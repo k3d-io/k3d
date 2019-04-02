@@ -1,2 +1,3 @@
 # k3d-go
-https://github.com/zeerorg/k3s-in-docker reimplemented in Golang
+
+[zeerorg/k3s-in-docker](https://github.com/zeerorg/k3s-in-docker) reimplemented in Golang... just because I didn't have time to learn Rust.
