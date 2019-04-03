@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 
 	"github.com/urfave/cli"
 )
@@ -108,6 +109,7 @@ func getKubeConfig(c *cli.Context) error {
 		return err
 	}
 	log.Printf("SUCCESS: retrieved kubeconfig for cluster [%s]", c.String("name"))
+	fmt.Printf("%s", path.Join(destPath, "kubeconfig.yaml"))
 	return nil
 }
 
