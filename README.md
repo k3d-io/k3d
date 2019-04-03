@@ -34,3 +34,9 @@ Example Workflow: Create a new cluster and use it with `kubectl`
 2. `export KUBECONFIG=$(k3d get-kubeconfig)` to make `kubectl` to use the kubeconfig for that cluster
 3. execute some commands like `kubectl get pods --all-namespaces`
 4. `k3d delete` to delete the default cluster
+
+## TODO
+
+[] Use the docker client library instead of commands
+[] Test the docker version
+[] Improve cluster state management
