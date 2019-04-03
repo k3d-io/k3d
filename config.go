@@ -46,22 +46,37 @@ func getClusterDir(name string) (string, error) {
 	return path.Join(homeDir, ".config", "k3d", name), nil
 }
 
-// listClusterDirs prints the names of the directories in the config folder (which should be the existing clusters)
-func listClusterDirs() {
+// printClusters prints the names of existing clusters
+func printClusters() {
+	clusters, err := getClusters()
+	if err != nil {
+		log.Fatalf("ERROR: Couldn't list clusters -> %+v", err)
+	}
+	fmt.Println("NAME")
+	// TODO: user docker client to get state of cluster
+	for _, cluster := range clusters {
+		fmt.Println(cluster)
+	}
+}
+
+// getClusters returns a list of cluster names which are folder names in the config directory
+func getClusters() ([]string, error) {
 	homeDir, err := homedir.Dir()
 	if err != nil {
-		log.Fatalf("ERROR: Couldn't get user's home directory")
+		log.Printf("ERROR: Couldn't get user's home directory")
+		return nil, err
 	}
 	configDir := path.Join(homeDir, ".config", "k3d")
 	files, err := ioutil.ReadDir(configDir)
 	if err != nil {
-		log.Fatalf("ERROR: Couldn't list files in [%s]", configDir)
+		log.Printf("ERROR: Couldn't list files in [%s]", configDir)
+		return nil, err
 	}
-	fmt.Println("NAME")
-	// TODO: user docker client to get state of cluster
+	clusters := []string{}
 	for _, file := range files {
 		if file.IsDir() {
-			fmt.Println(file.Name())
+			clusters = append(clusters, file.Name())
 		}
 	}
+	return clusters, nil
 }

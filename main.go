@@ -98,7 +98,7 @@ func startCluster(c *cli.Context) error {
 
 // listClusters prints a list of created clusters
 func listClusters(c *cli.Context) error {
-	listClusterDirs()
+	printClusters()
 	return nil
 }
 
