@@ -192,10 +192,7 @@ func main() {
 					Usage: "name of the cluster",
 				},
 			},
-			Action: func(c *cli.Context) error {
-				fmt.Println("Stopping cluster")
-				return nil
-			},
+			Action: stopCluster,
 		},
 		{
 			Name:  "start",
@@ -207,10 +204,7 @@ func main() {
 					Usage: "name of the cluster",
 				},
 			},
-			Action: func(c *cli.Context) error {
-				fmt.Println("Starting stopped cluster")
-				return nil
-			},
+			Action: startCluster,
 		},
 		{
 			Name:   "list",
@@ -227,10 +221,7 @@ func main() {
 					Usage: "name of the cluster",
 				},
 			},
-			Action: func(c *cli.Context) error {
-				fmt.Println("Starting stopped cluster")
-				return nil
-			},
+			Action: getKubeConfig,
 		},
 	}
 
