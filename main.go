@@ -44,6 +44,10 @@ func createCluster(c *cli.Context) error {
 		return err
 	}
 	log.Printf("SUCCESS: created cluster [%s]", c.String("name"))
+	log.Printf(`You can now use the cluster with:
+
+export KUBECONFIG="$(%s get-kubeconfig --name='%s')"
+kubectl cluster-info`, os.Args[0], c.String("name"))
 	return nil
 }
 
@@ -103,13 +107,11 @@ func getKubeConfig(c *cli.Context) error {
 	destPath, _ := getClusterDir(c.String("name"))
 	cmd := "docker"
 	args := []string{"cp", sourcePath, destPath}
-	log.Printf("Grabbing kubeconfig for cluster [%s]", c.String("name"))
 	if err := run(false, cmd, args...); err != nil {
 		log.Fatalf("FAILURE: couldn't get kubeconfig for cluster [%s] -> %+v", c.String("name"), err)
 		return err
 	}
-	log.Printf("SUCCESS: retrieved kubeconfig for cluster [%s]", c.String("name"))
-	fmt.Printf("%s", path.Join(destPath, "kubeconfig.yaml"))
+	fmt.Printf("%s\n", path.Join(destPath, "kubeconfig.yaml"))
 	return nil
 }
 
