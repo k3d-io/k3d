@@ -3,7 +3,9 @@
 ## k3s in docker
 
 k3s is the lightweight Kubernetes distribution by Rancher: [rancher/k3s](https://github.com/rancher/k3s)
+
 This repository is basically [zeerorg/k3s-in-docker](https://github.com/zeerorg/k3s-in-docker) reimplemented in Golang with some different/new functionality... just because I didn't have time to learn Rust.
+
 Thanks to @zeerorg for the original work!
 
 ## Requirements
@@ -37,6 +39,6 @@ Example Workflow: Create a new cluster and use it with `kubectl`
 
 ## TODO
 
-- [] Use the docker client library instead of commands
-- [] Test the docker version
-- [] Improve cluster state management
+- [ ] Use the docker client library instead of commands
+- [ ] Test the docker version
+- [ ] Improve cluster state management
