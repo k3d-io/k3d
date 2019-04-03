@@ -5,6 +5,10 @@
 *.so
 *.dylib
 
+# Output folders
+bin/
+_dist/
+
 # Test binary, build with `go test -c`
 *.test
 
