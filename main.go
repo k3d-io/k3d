@@ -22,7 +22,7 @@ func createCluster(c *cli.Context) error {
 	}
 	extraArgs := []string{}
 	if c.IsSet("volume") {
-		extraArgs = append(extraArgs, fmt.Sprintf("--volume %s", c.String("volume")))
+		extraArgs = append(extraArgs, "--volume", c.String("volume"))
 	}
 	if len(extraArgs) > 0 {
 		for _, extra := range extraArgs {
@@ -47,7 +47,7 @@ func createCluster(c *cli.Context) error {
 
 func deleteCluster(c *cli.Context) error {
 	cmd := "docker"
-	args := []string{"rm", "-f", c.String("name")}
+	args := []string{"rm", c.String("name")}
 	log.Printf("Deleting cluster [%s]", c.String("name"))
 	log.Printf("Running command: %+v", exec.Command(cmd, args...).Args)
 	if err := exec.Command(cmd, args...).Run(); err != nil {
