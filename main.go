@@ -51,8 +51,13 @@ func deleteCluster(c *cli.Context) error {
 	log.Printf("Deleting cluster [%s]", c.String("name"))
 	log.Printf("Running command: %+v", exec.Command(cmd, args...).Args)
 	if err := exec.Command(cmd, args...).Run(); err != nil {
-		log.Fatalf("FAILURE: couldn't delete cluster [%s] Err: %+v", c.String("name"), err)
-		return err
+		log.Printf("WARNING: couldn't delete cluster [%s], trying a force remove now.", c.String("name"))
+		args = append(args, "-f")
+		log.Printf("Running command: %+v", exec.Command(cmd, args...).Args)
+		if err := exec.Command(cmd, args...).Run(); err != nil {
+			log.Fatalf("FAILURE: couldn't delete cluster [%s] Err: %+v", c.String("name"), err)
+			return err
+		}
 	}
 	log.Printf("SUCCESS: deleted cluster [%s]", c.String("name"))
 	return nil
