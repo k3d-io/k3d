@@ -28,9 +28,7 @@ func createCluster(c *cli.Context) error {
 		extraArgs = append(extraArgs, "--volume", c.String("volume"))
 	}
 	if len(extraArgs) > 0 {
-		for _, extra := range extraArgs {
-			args = append(args, extra)
-		}
+		args = append(args, extraArgs...)
 	}
 	args = append(args,
 		"-d",

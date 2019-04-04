@@ -1,0 +1,23 @@
+dist: xenial
+
+language: go
+
+env:
+  - GO111MODULE=on
+
+go:
+  - 1.12.x
+  - master
+
+git:
+  depth: 1
+
+install: true
+
+before_script: 
+  - go install github.com/golangci/golangci-lint/cmd/golangci-lint
+  - go install github.com/mitchellh/gox
+
+script: 
+  - golangci-lint run
+  - make fmt check build-cross

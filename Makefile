@@ -15,12 +15,14 @@ GOFLAGS   :=
 BINDIR    := $(CURDIR)/bin
 BINARIES := k3d
 
+export GO111MODULE=on
+
 # go source files, ignore vendor directory
 SRC = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
-.PHONY: all build build-cross clean install uninstall fmt simplify check run bootstrap
+.PHONY: all build build-cross clean fmt simplify check bootstrap
 
-all: check install
+all: check build
 
 build: 
 	$(GO) build -i $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o '$(BINDIR)/$(BINARIES)'
@@ -44,14 +46,9 @@ check:
 	@go vet ${SRC}
 
 # Check for required executables 
-HAS_GOX := $(shell command -v gox;)
-HAS_GIT := $(shell command -v git;)
+HAS_GOX := $(shell command -v gox 2> /dev/null)
 
 bootstrap:
 ifndef HAS_GOX
 	go get -u github.com/mitchellh/gox
-endif
-
-ifndef HAS_GIT
-	$(error You must install Git)
 endif
