@@ -187,6 +187,10 @@ func main() {
 					Value: "k3s_default",
 					Usage: "name of the cluster",
 				},
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "delete all existing clusters (this ignores the --name/-n flag)",
+				},
 			},
 			Action: deleteCluster,
 		},
@@ -200,6 +204,10 @@ func main() {
 					Value: "k3s_default",
 					Usage: "name of the cluster",
 				},
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "stop all running clusters (this ignores the --name/-n flag)",
+				},
 			},
 			Action: stopCluster,
 		},
@@ -212,6 +220,10 @@ func main() {
 					Name:  "name, n",
 					Value: "k3s_default",
 					Usage: "name of the cluster",
+				},
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "start all stopped clusters (this ignores the --name/-n flag)",
 				},
 			},
 			Action: startCluster,
@@ -237,6 +249,10 @@ func main() {
 					Name:  "name, n",
 					Value: "k3s_default",
 					Usage: "name of the cluster",
+				},
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "get kubeconfig for all clusters (this ignores the --name/-n flag)",
 				},
 			},
 			Action: getKubeConfig,
