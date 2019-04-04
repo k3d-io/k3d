@@ -37,12 +37,15 @@ func createCluster(c *cli.Context) error {
 		"--https-listen-port", c.String("port"), //args
 	)
 	log.Printf("Creating cluster [%s]", c.String("name"))
-	log.Printf("Running command: %+v", exec.Command(cmd, args...).Args)
-	if err := exec.Command(cmd, args...).Run(); err != nil {
+	if err := run(true, cmd, args...); err != nil {
 		log.Fatalf("FAILURE: couldn't create cluster [%s] -> %+v", c.String("name"), err)
 		return err
 	}
 	log.Printf("SUCCESS: created cluster [%s]", c.String("name"))
+	log.Printf(`You can now use the cluster with:
+
+export KUBECONFIG="$(%s get-kubeconfig --name='%s')"
+kubectl cluster-info`, os.Args[0], c.String("name"))
 	return nil
 }
 
@@ -51,12 +54,10 @@ func deleteCluster(c *cli.Context) error {
 	cmd := "docker"
 	args := []string{"rm", c.String("name")}
 	log.Printf("Deleting cluster [%s]", c.String("name"))
-	log.Printf("Running command: %+v", exec.Command(cmd, args...).Args)
-	if err := exec.Command(cmd, args...).Run(); err != nil {
+	if err := run(true, cmd, args...); err != nil {
 		log.Printf("WARNING: couldn't delete cluster [%s], trying a force remove now.", c.String("name"))
 		args = append(args, "-f")
-		log.Printf("Running command: %+v", exec.Command(cmd, args...).Args)
-		if err := exec.Command(cmd, args...).Run(); err != nil {
+		if err := run(true, cmd, args...); err != nil {
 			log.Fatalf("FAILURE: couldn't delete cluster [%s] -> %+v", c.String("name"), err)
 			return err
 		}
@@ -71,8 +72,7 @@ func stopCluster(c *cli.Context) error {
 	cmd := "docker"
 	args := []string{"stop", c.String("name")}
 	log.Printf("Stopping cluster [%s]", c.String("name"))
-	log.Printf("Running command: %+v", exec.Command(cmd, args...).Args)
-	if err := exec.Command(cmd, args...).Run(); err != nil {
+	if err := run(true, cmd, args...); err != nil {
 		log.Fatalf("FAILURE: couldn't stop cluster [%s] -> %+v", c.String("name"), err)
 		return err
 	}
@@ -85,8 +85,7 @@ func startCluster(c *cli.Context) error {
 	cmd := "docker"
 	args := []string{"start", c.String("name")}
 	log.Printf("Starting cluster [%s]", c.String("name"))
-	log.Printf("Running command: %+v", exec.Command(cmd, args...).Args)
-	if err := exec.Command(cmd, args...).Run(); err != nil {
+	if err := run(true, cmd, args...); err != nil {
 		log.Fatalf("FAILURE: couldn't start cluster [%s] -> %+v", c.String("name"), err)
 		return err
 	}
@@ -106,14 +105,11 @@ func getKubeConfig(c *cli.Context) error {
 	destPath, _ := getClusterDir(c.String("name"))
 	cmd := "docker"
 	args := []string{"cp", sourcePath, destPath}
-	log.Printf("Grabbing kubeconfig for cluster [%s]", c.String("name"))
-	log.Printf("Running command: %+v", exec.Command(cmd, args...).Args)
-	if err := exec.Command(cmd, args...).Run(); err != nil {
+	if err := run(false, cmd, args...); err != nil {
 		log.Fatalf("FAILURE: couldn't get kubeconfig for cluster [%s] -> %+v", c.String("name"), err)
 		return err
 	}
-	log.Printf("SUCCESS: retrieved kubeconfig for cluster [%s]", c.String("name"))
-	fmt.Printf("%s", path.Join(destPath, "kubeconfig.yaml"))
+	fmt.Printf("%s\n", path.Join(destPath, "kubeconfig.yaml"))
 	return nil
 }
 
@@ -144,7 +140,7 @@ func main() {
 				log.Print("Checking docker...")
 				cmd := "docker"
 				args := []string{"version"}
-				if err := exec.Command(cmd, args...).Run(); err != nil {
+				if err := run(true, cmd, args...); err != nil {
 					log.Fatalf("Checking docker: FAILED")
 					return err
 				}
@@ -252,4 +248,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func run(verbose bool, name string, args ...string) error {
+	if verbose {
+		log.Printf("Running command: %+v", append([]string{name}, args...))
+	}
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
