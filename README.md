@@ -1,5 +1,7 @@
 # k3d-go
 
+![TravisCI](https://travis-ci.com/iwilltry42/k3d-go.svg?branch=master)
+
 ## k3s in docker
 
 k3s is the lightweight Kubernetes distribution by Rancher: [rancher/k3s](https://github.com/rancher/k3s)
