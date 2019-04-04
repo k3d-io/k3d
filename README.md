@@ -1,6 +1,7 @@
 # k3d-go
 
-![TravisCI](https://travis-ci.com/iwilltry42/k3d-go.svg?branch=master)
+[![Build Status](https://travis-ci.com/iwilltry42/k3d-go.svg?branch=master)](https://travis-ci.com/iwilltry42/k3d-go)
+[![Go Report Card](https://goreportcard.com/badge/github.com/iwilltry42/k3d-go)](https://goreportcard.com/report/github.com/iwilltry42/k3d-go)
 
 ## k3s in docker
 
