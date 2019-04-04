@@ -120,7 +120,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "k3d"
 	app.Usage = "Run k3s in Docker!"
-	app.Version = "0.0.2"
+	app.Version = "0.1.0"
 	app.Authors = []cli.Author{
 		cli.Author{
 			Name:  "iwilltry42",
@@ -136,7 +136,6 @@ func main() {
 			Aliases: []string{"ct"},
 			Usage:   "Check if docker is running",
 			Action: func(c *cli.Context) error {
-				//TODO: own function with version check
 				log.Print("Checking docker...")
 				cmd := "docker"
 				args := []string{"version"}

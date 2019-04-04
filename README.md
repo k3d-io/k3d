@@ -19,13 +19,15 @@ Thanks to @zeerorg for the original work!
 
 Grab a release from the [release tab](https://github.com/iwilltry42/k3d-go/releases).
 
+or `go install github.com/iwilltry42/k3d-go`
+
 or...
 
 ## Build
 
 1. Clone this repo, e.g. via `go get -u github.com/iwilltry42/k3d-go/releases`
 2. Inside the repo run
-   - `make bootstrap` to install build tools and then `make build` to build for your current system
+   - `make` to build for your current system
    - `go install` to install it to your `GOPATH`
    - `make build-cross` to build for all systems
 
@@ -45,3 +47,5 @@ Example Workflow: Create a new cluster and use it with `kubectl`
 - [ ] Use the docker client library instead of commands
 - [ ] Test the docker version
 - [ ] Improve cluster state management
+- [ ] Use [hsirupsen/logrus](https://github.com/sirupsen/logrus) for prettier logs
+- [ ] Add install script
