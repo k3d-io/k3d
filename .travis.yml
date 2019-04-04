@@ -19,5 +19,4 @@ before_script:
   - go install github.com/mitchellh/gox
 
 script: 
-  - golangci-lint run
   - make fmt check build-cross

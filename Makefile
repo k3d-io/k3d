@@ -20,9 +20,9 @@ export GO111MODULE=on
 # go source files, ignore vendor directory
 SRC = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
-.PHONY: all build build-cross clean fmt simplify check bootstrap
+.PHONY: all build build-cross clean fmt simplify check
 
-all: check build
+all: clean fmt check build
 
 build: 
 	$(GO) build -i $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o '$(BINDIR)/$(BINARIES)'
@@ -42,13 +42,16 @@ simplify:
 
 check:
 	@test -z $(shell gofmt -l main.go | tee /dev/stderr) || echo "[WARN] Fix formatting issues with 'make fmt'"
-	@for d in $$(go list ./... | grep -v /vendor/); do golint $${d}; done
+	@golangci-lint run
 	@go vet ${SRC}
 
 # Check for required executables 
 HAS_GOX := $(shell command -v gox 2> /dev/null)
+HAS_GOLANGCI  := $(shell command -v golangci-lint 2> /dev/null)
 
-bootstrap:
 ifndef HAS_GOX
 	go get -u github.com/mitchellh/gox
+endif
+ifndef HAS_GOLANGCI
+	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 endif
