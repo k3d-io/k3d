@@ -96,7 +96,7 @@ func startCluster(c *cli.Context) error {
 
 // listClusters prints a list of created clusters
 func listClusters(c *cli.Context) error {
-	printClusters()
+	printClusters(c.Bool("all"))
 	return nil
 }
 
@@ -222,8 +222,14 @@ func main() {
 		},
 		{
 			// list prints a list of created clusters
-			Name:   "list",
-			Usage:  "List all clusters",
+			Name:  "list",
+			Usage: "List all clusters",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "also show non-running clusters",
+				},
+			},
 			Action: listClusters,
 		},
 		{
