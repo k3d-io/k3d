@@ -17,9 +17,13 @@ Thanks to @zeerorg for the original work!
 
 ## Install
 
-Grab a release from the [release tab](https://github.com/iwilltry42/k3d-go/releases).
+You have several options there:
 
-or `go install github.com/iwilltry42/k3d-go`
+- use the install script to grab the latest release: 
+  - wget: `wget -q -O - https://raw.githubusercontent.com/iwilltry42/k3d-go/master/install.sh | bash`
+  - curl: `curl -s https://raw.githubusercontent.com/iwilltry42/k3d-go/master/install.sh | bash`
+- Grab a release from the [release tab](https://github.com/iwilltry42/k3d-go/releases) and install it yourself.
+- Via go: `go install github.com/iwilltry42/k3d-go`
 
 or...
 
