@@ -47,5 +47,5 @@ Example Workflow: Create a new cluster and use it with `kubectl`
 - [ ] Use the docker client library instead of commands
 - [ ] Test the docker version
 - [ ] Improve cluster state management
-- [ ] Use [hsirupsen/logrus](https://github.com/sirupsen/logrus) for prettier logs
+- [ ] Use [sirupsen/logrus](https://github.com/sirupsen/logrus) for prettier logs
 - [ ] Add install script
