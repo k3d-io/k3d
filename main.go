@@ -217,8 +217,9 @@ func main() {
 		},
 		{
 			// list prints a list of created clusters
-			Name:  "list",
-			Usage: "List all clusters",
+			Name:    "list",
+			Aliases: []string{"ls", "l"},
+			Usage:   "List all clusters",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "all, a",
