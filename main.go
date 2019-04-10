@@ -1,117 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
-	"os/exec"
-	"path"
 
+	"github.com/iwilltry42/k3d-go/cli"
+	"github.com/iwilltry42/k3d-go/version"
 	"github.com/urfave/cli"
 )
-
-// createCluster creates a new single-node cluster container and initializes the cluster directory
-func createCluster(c *cli.Context) error {
-	createClusterDir(c.String("name"))
-	port := fmt.Sprintf("%s:%s", c.String("port"), c.String("port"))
-	image := fmt.Sprintf("rancher/k3s:%s", c.String("version"))
-	cmd := "docker"
-	args := []string{
-		"run",
-		"--name", c.String("name"),
-		"-e", "K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml",
-		"--publish", port,
-		"--privileged",
-	}
-	extraArgs := []string{}
-	if c.IsSet("volume") {
-		extraArgs = append(extraArgs, "--volume", c.String("volume"))
-	}
-	if len(extraArgs) > 0 {
-		args = append(args, extraArgs...)
-	}
-	args = append(args,
-		"-d",
-		image,
-		"server",                                // cmd
-		"--https-listen-port", c.String("port"), //args
-	)
-	log.Printf("Creating cluster [%s]", c.String("name"))
-	if err := run(true, cmd, args...); err != nil {
-		log.Fatalf("FAILURE: couldn't create cluster [%s] -> %+v", c.String("name"), err)
-		return err
-	}
-	log.Printf("SUCCESS: created cluster [%s]", c.String("name"))
-	log.Printf(`You can now use the cluster with:
-
-export KUBECONFIG="$(%s get-kubeconfig --name='%s')"
-kubectl cluster-info`, os.Args[0], c.String("name"))
-	return nil
-}
-
-// deleteCluster removes the cluster container and its cluster directory
-func deleteCluster(c *cli.Context) error {
-	cmd := "docker"
-	args := []string{"rm", c.String("name")}
-	log.Printf("Deleting cluster [%s]", c.String("name"))
-	if err := run(true, cmd, args...); err != nil {
-		log.Printf("WARNING: couldn't delete cluster [%s], trying a force remove now.", c.String("name"))
-		args = append(args, "-f")
-		if err := run(true, cmd, args...); err != nil {
-			log.Fatalf("FAILURE: couldn't delete cluster [%s] -> %+v", c.String("name"), err)
-			return err
-		}
-	}
-	deleteClusterDir(c.String("name"))
-	log.Printf("SUCCESS: deleted cluster [%s]", c.String("name"))
-	return nil
-}
-
-// stopCluster stops a running cluster container (restartable)
-func stopCluster(c *cli.Context) error {
-	cmd := "docker"
-	args := []string{"stop", c.String("name")}
-	log.Printf("Stopping cluster [%s]", c.String("name"))
-	if err := run(true, cmd, args...); err != nil {
-		log.Fatalf("FAILURE: couldn't stop cluster [%s] -> %+v", c.String("name"), err)
-		return err
-	}
-	log.Printf("SUCCESS: stopped cluster [%s]", c.String("name"))
-	return nil
-}
-
-// startCluster starts a stopped cluster container
-func startCluster(c *cli.Context) error {
-	cmd := "docker"
-	args := []string{"start", c.String("name")}
-	log.Printf("Starting cluster [%s]", c.String("name"))
-	if err := run(true, cmd, args...); err != nil {
-		log.Fatalf("FAILURE: couldn't start cluster [%s] -> %+v", c.String("name"), err)
-		return err
-	}
-	log.Printf("SUCCESS: started cluster [%s]", c.String("name"))
-	return nil
-}
-
-// listClusters prints a list of created clusters
-func listClusters(c *cli.Context) error {
-	printClusters(c.Bool("all"))
-	return nil
-}
-
-// getKubeConfig grabs the kubeconfig from the running cluster and prints the path to stdout
-func getKubeConfig(c *cli.Context) error {
-	sourcePath := fmt.Sprintf("%s:/output/kubeconfig.yaml", c.String("name"))
-	destPath, _ := getClusterDir(c.String("name"))
-	cmd := "docker"
-	args := []string{"cp", sourcePath, destPath}
-	if err := run(false, cmd, args...); err != nil {
-		log.Fatalf("FAILURE: couldn't get kubeconfig for cluster [%s] -> %+v", c.String("name"), err)
-		return err
-	}
-	fmt.Printf("%s\n", path.Join(destPath, "kubeconfig.yaml"))
-	return nil
-}
 
 // main represents the CLI application
 func main() {
@@ -120,7 +16,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "k3d"
 	app.Usage = "Run k3s in Docker!"
-	app.Version = "v0.1.1"
+	app.Version = version.GetVersion()
 	app.Authors = []cli.Author{
 		cli.Author{
 			Name:  "iwilltry42",
@@ -135,17 +31,7 @@ func main() {
 			Name:    "check-tools",
 			Aliases: []string{"ct"},
 			Usage:   "Check if docker is running",
-			Action: func(c *cli.Context) error {
-				log.Print("Checking docker...")
-				cmd := "docker"
-				args := []string{"version"}
-				if err := run(true, cmd, args...); err != nil {
-					log.Fatalf("Checking docker: FAILED")
-					return err
-				}
-				log.Println("Checking docker: SUCCESS")
-				return nil
-			},
+			Action:  run.CheckTools,
 		},
 		{
 			// create creates a new k3s cluster in a container
@@ -160,7 +46,7 @@ func main() {
 				},
 				cli.StringFlag{
 					Name:  "volume, v",
-					Usage: "Mount a volume into the cluster node (Docker notation: `source:destination`",
+					Usage: "Mount a volume into the cluster node (Docker notation: `source:destination`)",
 				},
 				cli.StringFlag{
 					Name:  "version",
@@ -172,8 +58,17 @@ func main() {
 					Value: 6443,
 					Usage: "Set a port on which the ApiServer will listen",
 				},
+				cli.IntFlag{
+					Name:  "timeout, t",
+					Value: 0,
+					Usage: "Set the timeout value when --wait flag is set",
+				},
+				cli.BoolFlag{
+					Name:  "wait, w",
+					Usage: "Wait for the cluster to come up",
+				},
 			},
-			Action: createCluster,
+			Action: run.CreateCluster,
 		},
 		{
 			// delete deletes an existing k3s cluster (remove container and cluster directory)
@@ -186,8 +81,12 @@ func main() {
 					Value: "k3s_default",
 					Usage: "name of the cluster",
 				},
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "delete all existing clusters (this ignores the --name/-n flag)",
+				},
 			},
-			Action: deleteCluster,
+			Action: run.DeleteCluster,
 		},
 		{
 			// stop stopy a running cluster (its container) so it's restartable
@@ -199,8 +98,12 @@ func main() {
 					Value: "k3s_default",
 					Usage: "name of the cluster",
 				},
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "stop all running clusters (this ignores the --name/-n flag)",
+				},
 			},
-			Action: stopCluster,
+			Action: run.StopCluster,
 		},
 		{
 			// start restarts a stopped cluster container
@@ -212,8 +115,12 @@ func main() {
 					Value: "k3s_default",
 					Usage: "name of the cluster",
 				},
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "start all stopped clusters (this ignores the --name/-n flag)",
+				},
 			},
-			Action: startCluster,
+			Action: run.StartCluster,
 		},
 		{
 			// list prints a list of created clusters
@@ -226,7 +133,7 @@ func main() {
 					Usage: "also show non-running clusters",
 				},
 			},
-			Action: listClusters,
+			Action: run.ListClusters,
 		},
 		{
 			// get-kubeconfig grabs the kubeconfig from the cluster and prints the path to it
@@ -238,8 +145,12 @@ func main() {
 					Value: "k3s_default",
 					Usage: "name of the cluster",
 				},
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "get kubeconfig for all clusters (this ignores the --name/-n flag)",
+				},
 			},
-			Action: getKubeConfig,
+			Action: run.GetKubeConfig,
 		},
 	}
 
@@ -248,14 +159,4 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func run(verbose bool, name string, args ...string) error {
-	if verbose {
-		log.Printf("Running command: %+v", append([]string{name}, args...))
-	}
-	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
 }
