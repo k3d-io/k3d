@@ -19,17 +19,16 @@ func CheckTools(c *cli.Context) error {
 	cmd := "docker"
 	args := []string{"version"}
 	if err := runCommand(true, cmd, args...); err != nil {
-		log.Fatalf("Checking docker: FAILED")
-		return err
+		return fmt.Errorf("ERROR: checking docker failed\n%+v", err)
 	}
-	log.Println("Checking docker: SUCCESS")
+	log.Println("SUCCESS: Checking docker succeeded")
 	return nil
 }
 
 // CreateCluster creates a new single-node cluster container and initializes the cluster directory
 func CreateCluster(c *cli.Context) error {
 	if c.IsSet("timeout") && !c.IsSet("wait") {
-		return errors.New("--wait flag is not specified")
+		return errors.New("Cannot use --timeout flag without --wait flag")
 	}
 	port := fmt.Sprintf("%s:%s", c.String("port"), c.String("port"))
 	image := fmt.Sprintf("rancher/k3s:%s", c.String("version"))
@@ -56,8 +55,7 @@ func CreateCluster(c *cli.Context) error {
 	)
 	log.Printf("Creating cluster [%s]", c.String("name"))
 	if err := runCommand(true, cmd, args...); err != nil {
-		log.Fatalf("FAILURE: couldn't create cluster [%s] -> %+v", c.String("name"), err)
-		return err
+		return fmt.Errorf("ERROR: couldn't create cluster [%s]\n%+v", c.String("name"), err)
 	}
 
 	start := time.Now()
@@ -68,7 +66,7 @@ func CreateCluster(c *cli.Context) error {
 			if err != nil {
 				return err
 			}
-			return errors.New("Cluster timeout expired")
+			return errors.New("Cluster creation exceeded specified timeout")
 		}
 		cmd := "docker"
 		args = []string{
@@ -108,7 +106,7 @@ func DeleteCluster(c *cli.Context) error {
 	} else {
 		clusterList, err := getClusterNames()
 		if err != nil {
-			log.Fatalf("ERROR: `--all` specified, but no clusters were found.")
+			return fmt.Errorf("ERROR: `--all` specified, but no clusters were found\n%+v", err)
 		}
 		clusters = append(clusters, clusterList...)
 	}
@@ -147,7 +145,7 @@ func StopCluster(c *cli.Context) error {
 	} else {
 		clusterList, err := getClusterNames()
 		if err != nil {
-			log.Fatalf("ERROR: `--all` specified, but no clusters were found.")
+			return fmt.Errorf("ERROR: `--all` specified, but no clusters were found\n%+v", err)
 		}
 		clusters = append(clusters, clusterList...)
 	}
@@ -155,7 +153,7 @@ func StopCluster(c *cli.Context) error {
 	// stop clusters one by one instead of appending all names to the docker command
 	// this allows for more granular error handling and logging
 	for _, cluster := range clusters {
-		log.Printf("Starting cluster [%s]", cluster)
+		log.Printf("Stopping cluster [%s]", cluster)
 		args = append(args, cluster)
 		if err := runCommand(true, cmd, args...); err != nil {
 			log.Printf("FAILURE: couldn't stop cluster [%s] -> %+v", cluster, err)
@@ -179,7 +177,7 @@ func StartCluster(c *cli.Context) error {
 	} else {
 		clusterList, err := getClusterNames()
 		if err != nil {
-			log.Fatalf("ERROR: `--all` specified, but no clusters were found.")
+			return fmt.Errorf("ERROR: `--all` specified, but no clusters were found\n%+v", err)
 		}
 		clusters = append(clusters, clusterList...)
 	}
@@ -212,8 +210,7 @@ func GetKubeConfig(c *cli.Context) error {
 	cmd := "docker"
 	args := []string{"cp", sourcePath, destPath}
 	if err := runCommand(false, cmd, args...); err != nil {
-		log.Fatalf("FAILURE: couldn't get kubeconfig for cluster [%s] -> %+v", c.String("name"), err)
-		return err
+		return fmt.Errorf("ERROR: Couldn't get kubeconfig for cluster [%s]\n%+v", c.String("name"), err)
 	}
 	fmt.Printf("%s\n", path.Join(destPath, "kubeconfig.yaml"))
 	return nil
