@@ -1,7 +1,7 @@
-# k3d-go
+# k3d
 
-[![Build Status](https://travis-ci.com/iwilltry42/k3d-go.svg?branch=master)](https://travis-ci.com/iwilltry42/k3d-go)
-[![Go Report Card](https://goreportcard.com/badge/github.com/iwilltry42/k3d-go)](https://goreportcard.com/report/github.com/iwilltry42/k3d-go)
+[![Build Status](https://travis-ci.com/iwilltry42/k3d.svg?branch=master)](https://travis-ci.com/iwilltry42/k3d)
+[![Go Report Card](https://goreportcard.com/badge/github.com/iwilltry42/k3d)](https://goreportcard.com/report/github.com/iwilltry42/k3d)
 
 ## k3s in docker
 
@@ -20,16 +20,16 @@ Thanks to @zeerorg for the original work!
 You have several options there:
 
 - use the install script to grab the latest release: 
-  - wget: `wget -q -O - https://raw.githubusercontent.com/iwilltry42/k3d-go/master/install.sh | bash`
-  - curl: `curl -s https://raw.githubusercontent.com/iwilltry42/k3d-go/master/install.sh | bash`
-- Grab a release from the [release tab](https://github.com/iwilltry42/k3d-go/releases) and install it yourself.
-- Via go: `go install github.com/iwilltry42/k3d-go`
+  - wget: `wget -q -O - https://raw.githubusercontent.com/iwilltry42/k3d/master/install.sh | bash`
+  - curl: `curl -s https://raw.githubusercontent.com/iwilltry42/k3d/master/install.sh | bash`
+- Grab a release from the [release tab](https://github.com/iwilltry42/k3d/releases) and install it yourself.
+- Via go: `go install github.com/iwilltry42/k3d`
 
 or...
 
 ## Build
 
-1. Clone this repo, e.g. via `go get -u github.com/iwilltry42/k3d-go/releases`
+1. Clone this repo, e.g. via `go get -u github.com/iwilltry42/k3d/releases`
 2. Inside the repo run
    - `make` to build for your current system
    - `go install` to install it to your `GOPATH`

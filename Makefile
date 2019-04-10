@@ -16,7 +16,7 @@ PKG       := $(shell go mod vendor)
 TAGS      :=
 TESTS     := .
 TESTFLAGS :=
-LDFLAGS   := -w -s -X github.com/iwilltry42/k3d-go/version.Version=${GIT_TAG}
+LDFLAGS   := -w -s -X github.com/iwilltry42/k3d/version.Version=${GIT_TAG}
 GOFLAGS   :=
 BINDIR    := $(CURDIR)/bin
 BINARIES  := k3d

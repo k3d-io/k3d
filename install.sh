@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 APP_NAME="k3d"
-REPO_URL="https://github.com/iwilltry42/k3d-go"
+REPO_URL="https://github.com/iwilltry42/k3d"
 
 : ${USE_SUDO:="true"}
 : ${K3D_INSTALL_DIR:="/usr/local/bin"}
