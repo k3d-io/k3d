@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/iwilltry42/k3d/cli"
+	run "github.com/iwilltry42/k3d/cli"
 	"github.com/iwilltry42/k3d/version"
 	"github.com/urfave/cli"
 )
@@ -67,13 +67,21 @@ func main() {
 					Name:  "wait, w",
 					Usage: "Wait for the cluster to come up",
 				},
+				cli.StringSliceFlag{
+					Name:  "server-arg, x",
+					Usage: "Pass an additional argument to k3s server (new flag per argument)",
+				},
+				cli.StringSliceFlag{
+					Name:  "env, e",
+					Usage: "Pass an additional environment variable (new flag per variable)",
+				},
 			},
 			Action: run.CreateCluster,
 		},
 		{
 			// delete deletes an existing k3s cluster (remove container and cluster directory)
 			Name:    "delete",
-			Aliases: []string{"d"},
+			Aliases: []string{"d", "del"},
 			Usage:   "Delete cluster",
 			Flags: []cli.Flag{
 				cli.StringFlag{

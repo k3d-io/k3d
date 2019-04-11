@@ -30,34 +30,54 @@ func CreateCluster(c *cli.Context) error {
 	if c.IsSet("timeout") && !c.IsSet("wait") {
 		return errors.New("Cannot use --timeout flag without --wait flag")
 	}
+
 	port := fmt.Sprintf("%s:%s", c.String("port"), c.String("port"))
 	image := fmt.Sprintf("rancher/k3s:%s", c.String("version"))
 	cmd := "docker"
+
+	// default docker arguments
 	args := []string{
 		"run",
 		"--name", c.String("name"),
-		"-e", "K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml",
 		"--publish", port,
 		"--privileged",
+		"--detach",
+		"--env", "K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml",
 	}
+
+	// additional docker arguments
 	extraArgs := []string{}
+	if c.IsSet("env") || c.IsSet("e") {
+		for _, env := range c.StringSlice("env") {
+			extraArgs = append(extraArgs, "--env", env)
+		}
+	}
 	if c.IsSet("volume") {
 		extraArgs = append(extraArgs, "--volume", c.String("volume"))
 	}
 	if len(extraArgs) > 0 {
 		args = append(args, extraArgs...)
 	}
+
+	// k3s version and options
 	args = append(args,
-		"-d",
 		image,
 		"server",                                // cmd
 		"--https-listen-port", c.String("port"), //args
 	)
+
+	// additional k3s server arguments
+	if c.IsSet("server-arg") || c.IsSet("x") {
+		args = append(args, c.StringSlice("server-arg")...)
+	}
+
+	// let's go
 	log.Printf("Creating cluster [%s]", c.String("name"))
 	if err := runCommand(true, cmd, args...); err != nil {
 		return fmt.Errorf("ERROR: couldn't create cluster [%s]\n%+v", c.String("name"), err)
 	}
 
+	// wait for k3s to be up and running if we want it
 	start := time.Now()
 	timeout := time.Duration(c.Int("timeout")) * time.Second
 	for c.IsSet("wait") {

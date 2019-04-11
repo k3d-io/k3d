@@ -13,7 +13,7 @@ Thanks to @zeerorg for the original work!
 
 ## Requirements
 
-- docker
+- [docker](https://docs.docker.com/install/)
 
 ## Install
 
