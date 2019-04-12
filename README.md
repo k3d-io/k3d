@@ -1,35 +1,33 @@
 # k3d
 
-[![Build Status](https://travis-ci.com/iwilltry42/k3d.svg?branch=master)](https://travis-ci.com/iwilltry42/k3d)
-[![Go Report Card](https://goreportcard.com/badge/github.com/iwilltry42/k3d)](https://goreportcard.com/report/github.com/iwilltry42/k3d)
+[![Build Status](https://travis-ci.com/rancher/k3d.svg?branch=master)](https://travis-ci.com/rancher/k3d)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d)](https://goreportcard.com/report/github.com/rancher/k3d)
 
 ## k3s in docker
 
 k3s is the lightweight Kubernetes distribution by Rancher: [rancher/k3s](https://github.com/rancher/k3s)
 
-This repository is basically [zeerorg/k3s-in-docker](https://github.com/zeerorg/k3s-in-docker) reimplemented in Golang with some different/new functionality... just because I didn't have time to learn Rust.
-
-Thanks to @zeerorg for the original work!
+This repository is based on @zeerorg's [zeerorg/k3s-in-docker](https://github.com/zeerorg/k3s-in-docker), reimplemented in Go by @iwilltry42 in [iwilltry42/k3d](https://github.com/iwilltry42/k3d), which is now [rancher/k3d](https://github.com/rancher/k3d).
 
 ## Requirements
 
-- docker
+- [docker](https://docs.docker.com/install/)
 
 ## Install
 
 You have several options there:
 
 - use the install script to grab the latest release: 
-  - wget: `wget -q -O - https://raw.githubusercontent.com/iwilltry42/k3d/master/install.sh | bash`
-  - curl: `curl -s https://raw.githubusercontent.com/iwilltry42/k3d/master/install.sh | bash`
-- Grab a release from the [release tab](https://github.com/iwilltry42/k3d/releases) and install it yourself.
-- Via go: `go install github.com/iwilltry42/k3d`
+  - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
+  - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
+- Grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
+- Via go: `go install github.com/rancher/k3d`
 
 or...
 
 ## Build
 
-1. Clone this repo, e.g. via `go get -u github.com/iwilltry42/k3d/releases`
+1. Clone this repo, e.g. via `go get -u github.com/rancher/k3d/releases`
 2. Inside the repo run
    - `make` to build for your current system
    - `go install` to install it to your `GOPATH`

@@ -25,5 +25,5 @@ deploy:
   - _dist/k3d-linux-arm64
   - _dist/k3d-windows-amd64.exe
   on:
-    repo: iwilltry42/k3d
+    repo: rancher/k3d
     tags: true

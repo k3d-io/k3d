@@ -1,4 +1,4 @@
-module github.com/iwilltry42/k3d
+module github.com/rancher/k3d
 
 go 1.12
 
