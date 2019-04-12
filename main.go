@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	run "github.com/iwilltry42/k3d/cli"
-	"github.com/iwilltry42/k3d/version"
+	run "github.com/rancher/k3d/cli"
+	"github.com/rancher/k3d/version"
 	"github.com/urfave/cli"
 )
 
@@ -19,8 +19,15 @@ func main() {
 	app.Version = version.GetVersion()
 	app.Authors = []cli.Author{
 		cli.Author{
-			Name:  "iwilltry42",
+			Name:  "Thorsten Klein",
 			Email: "iwilltry42@gmail.com",
+		},
+		cli.Author{
+			Name:  "Rishabh Gupta",
+			Email: "r.g.gupta@outlook.com",
+		},
+		cli.Author{
+			Name: "Darren Shepherd",
 		},
 	}
 
