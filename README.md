@@ -7,7 +7,7 @@
 
 k3s is the lightweight Kubernetes distribution by Rancher: [rancher/k3s](https://github.com/rancher/k3s)
 
-This repository is based on @zeerorg's [zeerorg/k3s-in-docker](https://github.com/zeerorg/k3s-in-docker), reimplemented in Go by @iwilltry42 in [iwilltry42/k3d](https://github.com/iwilltry42/k3d), which is now [rancher/k3d](https://github.com/rancher/k3d).
+This repository is based on [@zeerorg](https://github.com/zeerorg/)'s [zeerorg/k3s-in-docker](https://github.com/zeerorg/k3s-in-docker), reimplemented in Go by [@iwilltry42](https://github.com/iwilltry42/) in [iwilltry42/k3d](https://github.com/iwilltry42/k3d), which is now [rancher/k3d](https://github.com/rancher/k3d).
 
 ## Requirements
 
@@ -43,11 +43,3 @@ Example Workflow: Create a new cluster and use it with `kubectl`
 2. `export KUBECONFIG=$(k3d get-kubeconfig)` to make `kubectl` to use the kubeconfig for that cluster
 3. execute some commands like `kubectl get pods --all-namespaces`
 4. `k3d delete` to delete the default cluster
-
-## TODO
-
-- [ ] Use the docker client library instead of commands
-- [ ] Test the docker version
-- [ ] Improve cluster state management
-- [ ] Use [sirupsen/logrus](https://github.com/sirupsen/logrus) for prettier logs
-- [ ] Add install script
