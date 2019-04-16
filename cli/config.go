@@ -11,18 +11,19 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/client"
 
-	dockerClient "github.com/docker/docker/client"
 	"github.com/mitchellh/go-homedir"
 	"github.com/olekukonko/tablewriter"
 )
 
 type cluster struct {
-	name   string
-	image  string
-	status string
-	ports  []string
-	id     string
+	name        string
+	image       string
+	status      string
+	serverPorts []string
+	server      types.Container
+	workers     []types.Container
 }
 
 // createDirIfNotExists checks for the existence of a directory and creates it along with all required parents if not.
@@ -63,21 +64,27 @@ func getClusterDir(name string) (string, error) {
 
 // printClusters prints the names of existing clusters
 func printClusters(all bool) {
-	clusterNames, err := getClusterNames()
+	clusters, err := getClusters()
 	if err != nil {
-		log.Fatalf("ERROR: Couldn't list clusters -> %+v", err)
+		log.Fatalf("ERROR: Couldn't list clusters\n%+v", err)
 	}
-	if len(clusterNames) == 0 {
+	if len(clusters) == 0 {
 		log.Printf("No clusters found!")
 		return
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"NAME", "IMAGE", "STATUS"})
+	table.SetHeader([]string{"NAME", "IMAGE", "STATUS", "WORKERS"})
 
-	for _, clusterName := range clusterNames {
-		cluster, _ := getCluster(clusterName)
-		clusterData := []string{cluster.name, cluster.image, cluster.status}
+	for _, cluster := range clusters {
+		workersRunning := 0
+		for _, worker := range cluster.workers {
+			if worker.State == "running" {
+				workersRunning++
+			}
+		}
+		workerData := fmt.Sprintf("%d/%d", workersRunning, len(cluster.workers))
+		clusterData := []string{cluster.name, cluster.image, cluster.status, workerData}
 		if cluster.status == "running" || all {
 			table.Append(clusterData)
 		}
@@ -107,41 +114,56 @@ func getClusterNames() ([]string, error) {
 	return clusters, nil
 }
 
-// getCluster creates a cluster struct with populated information fields
-func getCluster(name string) (cluster, error) {
-	cluster := cluster{
-		name:   name,
-		image:  "UNKNOWN",
-		status: "UNKNOWN",
-		ports:  []string{"UNKNOWN"},
-		id:     "UNKNOWN",
-	}
+// getClusters uses the docker API to get existing clusters and compares that with the list of cluster directories
+func getClusters() (map[string]cluster, error) {
 	ctx := context.Background()
-	docker, err := dockerClient.NewEnvClient()
+	docker, err := client.NewEnvClient()
 	if err != nil {
-		log.Printf("ERROR: couldn't create docker client -> %+v", err)
-		return cluster, err
+		return nil, fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
 
 	filters := filters.NewArgs()
 	filters.Add("label", "app=k3d")
-	filters.Add("label", fmt.Sprintf("cluster=%s", cluster.name))
 	filters.Add("label", "component=server")
 
-	containerList, err := docker.ContainerList(ctx, types.ContainerListOptions{
+	k3dServers, err := docker.ContainerList(ctx, types.ContainerListOptions{
 		All:     true,
 		Filters: filters,
 	})
 	if err != nil {
-		return cluster, fmt.Errorf("WARNING: couldn't get docker info for [%s] -> %+v", cluster.name, err)
+		return nil, fmt.Errorf("WARNING: couldn't list server containers\n%+v", err)
 	}
-	container := containerList[0]
-	cluster.image = container.Image
-	cluster.status = container.State
-	for _, port := range container.Ports {
-		cluster.ports = append(cluster.ports, strconv.Itoa(int(port.PublicPort)))
-	}
-	cluster.id = container.ID
 
-	return cluster, nil
+	clusters := make(map[string]cluster)
+	for _, server := range k3dServers {
+		filters.Add("label", fmt.Sprintf("cluster=%s", server.Labels["cluster"]))
+		filters.Del("label", "component=server")
+		filters.Add("label", "component=worker")
+		workers, err := docker.ContainerList(ctx, types.ContainerListOptions{
+			All:     true,
+			Filters: filters,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("WARNING: couldn't list worker containers for cluster %s\n%+v", server.Labels["cluster"], err)
+		}
+		serverPorts := []string{}
+		for _, port := range server.Ports {
+			serverPorts = append(serverPorts, strconv.Itoa(int(port.PublicPort)))
+		}
+		clusters[server.Labels["cluster"]] = cluster{
+			name:        server.Labels["cluster"],
+			image:       server.Image,
+			status:      server.State,
+			serverPorts: serverPorts,
+			server:      server,
+			workers:     workers,
+		}
+	}
+	return clusters, nil
+}
+
+// getCluster creates a cluster struct with populated information fields
+func getCluster(name string) (cluster, error) {
+	clusters, err := getClusters()
+	return clusters[name], err
 }
