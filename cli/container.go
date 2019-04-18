@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -16,18 +17,23 @@ import (
 )
 
 func createServer(verbose bool, image string, port string, args []string, env []string, name string, volumes []string) (string, error) {
+	log.Printf("Creating server using %s...\n", image)
 	ctx := context.Background()
 	docker, err := client.NewEnvClient()
 	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
-
 	reader, err := docker.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't pull image %s\n%+v", image, err)
 	}
 	if verbose {
 		_, err := io.Copy(os.Stdout, reader)
+		if err != nil {
+			log.Printf("WARNING: couldn't get docker output\n%+v", err)
+		}
+	} else {
+		_, err := io.Copy(ioutil.Discard, reader)
 		if err != nil {
 			log.Printf("WARNING: couldn't get docker output\n%+v", err)
 		}
