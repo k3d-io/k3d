@@ -122,10 +122,12 @@ func getClusters() (map[string]cluster, error) {
 		return nil, fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
 
+	// Prepare docker label filters
 	filters := filters.NewArgs()
 	filters.Add("label", "app=k3d")
 	filters.Add("label", "component=server")
 
+	// get all servers created by k3d
 	k3dServers, err := docker.ContainerList(ctx, types.ContainerListOptions{
 		All:     true,
 		Filters: filters,
@@ -135,17 +137,25 @@ func getClusters() (map[string]cluster, error) {
 	}
 
 	clusters := make(map[string]cluster)
+
+	// don't filter for servers but for workers now
+	filters.Del("label", "component=server")
+	filters.Add("label", "component=worker")
+
+	// for all servers created by k3d, get workers and cluster information
 	for _, server := range k3dServers {
 		filters.Add("label", fmt.Sprintf("cluster=%s", server.Labels["cluster"]))
-		filters.Del("label", "component=server")
-		filters.Add("label", "component=worker")
+
+		// get workers
 		workers, err := docker.ContainerList(ctx, types.ContainerListOptions{
 			All:     true,
 			Filters: filters,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("WARNING: couldn't list worker containers for cluster %s\n%+v", server.Labels["cluster"], err)
+			log.Printf("WARNING: couldn't get worker containers for cluster %s\n%+v", server.Labels["cluster"], err)
 		}
+
+		// save cluster information
 		serverPorts := []string{}
 		for _, port := range server.Ports {
 			serverPorts = append(serverPorts, strconv.Itoa(int(port.PublicPort)))
@@ -158,6 +168,8 @@ func getClusters() (map[string]cluster, error) {
 			server:      server,
 			workers:     workers,
 		}
+		// clear label filters before searching for next cluster
+		filters.Del("label", fmt.Sprintf("cluster=%s", server.Labels["cluster"]))
 	}
 	return clusters, nil
 }
