@@ -13,6 +13,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 )
 
@@ -65,6 +66,14 @@ func createServer(verbose bool, image string, port string, args []string, env []
 		hostConfig.Binds = volumes
 	}
 
+	networkingConfig := &network.NetworkingConfig{
+		EndpointsConfig: map[string]*network.EndpointSettings{
+			name: &network.EndpointSettings{
+				Aliases: []string{containerName},
+			},
+		},
+	}
+
 	resp, err := docker.ContainerCreate(ctx, &container.Config{
 		Image: image,
 		Cmd:   append([]string{"server"}, args...),
@@ -73,7 +82,7 @@ func createServer(verbose bool, image string, port string, args []string, env []
 		},
 		Env:    env,
 		Labels: containerLabels,
-	}, hostConfig, nil, containerName)
+	}, hostConfig, networkingConfig, containerName)
 	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't create container %s\n%+v", containerName, err)
 	}
@@ -126,11 +135,19 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 		hostConfig.Binds = volumes
 	}
 
+	networkingConfig := &network.NetworkingConfig{
+		EndpointsConfig: map[string]*network.EndpointSettings{
+			name: &network.EndpointSettings{
+				Aliases: []string{containerName},
+			},
+		},
+	}
+
 	resp, err := docker.ContainerCreate(ctx, &container.Config{
 		Image:  image,
 		Env:    env,
 		Labels: containerLabels,
-	}, hostConfig, nil, containerName)
+	}, hostConfig, networkingConfig, containerName)
 	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't create container %s\n%+v", containerName, err)
 	}
