@@ -117,11 +117,6 @@ func CreateCluster(c *cli.Context) error {
 	}
 
 	createClusterDir(c.String("name"))
-	log.Printf("SUCCESS: created cluster [%s]", c.String("name"))
-	log.Printf(`You can now use the cluster with:
-
-export KUBECONFIG="$(%s get-kubeconfig --name='%s')"
-kubectl cluster-info`, os.Args[0], c.String("name"))
 
 	// worker nodes
 	if c.Int("workers") > 0 {
@@ -145,6 +140,13 @@ kubectl cluster-info`, os.Args[0], c.String("name"))
 			fmt.Printf("Created worker with ID %s\n", workerID)
 		}
 	}
+
+	log.Printf("SUCCESS: created cluster [%s]", c.String("name"))
+	log.Printf(`You can now use the cluster with:
+
+export KUBECONFIG="$(%s get-kubeconfig --name='%s')"
+kubectl cluster-info`, os.Args[0], c.String("name"))
+
 	return nil
 }
 
