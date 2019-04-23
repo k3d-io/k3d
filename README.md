@@ -27,7 +27,7 @@ or...
 
 ## Build
 
-1. Clone this repo, e.g. via `go get -u github.com/rancher/k3d/releases`
+1. Clone this repo, e.g. via `go get -u github.com/rancher/k3d`
 2. Inside the repo run
    - `make` to build for your current system
    - `go install` to install it to your `GOPATH`
