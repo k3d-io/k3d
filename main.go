@@ -57,7 +57,7 @@ func main() {
 				},
 				cli.StringFlag{
 					Name:  "version",
-					Value: "v0.4.0",
+					Value: version.GetK3sVersion(),
 					Usage: "Choose the k3s image version",
 				},
 				cli.IntFlag{
