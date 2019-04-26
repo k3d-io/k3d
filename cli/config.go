@@ -2,20 +2,27 @@ package run
 
 import (
 	"context"
-	"io/ioutil"
+	"fmt"
 	"log"
 	"os"
 	"path"
+	"strconv"
 
-	dockerClient "github.com/docker/docker/client"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/client"
+
 	"github.com/mitchellh/go-homedir"
 	"github.com/olekukonko/tablewriter"
 )
 
 type cluster struct {
-	name   string
-	image  string
-	status string
+	name        string
+	image       string
+	status      string
+	serverPorts []string
+	server      types.Container
+	workers     []types.Container
 }
 
 // createDirIfNotExists checks for the existence of a directory and creates it along with all required parents if not.
@@ -56,21 +63,27 @@ func getClusterDir(name string) (string, error) {
 
 // printClusters prints the names of existing clusters
 func printClusters(all bool) {
-	clusterNames, err := getClusterNames()
+	clusters, err := getClusters()
 	if err != nil {
-		log.Fatalf("ERROR: Couldn't list clusters -> %+v", err)
+		log.Fatalf("ERROR: Couldn't list clusters\n%+v", err)
 	}
-	if len(clusterNames) == 0 {
+	if len(clusters) == 0 {
 		log.Printf("No clusters found!")
 		return
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"NAME", "IMAGE", "STATUS"})
+	table.SetHeader([]string{"NAME", "IMAGE", "STATUS", "WORKERS"})
 
-	for _, clusterName := range clusterNames {
-		cluster, _ := getCluster(clusterName)
-		clusterData := []string{cluster.name, cluster.image, cluster.status}
+	for _, cluster := range clusters {
+		workersRunning := 0
+		for _, worker := range cluster.workers {
+			if worker.State == "running" {
+				workersRunning++
+			}
+		}
+		workerData := fmt.Sprintf("%d/%d", workersRunning, len(cluster.workers))
+		clusterData := []string{cluster.name, cluster.image, cluster.status, workerData}
 		if cluster.status == "running" || all {
 			table.Append(clusterData)
 		}
@@ -78,47 +91,68 @@ func printClusters(all bool) {
 	table.Render()
 }
 
-// getClusterNames returns a list of cluster names which are folder names in the config directory
-func getClusterNames() ([]string, error) {
-	homeDir, err := homedir.Dir()
+// getClusters uses the docker API to get existing clusters and compares that with the list of cluster directories
+func getClusters() (map[string]cluster, error) {
+	ctx := context.Background()
+	docker, err := client.NewEnvClient()
 	if err != nil {
-		log.Printf("ERROR: Couldn't get user's home directory")
-		return nil, err
+		return nil, fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
-	configDir := path.Join(homeDir, ".config", "k3d")
-	files, err := ioutil.ReadDir(configDir)
+
+	// Prepare docker label filters
+	filters := filters.NewArgs()
+	filters.Add("label", "app=k3d")
+	filters.Add("label", "component=server")
+
+	// get all servers created by k3d
+	k3dServers, err := docker.ContainerList(ctx, types.ContainerListOptions{
+		All:     true,
+		Filters: filters,
+	})
 	if err != nil {
-		log.Printf("ERROR: Couldn't list files in [%s]", configDir)
-		return nil, err
+		return nil, fmt.Errorf("WARNING: couldn't list server containers\n%+v", err)
 	}
-	clusters := []string{}
-	for _, file := range files {
-		if file.IsDir() {
-			clusters = append(clusters, file.Name())
+
+	clusters := make(map[string]cluster)
+
+	// don't filter for servers but for workers now
+	filters.Del("label", "component=server")
+	filters.Add("label", "component=worker")
+
+	// for all servers created by k3d, get workers and cluster information
+	for _, server := range k3dServers {
+		filters.Add("label", fmt.Sprintf("cluster=%s", server.Labels["cluster"]))
+
+		// get workers
+		workers, err := docker.ContainerList(ctx, types.ContainerListOptions{
+			All:     true,
+			Filters: filters,
+		})
+		if err != nil {
+			log.Printf("WARNING: couldn't get worker containers for cluster %s\n%+v", server.Labels["cluster"], err)
 		}
+
+		// save cluster information
+		serverPorts := []string{}
+		for _, port := range server.Ports {
+			serverPorts = append(serverPorts, strconv.Itoa(int(port.PublicPort)))
+		}
+		clusters[server.Labels["cluster"]] = cluster{
+			name:        server.Labels["cluster"],
+			image:       server.Image,
+			status:      server.State,
+			serverPorts: serverPorts,
+			server:      server,
+			workers:     workers,
+		}
+		// clear label filters before searching for next cluster
+		filters.Del("label", fmt.Sprintf("cluster=%s", server.Labels["cluster"]))
 	}
 	return clusters, nil
 }
 
 // getCluster creates a cluster struct with populated information fields
 func getCluster(name string) (cluster, error) {
-	cluster := cluster{
-		name:   name,
-		image:  "UNKNOWN",
-		status: "UNKNOWN",
-	}
-
-	docker, err := dockerClient.NewEnvClient()
-	if err != nil {
-		log.Printf("ERROR: couldn't create docker client -> %+v", err)
-		return cluster, err
-	}
-	containerInfo, err := docker.ContainerInspect(context.Background(), cluster.name)
-	if err != nil {
-		log.Printf("WARNING: couldn't get docker info for [%s] -> %+v", cluster.name, err)
-	} else {
-		cluster.image = containerInfo.Config.Image
-		cluster.status = containerInfo.ContainerJSONBase.State.Status
-	}
-	return cluster, nil
+	clusters, err := getClusters()
+	return clusters[name], err
 }
