@@ -10,13 +10,16 @@ ifeq ($(GIT_TAG),)
 GIT_TAG   := $(shell git describe --always)
 endif
 
+# get latest k3s version
+K3S_TAG		:= $(shell curl --silent "https://api.github.com/repos/rancher/k3s/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+
 # Go options
 GO        ?= go
 PKG       := $(shell go mod vendor)
 TAGS      :=
 TESTS     := .
 TESTFLAGS :=
-LDFLAGS   := -w -s -X github.com/rancher/k3d/version.Version=${GIT_TAG}
+LDFLAGS   := -w -s -X github.com/rancher/k3d/version.Version=${GIT_TAG} -X github.com/rancher/k3d/version.K3sVersion=${K3S_TAG}
 GOFLAGS   :=
 BINDIR    := $(CURDIR)/bin
 BINARIES  := k3d
