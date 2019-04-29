@@ -1,5 +1,10 @@
 package run
 
+/*
+ * The functions in this file take care of spinning up the
+ * k3s server and worker containers as well as deleting them.
+ */
+
 import (
 	"context"
 	"fmt"
@@ -17,6 +22,7 @@ import (
 	"github.com/docker/docker/client"
 )
 
+// createServer creates and starts a k3s server container
 func createServer(verbose bool, image string, port string, args []string, env []string, name string, volumes []string) (string, error) {
 	log.Printf("Creating server using %s...\n", image)
 	ctx := context.Background()
@@ -24,6 +30,8 @@ func createServer(verbose bool, image string, port string, args []string, env []
 	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
+
+	// pull the required docker image
 	reader, err := docker.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't pull image %s\n%+v", image, err)
@@ -40,6 +48,7 @@ func createServer(verbose bool, image string, port string, args []string, env []
 		}
 	}
 
+	// configure container options (host/network configuration, labels, env vars, etc.)
 	containerLabels := make(map[string]string)
 	containerLabels["app"] = "k3d"
 	containerLabels["component"] = "server"
@@ -74,6 +83,7 @@ func createServer(verbose bool, image string, port string, args []string, env []
 		},
 	}
 
+	// create the container
 	resp, err := docker.ContainerCreate(ctx, &container.Config{
 		Image: image,
 		Cmd:   append([]string{"server"}, args...),
@@ -87,6 +97,7 @@ func createServer(verbose bool, image string, port string, args []string, env []
 		return "", fmt.Errorf("ERROR: couldn't create container %s\n%+v", containerName, err)
 	}
 
+	// start the container
 	if err := docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return "", fmt.Errorf("ERROR: couldn't start container %s\n%+v", containerName, err)
 	}
@@ -95,6 +106,7 @@ func createServer(verbose bool, image string, port string, args []string, env []
 
 }
 
+// createWorker creates/starts a k3s agent node that connects to the server
 func createWorker(verbose bool, image string, args []string, env []string, name string, volumes []string, postfix string, serverPort string) (string, error) {
 	ctx := context.Background()
 	docker, err := client.NewEnvClient()
@@ -102,6 +114,7 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 		return "", fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
 
+	// pull the required docker image
 	reader, err := docker.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't pull image %s\n%+v", image, err)
@@ -113,6 +126,7 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 		}
 	}
 
+	// configure container options (host/network configuration, labels, env vars, etc.)
 	containerLabels := make(map[string]string)
 	containerLabels["app"] = "k3d"
 	containerLabels["component"] = "worker"
@@ -143,6 +157,7 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 		},
 	}
 
+	// create the container
 	resp, err := docker.ContainerCreate(ctx, &container.Config{
 		Image:  image,
 		Env:    env,
@@ -152,6 +167,7 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 		return "", fmt.Errorf("ERROR: couldn't create container %s\n%+v", containerName, err)
 	}
 
+	// start the container
 	if err := docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return "", fmt.Errorf("ERROR: couldn't start container %s\n%+v", containerName, err)
 	}
@@ -159,13 +175,20 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 	return resp.ID, nil
 }
 
+// removeContainer tries to rm a container, selected by Docker ID, and does a rm -f if it fails (e.g. if container is still running)
 func removeContainer(ID string) error {
+	// TODO: first check if container is running, then try to stop it with a timeout before trying to remove it
+	// if it does not terminate gracefully, try a force remove
 	ctx := context.Background()
 	docker, err := client.NewEnvClient()
 	if err != nil {
 		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
+
+	// first, try a soft remove
 	if err := docker.ContainerRemove(ctx, ID, types.ContainerRemoveOptions{}); err != nil {
+
+		// if soft remove didn't succeed, force remove the container
 		log.Printf("WARNING: couldn't delete container [%s], trying a force remove now.", ID)
 		if err := docker.ContainerRemove(ctx, ID, types.ContainerRemoveOptions{Force: true}); err != nil {
 			return fmt.Errorf("FAILURE: couldn't delete container [%s] -> %+v", ID, err)

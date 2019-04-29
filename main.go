@@ -41,10 +41,10 @@ func main() {
 			Action:  run.CheckTools,
 		},
 		{
-			// create creates a new k3s cluster in a container
+			// create creates a new k3s cluster in docker containers
 			Name:    "create",
 			Aliases: []string{"c"},
-			Usage:   "Create a single node k3s cluster in a container",
+			Usage:   "Create a single- or multi-node k3s cluster in docker containers",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, n",
@@ -53,7 +53,7 @@ func main() {
 				},
 				cli.StringFlag{
 					Name:  "volume, v",
-					Usage: "Mount one or more volumes into the cluster node (Docker notation: `source:destination[,source:destination]`)",
+					Usage: "Mount one or more volumes into every node of the cluster (Docker notation: `source:destination[,source:destination]`)",
 				},
 				cli.StringFlag{
 					Name:  "version",
@@ -63,7 +63,7 @@ func main() {
 				cli.IntFlag{
 					Name:  "port, p",
 					Value: 6443,
-					Usage: "Set a port on which the ApiServer will listen",
+					Usage: "Map the Kubernetes ApiServer port to a local port",
 				},
 				cli.IntFlag{
 					Name:  "timeout, t",
@@ -72,7 +72,7 @@ func main() {
 				},
 				cli.BoolFlag{
 					Name:  "wait, w",
-					Usage: "Wait for the cluster to come up",
+					Usage: "Wait for the cluster to come up before returning",
 				},
 				cli.StringSliceFlag{
 					Name:  "server-arg, x",
@@ -103,7 +103,7 @@ func main() {
 				},
 				cli.BoolFlag{
 					Name:  "all, a",
-					Usage: "delete all existing clusters (this ignores the --name/-n flag)",
+					Usage: "Delete all existing clusters (this ignores the --name/-n flag)",
 				},
 			},
 			Action: run.DeleteCluster,
@@ -116,11 +116,11 @@ func main() {
 				cli.StringFlag{
 					Name:  "name, n",
 					Value: "k3s_default",
-					Usage: "name of the cluster",
+					Usage: "Name of the cluster",
 				},
 				cli.BoolFlag{
 					Name:  "all, a",
-					Usage: "stop all running clusters (this ignores the --name/-n flag)",
+					Usage: "Stop all running clusters (this ignores the --name/-n flag)",
 				},
 			},
 			Action: run.StopCluster,
@@ -133,11 +133,11 @@ func main() {
 				cli.StringFlag{
 					Name:  "name, n",
 					Value: "k3s_default",
-					Usage: "name of the cluster",
+					Usage: "Name of the cluster",
 				},
 				cli.BoolFlag{
 					Name:  "all, a",
-					Usage: "start all stopped clusters (this ignores the --name/-n flag)",
+					Usage: "Start all stopped clusters (this ignores the --name/-n flag)",
 				},
 			},
 			Action: run.StartCluster,
@@ -150,7 +150,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "all, a",
-					Usage: "also show non-running clusters",
+					Usage: "Also show non-running clusters",
 				},
 			},
 			Action: run.ListClusters,
@@ -163,17 +163,18 @@ func main() {
 				cli.StringFlag{
 					Name:  "name, n",
 					Value: "k3s_default",
-					Usage: "name of the cluster",
+					Usage: "Name of the cluster",
 				},
 				cli.BoolFlag{
 					Name:  "all, a",
-					Usage: "get kubeconfig for all clusters (this ignores the --name/-n flag)",
+					Usage: "Get kubeconfig for all clusters (this ignores the --name/-n flag)",
 				},
 			},
 			Action: run.GetKubeConfig,
 		},
 	}
 
+	// Global flags
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:  "verbose",

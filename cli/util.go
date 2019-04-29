@@ -16,6 +16,7 @@ const (
 var src = rand.NewSource(time.Now().UnixNano())
 
 // GenerateRandomString thanks to https://stackoverflow.com/a/31832326/6450189
+// GenerateRandomString is used to generate a random string that is used as a cluster secret
 func GenerateRandomString(n int) string {
 
 	sb := strings.Builder{}

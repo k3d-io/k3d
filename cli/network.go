@@ -11,6 +11,8 @@ import (
 	"github.com/docker/docker/client"
 )
 
+// createClusterNetwork creates a docker network for a cluster that will be used
+// to let the server and worker containers communicate with each other easily.
 func createClusterNetwork(clusterName string) (string, error) {
 	ctx := context.Background()
 	docker, err := client.NewEnvClient()
@@ -18,6 +20,7 @@ func createClusterNetwork(clusterName string) (string, error) {
 		return "", fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
 
+	// create the network with a set of labels and the cluster name as network name
 	resp, err := docker.NetworkCreate(ctx, clusterName, types.NetworkCreate{
 		Labels: map[string]string{
 			"app":     "k3d",
@@ -31,6 +34,7 @@ func createClusterNetwork(clusterName string) (string, error) {
 	return resp.ID, nil
 }
 
+// deleteClusterNetwork deletes a docker network based on the name of a cluster it belongs to
 func deleteClusterNetwork(clusterName string) error {
 	ctx := context.Background()
 	docker, err := client.NewEnvClient()
@@ -49,6 +53,7 @@ func deleteClusterNetwork(clusterName string) error {
 		return fmt.Errorf("ERROR: couldn't find network for cluster %s\n%+v", clusterName, err)
 	}
 
+	// there should be only one network that matches the name... but who knows?
 	for _, network := range networks {
 		if err := docker.NetworkRemove(ctx, network.ID); err != nil {
 			log.Printf("WARNING: couldn't remove network for cluster %s\n%+v", clusterName, err)
