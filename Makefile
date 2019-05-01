@@ -34,7 +34,7 @@ export GO111MODULE=on
 # go source files, ignore vendor directory
 SRC = $(shell find . -type f -name '*.go' -not -path "./*/*")
 
-.PHONY: all build build-cross clean fmt simplify check extra-clean
+.PHONY: all build build-cross clean fmt simplify check extra-clean install-tools
 
 all: clean fmt check build
 
@@ -67,9 +67,10 @@ check:
 HAS_GOX := $(shell command -v gox 2> /dev/null)
 HAS_GOLANGCI  := $(shell command -v golangci-lint 2> /dev/null)
 
+install-tools:
 ifndef HAS_GOX
-	go get -u $(PKG_GOX)
+	(export GO111MODULE=off; go get -u $(PKG_GOX))
 endif
 ifndef HAS_GOLANGCI
-	go get -u $(PKG_GOLANGCI_LINT)
+	(export GO111MODULE=off; go get -u $(PKG_GOLANGCI_LINT))
 endif

@@ -17,7 +17,7 @@ This repository is based on [@zeerorg](https://github.com/zeerorg/)'s [zeerorg/k
 
 You have several options there:
 
-- use the install script to grab the latest release: 
+- use the install script to grab the latest release:
   - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
   - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
 - Grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
@@ -29,7 +29,9 @@ or...
 
 1. Clone this repo, e.g. via `go get -u github.com/rancher/k3d`
 2. Inside the repo run
-   - `make` to build for your current system
+   - 'make install-tools' to make sure required go packages are installed
+3. Inside the repo run
+   - `make build` to build for your current system
    - `go install` to install it to your `GOPATH`
    - `make build-cross` to build for all systems
 
