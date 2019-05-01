@@ -24,24 +24,33 @@ GOFLAGS   :=
 BINDIR    := $(CURDIR)/bin
 BINARIES  := k3d
 
+
+# Go Package required
+PKG_GOX := github.com/mitchellh/gox
+PKG_GOLANGCI_LINT := github.com/golangci/golangci-lint/cmd/golangci-lint
+
 export GO111MODULE=on
 
 # go source files, ignore vendor directory
 SRC = $(shell find . -type f -name '*.go' -not -path "./*/*")
 
-.PHONY: all build build-cross clean fmt simplify check
+.PHONY: all build build-cross clean fmt simplify check extra-clean
 
 all: clean fmt check build
 
-build: 
+build:
 	$(GO) build -i $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o '$(BINDIR)/$(BINARIES)'
 
 build-cross: LDFLAGS += -extldflags "-static"
-build-cross:	
+build-cross:
 	CGO_ENABLED=0 gox -parallel=3 -output="_dist/$(BINARIES)-{{.OS}}-{{.Arch}}" -osarch='$(TARGETS)' $(GOFLAGS) $(if $(TAGS),-tags '$(TAGS)',) -ldflags '$(LDFLAGS)'
 
 clean:
 	@rm -rf $(BINDIR) _dist/
+
+extra-clean: clean
+	go clean -i $(PKG_GOX)
+	go clean -i $(PKG_GOLANGCI_LINT)
 
 fmt:
 	@gofmt -l -w $(SRC)
@@ -54,13 +63,13 @@ check:
 	@golangci-lint run
 	@go vet ${SRC}
 
-# Check for required executables 
+# Check for required executables
 HAS_GOX := $(shell command -v gox 2> /dev/null)
 HAS_GOLANGCI  := $(shell command -v golangci-lint 2> /dev/null)
 
 ifndef HAS_GOX
-	go get -u github.com/mitchellh/gox
+	go get -u $(PKG_GOX)
 endif
 ifndef HAS_GOLANGCI
-	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+	go get -u $(PKG_GOLANGCI_LINT)
 endif
