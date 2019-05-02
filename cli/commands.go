@@ -327,8 +327,8 @@ func GetKubeConfig(c *cli.Context) error {
 	server, err := docker.ContainerList(ctx, types.ContainerListOptions{
 		Filters: filters,
 	})
-	if err != nil {
-		return fmt.Errorf("Couldn't get server container for cluster %s\n%+v", c.String("name"), err)
+	if err != nil || len(server) != 1 {
+		return fmt.Errorf("Couldn't get server container for cluster: %s\n%+v", c.String("name"), err)
 	}
 
 	// get kubeconfig file from container and read contents
