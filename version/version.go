@@ -16,5 +16,6 @@ func GetVersion() string {
 
 // GetK3sVersion returns the version string for K3s
 func GetK3sVersion() string {
+	K3sVersion = "v0.4.0"
 	return K3sVersion
 }
