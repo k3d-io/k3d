@@ -14,41 +14,58 @@ import (
 	"os"
 	"time"
 
-	"github.com/docker/go-connections/nat"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 )
 
-// createServer creates and starts a k3s server container
-func createServer(verbose bool, image string, port string, args []string, env []string, name string, volumes []string) (string, error) {
-	log.Printf("Creating server using %s...\n", image)
+func startContainer(verbose bool, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
 	ctx := context.Background()
+
 	docker, err := client.NewEnvClient()
 	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
 
-	// pull the required docker image
-	reader, err := docker.ImagePull(ctx, image, types.ImagePullOptions{})
-	if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't pull image %s\n%+v", image, err)
-	}
-	if verbose {
-		_, err := io.Copy(os.Stdout, reader)
+	resp, err := docker.ContainerCreate(ctx, config, hostConfig, networkingConfig, containerName)
+	if client.IsErrImageNotFound(err) {
+		log.Printf("Pulling image %s...\n", config.Image)
+		reader, err := docker.ImagePull(ctx, config.Image, types.ImagePullOptions{})
 		if err != nil {
-			log.Printf("WARNING: couldn't get docker output\n%+v", err)
+			return "", fmt.Errorf("ERROR: couldn't pull image %s\n%+v", config.Image, err)
 		}
-	} else {
-		_, err := io.Copy(ioutil.Discard, reader)
+		defer reader.Close()
+		if verbose {
+			_, err := io.Copy(os.Stdout, reader)
+			if err != nil {
+				log.Printf("WARNING: couldn't get docker output\n%+v", err)
+			}
+		} else {
+			_, err := io.Copy(ioutil.Discard, reader)
+			if err != nil {
+				log.Printf("WARNING: couldn't get docker output\n%+v", err)
+			}
+		}
+		resp, err = docker.ContainerCreate(ctx, config, hostConfig, networkingConfig, containerName)
 		if err != nil {
-			log.Printf("WARNING: couldn't get docker output\n%+v", err)
+			return "", fmt.Errorf("ERROR: couldn't create container after pull %s\n%+v", containerName, err)
 		}
+	} else if err != nil {
+		return "", fmt.Errorf("ERROR: couldn't create container %s\n%+v", containerName, err)
 	}
 
-	// configure container options (host/network configuration, labels, env vars, etc.)
+	if err := docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return "", err
+	}
+
+	return resp.ID, nil
+}
+
+func createServer(verbose bool, image string, port string, args []string, env []string, name string, volumes []string) (string, error) {
+	log.Printf("Creating server using %s...\n", image)
+
 	containerLabels := make(map[string]string)
 	containerLabels["app"] = "k3d"
 	containerLabels["component"] = "server"
@@ -77,14 +94,13 @@ func createServer(verbose bool, image string, port string, args []string, env []
 
 	networkingConfig := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
-			name: &network.EndpointSettings{
+			name: {
 				Aliases: []string{containerName},
 			},
 		},
 	}
 
-	// create the container
-	resp, err := docker.ContainerCreate(ctx, &container.Config{
+	config := &container.Config{
 		Image: image,
 		Cmd:   append([]string{"server"}, args...),
 		ExposedPorts: nat.PortSet{
@@ -92,41 +108,17 @@ func createServer(verbose bool, image string, port string, args []string, env []
 		},
 		Env:    env,
 		Labels: containerLabels,
-	}, hostConfig, networkingConfig, containerName)
+	}
+	id, err := startContainer(verbose, config, hostConfig, networkingConfig, containerName)
 	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't create container %s\n%+v", containerName, err)
 	}
 
-	// start the container
-	if err := docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return "", fmt.Errorf("ERROR: couldn't start container %s\n%+v", containerName, err)
-	}
-
-	return resp.ID, nil
-
+	return id, nil
 }
 
 // createWorker creates/starts a k3s agent node that connects to the server
 func createWorker(verbose bool, image string, args []string, env []string, name string, volumes []string, postfix string, serverPort string) (string, error) {
-	ctx := context.Background()
-	docker, err := client.NewEnvClient()
-	if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
-	}
-
-	// pull the required docker image
-	reader, err := docker.ImagePull(ctx, image, types.ImagePullOptions{})
-	if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't pull image %s\n%+v", image, err)
-	}
-	if verbose {
-		_, err := io.Copy(os.Stdout, reader)
-		if err != nil {
-			log.Printf("WARNING: couldn't get docker output\n%+v", err)
-		}
-	}
-
-	// configure container options (host/network configuration, labels, env vars, etc.)
 	containerLabels := make(map[string]string)
 	containerLabels["app"] = "k3d"
 	containerLabels["component"] = "worker"
@@ -151,28 +143,24 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 
 	networkingConfig := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
-			name: &network.EndpointSettings{
+			name: {
 				Aliases: []string{containerName},
 			},
 		},
 	}
 
-	// create the container
-	resp, err := docker.ContainerCreate(ctx, &container.Config{
+	config := &container.Config{
 		Image:  image,
 		Env:    env,
 		Labels: containerLabels,
-	}, hostConfig, networkingConfig, containerName)
-	if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't create container %s\n%+v", containerName, err)
 	}
 
-	// start the container
-	if err := docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	id, err := startContainer(verbose, config, hostConfig, networkingConfig, containerName)
+	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't start container %s\n%+v", containerName, err)
 	}
 
-	return resp.ID, nil
+	return id, nil
 }
 
 // removeContainer tries to rm a container, selected by Docker ID, and does a rm -f if it fails (e.g. if container is still running)
