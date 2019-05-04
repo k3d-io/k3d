@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/docker/docker/api/types/filters"
-
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 )
 
@@ -18,6 +17,22 @@ func createClusterNetwork(clusterName string) (string, error) {
 	docker, err := client.NewEnvClient()
 	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+	}
+
+	args := filters.NewArgs()
+	args.Add("label", "app=k3d")
+	args.Add("label", "cluster="+clusterName)
+	nl, err := docker.NetworkList(ctx, types.NetworkListOptions{Filters: args})
+	if err != nil {
+		return "", fmt.Errorf("Failed to list networks\n%+v", err)
+	}
+
+	if len(nl) > 1 {
+		log.Printf("WARNING: Found %d networks for %s when we only expect 1\n", len(nl), clusterName)
+	}
+
+	if len(nl) > 0 {
+		return nl[0].ID, nil
 	}
 
 	// create the network with a set of labels and the cluster name as network name
