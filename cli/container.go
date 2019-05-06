@@ -101,8 +101,9 @@ func createServer(verbose bool, image string, port string, args []string, env []
 	}
 
 	config := &container.Config{
-		Image: image,
-		Cmd:   append([]string{"server"}, args...),
+		Hostname: containerName,
+		Image:    image,
+		Cmd:      append([]string{"server"}, args...),
 		ExposedPorts: nat.PortSet{
 			containerPort: struct{}{},
 		},
@@ -150,9 +151,10 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 	}
 
 	config := &container.Config{
-		Image:  image,
-		Env:    env,
-		Labels: containerLabels,
+		Hostname: containerName,
+		Image:    image,
+		Env:      env,
+		Labels:   containerLabels,
 	}
 
 	id, err := startContainer(verbose, config, hostConfig, networkingConfig, containerName)
