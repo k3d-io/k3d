@@ -190,7 +190,8 @@ func createServer(verbose bool, image string, port string, args []string, env []
 }
 
 // createWorker creates/starts a k3s agent node that connects to the server
-func createWorker(verbose bool, image string, args []string, env []string, name string, volumes []string, postfix int, serverPort string) (string, error) {
+func createWorker(verbose bool, image string, args []string, env []string, name string, volumes []string,
+		  postfix int, serverPort string, pPorts *PublishedPorts) (string, error) {
 	containerLabels := make(map[string]string)
 	containerLabels["app"] = "k3d"
 	containerLabels["component"] = "worker"
@@ -201,11 +202,14 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 
 	env = append(env, fmt.Sprintf("K3S_URL=https://k3d-%s-server:%s", name, serverPort))
 
+	workerPublishedPorts := pPorts.Offset(postfix + 1)
+
 	hostConfig := &container.HostConfig{
 		Tmpfs: map[string]string{
 			"/run":     "",
 			"/var/run": "",
 		},
+		PortBindings: workerPublishedPorts.PortBindings,
 		Privileged: true,
 	}
 
@@ -226,6 +230,7 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 		Image:    image,
 		Env:      env,
 		Labels:   containerLabels,
+		ExposedPorts: workerPublishedPorts.ExposedPorts,
 	}
 
 	id, err := startContainer(verbose, config, hostConfig, networkingConfig, containerName)
