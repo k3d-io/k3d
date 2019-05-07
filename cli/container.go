@@ -138,7 +138,8 @@ func startContainer(verbose bool, config *container.Config, hostConfig *containe
 	return resp.ID, nil
 }
 
-func createServer(verbose bool, image string, port string, args []string, env []string, name string, volumes []string) (string, error) {
+func createServer(verbose bool, image string, port string, args []string, env []string,
+                  name string, volumes []string, pPorts *PublishedPorts) (string, error) {
 	log.Printf("Creating server using %s...\n", image)
 
 	containerLabels := make(map[string]string)
@@ -149,17 +150,14 @@ func createServer(verbose bool, image string, port string, args []string, env []
 
 	containerName := fmt.Sprintf("k3d-%s-server", name)
 
-	containerPort := nat.Port(fmt.Sprintf("%s/tcp", port))
+	apiPortSpec := fmt.Sprintf("0.0.0.0:%s:%s/tcp", port, port)
+	serverPublishedPorts, err := pPorts.AddPort(apiPortSpec)
+	if (err != nil) {
+		log.Fatalf("Error: failed to parse API port spec %s \n%+v", apiPortSpec, err)
+	}
 
 	hostConfig := &container.HostConfig{
-		PortBindings: nat.PortMap{
-			containerPort: []nat.PortBinding{
-				{
-					HostIP:   "0.0.0.0",
-					HostPort: port,
-				},
-			},
-		},
+		PortBindings: serverPublishedPorts.PortBindings,
 		Privileged: true,
 	}
 
@@ -179,9 +177,7 @@ func createServer(verbose bool, image string, port string, args []string, env []
 		Hostname: containerName,
 		Image:    image,
 		Cmd:      append([]string{"server"}, args...),
-		ExposedPorts: nat.PortSet{
-			containerPort: struct{}{},
-		},
+		ExposedPorts: serverPublishedPorts.ExposedPorts,
 		Env:    env,
 		Labels: containerLabels,
 	}

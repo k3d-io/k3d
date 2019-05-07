@@ -55,6 +55,10 @@ func main() {
 					Name:  "volume, v",
 					Usage: "Mount one or more volumes into every node of the cluster (Docker notation: `source:destination[,source:destination]`)",
 				},
+				cli.StringSliceFlag{
+					Name:  "publish, add-port",
+					Usage: "publish k3s node ports to the host (Docker notation: `ip:public:private/proto`, use multiple options to expose more ports)",
+				},
 				cli.StringFlag{
 					Name:  "version",
 					Value: version.GetK3sVersion(),
