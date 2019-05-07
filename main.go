@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -8,6 +9,9 @@ import (
 	"github.com/rancher/k3d/version"
 	"github.com/urfave/cli"
 )
+
+// defaultK3sImage specifies the default image being used for server and workers
+const defaultK3sImage = "docker.io/rancher/k3s"
 
 // main represents the CLI application
 func main() {
@@ -56,8 +60,8 @@ func main() {
 					Usage: "Mount one or more volumes into every node of the cluster (Docker notation: `source:destination[,source:destination]`)",
 				},
 				cli.StringFlag{
-					Name:  "version, tag",
-					Value: version.GetK3sVersion(),
+					// TODO: to be deprecated
+					Name:  "version",
 					Usage: "Choose the k3s image version",
 				},
 				cli.IntFlag{
@@ -76,8 +80,8 @@ func main() {
 				},
 				cli.StringFlag{
 					Name:  "image, i",
-					Usage: "Specify a k3s image (repo only)",
-					Value: "docker.io/rancher/k3s",
+					Usage: "Specify a k3s image (Format: <repo>/<image>:<tag>)",
+					Value: fmt.Sprintf("%s:%s", defaultK3sImage, version.GetK3sVersion()),
 				},
 				cli.StringSliceFlag{
 					Name:  "server-arg, x",
