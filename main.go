@@ -52,7 +52,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, n",
-					Value: "k3s_default",
+					Value: "k3s-default",
 					Usage: "Set a name for the cluster",
 				},
 				cli.StringFlag{
@@ -107,7 +107,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, n",
-					Value: "k3s_default",
+					Value: "k3s-default",
 					Usage: "name of the cluster",
 				},
 				cli.BoolFlag{
@@ -124,7 +124,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, n",
-					Value: "k3s_default",
+					Value: "k3s-default",
 					Usage: "Name of the cluster",
 				},
 				cli.BoolFlag{
@@ -141,7 +141,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, n",
-					Value: "k3s_default",
+					Value: "k3s-default",
 					Usage: "Name of the cluster",
 				},
 				cli.BoolFlag{
@@ -171,7 +171,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, n",
-					Value: "k3s_default",
+					Value: "k3s-default",
 					Usage: "Name of the cluster",
 				},
 				cli.BoolFlag{
