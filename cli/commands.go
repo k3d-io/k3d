@@ -71,8 +71,18 @@ func CreateCluster(c *cli.Context) error {
 		k3sServerArgs = append(k3sServerArgs, c.StringSlice("server-arg")...)
 	}
 
+	fmt.Println("==========")
+	pm, err := createPortMap(c.StringSlice("publish"))
+	fmt.Printf("pm: %+v \n err: %+v \n", pm, err)
+	for _, x := range *pm {
+		fmt.Printf("x: %+v\n -> Ports: %+v\n", x, x.Ports)
+	}
+	fmt.Println("==========")
 	publishedPorts, err := createPublishedPorts(c.StringSlice("publish"))
-	if (err != nil) {
+	fmt.Printf("pm: %+v \n err: %+v \n", publishedPorts, err)
+	fmt.Println("==========")
+
+	if err != nil {
 		log.Fatalf("ERROR: failed to parse the publish parameter.\n%+v", err)
 	}
 
