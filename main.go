@@ -12,6 +12,7 @@ import (
 
 // defaultK3sImage specifies the default image being used for server and workers
 const defaultK3sImage = "docker.io/rancher/k3s"
+const defaultK3sClusterName string = "k3s-default"
 
 // main represents the CLI application
 func main() {
@@ -52,7 +53,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, n",
-					Value: "k3s-default",
+					Value: defaultK3sClusterName,
 					Usage: "Set a name for the cluster",
 				},
 				cli.StringFlag{
@@ -107,7 +108,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, n",
-					Value: "k3s-default",
+					Value: defaultK3sClusterName,
 					Usage: "name of the cluster",
 				},
 				cli.BoolFlag{
@@ -124,7 +125,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, n",
-					Value: "k3s-default",
+					Value: defaultK3sClusterName,
 					Usage: "Name of the cluster",
 				},
 				cli.BoolFlag{
@@ -141,7 +142,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, n",
-					Value: "k3s-default",
+					Value: defaultK3sClusterName,
 					Usage: "Name of the cluster",
 				},
 				cli.BoolFlag{
@@ -171,7 +172,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, n",
-					Value: "k3s-default",
+					Value: defaultK3sClusterName,
 					Usage: "Name of the cluster",
 				},
 				cli.BoolFlag{
