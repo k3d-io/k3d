@@ -14,17 +14,17 @@ type PublishedPorts struct {
 	PortBindings map[nat.Port][]nat.PortBinding
 }
 
-// Portmap maps node roles/names to a set of PublishedPorts
-type Portmap struct {
-	Node  string
-	Ports *PublishedPorts
-}
-
 // defaultNodes describes the type of nodes on which a port should be exposed by default
 const defaultNodes = "all"
 
-// createPortMap creates a list of portmaps that map nodes (roles or names) to a list of published ports
-func createPortMap(specs []string) (*[]Portmap, error) {
+// mapping a node role to groups that should be applied to it
+var nodeRuleGroupsMap = map[string][]string{
+	"worker": []string{"all", "workers"},
+	"server": []string{"all", "server", "master"},
+}
+
+// mapNodesToPortSpecs maps nodes to portSpecs
+func mapNodesToPortSpecs(specs []string) (map[string][]string, error) {
 
 	if err := validatePortSpecs(specs); err != nil {
 		return nil, err
@@ -40,23 +40,13 @@ func createPortMap(specs []string) (*[]Portmap, error) {
 		}
 	}
 
-	portmaps := []Portmap{}
-	for node, portSpecs := range nodeToPortSpecMap {
-		ports, err := createPublishedPorts(portSpecs)
-		if err != nil {
-			return nil, err
-		}
-		newPortMap := Portmap{
-			Node:  node,
-			Ports: ports,
-		}
-		portmaps = append(portmaps, newPortMap)
-	}
-	return &portmaps, nil
+	fmt.Printf("nodeToPortSpecMap: %+v\n", nodeToPortSpecMap)
+
+	return nodeToPortSpecMap, nil
 }
 
 // The factory function for PublishedPorts
-func createPublishedPorts(specs []string) (*PublishedPorts, error) {
+func CreatePublishedPorts(specs []string) (*PublishedPorts, error) {
 	if len(specs) == 0 {
 		var newExposedPorts = make(map[nat.Port]struct{}, 1)
 		var newPortBindings = make(map[nat.Port][]nat.PortBinding, 1)
@@ -150,4 +140,40 @@ func (p *PublishedPorts) AddPort(portSpec string) (*PublishedPorts, error) {
 	}
 
 	return &PublishedPorts{ExposedPorts: newExposedPorts, PortBindings: newPortBindings}, nil
+}
+
+// MergePortSpecs merges published ports for a given node
+func MergePortSpecs(nodeToPortSpecMap map[string][]string, role, name string) ([]string, error) {
+
+	portSpecs := []string{}
+
+	// add portSpecs according to node role
+	for _, group := range nodeRuleGroupsMap[role] {
+		for _, v := range nodeToPortSpecMap[group] {
+			exists := false
+			for _, i := range portSpecs {
+				if v == i {
+					exists = true
+				}
+			}
+			if !exists {
+				portSpecs = append(portSpecs, v)
+			}
+		}
+	}
+
+	// add portSpecs according to node name
+	for _, v := range nodeToPortSpecMap[name] {
+		exists := false
+		for _, i := range portSpecs {
+			if v == i {
+				exists = true
+			}
+		}
+		if !exists {
+			portSpecs = append(portSpecs, v)
+		}
+	}
+
+	return portSpecs, nil
 }

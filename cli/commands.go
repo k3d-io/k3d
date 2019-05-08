@@ -71,19 +71,10 @@ func CreateCluster(c *cli.Context) error {
 		k3sServerArgs = append(k3sServerArgs, c.StringSlice("server-arg")...)
 	}
 
-	fmt.Println("==========")
-	pm, err := createPortMap(c.StringSlice("publish"))
-	fmt.Printf("pm: %+v \n err: %+v \n", pm, err)
-	for _, x := range *pm {
-		fmt.Printf("x: %+v\n -> Ports: %+v\n", x, x.Ports)
-	}
-	fmt.Println("==========")
-	publishedPorts, err := createPublishedPorts(c.StringSlice("publish"))
-	fmt.Printf("pm: %+v \n err: %+v \n", publishedPorts, err)
-	fmt.Println("==========")
-
+	// new port map
+	portmap, err := mapNodesToPortSpecs(c.StringSlice("publish"))
 	if err != nil {
-		log.Fatalf("ERROR: failed to parse the publish parameter.\n%+v", err)
+		log.Fatal(err)
 	}
 
 	// create the server
@@ -96,7 +87,7 @@ func CreateCluster(c *cli.Context) error {
 		env,
 		c.String("name"),
 		strings.Split(c.String("volume"), ","),
-		publishedPorts,
+		portmap,
 	)
 	if err != nil {
 		log.Fatalf("ERROR: failed to create cluster\n%+v", err)
@@ -160,12 +151,12 @@ func CreateCluster(c *cli.Context) error {
 				strings.Split(c.String("volume"), ","),
 				i,
 				c.String("port"),
-				publishedPorts,
+				portmap,
 			)
 			if err != nil {
 				return fmt.Errorf("ERROR: failed to create worker node for cluster %s\n%+v", c.String("name"), err)
 			}
-			fmt.Printf("Created worker with ID %s\n", workerID)
+			log.Printf("Created worker with ID %s\n", workerID)
 		}
 	}
 

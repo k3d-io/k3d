@@ -63,7 +63,7 @@ func startContainer(verbose bool, config *container.Config, hostConfig *containe
 }
 
 func createServer(verbose bool, image string, port string, args []string, env []string,
-	name string, volumes []string, pPorts *PublishedPorts) (string, error) {
+	name string, volumes []string, nodeToPortSpecMap map[string][]string) (string, error) {
 	log.Printf("Creating server using %s...\n", image)
 
 	containerLabels := make(map[string]string)
@@ -74,10 +74,20 @@ func createServer(verbose bool, image string, port string, args []string, env []
 
 	containerName := fmt.Sprintf("k3d-%s-server", name)
 
-	apiPortSpec := fmt.Sprintf("0.0.0.0:%s:%s/tcp", port, port)
-	serverPublishedPorts, err := pPorts.AddPort(apiPortSpec)
+	// ports to be assigned to the server belong to roles
+	// all, server or <server-container-name>
+	serverPorts, err := MergePortSpecs(nodeToPortSpecMap, "server", containerName)
 	if err != nil {
-		log.Fatalf("Error: failed to parse API port spec %s \n%+v", apiPortSpec, err)
+		return "", err
+	}
+
+	apiPortSpec := fmt.Sprintf("0.0.0.0:%s:%s/tcp", port, port)
+
+	serverPorts = append(serverPorts, apiPortSpec)
+
+	serverPublishedPorts, err := CreatePublishedPorts(serverPorts)
+	if err != nil {
+		log.Fatalf("Error: failed to parse port specs %+v \n%+v", serverPorts, err)
 	}
 
 	hostConfig := &container.HostConfig{
@@ -115,7 +125,7 @@ func createServer(verbose bool, image string, port string, args []string, env []
 
 // createWorker creates/starts a k3s agent node that connects to the server
 func createWorker(verbose bool, image string, args []string, env []string, name string, volumes []string,
-	postfix int, serverPort string, pPorts *PublishedPorts) (string, error) {
+	postfix int, serverPort string, nodeToPortSpecMap map[string][]string) (string, error) {
 	containerLabels := make(map[string]string)
 	containerLabels["app"] = "k3d"
 	containerLabels["component"] = "worker"
@@ -126,7 +136,17 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 
 	env = append(env, fmt.Sprintf("K3S_URL=https://k3d-%s-server:%s", name, serverPort))
 
-	workerPublishedPorts := pPorts.Offset(postfix + 1)
+	// ports to be assigned to the server belong to roles
+	// all, server or <server-container-name>
+	workerPorts, err := MergePortSpecs(nodeToPortSpecMap, "worker", containerName)
+	if err != nil {
+		return "", err
+	}
+	workerPublishedPorts, err := CreatePublishedPorts(workerPorts)
+	if err != nil {
+		return "", err
+	}
+	workerPublishedPorts = workerPublishedPorts.Offset(postfix + 1)
 
 	hostConfig := &container.HostConfig{
 		Tmpfs: map[string]string{
