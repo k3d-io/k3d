@@ -38,7 +38,7 @@ func createPublishedPorts(specs []string) (*PublishedPorts, error) {
 	return &PublishedPorts{ExposedPorts: newExposedPorts, PortBindings: newPortBindings}, err
 }
 
-// Create a new PublishedPort structure, with all host ports are changed by a fixed  'offset'
+// Create a new PublishedPort structure, with all host ports are changed by a fixed 'offset'
 func (p PublishedPorts) Offset(offset int) (*PublishedPorts) {
 	var newExposedPorts = make(map[nat.Port]struct{}, len(p.ExposedPorts))
 	var newPortBindings = make(map[nat.Port][]nat.PortBinding, len(p.PortBindings))
@@ -191,7 +191,7 @@ func createServer(verbose bool, image string, port string, args []string, env []
 
 // createWorker creates/starts a k3s agent node that connects to the server
 func createWorker(verbose bool, image string, args []string, env []string, name string, volumes []string,
-		  postfix int, serverPort string, pPorts *PublishedPorts) (string, error) {
+		  postfix int, serverPort string, pPorts *PublishedPorts, publishOffset int) (string, error) {
 	containerLabels := make(map[string]string)
 	containerLabels["app"] = "k3d"
 	containerLabels["component"] = "worker"
@@ -202,7 +202,7 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 
 	env = append(env, fmt.Sprintf("K3S_URL=https://k3d-%s-server:%s", name, serverPort))
 
-	workerPublishedPorts := pPorts.Offset(postfix + 1)
+	workerPublishedPorts := pPorts.Offset(publishOffset * (postfix + 1))
 
 	hostConfig := &container.HostConfig{
 		Tmpfs: map[string]string{

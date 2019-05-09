@@ -62,7 +62,12 @@ func main() {
 				},
 				cli.StringSliceFlag{
 					Name:  "publish, add-port",
-					Usage: "publish k3s node ports to the host (Docker notation: `ip:public:private/proto`, use multiple options to expose more ports)",
+					Usage: "Publish k3s node ports to the host (Docker notation: `ip:public:private/proto`, use multiple options to expose more ports)",
+				},
+				cli.IntFlag{
+					Name:  "publish-offset, add-port-offset",
+					Value: 1,
+					Usage: "Host port number increments when publishing ports for the worker nodes",
 				},
 				cli.StringFlag{
 					// TODO: to be deprecated

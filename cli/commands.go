@@ -175,6 +175,7 @@ func CreateCluster(c *cli.Context) error {
 				i,
 				c.String("port"),
 				publishedPorts,
+				c.Int("publish-offset"),
 			)
 			if err != nil {
 				return fmt.Errorf("ERROR: failed to create worker node for cluster %s\n%+v", c.String("name"), err)
