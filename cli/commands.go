@@ -95,6 +95,11 @@ func CreateCluster(c *cli.Context) error {
 		k3sServerArgs = append(k3sServerArgs, c.StringSlice("server-arg")...)
 	}
 
+	publishedPorts, err := createPublishedPorts(c.StringSlice("publish"))
+	if (err != nil) {
+		log.Fatalf("ERROR: failed to parse the publish parameter.\n%+v", err)
+	}
+
 	// create the server
 	log.Printf("Creating cluster [%s]", c.String("name"))
 	dockerID, err := createServer(
@@ -105,6 +110,7 @@ func CreateCluster(c *cli.Context) error {
 		env,
 		c.String("name"),
 		strings.Split(c.String("volume"), ","),
+		publishedPorts,
 	)
 	if err != nil {
 		log.Fatalf("ERROR: failed to create cluster\n%+v", err)
@@ -166,8 +172,9 @@ func CreateCluster(c *cli.Context) error {
 				env,
 				c.String("name"),
 				strings.Split(c.String("volume"), ","),
-				strconv.Itoa(i),
+				i,
 				c.String("port"),
+				publishedPorts,
 			)
 			if err != nil {
 				return fmt.Errorf("ERROR: failed to create worker node for cluster %s\n%+v", c.String("name"), err)
