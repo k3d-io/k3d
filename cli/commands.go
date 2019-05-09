@@ -23,6 +23,8 @@ import (
 	"github.com/urfave/cli"
 )
 
+const defaultRegistry = "docker.io"
+
 // CheckTools checks if the docker API server is responding
 func CheckTools(c *cli.Context) error {
 	log.Print("Checking docker...")
@@ -42,6 +44,28 @@ func CheckTools(c *cli.Context) error {
 
 // CreateCluster creates a new single-node cluster container and initializes the cluster directory
 func CreateCluster(c *cli.Context) error {
+
+	if err := CheckClusterName(c.String("name")); err != nil {
+		return err
+	}
+
+	// define image
+	image := c.String("image")
+	if c.IsSet("version") {
+		// TODO: --version to be deprecated
+		log.Println("[WARNING] The `--version` flag will be deprecated soon, please use `--image rancher/k3s:<version>` instead")
+		if c.IsSet("image") {
+			// version specified, custom image = error (to push deprecation of version flag)
+			log.Fatalln("[ERROR] Please use `--image <image>:<version>` instead of --image and --version")
+		} else {
+			// version specified, default image = ok (until deprecation of version flag)
+			image = fmt.Sprintf("%s:%s", strings.Split(image, ":")[0], c.String("version"))
+		}
+	}
+	if len(strings.Split(image, "/")) <= 2 {
+		// fallback to default registry
+		image = fmt.Sprintf("%s/%s", defaultRegistry, image)
+	}
 
 	// create cluster network
 	networkID, err := createClusterNetwork(c.String("name"))
@@ -81,7 +105,7 @@ func CreateCluster(c *cli.Context) error {
 	log.Printf("Creating cluster [%s]", c.String("name"))
 	dockerID, err := createServer(
 		c.GlobalBool("verbose"),
-		fmt.Sprintf("docker.io/rancher/k3s:%s", c.String("version")),
+		image,
 		c.String("port"),
 		k3sServerArgs,
 		env,
@@ -144,7 +168,7 @@ func CreateCluster(c *cli.Context) error {
 		for i := 0; i < c.Int("workers"); i++ {
 			workerID, err := createWorker(
 				c.GlobalBool("verbose"),
-				fmt.Sprintf("docker.io/rancher/k3s:%s", c.String("version")),
+				image,
 				k3sWorkerArgs,
 				env,
 				c.String("name"),

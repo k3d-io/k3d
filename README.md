@@ -13,7 +13,7 @@ This repository is based on [@zeerorg](https://github.com/zeerorg/)'s [zeerorg/k
 
 - [docker](https://docs.docker.com/install/)
 
-## Install
+## Get
 
 You have several options there:
 
@@ -21,7 +21,7 @@ You have several options there:
   - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
   - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
 - Grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
-- Via go: `go install github.com/rancher/k3d`
+- Via go: `go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
 
 or...
 
@@ -32,7 +32,7 @@ or...
    - 'make install-tools' to make sure required go packages are installed
 3. Inside the repo run
    - `make build` to build for your current system
-   - `go install` to install it to your `GOPATH`
+   - `go install` to install it to your `GOPATH` (**Note**: this will give you unreleased/bleeding-edge changes)
    - `make build-cross` to build for all systems
 
 ## Usage
