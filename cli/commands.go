@@ -111,6 +111,7 @@ func CreateCluster(c *cli.Context) error {
 		c.String("name"),
 		strings.Split(c.String("volume"), ","),
 		publishedPorts,
+		!c.Bool("no-remove"),
 	)
 	if err != nil {
 		log.Printf("ERROR: failed to create cluster\n%+v", err)
@@ -180,6 +181,7 @@ func CreateCluster(c *cli.Context) error {
 				i,
 				c.String("port"),
 				publishedPorts,
+				!c.Bool("no-remove"),
 			)
 			if err != nil {
 				return fmt.Errorf("ERROR: failed to create worker node for cluster %s\n%+v", c.String("name"), err)

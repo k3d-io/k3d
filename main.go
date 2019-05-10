@@ -60,6 +60,10 @@ func main() {
 					Name:  "volume, v",
 					Usage: "Mount one or more volumes into every node of the cluster (Docker notation: `source:destination[,source:destination]`)",
 				},
+				cli.BoolFlag{
+					Name:  "no-remove, no-rm",
+					Usage: "Do not remove containers after deletion",
+				},
 				cli.StringSliceFlag{
 					Name:  "publish, add-port",
 					Usage: "publish k3s node ports to the host (Docker notation: `ip:public:private/proto`, use multiple options to expose more ports)",
