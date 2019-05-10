@@ -113,7 +113,12 @@ func CreateCluster(c *cli.Context) error {
 		publishedPorts,
 	)
 	if err != nil {
-		log.Fatalf("ERROR: failed to create cluster\n%+v", err)
+		log.Printf("ERROR: failed to create cluster\n%+v", err)
+		delErr := DeleteCluster(c)
+		if delErr != nil {
+			return delErr
+		}
+		os.Exit(1)
 	}
 
 	ctx := context.Background()
