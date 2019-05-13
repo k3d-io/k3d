@@ -139,6 +139,7 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 	// ports to be assigned to the server belong to roles
 	// all, server or <server-container-name>
 	workerPorts, err := MergePortSpecs(nodeToPortSpecMap, "worker", containerName)
+	fmt.Printf("%s -> ports: %+v\n", containerName, workerPorts)
 	if err != nil {
 		return "", err
 	}
