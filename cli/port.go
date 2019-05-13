@@ -59,11 +59,11 @@ func CreatePublishedPorts(specs []string) (*PublishedPorts, error) {
 
 // validatePortSpecs matches the provided port specs against a set of rules to enable early exit if something is wrong
 func validatePortSpecs(specs []string) error {
-	// regex matching (no sophisticated IP/Hostname matching at the moment)
-	regex := regexp.MustCompile(`^(((?P<host>[\w\.]+)?:)?((?P<hostPort>[0-9]{0,6}):)?(?P<containerPort>[0-9]{1,6}))((/(?P<protocol>udp|tcp))?(?P<nodes>(@(?P<node>[\w-]+))*))$`)
+	// regex matching (no sophisticated IP matching at the moment)
+	regex := regexp.MustCompile(`^(((?P<ip>[\d\.]+)?:)?((?P<hostPort>[0-9]{0,6}):)?(?P<containerPort>[0-9]{1,6}))((/(?P<protocol>udp|tcp))?(?P<nodes>(@(?P<node>[\w-]+))+))$`)
 	for _, spec := range specs {
 		if !regex.MatchString(spec) {
-			return fmt.Errorf("[ERROR] Provided port spec [%s] didn't match format specification", spec)
+			return fmt.Errorf("[ERROR] Provided port spec [%s] didn't match format specification (`[ip:][host-port:]container-port[/protocol]@node-specifier`)", spec)
 		}
 	}
 	return nil
