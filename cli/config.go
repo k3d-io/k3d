@@ -73,6 +73,7 @@ func printClusters(all bool) {
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
+	table.SetAlignment(tablewriter.ALIGN_CENTER)
 	table.SetHeader([]string{"NAME", "IMAGE", "STATUS", "WORKERS"})
 
 	for _, cluster := range clusters {
