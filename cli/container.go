@@ -23,12 +23,12 @@ import (
 
 type PublishedPorts struct {
 	ExposedPorts map[nat.Port]struct{}
-	PortBindings   map[nat.Port][]nat.PortBinding
+	PortBindings map[nat.Port][]nat.PortBinding
 }
 
 // The factory function for PublishedPorts
 func createPublishedPorts(specs []string) (*PublishedPorts, error) {
-	if  len(specs) == 0 {
+	if len(specs) == 0 {
 		var newExposedPorts = make(map[nat.Port]struct{}, 1)
 		var newPortBindings = make(map[nat.Port][]nat.PortBinding, 1)
 		return &PublishedPorts{ExposedPorts: newExposedPorts, PortBindings: newPortBindings}, nil
@@ -39,12 +39,12 @@ func createPublishedPorts(specs []string) (*PublishedPorts, error) {
 }
 
 // Create a new PublishedPort structure, with all host ports are changed by a fixed  'offset'
-func (p PublishedPorts) Offset(offset int) (*PublishedPorts) {
+func (p PublishedPorts) Offset(offset int) *PublishedPorts {
 	var newExposedPorts = make(map[nat.Port]struct{}, len(p.ExposedPorts))
 	var newPortBindings = make(map[nat.Port][]nat.PortBinding, len(p.PortBindings))
 
 	for k, v := range p.ExposedPorts {
-              newExposedPorts[k] = v
+		newExposedPorts[k] = v
 	}
 
 	for k, v := range p.PortBindings {
@@ -52,7 +52,7 @@ func (p PublishedPorts) Offset(offset int) (*PublishedPorts) {
 		for i, b := range v {
 			port, _ := nat.ParsePort(b.HostPort)
 			bindings[i].HostIP = b.HostIP
-			bindings[i].HostPort = fmt.Sprintf("%d",  port + offset)
+			bindings[i].HostPort = fmt.Sprintf("%d", port+offset)
 		}
 		newPortBindings[k] = bindings
 	}
@@ -67,16 +67,16 @@ func (p *PublishedPorts) AddPort(portSpec string) (*PublishedPorts, error) {
 		return nil, err
 	}
 
-	var newExposedPorts = make(map[nat.Port]struct{}, len(p.ExposedPorts) + 1)
-	var newPortBindings = make(map[nat.Port][]nat.PortBinding, len(p.PortBindings) + 1)
+	var newExposedPorts = make(map[nat.Port]struct{}, len(p.ExposedPorts)+1)
+	var newPortBindings = make(map[nat.Port][]nat.PortBinding, len(p.PortBindings)+1)
 
 	// Populate the new maps
 	for k, v := range p.ExposedPorts {
-              newExposedPorts[k] = v
+		newExposedPorts[k] = v
 	}
 
 	for k, v := range p.PortBindings {
-              newPortBindings[k] = v
+		newPortBindings[k] = v
 	}
 
 	// Add new ports
@@ -86,7 +86,7 @@ func (p *PublishedPorts) AddPort(portSpec string) (*PublishedPorts, error) {
 			newExposedPorts[port] = struct{}{}
 		}
 
-		bslice, exists := newPortBindings[port];
+		bslice, exists := newPortBindings[port]
 		if !exists {
 			bslice = []nat.PortBinding{}
 		}
@@ -139,7 +139,7 @@ func startContainer(verbose bool, config *container.Config, hostConfig *containe
 }
 
 func createServer(verbose bool, image string, port string, args []string, env []string,
-                  name string, volumes []string, pPorts *PublishedPorts) (string, error) {
+	name string, volumes []string, pPorts *PublishedPorts) (string, error) {
 	log.Printf("Creating server using %s...\n", image)
 
 	containerLabels := make(map[string]string)
@@ -152,13 +152,13 @@ func createServer(verbose bool, image string, port string, args []string, env []
 
 	apiPortSpec := fmt.Sprintf("0.0.0.0:%s:%s/tcp", port, port)
 	serverPublishedPorts, err := pPorts.AddPort(apiPortSpec)
-	if (err != nil) {
+	if err != nil {
 		log.Fatalf("Error: failed to parse API port spec %s \n%+v", apiPortSpec, err)
 	}
 
 	hostConfig := &container.HostConfig{
 		PortBindings: serverPublishedPorts.PortBindings,
-		Privileged: true,
+		Privileged:   true,
 	}
 
 	if len(volumes) > 0 && volumes[0] != "" {
@@ -174,12 +174,12 @@ func createServer(verbose bool, image string, port string, args []string, env []
 	}
 
 	config := &container.Config{
-		Hostname: containerName,
-		Image:    image,
-		Cmd:      append([]string{"server"}, args...),
+		Hostname:     containerName,
+		Image:        image,
+		Cmd:          append([]string{"server"}, args...),
 		ExposedPorts: serverPublishedPorts.ExposedPorts,
-		Env:    env,
-		Labels: containerLabels,
+		Env:          env,
+		Labels:       containerLabels,
 	}
 	id, err := startContainer(verbose, config, hostConfig, networkingConfig, containerName)
 	if err != nil {
@@ -191,7 +191,7 @@ func createServer(verbose bool, image string, port string, args []string, env []
 
 // createWorker creates/starts a k3s agent node that connects to the server
 func createWorker(verbose bool, image string, args []string, env []string, name string, volumes []string,
-		  postfix int, serverPort string, pPorts *PublishedPorts) (string, error) {
+	postfix int, serverPort string, pPorts *PublishedPorts) (string, error) {
 	containerLabels := make(map[string]string)
 	containerLabels["app"] = "k3d"
 	containerLabels["component"] = "worker"
@@ -210,7 +210,7 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 			"/var/run": "",
 		},
 		PortBindings: workerPublishedPorts.PortBindings,
-		Privileged: true,
+		Privileged:   true,
 	}
 
 	if len(volumes) > 0 && volumes[0] != "" {
@@ -226,10 +226,10 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 	}
 
 	config := &container.Config{
-		Hostname: containerName,
-		Image:    image,
-		Env:      env,
-		Labels:   containerLabels,
+		Hostname:     containerName,
+		Image:        image,
+		Env:          env,
+		Labels:       containerLabels,
 		ExposedPorts: workerPublishedPorts.ExposedPorts,
 	}
 
