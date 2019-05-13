@@ -40,8 +40,6 @@ func mapNodesToPortSpecs(specs []string) (map[string][]string, error) {
 		}
 	}
 
-	fmt.Printf("nodeToPortSpecMap: %+v\n", nodeToPortSpecMap)
-
 	return nodeToPortSpecMap, nil
 }
 

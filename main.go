@@ -62,7 +62,12 @@ func main() {
 				},
 				cli.StringSliceFlag{
 					Name:  "publish, add-port",
-					Usage: "publish k3s node ports to the host (Format: `[ip:][host-port:]container-port[/protocol]@node-specifier`, use multiple options to expose more ports)",
+					Usage: "Publish k3s node ports to the host (Format: `[ip:][host-port:]container-port[/protocol]@node-specifier`, use multiple options to expose more ports)",
+				},
+				cli.IntFlag{
+					Name:  "port-auto-offset",
+					Value: 0,
+					Usage: "Automatically add an offset (+ worker number) to the chosen host port when using `--publish` to map the same container-port from multiple k3d workers to the host",
 				},
 				cli.StringFlag{
 					// TODO: to be deprecated
@@ -70,9 +75,10 @@ func main() {
 					Usage: "Choose the k3s image version",
 				},
 				cli.IntFlag{
-					Name:  "port, p",
+					// TODO: only --api-port, -a soon since we want to use --port, -p for the --publish/--add-port functionality
+					Name:  "api-port, a, port, p",
 					Value: 6443,
-					Usage: "Map the Kubernetes ApiServer port to a local port",
+					Usage: "Map the Kubernetes ApiServer port to a local port (Note: --port/-p will have different functionality as of v2.0.0)",
 				},
 				cli.IntFlag{
 					Name:  "timeout, t",

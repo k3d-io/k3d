@@ -92,9 +92,9 @@ func CreateCluster(c *cli.Context) error {
 	// k3s server arguments
 	// TODO: --port will soon be --api-port since we want to re-use --port for arbitrary port mappings
 	if c.IsSet("port") {
-		log.Println("WARNING: --port will soon be used for arbitrary port-mappings. It's original functionality can then be used via --api-port.")
+		log.Println("WARNING: As of v2.0.0 --port will be used for arbitrary port-mappings. It's original functionality can then be used via --api-port.")
 	}
-	k3sServerArgs := []string{"--https-listen-port", c.String("port")}
+	k3sServerArgs := []string{"--https-listen-port", c.String("api-port")}
 	if c.IsSet("server-arg") || c.IsSet("x") {
 		k3sServerArgs = append(k3sServerArgs, c.StringSlice("server-arg")...)
 	}
@@ -110,7 +110,7 @@ func CreateCluster(c *cli.Context) error {
 	dockerID, err := createServer(
 		c.GlobalBool("verbose"),
 		image,
-		c.String("port"),
+		c.String("api-port"),
 		k3sServerArgs,
 		env,
 		c.String("name"),
@@ -183,8 +183,9 @@ func CreateCluster(c *cli.Context) error {
 				c.String("name"),
 				strings.Split(c.String("volume"), ","),
 				i,
-				c.String("port"),
+				c.String("api-port"),
 				portmap,
+				c.Int("port-auto-offset"),
 			)
 			if err != nil {
 				return fmt.Errorf("ERROR: failed to create worker node for cluster %s\n%+v", c.String("name"), err)
