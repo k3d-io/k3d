@@ -2,6 +2,7 @@ package run
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
@@ -24,11 +25,15 @@ var nodeRuleGroupsMap = map[string][]string{
 }
 
 // mapNodesToPortSpecs maps nodes to portSpecs
-func mapNodesToPortSpecs(specs []string) (map[string][]string, error) {
+func mapNodesToPortSpecs(specs []string, createdNodes []string) (map[string][]string, error) {
 
 	if err := validatePortSpecs(specs); err != nil {
 		return nil, err
 	}
+
+	// check node-specifier possibilitites
+	possibleNodeSpecifiers := []string{"all", "workers", "server", "master"}
+	possibleNodeSpecifiers = append(possibleNodeSpecifiers, createdNodes...)
 
 	nodeToPortSpecMap := make(map[string][]string)
 
@@ -36,14 +41,25 @@ func mapNodesToPortSpecs(specs []string) (map[string][]string, error) {
 		nodes, portSpec := extractNodes(spec)
 
 		for _, node := range nodes {
-			nodeToPortSpecMap[node] = append(nodeToPortSpecMap[node], portSpec)
+			// check if node-specifier is valid (either a role or a name) and append to list if matches
+			nodeFound := false
+			for _, name := range possibleNodeSpecifiers {
+				if node == name {
+					nodeFound = true
+					nodeToPortSpecMap[node] = append(nodeToPortSpecMap[node], portSpec)
+					break
+				}
+			}
+			if !nodeFound {
+				log.Printf("WARNING: Unknown node-specifier [%s] in port mapping entry [%s]", node, spec)
+			}
 		}
 	}
 
 	return nodeToPortSpecMap, nil
 }
 
-// The factory function for PublishedPorts
+// CreatePublishedPorts is the factory function for PublishedPorts
 func CreatePublishedPorts(specs []string) (*PublishedPorts, error) {
 	if len(specs) == 0 {
 		var newExposedPorts = make(map[nat.Port]struct{}, 1)

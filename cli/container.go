@@ -72,7 +72,7 @@ func createServer(verbose bool, image string, apiPort string, args []string, env
 	containerLabels["created"] = time.Now().Format("2006-01-02 15:04:05")
 	containerLabels["cluster"] = name
 
-	containerName := fmt.Sprintf("k3d-%s-server", name)
+	containerName := GetContainerName("server", name, -1)
 
 	// ports to be assigned to the server belong to roles
 	// all, server or <server-container-name>
@@ -132,7 +132,7 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 	containerLabels["created"] = time.Now().Format("2006-01-02 15:04:05")
 	containerLabels["cluster"] = name
 
-	containerName := fmt.Sprintf("k3d-%s-worker-%d", name, postfix)
+	containerName := GetContainerName("worker", name, postfix)
 
 	env = append(env, fmt.Sprintf("K3S_URL=https://k3d-%s-server:%s", name, serverPort))
 
