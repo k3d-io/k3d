@@ -15,7 +15,7 @@ type PublishedPorts struct {
 }
 
 // defaultNodes describes the type of nodes on which a port should be exposed by default
-const defaultNodes = "all"
+const defaultNodes = "server"
 
 // mapping a node role to groups that should be applied to it
 var nodeRuleGroupsMap = map[string][]string{
