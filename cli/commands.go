@@ -95,7 +95,7 @@ func CreateCluster(c *cli.Context) error {
 	// k3s server arguments
 	// TODO: --port will soon be --api-port since we want to re-use --port for arbitrary port mappings
 	if c.IsSet("port") {
-		log.Println("WARNING: As of v2.0.0 --port will be used for arbitrary port-mappings. It's original functionality can then be used via --api-port.")
+		log.Println("INFO: As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
 	}
 	k3sServerArgs := []string{"--https-listen-port", c.String("api-port")}
 	if c.IsSet("server-arg") || c.IsSet("x") {
