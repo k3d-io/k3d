@@ -98,6 +98,26 @@ func printClusters(all bool) {
 	}
 }
 
+// Classify cluster state: Running, Stopped or Abnormal
+func getClusterStatus(server types.Container, workers []types.Container) (string) {
+	// The cluster is in the abnromal state when server state and the worker
+	// states don't agree.
+	for _, w := range workers {
+		if w.State != server.State {
+			return "unhealthy"
+		}
+	}
+
+	switch server.State {
+	case "exited":  // All containers in this state are most likely
+	                // as the result of running the "k3d stop" command.
+		return "stopped"
+	}
+
+
+	return server.State
+}
+
 // getClusters uses the docker API to get existing clusters and compares that with the list of cluster directories
 func getClusters() (map[string]cluster, error) {
 	ctx := context.Background()
@@ -148,7 +168,7 @@ func getClusters() (map[string]cluster, error) {
 		clusters[clusterName] = cluster{
 			name:        clusterName,
 			image:       server.Image,
-			status:      server.State,
+			status:      getClusterStatus(server, workers),
 			serverPorts: serverPorts,
 			server:      server,
 			workers:     workers,
