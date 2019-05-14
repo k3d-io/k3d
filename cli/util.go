@@ -47,11 +47,15 @@ const clusterNameMaxSize int = 35
 // within the 64 characters limit.
 func CheckClusterName(name string) error {
 	if len(name) > clusterNameMaxSize {
-		return fmt.Errorf("[ERROR] Cluster name is too long")
+		return fmt.Errorf("[ERROR] Cluster name is too long (%d > %d)", len(name), clusterNameMaxSize)
 	}
+	return fmt.Errorf("[ERROR] Invalid cluster name\n%+v", ValidateHostname(name))
+}
 
+// ValidateHostname ensures that a cluster name is also a valid host name according to RFC 1123.
+func ValidateHostname(name string) error {
 	if name[0] == '-' || name[len(name)-1] == '-' {
-		return fmt.Errorf("[ERROR] Cluster name can not start or end with - (dash)")
+		return fmt.Errorf("[ERROR] Hostname [%s] must not start or end with - (dash)", name)
 	}
 
 	for _, c := range name {
@@ -62,7 +66,7 @@ func CheckClusterName(name string) error {
 		case c == '-':
 			break
 		default:
-			return fmt.Errorf("[ERROR] Cluster name contains characters other than 'Aa-Zz', '0-9' or '-'")
+			return fmt.Errorf("[ERROR] Hostname [%s] contains characters other than 'Aa-Zz', '0-9' or '-'", name)
 
 		}
 	}
