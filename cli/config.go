@@ -100,6 +100,8 @@ func printClusters(all bool) {
 	table.SetAlignment(tablewriter.ALIGN_CENTER)
 	table.SetHeader([]string{"NAME", "IMAGE", "STATUS", "WORKERS"})
 
+	tableEmpty := true;
+
 	for _, cluster := range clusters {
 		workersRunning := 0
 		for _, worker := range cluster.workers {
@@ -111,9 +113,33 @@ func printClusters(all bool) {
 		clusterData := []string{cluster.name, cluster.image, cluster.status, workerData}
 		if cluster.status == "running" || all {
 			table.Append(clusterData)
+			tableEmpty = false
 		}
 	}
-	table.Render()
+
+	if !tableEmpty {
+		table.Render()
+	}
+}
+
+// Classify cluster state: Running, Stopped or Abnormal
+func getClusterStatus(server types.Container, workers []types.Container) (string) {
+	// The cluster is in the abnromal state when server state and the worker
+	// states don't agree.
+	for _, w := range workers {
+		if w.State != server.State {
+			return "unhealthy"
+		}
+	}
+
+	switch server.State {
+	case "exited":  // All containers in this state are most likely
+	                // as the result of running the "k3d stop" command.
+		return "stopped"
+	}
+
+
+	return server.State
 }
 
 // getClusters uses the docker API to get existing clusters and compares that with the list of cluster directories
@@ -147,6 +173,7 @@ func getClusters() (map[string]cluster, error) {
 	// for all servers created by k3d, get workers and cluster information
 	for _, server := range k3dServers {
 		filters.Add("label", fmt.Sprintf("cluster=%s", server.Labels["cluster"]))
+		clusterName := server.Labels["cluster"]
 
 		// get workers
 		workers, err := docker.ContainerList(ctx, types.ContainerListOptions{
@@ -154,7 +181,7 @@ func getClusters() (map[string]cluster, error) {
 			Filters: filters,
 		})
 		if err != nil {
-			log.Printf("WARNING: couldn't get worker containers for cluster %s\n%+v", server.Labels["cluster"], err)
+			log.Printf("WARNING: couldn't get worker containers for cluster %s\n%+v", clusterName, err)
 		}
 
 		// save cluster information
@@ -162,17 +189,18 @@ func getClusters() (map[string]cluster, error) {
 		for _, port := range server.Ports {
 			serverPorts = append(serverPorts, strconv.Itoa(int(port.PublicPort)))
 		}
-		clusters[server.Labels["cluster"]] = cluster{
-			name:        server.Labels["cluster"],
+		clusters[clusterName] = cluster{
+			name:        clusterName,
 			image:       server.Image,
-			status:      server.State,
+			status:      getClusterStatus(server, workers),
 			serverPorts: serverPorts,
 			server:      server,
 			workers:     workers,
 		}
 		// clear label filters before searching for next cluster
-		filters.Del("label", fmt.Sprintf("cluster=%s", server.Labels["cluster"]))
+		filters.Del("label", fmt.Sprintf("cluster=%s", clusterName))
 	}
+
 	return clusters, nil
 }
 
