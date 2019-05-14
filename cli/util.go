@@ -49,7 +49,10 @@ func CheckClusterName(name string) error {
 	if len(name) > clusterNameMaxSize {
 		return fmt.Errorf("[ERROR] Cluster name is too long (%d > %d)", len(name), clusterNameMaxSize)
 	}
-	return fmt.Errorf("[ERROR] Invalid cluster name\n%+v", ValidateHostname(name))
+	if err := ValidateHostname(name); err != nil {
+		return fmt.Errorf("[ERROR] Invalid cluster name\n%+v", ValidateHostname(name))
+	}
+	return nil
 }
 
 // ValidateHostname ensures that a cluster name is also a valid host name according to RFC 1123.

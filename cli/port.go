@@ -39,6 +39,10 @@ func mapNodesToPortSpecs(specs []string, createdNodes []string) (map[string][]st
 	for _, spec := range specs {
 		nodes, portSpec := extractNodes(spec)
 
+		if len(nodes) == 0 {
+			nodes = append(nodes, defaultNodes)
+		}
+
 		for _, node := range nodes {
 			// check if node-specifier is valid (either a role or a name) and append to list if matches
 			nodeFound := false
