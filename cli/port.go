@@ -112,7 +112,7 @@ func (p PublishedPorts) Offset(offset int) *PublishedPorts {
 		for i, b := range v {
 			port, _ := nat.ParsePort(b.HostPort)
 			bindings[i].HostIP = b.HostIP
-			bindings[i].HostPort = fmt.Sprintf("%d", port+offset)
+			bindings[i].HostPort = fmt.Sprintf("%d", port*offset)
 		}
 		newPortBindings[k] = bindings
 	}

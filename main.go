@@ -67,7 +67,7 @@ func main() {
 				cli.IntFlag{
 					Name:  "port-auto-offset",
 					Value: 0,
-					Usage: "Automatically add an offset (+ worker number) to the chosen host port when using `--publish` to map the same container-port from multiple k3d workers to the host",
+					Usage: "Automatically add an offset (* worker number) to the chosen host port when using `--publish` to map the same container-port from multiple k3d workers to the host",
 				},
 				cli.StringFlag{
 					// TODO: to be deprecated
