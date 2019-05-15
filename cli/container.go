@@ -196,7 +196,13 @@ func removeContainer(ID string) error {
 	if err != nil {
 		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
-	if err := docker.ContainerRemove(ctx, ID, types.ContainerRemoveOptions{Force: true}); err != nil {
+
+	options := types.ContainerRemoveOptions{
+		RemoveVolumes: true,
+		Force:true,
+	}
+
+	if err := docker.ContainerRemove(ctx, ID, options); err != nil {
 		return fmt.Errorf("FAILURE: couldn't delete container [%s] -> %+v", ID, err)
 	}
 	return nil
