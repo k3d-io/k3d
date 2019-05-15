@@ -32,7 +32,7 @@ PKG_GOLANGCI_LINT := github.com/golangci/golangci-lint/cmd/golangci-lint
 export GO111MODULE=on
 
 # go source files, ignore vendor directory
-SRC = $(shell find . -type f -name '*.go' -not -path "./*/*")
+SRC =  *.go cli/*.go
 
 .PHONY: all build build-cross clean fmt simplify check extra-clean install-tools
 
@@ -53,15 +53,12 @@ extra-clean: clean
 	go clean -i $(PKG_GOLANGCI_LINT)
 
 fmt:
-	@gofmt -l -w $(SRC)
-
-simplify:
 	@gofmt -s -l -w $(SRC)
 
 check:
 	@test -z $(shell gofmt -l main.go | tee /dev/stderr) || echo "[WARN] Fix formatting issues with 'make fmt'"
 	@golangci-lint run
-	@go vet ${SRC}
+	@go vet  main.go
 
 # Check for required executables
 HAS_GOX := $(shell command -v gox 2> /dev/null)
