@@ -46,17 +46,22 @@ const clusterNameMaxSize int = 35
 // so that we can construct the host names based on the cluster name, and still stay
 // within the 64 characters limit.
 func CheckClusterName(name string) error {
-	if len(name) > clusterNameMaxSize {
-		return fmt.Errorf("[ERROR] Cluster name is too long (%d > %d)", len(name), clusterNameMaxSize)
-	}
 	if err := ValidateHostname(name); err != nil {
 		return fmt.Errorf("[ERROR] Invalid cluster name\n%+v", ValidateHostname(name))
+	}
+	if len(name) > clusterNameMaxSize {
+		return fmt.Errorf("[ERROR] Cluster name is too long (%d > %d)", len(name), clusterNameMaxSize)
 	}
 	return nil
 }
 
 // ValidateHostname ensures that a cluster name is also a valid host name according to RFC 1123.
 func ValidateHostname(name string) error {
+
+	if len(name) == 0 {
+		return fmt.Errorf("[ERROR] no name provided")
+	}
+
 	if name[0] == '-' || name[len(name)-1] == '-' {
 		return fmt.Errorf("[ERROR] Hostname [%s] must not start or end with - (dash)", name)
 	}
