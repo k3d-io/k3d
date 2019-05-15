@@ -100,7 +100,7 @@ func printClusters(all bool) {
 	table.SetAlignment(tablewriter.ALIGN_CENTER)
 	table.SetHeader([]string{"NAME", "IMAGE", "STATUS", "WORKERS"})
 
-	tableEmpty := true;
+	tableEmpty := true
 
 	for _, cluster := range clusters {
 		workersRunning := 0
@@ -123,7 +123,7 @@ func printClusters(all bool) {
 }
 
 // Classify cluster state: Running, Stopped or Abnormal
-func getClusterStatus(server types.Container, workers []types.Container) (string) {
+func getClusterStatus(server types.Container, workers []types.Container) string {
 	// The cluster is in the abnromal state when server state and the worker
 	// states don't agree.
 	for _, w := range workers {
@@ -133,11 +133,10 @@ func getClusterStatus(server types.Container, workers []types.Container) (string
 	}
 
 	switch server.State {
-	case "exited":  // All containers in this state are most likely
-	                // as the result of running the "k3d stop" command.
+	case "exited": // All containers in this state are most likely
+		// as the result of running the "k3d stop" command.
 		return "stopped"
 	}
-
 
 	return server.State
 }
