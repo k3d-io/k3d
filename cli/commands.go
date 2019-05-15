@@ -28,6 +28,9 @@ const (
 	defaultServerCount = 1
 )
 
+// Bind mount /dev/mapper for linux users who have lvm/luks/etc in use.
+var defaultBindMounts = []string{"/dev/mapper:/dev/mapper"}
+
 // CheckTools checks if the docker API server is responding
 func CheckTools(c *cli.Context) error {
 	log.Print("Checking docker...")

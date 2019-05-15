@@ -62,6 +62,17 @@ func startContainer(verbose bool, config *container.Config, hostConfig *containe
 	return resp.ID, nil
 }
 
+func processVolumes(volumes []string) []string {
+	newVols := make([]string, 0)
+	for _, v := range volumes {
+		if v != "" {
+			newVols = append(newVols, v)
+		}
+	}
+
+	return newVols
+}
+
 func createServer(verbose bool, image string, apiPort string, args []string, env []string,
 	name string, volumes []string, nodeToPortSpecMap map[string][]string) (string, error) {
 	log.Printf("Creating server using %s...\n", image)
@@ -96,7 +107,7 @@ func createServer(verbose bool, image string, apiPort string, args []string, env
 	}
 
 	if len(volumes) > 0 && volumes[0] != "" {
-		hostConfig.Binds = volumes
+		hostConfig.Binds = processVolumes(volumes)
 	}
 
 	networkingConfig := &network.NetworkingConfig{
@@ -162,7 +173,7 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 	}
 
 	if len(volumes) > 0 && volumes[0] != "" {
-		hostConfig.Binds = volumes
+		hostConfig.Binds = processVolumes(volumes)
 	}
 
 	networkingConfig := &network.NetworkingConfig{
