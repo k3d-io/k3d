@@ -18,83 +18,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
-	"github.com/docker/go-connections/nat"
 )
-
-type PublishedPorts struct {
-	ExposedPorts map[nat.Port]struct{}
-	PortBindings map[nat.Port][]nat.PortBinding
-}
-
-// The factory function for PublishedPorts
-func createPublishedPorts(specs []string) (*PublishedPorts, error) {
-	if len(specs) == 0 {
-		var newExposedPorts = make(map[nat.Port]struct{}, 1)
-		var newPortBindings = make(map[nat.Port][]nat.PortBinding, 1)
-		return &PublishedPorts{ExposedPorts: newExposedPorts, PortBindings: newPortBindings}, nil
-	}
-
-	newExposedPorts, newPortBindings, err := nat.ParsePortSpecs(specs)
-	return &PublishedPorts{ExposedPorts: newExposedPorts, PortBindings: newPortBindings}, err
-}
-
-// Create a new PublishedPort structure, with all host ports are changed by a fixed  'offset'
-func (p PublishedPorts) Offset(offset int) *PublishedPorts {
-	var newExposedPorts = make(map[nat.Port]struct{}, len(p.ExposedPorts))
-	var newPortBindings = make(map[nat.Port][]nat.PortBinding, len(p.PortBindings))
-
-	for k, v := range p.ExposedPorts {
-		newExposedPorts[k] = v
-	}
-
-	for k, v := range p.PortBindings {
-		bindings := make([]nat.PortBinding, len(v))
-		for i, b := range v {
-			port, _ := nat.ParsePort(b.HostPort)
-			bindings[i].HostIP = b.HostIP
-			bindings[i].HostPort = fmt.Sprintf("%d", port+offset)
-		}
-		newPortBindings[k] = bindings
-	}
-
-	return &PublishedPorts{ExposedPorts: newExposedPorts, PortBindings: newPortBindings}
-}
-
-// Create a new PublishedPort struct with one more port, based on 'portSpec'
-func (p *PublishedPorts) AddPort(portSpec string) (*PublishedPorts, error) {
-	portMappings, err := nat.ParsePortSpec(portSpec)
-	if err != nil {
-		return nil, err
-	}
-
-	var newExposedPorts = make(map[nat.Port]struct{}, len(p.ExposedPorts)+1)
-	var newPortBindings = make(map[nat.Port][]nat.PortBinding, len(p.PortBindings)+1)
-
-	// Populate the new maps
-	for k, v := range p.ExposedPorts {
-		newExposedPorts[k] = v
-	}
-
-	for k, v := range p.PortBindings {
-		newPortBindings[k] = v
-	}
-
-	// Add new ports
-	for _, portMapping := range portMappings {
-		port := portMapping.Port
-		if _, exists := newExposedPorts[port]; !exists {
-			newExposedPorts[port] = struct{}{}
-		}
-
-		bslice, exists := newPortBindings[port]
-		if !exists {
-			bslice = []nat.PortBinding{}
-		}
-		newPortBindings[port] = append(bslice, portMapping.Binding)
-	}
-
-	return &PublishedPorts{ExposedPorts: newExposedPorts, PortBindings: newPortBindings}, nil
-}
 
 func startContainer(verbose bool, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
 	ctx := context.Background()
@@ -138,8 +62,8 @@ func startContainer(verbose bool, config *container.Config, hostConfig *containe
 	return resp.ID, nil
 }
 
-func createServer(verbose bool, image string, port string, args []string, env []string,
-	name string, volumes []string, pPorts *PublishedPorts) (string, error) {
+func createServer(verbose bool, image string, apiPort string, args []string, env []string,
+	name string, volumes []string, nodeToPortSpecMap map[string][]string) (string, error) {
 	log.Printf("Creating server using %s...\n", image)
 
 	containerLabels := make(map[string]string)
@@ -148,12 +72,22 @@ func createServer(verbose bool, image string, port string, args []string, env []
 	containerLabels["created"] = time.Now().Format("2006-01-02 15:04:05")
 	containerLabels["cluster"] = name
 
-	containerName := fmt.Sprintf("k3d-%s-server", name)
+	containerName := GetContainerName("server", name, -1)
 
-	apiPortSpec := fmt.Sprintf("0.0.0.0:%s:%s/tcp", port, port)
-	serverPublishedPorts, err := pPorts.AddPort(apiPortSpec)
+	// ports to be assigned to the server belong to roles
+	// all, server or <server-container-name>
+	serverPorts, err := MergePortSpecs(nodeToPortSpecMap, "server", containerName)
 	if err != nil {
-		log.Fatalf("Error: failed to parse API port spec %s \n%+v", apiPortSpec, err)
+		return "", err
+	}
+
+	apiPortSpec := fmt.Sprintf("0.0.0.0:%s:%s/tcp", apiPort, apiPort)
+
+	serverPorts = append(serverPorts, apiPortSpec)
+
+	serverPublishedPorts, err := CreatePublishedPorts(serverPorts)
+	if err != nil {
+		log.Fatalf("Error: failed to parse port specs %+v \n%+v", serverPorts, err)
 	}
 
 	hostConfig := &container.HostConfig{
@@ -191,18 +125,32 @@ func createServer(verbose bool, image string, port string, args []string, env []
 
 // createWorker creates/starts a k3s agent node that connects to the server
 func createWorker(verbose bool, image string, args []string, env []string, name string, volumes []string,
-	postfix int, serverPort string, pPorts *PublishedPorts) (string, error) {
+	postfix int, serverPort string, nodeToPortSpecMap map[string][]string, portAutoOffset int) (string, error) {
 	containerLabels := make(map[string]string)
 	containerLabels["app"] = "k3d"
 	containerLabels["component"] = "worker"
 	containerLabels["created"] = time.Now().Format("2006-01-02 15:04:05")
 	containerLabels["cluster"] = name
 
-	containerName := fmt.Sprintf("k3d-%s-worker-%d", name, postfix)
+	containerName := GetContainerName("worker", name, postfix)
 
 	env = append(env, fmt.Sprintf("K3S_URL=https://k3d-%s-server:%s", name, serverPort))
 
-	workerPublishedPorts := pPorts.Offset(postfix + 1)
+	// ports to be assigned to the server belong to roles
+	// all, server or <server-container-name>
+	workerPorts, err := MergePortSpecs(nodeToPortSpecMap, "worker", containerName)
+	if err != nil {
+		return "", err
+	}
+	workerPublishedPorts, err := CreatePublishedPorts(workerPorts)
+	if err != nil {
+		return "", err
+	}
+	if portAutoOffset > 0 {
+		// TODO: add some checks before to print a meaningful log message saying that we cannot map multiple container ports
+		// to the same host port without a offset
+		workerPublishedPorts = workerPublishedPorts.Offset(postfix + portAutoOffset)
+	}
 
 	hostConfig := &container.HostConfig{
 		Tmpfs: map[string]string{

@@ -23,7 +23,10 @@ import (
 	"github.com/urfave/cli"
 )
 
-const defaultRegistry = "docker.io"
+const (
+	defaultRegistry    = "docker.io"
+	defaultServerCount = 1
+)
 
 // CheckTools checks if the docker API server is responding
 func CheckTools(c *cli.Context) error {
@@ -90,14 +93,19 @@ func CreateCluster(c *cli.Context) error {
 	}
 
 	// k3s server arguments
-	k3sServerArgs := []string{"--https-listen-port", c.String("port")}
+	// TODO: --port will soon be --api-port since we want to re-use --port for arbitrary port mappings
+	if c.IsSet("port") {
+		log.Println("INFO: As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
+	}
+	k3sServerArgs := []string{"--https-listen-port", c.String("api-port")}
 	if c.IsSet("server-arg") || c.IsSet("x") {
 		k3sServerArgs = append(k3sServerArgs, c.StringSlice("server-arg")...)
 	}
 
-	publishedPorts, err := createPublishedPorts(c.StringSlice("publish"))
-	if (err != nil) {
-		log.Fatalf("ERROR: failed to parse the publish parameter.\n%+v", err)
+	// new port map
+	portmap, err := mapNodesToPortSpecs(c.StringSlice("publish"), GetAllContainerNames(c.String("name"), defaultServerCount, c.Int("workers")))
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// create the server
@@ -105,12 +113,12 @@ func CreateCluster(c *cli.Context) error {
 	dockerID, err := createServer(
 		c.GlobalBool("verbose"),
 		image,
-		c.String("port"),
+		c.String("api-port"),
 		k3sServerArgs,
 		env,
 		c.String("name"),
 		strings.Split(c.String("volume"), ","),
-		publishedPorts,
+		portmap,
 	)
 	if err != nil {
 		log.Printf("ERROR: failed to create cluster\n%+v", err)
@@ -178,13 +186,14 @@ func CreateCluster(c *cli.Context) error {
 				c.String("name"),
 				strings.Split(c.String("volume"), ","),
 				i,
-				c.String("port"),
-				publishedPorts,
+				c.String("api-port"),
+				portmap,
+				c.Int("port-auto-offset"),
 			)
 			if err != nil {
 				return fmt.Errorf("ERROR: failed to create worker node for cluster %s\n%+v", c.String("name"), err)
 			}
-			fmt.Printf("Created worker with ID %s\n", workerID)
+			log.Printf("Created worker with ID %s\n", workerID)
 		}
 	}
 
