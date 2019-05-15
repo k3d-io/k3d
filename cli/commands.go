@@ -28,8 +28,16 @@ const (
 	defaultServerCount = 1
 )
 
-// Bind mount /dev/mapper for linux users who have lvm/luks/etc in use.
-var defaultBindMounts = []string{"/dev/mapper:/dev/mapper"}
+var defaultBindMounts = make([]string, 0)
+
+func init() {
+	// populate default bind mounts
+	// IsNotExist check instead of nil in case we don't have perms, but docker will
+	if _, err := os.Stat("/dev/mapper"); !os.IsNotExist(err) {
+		// Bind mount /dev/mapper for linux users who have lvm/luks/etc in use.
+		defaultBindMounts = append(defaultBindMounts, "/dev/mapper:/dev/mapper")
+	}
+}
 
 // CheckTools checks if the docker API server is responding
 func CheckTools(c *cli.Context) error {

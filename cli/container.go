@@ -106,7 +106,7 @@ func createServer(verbose bool, image string, apiPort string, args []string, env
 		Privileged:   true,
 	}
 
-	if len(volumes) > 0 && volumes[0] != "" {
+	if len(volumes) > 0 {
 		hostConfig.Binds = processVolumes(volumes)
 	}
 
