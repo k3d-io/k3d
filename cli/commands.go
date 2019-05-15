@@ -52,6 +52,13 @@ func CreateCluster(c *cli.Context) error {
 		return err
 	}
 
+	if cluster, err := getClusters(false, c.String("name")); err != nil {
+		return err
+	} else if len(cluster) != 0 {
+		// A cluster exists with the same name. Return with an error.
+		return fmt.Errorf("ERROR: Cluster %s already exists", c.String("name"))
+	}
+
 	// define image
 	image := c.String("image")
 	if c.IsSet("version") {
@@ -208,24 +215,10 @@ kubectl cluster-info`, os.Args[0], c.String("name"))
 
 // DeleteCluster removes the containers belonging to a cluster and its local directory
 func DeleteCluster(c *cli.Context) error {
+	clusters, err := getClusters(c.Bool("all"), c.String("name"))
 
-	// operate on one or all clusters
-	clusters := make(map[string]cluster)
-	if !c.Bool("all") {
-		cluster, err := getCluster(c.String("name"))
-		if err != nil {
-			return err
-		}
-		clusters[c.String("name")] = cluster
-	} else {
-		clusterMap, err := getClusters()
-		if err != nil {
-			return fmt.Errorf("ERROR: `--all` specified, but no clusters were found\n%+v", err)
-		}
-		// copy clusterMap
-		for k, v := range clusterMap {
-			clusters[k] = v
-		}
+	if err != nil {
+		return err
 	}
 
 	// remove clusters one by one instead of appending all names to the docker command
@@ -260,24 +253,10 @@ func DeleteCluster(c *cli.Context) error {
 
 // StopCluster stops a running cluster container (restartable)
 func StopCluster(c *cli.Context) error {
+	clusters, err := getClusters(c.Bool("all"), c.String("name"))
 
-	// operate on one or all clusters
-	clusters := make(map[string]cluster)
-	if !c.Bool("all") {
-		cluster, err := getCluster(c.String("name"))
-		if err != nil {
-			return err
-		}
-		clusters[c.String("name")] = cluster
-	} else {
-		clusterMap, err := getClusters()
-		if err != nil {
-			return fmt.Errorf("ERROR: `--all` specified, but no clusters were found\n%+v", err)
-		}
-		// copy clusterMap
-		for k, v := range clusterMap {
-			clusters[k] = v
-		}
+	if err != nil {
+		return err
 	}
 
 	ctx := context.Background()
@@ -312,23 +291,10 @@ func StopCluster(c *cli.Context) error {
 
 // StartCluster starts a stopped cluster container
 func StartCluster(c *cli.Context) error {
-	// operate on one or all clusters
-	clusters := make(map[string]cluster)
-	if !c.Bool("all") {
-		cluster, err := getCluster(c.String("name"))
-		if err != nil {
-			return err
-		}
-		clusters[c.String("name")] = cluster
-	} else {
-		clusterMap, err := getClusters()
-		if err != nil {
-			return fmt.Errorf("ERROR: `--all` specified, but no clusters were found\n%+v", err)
-		}
-		// copy clusterMap
-		for k, v := range clusterMap {
-			clusters[k] = v
-		}
+	clusters, err := getClusters(c.Bool("all"), c.String("name"))
+
+	if err != nil {
+		return err
 	}
 
 	ctx := context.Background()
