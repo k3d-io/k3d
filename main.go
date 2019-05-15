@@ -56,9 +56,9 @@ func main() {
 					Value: defaultK3sClusterName,
 					Usage: "Set a name for the cluster",
 				},
-				cli.StringFlag{
+				cli.StringSliceFlag{
 					Name:  "volume, v",
-					Usage: "Mount one or more volumes into every node of the cluster (Docker notation: `source:destination[,source:destination]`)",
+					Usage: "Mount one or more volumes into every node of the cluster (Docker notation: `source:destination`)",
 				},
 				cli.StringSliceFlag{
 					Name:  "publish, add-port",
