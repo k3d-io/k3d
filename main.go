@@ -23,15 +23,15 @@ func main() {
 	app.Usage = "Run k3s in Docker!"
 	app.Version = version.GetVersion()
 	app.Authors = []cli.Author{
-		cli.Author{
+		{
 			Name:  "Thorsten Klein",
 			Email: "iwilltry42@gmail.com",
 		},
-		cli.Author{
+		{
 			Name:  "Rishabh Gupta",
 			Email: "r.g.gupta@outlook.com",
 		},
-		cli.Author{
+		{
 			Name: "Darren Shepherd",
 		},
 	}

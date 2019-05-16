@@ -19,8 +19,8 @@ const defaultNodes = "server"
 
 // mapping a node role to groups that should be applied to it
 var nodeRuleGroupsMap = map[string][]string{
-	"worker": []string{"all", "workers"},
-	"server": []string{"all", "server", "master"},
+	"worker": {"all", "workers"},
+	"server": {"all", "server", "master"},
 }
 
 // mapNodesToPortSpecs maps nodes to portSpecs
