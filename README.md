@@ -128,5 +128,5 @@ Example Workflow: Create a new cluster and use it with `kubectl`
 
 ## FAQ / Nice to know
 
-- As [@jaredallard](https://github.com/jaredallard) [pointed out](https://github.com/rancher/k3d/pull/48), people running `k3d` on Linux with **LUKS/LVM**, need to mount `/dev/mapper` into the nodes for the setup to work.
+- As [@jaredallard](https://github.com/jaredallard) [pointed out](https://github.com/rancher/k3d/pull/48), people running `k3d` on Linux with **LUKS/LVM**, may need to mount `/dev/mapper` into the nodes for the setup to work.
   - This will do: `k3d create -v /dev/mapper:/dev/mapper`
