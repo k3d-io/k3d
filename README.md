@@ -54,6 +54,8 @@ Example Workflow: Create a new cluster and use it with `kubectl`
 
     `k3d create --api-port 6550 --publish 8081:80 --workers 2`
 
+    - Note: `--api-port 6550` is not required for the example to work. It's used to have `k3s`'s ApiServer listening on port 6550 with that port mapped to the host system.
+
 2. Get the kubeconfig file
 
     `export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"`
@@ -93,11 +95,13 @@ Example Workflow: Create a new cluster and use it with `kubectl`
 
 1. Create a cluster, mapping the port 30080 from worker-0 to localhost:8082
 
-    `k3d create --publish 8082:30080@k3d-k3s-default-worker-0 --workers 2 -a 6550`
+    `k3d create --publish 8082:30080@k3d-k3s-default-worker-0 --workers 2`
+
+    - Note: Kubernetes' default NodePort range is [`30000-32767`](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
 
 ... (Steps 2 and 3 like above) ...
 
-4. Create a NodePort service for it with `kubectl apply -f`
+1. Create a NodePort service for it with `kubectl apply -f`
 
     ```YAML
     apiVersion: v1
@@ -118,6 +122,11 @@ Example Workflow: Create a new cluster and use it with `kubectl`
       type: NodePort
     ```
 
-5. Curl it via localhost
+2. Curl it via localhost
 
     `curl localhost:8082/`
+
+## FAQ / Nice to know
+
+- As [@jaredallard](https://github.com/jaredallard) [pointed out](https://github.com/rancher/k3d/pull/48), people running `k3d` on Linux with **LUKS/LVM**, need to mount `/dev/mapper` into the nodes for the setup to work.
+  - This will do: `k3d create -v /dev/mapper:/dev/mapper`
