@@ -3,6 +3,7 @@ package run
 import (
 	"fmt"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 )
@@ -80,4 +81,35 @@ func ValidateHostname(name string) error {
 	}
 
 	return nil
+}
+
+// checkDefaultBindMounts takes a volumes slice and a defaults slice
+// and appends the volumes to the defaults, with respect to already set vaules
+// in defaults in volumes, so as to not cause duplication of the same string.
+func checkDefaultBindMounts(volumes []string, defaults []string) []string {
+	hm := make(map[string]bool)
+	newVols := make([]string, 0)
+
+	// add the defaults, checking to ensure that the local path (if it's a :) exists
+	for _, v := range defaults {
+		p := strings.Split(v, ":")
+		if len(p) > 1 {
+			// check if the path of a local:remote exists
+			if _, err := os.Stat(p[0]); os.IsNotExist(err) {
+				continue
+			}
+		}
+		newVols = append(newVols, v)
+		hm[v] = true
+	}
+
+	for _, v := range volumes {
+		// skip already set volumes
+		if hm[v] {
+			continue
+		}
+		newVols = append(newVols, v)
+	}
+
+	return newVols
 }

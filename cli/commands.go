@@ -28,16 +28,7 @@ const (
 	defaultServerCount = 1
 )
 
-var defaultBindMounts = make([]string, 0)
-
-func init() {
-	// populate default bind mounts
-	// IsNotExist check instead of nil in case we don't have perms, but docker will
-	if _, err := os.Stat("/dev/mapper"); !os.IsNotExist(err) {
-		// Bind mount /dev/mapper for linux users who have lvm/luks/etc in use.
-		defaultBindMounts = append(defaultBindMounts, "/dev/mapper:/dev/mapper")
-	}
-}
+var defaultBindMounts = []string{"/dev/mapper:/dev/mapper"}
 
 // CheckTools checks if the docker API server is responding
 func CheckTools(c *cli.Context) error {
@@ -135,7 +126,7 @@ func CreateCluster(c *cli.Context) error {
 		k3sServerArgs,
 		env,
 		c.String("name"),
-		c.StringSlice("volume"),
+		checkDefaultBindMounts(c.StringSlice("volume"), defaultBindMounts),
 		portmap,
 	)
 	if err != nil {
@@ -202,7 +193,7 @@ func CreateCluster(c *cli.Context) error {
 				k3sWorkerArgs,
 				env,
 				c.String("name"),
-				c.StringSlice("volume"),
+				checkDefaultBindMounts(c.StringSlice("volume"), defaultBindMounts),
 				i,
 				c.String("api-port"),
 				portmap,
