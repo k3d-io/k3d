@@ -80,6 +80,10 @@ func main() {
 					Value: 6443,
 					Usage: "Map the Kubernetes ApiServer port to a local port (Note: --port/-p will be used for arbitrary port mapping as of v2.0.0, use --api-port/-a instead for setting the api port)",
 				},
+				cli.BoolFlag{
+					Name:  "hostnetwork, host",
+					Usage: "Use host network (only available on linux)",
+				},
 				cli.IntFlag{
 					Name:  "timeout, t",
 					Value: 0,

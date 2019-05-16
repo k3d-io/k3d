@@ -63,7 +63,7 @@ func startContainer(verbose bool, config *container.Config, hostConfig *containe
 }
 
 func createServer(verbose bool, image string, apiPort string, args []string, env []string,
-	name string, volumes []string, nodeToPortSpecMap map[string][]string) (string, error) {
+	name string, volumes []string, nodeToPortSpecMap map[string][]string, hostnetwork bool) (string, error) {
 	log.Printf("Creating server using %s...\n", image)
 
 	containerLabels := make(map[string]string)
@@ -91,7 +91,6 @@ func createServer(verbose bool, image string, apiPort string, args []string, env
 	}
 
 	hostConfig := &container.HostConfig{
-		PortBindings: serverPublishedPorts.PortBindings,
 		Privileged:   true,
 	}
 
@@ -99,22 +98,28 @@ func createServer(verbose bool, image string, apiPort string, args []string, env
 		hostConfig.Binds = volumes
 	}
 
-	networkingConfig := &network.NetworkingConfig{
-		EndpointsConfig: map[string]*network.EndpointSettings{
-			name: {
-				Aliases: []string{containerName},
-			},
-		},
-	}
-
 	config := &container.Config{
-		Hostname:     containerName,
 		Image:        image,
 		Cmd:          append([]string{"server"}, args...),
 		ExposedPorts: serverPublishedPorts.ExposedPorts,
 		Env:          env,
 		Labels:       containerLabels,
 	}
+
+	networkingConfig := &network.NetworkingConfig{}
+
+	if hostnetwork {
+		hostConfig.NetworkMode = "host"
+	} else {
+		config.Hostname = containerName
+		hostConfig.PortBindings = serverPublishedPorts.PortBindings
+		networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
+			name: {
+				Aliases: []string{containerName},
+			},
+		}
+	}
+
 	id, err := startContainer(verbose, config, hostConfig, networkingConfig, containerName)
 	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't create container %s\n%+v", containerName, err)
@@ -125,7 +130,7 @@ func createServer(verbose bool, image string, apiPort string, args []string, env
 
 // createWorker creates/starts a k3s agent node that connects to the server
 func createWorker(verbose bool, image string, args []string, env []string, name string, volumes []string,
-	postfix int, serverPort string, nodeToPortSpecMap map[string][]string, portAutoOffset int) (string, error) {
+	postfix int, serverPort string, nodeToPortSpecMap map[string][]string, portAutoOffset int, hostnetwork bool) (string, error) {
 	containerLabels := make(map[string]string)
 	containerLabels["app"] = "k3d"
 	containerLabels["component"] = "worker"
@@ -157,7 +162,6 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 			"/run":     "",
 			"/var/run": "",
 		},
-		PortBindings: workerPublishedPorts.PortBindings,
 		Privileged:   true,
 	}
 
@@ -165,20 +169,25 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 		hostConfig.Binds = volumes
 	}
 
-	networkingConfig := &network.NetworkingConfig{
-		EndpointsConfig: map[string]*network.EndpointSettings{
-			name: {
-				Aliases: []string{containerName},
-			},
-		},
-	}
-
 	config := &container.Config{
-		Hostname:     containerName,
 		Image:        image,
 		Env:          env,
 		Labels:       containerLabels,
 		ExposedPorts: workerPublishedPorts.ExposedPorts,
+	}
+
+	networkingConfig := &network.NetworkingConfig{}
+
+	if hostnetwork {
+		hostConfig.NetworkMode = "host"
+	} else {
+		config.Hostname = containerName
+		hostConfig.PortBindings = workerPublishedPorts.PortBindings
+		networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
+			name: {
+				Aliases: []string{containerName},
+			},
+		}
 	}
 
 	id, err := startContainer(verbose, config, hostConfig, networkingConfig, containerName)
