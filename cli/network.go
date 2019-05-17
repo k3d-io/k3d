@@ -77,3 +77,34 @@ func deleteClusterNetwork(clusterName string) error {
 	}
 	return nil
 }
+
+// because we do not have support for `host.docker.internal` on linux,
+// we'll utilize the Gateway IP of our custom netwerk to reach the host.
+func getGatewayIP(clusterName string) (string, error) {
+	ctx := context.Background()
+	docker, err := client.NewEnvClient()
+	if err != nil {
+		return "", fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+	}
+
+	filters := filters.NewArgs()
+	filters.Add("label", "app=k3d")
+	filters.Add("label", fmt.Sprintf("cluster=%s", clusterName))
+
+	nl, err := docker.NetworkList(ctx, types.NetworkListOptions{
+		Filters: filters,
+	})
+	if err != nil {
+		return "", fmt.Errorf("ERROR: couldn't find network for cluster %s\n%+v", clusterName, err)
+	}
+
+	if len(nl) > 1 {
+		log.Printf("WARNING: Found %d networks for %s when we only expect 1\n", len(nl), clusterName)
+	}
+
+	if len(nl) > 0 {
+		return nl[0].IPAM.Config[0].Gateway, nil
+	}
+
+	return "", fmt.Errorf("ERROR: couldn't find the network entry for cluster %s\n", clusterName)
+}

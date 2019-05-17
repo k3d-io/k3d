@@ -162,32 +162,37 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 			"/run":     "",
 			"/var/run": "",
 		},
+		PortBindings: workerPublishedPorts.PortBindings,
 		Privileged:   true,
+	}
+
+	if hostnetwork {
+		gateway, err := getGatewayIP(name)
+		if err != nil {
+			return "", fmt.Errorf("ERROR: couldn't find server IP\n%+v", err)
+		}
+		// log.Printf("gateway IP: %s\n", gateway)
+		hostConfig.ExtraHosts = []string{fmt.Sprintf("k3d-%s-server:%s", name, gateway)}
 	}
 
 	if len(volumes) > 0 && volumes[0] != "" {
 		hostConfig.Binds = volumes
 	}
 
+	networkingConfig := &network.NetworkingConfig{
+		EndpointsConfig: map[string]*network.EndpointSettings{
+			name: {
+				Aliases: []string{containerName},
+			},
+		},
+	}
+
 	config := &container.Config{
+		Hostname:     containerName,
 		Image:        image,
 		Env:          env,
 		Labels:       containerLabels,
 		ExposedPorts: workerPublishedPorts.ExposedPorts,
-	}
-
-	networkingConfig := &network.NetworkingConfig{}
-
-	if hostnetwork {
-		hostConfig.NetworkMode = "host"
-	} else {
-		config.Hostname = containerName
-		hostConfig.PortBindings = workerPublishedPorts.PortBindings
-		networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
-			name: {
-				Aliases: []string{containerName},
-			},
-		}
 	}
 
 	id, err := startContainer(verbose, config, hostConfig, networkingConfig, containerName)

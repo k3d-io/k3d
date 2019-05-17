@@ -77,10 +77,7 @@ func CreateCluster(c *cli.Context) error {
 		image = fmt.Sprintf("%s/%s", defaultRegistry, image)
 	}
 
-	if c.IsSet("hostnetwork"){
-		// TODO: check if hostnetwork is available on the actual operating system
-		log.Printf("use network: `host`")
-	} else {
+	if !c.IsSet("hostnetwork") || c.Int("workers") > 0 {
 		// create cluster network
 		networkID, err := createClusterNetwork(c.String("name"))
 		if err != nil {
