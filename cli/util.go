@@ -2,6 +2,7 @@ package run
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"strings"
@@ -87,8 +88,35 @@ func ValidateHostname(name string) error {
 // and appends the volumes to the defaults, with respect to already set vaules
 // in defaults in volumes, so as to not cause duplication of the same string.
 func checkDefaultBindMounts(volumes []string, defaults []string) []string {
-	hm := make(map[string]bool)
 	newVols := make([]string, 0)
+	destHm := make(map[string]int)
+
+	// populate the desthm with indexes in the defaults
+	for i, v := range defaults {
+		p := strings.Split(v, ":")
+		if len(p) != 2 {
+			continue
+		}
+
+		destPath := p[1]
+		destHm[destPath] = i
+	}
+
+	// check if we overrode a default in the -v, if so, remove
+	// that default bind mount from ever being processed.
+	for _, v := range volumes {
+		p := strings.Split(v, ":")
+		if len(p) != 2 {
+			continue
+		}
+
+		destPath := p[1]
+		if i, ok := destHm[destPath]; ok {
+			defaults[i] = defaults[len(defaults)-1]
+			defaults[len(defaults)-1] = ""
+			defaults = defaults[:len(defaults)-1]
+		}
+	}
 
 	// add the defaults, checking to ensure that the local path (if it's a :) exists
 	for _, v := range defaults {
@@ -98,18 +126,14 @@ func checkDefaultBindMounts(volumes []string, defaults []string) []string {
 			if _, err := os.Stat(p[0]); os.IsNotExist(err) {
 				continue
 			}
+
+			log.Printf("Including extra mount '%s' due to local path existing", v)
 		}
+
 		newVols = append(newVols, v)
-		hm[v] = true
 	}
 
-	for _, v := range volumes {
-		// skip already set volumes
-		if hm[v] {
-			continue
-		}
-		newVols = append(newVols, v)
-	}
+	newVols = append(newVols, volumes...)
 
 	return newVols
 }
