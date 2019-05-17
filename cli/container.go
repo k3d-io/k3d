@@ -199,7 +199,7 @@ func removeContainer(ID string) error {
 
 	options := types.ContainerRemoveOptions{
 		RemoveVolumes: true,
-		Force:true,
+		Force:         true,
 	}
 
 	if err := docker.ContainerRemove(ctx, ID, options); err != nil {
