@@ -86,7 +86,7 @@ func getClusterDir(name string) (string, error) {
 }
 
 // printClusters prints the names of existing clusters
-func printClusters(all bool) {
+func printClusters() {
 	clusters, err := getClusters(true, "")
 	if err != nil {
 		log.Fatalf("ERROR: Couldn't list clusters\n%+v", err)
@@ -100,8 +100,6 @@ func printClusters(all bool) {
 	table.SetAlignment(tablewriter.ALIGN_CENTER)
 	table.SetHeader([]string{"NAME", "IMAGE", "STATUS", "WORKERS"})
 
-	tableEmpty := true
-
 	for _, cluster := range clusters {
 		workersRunning := 0
 		for _, worker := range cluster.workers {
@@ -111,15 +109,10 @@ func printClusters(all bool) {
 		}
 		workerData := fmt.Sprintf("%d/%d", workersRunning, len(cluster.workers))
 		clusterData := []string{cluster.name, cluster.image, cluster.status, workerData}
-		if cluster.status == "running" || all {
-			table.Append(clusterData)
-			tableEmpty = false
-		}
+		table.Append(clusterData)
 	}
 
-	if !tableEmpty {
-		table.Render()
-	}
+	table.Render()
 }
 
 // Classify cluster state: Running, Stopped or Abnormal
