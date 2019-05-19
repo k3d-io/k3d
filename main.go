@@ -74,11 +74,6 @@ func main() {
 					Value: 0,
 					Usage: "Automatically add an offset (* worker number) to the chosen host port when using `--publish` to map the same container-port from multiple k3d workers to the host",
 				},
-				cli.StringFlag{
-					// TODO: to be deprecated
-					Name:  "version",
-					Usage: "Choose the k3s image version",
-				},
 				cli.IntFlag{
 					// TODO: only --api-port, -a soon since we want to use --port, -p for the --publish/--add-port functionality
 					Name:  "api-port, a, port, p",
@@ -96,7 +91,7 @@ func main() {
 				},
 				cli.StringFlag{
 					Name:  "image, i",
-					Usage: "Specify a k3s image (Format: <repo>/<image>:<tag>)",
+					Usage: "Specify a k3s image (Format: [<repo>/]<image>:<tag>, default repo is docker.io)",
 					Value: fmt.Sprintf("%s:%s", defaultK3sImage, version.GetK3sVersion()),
 				},
 				cli.StringSliceFlag{

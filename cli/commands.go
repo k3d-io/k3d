@@ -61,17 +61,6 @@ func CreateCluster(c *cli.Context) error {
 
 	// define image
 	image := c.String("image")
-	if c.IsSet("version") {
-		// TODO: --version to be deprecated
-		log.Println("[WARNING] The `--version` flag will be deprecated soon, please use `--image rancher/k3s:<version>` instead")
-		if c.IsSet("image") {
-			// version specified, custom image = error (to push deprecation of version flag)
-			log.Fatalln("[ERROR] Please use `--image <image>:<version>` instead of --image and --version")
-		} else {
-			// version specified, default image = ok (until deprecation of version flag)
-			image = fmt.Sprintf("%s:%s", strings.Split(image, ":")[0], c.String("version"))
-		}
-	}
 	if len(strings.Split(image, "/")) <= 2 {
 		// fallback to default registry
 		image = fmt.Sprintf("%s/%s", defaultRegistry, image)
