@@ -46,87 +46,10 @@ Example Workflow: Create a new cluster and use it with `kubectl`
 3. execute some commands like `kubectl get pods --all-namespaces`
 4. `k3d delete` to delete the default cluster
 
-### Expose services
+## What now?
 
-#### 1. via Ingress
+Find...
 
-1. Create a cluster, mapping the ingress port 80 to localhost:8081
-
-    `k3d create --api-port 6550 --publish 8081:80 --workers 2`
-
-    - Note: `--api-port 6550` is not required for the example to work. It's used to have `k3s`'s ApiServer listening on port 6550 with that port mapped to the host system.
-
-2. Get the kubeconfig file
-
-    `export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"`
-
-3. Create a nginx deployment
-
-    `kubectl create deployment nginx --image=nginx`
-
-4. Create a ClusterIP service for it
-
-    `kubectl create service clusterip nginx --tcp=80:80`
-
-5. Create an ingress object for it with `kubectl apply -f`
-
-    ```YAML
-    apiVersion: extensions/v1beta1
-    kind: Ingress
-    metadata:
-      name: nginx
-      annotations:
-        ingress.kubernetes.io/ssl-redirect: "false"
-    spec:
-      rules:
-      - http:
-          paths:
-          - path: /
-            backend:
-              serviceName: nginx
-              servicePort: 80
-    ```
-
-6. Curl it via localhost
-
-    `curl localhost:8081/`
-
-#### 2. via NodePort
-
-1. Create a cluster, mapping the port 30080 from worker-0 to localhost:8082
-
-    `k3d create --publish 8082:30080@k3d-k3s-default-worker-0 --workers 2`
-
-    - Note: Kubernetes' default NodePort range is [`30000-32767`](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
-
-... (Steps 2 and 3 like above) ...
-
-1. Create a NodePort service for it with `kubectl apply -f`
-
-    ```YAML
-    apiVersion: v1
-    kind: Service
-    metadata:
-      labels:
-        app: nginx
-      name: nginx
-    spec:
-      ports:
-      - name: 80-80
-        nodePort: 30080
-        port: 80
-        protocol: TCP
-        targetPort: 80
-      selector:
-        app: nginx
-      type: NodePort
-    ```
-
-2. Curl it via localhost
-
-    `curl localhost:8082/`
-
-## FAQ / Nice to know
-
-- As [@jaredallard](https://github.com/jaredallard) [pointed out](https://github.com/rancher/k3d/pull/48), people running `k3d` on Linux with **LUKS/LVM**, may need to mount `/dev/mapper` into the nodes for the setup to work.
-  - This will do: `k3d create -v /dev/mapper:/dev/mapper`
+- [... further documentation here](docs/documentation.md)
+- [... usage examples here](docs/examples.md)
+- [... frequently asked questions and nice-to-know facts here](docs/faq.md)
