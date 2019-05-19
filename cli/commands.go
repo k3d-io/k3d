@@ -331,7 +331,11 @@ func StartCluster(c *cli.Context) error {
 
 // ListClusters prints a list of created clusters
 func ListClusters(c *cli.Context) error {
-	printClusters(c.Bool("all"))
+	if c.IsSet("all") {
+		log.Println("INFO: --all is on by default, thus no longer required. This option will be removed in v2.0.0")
+
+	}
+	printClusters()
 	return nil
 }
 
