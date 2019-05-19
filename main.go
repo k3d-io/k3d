@@ -32,7 +32,12 @@ func main() {
 			Email: "r.g.gupta@outlook.com",
 		},
 		{
-			Name: "Darren Shepherd",
+			Name:  "Darren Shepherd",
+			Email: "darren@rancher.com",
+		},
+		{
+			Name:  "Andy Zhou",
+			Email: "andy@andyz.dev",
 		},
 	}
 
