@@ -66,7 +66,7 @@ func main() {
 					Usage: "Mount one or more volumes into every node of the cluster (Docker notation: `source:destination`)",
 				},
 				cli.StringSliceFlag{
-					Name:  "publish, add-port",
+					Name:  "port, p, publish",
 					Usage: "Publish k3s node ports to the host (Format: `[ip:][host-port:]container-port[/protocol]@node-specifier`, use multiple options to expose more ports)",
 				},
 				cli.IntFlag{
@@ -75,10 +75,9 @@ func main() {
 					Usage: "Automatically add an offset (* worker number) to the chosen host port when using `--publish` to map the same container-port from multiple k3d workers to the host",
 				},
 				cli.IntFlag{
-					// TODO: only --api-port, -a soon since we want to use --port, -p for the --publish/--add-port functionality
-					Name:  "api-port, a, port, p",
+					Name:  "api-port, a",
 					Value: 6443,
-					Usage: "Map the Kubernetes ApiServer port to a local port (Note: --port/-p will be used for arbitrary port mapping as of v2.0.0, use --api-port/-a instead for setting the api port)",
+					Usage: "Map the Kubernetes ApiServer port to a local port",
 				},
 				cli.IntFlag{
 					Name:  "timeout, t",

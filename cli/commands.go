@@ -89,17 +89,13 @@ func CreateCluster(c *cli.Context) error {
 	}
 
 	// k3s server arguments
-	// TODO: --port will soon be --api-port since we want to re-use --port for arbitrary port mappings
-	if c.IsSet("port") {
-		log.Println("INFO: As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
-	}
 	k3sServerArgs := []string{"--https-listen-port", c.String("api-port")}
 	if c.IsSet("server-arg") || c.IsSet("x") {
 		k3sServerArgs = append(k3sServerArgs, c.StringSlice("server-arg")...)
 	}
 
 	// new port map
-	portmap, err := mapNodesToPortSpecs(c.StringSlice("publish"), GetAllContainerNames(c.String("name"), defaultServerCount, c.Int("workers")))
+	portmap, err := mapNodesToPortSpecs(c.StringSlice("port"), GetAllContainerNames(c.String("name"), defaultServerCount, c.Int("workers")))
 	if err != nil {
 		log.Fatal(err)
 	}
