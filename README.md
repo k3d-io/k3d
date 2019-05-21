@@ -48,8 +48,14 @@ Example Workflow: Create a new cluster and use it with `kubectl`
 
 ## What now?
 
-Find...
+Find more details under the following Links:
 
-- [... further documentation here](docs/documentation.md)
-- [... usage examples here](docs/examples.md)
-- [... frequently asked questions and nice-to-know facts here](docs/faq.md)
+- [Further documentation](docs/documentation.md)
+- [Usage examples](docs/examples.md)
+- [Frequently asked questions and nice-to-know facts](docs/faq.md)
+
+### Connect
+
+1. Join the Rancher community on slack via [slack.rancher.io](https://slack.rancher.io/)
+2. Go to [rancher-users.slack.com](https://rancher-users.slack.com) and join our channel #k3d
+3. Start chatting
