@@ -126,6 +126,7 @@ func CreateCluster(c *cli.Context) error {
 		c.String("name"),
 		c.StringSlice("volume"),
 		portmap,
+		c.Bool("auto-restart"),
 	)
 	if err != nil {
 		log.Printf("ERROR: failed to create cluster\n%+v", err)
@@ -196,6 +197,7 @@ func CreateCluster(c *cli.Context) error {
 				c.String("api-port"),
 				portmap,
 				c.Int("port-auto-offset"),
+				c.Bool("auto-restart"),
 			)
 			if err != nil {
 				return fmt.Errorf("ERROR: failed to create worker node for cluster %s\n%+v", c.String("name"), err)
