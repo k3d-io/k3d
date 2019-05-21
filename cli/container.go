@@ -63,7 +63,7 @@ func startContainer(verbose bool, config *container.Config, hostConfig *containe
 }
 
 func createServer(verbose bool, image string, apiPort string, args []string, env []string,
-	name string, volumes []string, nodeToPortSpecMap map[string][]string) (string, error) {
+	name string, volumes []string, nodeToPortSpecMap map[string][]string, autoRestart bool) (string, error) {
 	log.Printf("Creating server using %s...\n", image)
 
 	containerLabels := make(map[string]string)
@@ -93,6 +93,10 @@ func createServer(verbose bool, image string, apiPort string, args []string, env
 	hostConfig := &container.HostConfig{
 		PortBindings: serverPublishedPorts.PortBindings,
 		Privileged:   true,
+	}
+
+	if autoRestart {
+		hostConfig.RestartPolicy.Name = "unless-stopped"
 	}
 
 	if len(volumes) > 0 && volumes[0] != "" {
@@ -125,7 +129,7 @@ func createServer(verbose bool, image string, apiPort string, args []string, env
 
 // createWorker creates/starts a k3s agent node that connects to the server
 func createWorker(verbose bool, image string, args []string, env []string, name string, volumes []string,
-	postfix int, serverPort string, nodeToPortSpecMap map[string][]string, portAutoOffset int) (string, error) {
+	postfix int, serverPort string, nodeToPortSpecMap map[string][]string, portAutoOffset int, autoRestart bool) (string, error) {
 	containerLabels := make(map[string]string)
 	containerLabels["app"] = "k3d"
 	containerLabels["component"] = "worker"
@@ -159,6 +163,10 @@ func createWorker(verbose bool, image string, args []string, env []string, name 
 		},
 		PortBindings: workerPublishedPorts.PortBindings,
 		Privileged:   true,
+	}
+
+	if autoRestart {
+		hostConfig.RestartPolicy.Name = "unless-stopped"
 	}
 
 	if len(volumes) > 0 && volumes[0] != "" {

@@ -108,6 +108,10 @@ func main() {
 					Value: 0,
 					Usage: "Specify how many worker nodes you want to spawn",
 				},
+				cli.BoolFlag{
+					Name:  "auto-restart",
+					Usage: "Set docker's --restart=unless-stopped flag on the containers",
+				},
 			},
 			Action: run.CreateCluster,
 		},
