@@ -32,3 +32,7 @@ If applicable, add screenshots or terminal output (code block) to help explain y
 **Which version of `k3d`?**
 
 - output of `k3d --version`
+
+**Which version of docker?**
+
+- output of `docker version`
