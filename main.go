@@ -83,11 +83,12 @@ func main() {
 				cli.IntFlag{
 					Name:  "timeout, t",
 					Value: 0,
-					Usage: "Set the timeout value when --wait flag is set",
+					Usage: "Set the timeout value when --wait flag is set (deprecated, use --wait <timeout> instead)",
 				},
-				cli.BoolFlag{
+				cli.IntFlag{
 					Name:  "wait, w",
-					Usage: "Wait for the cluster to come up before returning",
+					Value: 0, // timeout
+					Usage: "Wait for the cluster to come up before returning until timoout (in seconds). Use --wait 0 to wait forever",
 				},
 				cli.StringFlag{
 					Name:  "image, i",
@@ -106,6 +107,10 @@ func main() {
 					Name:  "workers",
 					Value: 0,
 					Usage: "Specify how many worker nodes you want to spawn",
+				},
+				cli.BoolFlag{
+					Name:  "auto-restart",
+					Usage: "Set docker's --restart=unless-stopped flag on the containers",
 				},
 			},
 			Action: run.CreateCluster,
