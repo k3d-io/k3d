@@ -59,6 +59,15 @@ func CreateCluster(c *cli.Context) error {
 		return fmt.Errorf("ERROR: Cluster %s already exists", c.String("name"))
 	}
 
+	// On Error delete the cluster.  If there createCluster() encounter any error,
+	// call this function to remove all resources allocated for the cluster so far
+	// so that they don't linger around.
+	deleteCluster := func() {
+		if err := DeleteCluster(c); err != nil {
+			log.Printf("Error: Failed to delete cluster %s", c.String("name"))
+		}
+	}
+
 	// define image
 	image := c.String("image")
 	if c.IsSet("version") {
@@ -125,12 +134,8 @@ func CreateCluster(c *cli.Context) error {
 		c.Bool("auto-restart"),
 	)
 	if err != nil {
-		log.Printf("ERROR: failed to create cluster\n%+v", err)
-		delErr := DeleteCluster(c)
-		if delErr != nil {
-			return delErr
-		}
-		os.Exit(1)
+		deleteCluster()
+		return err
 	}
 
 	ctx := context.Background()
@@ -151,10 +156,7 @@ func CreateCluster(c *cli.Context) error {
 	for c.IsSet("wait") {
 		// not running after timeout exceeded? Rollback and delete everything.
 		if timeout != 0 && !time.Now().After(start.Add(timeout)) {
-			err := DeleteCluster(c)
-			if err != nil {
-				return err
-			}
+			deleteCluster()
 			return errors.New("Cluster creation exceeded specified timeout")
 		}
 
@@ -200,12 +202,8 @@ func CreateCluster(c *cli.Context) error {
 				c.Bool("auto-restart"),
 			)
 			if err != nil {
-				log.Printf("ERROR: failed to create worker node for cluster %s\n%+v", c.String("name"), err)
-				delErr := DeleteCluster(c)
-				if delErr != nil {
-					return delErr
-				}
-				os.Exit(1)
+				deleteCluster()
+				return err
 			}
 			log.Printf("Created worker with ID %s\n", workerID)
 		}
