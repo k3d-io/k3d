@@ -381,15 +381,14 @@ func GetKubeConfig(c *cli.Context) error {
 	}
 
 	// create destination kubeconfig file
-	clusterDir, err := getClusterDir(c.String("name"))
-	destPath := fmt.Sprintf("%s/kubeconfig.yaml", clusterDir)
+	destPath, err := getClusterKubeConfigPath(c.String("name"))
 	if err != nil {
 		return err
 	}
 
 	kubeconfigfile, err := os.Create(destPath)
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create kubeconfig.yaml in %s\n%+v", clusterDir, err)
+		return fmt.Errorf("ERROR: couldn't create kubeconfig file %s\n%+v", destPath, err)
 	}
 	defer kubeconfigfile.Close()
 
