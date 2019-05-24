@@ -6,7 +6,7 @@ import (
 	"os/exec"
 )
 
-func bashShell(cluster string) error {
+func bashShell(cluster string, command string) error {
 	kubeConfigPath, err := getKubeConfig(cluster)
 	if err != nil {
 		return err
@@ -18,6 +18,11 @@ func bashShell(cluster string) error {
 	}
 
 	cmd := exec.Command(bashPath, "--noprofile", "--norc")
+
+	if len(command) > 0 {
+		cmd.Args = append(cmd.Args, "-c", command)
+
+	}
 
 	// Set up stdio
 	cmd.Stdout = os.Stdout

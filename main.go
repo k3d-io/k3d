@@ -55,6 +55,10 @@ func main() {
 					Value: defaultK3sClusterName,
 					Usage: "Set a name for the cluster",
 				},
+				cli.StringFlag{
+					Name:  "command, c",
+					Usage: "Run a shell command in the context of the cluster",
+				},
 			},
 			Action: run.Bash,
 		},
