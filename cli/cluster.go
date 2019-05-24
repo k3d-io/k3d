@@ -148,6 +148,31 @@ func createKubeConfigFile(cluster string) error {
 	return nil
 }
 
+func getKubeConfig(cluster string) (string, error) {
+	kubeConfigPath, err := getClusterKubeConfigPath(cluster)
+	if err != nil {
+		return "", err
+	}
+
+	if clusters, err := getClusters(false, cluster); err != nil || len(clusters) != 1 {
+		if err != nil {
+			return "", err
+		}
+		return "", fmt.Errorf("Cluster %s does not exist", cluster)
+	}
+
+	// If kubeconfig.yaml has not been created, generate it now
+	if _, err := os.Stat(kubeConfigPath); os.IsNotExist(err) {
+		if err = createKubeConfigFile(cluster); err != nil {
+			return "", err
+		}
+	} else {
+		return "", err
+	}
+
+	return kubeConfigPath, nil
+}
+
 // printClusters prints the names of existing clusters
 func printClusters() {
 	clusters, err := getClusters(true, "")

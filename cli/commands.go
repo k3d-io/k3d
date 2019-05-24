@@ -344,28 +344,12 @@ func ListClusters(c *cli.Context) error {
 // GetKubeConfig grabs the kubeconfig from the running cluster and prints the path to stdout
 func GetKubeConfig(c *cli.Context) error {
 	cluster := c.String("name")
-	destPath, err := getClusterKubeConfigPath(c.String("name"))
+	kubeConfigPath, err := getKubeConfig(cluster)
 	if err != nil {
 		return err
 	}
 
-	if clusters, err := getClusters(false, cluster); err != nil || len(clusters) != 1 {
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("Cluster %s does not exist", cluster)
-	}
-
-	// If kubeconfig.yaml has not been created, generate it now.
-	if _, err := os.Stat(destPath); os.IsNotExist(err) {
-		if err = createKubeConfigFile(cluster); err != nil {
-			return err
-		}
-	} else {
-		return err
-	}
-
 	// output kubeconfig file path to stdout
-	fmt.Println(destPath)
+	fmt.Println(kubeConfigPath)
 	return nil
 }
