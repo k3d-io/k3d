@@ -12,6 +12,11 @@ func bashShell(cluster string, command string) error {
 		return err
 	}
 
+	subShell := os.ExpandEnv("$__K3D_CLUSTER__")
+	if len(subShell) > 0 {
+		return fmt.Errorf("Error: Already in subshell of cluster %s", subShell)
+	}
+
 	bashPath, err := exec.LookPath("bash")
 	if err != nil {
 		return err
@@ -34,7 +39,11 @@ func bashShell(cluster string, command string) error {
 
 	// Set up KUBECONFIG
 	setKube := fmt.Sprintf("KUBECONFIG=%s", kubeConfigPath)
-	newEnv := append(os.Environ(), setPS1, setKube)
+
+	// Declare subshell
+	subShell = fmt.Sprintf("__K3D_CLUSTER__=%s", cluster)
+
+	newEnv := append(os.Environ(), setPS1, setKube, subShell)
 
 	cmd.Env = newEnv
 
