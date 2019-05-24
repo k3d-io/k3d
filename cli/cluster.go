@@ -161,13 +161,15 @@ func getKubeConfig(cluster string) (string, error) {
 		return "", fmt.Errorf("Cluster %s does not exist", cluster)
 	}
 
-	// If kubeconfig.yaml has not been created, generate it now
-	if _, err := os.Stat(kubeConfigPath); os.IsNotExist(err) {
-		if err = createKubeConfigFile(cluster); err != nil {
+	// If kubeconfi.yaml has not been created, generate it now
+	if _, err := os.Stat(kubeConfigPath); err != nil {
+		if os.IsNotExist(err) {
+			if err = createKubeConfigFile(cluster); err != nil {
+				return "", err
+			}
+		} else {
 			return "", err
 		}
-	} else {
-		return "", err
 	}
 
 	return kubeConfigPath, nil
