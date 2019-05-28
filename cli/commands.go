@@ -355,5 +355,9 @@ func GetKubeConfig(c *cli.Context) error {
 }
 
 func Shell(c *cli.Context) error {
+	if c.String("shell") != "bash" {
+		return fmt.Errorf("%s is not supported. Only bash is supported", c.String("shell"))
+	}
+
 	return bashShell(c.String("name"), c.String("command"))
 }
