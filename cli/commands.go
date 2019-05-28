@@ -354,6 +354,6 @@ func GetKubeConfig(c *cli.Context) error {
 	return nil
 }
 
-func Bash(c *cli.Context) error {
+func Shell(c *cli.Context) error {
 	return bashShell(c.String("name"), c.String("command"))
 }
