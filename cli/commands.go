@@ -95,9 +95,8 @@ func CreateCluster(c *cli.Context) error {
 
 	// environment variables
 	env := []string{"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml"}
-	if c.IsSet("env") || c.IsSet("e") {
-		env = append(env, c.StringSlice("env")...)
-	}
+	env = append(env, c.StringSlice("env")...)
+
 	k3sClusterSecret := ""
 	if c.Int("workers") > 0 {
 		k3sClusterSecret = fmt.Sprintf("K3S_CLUSTER_SECRET=%s", GenerateRandomString(20))
@@ -186,6 +185,7 @@ func CreateCluster(c *cli.Context) error {
 	if c.Int("workers") > 0 {
 		k3sWorkerArgs := []string{}
 		env := []string{k3sClusterSecret}
+		env = append(env, c.StringSlice("env")...)
 		log.Printf("Booting %s workers for cluster %s", strconv.Itoa(c.Int("workers")), c.String("name"))
 		for i := 0; i < c.Int("workers"); i++ {
 			workerID, err := createWorker(
