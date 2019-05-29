@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -139,8 +140,23 @@ func createKubeConfigFile(cluster string) error {
 	}
 	defer kubeconfigfile.Close()
 
-	// write to file, skipping the first 512 bytes which contain file metadata and trimming any NULL characters
-	_, err = kubeconfigfile.Write(bytes.Trim(readBytes[512:], "\x00"))
+	// write to file, skipping the first 512 bytes which contain file metadata
+	// and trimming any NULL characters
+	trimBytes := bytes.Trim(readBytes[512:], "\x00")
+
+	// If running on a docker machine, replace localhost with
+	// docker machine's IP
+	dockerMachineIp, err := getDockerMachineIp()
+	if err != nil {
+		return err
+	}
+
+	if dockerMachineIp != "" {
+		s := string(trimBytes)
+		s = strings.Replace(s, "localhost", dockerMachineIp, 1)
+		trimBytes = []byte(s)
+	}
+	_, err = kubeconfigfile.Write(trimBytes)
 	if err != nil {
 		return fmt.Errorf("ERROR: couldn't write to kubeconfig.yaml\n%+v", err)
 	}
