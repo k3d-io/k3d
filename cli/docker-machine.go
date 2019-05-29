@@ -18,7 +18,7 @@ func getDockerMachineIp() (string, error) {
 		return "", err
 	}
 
-	out, err := exec.Command(dockerMachinePath, "ip").Output()
+	out, err := exec.Command(dockerMachinePath, "ip", machine).Output()
 
 	ipStr := strings.TrimSuffix(string(out), "\n")
 	ipStr = strings.TrimSuffix(ipStr, "\r")

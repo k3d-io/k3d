@@ -106,6 +106,13 @@ func CreateCluster(c *cli.Context) error {
 		log.Println("INFO: As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
 	}
 	k3sServerArgs := []string{"--https-listen-port", c.String("api-port")}
+	if ip, err := getDockerMachineIp(); ip != "" || err != nil {
+		if err != nil {
+			return err
+		}
+		log.Printf("Add TLS SAN for %s", ip)
+		k3sServerArgs = append(k3sServerArgs, "--tls-san", ip)
+	}
 	if c.IsSet("server-arg") || c.IsSet("x") {
 		k3sServerArgs = append(k3sServerArgs, c.StringSlice("server-arg")...)
 	}
