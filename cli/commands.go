@@ -9,14 +9,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/docker/docker/api/types/filters"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -346,61 +343,21 @@ func ListClusters(c *cli.Context) error {
 
 // GetKubeConfig grabs the kubeconfig from the running cluster and prints the path to stdout
 func GetKubeConfig(c *cli.Context) error {
-	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	cluster := c.String("name")
+	kubeConfigPath, err := getKubeConfig(cluster)
 	if err != nil {
 		return err
-	}
-
-	filters := filters.NewArgs()
-	filters.Add("label", "app=k3d")
-	filters.Add("label", fmt.Sprintf("cluster=%s", c.String("name")))
-	filters.Add("label", "component=server")
-	server, err := docker.ContainerList(ctx, types.ContainerListOptions{
-		Filters: filters,
-	})
-
-	if err != nil {
-		return fmt.Errorf("Failed to get server container for cluster %s\n%+v", c.String("name"), err)
-	}
-
-	if len(server) == 0 {
-		return fmt.Errorf("No server container for cluster %s", c.String("name"))
-	}
-
-	// get kubeconfig file from container and read contents
-	reader, _, err := docker.CopyFromContainer(ctx, server[0].ID, "/output/kubeconfig.yaml")
-	if err != nil {
-		return fmt.Errorf("ERROR: couldn't copy kubeconfig.yaml from server container %s\n%+v", server[0].ID, err)
-	}
-	defer reader.Close()
-
-	readBytes, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return fmt.Errorf("ERROR: couldn't read kubeconfig from container\n%+v", err)
-	}
-
-	// create destination kubeconfig file
-	clusterDir, err := getClusterDir(c.String("name"))
-	destPath := fmt.Sprintf("%s/kubeconfig.yaml", clusterDir)
-	if err != nil {
-		return err
-	}
-
-	kubeconfigfile, err := os.Create(destPath)
-	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create kubeconfig.yaml in %s\n%+v", clusterDir, err)
-	}
-	defer kubeconfigfile.Close()
-
-	// write to file, skipping the first 512 bytes which contain file metadata and trimming any NULL characters
-	_, err = kubeconfigfile.Write(bytes.Trim(readBytes[512:], "\x00"))
-	if err != nil {
-		return fmt.Errorf("ERROR: couldn't write to kubeconfig.yaml\n%+v", err)
 	}
 
 	// output kubeconfig file path to stdout
-	fmt.Println(destPath)
-
+	fmt.Println(kubeConfigPath)
 	return nil
+}
+
+func Shell(c *cli.Context) error {
+	if c.String("shell") != "bash" {
+		return fmt.Errorf("%s is not supported. Only bash is supported", c.String("shell"))
+	}
+
+	return bashShell(c.String("name"), c.String("command"))
 }
