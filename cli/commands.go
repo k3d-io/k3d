@@ -356,5 +356,5 @@ func GetKubeConfig(c *cli.Context) error {
 
 // Shell starts a new subshell with the KUBECONFIG pointing to the selected cluster
 func Shell(c *cli.Context) error {
-	return shell(c.String("name"), c.String("shell"), c.String("command"))
+	return subShell(c.String("name"), c.String("shell"), c.String("command"))
 }

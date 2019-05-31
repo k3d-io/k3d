@@ -7,22 +7,33 @@ import (
 	"path"
 )
 
-var shells = map[string]map[string][]string{
+type shell struct {
+	Name    string
+	Options []string
+	Prompt  string
+	Env     map[string]string
+}
+
+var shells = map[string]shell{
 	"bash": {
-		"options": []string{
+		Name: "bash",
+		Options: []string{
 			"--noprofile", // don't load .profile/.bash_profile
 			"--norc",      // don't load .bashrc
 		},
+		Prompt: "PS1",
 	},
 	"zsh": {
-		"options": []string{
+		Name: "zsh",
+		Options: []string{
 			"--no-rcs", // don't load .zshrc
 		},
+		Prompt: "PROMPT",
 	},
 }
 
-// shell
-func shell(cluster, shell, command string) error {
+// subShell
+func subShell(cluster, shell, command string) error {
 
 	// check if the selected shell is supported
 	if shell == "auto" {
@@ -58,7 +69,7 @@ func shell(cluster, shell, command string) error {
 	}
 
 	// set shell specific options (command line flags)
-	shellOptions := shells[shell]["options"]
+	shellOptions := shells[shell].Options
 
 	cmd := exec.Command(shellPath, shellOptions...)
 
@@ -73,7 +84,7 @@ func shell(cluster, shell, command string) error {
 	cmd.Stderr = os.Stderr
 
 	// Set up Promot
-	setPS1 := fmt.Sprintf("PS1=[%s}%s", cluster, os.Getenv("PS1"))
+	setPrompt := fmt.Sprintf("%s=[%s} %s", shells[shell].Prompt, cluster, os.Getenv("PS1"))
 
 	// Set up KUBECONFIG
 	setKube := fmt.Sprintf("KUBECONFIG=%s", kubeConfigPath)
@@ -81,7 +92,7 @@ func shell(cluster, shell, command string) error {
 	// Declare subshell
 	subShell = fmt.Sprintf("__K3D_CLUSTER__=%s", cluster)
 
-	newEnv := append(os.Environ(), setPS1, setKube, subShell)
+	newEnv := append(os.Environ(), setPrompt, setKube, subShell)
 
 	cmd.Env = newEnv
 
