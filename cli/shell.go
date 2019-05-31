@@ -84,7 +84,7 @@ func subShell(cluster, shell, command string) error {
 	cmd.Stderr = os.Stderr
 
 	// Set up Promot
-	setPrompt := fmt.Sprintf("%s=[%s} %s", shells[shell].Prompt, cluster, os.Getenv("PS1"))
+	setPrompt := fmt.Sprintf("%s=[%s} %s", shells[shell].Prompt, cluster, shells[shell].Prompt)
 
 	// Set up KUBECONFIG
 	setKube := fmt.Sprintf("KUBECONFIG=%s", kubeConfigPath)
