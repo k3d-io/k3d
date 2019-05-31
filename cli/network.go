@@ -10,6 +10,10 @@ import (
 	"github.com/docker/docker/client"
 )
 
+func k3dNetworkName(clusterName string) string {
+	return fmt.Sprintf("k3d-%s", clusterName)
+}
+
 // createClusterNetwork creates a docker network for a cluster that will be used
 // to let the server and worker containers communicate with each other easily.
 func createClusterNetwork(clusterName string) (string, error) {
@@ -36,7 +40,7 @@ func createClusterNetwork(clusterName string) (string, error) {
 	}
 
 	// create the network with a set of labels and the cluster name as network name
-	resp, err := docker.NetworkCreate(ctx, clusterName, types.NetworkCreate{
+	resp, err := docker.NetworkCreate(ctx, k3dNetworkName(clusterName), types.NetworkCreate{
 		Labels: map[string]string{
 			"app":     "k3d",
 			"cluster": clusterName,
