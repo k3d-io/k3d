@@ -61,8 +61,8 @@ func main() {
 				},
 				cli.StringFlag{
 					Name:  "shell, s",
-					Value: "bash",
-					Usage: "Sub shell type. Only bash is supported. (default bash)",
+					Value: "auto",
+					Usage: "which shell to use. One of [auto, bash, zsh]",
 				},
 			},
 			Action: run.Shell,

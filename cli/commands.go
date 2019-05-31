@@ -354,10 +354,7 @@ func GetKubeConfig(c *cli.Context) error {
 	return nil
 }
 
+// Shell starts a new subshell with the KUBECONFIG pointing to the selected cluster
 func Shell(c *cli.Context) error {
-	if c.String("shell") != "bash" {
-		return fmt.Errorf("%s is not supported. Only bash is supported", c.String("shell"))
-	}
-
-	return bashShell(c.String("name"), c.String("command"))
+	return subShell(c.String("name"), c.String("shell"), c.String("command"))
 }
