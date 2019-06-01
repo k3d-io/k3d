@@ -93,12 +93,7 @@ func CreateCluster(c *cli.Context) error {
 	// environment variables
 	env := []string{"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml"}
 	env = append(env, c.StringSlice("env")...)
-
-	k3sClusterSecret := ""
-	if c.Int("workers") > 0 {
-		k3sClusterSecret = fmt.Sprintf("K3S_CLUSTER_SECRET=%s", GenerateRandomString(20))
-		env = append(env, k3sClusterSecret)
-	}
+	env = append(env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", GenerateRandomString(20)))
 
 	// k3s server arguments
 	// TODO: --port will soon be --api-port since we want to re-use --port for arbitrary port mappings
@@ -123,19 +118,23 @@ func CreateCluster(c *cli.Context) error {
 		log.Fatal(err)
 	}
 
+	clusterSpec := &ClusterSpec{
+		AgentArgs:         []string{},
+		ApiPort:           c.String("api-port"),
+		AutoRestart:       c.Bool("auto-restart"),
+		ClusterName:       c.String("name"),
+		Env:               env,
+		Image:             image,
+		NodeToPortSpecMap: portmap,
+		PortAutoOffset:    c.Int("port-auto-offset"),
+		ServerArgs:        k3sServerArgs,
+		Verbose:           c.GlobalBool("verbose"),
+		Volumes:           c.StringSlice("volume"),
+	}
+
 	// create the server
 	log.Printf("Creating cluster [%s]", c.String("name"))
-	dockerID, err := createServer(
-		c.GlobalBool("verbose"),
-		image,
-		c.String("api-port"),
-		k3sServerArgs,
-		env,
-		c.String("name"),
-		c.StringSlice("volume"),
-		portmap,
-		c.Bool("auto-restart"),
-	)
+	dockerID, err := createServer(clusterSpec)
 	if err != nil {
 		deleteCluster()
 		return err
@@ -187,24 +186,9 @@ func CreateCluster(c *cli.Context) error {
 	// spin up the worker nodes
 	// TODO: do this concurrently in different goroutines
 	if c.Int("workers") > 0 {
-		k3sWorkerArgs := []string{}
-		env := []string{k3sClusterSecret}
-		env = append(env, c.StringSlice("env")...)
 		log.Printf("Booting %s workers for cluster %s", strconv.Itoa(c.Int("workers")), c.String("name"))
 		for i := 0; i < c.Int("workers"); i++ {
-			workerID, err := createWorker(
-				c.GlobalBool("verbose"),
-				image,
-				k3sWorkerArgs,
-				env,
-				c.String("name"),
-				c.StringSlice("volume"),
-				i,
-				c.String("api-port"),
-				portmap,
-				c.Int("port-auto-offset"),
-				c.Bool("auto-restart"),
-			)
+			workerID, err := createWorker(clusterSpec, i)
 			if err != nil {
 				deleteCluster()
 				return err
