@@ -96,11 +96,11 @@ func main() {
 					Name:  "version",
 					Usage: "Choose the k3s image version",
 				},
-				cli.IntFlag{
+				cli.StringFlag{
 					// TODO: only --api-port, -a soon since we want to use --port, -p for the --publish/--add-port functionality
 					Name:  "api-port, a, port, p",
-					Value: 6443,
-					Usage: "Map the Kubernetes ApiServer port to a local port (Note: --port/-p will be used for arbitrary port mapping as of v2.0.0, use --api-port/-a instead for setting the api port)",
+					Value: "6443",
+					Usage: "Specify the Kubernetes cluster API server port (Format: `[host:]port` (Note: --port/-p will be used for arbitrary port mapping as of v2.0.0, use --api-port/-a instead for setting the api port)",
 				},
 				cli.IntFlag{
 					Name:  "timeout, t",
