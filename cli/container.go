@@ -22,7 +22,7 @@ import (
 
 type ClusterSpec struct {
 	AgentArgs         []string
-	ApiPort           string
+	ApiPort           apiPort
 	AutoRestart       bool
 	ClusterName       string
 	Env               []string
@@ -94,7 +94,7 @@ func createServer(spec *ClusterSpec) (string, error) {
 		return "", err
 	}
 
-	apiPortSpec := fmt.Sprintf("0.0.0.0:%s:%s/tcp", spec.ApiPort, spec.ApiPort)
+	apiPortSpec := fmt.Sprintf("0.0.0.0:%s:%s/tcp", spec.ApiPort.Port, spec.ApiPort.Port)
 
 	serverPorts = append(serverPorts, apiPortSpec)
 

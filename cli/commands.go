@@ -120,7 +120,7 @@ func CreateCluster(c *cli.Context) error {
 
 	clusterSpec := &ClusterSpec{
 		AgentArgs:         []string{},
-		ApiPort:           c.String("api-port"),
+		ApiPort:           apiPort{Host: "0.0.0.0", Port: c.String("api-port")},
 		AutoRestart:       c.Bool("auto-restart"),
 		ClusterName:       c.String("name"),
 		Env:               env,
