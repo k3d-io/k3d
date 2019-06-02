@@ -150,7 +150,7 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 
 	containerName := GetContainerName("worker", spec.ClusterName, postfix)
 
-	env := append(spec.Env, fmt.Sprintf("K3S_URL=https://k3d-%s-server:%s", spec.ClusterName, spec.ApiPort))
+	env := append(spec.Env, fmt.Sprintf("K3S_URL=https://k3d-%s-server:%s", spec.ClusterName, spec.ApiPort.Port))
 
 	// ports to be assigned to the server belong to roles
 	// all, server or <server-container-name>

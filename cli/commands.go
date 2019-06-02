@@ -100,14 +100,28 @@ func CreateCluster(c *cli.Context) error {
 	if c.IsSet("port") {
 		log.Println("INFO: As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
 	}
-	k3sServerArgs := []string{"--https-listen-port", c.String("api-port")}
-	if ip, err := getDockerMachineIp(); ip != "" || err != nil {
-		if err != nil {
-			return err
-		}
-		log.Printf("Add TLS SAN for %s", ip)
-		k3sServerArgs = append(k3sServerArgs, "--tls-san", ip)
+	apiPort, err := parseApiPort(c.String("api-port"))
+	if err != nil {
+		return err
 	}
+
+	k3sServerArgs := []string{"--https-listen-port", apiPort.Port}
+
+	// When the 'host' is not provided by --api-port, try to fill it using Docker Machine's IP address.
+	if apiPort.Host == "" {
+		if apiPort.Host, err = getDockerMachineIp(); apiPort.Host != "" || err != nil {
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if apiPort.Host != "" {
+		// Add TLS SAN for non default host name
+		log.Printf("Add TLS SAN for %s", apiPort.Host)
+		k3sServerArgs = append(k3sServerArgs, "--tls-san", apiPort.Host)
+	}
+
 	if c.IsSet("server-arg") || c.IsSet("x") {
 		k3sServerArgs = append(k3sServerArgs, c.StringSlice("server-arg")...)
 	}
@@ -120,7 +134,7 @@ func CreateCluster(c *cli.Context) error {
 
 	clusterSpec := &ClusterSpec{
 		AgentArgs:         []string{},
-		ApiPort:           apiPort{Host: "0.0.0.0", Port: c.String("api-port")},
+		ApiPort:           *apiPort,
 		AutoRestart:       c.Bool("auto-restart"),
 		ClusterName:       c.String("name"),
 		Env:               env,
