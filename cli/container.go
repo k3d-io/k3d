@@ -97,7 +97,7 @@ func createServer(spec *ClusterSpec) (string, error) {
 	hostIp := "0.0.0.0"
 	containerLabels["apihost"] = "localhost"
 	if spec.ApiPort.Host != "" {
-		hostIp = spec.ApiPort.Host
+		hostIp = spec.ApiPort.HostIp
 		containerLabels["apihost"] = spec.ApiPort.Host
 	}
 
