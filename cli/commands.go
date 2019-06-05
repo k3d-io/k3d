@@ -109,11 +109,12 @@ func CreateCluster(c *cli.Context) error {
 
 	// When the 'host' is not provided by --api-port, try to fill it using Docker Machine's IP address.
 	if apiPort.Host == "" {
-		if apiPort.Host, err = getDockerMachineIp(); apiPort.Host != "" || err != nil {
-			if err != nil {
-				return err
-			}
+		if apiPort.Host, err = getDockerMachineIp(); err != nil {
+			return err
 		}
+
+		// IP address is the same as the host
+		apiPort.HostIp = apiPort.Host
 	}
 
 	if apiPort.Host != "" {
