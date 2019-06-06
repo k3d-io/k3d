@@ -144,16 +144,20 @@ func createKubeConfigFile(cluster string) error {
 	// and trimming any NULL characters
 	trimBytes := bytes.Trim(readBytes[512:], "\x00")
 
-	// If running on a docker machine, replace localhost with
-	// docker machine's IP
-	dockerMachineIp, err := getDockerMachineIp()
-	if err != nil {
-		return err
-	}
+	// Fix up kubeconfig.yaml file.
+	//
+	// K3s generates the default kubeconfig.yaml with host name as 'localhost'.
+	// Change the host name to the name user specified via the --api-port argument.
+	//
+	// When user did not specify the host name and when we are running against a remote docker,
+	// set the host name to remote docker machine's IP address.
+	//
+	// Otherwise, the hostname remains as 'localhost'
+	apiHost := server[0].Labels["apihost"]
 
-	if dockerMachineIp != "" {
+	if apiHost != "" {
 		s := string(trimBytes)
-		s = strings.Replace(s, "localhost", dockerMachineIp, 1)
+		s = strings.Replace(s, "localhost", apiHost, 1)
 		trimBytes = []byte(s)
 	}
 	_, err = kubeconfigfile.Write(trimBytes)

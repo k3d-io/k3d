@@ -93,26 +93,36 @@ func CreateCluster(c *cli.Context) error {
 	// environment variables
 	env := []string{"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml"}
 	env = append(env, c.StringSlice("env")...)
-
-	k3sClusterSecret := ""
-	if c.Int("workers") > 0 {
-		k3sClusterSecret = fmt.Sprintf("K3S_CLUSTER_SECRET=%s", GenerateRandomString(20))
-		env = append(env, k3sClusterSecret)
-	}
+	env = append(env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", GenerateRandomString(20)))
 
 	// k3s server arguments
 	// TODO: --port will soon be --api-port since we want to re-use --port for arbitrary port mappings
 	if c.IsSet("port") {
 		log.Println("INFO: As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
 	}
-	k3sServerArgs := []string{"--https-listen-port", c.String("api-port")}
-	if ip, err := getDockerMachineIp(); ip != "" || err != nil {
-		if err != nil {
+	apiPort, err := parseApiPort(c.String("api-port"))
+	if err != nil {
+		return err
+	}
+
+	k3sServerArgs := []string{"--https-listen-port", apiPort.Port}
+
+	// When the 'host' is not provided by --api-port, try to fill it using Docker Machine's IP address.
+	if apiPort.Host == "" {
+		if apiPort.Host, err = getDockerMachineIp(); err != nil {
 			return err
 		}
-		log.Printf("Add TLS SAN for %s", ip)
-		k3sServerArgs = append(k3sServerArgs, "--tls-san", ip)
+
+		// IP address is the same as the host
+		apiPort.HostIp = apiPort.Host
 	}
+
+	if apiPort.Host != "" {
+		// Add TLS SAN for non default host name
+		log.Printf("Add TLS SAN for %s", apiPort.Host)
+		k3sServerArgs = append(k3sServerArgs, "--tls-san", apiPort.Host)
+	}
+
 	if c.IsSet("server-arg") || c.IsSet("x") {
 		k3sServerArgs = append(k3sServerArgs, c.StringSlice("server-arg")...)
 	}
@@ -123,19 +133,23 @@ func CreateCluster(c *cli.Context) error {
 		log.Fatal(err)
 	}
 
+	clusterSpec := &ClusterSpec{
+		AgentArgs:         []string{},
+		ApiPort:           *apiPort,
+		AutoRestart:       c.Bool("auto-restart"),
+		ClusterName:       c.String("name"),
+		Env:               env,
+		Image:             image,
+		NodeToPortSpecMap: portmap,
+		PortAutoOffset:    c.Int("port-auto-offset"),
+		ServerArgs:        k3sServerArgs,
+		Verbose:           c.GlobalBool("verbose"),
+		Volumes:           c.StringSlice("volume"),
+	}
+
 	// create the server
 	log.Printf("Creating cluster [%s]", c.String("name"))
-	dockerID, err := createServer(
-		c.GlobalBool("verbose"),
-		image,
-		c.String("api-port"),
-		k3sServerArgs,
-		env,
-		c.String("name"),
-		c.StringSlice("volume"),
-		portmap,
-		c.Bool("auto-restart"),
-	)
+	dockerID, err := createServer(clusterSpec)
 	if err != nil {
 		deleteCluster()
 		return err
@@ -187,24 +201,9 @@ func CreateCluster(c *cli.Context) error {
 	// spin up the worker nodes
 	// TODO: do this concurrently in different goroutines
 	if c.Int("workers") > 0 {
-		k3sWorkerArgs := []string{}
-		env := []string{k3sClusterSecret}
-		env = append(env, c.StringSlice("env")...)
 		log.Printf("Booting %s workers for cluster %s", strconv.Itoa(c.Int("workers")), c.String("name"))
 		for i := 0; i < c.Int("workers"); i++ {
-			workerID, err := createWorker(
-				c.GlobalBool("verbose"),
-				image,
-				k3sWorkerArgs,
-				env,
-				c.String("name"),
-				c.StringSlice("volume"),
-				i,
-				c.String("api-port"),
-				portmap,
-				c.Int("port-auto-offset"),
-				c.Bool("auto-restart"),
-			)
+			workerID, err := createWorker(clusterSpec, i)
 			if err != nil {
 				deleteCluster()
 				return err

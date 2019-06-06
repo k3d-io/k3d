@@ -3,9 +3,17 @@ package run
 import (
 	"fmt"
 	"math/rand"
+	"net"
+	"strconv"
 	"strings"
 	"time"
 )
+
+type apiPort struct {
+	Host   string
+	HostIp string
+	Port   string
+}
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const (
@@ -80,4 +88,35 @@ func ValidateHostname(name string) error {
 	}
 
 	return nil
+}
+
+func parseApiPort(portSpec string) (*apiPort, error) {
+	var port *apiPort
+	split := strings.Split(portSpec, ":")
+	if len(split) > 2 {
+		return nil, fmt.Errorf("api-port format error")
+	}
+
+	if len(split) == 1 {
+		port = &apiPort{Port: split[0]}
+	} else {
+		// Make sure 'host' can be resolved to an IP address
+		addrs, err := net.LookupHost(split[0])
+		if err != nil {
+			return nil, err
+		}
+		port = &apiPort{Host: split[0], HostIp: addrs[0], Port: split[1]}
+	}
+
+	// Verify 'port' is an integer and within port ranges
+	p, err := strconv.Atoi(port.Port)
+	if err != nil {
+		return nil, err
+	}
+
+	if p < 0 || p > 65535 {
+		return nil, fmt.Errorf("ERROR: --api-port port value out of range")
+	}
+
+	return port, nil
 }
