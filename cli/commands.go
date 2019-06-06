@@ -161,10 +161,6 @@ func CreateCluster(c *cli.Context) error {
 		return err
 	}
 
-	if c.IsSet("timeout") {
-		log.Println("[Warning] The --timeout flag is deprecated. use '--wait <timeout>' instead")
-	}
-
 	// Wait for k3s to be up and running if wanted.
 	// We're simply scanning the container logs for a line that tells us that everything's up and running
 	// TODO: also wait for worker nodes
