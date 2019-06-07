@@ -103,12 +103,7 @@ func main() {
 					Usage: "Specify the Kubernetes cluster API server port (Format: `[host:]port` (Note: --port/-p will be used for arbitrary port mapping as of v2.0.0, use --api-port/-a instead for setting the api port)",
 				},
 				cli.IntFlag{
-					Name:  "timeout, t",
-					Value: 0,
-					Usage: "Set the timeout value when --wait flag is set (deprecated, use --wait <timeout> instead)",
-				},
-				cli.IntFlag{
-					Name:  "wait, w",
+					Name:  "wait, t",
 					Value: 0, // timeout
 					Usage: "Wait for the cluster to come up before returning until timoout (in seconds). Use --wait 0 to wait forever",
 				},
@@ -126,7 +121,7 @@ func main() {
 					Usage: "Pass an additional environment variable (new flag per variable)",
 				},
 				cli.IntFlag{
-					Name:  "workers",
+					Name:  "workers, w",
 					Value: 0,
 					Usage: "Specify how many worker nodes you want to spawn",
 				},
