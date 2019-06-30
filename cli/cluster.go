@@ -68,6 +68,10 @@ func createClusterDir(name string) {
 	if err := createDirIfNotExists(clusterPath); err != nil {
 		log.Fatalf("ERROR: couldn't create cluster directory [%s] -> %+v", clusterPath, err)
 	}
+	// create subdir for sharing container images
+	if err := createDirIfNotExists(clusterPath + "/images"); err != nil {
+		log.Fatalf("ERROR: couldn't create cluster sub-directory [%s] -> %+v", clusterPath+"/images", err)
+	}
 }
 
 // deleteClusterDir contrary to createClusterDir, this deletes the cluster directory under $HOME/.config/k3d/<cluster_name>

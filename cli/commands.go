@@ -100,7 +100,7 @@ func CreateCluster(c *cli.Context) error {
 	if c.IsSet("port") {
 		log.Println("INFO: As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
 	}
-	apiPort, err := parseApiPort(c.String("api-port"))
+	apiPort, err := parseAPIPort(c.String("api-port"))
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func CreateCluster(c *cli.Context) error {
 	if apiPort.Host == "" {
 		apiPort.Host, err = getDockerMachineIp()
 		// IP address is the same as the host
-		apiPort.HostIp = apiPort.Host
+		apiPort.HostIP = apiPort.Host
 		// In case of error, Log a warning message, and continue on. Since it more likely caused by a miss configured
 		// DOCKER_MACHINE_NAME environment variable.
 		if err != nil {
@@ -137,7 +137,7 @@ func CreateCluster(c *cli.Context) error {
 
 	clusterSpec := &ClusterSpec{
 		AgentArgs:         []string{},
-		ApiPort:           *apiPort,
+		APIPort:           *apiPort,
 		AutoRestart:       c.Bool("auto-restart"),
 		ClusterName:       c.String("name"),
 		Env:               env,
@@ -151,6 +151,10 @@ func CreateCluster(c *cli.Context) error {
 
 	// create the server
 	log.Printf("Creating cluster [%s]", c.String("name"))
+
+	// create the directory where we will put the kubeconfig file by default (when running `k3d get-config`)
+	createClusterDir(c.String("name"))
+
 	dockerID, err := createServer(clusterSpec)
 	if err != nil {
 		deleteCluster()
@@ -191,10 +195,6 @@ func CreateCluster(c *cli.Context) error {
 
 		time.Sleep(1 * time.Second)
 	}
-
-	// create the directory where we will put the kubeconfig file by default (when running `k3d get-config`)
-	// TODO: this can probably be moved to `k3d get-config` or be removed in a different approach
-	createClusterDir(c.String("name"))
 
 	// spin up the worker nodes
 	// TODO: do this concurrently in different goroutines
@@ -361,4 +361,9 @@ func GetKubeConfig(c *cli.Context) error {
 // Shell starts a new subshell with the KUBECONFIG pointing to the selected cluster
 func Shell(c *cli.Context) error {
 	return subShell(c.String("name"), c.String("shell"), c.String("command"))
+}
+
+// ImportImage saves an image locally and imports it into the k3d containers
+func ImportImage(c *cli.Context) error {
+	return importImage(c.String("name"), c.String("image"))
 }
