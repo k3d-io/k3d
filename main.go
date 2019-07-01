@@ -216,17 +216,14 @@ func main() {
 		},
 		{
 			// get-kubeconfig grabs the kubeconfig from the cluster and prints the path to it
-			Name:  "import-image",
-			Usage: "Import a container image from your local docker daemon into the cluster",
+			Name:    "import-images",
+			Aliases: []string{"i"},
+			Usage:   "Import a comma- or space-separated list of container images from your local docker daemon into the cluster",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "name, n",
+					Name:  "name, n, cluster, c",
 					Value: defaultK3sClusterName,
 					Usage: "Name of the cluster",
-				},
-				cli.StringFlag{
-					Name:  "image, i",
-					Usage: "Name of the image that you want to import, e.g. `nginx:local`",
 				},
 			},
 			Action: run.ImportImage,

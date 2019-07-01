@@ -365,5 +365,11 @@ func Shell(c *cli.Context) error {
 
 // ImportImage saves an image locally and imports it into the k3d containers
 func ImportImage(c *cli.Context) error {
-	return importImage(c.String("name"), c.String("image"))
+	images := make([]string, 0)
+	if strings.Contains(c.Args().First(), ",") {
+		images = append(images, strings.Split(c.Args().First(), ",")...)
+	} else {
+		images = append(images, c.Args()...)
+	}
+	return importImage(c.String("name"), images)
 }

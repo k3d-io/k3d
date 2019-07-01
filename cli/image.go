@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -15,7 +16,7 @@ import (
 
 const imageBasePathRemote = "/images/"
 
-func importImage(clusterName, image string) error {
+func importImage(clusterName string, images []string) error {
 	// get a docker client
 	ctx := context.Background()
 	docker, err := client.NewEnvClient()
@@ -30,18 +31,15 @@ func importImage(clusterName, image string) error {
 		return fmt.Errorf("ERROR: couldn't get cluster directory for cluster [%s]\n%+v", clusterName, err)
 	}
 
-	// TODO: extend to enable importing a list of images
-	imageList := []string{image}
-
 	//*** first, save the images using the local docker daemon
-	log.Printf("INFO: Saving image [%s] from local docker daemon...", image)
-	imageReader, err := docker.ImageSave(ctx, imageList)
+	log.Printf("INFO: Saving images [%s] from local docker daemon...", images)
+	imageReader, err := docker.ImageSave(ctx, images)
 	if err != nil {
-		return fmt.Errorf("ERROR: failed to save image [%s] locally\n%+v", image, err)
+		return fmt.Errorf("ERROR: failed to save images [%s] locally\n%+v", images, err)
 	}
 
 	// create tarball
-	imageTarName := strings.ReplaceAll(strings.ReplaceAll(image, ":", "_"), "/", "_") + ".tar"
+	imageTarName := "k3d-" + clusterName + "-images-" + time.Now().Format("20060102150405") + ".tar"
 	imageTar, err := os.Create(imageBasePathLocal + imageTarName)
 	if err != nil {
 		return err
@@ -50,10 +48,10 @@ func importImage(clusterName, image string) error {
 
 	_, err = io.Copy(imageTar, imageReader)
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't save image [%s] to file [%s]\n%+v", image, imageTar.Name(), err)
+		return fmt.Errorf("ERROR: couldn't save image [%s] to file [%s]\n%+v", images, imageTar.Name(), err)
 	}
 
-	// TODO: get correct container ID by cluster name
+	// Get the container IDs for all containers in the cluster
 	clusters, err := getClusters(false, clusterName)
 	if err != nil {
 		return fmt.Errorf("ERROR: couldn't get cluster by name [%s]\n%+v", clusterName, err)
@@ -86,7 +84,7 @@ func importImage(clusterName, image string) error {
 	for _, container := range containerList {
 
 		containerName := container.Names[0][1:] // trimming the leading "/" from name
-		log.Printf("INFO: Importing image [%s] in container [%s]", image, containerName)
+		log.Printf("INFO: Importing image [%s] in container [%s]", images, containerName)
 
 		// create exec configuration
 		execResponse, err := docker.ContainerExecCreate(ctx, container.ID, execConfig)
@@ -119,7 +117,7 @@ func importImage(clusterName, image string) error {
 		}
 	}
 
-	log.Printf("INFO: Successfully imported image [%s] in all nodes of cluster [%s]", image, clusterName)
+	log.Printf("INFO: Successfully imported image [%s] in all nodes of cluster [%s]", images, clusterName)
 
 	log.Println("INFO: Cleaning up tarball...")
 	if err := os.Remove(imageBasePathLocal + imageTarName); err != nil {
