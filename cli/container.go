@@ -123,13 +123,6 @@ func createServer(spec *ClusterSpec) (string, error) {
 		hostConfig.Binds = spec.Volumes
 	}
 
-	// we need to mount the clusterDir subdirectory `clusterDir/images` to enable importing images without the need for `docker cp`
-	clusterDir, err := getClusterDir(spec.ClusterName)
-	if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't get cluster dir for mounting\n%+v", err)
-	}
-	hostConfig.Binds = append(hostConfig.Binds, fmt.Sprintf("%s:/images", clusterDir+"/images"))
-
 	networkingConfig := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
 			k3dNetworkName(spec.ClusterName): {
@@ -198,13 +191,6 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 	if len(spec.Volumes) > 0 && spec.Volumes[0] != "" {
 		hostConfig.Binds = spec.Volumes
 	}
-
-	// we need to mount the clusterDir subdirectory `clusterDir/images` to enable importing images without the need for `docker cp`
-	clusterDir, err := getClusterDir(spec.ClusterName)
-	if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't get cluster dir for mounting\n%+v", err)
-	}
-	hostConfig.Binds = append(hostConfig.Binds, fmt.Sprintf("%s:/images", clusterDir+"/images"))
 
 	networkingConfig := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{

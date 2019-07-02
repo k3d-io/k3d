@@ -135,6 +135,15 @@ func CreateCluster(c *cli.Context) error {
 		log.Fatal(err)
 	}
 
+	// create a docker volume for sharing image tarballs with the cluster
+	imageVolume, err := createImageVolume(c.String("name"))
+	log.Println("Created docker volume ", imageVolume.Name)
+	if err != nil {
+		return err
+	}
+	volumes := c.StringSlice("volume")
+	volumes = append(volumes, fmt.Sprintf("%s:/images", imageVolume.Name))
+
 	clusterSpec := &ClusterSpec{
 		AgentArgs:         []string{},
 		APIPort:           *apiPort,
@@ -146,7 +155,7 @@ func CreateCluster(c *cli.Context) error {
 		PortAutoOffset:    c.Int("port-auto-offset"),
 		ServerArgs:        k3sServerArgs,
 		Verbose:           c.GlobalBool("verbose"),
-		Volumes:           c.StringSlice("volume"),
+		Volumes:           volumes,
 	}
 
 	// create the server
@@ -241,14 +250,19 @@ func DeleteCluster(c *cli.Context) error {
 				}
 			}
 		}
-		log.Println("...Removing server")
 		deleteClusterDir(cluster.name)
+		log.Println("...Removing server")
 		if err := removeContainer(cluster.server.ID); err != nil {
 			return fmt.Errorf("ERROR: Couldn't remove server for cluster %s\n%+v", cluster.name, err)
 		}
 
 		if err := deleteClusterNetwork(cluster.name); err != nil {
 			log.Printf("WARNING: couldn't delete cluster network for cluster %s\n%+v", cluster.name, err)
+		}
+
+		log.Println("...Removing docker image volume")
+		if err := deleteImageVolume(cluster.name); err != nil {
+			log.Printf("WARNING: couldn't delete image docker volume for cluster %s\n%+v", cluster.name, err)
 		}
 
 		log.Printf("SUCCESS: removed cluster [%s]", cluster.name)
