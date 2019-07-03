@@ -9,14 +9,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/docker/docker/api/types/filters"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -61,6 +58,15 @@ func CreateCluster(c *cli.Context) error {
 		return fmt.Errorf("ERROR: Cluster %s already exists", c.String("name"))
 	}
 
+	// On Error delete the cluster.  If there createCluster() encounter any error,
+	// call this function to remove all resources allocated for the cluster so far
+	// so that they don't linger around.
+	deleteCluster := func() {
+		if err := DeleteCluster(c); err != nil {
+			log.Printf("Error: Failed to delete cluster %s", c.String("name"))
+		}
+	}
+
 	// define image
 	image := c.String("image")
 	if c.IsSet("version") {
@@ -88,21 +94,39 @@ func CreateCluster(c *cli.Context) error {
 
 	// environment variables
 	env := []string{"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml"}
-	if c.IsSet("env") || c.IsSet("e") {
-		env = append(env, c.StringSlice("env")...)
-	}
-	k3sClusterSecret := ""
-	if c.Int("workers") > 0 {
-		k3sClusterSecret = fmt.Sprintf("K3S_CLUSTER_SECRET=%s", GenerateRandomString(20))
-		env = append(env, k3sClusterSecret)
-	}
+	env = append(env, c.StringSlice("env")...)
+	env = append(env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", GenerateRandomString(20)))
 
 	// k3s server arguments
 	// TODO: --port will soon be --api-port since we want to re-use --port for arbitrary port mappings
 	if c.IsSet("port") {
 		log.Println("INFO: As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
 	}
-	k3sServerArgs := []string{"--https-listen-port", c.String("api-port")}
+	apiPort, err := parseApiPort(c.String("api-port"))
+	if err != nil {
+		return err
+	}
+
+	k3sServerArgs := []string{"--https-listen-port", apiPort.Port}
+
+	// When the 'host' is not provided by --api-port, try to fill it using Docker Machine's IP address.
+	if apiPort.Host == "" {
+		apiPort.Host, err = getDockerMachineIp()
+		// IP address is the same as the host
+		apiPort.HostIp = apiPort.Host
+		// In case of error, Log a warning message, and continue on. Since it more likely caused by a miss configured
+		// DOCKER_MACHINE_NAME environment variable.
+		if err != nil {
+			log.Printf("WARNING: Failed to get docker machine IP address, ignoring the DOCKER_MACHINE_NAME environment variable setting.\n")
+		}
+	}
+
+	if apiPort.Host != "" {
+		// Add TLS SAN for non default host name
+		log.Printf("Add TLS SAN for %s", apiPort.Host)
+		k3sServerArgs = append(k3sServerArgs, "--tls-san", apiPort.Host)
+	}
+
 	if c.IsSet("server-arg") || c.IsSet("x") {
 		k3sServerArgs = append(k3sServerArgs, c.StringSlice("server-arg")...)
 	}
@@ -113,36 +137,32 @@ func CreateCluster(c *cli.Context) error {
 		log.Fatal(err)
 	}
 
+	clusterSpec := &ClusterSpec{
+		AgentArgs:         []string{},
+		ApiPort:           *apiPort,
+		AutoRestart:       c.Bool("auto-restart"),
+		ClusterName:       c.String("name"),
+		Env:               env,
+		Image:             image,
+		NodeToPortSpecMap: portmap,
+		PortAutoOffset:    c.Int("port-auto-offset"),
+		ServerArgs:        k3sServerArgs,
+		Verbose:           c.GlobalBool("verbose"),
+		Volumes:           c.StringSlice("volume"),
+	}
+
 	// create the server
 	log.Printf("Creating cluster [%s]", c.String("name"))
-	dockerID, err := createServer(
-		c.GlobalBool("verbose"),
-		image,
-		c.String("api-port"),
-		k3sServerArgs,
-		env,
-		c.String("name"),
-		checkDefaultBindMounts(c.StringSlice("volume"), defaultBindMounts),
-		portmap,
-		c.Bool("auto-restart"),
-	)
+	dockerID, err := createServer(clusterSpec)
 	if err != nil {
-		log.Printf("ERROR: failed to create cluster\n%+v", err)
-		delErr := DeleteCluster(c)
-		if delErr != nil {
-			return delErr
-		}
-		os.Exit(1)
+		deleteCluster()
+		return err
 	}
 
 	ctx := context.Background()
 	docker, err := client.NewEnvClient()
 	if err != nil {
 		return err
-	}
-
-	if c.IsSet("timeout") {
-		log.Println("[Warning] The --timeout flag is deprecated. use '--wait <timeout>' instead")
 	}
 
 	// Wait for k3s to be up and running if wanted.
@@ -153,10 +173,7 @@ func CreateCluster(c *cli.Context) error {
 	for c.IsSet("wait") {
 		// not running after timeout exceeded? Rollback and delete everything.
 		if timeout != 0 && !time.Now().After(start.Add(timeout)) {
-			err := DeleteCluster(c)
-			if err != nil {
-				return err
-			}
+			deleteCluster()
 			return errors.New("Cluster creation exceeded specified timeout")
 		}
 
@@ -184,30 +201,12 @@ func CreateCluster(c *cli.Context) error {
 	// spin up the worker nodes
 	// TODO: do this concurrently in different goroutines
 	if c.Int("workers") > 0 {
-		k3sWorkerArgs := []string{}
-		env := []string{k3sClusterSecret}
 		log.Printf("Booting %s workers for cluster %s", strconv.Itoa(c.Int("workers")), c.String("name"))
 		for i := 0; i < c.Int("workers"); i++ {
-			workerID, err := createWorker(
-				c.GlobalBool("verbose"),
-				image,
-				k3sWorkerArgs,
-				env,
-				c.String("name"),
-				checkDefaultBindMounts(c.StringSlice("volume"), defaultBindMounts),
-				i,
-				c.String("api-port"),
-				portmap,
-				c.Int("port-auto-offset"),
-				c.Bool("auto-restart"),
-			)
+			workerID, err := createWorker(clusterSpec, i)
 			if err != nil {
-				log.Printf("ERROR: failed to create worker node for cluster %s\n%+v", c.String("name"), err)
-				delErr := DeleteCluster(c)
-				if delErr != nil {
-					return delErr
-				}
-				os.Exit(1)
+				deleteCluster()
+				return err
 			}
 			log.Printf("Created worker with ID %s\n", workerID)
 		}
@@ -350,61 +349,18 @@ func ListClusters(c *cli.Context) error {
 
 // GetKubeConfig grabs the kubeconfig from the running cluster and prints the path to stdout
 func GetKubeConfig(c *cli.Context) error {
-	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	cluster := c.String("name")
+	kubeConfigPath, err := getKubeConfig(cluster)
 	if err != nil {
 		return err
-	}
-
-	filters := filters.NewArgs()
-	filters.Add("label", "app=k3d")
-	filters.Add("label", fmt.Sprintf("cluster=%s", c.String("name")))
-	filters.Add("label", "component=server")
-	server, err := docker.ContainerList(ctx, types.ContainerListOptions{
-		Filters: filters,
-	})
-
-	if err != nil {
-		return fmt.Errorf("Failed to get server container for cluster %s\n%+v", c.String("name"), err)
-	}
-
-	if len(server) == 0 {
-		return fmt.Errorf("No server container for cluster %s", c.String("name"))
-	}
-
-	// get kubeconfig file from container and read contents
-	reader, _, err := docker.CopyFromContainer(ctx, server[0].ID, "/output/kubeconfig.yaml")
-	if err != nil {
-		return fmt.Errorf("ERROR: couldn't copy kubeconfig.yaml from server container %s\n%+v", server[0].ID, err)
-	}
-	defer reader.Close()
-
-	readBytes, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return fmt.Errorf("ERROR: couldn't read kubeconfig from container\n%+v", err)
-	}
-
-	// create destination kubeconfig file
-	clusterDir, err := getClusterDir(c.String("name"))
-	destPath := fmt.Sprintf("%s/kubeconfig.yaml", clusterDir)
-	if err != nil {
-		return err
-	}
-
-	kubeconfigfile, err := os.Create(destPath)
-	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create kubeconfig.yaml in %s\n%+v", clusterDir, err)
-	}
-	defer kubeconfigfile.Close()
-
-	// write to file, skipping the first 512 bytes which contain file metadata and trimming any NULL characters
-	_, err = kubeconfigfile.Write(bytes.Trim(readBytes[512:], "\x00"))
-	if err != nil {
-		return fmt.Errorf("ERROR: couldn't write to kubeconfig.yaml\n%+v", err)
 	}
 
 	// output kubeconfig file path to stdout
-	fmt.Println(destPath)
-
+	fmt.Println(kubeConfigPath)
 	return nil
+}
+
+// Shell starts a new subshell with the KUBECONFIG pointing to the selected cluster
+func Shell(c *cli.Context) error {
+	return subShell(c.String("name"), c.String("shell"), c.String("command"))
 }

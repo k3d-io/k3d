@@ -46,6 +46,28 @@ func main() {
 			Action:  run.CheckTools,
 		},
 		{
+			// shell starts a shell in the context of a running cluster
+			Name:  "shell",
+			Usage: "Start a subshell for a cluster",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "name, n",
+					Value: defaultK3sClusterName,
+					Usage: "Set a name for the cluster",
+				},
+				cli.StringFlag{
+					Name:  "command, c",
+					Usage: "Run a shell command in the context of the cluster",
+				},
+				cli.StringFlag{
+					Name:  "shell, s",
+					Value: "auto",
+					Usage: "which shell to use. One of [auto, bash, zsh]",
+				},
+			},
+			Action: run.Shell,
+		},
+		{
 			// create creates a new k3s cluster in docker containers
 			Name:    "create",
 			Aliases: []string{"c"},
@@ -74,19 +96,14 @@ func main() {
 					Name:  "version",
 					Usage: "Choose the k3s image version",
 				},
-				cli.IntFlag{
+				cli.StringFlag{
 					// TODO: only --api-port, -a soon since we want to use --port, -p for the --publish/--add-port functionality
 					Name:  "api-port, a, port, p",
-					Value: 6443,
-					Usage: "Map the Kubernetes ApiServer port to a local port (Note: --port/-p will be used for arbitrary port mapping as of v2.0.0, use --api-port/-a instead for setting the api port)",
+					Value: "6443",
+					Usage: "Specify the Kubernetes cluster API server port (Format: `[host:]port` (Note: --port/-p will be used for arbitrary port mapping as of v2.0.0, use --api-port/-a instead for setting the api port)",
 				},
 				cli.IntFlag{
-					Name:  "timeout, t",
-					Value: 0,
-					Usage: "Set the timeout value when --wait flag is set (deprecated, use --wait <timeout> instead)",
-				},
-				cli.IntFlag{
-					Name:  "wait, w",
+					Name:  "wait, t",
 					Value: 0, // timeout
 					Usage: "Wait for the cluster to come up before returning until timoout (in seconds). Use --wait 0 to wait forever",
 				},
@@ -104,7 +121,7 @@ func main() {
 					Usage: "Pass an additional environment variable (new flag per variable)",
 				},
 				cli.IntFlag{
-					Name:  "workers",
+					Name:  "workers, w",
 					Value: 0,
 					Usage: "Specify how many worker nodes you want to spawn",
 				},
