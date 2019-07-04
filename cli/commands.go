@@ -170,7 +170,7 @@ func CreateCluster(c *cli.Context) error {
 	timeout := time.Duration(c.Int("wait")) * time.Second
 	for c.IsSet("wait") {
 		// not running after timeout exceeded? Rollback and delete everything.
-		if timeout != 0 && !time.Now().After(start.Add(timeout)) {
+		if timeout != 0 && time.Now().After(start.Add(timeout)) {
 			deleteCluster()
 			return errors.New("Cluster creation exceeded specified timeout")
 		}
