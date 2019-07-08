@@ -6,15 +6,15 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"os"
 	"strings"
-	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 )
 
-const imageBasePathRemote = "/images/"
+const imageBasePathRemote = "/images"
 
 func importImage(clusterName string, images []string) error {
 	// get a docker client
@@ -29,7 +29,6 @@ func importImage(clusterName string, images []string) error {
 	if err != nil {
 		return fmt.Errorf("ERROR: couldn't get image volume for cluster [%s]\n%+v", clusterName, err)
 	}
-	imageBasePathLocal := imageVolume.Mountpoint + "/"
 
 	//*** first, save the images using the local docker daemon
 	log.Printf("INFO: Saving images [%s] from local docker daemon...", images)
@@ -38,17 +37,44 @@ func importImage(clusterName string, images []string) error {
 		return fmt.Errorf("ERROR: failed to save images [%s] locally\n%+v", images, err)
 	}
 
-	// create tarball
-	imageTarName := "k3d-" + clusterName + "-images-" + time.Now().Format("20060102150405") + ".tar"
-	imageTar, err := os.Create(imageBasePathLocal + imageTarName)
+	// TODO: create tar from stream
+	tmpFile, err := ioutil.TempFile("", "*.tar")
 	if err != nil {
-		return err
+		return fmt.Errorf("ERROR: couldn't create temp file to cache tarball\n%+v", err)
 	}
-	defer imageTar.Close()
+	defer tmpFile.Close()
+	if _, err = io.Copy(tmpFile, imageReader); err != nil {
+		return fmt.Errorf("ERROR: couldn't write image stream to tar [%s]\n%+v", tmpFile.Name(), err)
+	}
 
-	_, err = io.Copy(imageTar, imageReader)
+	// create a dummy container to get the tarball into the named volume
+	containerConfig := container.Config{
+		Hostname: "k3d-dummy", // TODO: change details here
+		Image:    "rancher/k3s:v0.7.0-rc2",
+		Labels: map[string]string{
+			"app":     "k3d",
+			"cluster": "test",
+		},
+	}
+	hostConfig := container.HostConfig{
+		Binds: []string{
+			fmt.Sprintf("%s:%s:rw", imageVolume.Name, imageBasePathRemote),
+		},
+	}
+	dummyContainer, err := docker.ContainerCreate(ctx, &containerConfig, &hostConfig, &network.NetworkingConfig{}, "k3d-dummy")
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't save image [%s] to file [%s]\n%+v", images, imageTar.Name(), err)
+		return fmt.Errorf("ERROR: couldn't create dummy container\n%+v", err)
+	}
+
+	fmt.Println(ioutil.ReadAll(imageReader))
+	if err = docker.CopyToContainer(ctx, dummyContainer.ID, "/images", imageReader, types.CopyToContainerOptions{}); err != nil {
+		return fmt.Errorf("ERROR: couldn't copy tarball to dummy container\n%+v", err)
+	}
+
+	if err = docker.ContainerRemove(ctx, "k3d-dummy", types.ContainerRemoveOptions{
+		Force: true,
+	}); err != nil {
+		return fmt.Errorf("ERROR: couldn't remove dummy container\n%+v", err)
 	}
 
 	// Get the container IDs for all containers in the cluster
@@ -62,7 +88,8 @@ func importImage(clusterName string, images []string) error {
 	// *** second, import the images using ctr in the k3d nodes
 
 	// create exec configuration
-	cmd := []string{"ctr", "image", "import", imageBasePathRemote + imageTarName}
+	command := fmt.Sprintf("ctr image import %s", imageBasePathRemote+"/test.tar")
+	cmd := []string{"sh", "-c", command}
 	execConfig := types.ExecConfig{
 		AttachStderr: true,
 		AttachStdout: true,
@@ -120,9 +147,12 @@ func importImage(clusterName string, images []string) error {
 	log.Printf("INFO: Successfully imported image [%s] in all nodes of cluster [%s]", images, clusterName)
 
 	log.Println("INFO: Cleaning up tarball...")
-	if err := os.Remove(imageBasePathLocal + imageTarName); err != nil {
-		return fmt.Errorf("ERROR: Couldn't remove tarball [%s]\n%+v", imageBasePathLocal+imageTarName, err)
+	/*if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("ERROR: Couldn't close tarfile [%s]\n%+v", tmpFile.Name(), err)
 	}
+	if err = os.Remove(tmpFile.Name()); err != nil {
+		return fmt.Errorf("ERROR: Couldn't remove tarball [%s]\n%+v", tmpFile.Name(), err)
+	}*/
 	log.Println("INFO: ...Done")
 
 	return nil
