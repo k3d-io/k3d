@@ -29,6 +29,7 @@ func importImage(clusterName string, images []string) error {
 	if err != nil {
 		return fmt.Errorf("ERROR: couldn't get image volume for cluster [%s]\n%+v", clusterName, err)
 	}
+	imageBasePathLocal := imageVolume.Mountpoint + "/"
 
 	//*** first, save the images using the local docker daemon
 	log.Printf("INFO: Saving images [%s] from local docker daemon...", images)
