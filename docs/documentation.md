@@ -5,6 +5,7 @@
 ```shell
 COMMANDS:
      check-tools, ct  Check if docker is running
+     shell            Start a subshell for a cluster
      create, c        Create a single- or multi-node k3s cluster in docker containers
      delete, d, del   Delete cluster
      stop             Stop cluster
@@ -18,7 +19,6 @@ GLOBAL OPTIONS:
    --help, -h     show help
    --version, -v  print the version
 ```
-
 
 ## Compatibility with `k3s` functionality/options
 

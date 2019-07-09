@@ -46,6 +46,11 @@ Example Workflow: Create a new cluster and use it with `kubectl`
 3. execute some commands like `kubectl get pods --all-namespaces`
 4. `k3d delete` to delete the default cluster
 
+### Exposing Services
+
+If you want to access your services from the outside (e.g. via Ingress), you need to map the ports (e.g. port 80 for Ingress) using the `--publish` flag (or aliases). 
+Check out the [examples here]((docs/examples.md)).
+
 ## What now?
 
 Find more details under the following Links:
