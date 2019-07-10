@@ -3,10 +3,10 @@ package run
 import (
 	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -14,7 +14,10 @@ import (
 	"github.com/docker/docker/client"
 )
 
-const imageBasePathRemote = "/images"
+const (
+	imageBasePathRemote = "/images"
+	k3dToolsImage       = "iwilltry42/k3d-tools:v0.0.1"
+)
 
 func importImage(clusterName string, images []string) error {
 	// get a docker client
@@ -31,50 +34,69 @@ func importImage(clusterName string, images []string) error {
 	}
 
 	//*** first, save the images using the local docker daemon
-	log.Printf("INFO: Saving images [%s] from local docker daemon...", images)
-	imageReader, err := docker.ImageSave(ctx, images)
-	if err != nil {
-		return fmt.Errorf("ERROR: failed to save images [%s] locally\n%+v", images, err)
-	}
+	log.Printf("INFO: Saving images %s from local docker daemon...", images)
+	toolsContainerName := fmt.Sprintf("k3d-%s-tools", clusterName)
+	tarFileName := fmt.Sprintf("%s/k3d-%s-images-%s.tar", imageBasePathRemote, clusterName, time.Now().Format("20060102150405"))
 
-	// TODO: create tar from stream
-	tmpFile, err := ioutil.TempFile("", "*.tar")
-	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create temp file to cache tarball\n%+v", err)
-	}
-	defer tmpFile.Close()
-	if _, err = io.Copy(tmpFile, imageReader); err != nil {
-		return fmt.Errorf("ERROR: couldn't write image stream to tar [%s]\n%+v", tmpFile.Name(), err)
-	}
-
-	// create a dummy container to get the tarball into the named volume
+	// create a tools container to get the tarball into the named volume
 	containerConfig := container.Config{
-		Hostname: "k3d-dummy", // TODO: change details here
-		Image:    "rancher/k3s:v0.7.0-rc2",
+		Hostname: toolsContainerName,
+		Image:    k3dToolsImage,
 		Labels: map[string]string{
-			"app":     "k3d",
-			"cluster": "test",
+			"app":       "k3d",
+			"cluster":   clusterName,
+			"component": "tools",
 		},
+		Cmd:          append([]string{"save-image", "-d", tarFileName}, images...),
+		AttachStdout: true,
+		AttachStderr: true,
 	}
 	hostConfig := container.HostConfig{
 		Binds: []string{
+			"/var/run/docker.sock:/var/run/docker.sock",
 			fmt.Sprintf("%s:%s:rw", imageVolume.Name, imageBasePathRemote),
 		},
 	}
-	dummyContainer, err := docker.ContainerCreate(ctx, &containerConfig, &hostConfig, &network.NetworkingConfig{}, "k3d-dummy")
+
+	toolsContainerID, err := startContainer(false, &containerConfig, &hostConfig, &network.NetworkingConfig{}, toolsContainerName)
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create dummy container\n%+v", err)
+		return err
 	}
 
-	fmt.Println(ioutil.ReadAll(imageReader))
-	if err = docker.CopyToContainer(ctx, dummyContainer.ID, "/images", imageReader, types.CopyToContainerOptions{}); err != nil {
-		return fmt.Errorf("ERROR: couldn't copy tarball to dummy container\n%+v", err)
+	// loop to wait for tools container to exit (failed or successfully saved images)
+	for {
+		cont, err := docker.ContainerInspect(ctx, toolsContainerID)
+		if err != nil {
+			return fmt.Errorf("ERROR: couldn't get helper container's exit code\n%+v", err)
+		}
+		if !cont.State.Running { // container finished...
+			if cont.State.ExitCode == 0 { // ...successfully
+				log.Println("INFO: saved images to shared docker volume")
+				break
+			} else if cont.State.ExitCode != 0 { // ...failed
+				errTxt := "ERROR: helper container failed to save images"
+				logReader, err := docker.ContainerLogs(ctx, toolsContainerID, types.ContainerLogsOptions{
+					ShowStdout: true,
+					ShowStderr: true,
+				})
+				if err != nil {
+					return fmt.Errorf("%s\n> couldn't get logs from helper container\n%+v", errTxt, err)
+				}
+				logs, err := ioutil.ReadAll(logReader) // let's show somw logs indicating what happened
+				if err != nil {
+					return fmt.Errorf("%s\n> couldn't get logs from helper container\n%+v", errTxt, err)
+				}
+				return fmt.Errorf("%s -> Logs from [%s]:\n>>>>>>\n%s\n<<<<<<", errTxt, toolsContainerName, string(logs))
+			}
+		}
+		time.Sleep(time.Second / 2) // wait for half a second so we don't spam the docker API too much
 	}
 
-	if err = docker.ContainerRemove(ctx, "k3d-dummy", types.ContainerRemoveOptions{
+	// clean up tools container
+	if err = docker.ContainerRemove(ctx, toolsContainerID, types.ContainerRemoveOptions{
 		Force: true,
 	}); err != nil {
-		return fmt.Errorf("ERROR: couldn't remove dummy container\n%+v", err)
+		return fmt.Errorf("ERROR: couldn't remove helper container\n%+v", err)
 	}
 
 	// Get the container IDs for all containers in the cluster
@@ -88,8 +110,7 @@ func importImage(clusterName string, images []string) error {
 	// *** second, import the images using ctr in the k3d nodes
 
 	// create exec configuration
-	command := fmt.Sprintf("ctr image import %s", imageBasePathRemote+"/test.tar")
-	cmd := []string{"sh", "-c", command}
+	cmd := []string{"ctr", "image", "import", tarFileName}
 	execConfig := types.ExecConfig{
 		AttachStderr: true,
 		AttachStdout: true,
@@ -111,7 +132,7 @@ func importImage(clusterName string, images []string) error {
 	for _, container := range containerList {
 
 		containerName := container.Names[0][1:] // trimming the leading "/" from name
-		log.Printf("INFO: Importing image [%s] in container [%s]", images, containerName)
+		log.Printf("INFO: Importing images %s in container [%s]", images, containerName)
 
 		// create exec configuration
 		execResponse, err := docker.ContainerExecCreate(ctx, container.ID, execConfig)
@@ -144,15 +165,12 @@ func importImage(clusterName string, images []string) error {
 		}
 	}
 
-	log.Printf("INFO: Successfully imported image [%s] in all nodes of cluster [%s]", images, clusterName)
+	log.Printf("INFO: Successfully imported images %s in all nodes of cluster [%s]", images, clusterName)
 
-	log.Println("INFO: Cleaning up tarball...")
-	/*if err := tmpFile.Close(); err != nil {
-		return fmt.Errorf("ERROR: Couldn't close tarfile [%s]\n%+v", tmpFile.Name(), err)
-	}
-	if err = os.Remove(tmpFile.Name()); err != nil {
-		return fmt.Errorf("ERROR: Couldn't remove tarball [%s]\n%+v", tmpFile.Name(), err)
-	}*/
+	// log.Println("INFO: Cleaning up tarball...")
+
+	// TODO: clean up tarball (if --rm flag was passed) and then remove the tools container
+
 	log.Println("INFO: ...Done")
 
 	return nil
