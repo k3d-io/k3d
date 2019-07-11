@@ -16,10 +16,10 @@ import (
 
 const (
 	imageBasePathRemote = "/images"
-	k3dToolsImage       = "iwilltry42/k3d-tools:v0.0.1"
+	k3dToolsImage       = "docker.io/iwilltry42/k3d-tools:v0.0.1"
 )
 
-func importImage(clusterName string, images []string) error {
+func importImage(clusterName string, images []string, noRemove bool) error {
 	// get a docker client
 	ctx := context.Background()
 	docker, err := client.NewEnvClient()
@@ -96,7 +96,7 @@ func importImage(clusterName string, images []string) error {
 	if err = docker.ContainerRemove(ctx, toolsContainerID, types.ContainerRemoveOptions{
 		Force: true,
 	}); err != nil {
-		return fmt.Errorf("ERROR: couldn't remove helper container\n%+v", err)
+		return fmt.Errorf("ERROR: couldn't remove tools container\n%+v", err)
 	}
 
 	// Get the container IDs for all containers in the cluster
@@ -128,7 +128,7 @@ func importImage(clusterName string, images []string) error {
 	}
 
 	// import in each node separately
-	// TODO: create a shared image cache volume, so we don't need to import it separately
+	// TODO: import concurrently using goroutines or find a way to share the image cache
 	for _, container := range containerList {
 
 		containerName := container.Names[0][1:] // trimming the leading "/" from name
@@ -167,9 +167,40 @@ func importImage(clusterName string, images []string) error {
 
 	log.Printf("INFO: Successfully imported images %s in all nodes of cluster [%s]", images, clusterName)
 
-	// log.Println("INFO: Cleaning up tarball...")
+	// remove tarball from inside the server container
+	if !noRemove {
+		log.Println("INFO: Cleaning up tarball")
 
-	// TODO: clean up tarball (if --rm flag was passed) and then remove the tools container
+		execID, err := docker.ContainerExecCreate(ctx, clusters[clusterName].server.ID, types.ExecConfig{
+			Cmd: []string{"rm", "-f", tarFileName},
+		})
+		if err != nil {
+			log.Printf("WARN: failed to delete tarball: couldn't create remove in container [%s]\n%+v", clusters[clusterName].server.ID, err)
+		}
+		err = docker.ContainerExecStart(ctx, execID.ID, types.ExecStartCheck{
+			Detach: true,
+		})
+		if err != nil {
+			log.Printf("WARN: couldn't start tarball deletion action\n%+v", err)
+		}
+
+		for {
+			execInspect, err := docker.ContainerExecInspect(ctx, execID.ID)
+			if err != nil {
+				log.Printf("WARN: couldn't verify deletion of tarball\n%+v", err)
+			}
+
+			if !execInspect.Running {
+				if execInspect.ExitCode == 0 {
+					log.Println("INFO: deleted tarball")
+					break
+				} else {
+					log.Println("WARN: failed to delete tarball")
+					break
+				}
+			}
+		}
+	}
 
 	log.Println("INFO: ...Done")
 

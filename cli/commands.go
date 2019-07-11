@@ -385,5 +385,5 @@ func ImportImage(c *cli.Context) error {
 	} else {
 		images = append(images, c.Args()...)
 	}
-	return importImage(c.String("name"), images)
+	return importImage(c.String("name"), images, c.Bool("no-remove"))
 }

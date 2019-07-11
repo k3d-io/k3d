@@ -225,6 +225,10 @@ func main() {
 					Value: defaultK3sClusterName,
 					Usage: "Name of the cluster",
 				},
+				cli.BoolFlag{
+					Name:  "no-remove, no-rm, keep, k",
+					Usage: "Disable automatic removal of the tarball",
+				},
 			},
 			Action: run.ImportImage,
 		},
