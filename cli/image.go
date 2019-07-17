@@ -63,6 +63,14 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 		return err
 	}
 
+	defer func() {
+		if err = docker.ContainerRemove(ctx, toolsContainerID, types.ContainerRemoveOptions{
+			Force: true,
+		}); err != nil {
+			log.Println(fmt.Errorf("WARN: couldn't remove tools container\n%+v", err))
+		}
+	}()
+
 	// loop to wait for tools container to exit (failed or successfully saved images)
 	for {
 		cont, err := docker.ContainerInspect(ctx, toolsContainerID)
@@ -90,13 +98,6 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 			}
 		}
 		time.Sleep(time.Second / 2) // wait for half a second so we don't spam the docker API too much
-	}
-
-	// clean up tools container
-	if err = docker.ContainerRemove(ctx, toolsContainerID, types.ContainerRemoveOptions{
-		Force: true,
-	}); err != nil {
-		return fmt.Errorf("ERROR: couldn't remove tools container\n%+v", err)
 	}
 
 	// Get the container IDs for all containers in the cluster

@@ -230,7 +230,7 @@ func removeContainer(ID string) error {
 	}
 
 	if err := docker.ContainerRemove(ctx, ID, options); err != nil {
-		return fmt.Errorf("FAILURE: couldn't delete container [%s] -> %+v", ID, err)
+		return fmt.Errorf("ERROR: couldn't delete container [%s] -> %+v", ID, err)
 	}
 	return nil
 }
