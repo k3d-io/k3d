@@ -14,8 +14,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
-
-	"github.com/mitchellh/go-homedir"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -67,6 +66,10 @@ func createClusterDir(name string) {
 	clusterPath, _ := getClusterDir(name)
 	if err := createDirIfNotExists(clusterPath); err != nil {
 		log.Fatalf("ERROR: couldn't create cluster directory [%s] -> %+v", clusterPath, err)
+	}
+	// create subdir for sharing container images
+	if err := createDirIfNotExists(clusterPath + "/images"); err != nil {
+		log.Fatalf("ERROR: couldn't create cluster sub-directory [%s] -> %+v", clusterPath+"/images", err)
 	}
 }
 

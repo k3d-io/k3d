@@ -214,6 +214,24 @@ func main() {
 			},
 			Action: run.GetKubeConfig,
 		},
+		{
+			// get-kubeconfig grabs the kubeconfig from the cluster and prints the path to it
+			Name:    "import-images",
+			Aliases: []string{"i"},
+			Usage:   "Import a comma- or space-separated list of container images from your local docker daemon into the cluster",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "name, n, cluster, c",
+					Value: defaultK3sClusterName,
+					Usage: "Name of the cluster",
+				},
+				cli.BoolFlag{
+					Name:  "no-remove, no-rm, keep, k",
+					Usage: "Disable automatic removal of the tarball",
+				},
+			},
+			Action: run.ImportImage,
+		},
 	}
 
 	// Global flags

@@ -22,7 +22,7 @@ import (
 
 type ClusterSpec struct {
 	AgentArgs         []string
-	ApiPort           apiPort
+	APIPort           apiPort
 	AutoRestart       bool
 	ClusterName       string
 	Env               []string
@@ -94,14 +94,14 @@ func createServer(spec *ClusterSpec) (string, error) {
 		return "", err
 	}
 
-	hostIp := "0.0.0.0"
+	hostIP := "0.0.0.0"
 	containerLabels["apihost"] = "localhost"
-	if spec.ApiPort.Host != "" {
-		hostIp = spec.ApiPort.HostIp
-		containerLabels["apihost"] = spec.ApiPort.Host
+	if spec.APIPort.Host != "" {
+		hostIP = spec.APIPort.HostIP
+		containerLabels["apihost"] = spec.APIPort.Host
 	}
 
-	apiPortSpec := fmt.Sprintf("%s:%s:%s/tcp", hostIp, spec.ApiPort.Port, spec.ApiPort.Port)
+	apiPortSpec := fmt.Sprintf("%s:%s:%s/tcp", hostIP, spec.APIPort.Port, spec.APIPort.Port)
 
 	serverPorts = append(serverPorts, apiPortSpec)
 
@@ -157,7 +157,7 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 
 	containerName := GetContainerName("worker", spec.ClusterName, postfix)
 
-	env := append(spec.Env, fmt.Sprintf("K3S_URL=https://k3d-%s-server:%s", spec.ClusterName, spec.ApiPort.Port))
+	env := append(spec.Env, fmt.Sprintf("K3S_URL=https://k3d-%s-server:%s", spec.ClusterName, spec.APIPort.Port))
 
 	// ports to be assigned to the server belong to roles
 	// all, server or <server-container-name>
@@ -230,7 +230,7 @@ func removeContainer(ID string) error {
 	}
 
 	if err := docker.ContainerRemove(ctx, ID, options); err != nil {
-		return fmt.Errorf("FAILURE: couldn't delete container [%s] -> %+v", ID, err)
+		return fmt.Errorf("ERROR: couldn't delete container [%s] -> %+v", ID, err)
 	}
 	return nil
 }
