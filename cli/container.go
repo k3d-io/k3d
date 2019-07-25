@@ -37,7 +37,7 @@ type ClusterSpec struct {
 func startContainer(verbose bool, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
 	ctx := context.Background()
 
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
@@ -219,7 +219,7 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 // removeContainer tries to rm a container, selected by Docker ID, and does a rm -f if it fails (e.g. if container is still running)
 func removeContainer(ID string) error {
 	ctx := context.Background()
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}

@@ -22,7 +22,7 @@ const (
 func importImage(clusterName string, images []string, noRemove bool) error {
 	// get a docker client
 	ctx := context.Background()
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
