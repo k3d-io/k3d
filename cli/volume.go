@@ -16,14 +16,14 @@ func createImageVolume(clusterName string) (types.Volume, error) {
 	var vol types.Volume
 
 	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
 	if err != nil {
 		return vol, fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
 
 	volName := fmt.Sprintf("k3d-%s-images", clusterName)
 
-	volumeCreateOptions := volume.VolumesCreateBody{
+	volumeCreateOptions := volume.VolumeCreateBody{
 		Name: volName,
 		Labels: map[string]string{
 			"app":     "k3d",
@@ -44,7 +44,7 @@ func createImageVolume(clusterName string) (types.Volume, error) {
 func deleteImageVolume(clusterName string) error {
 
 	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
 	if err != nil {
 		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
@@ -64,7 +64,7 @@ func getImageVolume(clusterName string) (types.Volume, error) {
 	volName := fmt.Sprintf("k3d-%s-images", clusterName)
 
 	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
 	if err != nil {
 		return vol, fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}

@@ -98,7 +98,7 @@ func getClusterKubeConfigPath(cluster string) (string, error) {
 
 func createKubeConfigFile(cluster string) error {
 	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
 	if err != nil {
 		return err
 	}
@@ -253,7 +253,7 @@ func getClusterStatus(server types.Container, workers []types.Container) string 
 // be empty if no matching cluster is found.
 func getClusters(all bool, name string) (map[string]cluster, error) {
 	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
 	if err != nil {
 		return nil, fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}

@@ -22,7 +22,7 @@ const (
 func importImage(clusterName string, images []string, noRemove bool) error {
 	// get a docker client
 	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
 	if err != nil {
 		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
@@ -142,7 +142,10 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 		}
 
 		// attach to exec process in container
-		containerConnection, err := docker.ContainerExecAttach(ctx, execResponse.ID, execAttachConfig)
+		containerConnection, err := docker.ContainerExecAttach(ctx, execResponse.ID, types.ExecStartCheck{
+			Detach: execAttachConfig.Detach,
+			Tty: execAttachConfig.Tty,
+		})
 		if err != nil {
 			return fmt.Errorf("ERROR: couldn't attach to container [%s]\n%+v", containerName, err)
 		}

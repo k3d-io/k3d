@@ -29,7 +29,7 @@ const (
 func CheckTools(c *cli.Context) error {
 	log.Print("Checking docker...")
 	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func CreateCluster(c *cli.Context) error {
 	}
 
 	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
 	if err != nil {
 		return err
 	}
@@ -280,7 +280,7 @@ func StopCluster(c *cli.Context) error {
 	}
 
 	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
 	if err != nil {
 		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
@@ -318,7 +318,7 @@ func StartCluster(c *cli.Context) error {
 	}
 
 	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
 	if err != nil {
 		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
