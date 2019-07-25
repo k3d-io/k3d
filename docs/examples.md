@@ -80,11 +80,11 @@
 
     `curl localhost:8082/`
 
-## Local insecure registry
+## Connect with a local insecure registry
 
 This guide takes you through setting up a local insecure (http) registry and integrating it into your workflow so that:
 - you can push to the registry from your host
-- the cluster managed by k3d cann pull from that registry
+- the cluster managed by k3d can pull from that registry
 
 The registry will be named `registry.local` and run on port `5000`.
 ### Create the registry
@@ -102,6 +102,7 @@ First we need a place to store the config template: `mkdir -p /home/${USER}/.k3d
 Create a file named `config.toml.tmpl` in `/home/${USER}/.k3d`, with following content:
 
 <pre>
+# Original section: no changes
 [plugins.opt]
 path = "{{ .NodeConfig.Containerd.Opt }}"
 [plugins.cri]
@@ -121,6 +122,7 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
     conf_dir = "{{ .NodeConfig.AgentConfig.CNIConfDir }}"
 {{ end -}}
 
+# Added section: additional registries and the endpoints
 [plugins.cri.registry.mirrors]
   [plugins.cri.registry.mirrors."<b>registry.local:5000</b>"]
     endpoint = ["http://<b>registry.local:5000</b>"]
@@ -139,7 +141,7 @@ k3d create \
 
 ### Wire them up
 
-- Connect the cluster to the registry: `docker network connect k3d-k3s-default registry.local`
+- Connect the registry to the cluster network: `docker network connect k3d-k3s-default registry.local`
 - Add `127.0.0.1 registry.local` to your `/etc/hosts`
 
 ### Test
