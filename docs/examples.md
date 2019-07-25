@@ -79,3 +79,105 @@
 2. Curl it via localhost
 
     `curl localhost:8082/`
+
+## Local insecure registry
+
+This guide takes you through setting up a local insecure (http) registry and integrating it into your workflow so that:
+- you can push to the registry from your host
+- the cluster managed by k3d cann pull from that registry
+
+The registry will be named `registry.local` and run on port `5000`.
+### Create the registry
+
+<pre>
+docker volume create local_registry
+
+docker container run -d --name <b>registry.local</b> -v local_registry:/var/lib/registry --restart always -p <b>5000:5000</b> registry:2
+</pre>
+
+### Create the cluster with k3d
+
+First we need a place to store the config template: `mkdir -p /home/${USER}/.k3d`
+
+Create a file named `config.toml.tmpl` in `/home/${USER}/.k3d`, with following content:
+
+<pre>
+[plugins.opt]
+path = "{{ .NodeConfig.Containerd.Opt }}"
+[plugins.cri]
+stream_server_address = "{{ .NodeConfig.AgentConfig.NodeName }}"
+stream_server_port = "10010"
+{{- if .IsRunningInUserNS }}
+disable_cgroup = true
+disable_apparmor = true
+restrict_oom_score_adj = true
+{{ end -}}
+{{- if .NodeConfig.AgentConfig.PauseImage }}
+sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
+{{ end -}}
+{{- if not .NodeConfig.NoFlannel }}
+  [plugins.cri.cni]
+    bin_dir = "{{ .NodeConfig.AgentConfig.CNIBinDir }}"
+    conf_dir = "{{ .NodeConfig.AgentConfig.CNIConfDir }}"
+{{ end -}}
+
+[plugins.cri.registry.mirrors]
+  [plugins.cri.registry.mirrors."<b>registry.local:5000</b>"]
+    endpoint = ["http://<b>registry.local:5000</b>"]
+</pre>
+
+Finally start a cluster with k3d, passing-in the config template:
+
+```
+CLUSTER_NAME=k3s-default
+k3d create \
+    --name ${CLUSTER_NAME} \
+    --wait 0 \
+    --auto-restart \
+    --volume /home/${USER}/.k3d/config.toml.tmpl:/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+```
+
+### Wire them up
+
+- Connect the cluster to the registry: `docker network connect k3d-k3s-default registry.local`
+- Add `127.0.0.1 registry.local` to your `/etc/hosts`
+
+### Test
+
+Push an image to the registry:
+
+```
+docker pull nginx:latest
+docker tag nginx:latest registry.local:5000/nginx:latest
+docker push registry.local:5000/nginx:latest
+```
+
+Deploy a pod referencing this image to your cluster:
+
+```
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-test-registry
+  labels:
+    app: nginx-test-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-test-registry
+  template:
+    metadata:
+      labels:
+        app: nginx-test-registry
+    spec:
+      containers:
+      - name: nginx-test-registry
+        image: registry.local:5000/nginx:latest
+        ports:
+        - containerPort: 80
+EOF
+```
+
+... and check that the pod is running: `kubectl get pods -l "app=nginx-test-registry"`
