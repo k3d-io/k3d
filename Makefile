@@ -11,9 +11,11 @@ GIT_TAG   := $(shell git describe --always)
 endif
 
 # get latest k3s version
-K3S_TAG		:= $(shell curl --silent "https://api.github.com/repos/rancher/k3s/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+K3S_TAG		:= $(shell curl --silent "https://api.github.com/repos/rancher/k3s/releases/lates" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 ifeq ($(K3S_TAG),)
-$(error "K3S_TAG undefined: couldn't get latest k3s image tag!")
+$(warning K3S_TAG undefined: couldn't get latest k3s image tag!)
+$(warning Output of curl: $(shell curl --silent "https://api.github.com/repos/rancher/k3s/releases/latest"))
+$(error exiting)
 endif
 
 # Go options
