@@ -18,7 +18,7 @@ func k3dNetworkName(clusterName string) string {
 // to let the server and worker containers communicate with each other easily.
 func createClusterNetwork(clusterName string) (string, error) {
 	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return "", fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
@@ -56,7 +56,7 @@ func createClusterNetwork(clusterName string) (string, error) {
 // deleteClusterNetwork deletes a docker network based on the name of a cluster it belongs to
 func deleteClusterNetwork(clusterName string) error {
 	ctx := context.Background()
-	docker, err := client.NewEnvClient()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
 	}
