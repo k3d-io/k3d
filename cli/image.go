@@ -144,7 +144,7 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 		// attach to exec process in container
 		containerConnection, err := docker.ContainerExecAttach(ctx, execResponse.ID, types.ExecStartCheck{
 			Detach: execAttachConfig.Detach,
-			Tty: execAttachConfig.Tty,
+			Tty:    execAttachConfig.Tty,
 		})
 		if err != nil {
 			return fmt.Errorf("ERROR: couldn't attach to container [%s]\n%+v", containerName, err)
