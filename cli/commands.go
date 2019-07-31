@@ -105,6 +105,7 @@ func CreateCluster(c *cli.Context) error {
 		return err
 	}
 
+	k3AgentArgs := make([]string, 0)
 	k3sServerArgs := []string{"--https-listen-port", apiPort.Port}
 
 	// When the 'host' is not provided by --api-port, try to fill it using Docker Machine's IP address.
@@ -129,6 +130,10 @@ func CreateCluster(c *cli.Context) error {
 		k3sServerArgs = append(k3sServerArgs, c.StringSlice("server-arg")...)
 	}
 
+	if c.IsSet("agent-arg") {
+		k3AgentArgs = append(k3AgentArgs, c.StringSlice("agent-arg")...)
+	}
+
 	// new port map
 	portmap, err := mapNodesToPortSpecs(c.StringSlice("publish"), GetAllContainerNames(c.String("name"), defaultServerCount, c.Int("workers")))
 	if err != nil {
@@ -145,7 +150,7 @@ func CreateCluster(c *cli.Context) error {
 	volumes = append(volumes, fmt.Sprintf("%s:/images", imageVolume.Name))
 
 	clusterSpec := &ClusterSpec{
-		AgentArgs:         []string{},
+		AgentArgs:         k3AgentArgs,
 		APIPort:           *apiPort,
 		AutoRestart:       c.Bool("auto-restart"),
 		ClusterName:       c.String("name"),
