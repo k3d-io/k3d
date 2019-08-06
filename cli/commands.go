@@ -105,7 +105,7 @@ func CreateCluster(c *cli.Context) error {
 		return err
 	}
 
-	k3AgentArgs := make([]string, 0)
+	k3AgentArgs := []string{}
 	k3sServerArgs := []string{"--https-listen-port", apiPort.Port}
 
 	// When the 'host' is not provided by --api-port, try to fill it using Docker Machine's IP address.
