@@ -204,6 +204,7 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 		Hostname:     containerName,
 		Image:        spec.Image,
 		Env:          env,
+		Cmd:          append([]string{"agent"}, spec.AgentArgs...),
 		Labels:       containerLabels,
 		ExposedPorts: workerPublishedPorts.ExposedPorts,
 	}
