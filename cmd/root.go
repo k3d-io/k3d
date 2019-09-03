@@ -25,11 +25,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rancher/k3d/cmd/get"
 	"github.com/spf13/cobra"
 
 	"github.com/rancher/k3d/cmd/create"
 	"github.com/rancher/k3d/cmd/delete"
+	"github.com/rancher/k3d/cmd/get"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
