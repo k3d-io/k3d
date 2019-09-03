@@ -26,6 +26,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/rancher/k3d/cmd/get"
+
+	"github.com/rancher/k3d/cmd/create"
+	"github.com/rancher/k3d/cmd/delete"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -68,6 +72,11 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	// rootCmd.Flags().BoolP("nope", "n", false, "nope description")
+
+	// add subcommands
+	rootCmd.AddCommand(create.NewCmdCreate())
+	rootCmd.AddCommand(delete.NewCmdDelete())
+	rootCmd.AddCommand(get.NewCmdGet())
 }
 
 // initConfig reads in config file and ENV variables if set.

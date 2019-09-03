@@ -19,7 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package cmd
+package delete
 
 import (
 	log "github.com/sirupsen/logrus"
@@ -27,31 +27,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// deleteCmd represents the delete command
-var deleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+// NewCmdDeleteNode returns a new cobra command
+func NewCmdDeleteNode() *cobra.Command {
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		log.Debugln("delete called")
-	},
-}
+	// create new cobra command
+	cmd := &cobra.Command{
+		Use:   "node",
+		Short: "Delete a node.",
+		Long:  `Delete a node.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			log.Debugln("delete node called")
+		},
+	}
 
-func init() {
-	rootCmd.AddCommand(deleteCmd)
+	// add subcommands
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// deleteCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// deleteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// done
+	return cmd
 }

@@ -19,7 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package cmd
+package delete
 
 import (
 	log "github.com/sirupsen/logrus"
@@ -27,26 +27,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// createCmd represents the create command
-var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create a resource.",
-	Long:  `Create a resource.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		log.Debugln("create called")
-	},
-}
+// NewCmdDeleteCluster returns a new cobra command
+func NewCmdDeleteCluster() *cobra.Command {
 
-func init() {
-	rootCmd.AddCommand(createCmd)
+	// create new cobra command
+	cmd := &cobra.Command{
+		Use:   "cluster",
+		Short: "Delete a cluster.",
+		Long:  `Delete a cluster.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			log.Debugln("delete cluster called")
+		},
+	}
 
-	// Here you will define your flags and configuration settings.
+	// add subcommands
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// createCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// createCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// done
+	return cmd
 }
