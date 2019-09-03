@@ -137,6 +137,28 @@ func main() {
 			Action: run.CreateCluster,
 		},
 		{
+			Name:  "add-node",
+			Usage: "Add nodes to an existing k3d cluster",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "role, r",
+					Usage: "Choose role of the node you want to add [agent|server|both]",
+					Value: "agent",
+				},
+				cli.StringFlag{
+					Name:  "name, n",
+					Usage: "Name of the clsuter that you want to add a node to",
+					Value: defaultK3sClusterName,
+				},
+				cli.IntFlag{
+					Name:  "count, c",
+					Usage: "Number of nodes that you want to add",
+					Value: 1,
+				},
+			},
+			Action: run.AddNode,
+		},
+		{
 			// delete deletes an existing k3s cluster (remove container and cluster directory)
 			Name:    "delete",
 			Aliases: []string{"d", "del"},

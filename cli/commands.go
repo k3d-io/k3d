@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/urfave/cli"
 )
@@ -391,4 +392,51 @@ func ImportImage(c *cli.Context) error {
 		images = append(images, c.Args()...)
 	}
 	return importImage(c.String("name"), images, c.Bool("no-remove"))
+}
+
+// AddNode adds a node to an existing cluster
+func AddNode(c *cli.Context) error {
+	clusterName := c.String("name")
+	nodeRole := c.String("role")
+	nodeCount := c.Int("count")
+
+	// check if cluster (i.e. the server) exists
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+	}
+
+	filters := filters.NewArgs()
+	filters.Add("label", fmt.Sprintf("cluster=%s", clusterName))
+	filters.Add("label", "app=k3d")
+	filters.Add("label", "component=server")
+
+	serverList, err := docker.ContainerList(ctx, types.ContainerListOptions{
+		Filters: filters,
+	})
+	if err != nil || len(serverList) == 0 {
+		return fmt.Errorf("ERROR: coudln't get server container for cluster %s\n%+v", clusterName, err)
+	}
+
+	log.Printf("INFO: Adding %d %s-nodes to cluster %s\n", nodeCount, nodeRole, clusterName)
+
+	filters.Del("label", "component=server")
+	// now, get into the cluster's docker network
+	networkList, err := docker.NetworkList(ctx, types.NetworkListOptions{
+		Filters: filters,
+	})
+	if err != nil || len(networkList) == 0 {
+		return fmt.Errorf("ERROR: coudln't find network for cluster %s\n%+v", clusterName, err)
+	}
+
+	/*
+		clusterNetwork := networkList[0]
+
+		clusterSpec := &ClusterSpec{
+
+		}
+	*/
+
+	return nil
 }
