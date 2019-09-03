@@ -24,6 +24,8 @@ package create
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/rancher/k3d/pkg/types"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -39,6 +41,11 @@ func NewCmdCreateCluster() *cobra.Command {
 			log.Debugln("create cluster called")
 		},
 	}
+
+	// add flags
+	cmd.Flags().StringP("name", "n", types.DefaultClusterName, "Set a name for the cluster")
+	cmd.Flags().StringP("api-port", "a", "6443", "Specify the Kubernetes cluster API server port (Format: `--api-port [host:]port`")
+	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
 
 	// add subcommands
 

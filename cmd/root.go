@@ -31,13 +31,10 @@ import (
 	"github.com/rancher/k3d/cmd/delete"
 	"github.com/rancher/k3d/cmd/get"
 
-	homedir "github.com/mitchellh/go-homedir"
-	"github.com/spf13/viper"
-
 	log "github.com/sirupsen/logrus"
 )
 
-var cfgFile string
+// var cfgFile string
 var debugLogging bool
 
 // rootCmd represents the base command when called without any subcommands
@@ -59,14 +56,14 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	// cobra.OnInitialize(initConfig)
 	cobra.OnInitialize(initLogging)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k3d.yaml)")
+	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k3d.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&debugLogging, "verbose", false, "Enable verbose output (debug logging)")
 
 	// Cobra also supports local flags, which will only run
@@ -80,6 +77,7 @@ func init() {
 }
 
 // initConfig reads in config file and ENV variables if set.
+/*
 func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.
@@ -104,6 +102,7 @@ func initConfig() {
 		log.Debugln("Using config file:", viper.ConfigFileUsed())
 	}
 }
+*/
 
 // initLogging initializes the logger
 func initLogging() {
