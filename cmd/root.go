@@ -22,8 +22,10 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"os"
+	"strings"
+
+	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -32,6 +34,7 @@ import (
 )
 
 var cfgFile string
+var debugLogging bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -53,16 +56,18 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initLogging)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k3d.yaml)")
+	rootCmd.PersistentFlags().BoolVar(&debugLogging, "verbose", false, "Enable verbose output (debug logging)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("verbose", "v", false, "Enable verbose output (debug level logs)")
+	// rootCmd.Flags().BoolP("nope", "n", false, "nope description")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -88,5 +93,21 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		log.Debugln("Using config file:", viper.ConfigFileUsed())
+	}
+}
+
+// initLogging initializes the logger
+func initLogging() {
+	if debugLogging {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		switch logLevel := strings.ToUpper(os.Getenv("LOG_LEVEL")); logLevel {
+		case "DEBUG":
+			log.SetLevel(log.DebugLevel)
+		case "WARN":
+			log.SetLevel(log.WarnLevel)
+		default:
+			log.SetLevel(log.InfoLevel)
+		}
 	}
 }
