@@ -19,29 +19,41 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package types
+package util
 
-// DefaultClusterName specifies the default name used for newly created clusters
-const DefaultClusterName = "k3s-default"
+import (
+	"math/rand"
+	"strings"
+	"time"
+)
 
-// DefaultK3sImageRepo specifies the default image repository for the used k3s image
-const DefaultK3sImageRepo = "docker.io/rancher/k3s"
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const (
+	letterIdxBits = 6                    // 6 bits to represent a letter index
+	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+)
 
-// Cluster describes a k3d cluster
-type Cluster struct {
-	Name    string
-	Network string
-	Nodes   []Node
-}
+var src = rand.NewSource(time.Now().UnixNano())
 
-// Node describes a k3d node
-type Node struct {
-	Name    string
-	Role    string
-	Image   string
-	Volumes []string
-	Env     []string
-	Args    []string
-	Ports   []string
-	Restart bool
+// GenerateRandomString thanks to https://stackoverflow.com/a/31832326/6450189
+// GenerateRandomString is used to generate a random string that is used as a cluster secret
+func GenerateRandomString(n int) string {
+
+	sb := strings.Builder{}
+	sb.Grow(n)
+	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
+	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = src.Int63(), letterIdxMax
+		}
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			sb.WriteByte(letterBytes[idx])
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+
+	return sb.String()
 }
