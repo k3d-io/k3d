@@ -25,8 +25,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/rancher/k3d/cmd/get"
+	"github.com/spf13/cobra"
 
 	"github.com/rancher/k3d/cmd/create"
 	"github.com/rancher/k3d/cmd/delete"
