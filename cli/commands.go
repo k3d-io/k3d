@@ -437,11 +437,46 @@ func ImportImage(c *cli.Context) error {
 
 // AddNode adds a node to an existing cluster
 func AddNode(c *cli.Context) error {
+
+	/*
+	 * (0) Check flags
+	 */
+
 	clusterName := c.String("name")
-	nodeRole := c.String("role")
 	nodeCount := c.Int("count")
 
-	// check if cluster (i.e. the server) exists
+	/* (0.1)
+	 * --role
+	 * Role of the node that has to be created.
+	 * One of (server|master), (agent|worker)
+	 */
+	nodeRole := c.String("role")
+	if nodeRole == "worker" {
+		nodeRole = "agent"
+	}
+	if nodeRole == "master" {
+		nodeRole = "server"
+	}
+
+	// TODO: support this
+	if nodeRole == "server" {
+		return fmt.Errorf("ERROR: sorry, we don't support adding server nodes at the moment!")
+	}
+
+	/* (0.2)
+	 * --image, -i
+	 * The k3s image used for the k3d node containers
+	 */
+	image := c.String("image")
+	// if no registry was provided, use the default docker.io
+	if len(strings.Split(image, "/")) <= 2 {
+		image = fmt.Sprintf("%s/%s", defaultRegistry, image)
+	}
+
+	/*
+	 * (1) Check cluster
+	 */
+
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -451,6 +486,10 @@ func AddNode(c *cli.Context) error {
 	filters := filters.NewArgs()
 	filters.Add("label", fmt.Sprintf("cluster=%s", clusterName))
 	filters.Add("label", "app=k3d")
+
+	/*
+	 * (1.1) Verify, that the cluster (i.e. the server) that we want to connect to, is running
+	 */
 	filters.Add("label", "component=server")
 
 	serverList, err := docker.ContainerList(ctx, types.ContainerListOptions{
@@ -460,24 +499,116 @@ func AddNode(c *cli.Context) error {
 		return fmt.Errorf("ERROR: coudln't get server container for cluster %s\n%+v", clusterName, err)
 	}
 
-	log.Printf("INFO: Adding %d %s-nodes to cluster %s\n", nodeCount, nodeRole, clusterName)
+	/*
+	 * (1.2) Extract cluster information from server container
+	 */
+	serverContainer, err := docker.ContainerInspect(ctx, serverList[0].ID)
+	if err != nil {
+		return fmt.Errorf("ERROR: couldn't inspect server container [%s] to get cluster secret\n%+v", serverList[0].ID, err)
+	}
 
+	/*
+	 * (1.2.1) Extract cluster secret from server container's labels
+	 */
+	clusterSecretEnvVar := ""
+	for _, envVar := range serverContainer.Config.Env {
+		if envVarSplit := strings.SplitN(envVar, "=", 2); envVarSplit[0] == "K3S_CLUSTER_SECRET" {
+			clusterSecretEnvVar = envVar
+		}
+	}
+	if clusterSecretEnvVar == "" {
+		return fmt.Errorf("ERROR: couldn't get cluster secret from server container")
+	}
+
+	/*
+	 * (1.2.2) Extract API server Port from server container's cmd
+	 */
+	serverListenPort := ""
+	for cmdIndex, cmdPart := range serverContainer.Config.Cmd {
+		if cmdPart == "--https-listen-port" {
+			serverListenPort = serverContainer.Config.Cmd[cmdIndex+1]
+		}
+	}
+	if serverListenPort == "" {
+		return fmt.Errorf("ERROR: couldn't get https-listen-port form server contaienr")
+	}
+
+	/*
+	 * (1.3) Get the docker network of the cluster that we want to connect to
+	 */
 	filters.Del("label", "component=server")
-	// now, get into the cluster's docker network
+
 	networkList, err := docker.NetworkList(ctx, types.NetworkListOptions{
 		Filters: filters,
 	})
 	if err != nil || len(networkList) == 0 {
-		return fmt.Errorf("ERROR: coudln't find network for cluster %s\n%+v", clusterName, err)
+		return fmt.Errorf("ERROR: couldn't find network for cluster %s\n%+v", clusterName, err)
 	}
 
 	/*
-		clusterNetwork := networkList[0]
+	 * (2) Now identify any existing worker nodes IF we're adding a new one
+	 */
+	highestExistingWorkerSuffix := 0 // needs to be outside conditional because of bad branching
 
-		clusterSpec := &ClusterSpec{
+	if nodeRole == "agent" {
+		filters.Add("label", "component=worker")
 
+		workerList, err := docker.ContainerList(ctx, types.ContainerListOptions{
+			Filters: filters,
+			All:     true,
+		})
+		if err != nil {
+			return fmt.Errorf("ERROR: couldn't list worker node containers\n%+v", err)
 		}
-	*/
+
+		for _, worker := range workerList {
+			split := strings.Split(worker.Names[0], "-")
+			currSuffix, err := strconv.Atoi(split[len(split)-1])
+			if err != nil {
+				return fmt.Errorf("ERROR: failed to get highest worker suffix\n%+v", err)
+			}
+			if currSuffix > highestExistingWorkerSuffix {
+				highestExistingWorkerSuffix = currSuffix
+			}
+		}
+	}
+
+	/*
+	 * (3) Create the nodes with configuration that automatically joins them to the cluster
+	 */
+
+	serverURLEnvVar := fmt.Sprintf("K3S_URL=https://%s:%s", serverContainer.Name, serverListenPort)
+
+	env := []string{}
+
+	env = append(env, serverURLEnvVar)
+	env = append(env, clusterSecretEnvVar)
+
+	clusterSpec := &ClusterSpec{
+		AgentArgs:         nil,
+		APIPort:           apiPort{},
+		AutoRestart:       false,
+		ClusterName:       clusterName,
+		Env:               env,
+		Image:             image,
+		NodeToPortSpecMap: nil,
+		PortAutoOffset:    0,
+		ServerArgs:        nil,
+		Verbose:           false,
+		Volumes:           nil,
+	}
+
+	log.Printf("INFO: Adding %d %s-nodes to cluster %s...\n", nodeCount, nodeRole, clusterName)
+
+	if nodeRole == "agent" {
+		for suffix := highestExistingWorkerSuffix + 1; suffix < nodeCount+1+highestExistingWorkerSuffix; suffix++ {
+			workerContainerID, err := createWorker(clusterSpec, suffix)
+			if err != nil {
+				return fmt.Errorf("ERROR: Couldn't create %s-node!\n%+v", nodeRole, err)
+			}
+			log.Printf("INFO: Created %s-node with ID %s\n", nodeRole, workerContainerID)
+		}
+	}
 
 	return nil
 }

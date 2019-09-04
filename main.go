@@ -137,7 +137,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "role, r",
-					Usage: "Choose role of the node you want to add [agent|server|both]",
+					Usage: "Choose role of the node you want to add [agent|server]",
 					Value: "agent",
 				},
 				cli.StringFlag{
@@ -149,6 +149,11 @@ func main() {
 					Name:  "count, c",
 					Usage: "Number of nodes that you want to add",
 					Value: 1,
+				},
+				cli.StringFlag{
+					Name:  "image, i",
+					Usage: "Specify a k3s image (Format: <repo>/<image>:<tag>)",
+					Value: fmt.Sprintf("%s:%s", defaultK3sImage, version.GetK3sVersion()),
 				},
 			},
 			Action: run.AddNode,
