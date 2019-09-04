@@ -92,11 +92,6 @@ func main() {
 					Usage: "Automatically add an offset (* worker number) to the chosen host port when using `--publish` to map the same container-port from multiple k3d workers to the host",
 				},
 				cli.StringFlag{
-					// TODO: to be deprecated
-					Name:  "version",
-					Usage: "Choose the k3s image version",
-				},
-				cli.StringFlag{
 					// TODO: only --api-port, -a soon since we want to use --port, -p for the --publish/--add-port functionality
 					Name:  "api-port, a, port, p",
 					Value: "6443",
