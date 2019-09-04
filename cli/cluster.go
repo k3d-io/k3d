@@ -22,15 +22,6 @@ const (
 	defaultContainerNamePrefix = "k3d"
 )
 
-type cluster struct {
-	name        string
-	image       string
-	status      string
-	serverPorts []string
-	server      types.Container
-	workers     []types.Container
-}
-
 // GetContainerName generates the container names
 func GetContainerName(role, clusterName string, postfix int) string {
 	if postfix >= 0 {
@@ -251,7 +242,7 @@ func getClusterStatus(server types.Container, workers []types.Container) string 
 // When 'all' is true, 'cluster' contains all clusters found from the docker daemon
 // When 'all' is false, 'cluster' contains up to one cluster whose name matches 'name'. 'cluster' can
 // be empty if no matching cluster is found.
-func getClusters(all bool, name string) (map[string]cluster, error) {
+func getClusters(all bool, name string) (map[string]Cluster, error) {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -272,7 +263,7 @@ func getClusters(all bool, name string) (map[string]cluster, error) {
 		return nil, fmt.Errorf("WARNING: couldn't list server containers\n%+v", err)
 	}
 
-	clusters := make(map[string]cluster)
+	clusters := make(map[string]Cluster)
 
 	// don't filter for servers but for workers now
 	filters.Del("label", "component=server")
@@ -303,7 +294,7 @@ func getClusters(all bool, name string) (map[string]cluster, error) {
 			for _, port := range server.Ports {
 				serverPorts = append(serverPorts, strconv.Itoa(int(port.PublicPort)))
 			}
-			clusters[clusterName] = cluster{
+			clusters[clusterName] = Cluster{
 				name:        clusterName,
 				image:       server.Image,
 				status:      getClusterStatus(server, workers),

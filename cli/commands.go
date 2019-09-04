@@ -5,15 +5,12 @@ package run
  */
 
 import (
-	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -46,10 +43,33 @@ func CheckTools(c *cli.Context) error {
 // CreateCluster creates a new single-node cluster container and initializes the cluster directory
 func CreateCluster(c *cli.Context) error {
 
+	// On Error delete the cluster.  If there createCluster() encounter any error,
+	// call this function to remove all resources allocated for the cluster so far
+	// so that they don't linger around.
+	deleteCluster := func() {
+		log.Println("ERROR: Cluster creation failed, rolling back...")
+		if err := DeleteCluster(c); err != nil {
+			log.Printf("Error: Failed to delete cluster %s", c.String("name"))
+		}
+	}
+
+	/**********************
+	 *										*
+	 *		CONFIGURATION		*
+	 * vvvvvvvvvvvvvvvvvv *
+	 **********************/
+
+	/*
+	 * --name, -n
+	 * Name of the cluster
+	 */
+
+	// ensure that it's a valid hostname, because it will be part of container names
 	if err := CheckClusterName(c.String("name")); err != nil {
 		return err
 	}
 
+	// check if the cluster name is already taken
 	if cluster, err := getClusters(false, c.String("name")); err != nil {
 		return err
 	} else if len(cluster) != 0 {
@@ -57,22 +77,21 @@ func CreateCluster(c *cli.Context) error {
 		return fmt.Errorf("ERROR: Cluster %s already exists", c.String("name"))
 	}
 
-	// On Error delete the cluster.  If there createCluster() encounter any error,
-	// call this function to remove all resources allocated for the cluster so far
-	// so that they don't linger around.
-	deleteCluster := func() {
-		if err := DeleteCluster(c); err != nil {
-			log.Printf("Error: Failed to delete cluster %s", c.String("name"))
-		}
-	}
-
+	/*
+	 * --image, -i
+	 * The k3s image used for the k3d node containers
+	 */
 	// define image
 	image := c.String("image")
+	// if no registry was provided, use the default docker.io
 	if len(strings.Split(image, "/")) <= 2 {
-		// fallback to default registry
 		image = fmt.Sprintf("%s/%s", defaultRegistry, image)
 	}
 
+	/*
+	 * Cluster network
+	 * For proper communication, all k3d node containers have to be in the same docker network
+	 */
 	// create cluster network
 	networkID, err := createClusterNetwork(c.String("name"))
 	if err != nil {
@@ -80,23 +99,32 @@ func CreateCluster(c *cli.Context) error {
 	}
 	log.Printf("Created cluster network with ID %s", networkID)
 
+	/*
+	 * --env, -e
+	 * Environment variables that will be passed into the k3d node containers
+	 */
 	// environment variables
 	env := []string{"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml"}
 	env = append(env, c.StringSlice("env")...)
 	env = append(env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", GenerateRandomString(20)))
 
-	// k3s server arguments
-	// TODO: --port will soon be --api-port since we want to re-use --port for arbitrary port mappings
-	if c.IsSet("port") {
-		log.Println("INFO: As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
-	}
+	/*
+	 * Arguments passed on to the k3s server and agent, will be filled later
+	 */
+	k3AgentArgs := []string{}
+	k3sServerArgs := []string{}
+
+	/*
+	 * --api-port, -a
+	 * The port that will be used by the k3s API-Server
+	 * It will be mapped to localhost or to another hist interface, if specified
+	 * If another host is chosen, we also add a tls-san argument for the server to allow connections
+	 */
 	apiPort, err := parseAPIPort(c.String("api-port"))
 	if err != nil {
 		return err
 	}
-
-	k3AgentArgs := []string{}
-	k3sServerArgs := []string{"--https-listen-port", apiPort.Port}
+	k3sServerArgs = append(k3sServerArgs, "--https-listen-port", apiPort.Port)
 
 	// When the 'host' is not provided by --api-port, try to fill it using Docker Machine's IP address.
 	if apiPort.Host == "" {
@@ -110,35 +138,62 @@ func CreateCluster(c *cli.Context) error {
 		}
 	}
 
+	// Add TLS SAN for non default host name
 	if apiPort.Host != "" {
-		// Add TLS SAN for non default host name
 		log.Printf("Add TLS SAN for %s", apiPort.Host)
 		k3sServerArgs = append(k3sServerArgs, "--tls-san", apiPort.Host)
 	}
 
+	/*
+	 * --server-arg, -x
+	 * Add user-supplied arguments for the k3s server
+	 */
 	if c.IsSet("server-arg") || c.IsSet("x") {
 		k3sServerArgs = append(k3sServerArgs, c.StringSlice("server-arg")...)
 	}
 
+	/*
+	 * --agent-arg
+	 * Add user-supplied arguments for the k3s agent
+	 */
 	if c.IsSet("agent-arg") {
 		k3AgentArgs = append(k3AgentArgs, c.StringSlice("agent-arg")...)
 	}
 
+	/*
+	 * --port, -p, --publish, --add-port
+	 * List of ports, that should be mapped from some or all k3d node containers to the host system (or other interface)
+	 */
 	// new port map
-	portmap, err := mapNodesToPortSpecs(c.StringSlice("publish"), GetAllContainerNames(c.String("name"), defaultServerCount, c.Int("workers")))
+	portmap, err := mapNodesToPortSpecs(c.StringSlice("port"), GetAllContainerNames(c.String("name"), defaultServerCount, c.Int("workers")))
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	/*
+	 * --volume, -v
+	 * List of volumes: host directory mounts for some or all k3d node containers in the cluster
+	 */
+	volumes := c.StringSlice("volume")
+
+	/*
+	 * Image Volume
+	 * A docker volume that will be shared by every k3d node container in the cluster.
+	 * This volume will be used for the `import-image` command.
+	 * On it, all node containers can access the image tarball.
+	 */
 	// create a docker volume for sharing image tarballs with the cluster
 	imageVolume, err := createImageVolume(c.String("name"))
 	log.Println("Created docker volume ", imageVolume.Name)
 	if err != nil {
 		return err
 	}
-	volumes := c.StringSlice("volume")
 	volumes = append(volumes, fmt.Sprintf("%s:/images", imageVolume.Name))
 
+	/*
+	 * clusterSpec
+	 * Defines, with which specifications, the cluster and the nodes inside should be created
+	 */
 	clusterSpec := &ClusterSpec{
 		AgentArgs:         k3AgentArgs,
 		APIPort:           *apiPort,
@@ -153,54 +208,47 @@ func CreateCluster(c *cli.Context) error {
 		Volumes:           volumes,
 	}
 
-	// create the server
+	/******************
+	 *								*
+	 *		CREATION		*
+	 * vvvvvvvvvvvvvv	*
+	 ******************/
+
 	log.Printf("Creating cluster [%s]", c.String("name"))
 
+	/*
+	 * Cluster Directory
+	 */
 	// create the directory where we will put the kubeconfig file by default (when running `k3d get-config`)
 	createClusterDir(c.String("name"))
 
-	dockerID, err := createServer(clusterSpec)
+	/* (1)
+	 * Server
+	 * Create the server node container
+	 */
+	serverContainerID, err := createServer(clusterSpec)
 	if err != nil {
 		deleteCluster()
 		return err
 	}
 
-	ctx := context.Background()
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return err
-	}
-
-	// Wait for k3s to be up and running if wanted.
+	/* (1.1)
+	 * Wait
+	 * Wait for k3s server to be done initializing, if wanted
+	 */
 	// We're simply scanning the container logs for a line that tells us that everything's up and running
 	// TODO: also wait for worker nodes
-	start := time.Now()
-	timeout := time.Duration(c.Int("wait")) * time.Second
-	for c.IsSet("wait") {
-		// not running after timeout exceeded? Rollback and delete everything.
-		if timeout != 0 && time.Now().After(start.Add(timeout)) {
+	if c.IsSet("wait") {
+		if err := waitForContainerLogMessage(serverContainerID, "Running kubelet", c.Int("wait")); err != nil {
 			deleteCluster()
-			return errors.New("Cluster creation exceeded specified timeout")
+			return fmt.Errorf("ERROR: failed while waiting for server to come up\n%+v", err)
 		}
-
-		// scan container logs for a line that tells us that the required services are up and running
-		out, err := docker.ContainerLogs(ctx, dockerID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
-		if err != nil {
-			out.Close()
-			return fmt.Errorf("ERROR: couldn't get docker logs for %s\n%+v", c.String("name"), err)
-		}
-		buf := new(bytes.Buffer)
-		nRead, _ := buf.ReadFrom(out)
-		out.Close()
-		output := buf.String()
-		if nRead > 0 && strings.Contains(string(output), "Running kubelet") {
-			break
-		}
-
-		time.Sleep(1 * time.Second)
 	}
 
-	// spin up the worker nodes
+	/* (2)
+	 * Workers
+	 * Create the worker node containers
+	 */
 	// TODO: do this concurrently in different goroutines
 	if c.Int("workers") > 0 {
 		log.Printf("Booting %s workers for cluster %s", strconv.Itoa(c.Int("workers")), c.String("name"))
@@ -214,6 +262,10 @@ func CreateCluster(c *cli.Context) error {
 		}
 	}
 
+	/* (3)
+	 * Done
+	 * Finished creating resources.
+	 */
 	log.Printf("SUCCESS: created cluster [%s]", c.String("name"))
 	log.Printf(`You can now use the cluster with:
 

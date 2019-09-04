@@ -6,12 +6,14 @@ package run
  */
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -19,20 +21,6 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 )
-
-type ClusterSpec struct {
-	AgentArgs         []string
-	APIPort           apiPort
-	AutoRestart       bool
-	ClusterName       string
-	Env               []string
-	Image             string
-	NodeToPortSpecMap map[string][]string
-	PortAutoOffset    int
-	ServerArgs        []string
-	Verbose           bool
-	Volumes           []string
-}
 
 func startContainer(verbose bool, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
 	ctx := context.Background()
@@ -232,6 +220,40 @@ func removeContainer(ID string) error {
 
 	if err := docker.ContainerRemove(ctx, ID, options); err != nil {
 		return fmt.Errorf("ERROR: couldn't delete container [%s] -> %+v", ID, err)
+	}
+	return nil
+}
+
+func waitForContainerLogMessage(containerID string, message string, timeoutSeconds int) error {
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	timeout := time.Duration(timeoutSeconds) * time.Second
+	for {
+		// not running after timeout exceeded? Rollback and delete everything.
+		if timeout != 0 && time.Now().After(start.Add(timeout)) {
+			return fmt.Errorf("ERROR: timeout of %d seconds exceeded while waiting for log message '%s'", timeoutSeconds, message)
+		}
+
+		// scan container logs for a line that tells us that the required services are up and running
+		out, err := docker.ContainerLogs(ctx, containerID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
+		if err != nil {
+			out.Close()
+			return fmt.Errorf("ERROR: couldn't get docker logs from container %s\n%+v", containerID, err)
+		}
+		buf := new(bytes.Buffer)
+		nRead, _ := buf.ReadFrom(out)
+		out.Close()
+		output := buf.String()
+		if nRead > 0 && strings.Contains(string(output), message) {
+			break
+		}
+
+		time.Sleep(1 * time.Second)
 	}
 	return nil
 }

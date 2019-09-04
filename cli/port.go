@@ -8,12 +8,6 @@ import (
 	"github.com/docker/go-connections/nat"
 )
 
-// PublishedPorts is a struct used for exposing container ports on the host system
-type PublishedPorts struct {
-	ExposedPorts map[nat.Port]struct{}
-	PortBindings map[nat.Port][]nat.PortBinding
-}
-
 // defaultNodes describes the type of nodes on which a port should be exposed by default
 const defaultNodes = "server"
 
