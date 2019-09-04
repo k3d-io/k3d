@@ -460,7 +460,7 @@ func AddNode(c *cli.Context) error {
 
 	// TODO: support this
 	if nodeRole == "server" {
-		return fmt.Errorf("ERROR: sorry, we don't support adding server nodes at the moment!")
+		return fmt.Errorf("ERROR: sorry, we don't support adding server nodes at the moment")
 	}
 
 	/* (0.2)
@@ -471,6 +471,22 @@ func AddNode(c *cli.Context) error {
 	// if no registry was provided, use the default docker.io
 	if len(strings.Split(image, "/")) <= 2 {
 		image = fmt.Sprintf("%s/%s", defaultRegistry, image)
+	}
+
+	/* (0.3) BREAKOUT
+	 * --k3s <url>
+	 * Connect to a non-dockerized k3s server
+	 */
+
+	if c.IsSet("k3s") {
+		log.Printf("INFO: Adding new nodes to k3s [%s]\n", c.String("k3s"))
+		if _, err := createClusterNetwork(clusterName); err != nil {
+			return err
+		}
+		if err := addNodeToK3s(c, nodeRole, image); err != nil {
+			return err
+		}
+		return nil
 	}
 
 	/*
@@ -530,7 +546,7 @@ func AddNode(c *cli.Context) error {
 		}
 	}
 	if serverListenPort == "" {
-		return fmt.Errorf("ERROR: couldn't get https-listen-port form server contaienr")
+		return fmt.Errorf("ERROR: couldn't get https-listen-port form server container")
 	}
 
 	/*
@@ -600,15 +616,58 @@ func AddNode(c *cli.Context) error {
 
 	log.Printf("INFO: Adding %d %s-nodes to cluster %s...\n", nodeCount, nodeRole, clusterName)
 
-	if nodeRole == "agent" {
-		for suffix := highestExistingWorkerSuffix + 1; suffix < nodeCount+1+highestExistingWorkerSuffix; suffix++ {
-			workerContainerID, err := createWorker(clusterSpec, suffix)
-			if err != nil {
-				return fmt.Errorf("ERROR: Couldn't create %s-node!\n%+v", nodeRole, err)
-			}
-			log.Printf("INFO: Created %s-node with ID %s\n", nodeRole, workerContainerID)
-		}
+	if err := createNodes(clusterSpec, nodeRole, highestExistingWorkerSuffix+1, nodeCount); err != nil {
+		return err
 	}
 
+	return nil
+}
+
+func addNodeToK3s(c *cli.Context, nodeRole, image string) error {
+	env := []string{}
+
+	k3sURLEnvVar := fmt.Sprintf("K3S_URL=%s", c.String("k3s"))
+	k3sConnSecretEnvVar := fmt.Sprintf("K3S_SECRET=%s", c.String("k3s-secret"))
+	if c.IsSet("k3s-token") {
+		k3sConnSecretEnvVar = fmt.Sprintf("K3S_TOKEN=%s", c.String("k3s-token"))
+	}
+
+	env = append(env, k3sURLEnvVar, k3sConnSecretEnvVar)
+
+	clusterSpec := &ClusterSpec{
+		AgentArgs:         nil,
+		APIPort:           apiPort{},
+		AutoRestart:       false,
+		ClusterName:       c.String("name"),
+		Env:               env,
+		Image:             image,
+		NodeToPortSpecMap: nil,
+		PortAutoOffset:    0,
+		ServerArgs:        nil,
+		Verbose:           false,
+		Volumes:           nil,
+	}
+
+	if err := createNodes(clusterSpec, nodeRole, 0, c.Int("count")); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createNodes(clusterSpec *ClusterSpec, role string, suffixNumberStart int, count int) error {
+	for suffix := suffixNumberStart; suffix < suffixNumberStart+count; suffix++ {
+		containerID := ""
+		var err error
+		if role == "agent" {
+			containerID, err = createWorker(clusterSpec, suffix)
+		} else if role == "server" {
+			containerID, err = createServer(clusterSpec)
+		}
+		if err != nil {
+			return fmt.Errorf("ERROR: Couldn't create %s-node!\n%+v", role, err)
+		}
+		log.Printf("INFO: Created %s-node with ID %s\n", role, containerID)
+	}
 	return nil
 }

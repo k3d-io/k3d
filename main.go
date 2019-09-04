@@ -131,9 +131,12 @@ func main() {
 			},
 			Action: run.CreateCluster,
 		},
+		/*
+		 * Add a new node to an existing k3d/k3s cluster (choosing k3d by default)
+		 */
 		{
 			Name:  "add-node",
-			Usage: "Add nodes to an existing k3d cluster",
+			Usage: "Add nodes to an existing k3d/k3s cluster (k3d by default)",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "role, r",
@@ -142,7 +145,7 @@ func main() {
 				},
 				cli.StringFlag{
 					Name:  "name, n",
-					Usage: "Name of the clsuter that you want to add a node to",
+					Usage: "Name of the k3d cluster that you want to add a node to [only for node name if --k3s is set]",
 					Value: defaultK3sClusterName,
 				},
 				cli.IntFlag{
@@ -154,6 +157,21 @@ func main() {
 					Name:  "image, i",
 					Usage: "Specify a k3s image (Format: <repo>/<image>:<tag>)",
 					Value: fmt.Sprintf("%s:%s", defaultK3sImage, version.GetK3sVersion()),
+				},
+				/*
+				 * Connect to a non-dockerized k3s cluster
+				 */
+				cli.StringFlag{
+					Name:  "k3s",
+					Usage: "Add a k3d node to a non-k3d k3s cluster (specify k3s server URL like this `https://<host>:<port>`) [requires k3s-secret or k3s-token]",
+				},
+				cli.StringFlag{
+					Name:  "k3s-secret, s",
+					Usage: "Specify k3s cluster secret (or use --k3s-token to use a node token)",
+				},
+				cli.StringFlag{
+					Name:  "k3s-token, t",
+					Usage: "Specify k3s node token (or use --k3s-secret to use a cluster secret)[overrides k3s-secret]",
 				},
 			},
 			Action: run.AddNode,

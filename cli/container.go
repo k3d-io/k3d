@@ -144,8 +144,18 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 	containerLabels["cluster"] = spec.ClusterName
 
 	containerName := GetContainerName("worker", spec.ClusterName, postfix)
+	env := spec.Env
 
-	env := append(spec.Env, fmt.Sprintf("K3S_URL=https://k3d-%s-server:%s", spec.ClusterName, spec.APIPort.Port))
+	needServerURL := true
+	for _, envVar := range env {
+		if strings.Split(envVar, "=")[0] == "K3S_URL" {
+			needServerURL = false
+			break
+		}
+	}
+	if needServerURL {
+		env = append(spec.Env, fmt.Sprintf("K3S_URL=https://k3d-%s-server:%s", spec.ClusterName, spec.APIPort.Port))
+	}
 
 	// ports to be assigned to the server belong to roles
 	// all, server or <server-container-name>
