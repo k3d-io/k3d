@@ -245,13 +245,7 @@ func main() {
 			Name:    "list",
 			Aliases: []string{"ls", "l"},
 			Usage:   "List all clusters",
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "all, a",
-					Usage: "Also show non-running clusters",
-				},
-			},
-			Action: run.ListClusters,
+			Action:  run.ListClusters,
 		},
 		{
 			// get-kubeconfig grabs the kubeconfig from the cluster and prints the path to it
