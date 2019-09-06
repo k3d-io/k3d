@@ -85,7 +85,7 @@ func CreateCluster(c *cli.Context) error {
 	image := c.String("image")
 	// if no registry was provided, use the default docker.io
 	if len(strings.Split(image, "/")) <= 2 {
-		image = fmt.Sprintf("%s/%s", defaultRegistry, image)
+		image = fmt.Sprintf("%s/%s", DefaultRegistry, image)
 	}
 
 	/*
@@ -165,7 +165,7 @@ func CreateCluster(c *cli.Context) error {
 	 * List of ports, that should be mapped from some or all k3d node containers to the host system (or other interface)
 	 */
 	// new port map
-	portmap, err := mapNodesToPortSpecs(c.StringSlice("port"), GetAllContainerNames(c.String("name"), defaultServerCount, c.Int("workers")))
+	portmap, err := mapNodesToPortSpecs(c.StringSlice("port"), GetAllContainerNames(c.String("name"), DefaultServerCount, c.Int("workers")))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -480,7 +480,7 @@ func AddNode(c *cli.Context) error {
 	image := c.String("image")
 	// if no registry was provided, use the default docker.io
 	if len(strings.Split(image, "/")) <= 2 {
-		image = fmt.Sprintf("%s/%s", defaultRegistry, image)
+		image = fmt.Sprintf("%s/%s", DefaultRegistry, image)
 	}
 	clusterSpec.Image = image
 

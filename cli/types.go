@@ -5,6 +5,12 @@ import (
 	"github.com/docker/go-connections/nat"
 )
 
+// Globally used constants
+const (
+	DefaultRegistry    = "docker.io"
+	DefaultServerCount = 1
+)
+
 // Cluster describes an existing cluster
 type Cluster struct {
 	name        string
