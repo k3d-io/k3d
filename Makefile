@@ -31,9 +31,13 @@ BINARIES  := k3d
 
 
 # Go Package required
-PKG_GOX := github.com/mitchellh/gox
-PKG_GOLANGCI_LINT := github.com/golangci/golangci-lint/cmd/golangci-lint
+PKG_GOX := github.com/mitchellh/gox@v1.0.1
+PKG_GOLANGCI_LINT := github.com/golangci/golangci-lint/cmd/golangci-lint@v1.17.1
 
+# configuration adjustments for golangci-lint
+GOLANGCI_LINT_DISABLED_LINTERS := typecheck # disabling typecheck, because it currently (06.09.2019) fails with Go 1.13
+
+# Use Go Modules for everything
 export GO111MODULE=on
 
 # go source directories.
@@ -76,7 +80,7 @@ check-fmt:
 	@test -z $(shell gofmt -s -l $(GO_SRC) | tee /dev/stderr) || echo "[WARN] Fix formatting issues with 'make fmt'"
 
 lint:
-	@golangci-lint run $(LINT_DIRS)
+	@golangci-lint run -D $(GOLANGCI_LINT_DISABLED_LINTERS) $(LINT_DIRS)
 
 check: check-fmt lint
 
@@ -86,8 +90,8 @@ HAS_GOLANGCI  := $(shell command -v golangci-lint 2> /dev/null)
 
 install-tools:
 ifndef HAS_GOX
-	(export GO111MODULE=off; go get -u $(PKG_GOX))
+	(go get $(PKG_GOX))
 endif
 ifndef HAS_GOLANGCI
-	(export GO111MODULE=off; go get -u $(PKG_GOLANGCI_LINT))
+	(curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${GOPATH}/bin v1.17.1)
 endif
