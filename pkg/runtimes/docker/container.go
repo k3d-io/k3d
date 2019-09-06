@@ -22,8 +22,40 @@ THE SOFTWARE.
 
 package docker
 
-// CreateContainer creates a new docker container
+import (
+	"context"
+	"fmt"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
+)
+
+// createContainer creates a new docker container
 // @return containerID, error
-func CreateContainer(name string) (string, error) {
+func createContainer(ID string) (string, error) {
 	return "", nil
+}
+
+// removeContainer deletes a running container (like docker rm -f)
+func removeContainer(ID string) error {
+
+	// (0) create docker client
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("Failed to create docker client. %+v", err)
+	}
+
+	// (1) define remove options
+	options := types.ContainerRemoveOptions{
+		RemoveVolumes: true,
+		Force:         true,
+	}
+
+	// (2) remove container
+	if err := docker.ContainerRemove(ctx, ID, options); err != nil {
+		return fmt.Errorf("Failed to delete container '%s'. %+v", ID, err)
+	}
+
+	return nil
 }

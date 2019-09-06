@@ -21,11 +21,21 @@ THE SOFTWARE.
 */
 package types
 
+import "fmt"
+
 // DefaultClusterName specifies the default name used for newly created clusters
 const DefaultClusterName = "k3s-default"
 
 // DefaultK3sImageRepo specifies the default image repository for the used k3s image
 const DefaultK3sImageRepo = "docker.io/rancher/k3s"
+
+// DefaultObjectNamePrefix defines the name prefix for every object created by k3d
+const DefaultObjectNamePrefix = "k3d-"
+
+// DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
+var DefaultObjectLabels = map[string]string{
+	"app": "k3d",
+}
 
 // Cluster describes a k3d cluster
 type Cluster struct {
@@ -44,4 +54,15 @@ type Node struct {
 	Args    []string
 	Ports   []string
 	Restart bool
+}
+
+// Network describes a container network used by k3d clusters
+type Network struct {
+	Name    string
+	Cluster string
+}
+
+// GetDefaultObjectName prefixes the passed name with the default prefix
+func GetDefaultObjectName(name string) string {
+	return fmt.Sprintf("%s-%s", DefaultObjectNamePrefix, name)
 }
