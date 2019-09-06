@@ -498,6 +498,12 @@ func AddNode(c *cli.Context) error {
 	clusterSpec.ServerArgs = append(clusterSpec.ServerArgs, c.StringSlice("arg")...)
 	clusterSpec.AgentArgs = append(clusterSpec.AgentArgs, c.StringSlice("arg")...)
 
+	/* (0.5)
+	 * --volume, -v
+	 * Add volume mounts
+	 */
+	clusterSpec.Volumes = append(clusterSpec.Volumes, c.StringSlice("volume")...)
+
 	/* (0.5) BREAKOUT
 	 * --k3s <url>
 	 * Connect to a non-dockerized k3s server

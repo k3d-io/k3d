@@ -13,7 +13,7 @@ const defaultNodes = "server"
 
 // mapping a node role to groups that should be applied to it
 var nodeRuleGroupsMap = map[string][]string{
-	"worker": {"all", "workers"},
+	"worker": {"all", "workers", "agents"},
 	"server": {"all", "server", "master"},
 }
 

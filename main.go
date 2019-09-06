@@ -170,6 +170,10 @@ func main() {
 					Name:  "env, e",
 					Usage: "Pass an additional environment variable (new flag per variable)",
 				},
+				cli.StringSliceFlag{
+					Name:  "volume, v",
+					Usage: "Mount one or more volumes into every created node (Docker notation: `source:destination`)",
+				},
 				/*
 				 * Connect to a non-dockerized k3s cluster
 				 */
