@@ -499,10 +499,8 @@ func AddNode(c *cli.Context) error {
 	 * --arg, -x <argument>
 	 * Argument passed in to the k3s server/agent command
 	 */
-	k3sServerArgs := []string{}
-	k3sAgentArgs := []string{}
-	k3sServerArgs = append(k3sServerArgs, c.StringSlice("arg")...)
-	k3sAgentArgs = append(k3sAgentArgs, c.StringSlice("arg")...)
+	clusterSpec.ServerArgs = append(clusterSpec.ServerArgs, c.StringSlice("arg")...)
+	clusterSpec.AgentArgs = append(clusterSpec.AgentArgs, c.StringSlice("arg")...)
 
 	/* (0.5) BREAKOUT
 	 * --k3s <url>

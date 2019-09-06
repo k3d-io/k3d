@@ -28,6 +28,10 @@ func main() {
 			Email: "iwilltry42@gmail.com",
 		},
 		{
+			Name:  "Andy Zhou",
+			Email: "andy@andyz.dev",
+		},
+		{
 			Name:  "Rishabh Gupta",
 			Email: "r.g.gupta@outlook.com",
 		},
@@ -157,6 +161,14 @@ func main() {
 					Name:  "image, i",
 					Usage: "Specify a k3s image (Format: <repo>/<image>:<tag>)",
 					Value: fmt.Sprintf("%s:%s", defaultK3sImage, version.GetK3sVersion()),
+				},
+				cli.StringSliceFlag{
+					Name:  "arg, x",
+					Usage: "Pass arguments to the k3s server/agent command.",
+				},
+				cli.StringSliceFlag{
+					Name:  "env, e",
+					Usage: "Pass an additional environment variable (new flag per variable)",
 				},
 				/*
 				 * Connect to a non-dockerized k3s cluster
