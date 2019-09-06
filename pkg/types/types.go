@@ -26,6 +26,12 @@ import "fmt"
 // DefaultClusterName specifies the default name used for newly created clusters
 const DefaultClusterName = "k3s-default"
 
+// DefaultClusterNameMaxLength specifies the maximal length of a passed in cluster name
+// This restriction allows us to construct an name consisting of
+// <DefaultObjectNamePrefix[3]>-<ClusterName>-<TypeSuffix[5-10]>-<Counter[1-3]>
+// ... and still stay within the 64 character limit (e.g. of docker)
+const DefaultClusterNameMaxLength = 32
+
 // DefaultK3sImageRepo specifies the default image repository for the used k3s image
 const DefaultK3sImageRepo = "docker.io/rancher/k3s"
 
@@ -41,6 +47,7 @@ var DefaultObjectLabels = map[string]string{
 type Cluster struct {
 	Name    string
 	Network string
+	Secret  string
 	Nodes   []Node
 }
 

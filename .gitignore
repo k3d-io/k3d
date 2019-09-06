@@ -17,3 +17,4 @@ _dist/
 
 # Editors
 .vscode/
+.local/

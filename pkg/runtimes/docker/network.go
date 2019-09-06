@@ -48,7 +48,6 @@ func CreateNetworkIfNotExist(clusterName string) (string, error) {
 	// (1) configure list filters
 	args := GetDefaultObjectLabelsFilter(clusterName)
 	args.Add("name", networkName)
-	// TODO: filter for label: cluster=<clusterName>?
 
 	// (2) get filtered list of networks
 	networkList, err := docker.NetworkList(ctx, types.NetworkListOptions{

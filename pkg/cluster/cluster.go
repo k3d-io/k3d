@@ -21,11 +21,13 @@ THE SOFTWARE.
 */
 package cluster
 
-import "github.com/rancher/k3d/pkg/types"
+import (
+	"github.com/rancher/k3d/pkg/types"
+)
 
 // CreateCluster creates a new cluster consisting of
 // - some containerized k3s nodes
 // - a docker network
-func CreateCluster(clusterSpec *types.Cluster) error {
+func CreateCluster(cluster *types.Cluster) error {
 	return nil
 }

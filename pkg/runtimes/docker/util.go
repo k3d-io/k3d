@@ -19,43 +19,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
 package docker
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
+	"github.com/docker/docker/api/types/filters"
+	k3d "github.com/rancher/k3d/pkg/types"
 )
 
-// createContainer creates a new docker container
-// @return containerID, error
-func createContainer(types.Container) (string, error) {
-	return "", nil
-}
-
-// removeContainer deletes a running container (like docker rm -f)
-func removeContainer(ID string) error {
-
-	// (0) create docker client
-	ctx := context.Background()
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return fmt.Errorf("Failed to create docker client. %+v", err)
+// GetDefaultObjectLabelsFilter returns docker type filters created from k3d labels
+func GetDefaultObjectLabelsFilter(clusterName string) filters.Args {
+	filters := filters.NewArgs()
+	for key, value := range k3d.DefaultObjectLabels {
+		filters.Add("label", fmt.Sprintf("%s=%s", key, value))
 	}
-
-	// (1) define remove options
-	options := types.ContainerRemoveOptions{
-		RemoveVolumes: true,
-		Force:         true,
-	}
-
-	// (2) remove container
-	if err := docker.ContainerRemove(ctx, ID, options); err != nil {
-		return fmt.Errorf("Failed to delete container '%s'. %+v", ID, err)
-	}
-
-	return nil
+	filters.Add("label", fmt.Sprintf("cluster=%s", clusterName))
+	return filters
 }
