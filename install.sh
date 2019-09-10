@@ -75,6 +75,11 @@ checkK3dInstalledVersion() {
   fi
 }
 
+# checkTagProvided checks whether TAG has provided as an environment variable so we can skip checkLatestVersion.
+checkTagProvided() {
+  [[ ! -z "$TAG" ]]
+}
+
 # checkLatestVersion grabs the latest version string from the releases
 checkLatestVersion() {
   local latest_release_url="$REPO_URL/releases/latest"
@@ -178,7 +183,7 @@ set +u
 initArch
 initOS
 verifySupported
-checkLatestVersion
+checkTagProvided || checkLatestVersion
 if ! checkK3dInstalledVersion; then
   downloadFile
   installFile
