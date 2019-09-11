@@ -20,6 +20,10 @@ You have several options there:
 - use the install script to grab the latest release:
   - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
   - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
+- use the install script to grab a specific release (via `TAG` environment variable):
+  - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.3.1 bash`
+  - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.3.1 bash`
+
 - Grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
 - Via go: `go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
 
