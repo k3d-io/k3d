@@ -124,6 +124,8 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
 
 # Added section: additional registries and the endpoints
 [plugins.cri.registry.mirrors]
+  [plugins.cri.registry.mirrors."docker.io"]
+    endpoint = ["https://registry-1.docker.io"
   [plugins.cri.registry.mirrors."<b>registry.local:5000</b>"]
     endpoint = ["http://<b>registry.local:5000</b>"]
 </pre>
