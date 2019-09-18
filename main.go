@@ -105,7 +105,7 @@ func main() {
 				cli.IntFlag{
 					Name:  "wait, t",
 					Value: 0, // timeout
-					Usage: "Wait for the cluster to come up before returning until timoout (in seconds). Use --wait 0 to wait forever",
+					Usage: "Wait for the cluster to come up before returning until timeout (in seconds). Use --wait 0 to wait forever",
 				},
 				cli.StringFlag{
 					Name:  "image, i",
