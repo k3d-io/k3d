@@ -23,10 +23,25 @@ THE SOFTWARE.
 package cluster
 
 import (
-	"github.com/rancher/k3d/pkg/types"
+	k3drt "github.com/rancher/k3d/pkg/runtimes"
+	k3dContainerd "github.com/rancher/k3d/pkg/runtimes/containerd"
+	k3dDocker "github.com/rancher/k3d/pkg/runtimes/docker"
+	k3d "github.com/rancher/k3d/pkg/types"
+	log "github.com/sirupsen/logrus"
 )
 
 // CreateNode creates a new containerized k3s node
-func CreateNode(nodeSpec *types.Node) error {
+func CreateNode(nodeSpec *k3d.Node, runtimeChoice string) error {
+	var runtime k3drt.Runtime
+	if runtimeChoice == "docker" {
+		runtime = k3dDocker.Docker{}
+	} else {
+		runtime = k3dContainerd.Containerd{}
+	}
+
+	if err := runtime.CreateContainer(&k3d.Node{}); err != nil {
+		log.Error(err)
+	}
+	log.Println("...success")
 	return nil
 }

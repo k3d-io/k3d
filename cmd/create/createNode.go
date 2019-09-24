@@ -24,6 +24,8 @@ package create
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/rancher/k3d/pkg/cluster"
+	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -37,6 +39,11 @@ func NewCmdCreateNode() *cobra.Command {
 		Long:  `Create a new containerized k3s node (k3s in docker).`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("create node called")
+			rt, err := cmd.Flags().GetString("runtime")
+			if err != nil {
+				log.Debugln("runtime not defined")
+			}
+			cluster.CreateNode(&k3d.Node{}, rt)
 		},
 	}
 

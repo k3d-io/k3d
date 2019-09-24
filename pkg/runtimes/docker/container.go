@@ -27,13 +27,34 @@ import (
 	"fmt"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
+// CreateContainer creates a new container
 func (d Docker) CreateContainer(nodeSpec *k3d.Node) error {
 	log.Println("docker.CreateContainer...")
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("Failed to create docker client. %+v", err)
+	}
+
+	containerConfig := container.Config{
+		Cmd:   []string{"sh"},
+		Image: "nginx",
+	}
+
+	resp, err := docker.ContainerCreate(ctx, &containerConfig, &container.HostConfig{}, &network.NetworkingConfig{}, "test")
+	if err != nil {
+		log.Error("couldn't create container")
+		return err
+	}
+	log.Println(resp.ID)
+
 	return nil
 }
 

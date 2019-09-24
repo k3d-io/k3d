@@ -52,7 +52,6 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().StringP("name", "n", types.DefaultClusterName, "Set a name for the cluster")
 	cmd.Flags().StringP("api-port", "a", "6443", "Specify the Kubernetes cluster API server port (Format: `--api-port [host:]port`")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
-	cmd.Flags().StringP("runtime", "r", "docker", "Choose a container runtime environment [docker, containerd]")
 
 	// add subcommands
 
