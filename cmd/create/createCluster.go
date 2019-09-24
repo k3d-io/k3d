@@ -24,6 +24,7 @@ package create
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/types"
 
 	log "github.com/sirupsen/logrus"
@@ -38,6 +39,7 @@ func NewCmdCreateCluster() *cobra.Command {
 		Short: "Create a new k3s cluster in docker",
 		Long:  `Create a new k3s cluster with containerized nodes (k3s in docker).`,
 		Run: func(cmd *cobra.Command, args []string) {
+			cluster.CreateCluster()
 			log.Debugln("create cluster called")
 		},
 	}
@@ -52,3 +54,5 @@ func NewCmdCreateCluster() *cobra.Command {
 	// done
 	return cmd
 }
+
+// parseCmd parses the command input into variables required to create a cluster

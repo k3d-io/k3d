@@ -33,8 +33,8 @@ func NewCmdCreate() *cobra.Command {
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a resource.",
-		Long:  `Create a resource.`,
+		Short: "Create a resource [cluster, node].",
+		Long:  `Create a resource [cluster, node].`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("create called")
 		},
