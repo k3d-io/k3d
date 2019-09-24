@@ -22,8 +22,4 @@ THE SOFTWARE.
 
 package docker
 
-type docker struct{}
-
-func New() *Runtime {
-
-}
+type Docker struct{}

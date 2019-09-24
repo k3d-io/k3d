@@ -39,8 +39,12 @@ func NewCmdCreateCluster() *cobra.Command {
 		Short: "Create a new k3s cluster in docker",
 		Long:  `Create a new k3s cluster with containerized nodes (k3s in docker).`,
 		Run: func(cmd *cobra.Command, args []string) {
-			cluster.CreateCluster()
-			log.Debugln("create cluster called")
+			c := types.Cluster{} // TODO: fill
+			rt, err := cmd.Flags().GetString("runtime")
+			if err != nil {
+				log.Debugln("runtime not defined")
+			}
+			cluster.CreateCluster(&c, rt)
 		},
 	}
 
@@ -48,6 +52,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().StringP("name", "n", types.DefaultClusterName, "Set a name for the cluster")
 	cmd.Flags().StringP("api-port", "a", "6443", "Specify the Kubernetes cluster API server port (Format: `--api-port [host:]port`")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
+	cmd.Flags().StringP("runtime", "r", "docker", "Choose a container runtime environment [docker, containerd]")
 
 	// add subcommands
 

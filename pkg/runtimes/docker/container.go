@@ -28,7 +28,14 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	k3d "github.com/rancher/k3d/pkg/types"
+	log "github.com/sirupsen/logrus"
 )
+
+func (d Docker) CreateContainer(nodeSpec *k3d.Node) error {
+	log.Println("docker.CreateContainer...")
+	return nil
+}
 
 // createContainer creates a new docker container
 // @return containerID, error

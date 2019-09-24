@@ -28,9 +28,9 @@ import (
 // Runtime defines an interface that can be implemented for various container runtime environments (docker, containerd, etc.)
 type Runtime interface {
 	CreateContainer(*k3d.Node) error
-	StartContainer() error
-	ExecContainer() error
-	StopContainer() error
-	DeleteContainer() error
-	GetContainerLogs() error
+	// StartContainer() error
+	// ExecContainer() error
+	// StopContainer() error
+	// DeleteContainer() error
+	// GetContainerLogs() error
 }
