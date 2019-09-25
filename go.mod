@@ -6,6 +6,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/Microsoft/hcsshim v0.8.6 // indirect
+	github.com/containerd/cgroups v0.0.0-20190923161937-abd0b19954a6 // indirect
 	github.com/containerd/containerd v1.3.0-rc.2.0.20190924150618-aba201344ebf
 	github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6 // indirect
 	github.com/containerd/fifo v0.0.0-20190816180239-bda0ff6ed73c // indirect
@@ -15,11 +16,11 @@ require (
 	github.com/docker/docker v1.4.2-0.20190905191220-3b23f9033967
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
-	github.com/docker/go-units v0.4.0 // indirect
 	github.com/gogo/googleapis v1.3.0 // indirect
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/google/go-cmp v0.3.0 // indirect
 	github.com/gorilla/mux v1.7.3 // indirect
+	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/morikuni/aec v0.0.0-20170113033406-39771216ff4c // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
@@ -29,6 +30,7 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2 // indirect
+	go.etcd.io/bbolt v1.3.3 // indirect
 	golang.org/x/net v0.0.0-20190812203447-cdfb69ac37fc // indirect
 	golang.org/x/sys v0.0.0-20190902133755-9109b7679e13 // indirect
 	golang.org/x/text v0.3.2 // indirect
