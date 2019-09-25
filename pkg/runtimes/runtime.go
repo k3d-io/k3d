@@ -22,15 +22,33 @@ THE SOFTWARE.
 package runtimes
 
 import (
+	"fmt"
+
+	"github.com/rancher/k3d/pkg/runtimes/containerd"
+	"github.com/rancher/k3d/pkg/runtimes/docker"
 	k3d "github.com/rancher/k3d/pkg/types"
 )
 
+// Runtimes defines a map of implemented k3d runtimes
+var Runtimes = map[string]Runtime{
+	"docker":     docker.Docker{},
+	"containerd": containerd.Containerd{},
+}
+
 // Runtime defines an interface that can be implemented for various container runtime environments (docker, containerd, etc.)
 type Runtime interface {
-	CreateContainer(*k3d.Node) error
+	CreateNode(*k3d.Node) error
 	// StartContainer() error
 	// ExecContainer() error
 	// StopContainer() error
 	// DeleteContainer() error
 	// GetContainerLogs() error
+}
+
+// GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it
+func GetRuntime(rt string) (Runtime, error) {
+	if runtime, ok := Runtimes[rt]; ok {
+		return runtime, nil
+	}
+	return nil, fmt.Errorf("Runtime '%s' not supported", rt)
 }

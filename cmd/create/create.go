@@ -43,7 +43,6 @@ func NewCmdCreate() *cobra.Command {
 	cmd.AddCommand(NewCmdCreateNode())
 
 	// add flags
-	cmd.PersistentFlags().StringP("runtime", "r", "docker", "Choose a container runtime environment [docker, containerd]")
 
 	// done
 	return cmd

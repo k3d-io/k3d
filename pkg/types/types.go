@@ -38,9 +38,6 @@ const DefaultK3sImageRepo = "docker.io/rancher/k3s"
 // DefaultObjectNamePrefix defines the name prefix for every object created by k3d
 const DefaultObjectNamePrefix = "k3d-"
 
-// Runtimes defines a list of available container runtimes that we can talk to to handle resources
-var Runtimes = []string{"docker"}
-
 // DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
 var DefaultObjectLabels = map[string]string{
 	"app": "k3d",

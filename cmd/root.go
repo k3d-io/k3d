@@ -34,8 +34,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// RootFlags describes a struct that holds flags that can be set on root level of the command
+type RootFlags struct {
+	debugLogging bool
+	runtime      string
+}
+
+var flags = RootFlags{}
+
 // var cfgFile string
-var debugLogging bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -64,7 +71,8 @@ func init() {
 	// will be global for your application.
 
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k3d.yaml)")
-	rootCmd.PersistentFlags().BoolVar(&debugLogging, "verbose", false, "Enable verbose output (debug logging)")
+	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
+	rootCmd.PersistentFlags().StringVarP(&flags.runtime, "runtime", "r", "docker", "Choose a container runtime environment [docker, containerd]")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -106,7 +114,7 @@ func initConfig() {
 
 // initLogging initializes the logger
 func initLogging() {
-	if debugLogging {
+	if flags.debugLogging {
 		log.SetLevel(log.DebugLevel)
 	} else {
 		switch logLevel := strings.ToUpper(os.Getenv("LOG_LEVEL")); logLevel {

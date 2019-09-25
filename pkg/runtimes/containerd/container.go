@@ -23,11 +23,12 @@ THE SOFTWARE.
 package containerd
 
 import (
-	log "github.com/sirupsen/logrus"
 	k3d "github.com/rancher/k3d/pkg/types"
+	log "github.com/sirupsen/logrus"
 )
 
-func (d Containerd) CreateContainer(nodeSpec *k3d.Node) error {
-	log.Println("containerd.CreateContainer...")
+// CreateNode creates a new k3d node
+func (d Containerd) CreateNode(nodeSpec *k3d.Node) error {
+	log.Debugln("containerd.CreateContainer...")
 	return nil
 }
