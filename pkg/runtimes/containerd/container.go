@@ -33,9 +33,12 @@ import (
 
 // CreateNode creates a new k3d node
 func (d Containerd) CreateNode(nodeSpec *k3d.Node) error {
-	log.Debugln("containerd.CreateContainer...")
+	log.Debugln("containerd.CreateNode...")
 	ctx := context.Background()
-	client, err := containerd.New("")
+	clientOpts := []containerd.ClientOpt{
+		containerd.WithDefaultNamespace("k3d"),
+	}
+	client, err := containerd.New("/run/containerd/containerd.sock", clientOpts...) // TODO: this is the default address on UNIX, different on Windows
 	if err != nil {
 		log.Errorln("Failed to create containerd client")
 		return err
@@ -49,6 +52,37 @@ func (d Containerd) CreateNode(nodeSpec *k3d.Node) error {
 			return nil
 		},
 	}
-	client.NewContainer(ctx, "test-containerd", newContainerOpts...)
+	resp, err := client.NewContainer(ctx, "test-containerd", newContainerOpts...)
+	if err != nil {
+		log.Errorln("Couldn't create container")
+		return err
+	}
+	log.Debugln("Created container with ID", resp.ID)
+	return nil
+}
+
+// DeleteNode deletes an existing k3d node
+func (d Containerd) DeleteNode(nodeSpec *k3d.Node) error {
+	log.Debugln("containerd.DeleteNode...")
+	ctx := context.Background()
+	clientOpts := []containerd.ClientOpt{
+		containerd.WithDefaultNamespace("k3d"),
+	}
+	client, err := containerd.New("/run/containerd/containerd.sock", clientOpts...) // TODO: this is the default address on UNIX, different on Windows
+	if err != nil {
+		log.Errorln("Failed to create containerd client")
+		return err
+	}
+
+	container, err := client.LoadContainer(ctx, nodeSpec.Name)
+	if err != nil {
+		log.Errorln("Couldn't load container", nodeSpec.Name)
+		return err
+	}
+	if err = container.Delete(ctx, []containerd.DeleteOpts{}...); err != nil {
+		log.Errorln("Failed to delete container", container.ID)
+		return err
+	}
+
 	return nil
 }

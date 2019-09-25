@@ -38,6 +38,7 @@ var Runtimes = map[string]Runtime{
 // Runtime defines an interface that can be implemented for various container runtime environments (docker, containerd, etc.)
 type Runtime interface {
 	CreateNode(*k3d.Node) error
+	DeleteNode(*k3d.Node) error
 	// StartContainer() error
 	// ExecContainer() error
 	// StopContainer() error

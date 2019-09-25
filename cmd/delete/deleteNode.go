@@ -22,8 +22,9 @@ THE SOFTWARE.
 package delete
 
 import (
+	"github.com/rancher/k3d/pkg/cluster"
+	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
-
 	"github.com/spf13/cobra"
 )
 
@@ -37,6 +38,11 @@ func NewCmdDeleteNode() *cobra.Command {
 		Long:  `Delete a node.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("delete node called")
+			rt, err := cmd.Flags().GetString("runtime")
+			if err != nil {
+				log.Debugln("runtime not defined")
+			}
+			cluster.DeleteNode(&k3d.Node{Name: "test-containerd"}, rt)
 		},
 	}
 

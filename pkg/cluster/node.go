@@ -45,3 +45,19 @@ func CreateNode(nodeSpec *k3d.Node, runtimeChoice string) error {
 	log.Debugln("...success")
 	return nil
 }
+
+// DeleteNode deletes an existing node
+func DeleteNode(nodeSpec *k3d.Node, runtimeChoice string) error {
+	var runtime k3drt.Runtime
+	if runtimeChoice == "docker" {
+		runtime = k3dDocker.Docker{}
+	} else {
+		runtime = k3dContainerd.Containerd{}
+	}
+
+	if err := runtime.DeleteNode(nodeSpec); err != nil {
+		log.Error(err)
+	}
+	log.Debugln("...success")
+	return nil
+}
