@@ -23,6 +23,10 @@ THE SOFTWARE.
 package containerd
 
 import (
+	"context"
+
+	"github.com/containerd/containerd"
+	"github.com/containerd/containerd/containers"
 	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
@@ -30,5 +34,21 @@ import (
 // CreateNode creates a new k3d node
 func (d Containerd) CreateNode(nodeSpec *k3d.Node) error {
 	log.Debugln("containerd.CreateContainer...")
+	ctx := context.Background()
+	client, err := containerd.New("")
+	if err != nil {
+		log.Errorln("Failed to create containerd client")
+		return err
+	}
+	newContainerOpts := []containerd.NewContainerOpts{
+		func(ctx context.Context, _ *containerd.Client, c *containers.Container) error {
+			c.Image = "docker.io/nginx:latest"
+			c.Labels = map[string]string{
+				"runtime": "containerd",
+			}
+			return nil
+		},
+	}
+	client.NewContainer(ctx, "test-containerd", newContainerOpts...)
 	return nil
 }
