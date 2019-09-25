@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -27,7 +27,7 @@ const (
 
 // CheckTools checks if the docker API server is responding
 func CheckTools(c *cli.Context) error {
-	log.Print("Checking docker...")
+	logrus.Print("Checking docker...")
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -38,7 +38,7 @@ func CheckTools(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("ERROR: checking docker failed\n%+v", err)
 	}
-	log.Printf("SUCCESS: Checking docker succeeded (API: v%s)\n", ping.APIVersion)
+	logrus.Printf("SUCCESS: Checking docker succeeded (API: v%s)\n", ping.APIVersion)
 	return nil
 }
 
@@ -61,7 +61,7 @@ func CreateCluster(c *cli.Context) error {
 	// so that they don't linger around.
 	deleteCluster := func() {
 		if err := DeleteCluster(c); err != nil {
-			log.Printf("Error: Failed to delete cluster %s", c.String("name"))
+			logrus.Printf("Error: Failed to delete cluster %s", c.String("name"))
 		}
 	}
 
@@ -69,10 +69,10 @@ func CreateCluster(c *cli.Context) error {
 	image := c.String("image")
 	if c.IsSet("version") {
 		// TODO: --version to be deprecated
-		log.Println("[WARNING] The `--version` flag will be deprecated soon, please use `--image rancher/k3s:<version>` instead")
+		logrus.Println("[WARNING] The `--version` flag will be deprecated soon, please use `--image rancher/k3s:<version>` instead")
 		if c.IsSet("image") {
 			// version specified, custom image = error (to push deprecation of version flag)
-			log.Fatalln("[ERROR] Please use `--image <image>:<version>` instead of --image and --version")
+			logrus.Fatalln("[ERROR] Please use `--image <image>:<version>` instead of --image and --version")
 		} else {
 			// version specified, default image = ok (until deprecation of version flag)
 			image = fmt.Sprintf("%s:%s", strings.Split(image, ":")[0], c.String("version"))
@@ -88,7 +88,7 @@ func CreateCluster(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Created cluster network with ID %s", networkID)
+	logrus.Printf("Created cluster network with ID %s", networkID)
 
 	// environment variables
 	env := []string{"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml"}
@@ -98,7 +98,7 @@ func CreateCluster(c *cli.Context) error {
 	// k3s server arguments
 	// TODO: --port will soon be --api-port since we want to re-use --port for arbitrary port mappings
 	if c.IsSet("port") {
-		log.Println("INFO: As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
+		logrus.Println("INFO: As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
 	}
 	apiPort, err := parseAPIPort(c.String("api-port"))
 	if err != nil {
@@ -116,13 +116,13 @@ func CreateCluster(c *cli.Context) error {
 		// In case of error, Log a warning message, and continue on. Since it more likely caused by a miss configured
 		// DOCKER_MACHINE_NAME environment variable.
 		if err != nil {
-			log.Printf("WARNING: Failed to get docker machine IP address, ignoring the DOCKER_MACHINE_NAME environment variable setting.\n")
+			logrus.Printf("WARNING: Failed to get docker machine IP address, ignoring the DOCKER_MACHINE_NAME environment variable setting.\n")
 		}
 	}
 
 	if apiPort.Host != "" {
 		// Add TLS SAN for non default host name
-		log.Printf("Add TLS SAN for %s", apiPort.Host)
+		logrus.Printf("Add TLS SAN for %s", apiPort.Host)
 		k3sServerArgs = append(k3sServerArgs, "--tls-san", apiPort.Host)
 	}
 
@@ -137,12 +137,12 @@ func CreateCluster(c *cli.Context) error {
 	// new port map
 	portmap, err := mapNodesToPortSpecs(c.StringSlice("publish"), GetAllContainerNames(c.String("name"), defaultServerCount, c.Int("workers")))
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 
 	// create a docker volume for sharing image tarballs with the cluster
 	imageVolume, err := createImageVolume(c.String("name"))
-	log.Println("Created docker volume ", imageVolume.Name)
+	logrus.Println("Created docker volume ", imageVolume.Name)
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func CreateCluster(c *cli.Context) error {
 	}
 
 	// create the server
-	log.Printf("Creating cluster [%s]", c.String("name"))
+	logrus.Printf("Creating cluster [%s]", c.String("name"))
 
 	// create the directory where we will put the kubeconfig file by default (when running `k3d get-config`)
 	createClusterDir(c.String("name"))
@@ -213,19 +213,19 @@ func CreateCluster(c *cli.Context) error {
 	// spin up the worker nodes
 	// TODO: do this concurrently in different goroutines
 	if c.Int("workers") > 0 {
-		log.Printf("Booting %s workers for cluster %s", strconv.Itoa(c.Int("workers")), c.String("name"))
+		logrus.Printf("Booting %s workers for cluster %s", strconv.Itoa(c.Int("workers")), c.String("name"))
 		for i := 0; i < c.Int("workers"); i++ {
 			workerID, err := createWorker(clusterSpec, i)
 			if err != nil {
 				deleteCluster()
 				return err
 			}
-			log.Printf("Created worker with ID %s\n", workerID)
+			logrus.Printf("Created worker with ID %s\n", workerID)
 		}
 	}
 
-	log.Printf("SUCCESS: created cluster [%s]", c.String("name"))
-	log.Printf(`You can now use the cluster with:
+	logrus.Printf("SUCCESS: created cluster [%s]", c.String("name"))
+	logrus.Printf(`You can now use the cluster with:
 
 export KUBECONFIG="$(%s get-kubeconfig --name='%s')"
 kubectl cluster-info`, os.Args[0], c.String("name"))
@@ -244,33 +244,33 @@ func DeleteCluster(c *cli.Context) error {
 	// remove clusters one by one instead of appending all names to the docker command
 	// this allows for more granular error handling and logging
 	for _, cluster := range clusters {
-		log.Printf("Removing cluster [%s]", cluster.name)
+		logrus.Printf("Removing cluster [%s]", cluster.name)
 		if len(cluster.workers) > 0 {
 			// TODO: this could be done in goroutines
-			log.Printf("...Removing %d workers\n", len(cluster.workers))
+			logrus.Printf("...Removing %d workers\n", len(cluster.workers))
 			for _, worker := range cluster.workers {
 				if err := removeContainer(worker.ID); err != nil {
-					log.Println(err)
+					logrus.Println(err)
 					continue
 				}
 			}
 		}
 		deleteClusterDir(cluster.name)
-		log.Println("...Removing server")
+		logrus.Println("...Removing server")
 		if err := removeContainer(cluster.server.ID); err != nil {
 			return fmt.Errorf("ERROR: Couldn't remove server for cluster %s\n%+v", cluster.name, err)
 		}
 
 		if err := deleteClusterNetwork(cluster.name); err != nil {
-			log.Printf("WARNING: couldn't delete cluster network for cluster %s\n%+v", cluster.name, err)
+			logrus.Printf("WARNING: couldn't delete cluster network for cluster %s\n%+v", cluster.name, err)
 		}
 
-		log.Println("...Removing docker image volume")
+		logrus.Println("...Removing docker image volume")
 		if err := deleteImageVolume(cluster.name); err != nil {
-			log.Printf("WARNING: couldn't delete image docker volume for cluster %s\n%+v", cluster.name, err)
+			logrus.Printf("WARNING: couldn't delete image docker volume for cluster %s\n%+v", cluster.name, err)
 		}
 
-		log.Printf("SUCCESS: removed cluster [%s]", cluster.name)
+		logrus.Printf("SUCCESS: removed cluster [%s]", cluster.name)
 	}
 
 	return nil
@@ -293,22 +293,22 @@ func StopCluster(c *cli.Context) error {
 	// remove clusters one by one instead of appending all names to the docker command
 	// this allows for more granular error handling and logging
 	for _, cluster := range clusters {
-		log.Printf("Stopping cluster [%s]", cluster.name)
+		logrus.Printf("Stopping cluster [%s]", cluster.name)
 		if len(cluster.workers) > 0 {
-			log.Printf("...Stopping %d workers\n", len(cluster.workers))
+			logrus.Printf("...Stopping %d workers\n", len(cluster.workers))
 			for _, worker := range cluster.workers {
 				if err := docker.ContainerStop(ctx, worker.ID, nil); err != nil {
-					log.Println(err)
+					logrus.Println(err)
 					continue
 				}
 			}
 		}
-		log.Println("...Stopping server")
+		logrus.Println("...Stopping server")
 		if err := docker.ContainerStop(ctx, cluster.server.ID, nil); err != nil {
 			return fmt.Errorf("ERROR: Couldn't stop server for cluster %s\n%+v", cluster.name, err)
 		}
 
-		log.Printf("SUCCESS: Stopped cluster [%s]", cluster.name)
+		logrus.Printf("SUCCESS: Stopped cluster [%s]", cluster.name)
 	}
 
 	return nil
@@ -331,24 +331,24 @@ func StartCluster(c *cli.Context) error {
 	// remove clusters one by one instead of appending all names to the docker command
 	// this allows for more granular error handling and logging
 	for _, cluster := range clusters {
-		log.Printf("Starting cluster [%s]", cluster.name)
+		logrus.Printf("Starting cluster [%s]", cluster.name)
 
-		log.Println("...Starting server")
+		logrus.Println("...Starting server")
 		if err := docker.ContainerStart(ctx, cluster.server.ID, types.ContainerStartOptions{}); err != nil {
 			return fmt.Errorf("ERROR: Couldn't start server for cluster %s\n%+v", cluster.name, err)
 		}
 
 		if len(cluster.workers) > 0 {
-			log.Printf("...Starting %d workers\n", len(cluster.workers))
+			logrus.Printf("...Starting %d workers\n", len(cluster.workers))
 			for _, worker := range cluster.workers {
 				if err := docker.ContainerStart(ctx, worker.ID, types.ContainerStartOptions{}); err != nil {
-					log.Println(err)
+					logrus.Println(err)
 					continue
 				}
 			}
 		}
 
-		log.Printf("SUCCESS: Started cluster [%s]", cluster.name)
+		logrus.Printf("SUCCESS: Started cluster [%s]", cluster.name)
 	}
 
 	return nil
@@ -357,7 +357,7 @@ func StartCluster(c *cli.Context) error {
 // ListClusters prints a list of created clusters
 func ListClusters(c *cli.Context) error {
 	if c.IsSet("all") {
-		log.Println("INFO: --all is on by default, thus no longer required. This option will be removed in v2.0.0")
+		logrus.Println("INFO: --all is on by default, thus no longer required. This option will be removed in v2.0.0")
 
 	}
 	printClusters()
