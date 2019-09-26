@@ -43,7 +43,9 @@ func NewCmdCreateNode() *cobra.Command {
 			if err != nil {
 				log.Debugln("runtime not defined")
 			}
-			cluster.CreateNode(&k3d.Node{}, rt)
+			if err := cluster.CreateNode(&k3d.Node{}, rt); err != nil {
+				log.Fatalln(err)
+			}
 		},
 	}
 

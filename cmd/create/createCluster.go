@@ -41,7 +41,9 @@ func NewCmdCreateCluster() *cobra.Command {
 		Long:  `Create a new k3s cluster with containerized nodes (k3s in docker).`,
 		Run: func(cmd *cobra.Command, args []string) {
 			runtime, cluster := parseCmd(cmd, args)
-			k3dCluster.CreateCluster(cluster, runtime)
+			if err := k3dCluster.CreateCluster(cluster, runtime); err != nil {
+				log.Fatalln(err)
+			}
 		},
 	}
 

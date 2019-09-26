@@ -42,7 +42,9 @@ func NewCmdDeleteNode() *cobra.Command {
 			if err != nil {
 				log.Debugln("runtime not defined")
 			}
-			cluster.DeleteNode(&k3d.Node{Name: "test"}, rt)
+			if err := cluster.DeleteNode(&k3d.Node{Name: "test"}, rt); err != nil {
+				log.Fatalln(err)
+			}
 		},
 	}
 

@@ -22,6 +22,7 @@ THE SOFTWARE.
 package create
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +35,10 @@ func NewCmdCreate() *cobra.Command {
 		Short: "Create a resource [cluster, node].",
 		Long:  `Create a resource [cluster, node].`,
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Help()
+			if err := cmd.Help(); err != nil {
+				log.Errorln("Couldn't get help text")
+				log.Fatalln(err)
+			}
 		},
 	}
 
