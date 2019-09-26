@@ -468,9 +468,9 @@ func AddNode(c *cli.Context) error {
 		nodeRole = "server"
 	}
 
-	// TODO: support this
-	if nodeRole == "server" {
-		return fmt.Errorf("ERROR: sorry, we don't support adding server nodes at the moment")
+	// TODO: support adding server nodes
+	if nodeRole != "worker" && nodeRole != "agent" {
+		return fmt.Errorf("ERROR: adding nodes of type '%s' is not supported", nodeRole)
 	}
 
 	/* (0.2)
