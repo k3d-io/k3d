@@ -48,7 +48,7 @@ func (d Docker) CreateNode(nodeSpec *k3d.Node) error {
 		Image: "nginx",
 	}
 
-	resp, err := docker.ContainerCreate(ctx, &containerConfig, &container.HostConfig{}, &network.NetworkingConfig{}, "test")
+	resp, err := docker.ContainerCreate(ctx, &containerConfig, &container.HostConfig{}, &network.NetworkingConfig{}, nodeSpec.Name)
 	if err != nil {
 		log.Error("Couldn't create container")
 		return err
@@ -84,6 +84,8 @@ func removeContainer(ID string) error {
 	if err := docker.ContainerRemove(ctx, ID, options); err != nil {
 		return fmt.Errorf("Failed to delete container '%s'. %+v", ID, err)
 	}
+
+	log.Infoln("Deleted", ID)
 
 	return nil
 }

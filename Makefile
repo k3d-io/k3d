@@ -93,5 +93,5 @@ ifndef HAS_GOX
 	(go get $(PKG_GOX))
 endif
 ifndef HAS_GOLANGCI
-	(curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${GOPATH}/bin v1.17.1)
+	(curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${GOPATH}/bin v1.19.1)
 endif

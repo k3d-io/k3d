@@ -39,7 +39,7 @@ func CreateNode(nodeSpec *k3d.Node, runtimeChoice string) error {
 		runtime = k3dContainerd.Containerd{}
 	}
 
-	if err := runtime.CreateNode(&k3d.Node{}); err != nil {
+	if err := runtime.CreateNode(nodeSpec); err != nil {
 		log.Error(err)
 	}
 	log.Debugln("...success")
