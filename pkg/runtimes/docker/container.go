@@ -90,5 +90,6 @@ func removeContainer(ID string) error {
 
 // DeleteNode deletes a node
 func (d Docker) DeleteNode(nodeSpec *k3d.Node) error {
-	return nil
+	log.Debugln("docker.DeleteNode...")
+	return removeContainer(nodeSpec.Name)
 }
