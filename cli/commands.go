@@ -477,6 +477,7 @@ func AddNode(c *cli.Context) error {
 	 * --image, -i
 	 * The k3s image used for the k3d node containers
 	 */
+	// TODO: use the currently running image by default
 	image := c.String("image")
 	// if no registry was provided, use the default docker.io
 	if len(strings.Split(image, "/")) <= 2 {
