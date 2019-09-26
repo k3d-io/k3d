@@ -18,11 +18,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-const (
-	defaultRegistry    = "docker.io"
-	defaultServerCount = 1
-)
-
 // CheckTools checks if the docker API server is responding
 func CheckTools(c *cli.Context) error {
 	log.Print("Checking docker...")
