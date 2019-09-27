@@ -25,6 +25,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/rancher/k3d/pkg/cluster"
+	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
@@ -37,17 +38,25 @@ func NewCmdCreateNode() *cobra.Command {
 		Use:   "node",
 		Short: "Create a new k3s node in docker",
 		Long:  `Create a new containerized k3s node (k3s in docker).`,
+		Args:  cobra.ExactArgs(1), // exactly one name accepted
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("create node called")
 			rt, err := cmd.Flags().GetString("runtime")
 			if err != nil {
 				log.Debugln("runtime not defined")
 			}
-			if err := cluster.CreateNode(&k3d.Node{}, rt); err != nil {
+			runtime, err := runtimes.GetRuntime(rt)
+			if err != nil {
+				log.Fatalf("Unsupported runtime '%s'", rt)
+			}
+			if err := cluster.CreateNode(&k3d.Node{Name: args[0]}, runtime); err != nil {
 				log.Fatalln(err)
 			}
 		},
 	}
+
+	// add flags
+	cmd.Flags().Int("replicas", 1, "Number of replicas of this node specification.")
 
 	// done
 	return cmd

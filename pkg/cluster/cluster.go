@@ -38,3 +38,7 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	log.Debugln("...success")
 	return nil
 }
+
+func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
+	return nil
+}

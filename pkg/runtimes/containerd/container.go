@@ -57,7 +57,7 @@ func (d Containerd) CreateNode(nodeSpec *k3d.Node) error {
 		log.Errorln("Couldn't create container")
 		return err
 	}
-	log.Debugln("Created container with ID", resp.ID)
+	log.Infoln("Created container with ID", resp.ID())
 	return nil
 }
 

@@ -36,19 +36,24 @@ func NewCmdDeleteNode() *cobra.Command {
 		Use:   "node",
 		Short: "Delete a node.",
 		Long:  `Delete a node.`,
+		Args:  cobra.MinimumNArgs(1), // at least one node has to be specified
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("delete node called")
 			rt, err := cmd.Flags().GetString("runtime")
 			if err != nil {
 				log.Debugln("runtime not defined")
 			}
-			if err := cluster.DeleteNode(&k3d.Node{Name: "test"}, rt); err != nil {
-				log.Fatalln(err)
+			for _, name := range args {
+				if err := cluster.DeleteNode(&k3d.Node{Name: name}, rt); err != nil {
+					log.Errorln(err)
+				}
 			}
 		},
 	}
 
 	// add subcommands
+
+	// add flags
 
 	// done
 	return cmd

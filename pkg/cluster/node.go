@@ -31,14 +31,7 @@ import (
 )
 
 // CreateNode creates a new containerized k3s node
-func CreateNode(nodeSpec *k3d.Node, runtimeChoice string) error {
-	var runtime k3drt.Runtime
-	if runtimeChoice == "docker" {
-		runtime = k3dDocker.Docker{}
-	} else {
-		runtime = k3dContainerd.Containerd{}
-	}
-
+func CreateNode(nodeSpec *k3d.Node, runtime k3drt.Runtime) error {
 	if err := runtime.CreateNode(nodeSpec); err != nil {
 		log.Error(err)
 	}

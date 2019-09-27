@@ -22,6 +22,9 @@ THE SOFTWARE.
 package delete
 
 import (
+	"github.com/rancher/k3d/pkg/cluster"
+	"github.com/rancher/k3d/pkg/runtimes"
+	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
@@ -37,6 +40,19 @@ func NewCmdDeleteCluster() *cobra.Command {
 		Long:  `Delete a cluster.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("delete cluster called")
+			rt, err := cmd.Flags().GetString("runtime")
+			if err != nil {
+				log.Debugln("runtime not defined")
+			}
+			runtime, err := runtimes.GetRuntime(rt)
+			if err != nil {
+				log.Fatalf("Unsupported runtime '%s'", rt)
+			}
+			for _, name := range args {
+				if err := cluster.DeleteCluster(&k3d.Cluster{Name: name}, runtime); err != nil {
+					log.Errorln(err)
+				}
+			}
 		},
 	}
 
