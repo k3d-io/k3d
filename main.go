@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
 	run "github.com/rancher/k3d/cli"
@@ -250,6 +250,6 @@ func main() {
 	// run the whole thing
 	err := app.Run(os.Args)
 	if err != nil {
-		logrus.Fatal(err)
+		log.Fatal(err)
 	}
 }

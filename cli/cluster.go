@@ -15,7 +15,7 @@ import (
 	"github.com/docker/docker/client"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/olekukonko/tablewriter"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -65,11 +65,11 @@ func createDirIfNotExists(path string) error {
 func createClusterDir(name string) {
 	clusterPath, _ := getClusterDir(name)
 	if err := createDirIfNotExists(clusterPath); err != nil {
-		logrus.Fatalf("ERROR: couldn't create cluster directory [%s] -> %+v", clusterPath, err)
+		log.Fatalf("Couldn't create cluster directory [%s] -> %+v", clusterPath, err)
 	}
 	// create subdir for sharing container images
 	if err := createDirIfNotExists(clusterPath + "/images"); err != nil {
-		logrus.Fatalf("ERROR: couldn't create cluster sub-directory [%s] -> %+v", clusterPath+"/images", err)
+		log.Fatalf("Couldn't create cluster sub-directory [%s] -> %+v", clusterPath+"/images", err)
 	}
 }
 
@@ -77,7 +77,7 @@ func createClusterDir(name string) {
 func deleteClusterDir(name string) {
 	clusterPath, _ := getClusterDir(name)
 	if err := os.RemoveAll(clusterPath); err != nil {
-		logrus.Printf("WARNING: couldn't delete cluster directory [%s]. You might want to delete it manually.", clusterPath)
+		log.Warningf("Couldn't delete cluster directory [%s]. You might want to delete it manually.", clusterPath)
 	}
 }
 
@@ -85,7 +85,7 @@ func deleteClusterDir(name string) {
 func getClusterDir(name string) (string, error) {
 	homeDir, err := homedir.Dir()
 	if err != nil {
-		logrus.Printf("ERROR: Couldn't get user's home directory")
+		log.Error("Couldn't get user's home directory")
 		return "", err
 	}
 	return path.Join(homeDir, ".config", "k3d", name), nil
@@ -202,10 +202,10 @@ func getKubeConfig(cluster string) (string, error) {
 func printClusters() {
 	clusters, err := getClusters(true, "")
 	if err != nil {
-		logrus.Fatalf("ERROR: Couldn't list clusters\n%+v", err)
+		log.Fatalf("Couldn't list clusters\n%+v", err)
 	}
 	if len(clusters) == 0 {
-		logrus.Printf("No clusters found!")
+		log.Printf("No clusters found!")
 		return
 	}
 
@@ -295,7 +295,7 @@ func getClusters(all bool, name string) (map[string]cluster, error) {
 				Filters: filters,
 			})
 			if err != nil {
-				logrus.Printf("WARNING: couldn't get worker containers for cluster %s\n%+v", clusterName, err)
+				log.Warningf("Couldn't get worker containers for cluster %s\n%+v", clusterName, err)
 			}
 
 			// save cluster information

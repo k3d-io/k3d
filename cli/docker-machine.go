@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func getDockerMachineIp() (string, error) {
@@ -22,10 +22,10 @@ func getDockerMachineIp() (string, error) {
 
 	out, err := exec.Command(dockerMachinePath, "ip", machine).Output()
 	if err != nil {
-		logrus.Printf("Error executing 'docker-machine ip'")
+		log.Printf("Error executing 'docker-machine ip'")
 
 		if exitError, ok := err.(*exec.ExitError); ok {
-			logrus.Printf("%s", string(exitError.Stderr))
+			log.Printf("%s", string(exitError.Stderr))
 		}
 		return "", err
 	}

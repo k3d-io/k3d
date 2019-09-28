@@ -17,7 +17,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type ClusterSpec struct {
@@ -44,7 +44,7 @@ func startContainer(verbose bool, config *container.Config, hostConfig *containe
 
 	resp, err := docker.ContainerCreate(ctx, config, hostConfig, networkingConfig, containerName)
 	if client.IsErrNotFound(err) {
-		logrus.Printf("Pulling image %s...\n", config.Image)
+		log.Printf("Pulling image %s...\n", config.Image)
 		reader, err := docker.ImagePull(ctx, config.Image, types.ImagePullOptions{})
 		if err != nil {
 			return "", fmt.Errorf("ERROR: couldn't pull image %s\n%+v", config.Image, err)
@@ -53,12 +53,12 @@ func startContainer(verbose bool, config *container.Config, hostConfig *containe
 		if verbose {
 			_, err := io.Copy(os.Stdout, reader)
 			if err != nil {
-				logrus.Printf("WARNING: couldn't get docker output\n%+v", err)
+				log.Warningf("Couldn't get docker output\n%+v", err)
 			}
 		} else {
 			_, err := io.Copy(ioutil.Discard, reader)
 			if err != nil {
-				logrus.Printf("WARNING: couldn't get docker output\n%+v", err)
+				log.Warningf("Couldn't get docker output\n%+v", err)
 			}
 		}
 		resp, err = docker.ContainerCreate(ctx, config, hostConfig, networkingConfig, containerName)
@@ -77,7 +77,7 @@ func startContainer(verbose bool, config *container.Config, hostConfig *containe
 }
 
 func createServer(spec *ClusterSpec) (string, error) {
-	logrus.Printf("Creating server using %s...\n", spec.Image)
+	log.Printf("Creating server using %s...\n", spec.Image)
 
 	containerLabels := make(map[string]string)
 	containerLabels["app"] = "k3d"
@@ -107,7 +107,7 @@ func createServer(spec *ClusterSpec) (string, error) {
 
 	serverPublishedPorts, err := CreatePublishedPorts(serverPorts)
 	if err != nil {
-		logrus.Fatalf("Error: failed to parse port specs %+v \n%+v", serverPorts, err)
+		log.Fatalf("Error: failed to parse port specs %+v \n%+v", serverPorts, err)
 	}
 
 	hostConfig := &container.HostConfig{
