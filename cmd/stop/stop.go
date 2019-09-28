@@ -36,7 +36,10 @@ func NewCmdStop() *cobra.Command {
 		Short: "Stop a resource.",
 		Long:  `Stop a resource.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("stop called")
+			if err := cmd.Help(); err != nil {
+				log.Errorln("Couldn't get help text")
+				log.Fatalln(err)
+			}
 		},
 	}
 

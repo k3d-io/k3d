@@ -36,7 +36,10 @@ func NewCmdStart() *cobra.Command {
 		Short: "Start a resource.",
 		Long:  `Start a resource.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("start called")
+			if err := cmd.Help(); err != nil {
+				log.Errorln("Couldn't get help text")
+				log.Fatalln(err)
+			}
 		},
 	}
 

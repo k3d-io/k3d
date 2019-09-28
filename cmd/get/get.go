@@ -36,7 +36,10 @@ func NewCmdGet() *cobra.Command {
 		Short: "Get a resource.",
 		Long:  `Get a resource.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("get called")
+			if err := cmd.Help(); err != nil {
+				log.Errorln("Couldn't get help text")
+				log.Fatalln(err)
+			}
 		},
 	}
 
