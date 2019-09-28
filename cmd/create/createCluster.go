@@ -39,9 +39,9 @@ func NewCmdCreateCluster() *cobra.Command {
 		Use:   "cluster",
 		Short: "Create a new k3s cluster in docker",
 		Long:  `Create a new k3s cluster with containerized nodes (k3s in docker).`,
-		Args:  cobra.ExactArgs(1), // exactly one cluster name can be set
+		Args:  cobra.ExactArgs(1), // exactly one cluster name can be set // TODO: if not specified, use k3d.DefaultClusterName
 		Run: func(cmd *cobra.Command, args []string) {
-			runtime, cluster := parseCmd(cmd, args)
+			runtime, cluster := parseCreateClusterCmd(cmd, args)
 			if err := k3dCluster.CreateCluster(cluster, runtime); err != nil {
 				log.Fatalln(err)
 			}
@@ -49,7 +49,6 @@ func NewCmdCreateCluster() *cobra.Command {
 	}
 
 	// add flags
-	cmd.Flags().StringP("name", "n", k3d.DefaultClusterName, "Set a name for the cluster")
 	cmd.Flags().StringP("api-port", "a", "6443", "Specify the Kubernetes cluster API server port (Format: `--api-port [host:]port`")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
 
@@ -59,8 +58,8 @@ func NewCmdCreateCluster() *cobra.Command {
 	return cmd
 }
 
-// parseCmd parses the command input into variables required to create a cluster
-func parseCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, *k3d.Cluster) {
+// parseCreateClusterCmd parses the command input into variables required to create a cluster
+func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, *k3d.Cluster) {
 	rt, err := cmd.Flags().GetString("runtime")
 	if err != nil {
 		log.Fatalln("Runtime not defined")

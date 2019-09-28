@@ -38,18 +38,10 @@ func NewCmdCreateNode() *cobra.Command {
 		Use:   "node",
 		Short: "Create a new k3s node in docker",
 		Long:  `Create a new containerized k3s node (k3s in docker).`,
-		Args:  cobra.ExactArgs(1), // exactly one name accepted
+		Args:  cobra.ExactArgs(1), // exactly one name accepted // TODO: if not specified, inherit from cluster that the node shall belong to, if that is specified
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("create node called")
-			rt, err := cmd.Flags().GetString("runtime")
-			if err != nil {
-				log.Debugln("runtime not defined")
-			}
-			runtime, err := runtimes.GetRuntime(rt)
-			if err != nil {
-				log.Fatalf("Unsupported runtime '%s'", rt)
-			}
-			if err := cluster.CreateNode(&k3d.Node{Name: args[0]}, runtime); err != nil {
+			runtime, node := parseCreateNodeCmd(cmd, args)
+			if err := cluster.CreateNode(node, runtime); err != nil {
 				log.Fatalln(err)
 			}
 		},
@@ -57,7 +49,23 @@ func NewCmdCreateNode() *cobra.Command {
 
 	// add flags
 	cmd.Flags().Int("replicas", 1, "Number of replicas of this node specification.")
+	cmd.Flags().StringP("cluster", "c", "", "Select the cluster that the node shall connect to.")
 
 	// done
 	return cmd
+}
+
+// parseCreateNodeCmd parses the command input into variables required to create a cluster
+func parseCreateNodeCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, *k3d.Node) {
+	rt, err := cmd.Flags().GetString("runtime")
+	if err != nil {
+		log.Fatalln("Runtime not defined")
+	}
+	runtime, err := runtimes.GetRuntime(rt)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	node := k3d.Node{Name: args[0]}
+
+	return runtime, &node
 }
