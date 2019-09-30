@@ -45,22 +45,22 @@ var DefaultObjectLabels = map[string]string{
 
 // Cluster describes a k3d cluster
 type Cluster struct {
-	Name    string
-	Network string
-	Secret  string
-	Nodes   []Node
+	Name    string `yaml:"name" json:"name,omitempty"`
+	Network string `yaml:"network" json:"network,omitempty"`
+	Secret  string `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
+	Nodes   []Node `yaml:"nodes" json:"nodes,omitempty"`
 }
 
 // Node describes a k3d node
 type Node struct {
-	Name    string
-	Role    string
-	Image   string
-	Volumes []string
-	Env     []string
-	Args    []string
-	Ports   []string
-	Restart bool
+	Name    string   `yaml:"name" json:"name,omitempty"`
+	Role    string   `yaml:"role" json:"role,omitempty"`
+	Image   string   `yaml:"image" json:"image,omitempty"`
+	Volumes []string `yaml:"volumes" json:"volumes,omitempty"`
+	Env     []string `yaml:"env" json:"env,omitempty"`
+	Args    []string `yaml:"extra_args" json:"extraArgs,omitempty"`
+	Ports   []string `yaml:"port_mappings" json:"portMappings,omitempty"` // TODO: make a struct out of this?
+	Restart bool     `yaml:"restart" json:"restart,omitempty"`
 }
 
 // Network describes a container network used by k3d clusters
