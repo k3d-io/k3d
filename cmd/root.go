@@ -63,54 +63,20 @@ func Execute() {
 }
 
 func init() {
-	// cobra.OnInitialize(initConfig)
 	cobra.OnInitialize(initLogging)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k3d.yaml)")
+	// add persistent flags (present to all subcommands)
+	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k3d/config.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
 	rootCmd.PersistentFlags().StringVarP(&flags.runtime, "runtime", "r", "docker", "Choose a container runtime environment [docker, containerd]")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	// rootCmd.Flags().BoolP("nope", "n", false, "nope description")
+	// add local flags
 
 	// add subcommands
 	rootCmd.AddCommand(create.NewCmdCreate())
 	rootCmd.AddCommand(delete.NewCmdDelete())
 	rootCmd.AddCommand(get.NewCmdGet())
 }
-
-// initConfig reads in config file and ENV variables if set.
-/*
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			log.Errorln(err)
-			os.Exit(1)
-		}
-
-		// Search config in home directory with name ".k3d" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".k3d")
-	}
-
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		log.Debugln("Using config file:", viper.ConfigFileUsed())
-	}
-}
-*/
 
 // initLogging initializes the logger
 func initLogging() {
