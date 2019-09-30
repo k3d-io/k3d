@@ -49,8 +49,10 @@ func NewCmdCreateCluster() *cobra.Command {
 	}
 
 	// add flags
-	cmd.Flags().StringP("api-port", "a", "6443", "Specify the Kubernetes cluster API server port (Format: `--api-port [host:]port`")
+	cmd.Flags().StringP("api-port", "a", "6443", "Specify the Kubernetes API server port (Format: `--api-port [host:]port`")
+	cmd.Flags().IntP("masters", "m", 1, "Specify how many masters you want to create")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
+	cmd.Flags().String("config", "", "Specify a cluster configuration file") // TODO: to implement
 
 	// add subcommands
 

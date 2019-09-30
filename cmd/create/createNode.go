@@ -42,40 +42,67 @@ func NewCmdCreateNode() *cobra.Command {
 		Long:  `Create a new containerized k3s node (k3s in docker).`,
 		Args:  cobra.ExactArgs(1), // exactly one name accepted // TODO: if not specified, inherit from cluster that the node shall belong to, if that is specified
 		Run: func(cmd *cobra.Command, args []string) {
-			runtime, nodes := parseCreateNodeCmd(cmd, args)
-			cluster.CreateNodes(nodes, runtime)
+			cluster.CreateNodes(parseCreateNodeCmd(cmd, args))
 		},
 	}
 
 	// add flags
 	cmd.Flags().Int("replicas", 1, "Number of replicas of this node specification.")
+	cmd.Flags().String("role", "worker", "Specify node role [master, worker]")
 	cmd.Flags().StringP("cluster", "c", "", "Select the cluster that the node shall connect to.")
+	cmd.Flags().String("image", k3d.DefaultK3sImageRepo, "Specify k3s image used for the node(s)")
 
 	// done
 	return cmd
 }
 
 // parseCreateNodeCmd parses the command input into variables required to create a cluster
-func parseCreateNodeCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, []*k3d.Node) {
+func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, runtimes.Runtime) {
+
+	// --runtime
 	rt, err := cmd.Flags().GetString("runtime")
 	if err != nil {
-		log.Fatalln("Runtime not defined")
+		log.Fatalln("No runtime specified")
 	}
 	runtime, err := runtimes.GetRuntime(rt)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
+	// --replicas
 	replicas, err := cmd.Flags().GetInt("replicas")
 	if err != nil {
-		log.Errorln("Failed to parse flag '--replicas'")
+		log.Errorln("No replica count specified")
 		log.Fatalln(err)
 	}
 
-	nodes := []*k3d.Node{}
-	for i := 0; i < replicas; i++ {
-		nodes = append(nodes, &k3d.Node{Name: fmt.Sprintf("%s-%d", args[0], i)})
+	// --role
+	role, err := cmd.Flags().GetString("role")
+	if err != nil {
+		log.Errorln("No node role specified")
+		log.Fatalln(err)
+	}
+	if _, ok := k3d.DefaultK3dRoles[role]; !ok {
+		log.Fatalf("Unknown node role '%s'\n", role)
 	}
 
-	return runtime, nodes
+	// --image
+	image, err := cmd.Flags().GetString("image")
+	if err != nil {
+		log.Errorln("No image specified")
+		log.Fatalln(err)
+	}
+
+	// generate list of nodes
+	nodes := []*k3d.Node{}
+	for i := 0; i < replicas; i++ {
+		node := &k3d.Node{
+			Name:  fmt.Sprintf("%s-%s-%d", k3d.DefaultObjectNamePrefix, args[0], i),
+			Role:  role,
+			Image: image,
+		}
+		nodes = append(nodes, node)
+	}
+
+	return nodes, runtime
 }

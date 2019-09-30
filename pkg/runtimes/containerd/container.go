@@ -32,8 +32,10 @@ import (
 )
 
 // CreateNode creates a new k3d node
-func (d Containerd) CreateNode(nodeSpec *k3d.Node) error {
+func (d Containerd) CreateNode(node *k3d.Node) error {
 	log.Debugln("containerd.CreateNode...")
+
+	// create containerd client
 	ctx := context.Background()
 	clientOpts := []containerd.ClientOpt{
 		containerd.WithDefaultNamespace("k3d"),
@@ -43,26 +45,38 @@ func (d Containerd) CreateNode(nodeSpec *k3d.Node) error {
 		log.Errorln("Failed to create containerd client")
 		return err
 	}
+
+	// create container
 	newContainerOpts := []containerd.NewContainerOpts{
 		func(ctx context.Context, _ *containerd.Client, c *containers.Container) error {
-			c.Image = "docker.io/nginx:latest"
-			c.Labels = map[string]string{
-				"runtime": "containerd",
-			}
+			c.Image = node.Image
+			c.Labels = node.Labels
 			return nil
 		},
 	}
-	resp, err := client.NewContainer(ctx, "test-containerd", newContainerOpts...)
+	container, err := client.NewContainer(ctx, node.Name, newContainerOpts...)
 	if err != nil {
 		log.Errorln("Couldn't create container")
 		return err
 	}
-	log.Infoln("Created container with ID", resp.ID())
+
+	/*
+		// start container
+		task, err := container.NewTask(ctx, cio.NewCreator()) // TODO: how the hell does this work?
+		if err != nil {
+			log.Errorln("Failed to create task in container", container.ID)
+			return err
+		}
+
+		task.Start(ctx)
+	*/
+
+	log.Infoln("Created container with ID", container.ID())
 	return nil
 }
 
 // DeleteNode deletes an existing k3d node
-func (d Containerd) DeleteNode(nodeSpec *k3d.Node) error {
+func (d Containerd) DeleteNode(node *k3d.Node) error {
 	log.Debugln("containerd.DeleteNode...")
 	ctx := context.Background()
 	clientOpts := []containerd.ClientOpt{
@@ -74,9 +88,9 @@ func (d Containerd) DeleteNode(nodeSpec *k3d.Node) error {
 		return err
 	}
 
-	container, err := client.LoadContainer(ctx, nodeSpec.Name)
+	container, err := client.LoadContainer(ctx, node.Name)
 	if err != nil {
-		log.Errorln("Couldn't load container", nodeSpec.Name)
+		log.Errorln("Couldn't load container", node.Name)
 		return err
 	}
 	if err = container.Delete(ctx, []containerd.DeleteOpts{}...); err != nil {

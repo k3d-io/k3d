@@ -35,7 +35,7 @@ import (
 )
 
 // CreateNode creates a new container
-func (d Docker) CreateNode(nodeSpec *k3d.Node) error {
+func (d Docker) CreateNode(node *k3d.Node) error {
 	log.Debugln("docker.CreateNode...")
 	ctx := context.Background() // TODO: check how kind handles contexts
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -44,11 +44,12 @@ func (d Docker) CreateNode(nodeSpec *k3d.Node) error {
 	}
 
 	containerConfig := container.Config{
-		Cmd:   []string{"sh"},
-		Image: "nginx",
+		Cmd:    node.Cmd,
+		Image:  node.Image,
+		Labels: node.Labels,
 	}
 
-	resp, err := docker.ContainerCreate(ctx, &containerConfig, &container.HostConfig{}, &network.NetworkingConfig{}, nodeSpec.Name)
+	resp, err := docker.ContainerCreate(ctx, &containerConfig, &container.HostConfig{}, &network.NetworkingConfig{}, node.Name)
 	if err != nil {
 		log.Error("Couldn't create container")
 		return err

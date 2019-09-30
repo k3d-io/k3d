@@ -23,6 +23,8 @@ THE SOFTWARE.
 package cluster
 
 import (
+	"fmt"
+
 	k3drt "github.com/rancher/k3d/pkg/runtimes"
 	k3dContainerd "github.com/rancher/k3d/pkg/runtimes/containerd"
 	k3dDocker "github.com/rancher/k3d/pkg/runtimes/docker"
@@ -40,17 +42,40 @@ func CreateNodes(nodes []*k3d.Node, runtime k3drt.Runtime) { // TODO: pass `--at
 }
 
 // CreateNode creates a new containerized k3s node
-func CreateNode(nodeSpec *k3d.Node, runtime k3drt.Runtime) error {
-	log.Debugf("Creating node from spec\n%+v", nodeSpec)
-	if err := runtime.CreateNode(nodeSpec); err != nil {
-		log.Error(err)
+func CreateNode(node *k3d.Node, runtime k3drt.Runtime) error {
+	log.Debugf("Creating node from spec\n%+v", node)
+
+	/*
+	 * CONFIGURATION
+	 */
+
+	// global node configuration (applies for any node role)
+	node.Labels = k3d.DefaultObjectLabels
+
+	// specify options depending on node role
+	if node.Role == "worker" { // TODO: check here AND in CLI or only here?
+		node.Cmd = []string{"agent"}
+		node.Labels["role"] = "worker"
+	} else if node.Role == "master" {
+		node.Cmd = []string{"server"}
+		node.Labels["role"] = "master"
+	} else {
+		return fmt.Errorf("Unknown node role '%s'", node.Role)
 	}
+
+	/*
+	 * CREATION
+	 */
+	if err := runtime.CreateNode(node); err != nil {
+		return err
+	}
+
 	log.Debugln("...success")
 	return nil
 }
 
 // DeleteNode deletes an existing node
-func DeleteNode(nodeSpec *k3d.Node, runtimeChoice string) error {
+func DeleteNode(node *k3d.Node, runtimeChoice string) error {
 	var runtime k3drt.Runtime
 	if runtimeChoice == "docker" {
 		runtime = k3dDocker.Docker{}
@@ -58,9 +83,10 @@ func DeleteNode(nodeSpec *k3d.Node, runtimeChoice string) error {
 		runtime = k3dContainerd.Containerd{}
 	}
 
-	if err := runtime.DeleteNode(nodeSpec); err != nil {
+	if err := runtime.DeleteNode(node); err != nil {
 		log.Error(err)
 	}
+	log.Infoln("Deleted", node.Name)
 	log.Debugln("...success")
 	return nil
 }

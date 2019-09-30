@@ -36,7 +36,10 @@ const DefaultClusterNameMaxLength = 32
 const DefaultK3sImageRepo = "docker.io/rancher/k3s"
 
 // DefaultObjectNamePrefix defines the name prefix for every object created by k3d
-const DefaultObjectNamePrefix = "k3d-"
+const DefaultObjectNamePrefix = "k3d"
+
+// DefaultK3dRoles defines the roles available for nodes
+var DefaultK3dRoles = map[string]bool{"master": true, "worker": true}
 
 // DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
 var DefaultObjectLabels = map[string]string{
@@ -53,14 +56,16 @@ type Cluster struct {
 
 // Node describes a k3d node
 type Node struct {
-	Name    string   `yaml:"name" json:"name,omitempty"`
-	Role    string   `yaml:"role" json:"role,omitempty"`
-	Image   string   `yaml:"image" json:"image,omitempty"`
-	Volumes []string `yaml:"volumes" json:"volumes,omitempty"`
-	Env     []string `yaml:"env" json:"env,omitempty"`
-	Args    []string `yaml:"extra_args" json:"extraArgs,omitempty"`
-	Ports   []string `yaml:"port_mappings" json:"portMappings,omitempty"` // TODO: make a struct out of this?
-	Restart bool     `yaml:"restart" json:"restart,omitempty"`
+	Name    string            `yaml:"name" json:"name,omitempty"`
+	Role    string            `yaml:"role" json:"role,omitempty"`
+	Image   string            `yaml:"image" json:"image,omitempty"`
+	Volumes []string          `yaml:"volumes" json:"volumes,omitempty"`
+	Env     []string          `yaml:"env" json:"env,omitempty"`
+	Cmd     []string          // filled automatically depending on role (master: cmd='server'; worker: cmd='agent')
+	Args    []string          `yaml:"extra_args" json:"extraArgs,omitempty"`
+	Ports   []string          `yaml:"port_mappings" json:"portMappings,omitempty"` // TODO: make a struct out of this?
+	Restart bool              `yaml:"restart" json:"restart,omitempty"`
+	Labels  map[string]string // filled automatically
 }
 
 // Network describes a container network used by k3d clusters

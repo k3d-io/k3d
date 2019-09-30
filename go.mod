@@ -21,7 +21,6 @@ require (
 	github.com/google/go-cmp v0.3.0 // indirect
 	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/morikuni/aec v0.0.0-20170113033406-39771216ff4c // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
@@ -29,7 +28,6 @@ require (
 	github.com/opencontainers/runtime-spec v1.0.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
-	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2 // indirect
 	go.etcd.io/bbolt v1.3.3 // indirect
