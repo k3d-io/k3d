@@ -50,7 +50,7 @@ func NewCmdCreateNode() *cobra.Command {
 	cmd.Flags().Int("replicas", 1, "Number of replicas of this node specification.")
 	cmd.Flags().String("role", "worker", "Specify node role [master, worker]")
 	cmd.Flags().StringP("cluster", "c", "", "Select the cluster that the node shall connect to.")
-	cmd.Flags().String("image", k3d.DefaultK3sImageRepo, "Specify k3s image used for the node(s)")
+	cmd.Flags().String("image", k3d.DefaultK3sImageRepo, "Specify k3s image used for the node(s)") // TODO: get image version tag
 
 	// done
 	return cmd

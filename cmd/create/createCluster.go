@@ -52,7 +52,8 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().StringP("api-port", "a", "6443", "Specify the Kubernetes API server port (Format: `--api-port [host:]port`")
 	cmd.Flags().IntP("masters", "m", 1, "Specify how many masters you want to create")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
-	cmd.Flags().String("config", "", "Specify a cluster configuration file") // TODO: to implement
+	cmd.Flags().String("config", "", "Specify a cluster configuration file")                                     // TODO: to implement
+	cmd.Flags().String("image", k3d.DefaultK3sImageRepo, "Specify k3s image that you want to use for the nodes") // TODO: get image version
 
 	// add subcommands
 
@@ -62,15 +63,55 @@ func NewCmdCreateCluster() *cobra.Command {
 
 // parseCreateClusterCmd parses the command input into variables required to create a cluster
 func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, *k3d.Cluster) {
+	// --runtime
 	rt, err := cmd.Flags().GetString("runtime")
 	if err != nil {
-		log.Fatalln("Runtime not defined")
+		log.Fatalln("No runtime specified")
 	}
 	runtime, err := runtimes.GetRuntime(rt)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	cluster := k3d.Cluster{Name: args[0]}
 
-	return runtime, &cluster
+	// --image
+	image, err := cmd.Flags().GetString("image")
+	if err != nil {
+		log.Errorln("No image specified")
+		log.Fatalln(err)
+	}
+
+	// --masters
+	masterCount, err := cmd.Flags().GetInt("masters")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// --workers
+	workerCount, err := cmd.Flags().GetInt("workers")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// generate cluster
+	cluster := &k3d.Cluster{Name: args[0]} // TODO: validate name
+
+	// generate list of nodes
+	cluster.Nodes = []k3d.Node{}
+	for i := 0; i < masterCount; i++ {
+		node := k3d.Node{
+			Role:  "master",
+			Image: image,
+		}
+		cluster.Nodes = append(cluster.Nodes, node)
+	}
+
+	for i := 0; i < workerCount; i++ {
+		node := k3d.Node{
+			Role:  "worker",
+			Image: image,
+		}
+		cluster.Nodes = append(cluster.Nodes, node)
+	}
+
+	return runtime, cluster
 }

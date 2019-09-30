@@ -22,6 +22,8 @@ THE SOFTWARE.
 package cluster
 
 import (
+	"fmt"
+
 	k3drt "github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
@@ -32,12 +34,32 @@ import (
 // - a docker network
 func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
+	// used for node suffices
+	masterCount := 0
+	workerCount := 0
+
 	for _, node := range cluster.Nodes {
+		suffix := 0
+		// node role specific settings
+		if node.Role == "master" {
+			// name suffix
+			suffix = masterCount
+			masterCount++
+		} else if node.Role == "worker" {
+			// name suffix
+			suffix = workerCount
+			workerCount++
+		}
+
+		node.Name = fmt.Sprintf("%s-%s-%s-%d", k3d.DefaultObjectNamePrefix, cluster.Name, node.Role, suffix)
+
+		// create node
 		log.Infoln("Creating node", node.Name)
 		if err := runtime.CreateNode(&node); err != nil {
 			log.Errorln("...failed")
 		}
 	}
+
 	log.Debugln("...success")
 	return nil
 }

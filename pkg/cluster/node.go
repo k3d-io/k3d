@@ -54,10 +54,10 @@ func CreateNode(node *k3d.Node, runtime k3drt.Runtime) error {
 
 	// specify options depending on node role
 	if node.Role == "worker" { // TODO: check here AND in CLI or only here?
-		node.Cmd = []string{"agent"}
+		node.Args = append([]string{"agent"}, node.Args...)
 		node.Labels["role"] = "worker"
 	} else if node.Role == "master" {
-		node.Cmd = []string{"server"}
+		node.Args = append([]string{"server"}, node.Args...)
 		node.Labels["role"] = "master"
 	} else {
 		return fmt.Errorf("Unknown node role '%s'", node.Role)

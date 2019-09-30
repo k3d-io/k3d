@@ -44,7 +44,7 @@ func (d Docker) CreateNode(node *k3d.Node) error {
 	}
 
 	containerConfig := container.Config{
-		Cmd:    node.Cmd,
+		Cmd:    node.Args,
 		Image:  node.Image,
 		Labels: node.Labels,
 	}
