@@ -50,15 +50,25 @@ func CreateNode(node *k3d.Node, runtime k3drt.Runtime) error {
 	 */
 
 	// global node configuration (applies for any node role)
-	node.Labels = k3d.DefaultObjectLabels
+	labels := make(map[string]string)
+	for k, v := range k3d.DefaultObjectLabels {
+		labels[k] = v
+	}
+	for k, v := range node.Labels {
+		labels[k] = v
+	}
+	node.Labels = labels
 
 	// specify options depending on node role
 	if node.Role == "worker" { // TODO: check here AND in CLI or only here?
-		node.Args = append([]string{"agent"}, node.Args...)
-		node.Labels["role"] = "worker"
+		if err := patchWorkerSpec(node); err != nil {
+			return err
+		}
 	} else if node.Role == "master" {
-		node.Args = append([]string{"server"}, node.Args...)
-		node.Labels["role"] = "master"
+		if err := patchMasterSpec(node); err != nil {
+			return err
+		}
+		log.Debugf("spec = %+v\n", node)
 	} else {
 		return fmt.Errorf("Unknown node role '%s'", node.Role)
 	}
@@ -88,5 +98,19 @@ func DeleteNode(node *k3d.Node, runtimeChoice string) error {
 	}
 	log.Infoln("Deleted", node.Name)
 	log.Debugln("...success")
+	return nil
+}
+
+// patchWorkerSpec adds worker node specific settings to a node
+func patchWorkerSpec(node *k3d.Node) error {
+	node.Args = append([]string{"agent"}, node.Args...)
+	node.Labels["role"] = "worker" // TODO: maybe put those in a global var DefaultWorkerNodeSpec?
+	return nil
+}
+
+// patchMasterSpec adds worker node specific settings to a node
+func patchMasterSpec(node *k3d.Node) error {
+	node.Args = append([]string{"server"}, node.Args...)
+	node.Labels["role"] = "master" // TODO: maybe put those in a global var DefaultMasterNodeSpec?
 	return nil
 }

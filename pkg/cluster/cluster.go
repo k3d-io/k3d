@@ -39,8 +39,13 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	workerCount := 0
 
 	for _, node := range cluster.Nodes {
-		suffix := 0
+
+		// cluster specific settings
+		node.Labels = make(map[string]string)
+		node.Labels["cluster"] = cluster.Name
+
 		// node role specific settings
+		suffix := 0
 		if node.Role == "master" {
 			// name suffix
 			suffix = masterCount
@@ -55,7 +60,7 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 		// create node
 		log.Infoln("Creating node", node.Name)
-		if err := runtime.CreateNode(&node); err != nil {
+		if err := CreateNode(&node, runtime); err != nil {
 			log.Errorln("...failed")
 		}
 	}
