@@ -30,8 +30,18 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// CreateNodes creates a list of nodes
+func CreateNodes(nodes []*k3d.Node, runtime k3drt.Runtime) { // TODO: pass `--atomic` flag, so we stop and return an error if any node creation fails?
+	for _, node := range nodes {
+		if err := CreateNode(node, runtime); err != nil {
+			log.Error(err)
+		}
+	}
+}
+
 // CreateNode creates a new containerized k3s node
 func CreateNode(nodeSpec *k3d.Node, runtime k3drt.Runtime) error {
+	log.Debugf("Creating node from spec\n%+v", nodeSpec)
 	if err := runtime.CreateNode(nodeSpec); err != nil {
 		log.Error(err)
 	}

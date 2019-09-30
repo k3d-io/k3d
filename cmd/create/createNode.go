@@ -22,6 +22,8 @@ THE SOFTWARE.
 package create
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/rancher/k3d/pkg/cluster"
@@ -40,10 +42,8 @@ func NewCmdCreateNode() *cobra.Command {
 		Long:  `Create a new containerized k3s node (k3s in docker).`,
 		Args:  cobra.ExactArgs(1), // exactly one name accepted // TODO: if not specified, inherit from cluster that the node shall belong to, if that is specified
 		Run: func(cmd *cobra.Command, args []string) {
-			runtime, node := parseCreateNodeCmd(cmd, args)
-			if err := cluster.CreateNode(node, runtime); err != nil {
-				log.Fatalln(err)
-			}
+			runtime, nodes := parseCreateNodeCmd(cmd, args)
+			cluster.CreateNodes(nodes, runtime)
 		},
 	}
 
@@ -56,7 +56,7 @@ func NewCmdCreateNode() *cobra.Command {
 }
 
 // parseCreateNodeCmd parses the command input into variables required to create a cluster
-func parseCreateNodeCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, *k3d.Node) {
+func parseCreateNodeCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, []*k3d.Node) {
 	rt, err := cmd.Flags().GetString("runtime")
 	if err != nil {
 		log.Fatalln("Runtime not defined")
@@ -65,7 +65,17 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, *k
 	if err != nil {
 		log.Fatalln(err)
 	}
-	node := k3d.Node{Name: args[0]}
 
-	return runtime, &node
+	replicas, err := cmd.Flags().GetInt("replicas")
+	if err != nil {
+		log.Errorln("Failed to parse flag '--replicas'")
+		log.Fatalln(err)
+	}
+
+	nodes := []*k3d.Node{}
+	for i := 0; i < replicas; i++ {
+		nodes = append(nodes, &k3d.Node{Name: fmt.Sprintf("%s-%d", args[0], i)})
+	}
+
+	return runtime, nodes
 }

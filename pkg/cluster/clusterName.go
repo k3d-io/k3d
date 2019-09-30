@@ -27,11 +27,11 @@ import (
 	"github.com/rancher/k3d/pkg/types"
 )
 
-// CheckClusterName ensures that a cluster name is also a valid host name according to RFC 1123.
+// CheckName ensures that a cluster name is also a valid host name according to RFC 1123.
 // We further restrict the length of the cluster name to maximum 'clusterNameMaxSize'
 // so that we can construct the host names based on the cluster name, and still stay
 // within the 64 characters limit.
-func CheckClusterName(name string) error {
+func CheckName(name string) error {
 	if err := ValidateHostname(name); err != nil {
 		return fmt.Errorf("Invalid cluster name. %+v", ValidateHostname(name))
 	}

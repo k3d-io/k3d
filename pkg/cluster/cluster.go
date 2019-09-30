@@ -32,13 +32,17 @@ import (
 // - a docker network
 func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
-	if err := runtime.CreateNode(&k3d.Node{}); err != nil {
-		log.Debugln("...failed")
+	for _, node := range cluster.Nodes {
+		log.Infoln("Creating node", node.Name)
+		if err := runtime.CreateNode(&node); err != nil {
+			log.Errorln("...failed")
+		}
 	}
 	log.Debugln("...success")
 	return nil
 }
 
+// DeleteCluster deletes an existing cluster
 func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	return nil
 }
