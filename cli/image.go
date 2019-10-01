@@ -67,7 +67,7 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 		if err = docker.ContainerRemove(ctx, toolsContainerID, types.ContainerRemoveOptions{
 			Force: true,
 		}); err != nil {
-			log.Warning(fmt.Errorf("Couldn't remove tools container\n%+v", err))
+			log.Warning("Couldn't remove tools container\n%+v", err)
 		}
 	}()
 
