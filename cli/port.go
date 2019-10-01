@@ -2,10 +2,10 @@ package run
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/docker/go-connections/nat"
+	log "github.com/sirupsen/logrus"
 )
 
 // PublishedPorts is a struct used for exposing container ports on the host system
@@ -54,7 +54,7 @@ func mapNodesToPortSpecs(specs []string, createdNodes []string) (map[string][]st
 				}
 			}
 			if !nodeFound {
-				log.Printf("WARNING: Unknown node-specifier [%s] in port mapping entry [%s]", node, spec)
+				log.Warningf("Unknown node-specifier [%s] in port mapping entry [%s]", node, spec)
 			}
 		}
 	}

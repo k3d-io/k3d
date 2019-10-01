@@ -1,10 +1,11 @@
 package run
 
 import (
-	"log"
 	"os"
 	"os/exec"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func getDockerMachineIp() (string, error) {

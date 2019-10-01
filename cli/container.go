@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"time"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	log "github.com/sirupsen/logrus"
 )
 
 type ClusterSpec struct {
@@ -53,12 +53,12 @@ func startContainer(verbose bool, config *container.Config, hostConfig *containe
 		if verbose {
 			_, err := io.Copy(os.Stdout, reader)
 			if err != nil {
-				log.Printf("WARNING: couldn't get docker output\n%+v", err)
+				log.Warningf("Couldn't get docker output\n%+v", err)
 			}
 		} else {
 			_, err := io.Copy(ioutil.Discard, reader)
 			if err != nil {
-				log.Printf("WARNING: couldn't get docker output\n%+v", err)
+				log.Warningf("Couldn't get docker output\n%+v", err)
 			}
 		}
 		resp, err = docker.ContainerCreate(ctx, config, hostConfig, networkingConfig, containerName)

@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -69,10 +69,10 @@ func CreateCluster(c *cli.Context) error {
 	image := c.String("image")
 	if c.IsSet("version") {
 		// TODO: --version to be deprecated
-		log.Println("[WARNING] The `--version` flag will be deprecated soon, please use `--image rancher/k3s:<version>` instead")
+		log.Warning("The `--version` flag will be deprecated soon, please use `--image rancher/k3s:<version>` instead")
 		if c.IsSet("image") {
 			// version specified, custom image = error (to push deprecation of version flag)
-			log.Fatalln("[ERROR] Please use `--image <image>:<version>` instead of --image and --version")
+			log.Fatalln("Please use `--image <image>:<version>` instead of --image and --version")
 		} else {
 			// version specified, default image = ok (until deprecation of version flag)
 			image = fmt.Sprintf("%s:%s", strings.Split(image, ":")[0], c.String("version"))
@@ -98,7 +98,7 @@ func CreateCluster(c *cli.Context) error {
 	// k3s server arguments
 	// TODO: --port will soon be --api-port since we want to re-use --port for arbitrary port mappings
 	if c.IsSet("port") {
-		log.Println("INFO: As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
+		log.Info("As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
 	}
 	apiPort, err := parseAPIPort(c.String("api-port"))
 	if err != nil {
@@ -116,7 +116,7 @@ func CreateCluster(c *cli.Context) error {
 		// In case of error, Log a warning message, and continue on. Since it more likely caused by a miss configured
 		// DOCKER_MACHINE_NAME environment variable.
 		if err != nil {
-			log.Printf("WARNING: Failed to get docker machine IP address, ignoring the DOCKER_MACHINE_NAME environment variable setting.\n")
+			log.Warning("Failed to get docker machine IP address, ignoring the DOCKER_MACHINE_NAME environment variable setting.")
 		}
 	}
 
@@ -262,15 +262,15 @@ func DeleteCluster(c *cli.Context) error {
 		}
 
 		if err := deleteClusterNetwork(cluster.name); err != nil {
-			log.Printf("WARNING: couldn't delete cluster network for cluster %s\n%+v", cluster.name, err)
+			log.Warningf("Couldn't delete cluster network for cluster %s\n%+v", cluster.name, err)
 		}
 
 		log.Println("...Removing docker image volume")
 		if err := deleteImageVolume(cluster.name); err != nil {
-			log.Printf("WARNING: couldn't delete image docker volume for cluster %s\n%+v", cluster.name, err)
+			log.Warningf("Couldn't delete image docker volume for cluster %s\n%+v", cluster.name, err)
 		}
 
-		log.Printf("SUCCESS: removed cluster [%s]", cluster.name)
+		log.Infof("Removed cluster [%s]", cluster.name)
 	}
 
 	return nil
@@ -308,7 +308,7 @@ func StopCluster(c *cli.Context) error {
 			return fmt.Errorf("ERROR: Couldn't stop server for cluster %s\n%+v", cluster.name, err)
 		}
 
-		log.Printf("SUCCESS: Stopped cluster [%s]", cluster.name)
+		log.Infof("Stopped cluster [%s]", cluster.name)
 	}
 
 	return nil
@@ -357,7 +357,7 @@ func StartCluster(c *cli.Context) error {
 // ListClusters prints a list of created clusters
 func ListClusters(c *cli.Context) error {
 	if c.IsSet("all") {
-		log.Println("INFO: --all is on by default, thus no longer required. This option will be removed in v2.0.0")
+		log.Info("--all is on by default, thus no longer required. This option will be removed in v2.0.0")
 
 	}
 	printClusters()

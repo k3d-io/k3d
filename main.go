@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 
 	run "github.com/rancher/k3d/cli"
 	"github.com/rancher/k3d/version"
-	"github.com/urfave/cli"
 )
 
 // defaultK3sImage specifies the default image being used for server and workers

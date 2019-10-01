@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"strings"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -34,7 +34,7 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 	}
 
 	//*** first, save the images using the local docker daemon
-	log.Printf("INFO: Saving images %s from local docker daemon...", images)
+	log.Infof("Saving images %s from local docker daemon...", images)
 	toolsContainerName := fmt.Sprintf("k3d-%s-tools", clusterName)
 	tarFileName := fmt.Sprintf("%s/k3d-%s-images-%s.tar", imageBasePathRemote, clusterName, time.Now().Format("20060102150405"))
 
@@ -67,7 +67,7 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 		if err = docker.ContainerRemove(ctx, toolsContainerID, types.ContainerRemoveOptions{
 			Force: true,
 		}); err != nil {
-			log.Println(fmt.Errorf("WARN: couldn't remove tools container\n%+v", err))
+			log.Warningf("Couldn't remove tools container\n%+v", err)
 		}
 	}()
 
@@ -79,7 +79,7 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 		}
 		if !cont.State.Running { // container finished...
 			if cont.State.ExitCode == 0 { // ...successfully
-				log.Println("INFO: saved images to shared docker volume")
+				log.Info("Saved images to shared docker volume")
 				break
 			} else if cont.State.ExitCode != 0 { // ...failed
 				errTxt := "ERROR: helper container failed to save images"
@@ -133,7 +133,7 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 	for _, container := range containerList {
 
 		containerName := container.Names[0][1:] // trimming the leading "/" from name
-		log.Printf("INFO: Importing images %s in container [%s]", images, containerName)
+		log.Infof("Importing images %s in container [%s]", images, containerName)
 
 		// create exec configuration
 		execResponse, err := docker.ContainerExecCreate(ctx, container.ID, execConfig)
@@ -169,44 +169,44 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 		}
 	}
 
-	log.Printf("INFO: Successfully imported images %s in all nodes of cluster [%s]", images, clusterName)
+	log.Infof("Successfully imported images %s in all nodes of cluster [%s]", images, clusterName)
 
 	// remove tarball from inside the server container
 	if !noRemove {
-		log.Println("INFO: Cleaning up tarball")
+		log.Info("Cleaning up tarball")
 
 		execID, err := docker.ContainerExecCreate(ctx, clusters[clusterName].server.ID, types.ExecConfig{
 			Cmd: []string{"rm", "-f", tarFileName},
 		})
 		if err != nil {
-			log.Printf("WARN: failed to delete tarball: couldn't create remove in container [%s]\n%+v", clusters[clusterName].server.ID, err)
+			log.Warningf("Failed to delete tarball: couldn't create remove in container [%s]\n%+v", clusters[clusterName].server.ID, err)
 		}
 		err = docker.ContainerExecStart(ctx, execID.ID, types.ExecStartCheck{
 			Detach: true,
 		})
 		if err != nil {
-			log.Printf("WARN: couldn't start tarball deletion action\n%+v", err)
+			log.Warningf("Couldn't start tarball deletion action\n%+v", err)
 		}
 
 		for {
 			execInspect, err := docker.ContainerExecInspect(ctx, execID.ID)
 			if err != nil {
-				log.Printf("WARN: couldn't verify deletion of tarball\n%+v", err)
+				log.Warningf("Couldn't verify deletion of tarball\n%+v", err)
 			}
 
 			if !execInspect.Running {
 				if execInspect.ExitCode == 0 {
-					log.Println("INFO: deleted tarball")
+					log.Info("Deleted tarball")
 					break
 				} else {
-					log.Println("WARN: failed to delete tarball")
+					log.Warning("Failed to delete tarball")
 					break
 				}
 			}
 		}
 	}
 
-	log.Println("INFO: ...Done")
+	log.Info("...Done")
 
 	return nil
 }
