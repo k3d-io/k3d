@@ -39,6 +39,7 @@ var Runtimes = map[string]Runtime{
 type Runtime interface {
 	CreateNode(*k3d.Node) error
 	DeleteNode(*k3d.Node) error
+	GetNodesByLabel(map[string]string) ([]*k3d.Node, error)
 	// StartContainer() error
 	// ExecContainer() error
 	// StopContainer() error

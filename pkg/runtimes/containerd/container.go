@@ -100,3 +100,7 @@ func (d Containerd) DeleteNode(node *k3d.Node) error {
 
 	return nil
 }
+
+func (d Containerd) GetNodesByLabel(labels map[string]string) ([]*k3d.Node, error) {
+	return nil, nil
+}

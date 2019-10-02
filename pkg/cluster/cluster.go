@@ -73,3 +73,14 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	return nil
 }
+
+// GetClusters returns a list of all existing clusters
+func GetClusters(runtime k3drt.Runtime) ([]*k3d.Cluster, error) {
+	runtime.GetNodesByLabel(map[string]string{"role": "master"})
+	return []*k3d.Cluster{}, nil
+}
+
+// GetCluster returns an existing cluster
+func GetCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) (*k3d.Cluster, error) {
+	return cluster, nil
+}

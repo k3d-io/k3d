@@ -26,6 +26,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/docker/docker/api/types/filters"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -95,4 +97,46 @@ func removeContainer(ID string) error {
 func (d Docker) DeleteNode(nodeSpec *k3d.Node) error {
 	log.Debugln("docker.DeleteNode...")
 	return removeContainer(nodeSpec.Name)
+}
+
+func (d Docker) GetNodesByLabel(labels map[string]string) ([]*k3d.Node, error) {
+
+	// (0) create docker client
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create docker client. %+v", err)
+	}
+
+	// (1) list containers which have the default k3d labels attached
+	filters := filters.NewArgs()
+	for k, v := range k3d.DefaultObjectLabels {
+		filters.Add("label", fmt.Sprintf("%s=%s", k, v))
+	}
+	for k, v := range labels {
+		filters.Add("label", fmt.Sprintf("%s=%s", k, v))
+	}
+
+	containers, err := docker.ContainerList(ctx, types.ContainerListOptions{
+		Filters: filters,
+		All:     true,
+	})
+	if err != nil {
+		log.Errorln("Failed to list containers")
+		return nil, err
+	}
+
+	// (2) convert them to node structs
+	nodes := []*k3d.Node{}
+	for _, container := range containers {
+		node := &k3d.Node{
+			Name:   container.Names[0],
+			Role:   container.Labels["role"], // TODO: catch keyerror
+			Labels: container.Labels,
+		}
+		nodes = append(nodes, node)
+	}
+
+	return nodes, nil
+
 }
