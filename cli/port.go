@@ -80,12 +80,12 @@ func validatePortSpecs(specs []string) error {
 		atSplit := strings.Split(spec, "@")
 		_, err := nat.ParsePortSpec(atSplit[0])
 		if err != nil {
-			return fmt.Errorf("ERROR: Invalid port specification [%s] in port mapping [%s]\n%+v", atSplit[0], spec, err)
+			return fmt.Errorf("Invalid port specification [%s] in port mapping [%s]\n%+v", atSplit[0], spec, err)
 		}
 		if len(atSplit) > 0 {
 			for i := 1; i < len(atSplit); i++ {
 				if err := ValidateHostname(atSplit[i]); err != nil {
-					return fmt.Errorf("ERROR: Invalid node-specifier [%s] in port mapping [%s]\n%+v", atSplit[i], spec, err)
+					return fmt.Errorf("Invalid node-specifier [%s] in port mapping [%s]\n%+v", atSplit[i], spec, err)
 				}
 			}
 		}

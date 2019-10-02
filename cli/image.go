@@ -24,13 +24,13 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	// get cluster directory to temporarily save the image tarball there
 	imageVolume, err := getImageVolume(clusterName)
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't get image volume for cluster [%s]\n%+v", clusterName, err)
+		return fmt.Errorf(" Couldn't get image volume for cluster [%s]\n%+v", clusterName, err)
 	}
 
 	//*** first, save the images using the local docker daemon
@@ -58,7 +58,7 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 		},
 	}
 
-	toolsContainerID, err := startContainer(false, &containerConfig, &hostConfig, &network.NetworkingConfig{}, toolsContainerName)
+	toolsContainerID, err := startContainer(&containerConfig, &hostConfig, &network.NetworkingConfig{}, toolsContainerName)
 	if err != nil {
 		return err
 	}
@@ -75,14 +75,14 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 	for {
 		cont, err := docker.ContainerInspect(ctx, toolsContainerID)
 		if err != nil {
-			return fmt.Errorf("ERROR: couldn't get helper container's exit code\n%+v", err)
+			return fmt.Errorf(" Couldn't get helper container's exit code\n%+v", err)
 		}
 		if !cont.State.Running { // container finished...
 			if cont.State.ExitCode == 0 { // ...successfully
 				log.Info("Saved images to shared docker volume")
 				break
 			} else if cont.State.ExitCode != 0 { // ...failed
-				errTxt := "ERROR: helper container failed to save images"
+				errTxt := "Helper container failed to save images"
 				logReader, err := docker.ContainerLogs(ctx, toolsContainerID, types.ContainerLogsOptions{
 					ShowStdout: true,
 					ShowStderr: true,
@@ -103,7 +103,7 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 	// Get the container IDs for all containers in the cluster
 	clusters, err := getClusters(false, clusterName)
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't get cluster by name [%s]\n%+v", clusterName, err)
+		return fmt.Errorf(" Couldn't get cluster by name [%s]\n%+v", clusterName, err)
 	}
 	containerList := []types.Container{clusters[clusterName].server}
 	containerList = append(containerList, clusters[clusterName].workers...)
@@ -138,7 +138,7 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 		// create exec configuration
 		execResponse, err := docker.ContainerExecCreate(ctx, container.ID, execConfig)
 		if err != nil {
-			return fmt.Errorf("ERROR: Failed to create exec command for container [%s]\n%+v", containerName, err)
+			return fmt.Errorf("Failed to create exec command for container [%s]\n%+v", containerName, err)
 		}
 
 		// attach to exec process in container
@@ -147,25 +147,25 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 			Tty:    execAttachConfig.Tty,
 		})
 		if err != nil {
-			return fmt.Errorf("ERROR: couldn't attach to container [%s]\n%+v", containerName, err)
+			return fmt.Errorf(" Couldn't attach to container [%s]\n%+v", containerName, err)
 		}
 		defer containerConnection.Close()
 
 		// start exec
 		err = docker.ContainerExecStart(ctx, execResponse.ID, execStartConfig)
 		if err != nil {
-			return fmt.Errorf("ERROR: couldn't execute command in container [%s]\n%+v", containerName, err)
+			return fmt.Errorf(" Couldn't execute command in container [%s]\n%+v", containerName, err)
 		}
 
 		// get output from container
 		content, err := ioutil.ReadAll(containerConnection.Reader)
 		if err != nil {
-			return fmt.Errorf("ERROR: couldn't read output from container [%s]\n%+v", containerName, err)
+			return fmt.Errorf(" Couldn't read output from container [%s]\n%+v", containerName, err)
 		}
 
 		// example output "unpacking image........ ...done"
 		if !strings.Contains(string(content), "done") {
-			return fmt.Errorf("ERROR: seems like something went wrong using `ctr image import` in container [%s]. Full output below:\n%s", containerName, string(content))
+			return fmt.Errorf("seems like something went wrong using `ctr image import` in container [%s]. Full output below:\n%s", containerName, string(content))
 		}
 	}
 

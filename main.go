@@ -247,6 +247,16 @@ func main() {
 		},
 	}
 
+	// init log level
+	app.Before = func(c *cli.Context) error {
+		if c.GlobalBool("verbose") {
+			log.SetLevel(log.DebugLevel)
+		} else {
+			log.SetLevel(log.InfoLevel)
+		}
+		return nil
+	}
+
 	// run the whole thing
 	err := app.Run(os.Args)
 	if err != nil {

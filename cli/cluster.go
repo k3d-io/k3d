@@ -122,13 +122,13 @@ func createKubeConfigFile(cluster string) error {
 	// get kubeconfig file from container and read contents
 	reader, _, err := docker.CopyFromContainer(ctx, server[0].ID, "/output/kubeconfig.yaml")
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't copy kubeconfig.yaml from server container %s\n%+v", server[0].ID, err)
+		return fmt.Errorf(" Couldn't copy kubeconfig.yaml from server container %s\n%+v", server[0].ID, err)
 	}
 	defer reader.Close()
 
 	readBytes, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't read kubeconfig from container\n%+v", err)
+		return fmt.Errorf(" Couldn't read kubeconfig from container\n%+v", err)
 	}
 
 	// create destination kubeconfig file
@@ -139,7 +139,7 @@ func createKubeConfigFile(cluster string) error {
 
 	kubeconfigfile, err := os.Create(destPath)
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create kubeconfig file %s\n%+v", destPath, err)
+		return fmt.Errorf(" Couldn't create kubeconfig file %s\n%+v", destPath, err)
 	}
 	defer kubeconfigfile.Close()
 
@@ -165,7 +165,7 @@ func createKubeConfigFile(cluster string) error {
 	}
 	_, err = kubeconfigfile.Write(trimBytes)
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't write to kubeconfig.yaml\n%+v", err)
+		return fmt.Errorf(" Couldn't write to kubeconfig.yaml\n%+v", err)
 	}
 
 	return nil
@@ -255,7 +255,7 @@ func getClusters(all bool, name string) (map[string]cluster, error) {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return nil, fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return nil, fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	// Prepare docker label filters

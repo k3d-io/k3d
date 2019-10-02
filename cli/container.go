@@ -30,16 +30,15 @@ type ClusterSpec struct {
 	NodeToPortSpecMap map[string][]string
 	PortAutoOffset    int
 	ServerArgs        []string
-	Verbose           bool
 	Volumes           []string
 }
 
-func startContainer(verbose bool, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
+func startContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
 	ctx := context.Background()
 
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return "", fmt.Errorf("Couldn't create docker client\n%+v", err)
 	}
 
 	resp, err := docker.ContainerCreate(ctx, config, hostConfig, networkingConfig, containerName)
@@ -47,10 +46,10 @@ func startContainer(verbose bool, config *container.Config, hostConfig *containe
 		log.Printf("Pulling image %s...\n", config.Image)
 		reader, err := docker.ImagePull(ctx, config.Image, types.ImagePullOptions{})
 		if err != nil {
-			return "", fmt.Errorf("ERROR: couldn't pull image %s\n%+v", config.Image, err)
+			return "", fmt.Errorf("Couldn't pull image %s\n%+v", config.Image, err)
 		}
 		defer reader.Close()
-		if verbose {
+		if ll := log.GetLevel(); ll == log.DebugLevel {
 			_, err := io.Copy(os.Stdout, reader)
 			if err != nil {
 				log.Warningf("Couldn't get docker output\n%+v", err)
@@ -63,10 +62,10 @@ func startContainer(verbose bool, config *container.Config, hostConfig *containe
 		}
 		resp, err = docker.ContainerCreate(ctx, config, hostConfig, networkingConfig, containerName)
 		if err != nil {
-			return "", fmt.Errorf("ERROR: couldn't create container after pull %s\n%+v", containerName, err)
+			return "", fmt.Errorf(" Couldn't create container after pull %s\n%+v", containerName, err)
 		}
 	} else if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't create container %s\n%+v", containerName, err)
+		return "", fmt.Errorf(" Couldn't create container %s\n%+v", containerName, err)
 	}
 
 	if err := docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
@@ -139,9 +138,9 @@ func createServer(spec *ClusterSpec) (string, error) {
 		Env:          spec.Env,
 		Labels:       containerLabels,
 	}
-	id, err := startContainer(spec.Verbose, config, hostConfig, networkingConfig, containerName)
+	id, err := startContainer(config, hostConfig, networkingConfig, containerName)
 	if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't create container %s\n%+v", containerName, err)
+		return "", fmt.Errorf(" Couldn't create container %s\n%+v", containerName, err)
 	}
 
 	return id, nil
@@ -209,9 +208,9 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 		ExposedPorts: workerPublishedPorts.ExposedPorts,
 	}
 
-	id, err := startContainer(spec.Verbose, config, hostConfig, networkingConfig, containerName)
+	id, err := startContainer(config, hostConfig, networkingConfig, containerName)
 	if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't start container %s\n%+v", containerName, err)
+		return "", fmt.Errorf(" Couldn't start container %s\n%+v", containerName, err)
 	}
 
 	return id, nil
@@ -222,7 +221,7 @@ func removeContainer(ID string) error {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	options := types.ContainerRemoveOptions{
@@ -231,7 +230,7 @@ func removeContainer(ID string) error {
 	}
 
 	if err := docker.ContainerRemove(ctx, ID, options); err != nil {
-		return fmt.Errorf("ERROR: couldn't delete container [%s] -> %+v", ID, err)
+		return fmt.Errorf(" Couldn't delete container [%s] -> %+v", ID, err)
 	}
 	return nil
 }

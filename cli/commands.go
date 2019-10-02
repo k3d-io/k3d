@@ -36,7 +36,7 @@ func CheckTools(c *cli.Context) error {
 	ping, err := docker.Ping(ctx)
 
 	if err != nil {
-		return fmt.Errorf("ERROR: checking docker failed\n%+v", err)
+		return fmt.Errorf(" Checking docker failed\n%+v", err)
 	}
 	log.Printf("SUCCESS: Checking docker succeeded (API: v%s)\n", ping.APIVersion)
 	return nil
@@ -53,7 +53,7 @@ func CreateCluster(c *cli.Context) error {
 		return err
 	} else if len(cluster) != 0 {
 		// A cluster exists with the same name. Return with an error.
-		return fmt.Errorf("ERROR: Cluster %s already exists", c.String("name"))
+		return fmt.Errorf(" Cluster %s already exists", c.String("name"))
 	}
 
 	// On Error delete the cluster.  If there createCluster() encounter any error,
@@ -159,7 +159,6 @@ func CreateCluster(c *cli.Context) error {
 		NodeToPortSpecMap: portmap,
 		PortAutoOffset:    c.Int("port-auto-offset"),
 		ServerArgs:        k3sServerArgs,
-		Verbose:           c.GlobalBool("verbose"),
 		Volumes:           volumes,
 	}
 
@@ -197,7 +196,7 @@ func CreateCluster(c *cli.Context) error {
 		out, err := docker.ContainerLogs(ctx, dockerID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
 		if err != nil {
 			out.Close()
-			return fmt.Errorf("ERROR: couldn't get docker logs for %s\n%+v", c.String("name"), err)
+			return fmt.Errorf(" Couldn't get docker logs for %s\n%+v", c.String("name"), err)
 		}
 		buf := new(bytes.Buffer)
 		nRead, _ := buf.ReadFrom(out)
@@ -258,7 +257,7 @@ func DeleteCluster(c *cli.Context) error {
 		deleteClusterDir(cluster.name)
 		log.Println("...Removing server")
 		if err := removeContainer(cluster.server.ID); err != nil {
-			return fmt.Errorf("ERROR: Couldn't remove server for cluster %s\n%+v", cluster.name, err)
+			return fmt.Errorf(" Couldn't remove server for cluster %s\n%+v", cluster.name, err)
 		}
 
 		if err := deleteClusterNetwork(cluster.name); err != nil {
@@ -287,7 +286,7 @@ func StopCluster(c *cli.Context) error {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	// remove clusters one by one instead of appending all names to the docker command
@@ -305,7 +304,7 @@ func StopCluster(c *cli.Context) error {
 		}
 		log.Println("...Stopping server")
 		if err := docker.ContainerStop(ctx, cluster.server.ID, nil); err != nil {
-			return fmt.Errorf("ERROR: Couldn't stop server for cluster %s\n%+v", cluster.name, err)
+			return fmt.Errorf(" Couldn't stop server for cluster %s\n%+v", cluster.name, err)
 		}
 
 		log.Infof("Stopped cluster [%s]", cluster.name)
@@ -325,7 +324,7 @@ func StartCluster(c *cli.Context) error {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	// remove clusters one by one instead of appending all names to the docker command
@@ -335,7 +334,7 @@ func StartCluster(c *cli.Context) error {
 
 		log.Println("...Starting server")
 		if err := docker.ContainerStart(ctx, cluster.server.ID, types.ContainerStartOptions{}); err != nil {
-			return fmt.Errorf("ERROR: Couldn't start server for cluster %s\n%+v", cluster.name, err)
+			return fmt.Errorf(" Couldn't start server for cluster %s\n%+v", cluster.name, err)
 		}
 
 		if len(cluster.workers) > 0 {

@@ -20,7 +20,7 @@ func createClusterNetwork(clusterName string) (string, error) {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return "", fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	args := filters.NewArgs()
@@ -47,7 +47,7 @@ func createClusterNetwork(clusterName string) (string, error) {
 		},
 	})
 	if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't create network\n%+v", err)
+		return "", fmt.Errorf(" Couldn't create network\n%+v", err)
 	}
 
 	return resp.ID, nil
@@ -58,7 +58,7 @@ func deleteClusterNetwork(clusterName string) error {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	filters := filters.NewArgs()
@@ -69,7 +69,7 @@ func deleteClusterNetwork(clusterName string) error {
 		Filters: filters,
 	})
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't find network for cluster %s\n%+v", clusterName, err)
+		return fmt.Errorf(" Couldn't find network for cluster %s\n%+v", clusterName, err)
 	}
 
 	// there should be only one network that matches the name... but who knows?

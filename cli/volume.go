@@ -18,7 +18,7 @@ func createImageVolume(clusterName string) (types.Volume, error) {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return vol, fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return vol, fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	volName := fmt.Sprintf("k3d-%s-images", clusterName)
@@ -34,7 +34,7 @@ func createImageVolume(clusterName string) (types.Volume, error) {
 	}
 	vol, err = docker.VolumeCreate(ctx, volumeCreateOptions)
 	if err != nil {
-		return vol, fmt.Errorf("ERROR: failed to create image volume [%s] for cluster [%s]\n%+v", volName, clusterName, err)
+		return vol, fmt.Errorf("failed to create image volume [%s] for cluster [%s]\n%+v", volName, clusterName, err)
 	}
 
 	return vol, nil
@@ -46,13 +46,13 @@ func deleteImageVolume(clusterName string) error {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	volName := fmt.Sprintf("k3d-%s-images", clusterName)
 
 	if err = docker.VolumeRemove(ctx, volName, true); err != nil {
-		return fmt.Errorf("ERROR: couldn't remove volume [%s] for cluster [%s]\n%+v", volName, clusterName, err)
+		return fmt.Errorf(" Couldn't remove volume [%s] for cluster [%s]\n%+v", volName, clusterName, err)
 	}
 
 	return nil
@@ -66,7 +66,7 @@ func getImageVolume(clusterName string) (types.Volume, error) {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return vol, fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return vol, fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	filters := filters.NewArgs()
@@ -74,7 +74,7 @@ func getImageVolume(clusterName string) (types.Volume, error) {
 	filters.Add("label", fmt.Sprintf("cluster=%s", clusterName))
 	volumeList, err := docker.VolumeList(ctx, filters)
 	if err != nil {
-		return vol, fmt.Errorf("ERROR: couldn't get volumes for cluster [%s]\n%+v ", clusterName, err)
+		return vol, fmt.Errorf(" Couldn't get volumes for cluster [%s]\n%+v ", clusterName, err)
 	}
 	volFound := false
 	for _, volume := range volumeList.Volumes {
@@ -85,7 +85,7 @@ func getImageVolume(clusterName string) (types.Volume, error) {
 		}
 	}
 	if !volFound {
-		return vol, fmt.Errorf("ERROR: didn't find volume [%s] in list of volumes returned for cluster [%s]", volName, clusterName)
+		return vol, fmt.Errorf("didn't find volume [%s] in list of volumes returned for cluster [%s]", volName, clusterName)
 	}
 
 	return vol, nil
