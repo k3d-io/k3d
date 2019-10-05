@@ -238,9 +238,7 @@ func addVolumesToHostConfig(volumesSpec Volumes, containerName string, hostConfi
 
 		// add node specific volumes if present
 		if v, ok := volumesSpec.NodeSpecificVolumes[containerName]; ok {
-			for _, volume := range v {
-				volumes = append(volumes, volume)
-			}
+			volumes = append(volumes, v...)
 		}
 
 		hostConfig.Binds = volumes
