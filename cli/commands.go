@@ -147,7 +147,34 @@ func CreateCluster(c *cli.Context) error {
 		return err
 	}
 	volumes := c.StringSlice("volume")
-	volumes = append(volumes, fmt.Sprintf("%s:/images", imageVolume.Name))
+
+	volumesSpec := Volumes{
+		DefaultVolumes:      []string{},
+		NodeSpecificVolumes: make(map[string][]string),
+	}
+	for _, volume := range volumes {
+		if strings.Contains(volume, "@") {
+			split := strings.Split(volume, "@")
+			if len(split) != 2 {
+				return fmt.Errorf("invalid node volume spec: %s", volume)
+			}
+
+			nodeVolumes := split[0]
+			node := split[1]
+			if len(node) == 0 {
+				return fmt.Errorf("invalid node volume spec: %s", volume)
+			}
+
+			if _, ok := volumesSpec.NodeSpecificVolumes[node]; !ok {
+				volumesSpec.NodeSpecificVolumes[node] = []string{}
+			}
+			volumesSpec.NodeSpecificVolumes[node] = append(volumesSpec.NodeSpecificVolumes[node], nodeVolumes)
+		} else {
+			volumesSpec.DefaultVolumes = append(volumesSpec.DefaultVolumes, volume)
+		}
+	}
+
+	volumesSpec.DefaultVolumes = append(volumesSpec.DefaultVolumes, fmt.Sprintf("%s:/images", imageVolume.Name))
 
 	clusterSpec := &ClusterSpec{
 		AgentArgs:         k3AgentArgs,
@@ -159,7 +186,7 @@ func CreateCluster(c *cli.Context) error {
 		NodeToPortSpecMap: portmap,
 		PortAutoOffset:    c.Int("port-auto-offset"),
 		ServerArgs:        k3sServerArgs,
-		Volumes:           volumes,
+		Volumes:           volumesSpec,
 	}
 
 	// create the server

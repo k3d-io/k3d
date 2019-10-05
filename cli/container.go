@@ -30,7 +30,7 @@ type ClusterSpec struct {
 	NodeToPortSpecMap map[string][]string
 	PortAutoOffset    int
 	ServerArgs        []string
-	Volumes           []string
+	Volumes           Volumes
 }
 
 func startContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
@@ -118,9 +118,7 @@ func createServer(spec *ClusterSpec) (string, error) {
 		hostConfig.RestartPolicy.Name = "unless-stopped"
 	}
 
-	if len(spec.Volumes) > 0 && spec.Volumes[0] != "" {
-		hostConfig.Binds = spec.Volumes
-	}
+	addVolumesToHostConfig(spec.Volumes, containerName, hostConfig)
 
 	networkingConfig := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
@@ -187,9 +185,7 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 		hostConfig.RestartPolicy.Name = "unless-stopped"
 	}
 
-	if len(spec.Volumes) > 0 && spec.Volumes[0] != "" {
-		hostConfig.Binds = spec.Volumes
-	}
+	addVolumesToHostConfig(spec.Volumes, containerName, hostConfig)
 
 	networkingConfig := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
@@ -233,4 +229,20 @@ func removeContainer(ID string) error {
 		return fmt.Errorf(" Couldn't delete container [%s] -> %+v", ID, err)
 	}
 	return nil
+}
+
+// addVolumesToHostConfig adds all default volumes and node specific volumes to a HostConfig
+func addVolumesToHostConfig(volumesSpec Volumes, containerName string, hostConfig *container.HostConfig) {
+	if len(volumesSpec.DefaultVolumes) > 0 {
+		volumes := volumesSpec.DefaultVolumes
+
+		// add node specific volumes if present
+		if v, ok := volumesSpec.NodeSpecificVolumes[containerName]; ok {
+			for _, volume := range v {
+				volumes = append(volumes, volume)
+			}
+		}
+
+		hostConfig.Binds = volumes
+	}
 }

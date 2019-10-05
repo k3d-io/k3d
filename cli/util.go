@@ -15,6 +15,11 @@ type apiPort struct {
 	Port   string
 }
 
+type Volumes struct {
+	DefaultVolumes      []string
+	NodeSpecificVolumes map[string][]string
+}
+
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const (
 	letterIdxBits = 6                    // 6 bits to represent a letter index
