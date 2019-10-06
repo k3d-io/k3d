@@ -68,8 +68,8 @@ clean:
 	@rm -rf $(BINDIR) _dist/
 
 extra-clean: clean
-	go clean -i $(PKG_GOX)
-	go clean -i $(PKG_GOLANGCI_LINT)
+	$(GO) clean -i $(PKG_GOX)
+	$(GO) clean -i $(PKG_GOLANGCI_LINT)
 
 # fmt will fix the golang source style in place.
 fmt:
@@ -90,7 +90,7 @@ HAS_GOLANGCI  := $(shell command -v golangci-lint 2> /dev/null)
 
 install-tools:
 ifndef HAS_GOX
-	(go get $(PKG_GOX))
+	($(GO) get $(PKG_GOX))
 endif
 ifndef HAS_GOLANGCI
 	(curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${GOPATH}/bin v1.17.1)
