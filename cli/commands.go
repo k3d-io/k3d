@@ -365,14 +365,22 @@ func ListClusters(c *cli.Context) error {
 
 // GetKubeConfig grabs the kubeconfig from the running cluster and prints the path to stdout
 func GetKubeConfig(c *cli.Context) error {
-	cluster := c.String("name")
-	kubeConfigPath, err := getKubeConfig(cluster)
+	clusters, err := getClusters(c.Bool("all"), c.String("name"))
 	if err != nil {
 		return err
 	}
 
-	// output kubeconfig file path to stdout
-	fmt.Println(kubeConfigPath)
+	for _, cluster := range clusters {
+		kubeConfigPath, err := getKubeConfig(cluster.name)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		// output kubeconfig file path to stdout
+		fmt.Println(kubeConfigPath)
+	}
+
 	return nil
 }
 
