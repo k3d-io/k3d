@@ -105,6 +105,8 @@ func NewVolumes(volumes []string) (*Volumes, error) {
 		NodeSpecificVolumes:  make(map[string][]string),
 		GroupSpecificVolumes: make(map[string][]string),
 	}
+
+volumes:
 	for _, volume := range volumes {
 		if strings.Contains(volume, "@") {
 			split := strings.Split(volume, "@")
@@ -119,8 +121,20 @@ func NewVolumes(volumes []string) (*Volumes, error) {
 			}
 
 			// check if node selector is a node group
-			if _, ok := nodeRuleGroupsMap[node]; ok {
-				volumesSpec.addGroupSpecificVolume(node, nodeVolumes)
+			for group, names := range nodeRuleGroupsMap {
+				added := false
+
+				for _, name := range names {
+					if name == node {
+						volumesSpec.addGroupSpecificVolume(group, nodeVolumes)
+						added = true
+						break
+					}
+				}
+
+				if added {
+					continue volumes
+				}
 			}
 
 			// otherwise this is a volume for a specific node
