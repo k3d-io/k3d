@@ -67,6 +67,7 @@ type Node struct {
 	Image   string            `yaml:"image" json:"image,omitempty"`
 	Volumes []string          `yaml:"volumes" json:"volumes,omitempty"`
 	Env     []string          `yaml:"env" json:"env,omitempty"`
+	Cmd     []string          // filled automatically based on role
 	Args    []string          `yaml:"extra_args" json:"extraArgs,omitempty"`
 	Ports   []string          `yaml:"port_mappings" json:"portMappings,omitempty"` // TODO: make a struct out of this?
 	Restart bool              `yaml:"restart" json:"restart,omitempty"`

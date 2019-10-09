@@ -29,15 +29,29 @@ import (
 	k3d "github.com/rancher/k3d/pkg/types"
 )
 
-func TranslateNodeToContainer(node *k3d.Node) (docker.Config, error) {
+// TranslateNodeToContainer translates a k3d node specification to a docker container representation
+func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 
-	container := docker.Config{}
-	container.Hostname = node.Name
-	container.Image = node.Image
-	container.Labels = node.Labels // has to include the role
-	container.Env = []string{}     // TODO:
-	container.Cmd = []string{}     // TODO: dependent on role and extra args
-	hostConfig := docker.HostConfig{}
+	/* initialize everything that we need */
+	containerConfig := &docker.Config{}
+	hostConfig := &docker.HostConfig{}
+	networkingConfig := &network.NetworkingConfig{}
+
+	/* Name & Image */
+	containerConfig.Hostname = node.Name
+	containerConfig.Image = node.Image
+
+	/* Command & Arguments */
+	containerConfig.Cmd = []string{}
+
+	containerConfig.Cmd = append(containerConfig.Cmd, node.Cmd...)  // contains k3s command and role-specific required flags/args
+	containerConfig.Cmd = append(containerConfig.Cmd, node.Args...) // extra flags/args
+
+	/* Environment Variables */
+	containerConfig.Env = node.Env
+
+	/* Labels */
+	containerConfig.Labels = node.Labels // has to include the role
 
 	/* Auto-Restart */
 	if node.Restart {
@@ -46,30 +60,36 @@ func TranslateNodeToContainer(node *k3d.Node) (docker.Config, error) {
 		}
 	}
 
+	/* Tmpfs Mounts */
 	// TODO: do we need this or can the default be a map with empty values already?
 	hostConfig.Tmpfs = make(map[string]string)
 	for _, mnt := range k3d.DefaultTmpfsMounts {
 		hostConfig.Tmpfs[mnt] = ""
 	}
 
+	/* They have to run in privileged mode */
+	// TODO: can we replace this by a reduced set of capabilities?
 	hostConfig.Privileged = true
 
 	/* Volumes */
 	// TODO: image volume
-	hostConfig.Binds = []string{}
-	container.Volumes = map[string]struct{}{} // TODO: which one do we use?
+	hostConfig.Binds = node.Volumes // TODO: some validation?
+	// containerConfig.Volumes = map[string]struct{}{} // TODO: do we need this? We only used binds before
 
 	/* Ports */
-	container.ExposedPorts = nat.PortSet{}  // TODO:
-	hostConfig.PortBindings = nat.PortMap{} // TODO: this and exposedPorts required?
+	containerConfig.ExposedPorts = nat.PortSet{} // TODO: translate from node.Ports to nat.PortSet
+	hostConfig.PortBindings = nat.PortMap{}      // TODO: this and exposedPorts required?
 
 	/* Network */
-	networkingConfig := &network.NetworkingConfig{}
 	networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
 		"<network-name>": { // TODO: fill
 			Aliases: []string{"<container-alias>"}, // TODO: fill
 		},
 	}
 
-	return container, nil
+	return &NodeInDocker{
+		ContainerConfig:  containerConfig,
+		HostConfig:       hostConfig,
+		NetworkingConfig: networkingConfig,
+	}, nil
 }
