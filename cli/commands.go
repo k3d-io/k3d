@@ -148,30 +148,9 @@ func CreateCluster(c *cli.Context) error {
 	}
 	volumes := c.StringSlice("volume")
 
-	volumesSpec := Volumes{
-		DefaultVolumes:      []string{},
-		NodeSpecificVolumes: make(map[string][]string),
-	}
-	for _, volume := range volumes {
-		if strings.Contains(volume, "@") {
-			split := strings.Split(volume, "@")
-			if len(split) != 2 {
-				return fmt.Errorf("invalid node volume spec: %s", volume)
-			}
-
-			nodeVolumes := split[0]
-			node := split[1]
-			if len(node) == 0 {
-				return fmt.Errorf("invalid node volume spec: %s", volume)
-			}
-
-			if _, ok := volumesSpec.NodeSpecificVolumes[node]; !ok {
-				volumesSpec.NodeSpecificVolumes[node] = []string{}
-			}
-			volumesSpec.NodeSpecificVolumes[node] = append(volumesSpec.NodeSpecificVolumes[node], nodeVolumes)
-		} else {
-			volumesSpec.DefaultVolumes = append(volumesSpec.DefaultVolumes, volume)
-		}
+	volumesSpec, err := NewVolumes(volumes)
+	if err != nil {
+		return err
 	}
 
 	volumesSpec.DefaultVolumes = append(volumesSpec.DefaultVolumes, fmt.Sprintf("%s:/images", imageVolume.Name))

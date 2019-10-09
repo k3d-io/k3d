@@ -14,15 +14,6 @@ type PublishedPorts struct {
 	PortBindings map[nat.Port][]nat.PortBinding
 }
 
-// defaultNodes describes the type of nodes on which a port should be exposed by default
-const defaultNodes = "server"
-
-// mapping a node role to groups that should be applied to it
-var nodeRuleGroupsMap = map[string][]string{
-	"worker": {"all", "workers"},
-	"server": {"all", "server", "master"},
-}
-
 // mapNodesToPortSpecs maps nodes to portSpecs
 func mapNodesToPortSpecs(specs []string, createdNodes []string) (map[string][]string, error) {
 

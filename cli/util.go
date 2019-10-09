@@ -15,17 +15,21 @@ type apiPort struct {
 	Port   string
 }
 
-type Volumes struct {
-	DefaultVolumes      []string
-	NodeSpecificVolumes map[string][]string
-}
-
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const (
 	letterIdxBits = 6                    // 6 bits to represent a letter index
 	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
+
+// defaultNodes describes the default node group (master)
+const defaultNodes = "server"
+
+// mapping a node role to groups that should be applied to it
+var nodeRuleGroupsMap = map[string][]string{
+	"worker": {"all", "workers"},
+	"server": {"all", "server", "master"},
+}
 
 var src = rand.NewSource(time.Now().UnixNano())
 
