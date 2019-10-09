@@ -42,9 +42,17 @@ func NewCmdGetCluster() *cobra.Command {
 			log.Debugln("get cluster called")
 			c, rt := parseGetClusterCmd(cmd, args)
 			if c == nil {
-				cluster.GetClusters(rt)
+				existingClusters, err := cluster.GetClusters(rt)
+				if err != nil {
+					log.Fatalln(err) // TODO: log something here as well?
+				}
+				log.Debugln(existingClusters)
 			} else {
-				cluster.GetCluster(c, rt)
+				existingCluster, err := cluster.GetCluster(c, rt)
+				if err != nil {
+					log.Fatalln(err) // TODO: log something here as well?
+				}
+				log.Debugln(existingCluster)
 			}
 		},
 	}

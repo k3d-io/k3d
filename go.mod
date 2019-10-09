@@ -14,7 +14,7 @@ require (
 	github.com/containerd/typeurl v0.0.0-20190911142611-5eb25027c9fd // indirect
 	github.com/docker/distribution v0.0.0-20190905152932-14b96e55d84c // indirect
 	github.com/docker/docker v1.4.2-0.20190905191220-3b23f9033967
-	github.com/docker/go-connections v0.4.0 // indirect
+	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/gogo/googleapis v1.3.0 // indirect
 	github.com/golang/protobuf v1.3.1 // indirect

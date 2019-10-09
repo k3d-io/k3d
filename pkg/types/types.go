@@ -46,6 +46,12 @@ var DefaultObjectLabels = map[string]string{
 	"app": "k3d",
 }
 
+// DefaultTmpfsMounts specifies tmpfs mounts that are required for all k3d nodes
+var DefaultTmpfsMounts = []string{
+	"/run",
+	"/var/run",
+}
+
 // Cluster describes a k3d cluster
 type Cluster struct {
 	Name    string `yaml:"name" json:"name,omitempty"`
