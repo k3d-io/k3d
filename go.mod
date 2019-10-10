@@ -16,6 +16,7 @@ require (
 	github.com/docker/docker v1.4.2-0.20190905191220-3b23f9033967
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
+	github.com/go-test/deep v1.0.4
 	github.com/gogo/googleapis v1.3.0 // indirect
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/google/go-cmp v0.3.0 // indirect

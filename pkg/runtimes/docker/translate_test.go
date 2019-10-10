@@ -25,10 +25,11 @@ package docker
 import (
 	"testing"
 
-	"reflect"
+	"github.com/go-test/deep"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
+	"github.com/docker/go-connections/nat"
 	k3d "github.com/rancher/k3d/pkg/types"
 )
 
@@ -44,16 +45,30 @@ func TestTranslateNodeToContainer(t *testing.T) {
 		Args:    []string{"--some-boolflag"},
 		Ports:   []string{"0.0.0.0:6443:6443/tcp"},
 		Restart: true,
-		Labels:  map[string]string{"test_key_1": "test_val_1"},
+		Labels:  map[string]string{"k3d.role": "master", "test_key_1": "test_val_1"},
 	}
 
 	expectedRepresentation := &NodeInDocker{
-		ContainerConfig: &container.Config{
-			Hostname: inputNode.Name,
-			Image:    inputNode.Image,
+		ContainerConfig: container.Config{
+			Hostname:     "test",
+			Image:        "rancher/k3s:v0.9.0",
+			Env:          []string{"TEST_KEY_1=TEST_VAL_1"},
+			Cmd:          []string{"server", "--https-listen-port=6443", "--some-boolflag"},
+			Labels:       map[string]string{"k3d.role": "master", "test_key_1": "test_val_1"},
+			ExposedPorts: nat.PortSet{},
 		},
-		HostConfig:       &container.HostConfig{},
-		NetworkingConfig: &network.NetworkingConfig{},
+		HostConfig: container.HostConfig{
+			Binds: []string{"/test:/tmp/test"},
+			RestartPolicy: container.RestartPolicy{
+				Name: "unless-stopped",
+			},
+			Privileged:   true,
+			Tmpfs:        map[string]string{"/run": "", "/var/run": ""},
+			PortBindings: nat.PortMap{},
+		},
+		NetworkingConfig: network.NetworkingConfig{
+			EndpointsConfig: map[string]*network.EndpointSettings{},
+		},
 	}
 
 	actualRepresentation, err := TranslateNodeToContainer(inputNode)
@@ -61,8 +76,8 @@ func TestTranslateNodeToContainer(t *testing.T) {
 		t.Error(err)
 	}
 
-	if !reflect.DeepEqual(actualRepresentation, expectedRepresentation) {
-		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v", actualRepresentation, expectedRepresentation)
+	if diff := deep.Equal(actualRepresentation, expectedRepresentation); diff != nil {
+		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", actualRepresentation, expectedRepresentation, diff)
 	}
 
 }

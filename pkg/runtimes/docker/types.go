@@ -28,7 +28,7 @@ import (
 
 // NodeInDocker represents everything that we need to represent a k3d node in docker
 type NodeInDocker struct {
-	ContainerConfig  *container.Config // TODO: do we need this as pointers?
-	HostConfig       *container.HostConfig
-	NetworkingConfig *network.NetworkingConfig
+	ContainerConfig  container.Config // TODO: do we need this as pointers?
+	HostConfig       container.HostConfig
+	NetworkingConfig network.NetworkingConfig
 }
