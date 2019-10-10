@@ -60,11 +60,11 @@ func CreateNode(node *k3d.Node, runtime k3drt.Runtime) error {
 	node.Labels = labels
 
 	// specify options depending on node role
-	if node.Role == "worker" { // TODO: check here AND in CLI or only here?
+	if node.Role == k3d.WorkerRole { // TODO: check here AND in CLI or only here?
 		if err := patchWorkerSpec(node); err != nil {
 			return err
 		}
-	} else if node.Role == "master" {
+	} else if node.Role == k3d.MasterRole {
 		if err := patchMasterSpec(node); err != nil {
 			return err
 		}
@@ -80,7 +80,6 @@ func CreateNode(node *k3d.Node, runtime k3drt.Runtime) error {
 		return err
 	}
 
-	log.Debugln("...success")
 	return nil
 }
 
@@ -96,21 +95,19 @@ func DeleteNode(node *k3d.Node, runtimeChoice string) error {
 	if err := runtime.DeleteNode(node); err != nil {
 		log.Error(err)
 	}
-	log.Infoln("Deleted", node.Name)
-	log.Debugln("...success")
 	return nil
 }
 
 // patchWorkerSpec adds worker node specific settings to a node
 func patchWorkerSpec(node *k3d.Node) error {
 	node.Args = append([]string{"agent"}, node.Args...)
-	node.Labels["role"] = "worker" // TODO: maybe put those in a global var DefaultWorkerNodeSpec?
+	node.Labels["role"] = string(k3d.MasterRole) // TODO: maybe put those in a global var DefaultWorkerNodeSpec?
 	return nil
 }
 
 // patchMasterSpec adds worker node specific settings to a node
 func patchMasterSpec(node *k3d.Node) error {
 	node.Args = append([]string{"server"}, node.Args...)
-	node.Labels["role"] = "master" // TODO: maybe put those in a global var DefaultMasterNodeSpec?
+	node.Labels["role"] = string(k3d.MasterRole) // TODO: maybe put those in a global var DefaultMasterNodeSpec?
 	return nil
 }

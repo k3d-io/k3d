@@ -46,11 +46,11 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 		// node role specific settings
 		suffix := 0
-		if node.Role == "master" {
+		if node.Role == k3d.MasterRole {
 			// name suffix
 			suffix = masterCount
 			masterCount++
-		} else if node.Role == "worker" {
+		} else if node.Role == k3d.WorkerRole {
 			// name suffix
 			suffix = workerCount
 			workerCount++
@@ -59,13 +59,14 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		node.Name = fmt.Sprintf("%s-%s-%s-%d", k3d.DefaultObjectNamePrefix, cluster.Name, node.Role, suffix)
 
 		// create node
-		log.Infoln("Creating node", node.Name)
+		log.Infof("Creating node '%s'", node.Name)
 		if err := CreateNode(&node, runtime); err != nil {
-			log.Errorln("...failed")
+			log.Errorln("Failed to create node")
+			return err
 		}
+		log.Debugf("Created node '%s'", node.Name)
 	}
 
-	log.Debugln("...success")
 	return nil
 }
 
@@ -76,7 +77,7 @@ func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 // GetClusters returns a list of all existing clusters
 func GetClusters(runtime k3drt.Runtime) ([]*k3d.Cluster, error) {
-	runtime.GetNodesByLabel(map[string]string{"role": "master"})
+	runtime.GetNodesByLabel(map[string]string{"role": string(k3d.MasterRole)})
 	return []*k3d.Cluster{}, nil
 }
 

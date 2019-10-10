@@ -54,6 +54,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
 	cmd.Flags().String("config", "", "Specify a cluster configuration file")                                     // TODO: to implement
 	cmd.Flags().String("image", k3d.DefaultK3sImageRepo, "Specify k3s image that you want to use for the nodes") // TODO: get image version
+	cmd.Flags().String("network", "", "Join an existing network")
 
 	// add subcommands
 
@@ -92,14 +93,23 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		log.Fatalln(err)
 	}
 
-	// generate cluster
-	cluster := &k3d.Cluster{Name: args[0]} // TODO: validate name
+	// --network
+	network, err := cmd.Flags().GetString("network")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	/* generate cluster */
+	cluster := &k3d.Cluster{
+		Name:    args[0], // TODO: validate name
+		Network: network,
+	}
 
 	// generate list of nodes
 	cluster.Nodes = []k3d.Node{}
 	for i := 0; i < masterCount; i++ {
 		node := k3d.Node{
-			Role:  "master",
+			Role:  k3d.MasterRole,
 			Image: image,
 		}
 		cluster.Nodes = append(cluster.Nodes, node)
@@ -107,7 +117,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 
 	for i := 0; i < workerCount; i++ {
 		node := k3d.Node{
-			Role:  "worker",
+			Role:  k3d.WorkerRole,
 			Image: image,
 		}
 		cluster.Nodes = append(cluster.Nodes, node)

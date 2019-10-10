@@ -48,7 +48,7 @@ func NewCmdCreateNode() *cobra.Command {
 
 	// add flags
 	cmd.Flags().Int("replicas", 1, "Number of replicas of this node specification.")
-	cmd.Flags().String("role", "worker", "Specify node role [master, worker]")
+	cmd.Flags().String("role", string(k3d.WorkerRole), "Specify node role [master, worker]")
 	cmd.Flags().StringP("cluster", "c", "", "Select the cluster that the node shall connect to.")
 	cmd.Flags().String("image", k3d.DefaultK3sImageRepo, "Specify k3s image used for the node(s)") // TODO: get image version tag
 
@@ -77,14 +77,15 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, runtime
 	}
 
 	// --role
-	role, err := cmd.Flags().GetString("role")
+	roleStr, err := cmd.Flags().GetString("role")
 	if err != nil {
 		log.Errorln("No node role specified")
 		log.Fatalln(err)
 	}
-	if _, ok := k3d.DefaultK3dRoles[role]; !ok {
-		log.Fatalf("Unknown node role '%s'\n", role)
+	if _, ok := k3d.DefaultK3dRoles[roleStr]; !ok {
+		log.Fatalf("Unknown node role '%s'\n", roleStr)
 	}
+	role := k3d.DefaultK3dRoles[roleStr]
 
 	// --image
 	image, err := cmd.Flags().GetString("image")

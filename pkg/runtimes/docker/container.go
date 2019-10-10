@@ -46,10 +46,8 @@ func createContainer(dockerNode *NodeInDocker, name string) error {
 		return err
 	}
 
-	// check that we have the image locally
-
-	// start container
-create: // label used to restart process, if we're only missing the image
+	// create container
+create: // label used to restart creation process, if we're only missing the image
 	resp, err := docker.ContainerCreate(ctx, &dockerNode.ContainerConfig, &dockerNode.HostConfig, &dockerNode.NetworkingConfig, name)
 	if err != nil {
 		if client.IsErrNotFound(err) {
@@ -62,7 +60,13 @@ create: // label used to restart process, if we're only missing the image
 		log.Errorln("Failed to create container")
 		return err
 	}
-	log.Infoln("Created container", resp.ID)
+	log.Debugln("Created container", resp.ID)
+
+	// start container
+	if err := docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		log.Errorln("Failed to start container")
+		return err
+	}
 
 	return nil
 }
@@ -95,6 +99,7 @@ func removeContainer(ID string) error {
 	return nil
 }
 
+// pullImage pulls a container image and outputs progress if --verbose flag is set
 func pullImage(ctx *context.Context, docker *client.Client, image string) error {
 
 	resp, err := docker.ImagePull(*ctx, image, types.ImagePullOptions{})

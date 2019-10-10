@@ -93,7 +93,7 @@ func (d Docker) GetNodesByLabel(labels map[string]string) ([]*k3d.Node, error) {
 	for _, container := range containers {
 		node := &k3d.Node{
 			Name:   container.Names[0],
-			Role:   container.Labels["role"], // TODO: catch keyerror
+			Role:   k3d.DefaultK3dRoles[container.Labels["role"]], // TODO: catch keyerror
 			Labels: container.Labels,
 		}
 		nodes = append(nodes, node)
