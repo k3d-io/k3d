@@ -8,7 +8,7 @@ git:
   depth: 1
 install: true
 before_script:
-- curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${GOPATH}/bin v1.17.1
+- curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH}/bin v1.20.0
 - go get github.com/mitchellh/gox@v1.0.1
 script:
 - make fmt check build-cross
