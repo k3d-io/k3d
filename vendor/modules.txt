@@ -109,6 +109,8 @@ github.com/docker/go-connections/tlsconfig
 github.com/docker/go-events
 # github.com/docker/go-units v0.4.0
 github.com/docker/go-units
+# github.com/go-test/deep v1.0.4
+github.com/go-test/deep
 # github.com/gogo/googleapis v1.3.0
 github.com/gogo/googleapis/google/rpc
 # github.com/gogo/protobuf v1.3.0
