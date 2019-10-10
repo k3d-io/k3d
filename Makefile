@@ -32,10 +32,11 @@ BINARIES  := k3d
 
 # Go Package required
 PKG_GOX := github.com/mitchellh/gox@v1.0.1
-PKG_GOLANGCI_LINT := github.com/golangci/golangci-lint/cmd/golangci-lint@v1.17.1
+PKG_GOLANGCI_LINT_VERSION := v1.20.0
+PKG_GOLANGCI_LINT := github.com/golangci/golangci-lint/cmd/golangci-lint@${PKG_GOLANGCI_LINT_VERSION}
 
 # configuration adjustments for golangci-lint
-GOLANGCI_LINT_DISABLED_LINTERS := typecheck # disabling typecheck, because it currently (06.09.2019) fails with Go 1.13
+GOLANGCI_LINT_DISABLED_LINTERS := "" # disabling typecheck, because it currently (06.09.2019) fails with Go 1.13
 
 # Use Go Modules for everything
 export GO111MODULE=on
@@ -93,5 +94,5 @@ ifndef HAS_GOX
 	($(GO) get $(PKG_GOX))
 endif
 ifndef HAS_GOLANGCI
-	(curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${GOPATH}/bin v1.17.1)
+	(curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${GOPATH}/bin ${PKG_GOLANGCI_LINT_VERSION})
 endif
