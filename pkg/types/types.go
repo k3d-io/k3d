@@ -84,6 +84,7 @@ type Node struct {
 	Ports   []string          `yaml:"port_mappings" json:"portMappings,omitempty"` // TODO: make a struct out of this?
 	Restart bool              `yaml:"restart" json:"restart,omitempty"`
 	Labels  map[string]string // filled automatically
+	Network string            // filled automatically
 }
 
 // Network describes a container network used by k3d clusters

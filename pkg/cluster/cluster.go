@@ -38,6 +38,11 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	masterCount := 0
 	workerCount := 0
 
+	// generate cluster network name, if not set
+	if cluster.Network == "" {
+		cluster.Network = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
+	}
+
 	for _, node := range cluster.Nodes {
 
 		// cluster specific settings
@@ -56,7 +61,8 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 			workerCount++
 		}
 
-		node.Name = fmt.Sprintf("%s-%s-%s-%d", k3d.DefaultObjectNamePrefix, cluster.Name, node.Role, suffix)
+		node.Name = fmt.Sprintf("%s-%s-%s-%d", k3d.DefaultObjectNamePrefix, cluster.Name, node.Role, suffix) // TODO: move this somewhere else?
+		node.Network = cluster.Network
 
 		// create node
 		log.Infof("Creating node '%s'", node.Name)
