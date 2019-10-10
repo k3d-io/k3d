@@ -24,7 +24,9 @@ package docker
 
 import (
 	"context"
-	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -44,9 +46,19 @@ func createContainer(dockerNode *NodeInDocker, name string) error {
 		return err
 	}
 
-	// start container // TODO: check first if image exists locally and pull if it doesn't
+	// check that we have the image locally
+
+	// start container
+create: // label used to restart process, if we're only missing the image
 	resp, err := docker.ContainerCreate(ctx, &dockerNode.ContainerConfig, &dockerNode.HostConfig, &dockerNode.NetworkingConfig, name)
 	if err != nil {
+		if client.IsErrNotFound(err) {
+			if err := pullImage(&ctx, docker, dockerNode.ContainerConfig.Image); err != nil {
+				log.Errorln("Failed to create container")
+				return err
+			}
+			goto create
+		}
 		log.Errorln("Failed to create container")
 		return err
 	}
@@ -62,7 +74,8 @@ func removeContainer(ID string) error {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("Failed to create docker client. %+v", err)
+		log.Errorln("Failed to create docker client")
+		return err
 	}
 
 	// (1) define remove options
@@ -73,10 +86,37 @@ func removeContainer(ID string) error {
 
 	// (2) remove container
 	if err := docker.ContainerRemove(ctx, ID, options); err != nil {
-		return fmt.Errorf("Failed to delete container '%s'. %+v", ID, err)
+		log.Errorf("Failed to delete container '%s'", ID)
+		return err
 	}
 
 	log.Infoln("Deleted", ID)
 
 	return nil
+}
+
+func pullImage(ctx *context.Context, docker *client.Client, image string) error {
+
+	resp, err := docker.ImagePull(*ctx, image, types.ImagePullOptions{})
+	if err != nil {
+		log.Errorf("Failed to pull image '%s'", image)
+		return err
+	}
+	defer resp.Close()
+
+	log.Infof("Pulling image '%s'", image)
+
+	// in debug mode (--verbose flag set), output pull progress
+	var writer io.Writer = ioutil.Discard
+	if log.GetLevel() == log.DebugLevel {
+		writer = os.Stdout
+	}
+	_, err = io.Copy(writer, resp)
+	if err != nil {
+		log.Warningf("Couldn't get docker output")
+		log.Warningln(err)
+	}
+
+	return nil
+
 }
