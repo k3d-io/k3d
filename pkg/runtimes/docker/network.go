@@ -23,7 +23,6 @@ package docker
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -32,29 +31,28 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// CreateNetworkIfNotExist creates a new docker network
-// @return networkID, error
-func CreateNetworkIfNotExist(clusterName string) (string, error) {
-
-	networkName := k3d.GetDefaultObjectName(clusterName)
+// CreateNetworkIfNotPresent creates a new docker network
+func (d Docker) CreateNetworkIfNotPresent(name string) (string, error) {
 
 	// (0) create new docker client
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return "", fmt.Errorf("Failed to create docker client. %+v", err)
+		log.Errorln("Failed to create docker client")
+		return "", err
 	}
 
 	// (1) configure list filters
-	args := GetDefaultObjectLabelsFilter(clusterName)
-	args.Add("name", networkName)
+	args := GetDefaultObjectLabelsFilter(name)
+	args.Add("name", name)
 
 	// (2) get filtered list of networks
 	networkList, err := docker.NetworkList(ctx, types.NetworkListOptions{
 		Filters: args,
 	})
 	if err != nil {
-		return "", fmt.Errorf("Failed to list docker networks. %+v", err)
+		log.Errorln("Failed to list docker networks")
+		return "", err
 	}
 
 	// (2.1) If possible, return an existing network
@@ -63,21 +61,19 @@ func CreateNetworkIfNotExist(clusterName string) (string, error) {
 	}
 
 	if len(networkList) > 0 {
+		log.Infof("Network with name '%s' already exists with ID '%s'", name, networkList[0].ID)
 		return networkList[0].ID, nil
 	}
 
 	// (3) Create a new network
-	// (3.1) Define network labels
-	labels := k3d.DefaultObjectLabels
-	labels["cluster"] = clusterName
-
-	// (3.2) Create network
-	network, err := docker.NetworkCreate(ctx, networkName, types.NetworkCreate{
+	network, err := docker.NetworkCreate(ctx, name, types.NetworkCreate{
 		Labels: k3d.DefaultObjectLabels,
 	})
 	if err != nil {
-		return "", fmt.Errorf("Failed to create network. %+v", err)
+		log.Errorln("Failed to create network")
+		return "", err
 	}
 
+	log.Infof("Created network '%s'", name)
 	return network.ID, nil
 }

@@ -41,6 +41,13 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	// generate cluster network name, if not set
 	if cluster.Network == "" {
 		cluster.Network = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
+		// create cluster network
+		networkID, err := runtime.CreateNetworkIfNotPresent(cluster.Network)
+		if err != nil {
+			log.Errorln("Failed to create cluster network")
+			return err
+		}
+		cluster.Network = networkID
 	}
 
 	for _, node := range cluster.Nodes {

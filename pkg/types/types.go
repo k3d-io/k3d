@@ -87,12 +87,6 @@ type Node struct {
 	Network string            // filled automatically
 }
 
-// Network describes a container network used by k3d clusters
-type Network struct {
-	Name    string
-	Cluster string
-}
-
 // GetDefaultObjectName prefixes the passed name with the default prefix
 func GetDefaultObjectName(name string) string {
 	return fmt.Sprintf("%s-%s", DefaultObjectNamePrefix, name)

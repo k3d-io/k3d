@@ -20,3 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 package containerd
+
+// CreateNetworkIfNotPresent creates a new docker network
+func (d Containerd) CreateNetworkIfNotPresent(name string) (string, error) {
+	return "", nil
+}
