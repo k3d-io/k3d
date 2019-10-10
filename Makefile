@@ -45,7 +45,7 @@ export GO111MODULE=on
 # DIRS defines a single level directly, we only look at *.go in this directory.
 # REC_DIRS defines a source code tree. All go files are analyzed recursively.
 DIRS :=  .
-REC_DIRS := cli
+REC_DIRS := cmd
 
 # Rules for finding all go source files using 'DIRS' and 'REC_DIRS'
 GO_SRC := $(foreach dir,$(DIRS),$(wildcard $(dir)/*.go))
