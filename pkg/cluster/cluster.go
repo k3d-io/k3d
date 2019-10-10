@@ -85,9 +85,12 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 			// name suffix
 			suffix = workerCount
 			workerCount++
+
+			// connection url
+			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=https://%s:%d", generateNodeName(cluster.Name, k3d.MasterRole, 0), 6443)) // TODO: use actual configurable api-port
 		}
 
-		node.Name = fmt.Sprintf("%s-%s-%s-%d", k3d.DefaultObjectNamePrefix, cluster.Name, node.Role, suffix) // TODO: move this somewhere else?
+		node.Name = generateNodeName(cluster.Name, node.Role, suffix)
 		node.Network = cluster.Network
 
 		// create node
@@ -121,4 +124,8 @@ func GetCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) (*k3d.Cluster, erro
 // GenerateClusterSecret generates a random 20 character string
 func GenerateClusterSecret() string {
 	return util.GenerateRandomString(20)
+}
+
+func generateNodeName(cluster string, role k3d.Role, suffix int) string {
+	return fmt.Sprintf("%s-%s-%s-%d", k3d.DefaultObjectNamePrefix, cluster, role, suffix)
 }
