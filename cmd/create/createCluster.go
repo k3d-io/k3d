@@ -106,12 +106,11 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		log.Fatalln(err)
 	}
 
-	// --api-port
-	apiPort, err := cmd.Flags().GetString("api-port")
-	secret, err := cmd.Flags().GetString("secret")
+	// --api-port // TODO:
+	/*apiPort, err := cmd.Flags().GetString("api-port")
 	if err != nil {
 		log.Fatalln(err)
-	}
+	}*/
 
 	/* generate cluster */
 	cluster := &k3d.Cluster{
