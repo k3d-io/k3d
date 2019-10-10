@@ -49,12 +49,13 @@ func NewCmdCreateCluster() *cobra.Command {
 	}
 
 	// add flags
-	cmd.Flags().StringP("api-port", "a", "6443", "Specify the Kubernetes API server port (Format: `--api-port [host:]port`")
+	cmd.Flags().StringP("api-port", "a", "6443", "Specify the Kubernetes API server port (Format: `--api-port [host:]port`") // TODO: how to handle this for multi-master setups?
 	cmd.Flags().IntP("masters", "m", 1, "Specify how many masters you want to create")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
 	cmd.Flags().String("config", "", "Specify a cluster configuration file")                                     // TODO: to implement
 	cmd.Flags().String("image", k3d.DefaultK3sImageRepo, "Specify k3s image that you want to use for the nodes") // TODO: get image version
 	cmd.Flags().String("network", "", "Join an existing network")
+	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
 
 	// add subcommands
 
@@ -99,10 +100,24 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		log.Fatalln(err)
 	}
 
+	// --secret
+	secret, err := cmd.Flags().GetString("secret")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// --api-port
+	apiPort, err := cmd.Flags().GetString("api-port")
+	secret, err := cmd.Flags().GetString("secret")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	/* generate cluster */
 	cluster := &k3d.Cluster{
 		Name:    args[0], // TODO: validate name
 		Network: network,
+		Secret:  secret,
 	}
 
 	// generate list of nodes

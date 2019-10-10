@@ -49,7 +49,9 @@ func CreateNode(node *k3d.Node, runtime k3drt.Runtime) error {
 	 * CONFIGURATION
 	 */
 
-	// global node configuration (applies for any node role)
+	/* global node configuration (applies for any node role) */
+
+	// ### Labels ###
 	labels := make(map[string]string)
 	for k, v := range k3d.DefaultObjectLabels {
 		labels[k] = v
@@ -58,6 +60,9 @@ func CreateNode(node *k3d.Node, runtime k3drt.Runtime) error {
 		labels[k] = v
 	}
 	node.Labels = labels
+
+	// ### Environment ###
+	node.Env = append(node.Env, k3d.DefaultNodeEnv...) // append default node env vars
 
 	// specify options depending on node role
 	if node.Role == k3d.WorkerRole { // TODO: check here AND in CLI or only here?

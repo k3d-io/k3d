@@ -64,6 +64,11 @@ var DefaultTmpfsMounts = []string{
 	"/var/run",
 }
 
+// DefaultNodeEnv defines some default environment variables that should be set on every node
+var DefaultNodeEnv = []string{
+	"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml",
+}
+
 // Cluster describes a k3d cluster
 type Cluster struct {
 	Name    string `yaml:"name" json:"name,omitempty"`
