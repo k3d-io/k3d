@@ -30,7 +30,7 @@ type ClusterSpec struct {
 	NodeToPortSpecMap map[string][]string
 	PortAutoOffset    int
 	ServerArgs        []string
-	Volumes           []string
+	Volumes           *Volumes
 }
 
 func startContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
@@ -118,9 +118,7 @@ func createServer(spec *ClusterSpec) (string, error) {
 		hostConfig.RestartPolicy.Name = "unless-stopped"
 	}
 
-	if len(spec.Volumes) > 0 && spec.Volumes[0] != "" {
-		hostConfig.Binds = spec.Volumes
-	}
+	spec.Volumes.addVolumesToHostConfig(containerName, "server", hostConfig)
 
 	networkingConfig := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
@@ -187,9 +185,7 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 		hostConfig.RestartPolicy.Name = "unless-stopped"
 	}
 
-	if len(spec.Volumes) > 0 && spec.Volumes[0] != "" {
-		hostConfig.Binds = spec.Volumes
-	}
+	spec.Volumes.addVolumesToHostConfig(containerName, "worker", hostConfig)
 
 	networkingConfig := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{

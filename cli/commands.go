@@ -147,7 +147,13 @@ func CreateCluster(c *cli.Context) error {
 		return err
 	}
 	volumes := c.StringSlice("volume")
-	volumes = append(volumes, fmt.Sprintf("%s:/images", imageVolume.Name))
+
+	volumesSpec, err := NewVolumes(volumes)
+	if err != nil {
+		return err
+	}
+
+	volumesSpec.DefaultVolumes = append(volumesSpec.DefaultVolumes, fmt.Sprintf("%s:/images", imageVolume.Name))
 
 	clusterSpec := &ClusterSpec{
 		AgentArgs:         k3AgentArgs,
@@ -159,7 +165,7 @@ func CreateCluster(c *cli.Context) error {
 		NodeToPortSpecMap: portmap,
 		PortAutoOffset:    c.Int("port-auto-offset"),
 		ServerArgs:        k3sServerArgs,
-		Volumes:           volumes,
+		Volumes:           volumesSpec,
 	}
 
 	// create the server
