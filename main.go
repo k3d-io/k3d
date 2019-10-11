@@ -245,6 +245,10 @@ func main() {
 			Name:  "verbose",
 			Usage: "Enable verbose output",
 		},
+		cli.BoolFlag{
+			Name:  "timestamp",
+			Usage: "Enable timestamps in logs messages",
+		},
 	}
 
 	// init log level
@@ -253,6 +257,11 @@ func main() {
 			log.SetLevel(log.DebugLevel)
 		} else {
 			log.SetLevel(log.InfoLevel)
+		}
+		if c.GlobalBool("timestamp") {
+			log.SetFormatter(&log.TextFormatter{
+				FullTimestamp: true,
+			})
 		}
 		return nil
 	}
