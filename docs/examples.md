@@ -183,3 +183,42 @@ EOF
 ```
 
 ... and check that the pod is running: `kubectl get pods -l "app=nginx-test-registry"`
+
+## Running on filesystems k3s doesn't like (btrfs, tmpfs, …)
+
+The following script leverages a [Docker loopback volume plugin](https://github.com/ashald/docker-volume-loopback) to mask the problematic filesystem away from k3s by providing a small ext4 filesystem underneath `/var/lib/rancher/k3s` (k3s' data dir).
+
+```
+#!/bin/bash -x
+
+CLUSTER_NAME="${1:-k3s-default}"
+NUM_WORKERS="${2:-2}"
+
+setup() {
+  PLUGIN_LS_OUT=`docker plugin ls --format '{{.Name}},{{.Enabled}}' | grep -E '^ashald/docker-volume-loopback'`
+  [ -z "${PLUGIN_LS_OUT}" ] && docker plugin install ashald/docker-volume-loopback DATA_DIR=/tmp/docker-loop/data
+  sleep 3
+  [ "${PLUGIN_LS_OUT##*,}" != "true" ] && docker plugin enable ashald/docker-volume-loopback
+
+  K3D_MOUNTS=()
+  for i in `seq 0 ${NUM_WORKERS}`; do
+    [ ${i} -eq 0 ] && VOLUME_NAME="k3d-${CLUSTER_NAME}-server" || VOLUME_NAME="k3d-${CLUSTER_NAME}-worker-$((${i}-1))"
+    docker volume create -d ashald/docker-volume-loopback ${VOLUME_NAME} -o sparse=true -o fs=ext4
+    K3D_MOUNTS+=('-v' "${VOLUME_NAME}:/var/lib/rancher/k3s@${VOLUME_NAME}")
+  done
+  k3d c -i rancher/k3s:v0.9.1 -n ${CLUSTER_NAME} -w ${NUM_WORKERS} ${K3D_MOUNTS[@]}
+}
+
+cleanup() {
+  K3D_VOLUMES=()
+  k3d d -n ${CLUSTER_NAME}
+  for i in `seq 0 ${NUM_WORKERS}`; do
+    [ ${i} -eq 0 ] && VOLUME_NAME="k3d-${CLUSTER_NAME}-server" || VOLUME_NAME="k3d-${CLUSTER_NAME}-worker-$((${i}-1))"
+    K3D_VOLUMES+=("${VOLUME_NAME}")
+  done
+  docker volume rm -f ${K3D_VOLUMES[@]}
+}
+
+setup
+#cleanup
+```
