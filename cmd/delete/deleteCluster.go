@@ -58,6 +58,9 @@ func NewCmdDeleteCluster() *cobra.Command {
 
 	// add subcommands
 
+	// add flags
+	cmd.Flags().BoolP("all", "a", false, "Delete all existing clusters")
+
 	// done
 	return cmd
 }

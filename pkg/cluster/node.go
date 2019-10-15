@@ -106,13 +106,13 @@ func DeleteNode(node *k3d.Node, runtimeChoice string) error {
 // patchWorkerSpec adds worker node specific settings to a node
 func patchWorkerSpec(node *k3d.Node) error {
 	node.Args = append([]string{"agent"}, node.Args...)
-	node.Labels["role"] = string(k3d.MasterRole) // TODO: maybe put those in a global var DefaultWorkerNodeSpec?
+	node.Labels["k3d.role"] = string(k3d.WorkerRole) // TODO: maybe put those in a global var DefaultWorkerNodeSpec?
 	return nil
 }
 
 // patchMasterSpec adds worker node specific settings to a node
 func patchMasterSpec(node *k3d.Node) error {
 	node.Args = append([]string{"server"}, node.Args...)
-	node.Labels["role"] = string(k3d.MasterRole) // TODO: maybe put those in a global var DefaultMasterNodeSpec?
+	node.Labels["k3d.role"] = string(k3d.MasterRole) // TODO: maybe put those in a global var DefaultMasterNodeSpec?
 	return nil
 }

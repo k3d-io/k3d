@@ -72,7 +72,7 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 		// cluster specific settings
 		node.Labels = make(map[string]string)
-		node.Labels["cluster"] = cluster.Name
+		node.Labels["k3d.cluster"] = cluster.Name
 		node.Env = append(node.Env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", cluster.Secret))
 
 		// node role specific settings
@@ -112,12 +112,47 @@ func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 // GetClusters returns a list of all existing clusters
 func GetClusters(runtime k3drt.Runtime) ([]*k3d.Cluster, error) {
-	runtime.GetNodesByLabel(map[string]string{"role": string(k3d.MasterRole)})
-	return []*k3d.Cluster{}, nil
+	nodes, err := runtime.GetNodesByLabel(k3d.DefaultObjectLabels)
+	if err != nil {
+		log.Errorln("Failed to get clusters")
+		return nil, err
+	}
+
+	clusters := []*k3d.Cluster{}
+	// for each node, check, if we can add it to a cluster or add the cluster if it doesn't exist yet
+	for _, node := range nodes {
+		clusterExists := false
+		for _, cluster := range clusters {
+			if node.Labels["k3d.cluster"] == cluster.Name { // TODO: handle case, where this label doesn't exist
+				cluster.Nodes = append(cluster.Nodes, *node)
+				clusterExists = true
+				break
+			}
+		}
+		// cluster is not in the list yet, so we add it with the current node as its first member
+		if !clusterExists {
+			clusters = append(clusters, &k3d.Cluster{
+				Name:  node.Labels["k3d.cluster"],
+				Nodes: []k3d.Node{*node},
+			})
+		}
+	}
+	return clusters, nil
 }
 
 // GetCluster returns an existing cluster
 func GetCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) (*k3d.Cluster, error) {
+	// get nodes that belong to the selected cluster
+	nodes, err := runtime.GetNodesByLabel(map[string]string{"k3d.cluster": cluster.Name})
+	if err != nil {
+		log.Errorf("Failed to get nodes for cluster '%s'", cluster.Name)
+	}
+
+	// append nodes
+	for _, node := range nodes {
+		cluster.Nodes = append(cluster.Nodes, *node)
+	}
+
 	return cluster, nil
 }
 

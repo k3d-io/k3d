@@ -49,7 +49,7 @@ Here's how k3d types should translate to a runtime type:
 `network = "github.com/docker/docker/api/types/network"`
 
 - Name    -> container.Hostname = node.Name
-- Role    -> container.Labels["role"] = node.Role
+- Role    -> container.Labels["k3d.role"] = node.Role
 - Image   -> container.Image = node.Image
 - Volumes -> container.HostConfig.PortBindings
 - Env     -> 

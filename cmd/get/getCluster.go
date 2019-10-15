@@ -22,6 +22,8 @@ THE SOFTWARE.
 package get
 
 import (
+	"fmt"
+
 	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -35,25 +37,29 @@ func NewCmdGetCluster() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "cluster",
-		Short: "Get cluster",
-		Long:  `Get cluster.`,
+		Use:     "cluster",
+		Aliases: []string{"clusters"},
+		Short:   "Get cluster",
+		Long:    `Get cluster.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("get cluster called")
 			c, rt := parseGetClusterCmd(cmd, args)
-			if c == nil {
-				existingClusters, err := cluster.GetClusters(rt)
+			var existingClusters []*k3d.Cluster
+			if c == nil { // Option a)  no cluster name specified -> get all clusters
+				found, err := cluster.GetClusters(rt)
 				if err != nil {
-					log.Fatalln(err) // TODO: log something here as well?
+					log.Fatalln(err)
 				}
-				log.Debugln(existingClusters)
-			} else {
-				existingCluster, err := cluster.GetCluster(c, rt)
+				existingClusters = append(existingClusters, found...)
+			} else { // Option b) cluster name specified -> get specific cluster
+				found, err := cluster.GetCluster(c, rt)
 				if err != nil {
-					log.Fatalln(err) // TODO: log something here as well?
+					log.Fatalln(err)
 				}
-				log.Debugln(existingCluster)
+				existingClusters = append(existingClusters, found)
 			}
+			// print existing clusters
+			printClusters(existingClusters)
 		},
 	}
 
@@ -74,6 +80,7 @@ func parseGetClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, runtim
 		log.Fatalln(err)
 	}
 
+	// Args = cluster name
 	if len(args) == 0 {
 		return nil, runtime
 	}
@@ -81,4 +88,14 @@ func parseGetClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, runtim
 	cluster := &k3d.Cluster{Name: args[0]} // TODO: validate name first?
 
 	return cluster, runtime
+}
+
+func printClusters(clusters []*k3d.Cluster) {
+	for _, cluster := range clusters {
+		fmt.Printf("@@@ Cluster '%s' @@@\n", cluster.Name)
+		for _, node := range cluster.Nodes {
+			fmt.Printf("Node '%s' - Role '%s' - Labels '%v'\n", node.Name, node.Role, node.Labels)
+		}
+		fmt.Println("====================")
+	}
 }

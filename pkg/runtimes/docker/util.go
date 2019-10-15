@@ -34,6 +34,6 @@ func GetDefaultObjectLabelsFilter(clusterName string) filters.Args {
 	for key, value := range k3d.DefaultObjectLabels {
 		filters.Add("label", fmt.Sprintf("%s=%s", key, value))
 	}
-	filters.Add("label", fmt.Sprintf("cluster=%s", clusterName))
+	filters.Add("label", fmt.Sprintf("k3d.cluster=%s", clusterName))
 	return filters
 }

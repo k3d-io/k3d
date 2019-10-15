@@ -23,6 +23,7 @@ THE SOFTWARE.
 package docker
 
 import (
+	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
@@ -92,4 +93,16 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 		HostConfig:       hostConfig,
 		NetworkingConfig: networkingConfig,
 	}, nil
+}
+
+// TranslateContainerToNode translates a docker container object into a k3d node representation
+func TranslateContainerToNode(cont *types.Container) (*k3d.Node, error) {
+	node := &k3d.Node{
+		Name:   cont.Names[0],
+		Image:  cont.Image,
+		Labels: cont.Labels,
+		Role:   k3d.DefaultK3dRoles[cont.Labels["k3d.role"]], // TODO: what if this is not present?
+		// TODO: all the rest
+	}
+	return node, nil
 }
