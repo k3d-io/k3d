@@ -134,6 +134,10 @@ func main() {
 					Name:  "auto-restart",
 					Usage: "Set docker's --restart=unless-stopped flag on the containers",
 				},
+				cli.StringFlag{
+					Name:  "network",
+					Usage: "Connect the cluster to specified network, if <network> doesn't exist it will be created. Note that the created network will be prefixed with k3d-",
+				},
 			},
 			Action: run.CreateCluster,
 		},

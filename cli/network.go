@@ -14,6 +14,11 @@ func k3dNetworkName(clusterName string) string {
 	return fmt.Sprintf("k3d-%s", clusterName)
 }
 
+
+func createJoinableNetwork(clusterName string, networkName string) error {
+	return nil
+}
+
 // createClusterNetwork creates a docker network for a cluster that will be used
 // to let the server and worker containers communicate with each other easily.
 func createClusterNetwork(clusterName string) (string, error) {
