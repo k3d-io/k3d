@@ -41,6 +41,7 @@ type Runtime interface {
 	DeleteNode(*k3d.Node) error
 	GetNodesByLabel(map[string]string) ([]*k3d.Node, error)
 	CreateNetworkIfNotPresent(name string) (string, error)
+	GetKubeconfig(*k3d.Node) error
 	// StartContainer() error
 	// ExecContainer() error
 	// StopContainer() error
