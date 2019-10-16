@@ -41,10 +41,10 @@ Check out what you can do via `k3d help`
 
 Example Workflow: Create a new cluster and use it with `kubectl`
 
-1. `k3d create` to create a new single-node cluster (docker container)
-2. `export KUBECONFIG=$(k3d get-kubeconfig)` to make `kubectl` to use the kubeconfig for that cluster
+1. `k3d create cluster CLUSTER_NAME` to create a new single-node cluster (= 1 container running k3s)
+2. `export KUBECONFIG=$(k3d get kubeconfig CLUSTER_NAME)` to make `kubectl` to use the kubeconfig for that cluster
 3. execute some commands like `kubectl get pods --all-namespaces`
-4. `k3d delete` to delete the default cluster
+4. `k3d delete cluster CLUSTER_NAME` to delete the default cluster
 
 ### Exposing Services
 
