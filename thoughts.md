@@ -57,3 +57,15 @@ Here's how k3d types should translate to a runtime type:
 - Ports   -> 
 - Restart -> 
 - Labels  -> container.Labels
+
+## expose ports / volumes
+
+- `--port [host:]port[:containerPort][/protocol][@group_identifier[[index] | @node_identifier]`
+  - Examples:
+    - `--port 0.0.0.0:8080:8081/tcp@workers` -> whole group
+    - `--port 80@workers[0]` -> single instance of group by list index
+    - `--port 80@workers[0,2-3]` -> multiple instances of a group by index lists and ranges
+    - `--port 80@k3d-test-worker-0` -> single instance by specific node identifier
+    - `--port 80@k3d-test-master-0@workers[1-5]` -> multiple instances by combination of node and group identifiers
+
+- analogous for volumes
