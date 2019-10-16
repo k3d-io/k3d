@@ -90,6 +90,7 @@ func parseGetClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, runtim
 	return cluster, runtime
 }
 
+// TODO: improve (tabular output or output similar to kubectl)
 func printClusters(clusters []*k3d.Cluster) {
 	for _, cluster := range clusters {
 		fmt.Printf("@@@ Cluster '%s' @@@\n", cluster.Name)

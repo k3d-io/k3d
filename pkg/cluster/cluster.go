@@ -107,6 +107,23 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 // DeleteCluster deletes an existing cluster
 func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
+
+	log.Infof("Deleting cluster '%s'", cluster.Name)
+
+	failed := 0
+	for _, node := range cluster.Nodes {
+		if err := runtime.DeleteNode(&node); err != nil {
+			log.Warningf("Failed to delete node '%s': Try to delete it manually", node.Name)
+			failed++
+			continue
+		}
+	}
+
+	// TODO: remove network
+
+	if failed > 0 {
+		return fmt.Errorf("Failed to delete %d nodes: Try to delete them manually", failed)
+	}
 	return nil
 }
 
@@ -146,6 +163,10 @@ func GetCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) (*k3d.Cluster, erro
 	nodes, err := runtime.GetNodesByLabel(map[string]string{"k3d.cluster": cluster.Name})
 	if err != nil {
 		log.Errorf("Failed to get nodes for cluster '%s'", cluster.Name)
+	}
+
+	if len(nodes) == 0 {
+		return nil, fmt.Errorf("No nodes found for cluster '%s'", cluster.Name)
 	}
 
 	// append nodes

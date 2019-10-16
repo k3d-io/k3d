@@ -40,19 +40,21 @@ func NewCmdDeleteCluster() *cobra.Command {
 		Long:  `Delete a cluster.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("delete cluster called")
-			rt, err := cmd.Flags().GetString("runtime")
-			if err != nil {
-				log.Debugln("runtime not defined")
-			}
-			runtime, err := runtimes.GetRuntime(rt)
-			if err != nil {
-				log.Fatalf("Unsupported runtime '%s'", rt)
-			}
-			for _, name := range args {
-				if err := cluster.DeleteCluster(&k3d.Cluster{Name: name}, runtime); err != nil {
-					log.Errorln(err)
+
+			rt, cs := parseDeleteClusterCmd(cmd, args)
+
+			if len(cs) == 0 {
+				log.Infoln("No clusters found")
+			} else {
+				for _, c := range cs {
+					if err := cluster.DeleteCluster(c, rt); err != nil {
+						log.Fatalln(err)
+					}
 				}
 			}
+
+			log.Debugln("...Finished")
+
 		},
 	}
 
@@ -63,4 +65,44 @@ func NewCmdDeleteCluster() *cobra.Command {
 
 	// done
 	return cmd
+}
+
+// parseDeleteClusterCmd parses the command input into variables required to create a cluster
+func parseDeleteClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, []*k3d.Cluster) {
+	// --runtime
+	rt, err := cmd.Flags().GetString("runtime")
+	if err != nil {
+		log.Fatalln("No runtime specified")
+	}
+	runtime, err := runtimes.GetRuntime(rt)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// --all
+	var clusters []*k3d.Cluster
+
+	if all, err := cmd.Flags().GetBool("all"); err != nil {
+		log.Fatalln(err)
+	} else if all {
+		clusters, err = cluster.GetClusters(runtime)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		return runtime, clusters
+	}
+
+	if len(args) < 1 {
+		log.Fatalln("Expecting at least one cluster name if `--all` is not set")
+	}
+
+	for _, name := range args {
+		cluster, err := cluster.GetCluster(&k3d.Cluster{Name: name}, runtime)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		clusters = append(clusters, cluster)
+	}
+
+	return runtime, clusters
 }
