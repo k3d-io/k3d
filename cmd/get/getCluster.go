@@ -23,6 +23,9 @@ package get
 
 import (
 	"fmt"
+	"os"
+	"sort"
+	"strings"
 
 	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
@@ -30,6 +33,8 @@ import (
 	"github.com/spf13/cobra"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/liggitt/tabwriter"
 )
 
 // NewCmdGetCluster returns a new cobra command
@@ -92,11 +97,30 @@ func parseGetClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, runtim
 
 // TODO: improve (tabular output or output similar to kubectl)
 func printClusters(clusters []*k3d.Cluster) {
+
+	tabwriter := tabwriter.NewWriter(os.Stdout, 6, 4, 3, ' ', tabwriter.RememberWidths)
+	defer tabwriter.Flush()
+
+	headers := []string{"NAME", "MASTERS", "WORKERS"} // TODO: add status
+	_, err := fmt.Fprintf(tabwriter, "%s\n", strings.Join(headers, "\t"))
+	if err != nil {
+		log.Fatalln("Failed to print headers")
+	}
+
+	sort.Slice(clusters, func(i, j int) bool {
+		return clusters[i].Name < clusters[j].Name
+	})
+
 	for _, cluster := range clusters {
-		fmt.Printf("@@@ Cluster '%s' @@@\n", cluster.Name)
+		masterCount := 0
+		workerCount := 0
 		for _, node := range cluster.Nodes {
-			fmt.Printf("Node '%s' - Role '%s' - Labels '%v'\n", node.Name, node.Role, node.Labels)
+			if node.Role == k3d.MasterRole {
+				masterCount++
+			} else if node.Role == k3d.WorkerRole {
+				workerCount++
+			}
 		}
-		fmt.Println("====================")
+		fmt.Fprintf(tabwriter, "%s\t%d\t%d\n", cluster.Name, masterCount, workerCount)
 	}
 }
