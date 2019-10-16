@@ -22,6 +22,7 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -30,6 +31,8 @@ import (
 	"github.com/rancher/k3d/cmd/create"
 	"github.com/rancher/k3d/cmd/delete"
 	"github.com/rancher/k3d/cmd/get"
+
+	"github.com/rancher/k3d/version"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -76,6 +79,15 @@ func init() {
 	rootCmd.AddCommand(create.NewCmdCreate())
 	rootCmd.AddCommand(delete.NewCmdDelete())
 	rootCmd.AddCommand(get.NewCmdGet())
+
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "version",
+		Short: "Print k3d version",
+		Long:  "Print k3d version",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("k3d version %s\n", version.GetVersion())
+		},
+	})
 }
 
 // initLogging initializes the logger
