@@ -58,7 +58,7 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 		},
 	}
 
-	toolsContainerID, err := startContainer(&containerConfig, &hostConfig, &network.NetworkingConfig{}, toolsContainerName)
+	toolsContainerID, err := startContainer(&containerConfig, &hostConfig, &network.NetworkingConfig{}, toolsContainerName, nil)
 	if err != nil {
 		return err
 	}
@@ -149,6 +149,7 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 		if err != nil {
 			return fmt.Errorf(" Couldn't attach to container [%s]\n%+v", containerName, err)
 		}
+		// TODO: Evaluate this potential issue: Possible resource leak, defer in for loop
 		defer containerConnection.Close()
 
 		// start exec

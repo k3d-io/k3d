@@ -168,6 +168,15 @@ func CreateCluster(c *cli.Context) error {
 		Volumes:           volumesSpec,
 	}
 
+	// deal with --network option, if specified add it into clusterSpec
+	networkName := c.String("network")
+	if networkName != "" {
+		if clusterSpec.Network, err = createJoinableNetwork(networkName); err != nil {
+			// just emit warning if any error occurred during initialization of the bridge network
+			log.Warningf("Failed to create bridge network %s: %s", c.String("network"), err)
+		}
+	}
+
 	// create the server
 	log.Printf("Creating cluster [%s]", c.String("name"))
 

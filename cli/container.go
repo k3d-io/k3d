@@ -31,9 +31,10 @@ type ClusterSpec struct {
 	PortAutoOffset    int
 	ServerArgs        []string
 	Volumes           *Volumes
+	Network           *networkConfig
 }
 
-func startContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
+func startContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string, bridgeConfig *networkConfig) (string, error) {
 	ctx := context.Background()
 
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -66,6 +67,13 @@ func startContainer(config *container.Config, hostConfig *container.HostConfig, 
 		}
 	} else if err != nil {
 		return "", fmt.Errorf(" Couldn't create container %s\n%+v", containerName, err)
+	}
+
+	if bridgeConfig != nil {
+		if err := docker.NetworkConnect(ctx, bridgeConfig.ID, containerName, bridgeConfig.builder(containerName)); err != nil {
+			// just emit warning and let process continue
+			log.Warningf("Couldn't connect %s to %s network: %s", containerName, bridgeConfig.ID, err)
+		}
 	}
 
 	if err := docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
@@ -136,7 +144,7 @@ func createServer(spec *ClusterSpec) (string, error) {
 		Env:          spec.Env,
 		Labels:       containerLabels,
 	}
-	id, err := startContainer(config, hostConfig, networkingConfig, containerName)
+	id, err := startContainer(config, hostConfig, networkingConfig, containerName, spec.Network)
 	if err != nil {
 		return "", fmt.Errorf(" Couldn't create container %s\n%+v", containerName, err)
 	}
@@ -204,7 +212,7 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 		ExposedPorts: workerPublishedPorts.ExposedPorts,
 	}
 
-	id, err := startContainer(config, hostConfig, networkingConfig, containerName)
+	id, err := startContainer(config, hostConfig, networkingConfig, containerName, spec.Network)
 	if err != nil {
 		return "", fmt.Errorf(" Couldn't start container %s\n%+v", containerName, err)
 	}

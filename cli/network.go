@@ -6,17 +6,54 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
 )
+
+type networkConfig struct {
+	ID      string
+	builder func(containerName string) *network.EndpointSettings
+}
 
 func k3dNetworkName(clusterName string) string {
 	return fmt.Sprintf("k3d-%s", clusterName)
 }
 
+// createJoinableNetwork creates bridge network that can be joined by another
+// containers grouped in a cluster to allow communication overall multiple clusters
+// if the requested network doesn't exist, it will be created
+func createJoinableNetwork(networkName string) (*networkConfig, error) {
+	endpointBuilder := func(containerName string) *network.EndpointSettings {
+		return &network.EndpointSettings{
+			Aliases: []string{containerName},
+		}
+	}
 
-func createJoinableNetwork(clusterName string, networkName string) error {
-	return nil
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return nil, fmt.Errorf(" Couldn't create docker client\n%+v", err)
+	}
+
+	args := filters.NewArgs()
+	args.Add("name", networkName)
+	nl, err := docker.NetworkList(ctx, types.NetworkListOptions{Filters: args})
+	if err != nil {
+		return nil, fmt.Errorf("Failed to list networks\n%+v", err)
+	}
+
+	if len(nl) > 0 {
+		return &networkConfig{ID: nl[0].ID, builder: endpointBuilder}, nil
+	}
+
+	// create the network with a set of labels and the cluster name as network name
+	resp, err := docker.NetworkCreate(ctx, networkName, types.NetworkCreate{})
+	if err != nil {
+		return nil, fmt.Errorf(" Couldn't create network\n%+v", err)
+	}
+
+	return &networkConfig{ID: resp.ID, builder: endpointBuilder}, nil
 }
 
 // createClusterNetwork creates a docker network for a cluster that will be used
