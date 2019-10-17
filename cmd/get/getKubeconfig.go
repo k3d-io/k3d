@@ -22,9 +22,9 @@ THE SOFTWARE.
 package get
 
 import (
+	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	"github.com/spf13/cobra"
-	"github.com/rancher/k3d/pkg/cluster"
 
 	log "github.com/sirupsen/logrus"
 )
