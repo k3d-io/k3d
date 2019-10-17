@@ -26,9 +26,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/docker/docker/api/types/filters"
-
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
@@ -63,6 +62,27 @@ func (d Docker) DeleteNode(nodeSpec *k3d.Node) error {
 // GetNodesByLabel returns a list of existing nodes
 func (d Docker) GetNodesByLabel(labels map[string]string) ([]*k3d.Node, error) {
 
+	// (0) get containers
+	containers, err := getContainersByLabel(labels)
+	if err != nil {
+		return nil, err
+	}
+
+	// (1) convert them to node structs
+	nodes := []*k3d.Node{}
+	for _, container := range containers {
+		node, err := TranslateContainerToNode(&container)
+		if err != nil {
+			return nil, err
+		}
+		nodes = append(nodes, node)
+	}
+
+	return nodes, nil
+
+}
+
+func getContainersByLabel(labels map[string]string) ([]types.Container, error) {
 	// (0) create docker client
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -87,17 +107,5 @@ func (d Docker) GetNodesByLabel(labels map[string]string) ([]*k3d.Node, error) {
 		log.Errorln("Failed to list containers")
 		return nil, err
 	}
-
-	// (2) convert them to node structs
-	nodes := []*k3d.Node{}
-	for _, container := range containers {
-		node, err := TranslateContainerToNode(&container)
-		if err != nil {
-			return nil, err
-		}
-		nodes = append(nodes, node)
-	}
-
-	return nodes, nil
-
+	return containers, nil
 }

@@ -24,12 +24,15 @@ package docker
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -123,5 +126,38 @@ func pullImage(ctx *context.Context, docker *client.Client, image string) error 
 	}
 
 	return nil
+
+}
+
+func getNodeContainer(node *k3d.Node) (*types.Container, error) {
+	// (0) create docker client
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return nil, err
+	}
+
+	// (1) list containers which have the default k3d labels attached
+	filters := filters.NewArgs()
+	for k, v := range node.Labels {
+		filters.Add("label", fmt.Sprintf("%s=%s", k, v))
+	}
+	filters.Add("name", node.Name)
+
+	containers, err := docker.ContainerList(ctx, types.ContainerListOptions{
+		Filters: filters,
+	})
+	if err != nil {
+		log.Errorln("Failed to list containers")
+		return nil, err
+	}
+
+	if len(containers) > 1 {
+		log.Errorln("Failed to get a single container")
+		return nil, err
+	}
+
+	return &containers[0], nil
 
 }

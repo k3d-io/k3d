@@ -27,6 +27,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// GetKubeconfig grabs the kubeconfig file from /output from a master node container and puts it into a local directory
 func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) error {
 	masterNodes, err := runtime.GetNodesByLabel(map[string]string{"k3d.cluster": cluster.Name, "k3d.role": string(k3d.MasterRole)})
 	if err != nil {

@@ -22,7 +22,9 @@ THE SOFTWARE.
 package get
 
 import (
+	"github.com/rancher/k3d/pkg/runtimes"
 	"github.com/spf13/cobra"
+	"github.com/rancher/k3d/pkg/cluster"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -37,6 +39,8 @@ func NewCmdGetKubeconfig() *cobra.Command {
 		Long:  `Get kubeconfig.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("get kubeconfig called")
+			rt := parseGetKubeconfigCmd(cmd, args)
+			cluster.GetKubeConfig()
 		},
 	}
 
@@ -44,4 +48,17 @@ func NewCmdGetKubeconfig() *cobra.Command {
 
 	// done
 	return cmd
+}
+
+func parseGetKubeconfigCmd(cmd *cobra.Command, args []string) runtimes.Runtime {
+	// --runtime
+	rt, err := cmd.Flags().GetString("runtime")
+	if err != nil {
+		log.Fatalln("No runtime specified")
+	}
+	runtime, err := runtimes.GetRuntime(rt)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return runtime
 }
