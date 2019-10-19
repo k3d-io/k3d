@@ -379,6 +379,9 @@ func GetKubeConfig(c *cli.Context) error {
 	for _, cluster := range clusters {
 		kubeConfigPath, err := getKubeConfig(cluster.name)
 		if err != nil {
+			if !c.Bool("all") {
+				return err
+			}
 			log.Println(err)
 			continue
 		}
