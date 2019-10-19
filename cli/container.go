@@ -112,6 +112,7 @@ func createServer(spec *ClusterSpec) (string, error) {
 	hostConfig := &container.HostConfig{
 		PortBindings: serverPublishedPorts.PortBindings,
 		Privileged:   true,
+		Init:         &[]bool{true}[0],
 	}
 
 	if spec.AutoRestart {
