@@ -24,7 +24,8 @@ You have several options there:
   - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.3.1 bash`
   - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.3.1 bash`
 
-- (MacOS only!) Use [Homebrew](https://brew.sh): `brew install k3d`
+- Use [Homebrew](https://brew.sh): `brew install k3d` (Homebrew is avaiable for MacOS and Linux)
+  - Formula can be found in [homebrew/homebrew-core](https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb) and is mirrored to [homebrew/linuxbrew-core](https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb)
 - Grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
 - Via go: `go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
 
