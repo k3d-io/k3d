@@ -199,14 +199,13 @@ func getKubeConfig(cluster string) (string, error) {
 }
 
 // printClusters prints the names of existing clusters
-func printClusters() {
+func printClusters() error {
 	clusters, err := getClusters(true, "")
 	if err != nil {
 		log.Fatalf("Couldn't list clusters\n%+v", err)
 	}
 	if len(clusters) == 0 {
-		log.Printf("No clusters found!")
-		return
+		return fmt.Errorf("No clusters found")
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
@@ -226,6 +225,7 @@ func printClusters() {
 	}
 
 	table.Render()
+	return nil
 }
 
 // Classify cluster state: Running, Stopped or Abnormal

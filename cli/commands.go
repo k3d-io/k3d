@@ -246,6 +246,10 @@ func DeleteCluster(c *cli.Context) error {
 		return err
 	}
 
+	if len(clusters) == 0 {
+		return fmt.Errorf("No cluster(s) found")
+	}
+
 	// remove clusters one by one instead of appending all names to the docker command
 	// this allows for more granular error handling and logging
 	for _, cluster := range clusters {
@@ -365,7 +369,9 @@ func ListClusters(c *cli.Context) error {
 		log.Info("--all is on by default, thus no longer required. This option will be removed in v2.0.0")
 
 	}
-	printClusters()
+	if err := printClusters(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -374,6 +380,10 @@ func GetKubeConfig(c *cli.Context) error {
 	clusters, err := getClusters(c.Bool("all"), c.String("name"))
 	if err != nil {
 		return err
+	}
+
+	if len(clusters) == 0 {
+		return fmt.Errorf("No cluster(s) found")
 	}
 
 	for _, cluster := range clusters {
