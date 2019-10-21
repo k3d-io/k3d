@@ -11,6 +11,15 @@ const (
 	DefaultServerCount = 1
 )
 
+// defaultNodes describes the type of nodes on which a port should be exposed by default
+const defaultNodes = "server"
+
+// mapping a node role to groups that should be applied to it
+var nodeRuleGroupsMap = map[string][]string{
+	"worker": {"all", "workers", "agents"},
+	"server": {"all", "server", "master"},
+}
+
 // Cluster describes an existing cluster
 type Cluster struct {
 	name        string
@@ -32,8 +41,7 @@ type ClusterSpec struct {
 	NodeToPortSpecMap map[string][]string
 	PortAutoOffset    int
 	ServerArgs        []string
-	Verbose           bool
-	Volumes           []string
+	Volumes           *Volumes
 }
 
 // PublishedPorts is a struct used for exposing container ports on the host system

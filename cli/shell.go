@@ -47,7 +47,7 @@ func subShell(cluster, shell, command string) error {
 		}
 	}
 	if !supported {
-		return fmt.Errorf("ERROR: selected shell [%s] is not supported", shell)
+		return fmt.Errorf("selected shell [%s] is not supported", shell)
 	}
 
 	// get kubeconfig for selected cluster

@@ -3,11 +3,11 @@ package run
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	log "github.com/sirupsen/logrus"
 )
 
 func k3dNetworkName(clusterName string) string {
@@ -20,7 +20,7 @@ func createClusterNetwork(clusterName string) (string, error) {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return "", fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	args := filters.NewArgs()
@@ -32,7 +32,7 @@ func createClusterNetwork(clusterName string) (string, error) {
 	}
 
 	if len(nl) > 1 {
-		log.Printf("WARNING: Found %d networks for %s when we only expect 1\n", len(nl), clusterName)
+		log.Warningf("Found %d networks for %s when we only expect 1\n", len(nl), clusterName)
 	}
 
 	if len(nl) > 0 {
@@ -47,7 +47,7 @@ func createClusterNetwork(clusterName string) (string, error) {
 		},
 	})
 	if err != nil {
-		return "", fmt.Errorf("ERROR: couldn't create network\n%+v", err)
+		return "", fmt.Errorf(" Couldn't create network\n%+v", err)
 	}
 
 	return resp.ID, nil
@@ -58,7 +58,7 @@ func deleteClusterNetwork(clusterName string) error {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	filters := filters.NewArgs()
@@ -69,13 +69,13 @@ func deleteClusterNetwork(clusterName string) error {
 		Filters: filters,
 	})
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't find network for cluster %s\n%+v", clusterName, err)
+		return fmt.Errorf(" Couldn't find network for cluster %s\n%+v", clusterName, err)
 	}
 
 	// there should be only one network that matches the name... but who knows?
 	for _, network := range networks {
 		if err := docker.NetworkRemove(ctx, network.ID); err != nil {
-			log.Printf("WARNING: couldn't remove network for cluster %s\n%+v", clusterName, err)
+			log.Warningf("couldn't remove network for cluster %s\n%+v", clusterName, err)
 			continue
 		}
 	}

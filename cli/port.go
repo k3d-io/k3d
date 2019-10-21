@@ -2,20 +2,11 @@ package run
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/docker/go-connections/nat"
+	log "github.com/sirupsen/logrus"
 )
-
-// defaultNodes describes the type of nodes on which a port should be exposed by default
-const defaultNodes = "server"
-
-// mapping a node role to groups that should be applied to it
-var nodeRuleGroupsMap = map[string][]string{
-	"worker": {"all", "workers", "agents"},
-	"server": {"all", "server", "master"},
-}
 
 // mapNodesToPortSpecs maps nodes to portSpecs
 func mapNodesToPortSpecs(specs []string, createdNodes []string) (map[string][]string, error) {
@@ -48,7 +39,7 @@ func mapNodesToPortSpecs(specs []string, createdNodes []string) (map[string][]st
 				}
 			}
 			if !nodeFound {
-				log.Printf("WARNING: Unknown node-specifier [%s] in port mapping entry [%s]", node, spec)
+				log.Warningf("Unknown node-specifier [%s] in port mapping entry [%s]", node, spec)
 			}
 		}
 	}
@@ -74,12 +65,12 @@ func validatePortSpecs(specs []string) error {
 		atSplit := strings.Split(spec, "@")
 		_, err := nat.ParsePortSpec(atSplit[0])
 		if err != nil {
-			return fmt.Errorf("ERROR: Invalid port specification [%s] in port mapping [%s]\n%+v", atSplit[0], spec, err)
+			return fmt.Errorf("Invalid port specification [%s] in port mapping [%s]\n%+v", atSplit[0], spec, err)
 		}
 		if len(atSplit) > 0 {
 			for i := 1; i < len(atSplit); i++ {
 				if err := ValidateHostname(atSplit[i]); err != nil {
-					return fmt.Errorf("ERROR: Invalid node-specifier [%s] in port mapping [%s]\n%+v", atSplit[i], spec, err)
+					return fmt.Errorf("Invalid node-specifier [%s] in port mapping [%s]\n%+v", atSplit[i], spec, err)
 				}
 			}
 		}

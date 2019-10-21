@@ -55,10 +55,10 @@ const clusterNameMaxSize int = 35
 // within the 64 characters limit.
 func CheckClusterName(name string) error {
 	if err := ValidateHostname(name); err != nil {
-		return fmt.Errorf("[ERROR] Invalid cluster name\n%+v", ValidateHostname(name))
+		return fmt.Errorf("Invalid cluster name\n%+v", ValidateHostname(name))
 	}
 	if len(name) > clusterNameMaxSize {
-		return fmt.Errorf("[ERROR] Cluster name is too long (%d > %d)", len(name), clusterNameMaxSize)
+		return fmt.Errorf("Cluster name is too long (%d > %d)", len(name), clusterNameMaxSize)
 	}
 	return nil
 }
@@ -67,11 +67,11 @@ func CheckClusterName(name string) error {
 func ValidateHostname(name string) error {
 
 	if len(name) == 0 {
-		return fmt.Errorf("[ERROR] no name provided")
+		return fmt.Errorf("no name provided")
 	}
 
 	if name[0] == '-' || name[len(name)-1] == '-' {
-		return fmt.Errorf("[ERROR] Hostname [%s] must not start or end with - (dash)", name)
+		return fmt.Errorf("Hostname [%s] must not start or end with - (dash)", name)
 	}
 
 	for _, c := range name {
@@ -82,7 +82,7 @@ func ValidateHostname(name string) error {
 		case c == '-':
 			break
 		default:
-			return fmt.Errorf("[ERROR] Hostname [%s] contains characters other than 'Aa-Zz', '0-9' or '-'", name)
+			return fmt.Errorf("Hostname [%s] contains characters other than 'Aa-Zz', '0-9' or '-'", name)
 
 		}
 	}
@@ -115,7 +115,7 @@ func parseAPIPort(portSpec string) (*apiPort, error) {
 	}
 
 	if p < 0 || p > 65535 {
-		return nil, fmt.Errorf("ERROR: --api-port port value out of range")
+		return nil, fmt.Errorf("--api-port port value out of range")
 	}
 
 	return port, nil

@@ -7,7 +7,6 @@ package run
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -15,6 +14,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -29,7 +29,7 @@ func CheckTools(c *cli.Context) error {
 	ping, err := docker.Ping(ctx)
 
 	if err != nil {
-		return fmt.Errorf("ERROR: checking docker failed\n%+v", err)
+		return fmt.Errorf(" Checking docker failed\n%+v", err)
 	}
 	log.Printf("SUCCESS: Checking docker succeeded (API: v%s)\n", ping.APIVersion)
 	return nil
@@ -69,7 +69,7 @@ func CreateCluster(c *cli.Context) error {
 		return err
 	} else if len(cluster) != 0 {
 		// A cluster exists with the same name. Return with an error.
-		return fmt.Errorf("ERROR: Cluster %s already exists", c.String("name"))
+		return fmt.Errorf(" Cluster %s already exists", c.String("name"))
 	}
 
 	/*
@@ -129,7 +129,7 @@ func CreateCluster(c *cli.Context) error {
 		// In case of error, Log a warning message, and continue on. Since it more likely caused by a miss configured
 		// DOCKER_MACHINE_NAME environment variable.
 		if err != nil {
-			log.Printf("WARNING: Failed to get docker machine IP address, ignoring the DOCKER_MACHINE_NAME environment variable setting.\n")
+			log.Warning("Failed to get docker machine IP address, ignoring the DOCKER_MACHINE_NAME environment variable setting.")
 		}
 	}
 
@@ -166,12 +166,6 @@ func CreateCluster(c *cli.Context) error {
 	}
 
 	/*
-	 * --volume, -v
-	 * List of volumes: host directory mounts for some or all k3d node containers in the cluster
-	 */
-	volumes := c.StringSlice("volume")
-
-	/*
 	 * Image Volume
 	 * A docker volume that will be shared by every k3d node container in the cluster.
 	 * This volume will be used for the `import-image` command.
@@ -183,7 +177,19 @@ func CreateCluster(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	volumes = append(volumes, fmt.Sprintf("%s:/images", imageVolume.Name))
+
+	/*
+	 * --volume, -v
+	 * List of volumes: host directory mounts for some or all k3d node containers in the cluster
+	 */
+	volumes := c.StringSlice("volume")
+
+	volumesSpec, err := NewVolumes(volumes)
+	if err != nil {
+		return err
+	}
+
+	volumesSpec.DefaultVolumes = append(volumesSpec.DefaultVolumes, fmt.Sprintf("%s:/images", imageVolume.Name))
 
 	/*
 	 * clusterSpec
@@ -199,8 +205,7 @@ func CreateCluster(c *cli.Context) error {
 		NodeToPortSpecMap: portmap,
 		PortAutoOffset:    c.Int("port-auto-offset"),
 		ServerArgs:        k3sServerArgs,
-		Verbose:           c.GlobalBool("verbose"),
-		Volumes:           volumes,
+		Volumes:           volumesSpec,
 	}
 
 	/******************
@@ -278,6 +283,10 @@ func DeleteCluster(c *cli.Context) error {
 		return err
 	}
 
+	if len(clusters) == 0 {
+		return fmt.Errorf("No cluster(s) found")
+	}
+
 	// remove clusters one by one instead of appending all names to the docker command
 	// this allows for more granular error handling and logging
 	for _, cluster := range clusters {
@@ -295,19 +304,19 @@ func DeleteCluster(c *cli.Context) error {
 		deleteClusterDir(cluster.name)
 		log.Println("...Removing server")
 		if err := removeContainer(cluster.server.ID); err != nil {
-			return fmt.Errorf("ERROR: Couldn't remove server for cluster %s\n%+v", cluster.name, err)
+			return fmt.Errorf(" Couldn't remove server for cluster %s\n%+v", cluster.name, err)
 		}
 
 		if err := deleteClusterNetwork(cluster.name); err != nil {
-			log.Printf("WARNING: couldn't delete cluster network for cluster %s\n%+v", cluster.name, err)
+			log.Warningf("Couldn't delete cluster network for cluster %s\n%+v", cluster.name, err)
 		}
 
 		log.Println("...Removing docker image volume")
 		if err := deleteImageVolume(cluster.name); err != nil {
-			log.Printf("WARNING: couldn't delete image docker volume for cluster %s\n%+v", cluster.name, err)
+			log.Warningf("Couldn't delete image docker volume for cluster %s\n%+v", cluster.name, err)
 		}
 
-		log.Printf("SUCCESS: removed cluster [%s]", cluster.name)
+		log.Infof("Removed cluster [%s]", cluster.name)
 	}
 
 	return nil
@@ -324,7 +333,7 @@ func StopCluster(c *cli.Context) error {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	// remove clusters one by one instead of appending all names to the docker command
@@ -342,10 +351,10 @@ func StopCluster(c *cli.Context) error {
 		}
 		log.Println("...Stopping server")
 		if err := docker.ContainerStop(ctx, cluster.server.ID, nil); err != nil {
-			return fmt.Errorf("ERROR: Couldn't stop server for cluster %s\n%+v", cluster.name, err)
+			return fmt.Errorf(" Couldn't stop server for cluster %s\n%+v", cluster.name, err)
 		}
 
-		log.Printf("SUCCESS: Stopped cluster [%s]", cluster.name)
+		log.Infof("Stopped cluster [%s]", cluster.name)
 	}
 
 	return nil
@@ -362,7 +371,7 @@ func StartCluster(c *cli.Context) error {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	// remove clusters one by one instead of appending all names to the docker command
@@ -372,7 +381,7 @@ func StartCluster(c *cli.Context) error {
 
 		log.Println("...Starting server")
 		if err := docker.ContainerStart(ctx, cluster.server.ID, types.ContainerStartOptions{}); err != nil {
-			return fmt.Errorf("ERROR: Couldn't start server for cluster %s\n%+v", cluster.name, err)
+			return fmt.Errorf(" Couldn't start server for cluster %s\n%+v", cluster.name, err)
 		}
 
 		if len(cluster.workers) > 0 {
@@ -393,20 +402,37 @@ func StartCluster(c *cli.Context) error {
 
 // ListClusters prints a list of created clusters
 func ListClusters(c *cli.Context) error {
-	printClusters()
+	if err := printClusters(); err != nil {
+		return err
+	}
 	return nil
 }
 
 // GetKubeConfig grabs the kubeconfig from the running cluster and prints the path to stdout
 func GetKubeConfig(c *cli.Context) error {
-	cluster := c.String("name")
-	kubeConfigPath, err := getKubeConfig(cluster)
+	clusters, err := getClusters(c.Bool("all"), c.String("name"))
 	if err != nil {
 		return err
 	}
 
-	// output kubeconfig file path to stdout
-	fmt.Println(kubeConfigPath)
+	if len(clusters) == 0 {
+		return fmt.Errorf("No cluster(s) found")
+	}
+
+	for _, cluster := range clusters {
+		kubeConfigPath, err := getKubeConfig(cluster.name)
+		if err != nil {
+			if !c.Bool("all") {
+				return err
+			}
+			log.Println(err)
+			continue
+		}
+
+		// output kubeconfig file path to stdout
+		fmt.Println(kubeConfigPath)
+	}
+
 	return nil
 }
 
@@ -446,8 +472,7 @@ func AddNode(c *cli.Context) error {
 		NodeToPortSpecMap: nil,
 		PortAutoOffset:    0,
 		ServerArgs:        nil,
-		Verbose:           false,
-		Volumes:           nil,
+		Volumes:           &Volumes{},
 	}
 
 	/* (0.1)
@@ -465,7 +490,7 @@ func AddNode(c *cli.Context) error {
 
 	// TODO: support adding server nodes
 	if nodeRole != "worker" && nodeRole != "agent" {
-		return fmt.Errorf("ERROR: adding nodes of type '%s' is not supported", nodeRole)
+		return fmt.Errorf("Adding nodes of type '%s' is not supported", nodeRole)
 	}
 
 	/* (0.2)
@@ -498,7 +523,12 @@ func AddNode(c *cli.Context) error {
 	 * --volume, -v
 	 * Add volume mounts
 	 */
-	clusterSpec.Volumes = append(clusterSpec.Volumes, c.StringSlice("volume")...)
+	volumeSpec, err := NewVolumes(c.StringSlice("volume"))
+	if err != nil {
+		return err
+	}
+	// TODO: volumeSpec.DefaultVolumes = append(volumeSpec.DefaultVolumes, "%s:/images", imageVolume.Name)
+	clusterSpec.Volumes = volumeSpec
 
 	/* (0.5) BREAKOUT
 	 * --k3s <url>
@@ -506,7 +536,7 @@ func AddNode(c *cli.Context) error {
 	 */
 
 	if c.IsSet("k3s") {
-		log.Printf("INFO: Adding %d %s-nodes to k3s cluster %s...\n", nodeCount, nodeRole, c.String("k3s"))
+		log.Infof("Adding %d %s-nodes to k3s cluster %s...\n", nodeCount, nodeRole, c.String("k3s"))
 		if _, err := createClusterNetwork(clusterName); err != nil {
 			return err
 		}
@@ -523,7 +553,8 @@ func AddNode(c *cli.Context) error {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't create docker client\n%+v", err)
+		log.Errorln("Failed to create docker client")
+		return err
 	}
 
 	filters := filters.NewArgs()
@@ -539,7 +570,8 @@ func AddNode(c *cli.Context) error {
 		Filters: filters,
 	})
 	if err != nil || len(serverList) == 0 {
-		return fmt.Errorf("ERROR: coudln't get server container for cluster %s\n%+v", clusterName, err)
+		log.Errorf("Failed to get server container for cluster '%s'", clusterName)
+		return err
 	}
 
 	/*
@@ -547,7 +579,8 @@ func AddNode(c *cli.Context) error {
 	 */
 	serverContainer, err := docker.ContainerInspect(ctx, serverList[0].ID)
 	if err != nil {
-		return fmt.Errorf("ERROR: couldn't inspect server container [%s] to get cluster secret\n%+v", serverList[0].ID, err)
+		log.Errorf("Failed to inspect server container '%s' to get cluster secret", serverList[0].ID)
+		return err
 	}
 
 	/*
@@ -560,7 +593,7 @@ func AddNode(c *cli.Context) error {
 		}
 	}
 	if clusterSecretEnvVar == "" {
-		return fmt.Errorf("ERROR: couldn't get cluster secret from server container")
+		return fmt.Errorf("Failed to get cluster secret from server container")
 	}
 
 	clusterSpec.Env = append(clusterSpec.Env, clusterSecretEnvVar)
@@ -575,7 +608,7 @@ func AddNode(c *cli.Context) error {
 		}
 	}
 	if serverListenPort == "" {
-		return fmt.Errorf("ERROR: couldn't get https-listen-port form server container")
+		return fmt.Errorf("Failed to get https-listen-port from server container")
 	}
 
 	serverURLEnvVar := fmt.Sprintf("K3S_URL=https://%s:%s", strings.TrimLeft(serverContainer.Name, "/"), serverListenPort)
@@ -590,7 +623,8 @@ func AddNode(c *cli.Context) error {
 		Filters: filters,
 	})
 	if err != nil || len(networkList) == 0 {
-		return fmt.Errorf("ERROR: couldn't find network for cluster %s\n%+v", clusterName, err)
+		log.Errorf("Failed to find network for cluster '%s'", clusterName)
+		return err
 	}
 
 	/*
@@ -606,14 +640,16 @@ func AddNode(c *cli.Context) error {
 			All:     true,
 		})
 		if err != nil {
-			return fmt.Errorf("ERROR: couldn't list worker node containers\n%+v", err)
+			log.Errorln("Failed to list worker node containers")
+			return err
 		}
 
 		for _, worker := range workerList {
 			split := strings.Split(worker.Names[0], "-")
 			currSuffix, err := strconv.Atoi(split[len(split)-1])
 			if err != nil {
-				return fmt.Errorf("ERROR: failed to get highest worker suffix\n%+v", err)
+				log.Errorln("Failed to get highest worker suffix")
+				return err
 			}
 			if currSuffix > highestExistingWorkerSuffix {
 				highestExistingWorkerSuffix = currSuffix
@@ -625,7 +661,7 @@ func AddNode(c *cli.Context) error {
 	 * (3) Create the nodes with configuration that automatically joins them to the cluster
 	 */
 
-	log.Printf("INFO: Adding %d %s-nodes to k3d cluster %s...\n", nodeCount, nodeRole, clusterName)
+	log.Infof("Adding %d %s-nodes to k3d cluster %s...\n", nodeCount, nodeRole, clusterName)
 
 	if err := createNodes(clusterSpec, nodeRole, highestExistingWorkerSuffix+1, nodeCount); err != nil {
 		return err
@@ -662,9 +698,10 @@ func createNodes(clusterSpec *ClusterSpec, role string, suffixNumberStart int, c
 			containerID, err = createServer(clusterSpec)
 		}
 		if err != nil {
-			return fmt.Errorf("ERROR: Couldn't create %s-node!\n%+v", role, err)
+			log.Errorf("Failed to create %s-node", role)
+			return err
 		}
-		log.Printf("INFO: Created %s-node with ID %s\n", role, containerID)
+		log.Infof("Created %s-node with ID %s", role, containerID)
 	}
 	return nil
 }
