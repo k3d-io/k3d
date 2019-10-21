@@ -21,8 +21,8 @@ You have several options there:
   - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
   - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
 - use the install script to grab a specific release (via `TAG` environment variable):
-  - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.3.1 bash`
-  - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.3.1 bash`
+  - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.3.4 bash`
+  - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.3.4 bash`
 
 - Use [Homebrew](https://brew.sh): `brew install k3d` (Homebrew is avaiable for MacOS and Linux)
   - Formula can be found in [homebrew/homebrew-core](https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb) and is mirrored to [homebrew/linuxbrew-core](https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb)
