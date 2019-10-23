@@ -20,16 +20,9 @@ func k3dNetworkName(clusterName string) string {
 	return fmt.Sprintf("k3d-%s", clusterName)
 }
 
-// createJoinableNetwork creates bridge network that can be joined by another
-// containers grouped in a cluster to allow communication overall multiple clusters
-// if the requested network doesn't exist, it will be created
-func createJoinableNetwork(networkName string) (*networkConfig, error) {
-	endpointBuilder := func(containerName string) *network.EndpointSettings {
-		return &network.EndpointSettings{
-			Aliases: []string{containerName},
-		}
-	}
-
+// checkIfNetworkExists checks if the specified network exists or not
+// if not, an error will be thrown
+func checkIfNetworkExists(networkName string) (*networkConfig, error) {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -43,17 +36,17 @@ func createJoinableNetwork(networkName string) (*networkConfig, error) {
 		return nil, fmt.Errorf("Failed to list networks\n%+v", err)
 	}
 
-	if len(nl) > 0 {
-		return &networkConfig{ID: nl[0].ID, builder: endpointBuilder}, nil
+	if len(nl) == 0 {
+		return nil, fmt.Errorf("network '%s' doesn't exist, make sure to create it first", networkName)
 	}
 
-	// create the network with a set of labels and the cluster name as network name
-	resp, err := docker.NetworkCreate(ctx, networkName, types.NetworkCreate{})
-	if err != nil {
-		return nil, fmt.Errorf(" Couldn't create network\n%+v", err)
+	endpointBuilder := func(containerName string) *network.EndpointSettings {
+		return &network.EndpointSettings{
+			Aliases: []string{containerName},
+		}
 	}
 
-	return &networkConfig{ID: resp.ID, builder: endpointBuilder}, nil
+	return &networkConfig{ID: nl[0].ID, builder: endpointBuilder}, nil
 }
 
 // createClusterNetwork creates a docker network for a cluster that will be used

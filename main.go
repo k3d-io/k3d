@@ -136,7 +136,7 @@ func main() {
 				},
 				cli.StringFlag{
 					Name:  "network",
-					Usage: "Connect the cluster to specified network, if <network> doesn't exist it will be created. Note that the created network will be prefixed with k3d-",
+					Usage: "Connect the cluster to specified network, make sure the network you want to connect with exists",
 				},
 			},
 			Action: run.CreateCluster,
