@@ -257,7 +257,6 @@ rules:
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-# This role binding allows "jane" to read pods in the "default" namespace.
 kind: ClusterRoleBinding
 metadata:
   name: rancher
