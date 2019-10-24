@@ -56,7 +56,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 	}
 
 	// add flags
-	cmd.Flags().StringP("output", "o", "", "Define output.")
+	cmd.Flags().StringP("output", "o", "", "Define output [ - | <file> ]")
 
 	// done
 	return cmd
