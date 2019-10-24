@@ -28,6 +28,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 	k3d "github.com/rancher/k3d/pkg/types"
+	log "github.com/sirupsen/logrus"
 )
 
 // TranslateNodeToContainer translates a k3d node specification to a docker container representation
@@ -78,8 +79,13 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	// containerConfig.Volumes = map[string]struct{}{} // TODO: do we need this? We only used binds before
 
 	/* Ports */
-	containerConfig.ExposedPorts = nat.PortSet{} // TODO: translate from node.Ports to nat.PortSet
-	hostConfig.PortBindings = nat.PortMap{}      // TODO: this and exposedPorts required?
+	exposedPorts, portBindings, err := nat.ParsePortSpecs(node.Ports)
+	if err != nil {
+		log.Errorln("Failed to parse port specs")
+		return nil, err
+	}
+	containerConfig.ExposedPorts = exposedPorts
+	hostConfig.PortBindings = portBindings
 
 	/* Network */
 	networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
