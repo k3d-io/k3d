@@ -24,6 +24,7 @@ package get
 import (
 	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
+	k3d "github.com/rancher/k3d/pkg/types"
 	"github.com/spf13/cobra"
 
 	log "github.com/sirupsen/logrus"
@@ -39,8 +40,8 @@ func NewCmdGetKubeconfig() *cobra.Command {
 		Long:  `Get kubeconfig.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("get kubeconfig called")
-			rt := parseGetKubeconfigCmd(cmd, args)
-			cluster.GetKubeConfig()
+			rt, c := parseGetKubeconfigCmd(cmd, args)
+			cluster.GetKubeconfig(rt, c)
 		},
 	}
 
@@ -50,7 +51,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 	return cmd
 }
 
-func parseGetKubeconfigCmd(cmd *cobra.Command, args []string) runtimes.Runtime {
+func parseGetKubeconfigCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, *k3d.Cluster) {
 	// --runtime
 	rt, err := cmd.Flags().GetString("runtime")
 	if err != nil {
@@ -60,5 +61,5 @@ func parseGetKubeconfigCmd(cmd *cobra.Command, args []string) runtimes.Runtime {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	return runtime
+	return runtime, &k3d.Cluster{Name: args[0]} // TODO: validate first?
 }
