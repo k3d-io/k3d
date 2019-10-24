@@ -22,6 +22,8 @@ THE SOFTWARE.
 package get
 
 import (
+	"fmt"
+
 	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -40,18 +42,27 @@ func NewCmdGetKubeconfig() *cobra.Command {
 		Long:  `Get kubeconfig.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("get kubeconfig called")
-			rt, c := parseGetKubeconfigCmd(cmd, args)
-			cluster.GetKubeconfig(rt, c)
+			rt, c, path := parseGetKubeconfigCmd(cmd, args)
+			kubeconfigpath, err := cluster.GetKubeconfigPath(rt, c, path)
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			// only print kubeconfig file path if output is not stdout ("-")
+			if path != "-" {
+				fmt.Println(kubeconfigpath)
+			}
 		},
 	}
 
-	// add subcommands
+	// add flags
+	cmd.Flags().StringP("output", "o", "", "Define output.")
 
 	// done
 	return cmd
 }
 
-func parseGetKubeconfigCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, *k3d.Cluster) {
+func parseGetKubeconfigCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, *k3d.Cluster, string) {
 	// --runtime
 	rt, err := cmd.Flags().GetString("runtime")
 	if err != nil {
@@ -61,5 +72,12 @@ func parseGetKubeconfigCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	if err != nil {
 		log.Fatalln(err)
 	}
-	return runtime, &k3d.Cluster{Name: args[0]} // TODO: validate first?
+
+	// --output
+	output, err := cmd.Flags().GetString("output")
+	if err != nil {
+		log.Fatalln("No output specified")
+	}
+
+	return runtime, &k3d.Cluster{Name: args[0]}, output // TODO: validate first
 }

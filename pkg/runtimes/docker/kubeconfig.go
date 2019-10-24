@@ -23,25 +23,35 @@ THE SOFTWARE.
 package docker
 
 import (
+	"context"
+	"io"
+
+	"github.com/docker/docker/client"
 	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
 // GetKubeconfig grabs the kubeconfig from inside a k3d node
-func (d Docker) GetKubeconfig(node *k3d.Node) error {
-	/*ctx := context.Background
+func (d Docker) GetKubeconfig(node *k3d.Node) (io.ReadCloser, error) {
+	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")
-		return err
-	}*/
+		return nil, err
+	}
 
 	container, err := getNodeContainer(node)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	log.Debugf("Container: %+v", container)
 
-	return nil
+	reader, _, err := docker.CopyFromContainer(ctx, container.ID, "/output/kubeconfig.yaml")
+	if err != nil {
+		log.Errorf("Failed to copy from container '%s'", container.ID)
+		return nil, err
+	}
+
+	return reader, nil
 }

@@ -23,6 +23,7 @@ package runtimes
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/rancher/k3d/pkg/runtimes/containerd"
 	"github.com/rancher/k3d/pkg/runtimes/docker"
@@ -41,7 +42,7 @@ type Runtime interface {
 	DeleteNode(*k3d.Node) error
 	GetNodesByLabel(map[string]string) ([]*k3d.Node, error)
 	CreateNetworkIfNotPresent(name string) (string, error)
-	GetKubeconfig(*k3d.Node) error
+	GetKubeconfig(*k3d.Node) (io.ReadCloser, error)
 	// StartContainer() error
 	// ExecContainer() error
 	// StopContainer() error
