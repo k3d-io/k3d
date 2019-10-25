@@ -22,8 +22,6 @@ THE SOFTWARE.
 package create
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/rancher/k3d/pkg/cluster"
@@ -120,6 +118,10 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	if err != nil {
 		log.Fatalln(err)
 	}
+	exposeAPI, err := cluster.ParseAPIPort(apiPort)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	// --volume
 	volumes, err := cmd.Flags().GetStringSlice("volume")
@@ -144,14 +146,13 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	// -> master nodes
 	for i := 0; i < masterCount; i++ {
 		node := k3d.Node{
-			Role:    k3d.MasterRole,
-			Image:   image,
-			Volumes: volumes, // add only volumes for `all`, `masters`, `master[i]` and `k3d-<name>-master-<i>`
-			Labels:  make(map[string]string, 1),
+			Role:       k3d.MasterRole,
+			Image:      image,
+			Volumes:    volumes, // add only volumes for `all`, `masters`, `master[i]` and `k3d-<name>-master-<i>`
+			MasterOpts: k3d.MasterOpts{},
 		}
 		if i == 0 {
-			node.Ports = append(node.Ports, fmt.Sprintf("0.0.0.0:%s:6443/tcp", apiPort)) // TODO: update (choose interface, enable more than one master) and get '6443' from defaultport variable
-			node.Labels["k3d.master.apiPort"] = apiPort
+			node.MasterOpts.ExposeAPI = exposeAPI
 		}
 		cluster.Nodes = append(cluster.Nodes, node)
 	}
@@ -164,6 +165,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 			Volumes: volumes, // add only volumes for `all`, `workers`, `worker[i]` and `k3d-<name>-worker-<i>`
 		}
 		cluster.Nodes = append(cluster.Nodes, node)
+
 	}
 
 	return runtime, cluster

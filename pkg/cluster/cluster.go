@@ -71,7 +71,9 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	for _, node := range cluster.Nodes {
 
 		// cluster specific settings
-		node.Labels = make(map[string]string)
+		if node.Labels == nil {
+			node.Labels = make(map[string]string) // TODO: maybe create an init function?
+		}
 		node.Labels["k3d.cluster"] = cluster.Name
 		node.Env = append(node.Env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", cluster.Secret))
 

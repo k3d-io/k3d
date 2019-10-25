@@ -114,5 +114,26 @@ func patchWorkerSpec(node *k3d.Node) error {
 func patchMasterSpec(node *k3d.Node) error {
 	node.Args = append([]string{"server"}, node.Args...)
 	node.Labels["k3d.role"] = string(k3d.MasterRole) // TODO: maybe put those in a global var DefaultMasterNodeSpec?
+
+	hostIP := "0.0.0.0" // TODO: from defaults
+	apiPort := "6443"   // TODO: from defaults
+
+	if node.MasterOpts.ExposeAPI.Port != "" {
+
+		apiPort = node.MasterOpts.ExposeAPI.Port
+		node.Labels["k3d.master.api.port"] = node.MasterOpts.ExposeAPI.Port
+
+		if node.MasterOpts.ExposeAPI.Host != "" {
+
+			hostIP = node.MasterOpts.ExposeAPI.HostIP
+			node.Labels["k3d.master.api.hostIP"] = node.MasterOpts.ExposeAPI.HostIP // TODO: maybe get docker machine IP here
+
+			node.Labels["k3d.master.api.host"] = node.MasterOpts.ExposeAPI.Host
+
+		}
+
+	}
+
+	node.Ports = append(node.Ports, fmt.Sprintf("%s:%s:6443/tcp", hostIP, apiPort)) // TODO: get '6443' from defaultport variable
 	return nil
 }

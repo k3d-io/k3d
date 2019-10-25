@@ -23,8 +23,10 @@ package cluster
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -33,14 +35,41 @@ import (
 
 // GetKubeconfig grabs the kubeconfig file from /output from a master node container and puts it into a local directory
 func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) ([]byte, error) {
+	// get all master nodes for the selected cluster
 	masterNodes, err := runtime.GetNodesByLabel(map[string]string{"k3d.cluster": cluster.Name, "k3d.role": string(k3d.MasterRole)})
 	if err != nil {
-		log.Errorln("Failed to get masternodes")
+		log.Errorln("Failed to get master nodes")
 		return nil, err
 	}
-	reader, err := runtime.GetKubeconfig(masterNodes[0])
+	if len(masterNodes) == 0 {
+		return nil, fmt.Errorf("Didn't find any master node")
+	}
+
+	// prefer a master node, which actually has the port exposed
+	var chosenMaster *k3d.Node
+	chosenMaster = nil
+	APIPort := "6443"      // TODO: use default from types
+	APIHost := "localhost" // TODO: use default from types
+
+	for _, master := range masterNodes {
+		if _, ok := master.Labels["k3d.master.api.port"]; ok {
+			chosenMaster = master
+			APIPort = master.Labels["k3d.master.api.port"]
+			if _, ok := master.Labels["k3d.master.api.host"]; ok {
+				APIHost = master.Labels["k3d.master.api.host"]
+			}
+			break
+		}
+	}
+
+	if chosenMaster == nil {
+		chosenMaster = masterNodes[0]
+	}
+
+	// get the kubeconfig from the first master node
+	reader, err := runtime.GetKubeconfig(chosenMaster)
 	if err != nil {
-		log.Errorf("Failed to get kubeconfig from node '%s'", masterNodes[0].Name)
+		log.Errorf("Failed to get kubeconfig from node '%s'", chosenMaster)
 		return nil, err
 	}
 	defer reader.Close()
@@ -51,9 +80,12 @@ func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) ([]byte, erro
 		return nil, err
 	}
 
-	// write to file, skipping the first 512 bytes which contain file metadata
-	// and trimming any NULL characters
+	// drop the first 512 bytes which contain file metadata
+	// and trim any NULL characters
 	trimBytes := bytes.Trim(readBytes[512:], "\x00")
+
+	// replace host and port where the API is exposed with what we've found in the master node labels (or use the default)
+	trimBytes = []byte(strings.Replace(string(trimBytes), "localhost:6443", fmt.Sprintf("%s:%s", APIHost, APIPort), 1)) // replace localhost:6443 with localhost:<mappedAPIPort> in kubeconfig
 
 	return trimBytes, nil
 }

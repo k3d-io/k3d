@@ -79,17 +79,35 @@ type Cluster struct {
 
 // Node describes a k3d node
 type Node struct {
-	Name    string            `yaml:"name" json:"name,omitempty"`
-	Role    Role              `yaml:"role" json:"role,omitempty"`
-	Image   string            `yaml:"image" json:"image,omitempty"`
-	Volumes []string          `yaml:"volumes" json:"volumes,omitempty"`
-	Env     []string          `yaml:"env" json:"env,omitempty"`
-	Cmd     []string          // filled automatically based on role
-	Args    []string          `yaml:"extra_args" json:"extraArgs,omitempty"`
-	Ports   []string          `yaml:"port_mappings" json:"portMappings,omitempty"` // TODO: make a struct out of this?
-	Restart bool              `yaml:"restart" json:"restart,omitempty"`
-	Labels  map[string]string // filled automatically
-	Network string            // filled automatically
+	Name       string            `yaml:"name" json:"name,omitempty"`
+	Role       Role              `yaml:"role" json:"role,omitempty"`
+	Image      string            `yaml:"image" json:"image,omitempty"`
+	Volumes    []string          `yaml:"volumes" json:"volumes,omitempty"`
+	Env        []string          `yaml:"env" json:"env,omitempty"`
+	Cmd        []string          // filled automatically based on role
+	Args       []string          `yaml:"extra_args" json:"extraArgs,omitempty"`
+	Ports      []string          `yaml:"port_mappings" json:"portMappings,omitempty"` // TODO: make a struct out of this?
+	Restart    bool              `yaml:"restart" json:"restart,omitempty"`
+	Labels     map[string]string // filled automatically
+	Network    string            // filled automatically
+	MasterOpts MasterOpts        `yaml:"master_opts" json:"masterOpts,omitempty"`
+	WorkerOpts WorkerOpts        `yaml:"worker_opts" json:"workerOpts,omitempty"`
+}
+
+// MasterOpts describes some additional master role specific opts
+type MasterOpts struct {
+	ExposeAPI ExposeAPI `yaml:"expose_api" json:"exposeAPI,omitempty"`
+}
+
+// ExposeAPI describes specs needed to expose the API-Server
+type ExposeAPI struct {
+	Host   string `yaml:"host" json:"host,omitempty"`
+	HostIP string `yaml:"host_ip" json:"hostIP,omitempty"`
+	Port   string `yaml:"port" json:"port"`
+}
+
+// WorkerOpts describes some additional worker role specific opts
+type WorkerOpts struct {
 }
 
 // GetDefaultObjectName prefixes the passed name with the default prefix
