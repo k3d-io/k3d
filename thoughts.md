@@ -69,3 +69,9 @@ Here's how k3d types should translate to a runtime type:
     - `--port 80@k3d-test-master-0@workers[1-5]` -> multiple instances by combination of node and group identifiers
 
 - analogous for volumes
+
+## multi master setup
+
+- if `--masters` > 1 deploy a load-balancer in front of them as an extra container
+  - consider that in the kubeconfig file and `--tls-san`
+  - make this the default, but provide a `--no-deploy-lb` flag
