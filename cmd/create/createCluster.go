@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/rancher/k3d/pkg/cluster"
 	k3dCluster "github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -58,6 +59,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().String("image", k3d.DefaultK3sImageRepo, "Specify k3s image that you want to use for the nodes") // TODO: get image version
 	cmd.Flags().String("network", "", "Join an existing network")
 	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
+	cmd.Flags().StringSliceP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@SELECTOR[@SELECTOR...]]`")
 
 	// add subcommands
 
@@ -113,9 +115,19 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		log.Fatalln(err)
 	}
 
-	// --api-port // TODO:
+	// --api-port
 	apiPort, err := cmd.Flags().GetString("api-port")
 	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// --volume
+	volumes, err := cmd.Flags().GetStringSlice("volume")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if err := cluster.ValidateVolumeFlag(volumes); err != nil { // TODO: also split SPECIFIER from here and create map from what mount where
+		log.Errorln("Failed to validate '--volume' flag")
 		log.Fatalln(err)
 	}
 
@@ -132,8 +144,10 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	// -> master nodes
 	for i := 0; i < masterCount; i++ {
 		node := k3d.Node{
-			Role:  k3d.MasterRole,
-			Image: image,
+			Role:    k3d.MasterRole,
+			Image:   image,
+			Volumes: volumes, // add only volumes for `all`, `masters`, `master[i]` and `k3d-<name>-master-<i>`
+			Labels:  make(map[string]string, 1),
 		}
 		if i == 0 {
 			node.Ports = append(node.Ports, fmt.Sprintf("0.0.0.0:%s:6443/tcp", apiPort)) // TODO: update (choose interface, enable more than one master) and get '6443' from defaultport variable
@@ -145,8 +159,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	// -> worker nodes
 	for i := 0; i < workerCount; i++ {
 		node := k3d.Node{
-			Role:  k3d.WorkerRole,
-			Image: image,
+			Role:    k3d.WorkerRole,
+			Image:   image,
+			Volumes: volumes, // add only volumes for `all`, `workers`, `worker[i]` and `k3d-<name>-worker-<i>`
 		}
 		cluster.Nodes = append(cluster.Nodes, node)
 	}
