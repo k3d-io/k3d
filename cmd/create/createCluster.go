@@ -24,7 +24,7 @@ package create
 import (
 	"github.com/spf13/cobra"
 
-	cliutil "github.com/rancher/k3d/cmd/cli-util"
+	cliutil "github.com/rancher/k3d/cmd/cliutil"
 	k3dCluster "github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
