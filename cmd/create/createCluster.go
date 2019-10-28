@@ -24,7 +24,7 @@ package create
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/rancher/k3d/pkg/cluster"
+	cliutil "github.com/rancher/k3d/cmd/cli-util"
 	k3dCluster "github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -118,7 +118,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	if err != nil {
 		log.Fatalln(err)
 	}
-	exposeAPI, err := cluster.ParseAPIPort(apiPort)
+	exposeAPI, err := cliutil.ParseAPIPort(apiPort)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -128,7 +128,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if err := cluster.ValidateVolumeFlag(volumes); err != nil { // TODO: also split SPECIFIER from here and create map from what mount where
+	if err := cliutil.ValidateVolumeFlag(volumes); err != nil { // TODO: also split SPECIFIER from here and create map from what mount where
 		log.Errorln("Failed to validate '--volume' flag")
 		log.Fatalln(err)
 	}
