@@ -304,7 +304,7 @@ metadata:
 spec:
   type: LoadBalancer
   ports:
-  - port: 443
+  - port: 8443
     targetPort: 443
   selector:
     app: rancher
