@@ -23,19 +23,6 @@ func main() {
 	app.Name = "k3d"
 	app.Usage = "Run k3s in Docker!"
 	app.Version = version.GetVersion()
-	app.Authors = []cli.Author{
-		{
-			Name:  "Thorsten Klein",
-			Email: "iwilltry42@gmail.com",
-		},
-		{
-			Name:  "Rishabh Gupta",
-			Email: "r.g.gupta@outlook.com",
-		},
-		{
-			Name: "Darren Shepherd",
-		},
-	}
 
 	// commands that you can execute
 	app.Commands = []cli.Command{
@@ -236,6 +223,14 @@ func main() {
 				},
 			},
 			Action: run.ImportImage,
+		},
+		{
+			Name:  "version",
+			Usage: "print k3d and k3s version",
+			Action: func(c *cli.Context) {
+				fmt.Println("k3d version", version.GetVersion())
+				fmt.Println("k3s version", version.GetK3sVersion())
+			},
 		},
 	}
 
