@@ -93,7 +93,7 @@ This guide takes you through setting up a local insecure (http) registry and int
 
 The registry will be named `registry.local` and run on port `5000`.
 
-### Create the registry
+### Step 1: Create the registry
 
 <pre>
 docker volume create local_registry
@@ -101,11 +101,20 @@ docker volume create local_registry
 docker container run -d --name <b>registry.local</b> -v local_registry:/var/lib/registry --restart always -p <b>5000:5000</b> registry:2
 </pre>
 
-### Create the cluster with k3d
+### Step 2: Prepare configuration to connect to the registry
 
 First we need a place to store the config template: `mkdir -p /home/${USER}/.k3d`
 
+#### Step 2 - Option 1: use `registries.yaml` (for k3s >= v0.10.0)
+
+Create a file named `registries.yaml` in `/home/${USER}/.k3d` with following content:
+
+
+#### Step 2 - Option 2: use `config.toml.tmpl` to directly modify the containerd config (all versions)
+
 Create a file named `config.toml.tmpl` in `/home/${USER}/.k3d`, with following content:
+
+##### Step 2 - Option 2.1 -> for k3s >= v0.10.0
 
 <pre>
 [plugins.opt]
@@ -158,23 +167,57 @@ Create a file named `config.toml.tmpl` in `/home/${USER}/.k3d`, with following c
     endpoint = ["http://<b>registry.local:5000</b>"]
 </pre>
 
-Finally start a cluster with k3d, passing-in the config template:
+##### Step 2 - Option 2.2 -> for k3s <= v0.9.1
+
+<pre>
+# Original section: no changes
+[plugins.opt]
+path = "{{ .NodeConfig.Containerd.Opt }}"
+[plugins.cri]
+stream_server_address = "{{ .NodeConfig.AgentConfig.NodeName }}"
+stream_server_port = "10010"
+{{- if .IsRunningInUserNS }}
+disable_cgroup = true
+disable_apparmor = true
+restrict_oom_score_adj = true
+{{ end -}}
+{{- if .NodeConfig.AgentConfig.PauseImage }}
+sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
+{{ end -}}
+{{- if not .NodeConfig.NoFlannel }}
+  [plugins.cri.cni]
+    bin_dir = "{{ .NodeConfig.AgentConfig.CNIBinDir }}"
+    conf_dir = "{{ .NodeConfig.AgentConfig.CNIConfDir }}"
+{{ end -}}
+
+# Added section: additional registries and the endpoints
+[plugins.cri.registry.mirrors]
+  [plugins.cri.registry.mirrors."<b>registry.local:5000</b>"]
+    endpoint = ["http://<b>registry.local:5000</b>"]
+</pre>
+
+### Step 3 - Start the cluster
+
+Finally start a cluster with k3d, passing-in the `registries.yaml` or `config.toml.tmpl`:
 
 ```bash
-CLUSTER_NAME=k3s-default
 k3d create \
-    --name ${CLUSTER_NAME} \
-    --wait 0 \
-    --auto-restart \
+    --volume /home/${USER}/.k3d/registries.yaml:/etc/rancher/k3s/registries.yaml
+```
+
+or
+
+```bash
+k3d create \
     --volume /home/${USER}/.k3d/config.toml.tmpl:/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
 ```
 
-### Wire them up
+### Step 4 - Wire them up
 
 - Connect the registry to the cluster network: `docker network connect k3d-k3s-default registry.local`
 - Add `127.0.0.1 registry.local` to your `/etc/hosts`
 
-### Test
+### Step 5 - Test
 
 Push an image to the registry:
 
