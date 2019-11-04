@@ -161,6 +161,7 @@ func createKubeConfigFile(cluster string) error {
 	if apiHost != "" {
 		s := string(trimBytes)
 		s = strings.Replace(s, "localhost", apiHost, 1)
+		s = strings.Replace(s, "127.0.0.1", apiHost, 1)
 		trimBytes = []byte(s)
 	}
 	_, err = kubeconfigfile.Write(trimBytes)
