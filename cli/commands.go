@@ -17,7 +17,6 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
 )
 
 const (
@@ -26,7 +25,7 @@ const (
 )
 
 // CheckTools checks if the docker API server is responding
-func CheckTools(c *cli.Context) error {
+func CheckTools() error {
 	log.Print("Checking docker...")
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -43,48 +42,46 @@ func CheckTools(c *cli.Context) error {
 }
 
 // CreateCluster creates a new single-node cluster container and initializes the cluster directory
-func CreateCluster(c *cli.Context) error {
+func CreateCluster(
+	name,
+	image string,
+	oEnv []string,
+	port string,
+	serverArgs, agentArgs []string,
+	workers int,
+	publish, volumes []string,
+	autoRestart bool,
+	portAutoOffset, wait int,
+) error {
 
-	if err := CheckClusterName(c.String("name")); err != nil {
+	if err := CheckClusterName(name); err != nil {
 		return err
 	}
 
-	if cluster, err := getClusters(false, c.String("name")); err != nil {
+	if cluster, err := getClusters(false, name); err != nil {
 		return err
 	} else if len(cluster) != 0 {
 		// A cluster exists with the same name. Return with an error.
-		return fmt.Errorf(" Cluster %s already exists", c.String("name"))
+		return fmt.Errorf(" Cluster %s already exists", name)
 	}
 
 	// On Error delete the cluster.  If there createCluster() encounter any error,
 	// call this function to remove all resources allocated for the cluster so far
 	// so that they don't linger around.
 	deleteCluster := func() {
-		if err := DeleteCluster(c); err != nil {
-			log.Printf("Error: Failed to delete cluster %s", c.String("name"))
+		if err := DeleteCluster(false, name); err != nil {
+			log.Printf("Error: Failed to delete cluster %s", name)
 		}
 	}
 
 	// define image
-	image := c.String("image")
-	if c.IsSet("version") {
-		// TODO: --version to be deprecated
-		log.Warning("The `--version` flag will be deprecated soon, please use `--image rancher/k3s:<version>` instead")
-		if c.IsSet("image") {
-			// version specified, custom image = error (to push deprecation of version flag)
-			log.Fatalln("Please use `--image <image>:<version>` instead of --image and --version")
-		} else {
-			// version specified, default image = ok (until deprecation of version flag)
-			image = fmt.Sprintf("%s:%s", strings.Split(image, ":")[0], c.String("version"))
-		}
-	}
 	if len(strings.Split(image, "/")) <= 2 {
 		// fallback to default registry
 		image = fmt.Sprintf("%s/%s", defaultRegistry, image)
 	}
 
 	// create cluster network
-	networkID, err := createClusterNetwork(c.String("name"))
+	networkID, err := createClusterNetwork(name)
 	if err != nil {
 		return err
 	}
@@ -92,20 +89,16 @@ func CreateCluster(c *cli.Context) error {
 
 	// environment variables
 	env := []string{"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml"}
-	env = append(env, c.StringSlice("env")...)
+	env = append(env, oEnv...)
 	env = append(env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", GenerateRandomString(20)))
 
 	// k3s server arguments
-	// TODO: --port will soon be --api-port since we want to re-use --port for arbitrary port mappings
-	if c.IsSet("port") {
-		log.Info("As of v2.0.0 --port will be used for arbitrary port mapping. Please use --api-port/-a instead for configuring the Api Port")
-	}
-	apiPort, err := parseAPIPort(c.String("api-port"))
+	apiPort, err := parseAPIPort(port)
 	if err != nil {
 		return err
 	}
 
-	k3AgentArgs := []string{}
+	k3sAgentArgs := []string{}
 	k3sServerArgs := []string{"--https-listen-port", apiPort.Port}
 
 	// When the 'host' is not provided by --api-port, try to fill it using Docker Machine's IP address.
@@ -126,28 +119,26 @@ func CreateCluster(c *cli.Context) error {
 		k3sServerArgs = append(k3sServerArgs, "--tls-san", apiPort.Host)
 	}
 
-	if c.IsSet("server-arg") || c.IsSet("x") {
-		k3sServerArgs = append(k3sServerArgs, c.StringSlice("server-arg")...)
+	if len(serverArgs) > 0 {
+		k3sServerArgs = append(k3sServerArgs, serverArgs...)
 	}
 
-	if c.IsSet("agent-arg") {
-		k3AgentArgs = append(k3AgentArgs, c.StringSlice("agent-arg")...)
+	if len(agentArgs) > 0 {
+		k3sAgentArgs = append(k3sAgentArgs, agentArgs...)
 	}
 
 	// new port map
-	portmap, err := mapNodesToPortSpecs(c.StringSlice("publish"), GetAllContainerNames(c.String("name"), defaultServerCount, c.Int("workers")))
+	portmap, err := mapNodesToPortSpecs(publish, GetAllContainerNames(name, defaultServerCount, workers))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// create a docker volume for sharing image tarballs with the cluster
-	imageVolume, err := createImageVolume(c.String("name"))
+	imageVolume, err := createImageVolume(name)
 	log.Println("Created docker volume ", imageVolume.Name)
 	if err != nil {
 		return err
 	}
-	volumes := c.StringSlice("volume")
-
 	volumesSpec, err := NewVolumes(volumes)
 	if err != nil {
 		return err
@@ -156,23 +147,23 @@ func CreateCluster(c *cli.Context) error {
 	volumesSpec.DefaultVolumes = append(volumesSpec.DefaultVolumes, fmt.Sprintf("%s:/images", imageVolume.Name))
 
 	clusterSpec := &ClusterSpec{
-		AgentArgs:         k3AgentArgs,
+		AgentArgs:         k3sAgentArgs,
 		APIPort:           *apiPort,
-		AutoRestart:       c.Bool("auto-restart"),
-		ClusterName:       c.String("name"),
+		AutoRestart:       autoRestart,
+		ClusterName:       name,
 		Env:               env,
 		Image:             image,
 		NodeToPortSpecMap: portmap,
-		PortAutoOffset:    c.Int("port-auto-offset"),
+		PortAutoOffset:    portAutoOffset,
 		ServerArgs:        k3sServerArgs,
 		Volumes:           volumesSpec,
 	}
 
 	// create the server
-	log.Printf("Creating cluster [%s]", c.String("name"))
+	log.Printf("Creating cluster [%s]", name)
 
 	// create the directory where we will put the kubeconfig file by default (when running `k3d get-config`)
-	createClusterDir(c.String("name"))
+	createClusterDir(name)
 
 	dockerID, err := createServer(clusterSpec)
 	if err != nil {
@@ -190,8 +181,8 @@ func CreateCluster(c *cli.Context) error {
 	// We're simply scanning the container logs for a line that tells us that everything's up and running
 	// TODO: also wait for worker nodes
 	start := time.Now()
-	timeout := time.Duration(c.Int("wait")) * time.Second
-	for c.IsSet("wait") {
+	timeout := time.Duration(wait) * time.Second
+	for wait > 0 {
 		// not running after timeout exceeded? Rollback and delete everything.
 		if timeout != 0 && time.Now().After(start.Add(timeout)) {
 			deleteCluster()
@@ -202,7 +193,7 @@ func CreateCluster(c *cli.Context) error {
 		out, err := docker.ContainerLogs(ctx, dockerID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
 		if err != nil {
 			out.Close()
-			return fmt.Errorf(" Couldn't get docker logs for %s\n%+v", c.String("name"), err)
+			return fmt.Errorf(" Couldn't get docker logs for %s\n%+v", name, err)
 		}
 		buf := new(bytes.Buffer)
 		nRead, _ := buf.ReadFrom(out)
@@ -217,9 +208,9 @@ func CreateCluster(c *cli.Context) error {
 
 	// spin up the worker nodes
 	// TODO: do this concurrently in different goroutines
-	if c.Int("workers") > 0 {
-		log.Printf("Booting %s workers for cluster %s", strconv.Itoa(c.Int("workers")), c.String("name"))
-		for i := 0; i < c.Int("workers"); i++ {
+	if workers > 0 {
+		log.Printf("Booting %s workers for cluster %s", strconv.Itoa(workers), name)
+		for i := 0; i < workers; i++ {
 			workerID, err := createWorker(clusterSpec, i)
 			if err != nil {
 				deleteCluster()
@@ -229,18 +220,18 @@ func CreateCluster(c *cli.Context) error {
 		}
 	}
 
-	log.Printf("SUCCESS: created cluster [%s]", c.String("name"))
+	log.Printf("SUCCESS: created cluster [%s]", name)
 	log.Printf(`You can now use the cluster with:
 
 export KUBECONFIG="$(%s get-kubeconfig --name='%s')"
-kubectl cluster-info`, os.Args[0], c.String("name"))
+kubectl cluster-info`, os.Args[0], name)
 
 	return nil
 }
 
 // DeleteCluster removes the containers belonging to a cluster and its local directory
-func DeleteCluster(c *cli.Context) error {
-	clusters, err := getClusters(c.Bool("all"), c.String("name"))
+func DeleteCluster(all bool, name string) error {
+	clusters, err := getClusters(all, name)
 
 	if err != nil {
 		return err
@@ -286,8 +277,8 @@ func DeleteCluster(c *cli.Context) error {
 }
 
 // StopCluster stops a running cluster container (restartable)
-func StopCluster(c *cli.Context) error {
-	clusters, err := getClusters(c.Bool("all"), c.String("name"))
+func StopCluster(all bool, name string) error {
+	clusters, err := getClusters(all, name)
 
 	if err != nil {
 		return err
@@ -324,8 +315,8 @@ func StopCluster(c *cli.Context) error {
 }
 
 // StartCluster starts a stopped cluster container
-func StartCluster(c *cli.Context) error {
-	clusters, err := getClusters(c.Bool("all"), c.String("name"))
+func StartCluster(all bool, name string) error {
+	clusters, err := getClusters(all, name)
 
 	if err != nil {
 		return err
@@ -364,11 +355,7 @@ func StartCluster(c *cli.Context) error {
 }
 
 // ListClusters prints a list of created clusters
-func ListClusters(c *cli.Context) error {
-	if c.IsSet("all") {
-		log.Info("--all is on by default, thus no longer required. This option will be removed in v2.0.0")
-
-	}
+func ListClusters() error {
 	if err := printClusters(); err != nil {
 		return err
 	}
@@ -376,8 +363,8 @@ func ListClusters(c *cli.Context) error {
 }
 
 // GetKubeConfig grabs the kubeconfig from the running cluster and prints the path to stdout
-func GetKubeConfig(c *cli.Context) error {
-	clusters, err := getClusters(c.Bool("all"), c.String("name"))
+func GetKubeConfig(all bool, name string) error {
+	clusters, err := getClusters(all, name)
 	if err != nil {
 		return err
 	}
@@ -389,7 +376,7 @@ func GetKubeConfig(c *cli.Context) error {
 	for _, cluster := range clusters {
 		kubeConfigPath, err := getKubeConfig(cluster.name)
 		if err != nil {
-			if !c.Bool("all") {
+			if all {
 				return err
 			}
 			log.Println(err)
@@ -404,17 +391,11 @@ func GetKubeConfig(c *cli.Context) error {
 }
 
 // Shell starts a new subshell with the KUBECONFIG pointing to the selected cluster
-func Shell(c *cli.Context) error {
-	return subShell(c.String("name"), c.String("shell"), c.String("command"))
+func Shell(name, shell, command string) error {
+	return subShell(name, shell, command)
 }
 
 // ImportImage saves an image locally and imports it into the k3d containers
-func ImportImage(c *cli.Context) error {
-	images := make([]string, 0)
-	if strings.Contains(c.Args().First(), ",") {
-		images = append(images, strings.Split(c.Args().First(), ",")...)
-	} else {
-		images = append(images, c.Args()...)
-	}
-	return importImage(c.String("name"), images, c.Bool("no-remove"))
+func ImportImage(name string, noRemove bool, images []string) error {
+	return importImage(name, images, noRemove)
 }
