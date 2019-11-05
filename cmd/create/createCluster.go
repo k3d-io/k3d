@@ -24,7 +24,7 @@ package create
 import (
 	"github.com/spf13/cobra"
 
-	cliutil "github.com/rancher/k3d/cmd/cliutil"
+	cliutil "github.com/rancher/k3d/cmd/util"
 	k3dCluster "github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -57,7 +57,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().String("image", k3d.DefaultK3sImageRepo, "Specify k3s image that you want to use for the nodes") // TODO: get image version
 	cmd.Flags().String("network", "", "Join an existing network")
 	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
-	cmd.Flags().StringSliceP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@SELECTOR[@SELECTOR...]]`")
+	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@SELECTOR[;SELECTOR...]]`")
 
 	// add subcommands
 
@@ -124,18 +124,22 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	}
 
 	// --volume
-	volumes, err := cmd.Flags().GetStringSlice("volume")
+	volumeFlags, err := cmd.Flags().GetStringArray("volume")
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if err := cliutil.ValidateVolumeFlag(volumes); err != nil { // TODO: also split SPECIFIER from here and create map from what mount where
-		log.Errorln("Failed to validate '--volume' flag")
-		log.Fatalln(err)
+	volumeFilterMap := make(map[string]string, 1)
+	for _, volumeFlag := range volumeFlags {
+		v, f, err := cliutil.SplitFilterFromFlag(volumeFlag)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		volumeFilterMap[v] = f
 	}
 
 	/* generate cluster */
 	cluster := &k3d.Cluster{
-		Name:    args[0], // TODO: validate name
+		Name:    args[0], // TODO: validate name0
 		Network: network,
 		Secret:  secret,
 	}
@@ -148,24 +152,37 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		node := k3d.Node{
 			Role:       k3d.MasterRole,
 			Image:      image,
-			Volumes:    volumes, // add only volumes for `all`, `masters`, `master[i]` and `k3d-<name>-master-<i>`
 			MasterOpts: k3d.MasterOpts{},
 		}
-		if i == 0 {
+
+		// expose API Port
+		if i == 0 { // TODO:
 			node.MasterOpts.ExposeAPI = exposeAPI
 		}
+
+		// append node to list
 		cluster.Nodes = append(cluster.Nodes, node)
+		cluster.MasterNodes = append(cluster.MasterNodes, &node)
 	}
 
 	// -> worker nodes
 	for i := 0; i < workerCount; i++ {
 		node := k3d.Node{
-			Role:    k3d.WorkerRole,
-			Image:   image,
-			Volumes: volumes, // add only volumes for `all`, `workers`, `worker[i]` and `k3d-<name>-worker-<i>`
+			Role:  k3d.WorkerRole,
+			Image: image,
 		}
-		cluster.Nodes = append(cluster.Nodes, node)
 
+		cluster.Nodes = append(cluster.Nodes, node)
+		cluster.WorkerNodes = append(cluster.WorkerNodes, &node)
+	}
+
+	// append volumes
+	// TODO:
+	for v, f := range volumeFilterMap {
+		nodes, err := cliutil.FilterNodes(f)
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 
 	return runtime, cluster

@@ -71,10 +71,12 @@ var DefaultNodeEnv = []string{
 
 // Cluster describes a k3d cluster
 type Cluster struct {
-	Name    string `yaml:"name" json:"name,omitempty"`
-	Network string `yaml:"network" json:"network,omitempty"`
-	Secret  string `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
-	Nodes   []Node `yaml:"nodes" json:"nodes,omitempty"`
+	Name        string `yaml:"name" json:"name,omitempty"`
+	Network     string `yaml:"network" json:"network,omitempty"`
+	Secret      string `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
+	Nodes       []Node `yaml:"nodes" json:"nodes,omitempty"`
+	MasterNodes []*Node
+	WorkerNodes []*Node
 }
 
 // Node describes a k3d node
@@ -107,8 +109,7 @@ type ExposeAPI struct {
 }
 
 // WorkerOpts describes some additional worker role specific opts
-type WorkerOpts struct {
-}
+type WorkerOpts struct{}
 
 // GetDefaultObjectName prefixes the passed name with the default prefix
 func GetDefaultObjectName(name string) string {
