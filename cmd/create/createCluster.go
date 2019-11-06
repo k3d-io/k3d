@@ -130,11 +130,14 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	}
 	volumeFilterMap := make(map[string]string, 1)
 	for _, volumeFlag := range volumeFlags {
-		v, f, err := cliutil.SplitFilterFromFlag(volumeFlag)
+		volume, filter, err := cliutil.SplitFilterFromFlag(volumeFlag)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		volumeFilterMap[v] = f
+		if err := cliutil.ValidateVolumeMount(volume); err != nil {
+			log.Fatalln(err)
+		}
+		volumeFilterMap[volume] = filter
 	}
 
 	/* generate cluster */
@@ -178,10 +181,13 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 
 	// append volumes
 	// TODO:
-	for v, f := range volumeFilterMap {
-		nodes, err := cliutil.FilterNodes(f)
+	for volume, filter := range volumeFilterMap {
+		nodes, err := cliutil.FilterNodes(&cluster.Nodes, filter)
 		if err != nil {
 			log.Fatalln(err)
+		}
+		for _, node := range nodes {
+			node.Volumes = append(node.Volumes, volume)
 		}
 	}
 

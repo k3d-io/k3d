@@ -25,83 +25,41 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
-// ValidateVolumeFlag checks, if the source of volume mounts exists and if the destination is an absolute path
-// a flag can look like this: --volume SRC:DST@NODES, where...
+// ValidateVolumeMount checks, if the source of volume mounts exists and if the destination is an absolute path
 // - SRC: source directory/file -> tests: must exist
 // - DEST: source directory/file -> tests: must be absolute path
-// - NODES: specifies a set of nodes -> tests: fit regex // TODO:
-func ValidateVolumeFlag(volumeFlags []string) (string, string, error) {
+func ValidateVolumeMount(volumeMount string) error {
+	src := ""
+	dest := ""
 
-	for _, volume := range volumeFlags {
-		src := ""
-		dest := ""
-		nodes := ""
-
-		split := strings.Split(volume, "@")
-
-		// max number of pieces after split = 2 (only one @ allowed in flag)
-		if len(split) > 2 {
-			return rolesToVolumesMap, fmt.Errorf("Invalid volume flag '%s': only one '@' allowed", volume)
-		}
-
-		// min number of pieces after split = 1 (catch empty flags)
-		if len(split) > 1 {
-			nodes = split[1]
-		}
-
-		// catch all other unlikely cases
-		if len(split) == 0 || split[0] == "" {
-			return rolesToVolumesMap, fmt.Errorf("Invalid volume flag '%s'", volume)
-		}
-
-		// validate 'SRC[:DEST]' substring
-		split = strings.Split(split[0], ":")
-		if len(split) < 1 || len(split) > 2 {
-			return rolesToVolumesMap, fmt.Errorf("Invalid volume mount '%s': only one ':' allowed", volume)
-		}
-
-		// we only have SRC specified -> DEST = SRC
-		if len(split) == 1 {
-			src = split[0]
-			dest = src
-		} else {
-			src = split[0]
-			dest = split[1]
-		}
-
-		// verify that the source exists
-		if src != "" {
-			if _, err := os.Stat(src); err != nil {
-				return rolesToVolumesMap, fmt.Errorf("Failed to stat file/dir that you're trying to mount: '%s' in '%s'", src, volume)
-			}
-		}
-
-		// verify that the destination is an absolute path
-		if !strings.HasPrefix(dest, "/") {
-			return rolesToVolumesMap, fmt.Errorf("Volume mount destination doesn't appear to be an absolute path: '%s' in '%s'", dest, volume)
-		}
-
-		// put into struct
-		volumeSpec.Source = src
-		volumeSpec.Destination = dest
-
-		// if no nodes are specified with an @nodeset, attach volume to all nodes and go to next value
-		if nodes == "" {
-			rolesToVolumesMap.AllRoles = append(rolesToVolumesMap.AllRoles, volumeSpec)
-			continue
-		}
-
-		specifiedNodes, err := parseNodeSpecifier(nodes, masterCount, workerCount)
-		if err != nil {
-			log.Errorf("Failed to parse node specifier on '--volume %s'", volume)
-			return rolesToVolumesMap, err
-		}
-		log.Debugf("Specified nodes: %+v", specifiedNodes)
-
+	// validate 'SRC[:DEST]' substring
+	split := strings.Split(volumeMount, ":")
+	if len(split) < 1 || len(split) > 2 {
+		return fmt.Errorf("Invalid volume mount '%s': only one ':' allowed", volumeMount)
 	}
-	return rolesToVolumesMap, nil
+
+	// we only have SRC specified -> DEST = SRC
+	if len(split) == 1 {
+		src = split[0]
+		dest = src
+	} else {
+		src = split[0]
+		dest = split[1]
+	}
+
+	// verify that the source exists
+	if src != "" {
+		if _, err := os.Stat(src); err != nil {
+			return fmt.Errorf("Failed to stat file/dir that you're trying to mount: '%s' in '%s'", src, volumeMount)
+		}
+	}
+
+	// verify that the destination is an absolute path
+	if !strings.HasPrefix(dest, "/") {
+		return fmt.Errorf("Volume mount destination doesn't appear to be an absolute path: '%s' in '%s'", dest, volumeMount)
+	}
+
+	return nil
 }

@@ -75,7 +75,7 @@ func SplitFilterFromFlag(flag string) (string, string, error) {
 }
 
 // FilterNodes takes a string filter to return a filtered list of nodes
-func FilterNodes(filterString string, nodes []*k3d.Node) ([]*k3d.Node, error) {
+func FilterNodes(nodes *[]k3d.Node, filterString string) ([]*k3d.Node, error) {
 
 	// filterString is a semicolon-separated list of node filters
 	filters := strings.Split(filterString, ";")
