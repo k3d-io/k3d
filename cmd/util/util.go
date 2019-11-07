@@ -145,6 +145,7 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 					}
 					if _, exists := set[groupNodes[num]]; !exists {
 						filteredNodes = append(filteredNodes, groupNodes[num])
+						set[groupNodes[num]] = struct{}{}
 					}
 				}
 			}
@@ -190,6 +191,7 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 			for i := start; i <= end; i++ {
 				if _, exists := set[groupNodes[i]]; !exists {
 					filteredNodes = append(filteredNodes, groupNodes[i])
+					set[groupNodes[i]] = struct{}{}
 				}
 			}
 
@@ -201,6 +203,7 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 			for _, node := range groupNodes {
 				if _, exists := set[node]; !exists {
 					filteredNodes = append(filteredNodes, node)
+					set[node] = struct{}{}
 				}
 			}
 
