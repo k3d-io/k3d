@@ -131,6 +131,9 @@ func CreateCluster(c *cli.Context) error {
 	}
 
 	if c.IsSet("agent-arg") {
+		if c.Int("workers") < 1 {
+			log.Warnln("--agent-arg supplied, but --workers is 0, so no agents will be created")
+		}
 		k3AgentArgs = append(k3AgentArgs, c.StringSlice("agent-arg")...)
 	}
 
