@@ -71,12 +71,10 @@ var DefaultNodeEnv = []string{
 
 // Cluster describes a k3d cluster
 type Cluster struct {
-	Name        string `yaml:"name" json:"name,omitempty"`
-	Network     string `yaml:"network" json:"network,omitempty"`
-	Secret      string `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
-	Nodes       []Node `yaml:"nodes" json:"nodes,omitempty"`
-	MasterNodes []*Node
-	WorkerNodes []*Node
+	Name    string  `yaml:"name" json:"name,omitempty"`
+	Network string  `yaml:"network" json:"network,omitempty"`
+	Secret  string  `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
+	Nodes   []*Node `yaml:"nodes" json:"nodes,omitempty"`
 }
 
 // Node describes a k3d node

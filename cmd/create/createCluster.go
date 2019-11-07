@@ -148,7 +148,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	}
 
 	// generate list of nodes
-	cluster.Nodes = []k3d.Node{}
+	cluster.Nodes = []*k3d.Node{}
 
 	// -> master nodes
 	for i := 0; i < masterCount; i++ {
@@ -164,8 +164,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		}
 
 		// append node to list
-		cluster.Nodes = append(cluster.Nodes, node)
-		cluster.MasterNodes = append(cluster.MasterNodes, &node)
+		cluster.Nodes = append(cluster.Nodes, &node)
 	}
 
 	// -> worker nodes
@@ -175,14 +174,13 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 			Image: image,
 		}
 
-		cluster.Nodes = append(cluster.Nodes, node)
-		cluster.WorkerNodes = append(cluster.WorkerNodes, &node)
+		cluster.Nodes = append(cluster.Nodes, &node)
 	}
 
 	// append volumes
 	// TODO:
 	for volume, filter := range volumeFilterMap {
-		nodes, err := cliutil.FilterNodes(&cluster.Nodes, filter)
+		nodes, err := cliutil.FilterNodes(cluster.Nodes, filter)
 		if err != nil {
 			log.Fatalln(err)
 		}

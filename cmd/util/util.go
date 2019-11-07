@@ -75,14 +75,28 @@ func SplitFilterFromFlag(flag string) (string, string, error) {
 }
 
 // FilterNodes takes a string filter to return a filtered list of nodes
-func FilterNodes(nodes *[]k3d.Node, filterString string) ([]*k3d.Node, error) {
+func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 
 	// filterString is a semicolon-separated list of node filters
 	filters := strings.Split(filterString, ";")
 
 	if len(filters) == 0 {
-		return nil, fmt.Errorf("No filter specified")
+		log.Warnln("No filter specified")
+		return nodes, nil
 	}
+
+	// map roles to subsets
+	masterNodes := []*k3d.Node{}
+	workerNodes := []*k3d.Node{}
+	for _, node := range nodes {
+		if node.Role == k3d.MasterRole {
+			masterNodes = append(masterNodes, node)
+		} else if node.Role == k3d.WorkerRole {
+			workerNodes = append(workerNodes, node)
+		}
+	}
+
+	filteredNodes := make([]k3d.Node, 1)
 
 	// range over all instances of group[subset] specs
 	for _, filter := range filters {
@@ -105,11 +119,18 @@ func FilterNodes(nodes *[]k3d.Node, filterString string) ([]*k3d.Node, error) {
 		// if one of the filters is 'all', we only return this and drop all others
 		if submatches["group"] == "all" {
 			// TODO: only log if really more than one is specified
-			log.Warnf("Node Specifier 'all' set, but more were specified in '%s'", filterString)
+			log.Warnf("Node filter 'all' set, but more were specified in '%s'", filterString)
 			return nodes, nil
 		}
 
 		/*  */
+		groupNodes := []*k3d.Node{}
+		if submatches["group"] == string(k3d.MasterRole) {
+			groupNodes = masterNodes
+		} else if submatches["group"] == string(k3d.WorkerRole) {
+			groupNodes = workerNodes
+		}
+
 		subset := []int{}
 
 		if submatches["subsetList"] != "" {
@@ -117,8 +138,9 @@ func FilterNodes(nodes *[]k3d.Node, filterString string) ([]*k3d.Node, error) {
 				if index != "" {
 					num, err := strconv.Atoi(index)
 					if err != nil {
-						return rolesMap, fmt.Errorf("Failed to convert subset number to integer in '%s'", filter)
+						return nil, fmt.Errorf("Failed to convert subset number to integer in '%s'", filter)
 					}
+					filteredNodes = append(filteredNodes, *groupNodes[num])
 					subset = append(subset, num)
 				}
 			}
@@ -131,30 +153,31 @@ func FilterNodes(nodes *[]k3d.Node, filterString string) ([]*k3d.Node, error) {
 
 			split := strings.Split(submatches["subsetRange"], ":")
 			if len(split) != 2 {
-				return rolesMap, fmt.Errorf("Failed to parse subset range in '%s'", filter)
+				return nil, fmt.Errorf("Failed to parse subset range in '%s'", filter)
 			}
 
 			start := 0
-			end := numNodes - 1
+			end := len(groupNodes) - 1
+
 			var err error
 
 			if split[0] != "" {
 				start, err = strconv.Atoi(split[0])
 				if err != nil {
-					return rolesMap, fmt.Errorf("Failed to convert subset range start to integer in '%s'", filter)
+					return nil, fmt.Errorf("Failed to convert subset range start to integer in '%s'", filter)
 				}
 				if start < 0 {
-					return rolesMap, fmt.Errorf("Invalid subset range: start < 0 in '%s'", filter)
+					return nil, fmt.Errorf("Invalid subset range: start < 0 in '%s'", filter)
 				}
 			}
 
 			if split[1] != "" {
 				end, err = strconv.Atoi(split[1])
 				if err != nil {
-					return rolesMap, fmt.Errorf("Failed to convert subset range start to integer in '%s'", filter)
+					return nil, fmt.Errorf("Failed to convert subset range start to integer in '%s'", filter)
 				}
 				if end < start {
-					return rolesMap, fmt.Errorf("Invalid subset range: end < start in '%s'", filter)
+					return nil, fmt.Errorf("Invalid subset range: end < start in '%s'", filter)
 				}
 			}
 
@@ -166,14 +189,10 @@ func FilterNodes(nodes *[]k3d.Node, filterString string) ([]*k3d.Node, error) {
 			/*
 			 * '*' = all nodes
 			 */
-			for i := 0; i < numNodes; i++ {
-				subset = append(subset, i)
-			}
+			return groupNodes, nil
 		} else {
-			return rolesMap, fmt.Errorf("Failed to parse node specifiers: unknown subset in '%s'", filter)
+			return nil, fmt.Errorf("Failed to parse node specifiers: unknown subset in '%s'", filter)
 		}
-
-		rolesMap[submatches["group"]] = append(rolesMap[submatches["group"]], subset...)
 
 	}
 
