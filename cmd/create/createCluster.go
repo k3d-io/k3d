@@ -164,22 +164,22 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	portFilterMap := make(map[string]string, 1)
 	for _, portFlag := range portFlags {
 		// split node filter from the specified volume
-		volume, filter, err := cliutil.SplitFilterFromFlag(portFlag)
+		portmap, filter, err := cliutil.SplitFilterFromFlag(portFlag)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
 		// validate the specified volume mount and return it in SRC:DEST format
-		volume, err = cliutil.ValidateVolumeMount(volume)
+		portmap, err = cliutil.ValidatePortMap(portmap)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
 		// create new entry or append filter to existing entry
-		if _, exists := volumeFilterMap[volume]; exists {
-			volumeFilterMap[volume] = fmt.Sprintf("%s;%s", volumeFilterMap[volume], filter)
+		if _, exists := portFilterMap[portmap]; exists {
+			portFilterMap[portmap] = fmt.Sprintf("%s;%s", portFilterMap[portmap], filter)
 		} else {
-			volumeFilterMap[volume] = filter
+			portFilterMap[portmap] = filter
 		}
 	}
 
