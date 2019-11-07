@@ -59,7 +59,8 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().String("image", k3d.DefaultK3sImageRepo, "Specify k3s image that you want to use for the nodes") // TODO: get image version
 	cmd.Flags().String("network", "", "Join an existing network")
 	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
-	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@SELECTOR[;SELECTOR...]]`")
+	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`")
+	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[IP:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)")
 
 	// add subcommands
 
@@ -137,6 +138,33 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 
 		// split node filter from the specified volume
 		volume, filter, err := cliutil.SplitFilterFromFlag(volumeFlag)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// validate the specified volume mount and return it in SRC:DEST format
+		volume, err = cliutil.ValidateVolumeMount(volume)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// create new entry or append filter to existing entry
+		if _, exists := volumeFilterMap[volume]; exists {
+			volumeFilterMap[volume] = fmt.Sprintf("%s;%s", volumeFilterMap[volume], filter)
+		} else {
+			volumeFilterMap[volume] = filter
+		}
+	}
+
+	// --port
+	portFlags, err := cmd.Flags().GetStringArray("port")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	portFilterMap := make(map[string]string, 1)
+	for _, portFlag := range portFlags {
+		// split node filter from the specified volume
+		volume, filter, err := cliutil.SplitFilterFromFlag(portFlag)
 		if err != nil {
 			log.Fatalln(err)
 		}
