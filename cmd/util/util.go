@@ -96,7 +96,8 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 		}
 	}
 
-	filteredNodes := make([]k3d.Node, 1)
+	filteredNodes := make([]*k3d.Node, 1)
+	set := make(map[*k3d.Node]struct{})
 
 	// range over all instances of group[subset] specs
 	for _, filter := range filters {
@@ -131,8 +132,7 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 			groupNodes = workerNodes
 		}
 
-		subset := []int{}
-
+		/* subset defined by list */
 		if submatches["subsetList"] != "" {
 			for _, index := range strings.Split(submatches["subsetList"], ",") {
 				if index != "" {
@@ -140,11 +140,13 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 					if err != nil {
 						return nil, fmt.Errorf("Failed to convert subset number to integer in '%s'", filter)
 					}
-					filteredNodes = append(filteredNodes, *groupNodes[num])
-					subset = append(subset, num)
+					if _, exists := set[groupNodes[num]]; !exists {
+						filteredNodes = append(filteredNodes, groupNodes[num])
+					}
 				}
 			}
 
+			/* subset defined by range */
 		} else if submatches["subsetRange"] != "" {
 
 			/*
@@ -182,21 +184,26 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 			}
 
 			for i := start; i <= end; i++ {
-				subset = append(subset, i)
+				if _, exists := set[groupNodes[i]]; !exists {
+					filteredNodes = append(filteredNodes, groupNodes[i])
+				}
 			}
 
+			/* subset defined by wildcard */
 		} else if submatches["subsetWildcard"] == "*" {
 			/*
 			 * '*' = all nodes
 			 */
 			return groupNodes, nil
+
+			/* invalid/unknown subset */
 		} else {
 			return nil, fmt.Errorf("Failed to parse node specifiers: unknown subset in '%s'", filter)
 		}
 
 	}
 
-	log.Debugf("ROLESMAP: %+v", rolesMap)
+	log.Debugf("Filtered nodes: %+v", filteredNodes)
 
-	return rolesMap, nil
+	return filteredNodes, nil
 }
