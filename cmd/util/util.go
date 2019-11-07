@@ -102,8 +102,7 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 	// range over all instances of group[subset] specs
 	for _, filter := range filters {
 
-		/* Step 1: match regular expression */
-
+		// match regex with capturing groups
 		match := filterRegexp.FindStringSubmatch(filter)
 
 		if len(match) == 0 {
@@ -113,10 +112,6 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 		// map capturing group names to submatches
 		submatches := mapSubexpNames(filterRegexp.SubexpNames(), match)
 
-		log.Debugf("Matches: %+v", submatches)
-
-		/* Step 2 - Evaluate */
-
 		// if one of the filters is 'all', we only return this and drop all others
 		if submatches["group"] == "all" {
 			// TODO: only log if really more than one is specified
@@ -124,7 +119,7 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 			return nodes, nil
 		}
 
-		/* Choose the group of nodes to operate on */
+		// Choose the group of nodes to operate on
 		groupNodes := []*k3d.Node{}
 		if submatches["group"] == string(k3d.MasterRole) {
 			groupNodes = masterNodes
@@ -132,7 +127,7 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 			groupNodes = workerNodes
 		}
 
-		/* subset defined by list */
+		/* Option 1) subset defined by list */
 		if submatches["subsetList"] != "" {
 			for _, index := range strings.Split(submatches["subsetList"], ",") {
 				if index != "" {
@@ -150,7 +145,7 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 				}
 			}
 
-			/* subset defined by range */
+			/* Option 2) subset defined by range */
 		} else if submatches["subsetRange"] != "" {
 
 			/*
@@ -195,7 +190,7 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 				}
 			}
 
-			/* subset defined by wildcard */
+			/* Option 3) subset defined by wildcard */
 		} else if submatches["subsetWildcard"] == "*" {
 			/*
 			 * '*' = all nodes
@@ -207,14 +202,12 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 				}
 			}
 
-			/* invalid/unknown subset */
+			/* Option X) invalid/unknown subset */
 		} else {
 			return nil, fmt.Errorf("Failed to parse node specifiers: unknown subset in '%s'", filter)
 		}
 
 	}
-
-	log.Debugf("Filtered nodes: %+v", filteredNodes)
 
 	return filteredNodes, nil
 }

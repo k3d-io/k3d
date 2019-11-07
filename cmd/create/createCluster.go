@@ -130,14 +130,18 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	// volumeFilterMap will map volume mounts to applied node filters
 	volumeFilterMap := make(map[string]string, 1)
 	for _, volumeFlag := range volumeFlags {
-		log.Debugf("Parsing vol flag %+v", volumeFlag)
+
+		// split node filter from the specified volume
 		volume, filter, err := cliutil.SplitFilterFromFlag(volumeFlag)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		log.Debugf("Parsed vol flag %+v + filter %+v", volume, filter)
+
+		// validate the specified volume mount and return it in SRC:DEST format
 		volume, err = cliutil.ValidateVolumeMount(volume)
 		if err != nil {
 			log.Fatalln(err)
@@ -149,9 +153,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		} else {
 			volumeFilterMap[volume] = filter
 		}
-		log.Debugf("volFilterMap %+v", volumeFilterMap)
 	}
-	log.Debugf("volumeFIlterMap: %+v", volumeFilterMap)
 
 	/* generate cluster */
 	cluster := &k3d.Cluster{
@@ -191,7 +193,6 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	}
 
 	// append volumes
-	// TODO:
 	for volume, filter := range volumeFilterMap {
 		nodes, err := cliutil.FilterNodes(cluster.Nodes, filter)
 		if err != nil {
