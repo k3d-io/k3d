@@ -96,7 +96,7 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 		}
 	}
 
-	filteredNodes := make([]*k3d.Node, 1)
+	filteredNodes := []*k3d.Node{}
 	set := make(map[*k3d.Node]struct{})
 
 	// range over all instances of group[subset] specs
@@ -124,7 +124,7 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 			return nodes, nil
 		}
 
-		/*  */
+		/* Choose the group of nodes to operate on */
 		groupNodes := []*k3d.Node{}
 		if submatches["group"] == string(k3d.MasterRole) {
 			groupNodes = masterNodes
@@ -139,6 +139,9 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 					num, err := strconv.Atoi(index)
 					if err != nil {
 						return nil, fmt.Errorf("Failed to convert subset number to integer in '%s'", filter)
+					}
+					if num < 0 || num >= len(groupNodes) {
+						return nil, fmt.Errorf("Index out of range: index '%d' < 0 or > number of available nodes in filter '%s'", num, filter)
 					}
 					if _, exists := set[groupNodes[num]]; !exists {
 						filteredNodes = append(filteredNodes, groupNodes[num])
@@ -168,9 +171,10 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 				if err != nil {
 					return nil, fmt.Errorf("Failed to convert subset range start to integer in '%s'", filter)
 				}
-				if start < 0 {
-					return nil, fmt.Errorf("Invalid subset range: start < 0 in '%s'", filter)
+				if start < 0 || start >= len(groupNodes) {
+					return nil, fmt.Errorf("Invalid subset range: start < 0 or > number of available nodes in '%s'", filter)
 				}
+
 			}
 
 			if split[1] != "" {
@@ -178,8 +182,8 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 				if err != nil {
 					return nil, fmt.Errorf("Failed to convert subset range start to integer in '%s'", filter)
 				}
-				if end < start {
-					return nil, fmt.Errorf("Invalid subset range: end < start in '%s'", filter)
+				if end < start || end >= len(groupNodes) {
+					return nil, fmt.Errorf("Invalid subset range: end < start or > number of available nodes in '%s'", filter)
 				}
 			}
 
@@ -194,7 +198,11 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 			/*
 			 * '*' = all nodes
 			 */
-			return groupNodes, nil
+			for _, node := range groupNodes {
+				if _, exists := set[node]; !exists {
+					filteredNodes = append(filteredNodes, node)
+				}
+			}
 
 			/* invalid/unknown subset */
 		} else {

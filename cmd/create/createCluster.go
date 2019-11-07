@@ -22,6 +22,8 @@ THE SOFTWARE.
 package create
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	cliutil "github.com/rancher/k3d/cmd/util"
@@ -130,15 +132,25 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	}
 	volumeFilterMap := make(map[string]string, 1)
 	for _, volumeFlag := range volumeFlags {
+		log.Debugf("Parsing vol flag %+v", volumeFlag)
 		volume, filter, err := cliutil.SplitFilterFromFlag(volumeFlag)
 		if err != nil {
 			log.Fatalln(err)
 		}
+		log.Debugf("Parsed vol flag %+v + filter %+v", volume, filter)
 		if err := cliutil.ValidateVolumeMount(volume); err != nil {
 			log.Fatalln(err)
 		}
-		volumeFilterMap[volume] = filter
+
+		// create new entry or append filter to existing entry
+		if _, exists := volumeFilterMap[volume]; exists {
+			volumeFilterMap[volume] = fmt.Sprintf("%s;%s", volumeFilterMap[volume], filter)
+		} else {
+			volumeFilterMap[volume] = filter
+		}
+		log.Debugf("volFilterMap %+v", volumeFilterMap)
 	}
+	log.Debugf("volumeFIlterMap: %+v", volumeFilterMap)
 
 	/* generate cluster */
 	cluster := &k3d.Cluster{

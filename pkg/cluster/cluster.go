@@ -97,7 +97,7 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 		// create node
 		log.Infof("Creating node '%s'", node.Name)
-		if err := CreateNode(&node, runtime); err != nil {
+		if err := CreateNode(node, runtime); err != nil {
 			log.Errorln("Failed to create node")
 			return err
 		}
@@ -114,7 +114,7 @@ func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 	failed := 0
 	for _, node := range cluster.Nodes {
-		if err := runtime.DeleteNode(&node); err != nil {
+		if err := runtime.DeleteNode(node); err != nil {
 			log.Warningf("Failed to delete node '%s': Try to delete it manually", node.Name)
 			failed++
 			continue
@@ -143,7 +143,7 @@ func GetClusters(runtime k3drt.Runtime) ([]*k3d.Cluster, error) {
 		clusterExists := false
 		for _, cluster := range clusters {
 			if node.Labels["k3d.cluster"] == cluster.Name { // TODO: handle case, where this label doesn't exist
-				cluster.Nodes = append(cluster.Nodes, *node)
+				cluster.Nodes = append(cluster.Nodes, node)
 				clusterExists = true
 				break
 			}
@@ -152,7 +152,7 @@ func GetClusters(runtime k3drt.Runtime) ([]*k3d.Cluster, error) {
 		if !clusterExists {
 			clusters = append(clusters, &k3d.Cluster{
 				Name:  node.Labels["k3d.cluster"],
-				Nodes: []k3d.Node{*node},
+				Nodes: []*k3d.Node{node},
 			})
 		}
 	}
@@ -173,7 +173,7 @@ func GetCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) (*k3d.Cluster, erro
 
 	// append nodes
 	for _, node := range nodes {
-		cluster.Nodes = append(cluster.Nodes, *node)
+		cluster.Nodes = append(cluster.Nodes, node)
 	}
 
 	return cluster, nil
