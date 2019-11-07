@@ -243,6 +243,7 @@ kubectl cluster-info`, os.Args[0], c.String("name"))
 
 // DeleteCluster removes the containers belonging to a cluster and its local directory
 func DeleteCluster(c *cli.Context) error {
+
 	clusters, err := getClusters(c.Bool("all"), c.String("name"))
 
 	if err != nil {
@@ -250,6 +251,9 @@ func DeleteCluster(c *cli.Context) error {
 	}
 
 	if len(clusters) == 0 {
+		if !c.IsSet("all") && !c.IsSet("name") {
+			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to delete other clusters)", c.String("name"))
+		}
 		return fmt.Errorf("No cluster(s) found")
 	}
 
@@ -386,6 +390,9 @@ func GetKubeConfig(c *cli.Context) error {
 	}
 
 	if len(clusters) == 0 {
+		if !c.IsSet("all") && !c.IsSet("name") {
+			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to check other clusters)", c.String("name"))
+		}
 		return fmt.Errorf("No cluster(s) found")
 	}
 
