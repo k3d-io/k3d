@@ -138,7 +138,8 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 			log.Fatalln(err)
 		}
 		log.Debugf("Parsed vol flag %+v + filter %+v", volume, filter)
-		if err := cliutil.ValidateVolumeMount(volume); err != nil {
+		volume, err = cliutil.ValidateVolumeMount(volume)
+		if err != nil {
 			log.Fatalln(err)
 		}
 

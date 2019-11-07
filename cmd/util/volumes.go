@@ -30,14 +30,14 @@ import (
 // ValidateVolumeMount checks, if the source of volume mounts exists and if the destination is an absolute path
 // - SRC: source directory/file -> tests: must exist
 // - DEST: source directory/file -> tests: must be absolute path
-func ValidateVolumeMount(volumeMount string) error {
+func ValidateVolumeMount(volumeMount string) (string, error) {
 	src := ""
 	dest := ""
 
 	// validate 'SRC[:DEST]' substring
 	split := strings.Split(volumeMount, ":")
 	if len(split) < 1 || len(split) > 2 {
-		return fmt.Errorf("Invalid volume mount '%s': only one ':' allowed", volumeMount)
+		return "", fmt.Errorf("Invalid volume mount '%s': only one ':' allowed", volumeMount)
 	}
 
 	// we only have SRC specified -> DEST = SRC
@@ -52,14 +52,14 @@ func ValidateVolumeMount(volumeMount string) error {
 	// verify that the source exists
 	if src != "" {
 		if _, err := os.Stat(src); err != nil {
-			return fmt.Errorf("Failed to stat file/dir that you're trying to mount: '%s' in '%s'", src, volumeMount)
+			return "", fmt.Errorf("Failed to stat file/dir that you're trying to mount: '%s' in '%s'", src, volumeMount)
 		}
 	}
 
 	// verify that the destination is an absolute path
 	if !strings.HasPrefix(dest, "/") {
-		return fmt.Errorf("Volume mount destination doesn't appear to be an absolute path: '%s' in '%s'", dest, volumeMount)
+		return "", fmt.Errorf("Volume mount destination doesn't appear to be an absolute path: '%s' in '%s'", dest, volumeMount)
 	}
 
-	return nil
+	return fmt.Sprintf("%s:%s", src, dest), nil
 }
