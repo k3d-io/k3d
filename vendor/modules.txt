@@ -39,6 +39,8 @@ github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
+# github.com/inconshreveable/mousetrap v1.0.0
+github.com/inconshreveable/mousetrap
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/mattn/go-runewidth v0.0.4
@@ -56,8 +58,10 @@ github.com/opencontainers/image-spec/specs-go
 github.com/pkg/errors
 # github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
-# github.com/urfave/cli v1.20.0
-github.com/urfave/cli
+# github.com/spf13/cobra v0.0.5
+github.com/spf13/cobra
+# github.com/spf13/pflag v1.0.3
+github.com/spf13/pflag
 # golang.org/x/net v0.0.0-20190403144856-b630fd6fe46b
 golang.org/x/net/proxy
 golang.org/x/net/internal/socks
