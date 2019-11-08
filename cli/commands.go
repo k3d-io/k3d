@@ -17,6 +17,8 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/rancher/k3d/pkg/constants"
 )
 
 const (
@@ -124,8 +126,8 @@ func CreateCluster(
 	}
 
 	if len(agentArgs) > 0 {
-    if workers < 1 {
-      log.Warnln("--agent-arg supplied, but --workers is 0, so no agents will be created")
+		if workers < 1 {
+			log.Warnln("--agent-arg supplied, but --workers is 0, so no agents will be created")
 		}
 		k3sAgentArgs = append(k3sAgentArgs, agentArgs...)
 	}
@@ -241,7 +243,7 @@ func DeleteCluster(all bool, name string) error {
 	}
 
 	if len(clusters) == 0 {
-		if !all && !name{
+		if !all && name != constants.DefaultK3sClusterName {
 			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to delete other clusters)", name)
 		}
 		return fmt.Errorf("No cluster(s) found")
@@ -376,7 +378,7 @@ func GetKubeConfig(all bool, name string) error {
 	}
 
 	if len(clusters) == 0 {
-		if !all && !name {
+		if !all && name != constants.DefaultK3sClusterName {
 			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to check other clusters)", name)
 		}
 		return fmt.Errorf("No cluster(s) found")
