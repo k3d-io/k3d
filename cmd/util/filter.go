@@ -36,13 +36,13 @@ import (
 // Regexp pattern to match node filters
 var filterRegexp = regexp.MustCompile(`^(?P<group>master|worker|all)(?P<subsetSpec>\[(?P<subset>(?P<subsetList>(\d+,?)+)|(?P<subsetRange>\d*:\d*)|(?P<subsetWildcard>\*))\])?$`)
 
-// SplitFilterFromFlag separates a flag's value from the node filter, if there is one
-func SplitFilterFromFlag(flag string) (string, string, error) {
+// SplitFiltersFromFlag separates a flag's value from the node filter, if there is one
+func SplitFiltersFromFlag(flag string) (string, []string, error) {
 
 	/* Case 1) no filter specified */
 
 	if !strings.Contains(flag, "@") {
-		return flag, "", nil
+		return flag, nil, nil
 	}
 
 	/* Case 2) filter indicated using '@' in flag */
@@ -51,25 +51,22 @@ func SplitFilterFromFlag(flag string) (string, string, error) {
 
 	// max number of pieces after split = 2 (only one @ allowed in flag)
 	if len(split) > 2 {
-		return "", "", fmt.Errorf("Invalid flag '%s': only one '@' for node filter allowed", flag)
+		return "", nil, fmt.Errorf("Invalid flag '%s': only one '@' for node filter allowed", flag)
 	}
 
 	// trailing or leading '@'
 	if len(split) < 2 {
-		return "", "", fmt.Errorf("Invalid flag '%s' includes '@' but is missing either an object or a filter", flag)
+		return "", nil, fmt.Errorf("Invalid flag '%s' includes '@' but is missing either an object or a filter", flag)
 	}
 
-	return split[0], split[1], nil
+	return split[0], strings.Split(split[1], ";"), nil
 
 }
 
 // FilterNodes takes a string filter to return a filtered list of nodes
-func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
+func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 
-	// filterString is a semicolon-separated list of node filters
-	filters := strings.Split(filterString, ";")
-
-	if len(filters) == 0 {
+	if len(filters) == 0 || len(filters[0]) == 0 {
 		log.Warnln("No filter specified")
 		return nodes, nil
 	}
@@ -104,7 +101,7 @@ func FilterNodes(nodes []*k3d.Node, filterString string) ([]*k3d.Node, error) {
 		// if one of the filters is 'all', we only return this and drop all others
 		if submatches["group"] == "all" {
 			// TODO: only log if really more than one is specified
-			log.Warnf("Node filter 'all' set, but more were specified in '%s'", filterString)
+			log.Warnf("Node filter 'all' set, but more were specified in '%+v'", filters)
 			return nodes, nil
 		}
 

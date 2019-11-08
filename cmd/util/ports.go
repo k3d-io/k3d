@@ -70,5 +70,5 @@ func ParseAPIPort(portString string) (k3d.ExposeAPI, error) {
 
 // ValidatePortMap validates a port mapping
 func ValidatePortMap(portmap string) (string, error) {
-	return "", nil // TODO:
+	return portmap, nil // TODO:
 }

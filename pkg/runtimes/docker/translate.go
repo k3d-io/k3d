@@ -81,7 +81,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	/* Ports */
 	exposedPorts, portBindings, err := nat.ParsePortSpecs(node.Ports)
 	if err != nil {
-		log.Errorln("Failed to parse port specs")
+		log.Errorln("Failed to parse port specs '%v'", node.Ports)
 		return nil, err
 	}
 	containerConfig.ExposedPorts = exposedPorts

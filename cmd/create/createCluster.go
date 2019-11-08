@@ -22,8 +22,6 @@ THE SOFTWARE.
 package create
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	cliutil "github.com/rancher/k3d/cmd/util"
@@ -133,11 +131,11 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	}
 
 	// volumeFilterMap will map volume mounts to applied node filters
-	volumeFilterMap := make(map[string]string, 1)
+	volumeFilterMap := make(map[string][]string, 1)
 	for _, volumeFlag := range volumeFlags {
 
 		// split node filter from the specified volume
-		volume, filter, err := cliutil.SplitFilterFromFlag(volumeFlag)
+		volume, filters, err := cliutil.SplitFiltersFromFlag(volumeFlag)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -150,9 +148,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 
 		// create new entry or append filter to existing entry
 		if _, exists := volumeFilterMap[volume]; exists {
-			volumeFilterMap[volume] = fmt.Sprintf("%s;%s", volumeFilterMap[volume], filter)
+			volumeFilterMap[volume] = append(volumeFilterMap[volume], filters...)
 		} else {
-			volumeFilterMap[volume] = filter
+			volumeFilterMap[volume] = filters
 		}
 	}
 
@@ -161,13 +159,19 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	if err != nil {
 		log.Fatalln(err)
 	}
-	portFilterMap := make(map[string]string, 1)
+	portFilterMap := make(map[string][]string, 1)
 	for _, portFlag := range portFlags {
 		// split node filter from the specified volume
-		portmap, filter, err := cliutil.SplitFilterFromFlag(portFlag)
+		portmap, filters, err := cliutil.SplitFiltersFromFlag(portFlag)
 		if err != nil {
 			log.Fatalln(err)
 		}
+
+		if len(filters) > 1 {
+			log.Fatalln("Can only apply a Portmap to one node")
+		}
+
+		// the same portmapping can't be applied to multiple nodes
 
 		// validate the specified volume mount and return it in SRC:DEST format
 		portmap, err = cliutil.ValidatePortMap(portmap)
@@ -177,9 +181,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 
 		// create new entry or append filter to existing entry
 		if _, exists := portFilterMap[portmap]; exists {
-			portFilterMap[portmap] = fmt.Sprintf("%s;%s", portFilterMap[portmap], filter)
+			log.Fatalln("Same Portmapping can not be used for multiple nodes")
 		} else {
-			portFilterMap[portmap] = filter
+			portFilterMap[portmap] = filters
 		}
 	}
 
@@ -228,6 +232,17 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		}
 		for _, node := range nodes {
 			node.Volumes = append(node.Volumes, volume)
+		}
+	}
+
+	// append ports
+	for portmap, filter := range portFilterMap {
+		nodes, err := cliutil.FilterNodes(cluster.Nodes, filter)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		for _, node := range nodes {
+			node.Ports = append(node.Ports, portmap)
 		}
 	}
 
