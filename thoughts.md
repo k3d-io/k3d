@@ -75,3 +75,9 @@ Here's how k3d types should translate to a runtime type:
 - if `--masters` > 1 deploy a load-balancer in front of them as an extra container
   - consider that in the kubeconfig file and `--tls-san`
   - make this the default, but provide a `--no-deploy-lb` flag
+
+## Store additional created stuff in labels
+
+- when creating a cluster, usually, you also create a new docker network (and maybe other resources)
+  - store a reference to those in the container labels of cluster nodes
+  - when deleting the cluster, parse the labels, deduplicate the results and delete the additional resources

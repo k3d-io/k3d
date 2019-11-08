@@ -75,7 +75,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 
 	/* Volumes */
 	// TODO: image volume
-	hostConfig.Binds = node.Volumes // TODO: some validation?
+	hostConfig.Binds = node.Volumes
 	// containerConfig.Volumes = map[string]struct{}{} // TODO: do we need this? We only used binds before
 
 	/* Ports */

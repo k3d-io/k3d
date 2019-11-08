@@ -50,7 +50,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	}
 
 	// add flags
-	cmd.Flags().StringP("api-port", "a", "6443", "Specify the Kubernetes API server port (Format: `--api-port [host:]port`") // TODO: how to handle this for multi-master setups?
+	cmd.Flags().StringArrayP("api-port", "a", []string{"6443"}, "Specify the Kubernetes API server port (Format: `--api-port [HOST:]HOSTPORT[@NODEFILTER]`") // TODO: how to handle this for multi-master setups?
 	cmd.Flags().IntP("masters", "m", 1, "Specify how many masters you want to create")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
 	cmd.Flags().String("config", "", "Specify a cluster configuration file")                                     // TODO: to implement
@@ -58,7 +58,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().String("network", "", "Join an existing network")
 	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`")
-	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[IP:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)")
+	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)")
 
 	// add subcommands
 
@@ -115,13 +115,22 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	}
 
 	// --api-port
-	apiPort, err := cmd.Flags().GetString("api-port")
+	apiPorts, err := cmd.Flags().GetStringArray("api-port")
 	if err != nil {
 		log.Fatalln(err)
 	}
-	exposeAPI, err := cliutil.ParseAPIPort(apiPort)
-	if err != nil {
-		log.Fatalln(err)
+
+	// error out if we have more api-ports than masters specified
+	if len(apiPorts) > masterCount {
+		log.Fatalf("Cannot expose more api-ports than master nodes exist (%d > %d)", len(apiPorts), masterCount)
+	}
+
+	// TODO: finish like volume and port maps
+	for _, apiport := range apiPorts {
+		exposeAPI, err := cliutil.ParseAPIPort(apiPorts)
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 
 	// --volume
