@@ -134,6 +134,7 @@ func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		}
 	}
 
+	// Delete the cluster network, if it was created for/by this cluster (and if it's not in use anymore) // TODO: does this make sense or should we always try to delete it? (Will fail anyway, if it's still in use)
 	if network, ok := cluster.Nodes[0].Labels["k3d.cluster.network"]; ok {
 		if cluster.Nodes[0].Labels["k3d.cluster.network.external"] == "false" {
 			log.Infof("Deleting cluster network '%s'", network)

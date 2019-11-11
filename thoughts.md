@@ -58,7 +58,7 @@ Here's how k3d types should translate to a runtime type:
 - Restart -> 
 - Labels  -> container.Labels
 
-## expose ports / volumes
+## expose ports / volumes => DONE
 
 - `--port [host:]port[:containerPort][/protocol][@group_identifier[[index] | @node_identifier]`
   - Examples:
@@ -70,14 +70,16 @@ Here's how k3d types should translate to a runtime type:
 
 - analogous for volumes
 
-## multi master setup
+## multi master setup => WIP
 
 - if `--masters` > 1 deploy a load-balancer in front of them as an extra container
   - consider that in the kubeconfig file and `--tls-san`
-  - make this the default, but provide a `--no-deploy-lb` flag
+  - make this the default, but provide a `--no-lb` flag
 
-## Store additional created stuff in labels
+## Store additional created stuff in labels => DONE
 
 - when creating a cluster, usually, you also create a new docker network (and maybe other resources)
   - store a reference to those in the container labels of cluster nodes
   - when deleting the cluster, parse the labels, deduplicate the results and delete the additional resources
+  - DONE for network
+    - new labels `k3d.cluster.network=<ID>` and `k3d.cluster.network.external=<true|false>` (determine whether to try to delete it when you delete a cluster, since network may have been created manually)
