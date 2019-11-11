@@ -94,9 +94,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	}
 
 	// TODO: allow more than one master
-	// if masterCount > 1 {
-	// 	log.Fatalln("Only one master node supported right now!")
-	// }
+	if masterCount > 1 {
+		log.Warnln("Multi-Master is setup not fully implemented/supported right now!")
+	}
 
 	// --workers
 	workerCount, err := cmd.Flags().GetInt("workers")
