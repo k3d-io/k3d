@@ -82,6 +82,15 @@ func (d Docker) CreateNetworkIfNotPresent(name string) (string, bool, error) {
 }
 
 // DeleteNetwork deletes a network
-func (d Docker) DeleteNetwork(name string) error {
-	return nil
+func (d Docker) DeleteNetwork(ID string) error {
+	// (0) create new docker client
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return err
+	}
+
+	// (3) delete network
+	return docker.NetworkRemove(ctx, ID)
 }

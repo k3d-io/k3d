@@ -135,9 +135,12 @@ func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 	if network, ok := cluster.Nodes[0].Labels["k3d.cluster.network"]; ok {
 		if cluster.Nodes[0].Labels["k3d.cluster.network.external"] == "false" {
+			log.Infof("Deleting cluster network '%s'", network)
 			if err := runtime.DeleteNetwork(network); err != nil {
 				log.Warningf("Failed to delete cluster network '%s': Try to delete it manually", network)
 			}
+		} else if cluster.Nodes[0].Labels["k3d.cluster.network.external"] == "true" {
+			log.Debugf("Skip deletion of cluster network '%s' because it's managed externally", network)
 		}
 	}
 

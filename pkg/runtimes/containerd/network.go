@@ -27,6 +27,6 @@ func (d Containerd) CreateNetworkIfNotPresent(name string) (string, bool, error)
 }
 
 // DeleteNetwork deletes a network
-func (d Containerd) DeleteNetwork(name string) error {
+func (d Containerd) DeleteNetwork(ID string) error {
 	return nil
 }
