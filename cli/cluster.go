@@ -156,17 +156,21 @@ func createKubeConfigFile(cluster string) error {
 	// set the host name to remote docker machine's IP address.
 	//
 	// Otherwise, the hostname remains as 'localhost'
+	//
+	// Additionally, we replace every occurence of 'default' in the kubeconfig with the actual cluster name
 	apiHost := server[0].Labels["apihost"]
 
+	s := string(trimBytes)
+	s = strings.ReplaceAll(s, "default", cluster)
 	if apiHost != "" {
-		s := string(trimBytes)
 		s = strings.Replace(s, "localhost", apiHost, 1)
 		s = strings.Replace(s, "127.0.0.1", apiHost, 1)
-		trimBytes = []byte(s)
 	}
+	trimBytes = []byte(s)
+
 	_, err = kubeconfigfile.Write(trimBytes)
 	if err != nil {
-		return fmt.Errorf(" Couldn't write to kubeconfig.yaml\n%+v", err)
+		return fmt.Errorf("Couldn't write to kubeconfig.yaml\n%+v", err)
 	}
 
 	return nil
