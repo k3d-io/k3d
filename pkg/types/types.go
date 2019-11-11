@@ -35,6 +35,9 @@ const DefaultClusterNameMaxLength = 32
 // DefaultK3sImageRepo specifies the default image repository for the used k3s image
 const DefaultK3sImageRepo = "docker.io/rancher/k3s"
 
+// DefaultLBImage defines the default cluster load balancer image
+const DefaultLBImage = "docker.io/library/traefik:v2.0"
+
 // DefaultObjectNamePrefix defines the name prefix for every object created by k3d
 const DefaultObjectNamePrefix = "k3d"
 
@@ -71,10 +74,11 @@ var DefaultNodeEnv = []string{
 
 // Cluster describes a k3d cluster
 type Cluster struct {
-	Name    string  `yaml:"name" json:"name,omitempty"`
-	Network string  `yaml:"network" json:"network,omitempty"`
-	Secret  string  `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
-	Nodes   []*Node `yaml:"nodes" json:"nodes,omitempty"`
+	Name               string               `yaml:"name" json:"name,omitempty"`
+	Network            string               `yaml:"network" json:"network,omitempty"`
+	Secret             string               `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
+	Nodes              []*Node              `yaml:"nodes" json:"nodes,omitempty"`
+	MasterLoadBalancer *ClusterLoadbalancer `yaml:"master_loadbalancer" json:"masterLoadBalancer,omitempty"`
 }
 
 // Node describes a k3d node
@@ -112,4 +116,10 @@ type WorkerOpts struct{}
 // GetDefaultObjectName prefixes the passed name with the default prefix
 func GetDefaultObjectName(name string) string {
 	return fmt.Sprintf("%s-%s", DefaultObjectNamePrefix, name)
+}
+
+// ClusterLoadbalancer describes a loadbalancer deployed in front of a multi-master cluster
+type ClusterLoadbalancer struct {
+	Image       string
+	ExposedPort string `yaml:"exposed_port" json:"exposedPort,omitempty"`
 }

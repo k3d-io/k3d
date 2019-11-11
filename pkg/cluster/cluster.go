@@ -45,12 +45,19 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	}
 
 	// create cluster network or use an existing one
-	networkID, err := runtime.CreateNetworkIfNotPresent(cluster.Network)
+	networkID, networkExists, err := runtime.CreateNetworkIfNotPresent(cluster.Network)
 	if err != nil {
 		log.Errorln("Failed to create cluster network")
 		return err
 	}
 	cluster.Network = networkID
+	extraLabels := map[string]string{
+		"k3d.cluster.network":          networkID,
+		"k3d.cluster.network.external": "false",
+	}
+	if networkExists {
+		extraLabels["k3d.cluster.network.external"] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)
+	}
 
 	/*
 	 * Cluster Secret
@@ -76,6 +83,11 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		}
 		node.Labels["k3d.cluster"] = cluster.Name
 		node.Env = append(node.Env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", cluster.Secret))
+
+		// append extra labels
+		for k, v := range extraLabels {
+			node.Labels[k] = v
+		}
 
 		// node role specific settings
 		suffix := 0
@@ -121,7 +133,13 @@ func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		}
 	}
 
-	// TODO: remove network
+	if network, ok := cluster.Nodes[0].Labels["k3d.cluster.network"]; ok {
+		if cluster.Nodes[0].Labels["k3d.cluster.network.external"] == "false" {
+			if err := runtime.DeleteNetwork(network); err != nil {
+				log.Warningf("Failed to delete cluster network '%s': Try to delete it manually", network)
+			}
+		}
+	}
 
 	if failed > 0 {
 		return fmt.Errorf("Failed to delete %d nodes: Try to delete them manually", failed)

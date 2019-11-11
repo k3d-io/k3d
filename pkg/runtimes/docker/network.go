@@ -23,6 +23,7 @@ package docker
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -32,18 +33,20 @@ import (
 )
 
 // CreateNetworkIfNotPresent creates a new docker network
-func (d Docker) CreateNetworkIfNotPresent(name string) (string, error) {
+// @return: network name, exists, error
+func (d Docker) CreateNetworkIfNotPresent(name string) (string, bool, error) {
 
 	// (0) create new docker client
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")
-		return "", err
+		return "", false, err
 	}
 
 	// (1) configure list filters
-	args := GetDefaultObjectLabelsFilter(name)
+	args := GetDefaultObjectLabelsFilter("")
+	args.Del("label", fmt.Sprintf("k3d.cluster=%s", "")) // We don't filter for cluster name here
 	args.Add("name", name)
 
 	// (2) get filtered list of networks
@@ -52,7 +55,7 @@ func (d Docker) CreateNetworkIfNotPresent(name string) (string, error) {
 	})
 	if err != nil {
 		log.Errorln("Failed to list docker networks")
-		return "", err
+		return "", false, err
 	}
 
 	// (2.1) If possible, return an existing network
@@ -62,7 +65,7 @@ func (d Docker) CreateNetworkIfNotPresent(name string) (string, error) {
 
 	if len(networkList) > 0 {
 		log.Infof("Network with name '%s' already exists with ID '%s'", name, networkList[0].ID)
-		return networkList[0].ID, nil
+		return networkList[0].ID, true, nil
 	}
 
 	// (3) Create a new network
@@ -71,9 +74,14 @@ func (d Docker) CreateNetworkIfNotPresent(name string) (string, error) {
 	})
 	if err != nil {
 		log.Errorln("Failed to create network")
-		return "", err
+		return "", false, err
 	}
 
 	log.Infof("Created network '%s'", name)
-	return network.ID, nil
+	return network.ID, false, nil
+}
+
+// DeleteNetwork deletes a network
+func DeleteNetwork(name string) error {
+	return nil
 }

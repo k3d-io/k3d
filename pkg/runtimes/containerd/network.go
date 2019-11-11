@@ -22,6 +22,11 @@ THE SOFTWARE.
 package containerd
 
 // CreateNetworkIfNotPresent creates a new docker network
-func (d Containerd) CreateNetworkIfNotPresent(name string) (string, error) {
-	return "", nil
+func (d Containerd) CreateNetworkIfNotPresent(name string) (string, bool, error) {
+	return "", false, nil
+}
+
+// DeleteNetwork deletes a network
+func DeleteNetwork(name string) error {
+	return nil
 }

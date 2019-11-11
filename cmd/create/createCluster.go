@@ -55,12 +55,14 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().StringArrayP("api-port", "a", []string{"6443"}, "Specify the Kubernetes API server port (Format: `--api-port [HOST:]HOSTPORT[@NODEFILTER]`") // TODO: how to handle this for multi-master setups?
 	cmd.Flags().IntP("masters", "m", 1, "Specify how many masters you want to create")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
-	cmd.Flags().String("config", "", "Specify a cluster configuration file")                                     // TODO: to implement
+	// cmd.Flags().String("config", "", "Specify a cluster configuration file")                                     // TODO: to implement
 	cmd.Flags().String("image", k3d.DefaultK3sImageRepo, "Specify k3s image that you want to use for the nodes") // TODO: get image version
 	cmd.Flags().String("network", "", "Join an existing network")
 	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`")
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)")
+	cmd.Flags().Bool("no-lb", false, "Disable automatic deployment of a load balancer in Multi-Master setups")
+	cmd.Flags().String("lb-port", "0.0.0.0:6443", "Specify port to be exposed by the master load balancer (Format: `[HOST:]HOSTPORT)")
 
 	// add subcommands
 
@@ -170,6 +172,18 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 
 		// add to map
 		exposeAPIToFiltersMap[exposeAPI] = filters
+	}
+
+	// --no-lb
+	noLB, err := cmd.Flags().GetBool("no-lb")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// --lb-port
+	lbPort, err := cmd.Flags().GetString("lb-port")
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	// --volume
@@ -300,6 +314,15 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		}
 		for _, node := range nodes {
 			node.Ports = append(node.Ports, portmap)
+		}
+	}
+
+	// TODO: create load balancer and other util containers // TODO: for now, this will only work with the docker provider (?) -> can replace dynamic docker lookup with static traefik config (?)
+	if masterCount > 1 && !noLB { // TODO: add traefik to the same network and add traefik labels to the master node containers
+		log.Debugln("Creating LB in front of master nodes")
+		cluster.MasterLoadBalancer = &k3d.ClusterLoadbalancer{
+			Image:       k3d.DefaultLBImage,
+			ExposedPort: lbPort,
 		}
 	}
 
