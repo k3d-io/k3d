@@ -22,6 +22,8 @@ THE SOFTWARE.
 package create
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	cliutil "github.com/rancher/k3d/cmd/util"
@@ -92,9 +94,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	}
 
 	// TODO: allow more than one master
-	if masterCount > 1 {
-		log.Fatalln("Only one master node supported right now!")
-	}
+	// if masterCount > 1 {
+	// 	log.Fatalln("Only one master node supported right now!")
+	// }
 
 	// --workers
 	workerCount, err := cmd.Flags().GetInt("workers")
@@ -115,22 +117,59 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	}
 
 	// --api-port
-	apiPorts, err := cmd.Flags().GetStringArray("api-port")
+	apiPortFlags, err := cmd.Flags().GetStringArray("api-port")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	// error out if we have more api-ports than masters specified
-	if len(apiPorts) > masterCount {
-		log.Fatalf("Cannot expose more api-ports than master nodes exist (%d > %d)", len(apiPorts), masterCount)
+	if len(apiPortFlags) > masterCount {
+		log.Fatalf("Cannot expose more api-ports than master nodes exist (%d > %d)", len(apiPortFlags), masterCount)
 	}
 
 	// TODO: finish like volume and port maps
-	for _, apiport := range apiPorts {
-		exposeAPI, err := cliutil.ParseAPIPort(apiPorts)
+	ipPortCombinations := map[string]struct{}{} // only for finding duplicates
+	apiPortFilters := map[string]struct{}{}     // only for deduplication
+	exposeAPIToFiltersMap := map[k3d.ExposeAPI][]string{}
+	for _, apiPortFlag := range apiPortFlags {
+
+		// split the flag value from the node filter
+		apiPortString, filters, err := cliutil.SplitFiltersFromFlag(apiPortFlag)
 		if err != nil {
 			log.Fatalln(err)
 		}
+
+		// if there's only one master node, we don't need a node filter, but if there's more than one, we need exactly one node filter per api-port flag
+		if len(filters) > 1 || (len(filters) == 0 && masterCount > 1) {
+			log.Fatalf("Exactly one node filter required per '--api-port' flag, but got %d on flag %s", len(filters), apiPortFlag)
+		}
+
+		// add default, if no filter was set and we only have a single master node
+		if len(filters) == 0 && masterCount == 1 {
+			filters[0] = "master[0]"
+		}
+
+		// only one api-port mapping allowed per master node
+		if _, exists := apiPortFilters[filters[0]]; exists {
+			log.Fatalf("Cannot assign multiple api-port mappings to the same node: duplicate '%s'", filters[0])
+		}
+		apiPortFilters[filters[0]] = struct{}{}
+
+		// parse the port mapping
+		exposeAPI, err := cliutil.ParseAPIPort(apiPortString)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// error out on duplicates
+		ipPort := fmt.Sprintf("%s:%s", exposeAPI.HostIP, exposeAPI.Port)
+		if _, exists := ipPortCombinations[ipPort]; exists {
+			log.Fatalf("Duplicate IP:PORT combination '%s' for the Api Port is not allowed", ipPort)
+		}
+		ipPortCombinations[ipPort] = struct{}{}
+
+		// add to map
+		exposeAPIToFiltersMap[exposeAPI] = filters
 	}
 
 	// --volume
@@ -214,11 +253,6 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 			MasterOpts: k3d.MasterOpts{},
 		}
 
-		// expose API Port
-		if i == 0 { // TODO:
-			node.MasterOpts.ExposeAPI = exposeAPI
-		}
-
 		// append node to list
 		cluster.Nodes = append(cluster.Nodes, &node)
 	}
@@ -233,9 +267,23 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		cluster.Nodes = append(cluster.Nodes, &node)
 	}
 
+	// add masterOpts
+	for exposeAPI, filters := range exposeAPIToFiltersMap {
+		nodes, err := cliutil.FilterNodes(cluster.Nodes, filters)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		for _, node := range nodes {
+			if node.Role != k3d.MasterRole {
+				log.Fatalf("Node returned by filters '%+v' for exposing the API is not a master node", filters)
+			}
+			node.MasterOpts.ExposeAPI = exposeAPI
+		}
+	}
+
 	// append volumes
-	for volume, filter := range volumeFilterMap {
-		nodes, err := cliutil.FilterNodes(cluster.Nodes, filter)
+	for volume, filters := range volumeFilterMap {
+		nodes, err := cliutil.FilterNodes(cluster.Nodes, filters)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -245,8 +293,8 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	}
 
 	// append ports
-	for portmap, filter := range portFilterMap {
-		nodes, err := cliutil.FilterNodes(cluster.Nodes, filter)
+	for portmap, filters := range portFilterMap {
+		nodes, err := cliutil.FilterNodes(cluster.Nodes, filters)
 		if err != nil {
 			log.Fatalln(err)
 		}
