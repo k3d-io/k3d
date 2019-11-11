@@ -69,7 +69,7 @@ func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) ([]byte, erro
 	// get the kubeconfig from the first master node
 	reader, err := runtime.GetKubeconfig(chosenMaster)
 	if err != nil {
-		log.Errorf("Failed to get kubeconfig from node '%s'", chosenMaster)
+		log.Errorf("Failed to get kubeconfig from node '%s'", chosenMaster.Name)
 		return nil, err
 	}
 	defer reader.Close()
@@ -84,8 +84,13 @@ func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) ([]byte, erro
 	// and trim any NULL characters
 	trimBytes := bytes.Trim(readBytes[512:], "\x00")
 
+	// TODO: parse yaml and modify fields directly?
+
 	// replace host and port where the API is exposed with what we've found in the master node labels (or use the default)
-	trimBytes = []byte(strings.Replace(string(trimBytes), "localhost:6443", fmt.Sprintf("%s:%s", APIHost, APIPort), 1)) // replace localhost:6443 with localhost:<mappedAPIPort> in kubeconfig
+	trimBytes = []byte(strings.Replace(string(trimBytes), "localhost:6443", fmt.Sprintf("%s:%s", APIHost, APIPort), 1)) // replace localhost:6443 with <apiHost>:<mappedAPIPort> in kubeconfig
+
+	// replace 'default' in kubeconfig with <cluster name> // TODO: only do this for the context and cluster name (?) -> parse yaml
+	trimBytes = []byte(strings.ReplaceAll(string(trimBytes), "default", cluster.Name))
 
 	return trimBytes, nil
 }
