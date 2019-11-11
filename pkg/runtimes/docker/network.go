@@ -82,6 +82,6 @@ func (d Docker) CreateNetworkIfNotPresent(name string) (string, bool, error) {
 }
 
 // DeleteNetwork deletes a network
-func DeleteNetwork(name string) error {
+func (d Docker) DeleteNetwork(name string) error {
 	return nil
 }
