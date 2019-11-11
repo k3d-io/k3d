@@ -23,6 +23,7 @@ package cluster
 
 import (
 	"fmt"
+	"strings"
 
 	k3drt "github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -137,7 +138,11 @@ func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		if cluster.Nodes[0].Labels["k3d.cluster.network.external"] == "false" {
 			log.Infof("Deleting cluster network '%s'", network)
 			if err := runtime.DeleteNetwork(network); err != nil {
-				log.Warningf("Failed to delete cluster network '%s': Try to delete it manually", network)
+				if strings.HasSuffix(err.Error(), "active endpoints") {
+					log.Warningf("Failed to delete cluster network '%s' because it's still in use: is there another cluster using it?", network)
+				} else {
+					log.Warningf("Failed to delete cluster network '%s': '%+v'", network, err)
+				}
 			}
 		} else if cluster.Nodes[0].Labels["k3d.cluster.network.external"] == "true" {
 			log.Debugf("Skip deletion of cluster network '%s' because it's managed externally", network)
