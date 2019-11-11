@@ -148,7 +148,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 
 		// add default, if no filter was set and we only have a single master node
 		if len(filters) == 0 && masterCount == 1 {
-			filters[0] = "master[0]"
+			filters = []string{"master[0]"}
 		}
 
 		// only one api-port mapping allowed per master node
