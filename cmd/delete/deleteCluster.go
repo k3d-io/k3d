@@ -67,7 +67,7 @@ func NewCmdDeleteCluster() *cobra.Command {
 	return cmd
 }
 
-// parseDeleteClusterCmd parses the command input into variables required to create a cluster
+// parseDeleteClusterCmd parses the command input into variables required to delete clusters
 func parseDeleteClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, []*k3d.Cluster) {
 	// --runtime
 	rt, err := cmd.Flags().GetString("runtime")

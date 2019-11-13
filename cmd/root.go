@@ -31,6 +31,8 @@ import (
 	"github.com/rancher/k3d/cmd/create"
 	"github.com/rancher/k3d/cmd/delete"
 	"github.com/rancher/k3d/cmd/get"
+	"github.com/rancher/k3d/cmd/start"
+	"github.com/rancher/k3d/cmd/stop"
 
 	"github.com/rancher/k3d/version"
 
@@ -79,6 +81,8 @@ func init() {
 	rootCmd.AddCommand(create.NewCmdCreate())
 	rootCmd.AddCommand(delete.NewCmdDelete())
 	rootCmd.AddCommand(get.NewCmdGet())
+	rootCmd.AddCommand(stop.NewCmdStop())
+	rootCmd.AddCommand(start.NewCmdStart())
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",

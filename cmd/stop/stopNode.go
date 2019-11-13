@@ -22,7 +22,10 @@ THE SOFTWARE.
 package stop
 
 import (
+	"github.com/rancher/k3d/pkg/runtimes"
 	"github.com/spf13/cobra"
+
+	k3d "github.com/rancher/k3d/pkg/types"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -37,9 +40,33 @@ func NewCmdStopNode() *cobra.Command {
 		Long:  `Stop an existing k3d node.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("stop node called")
+			runtime, node := parseStopNodeCmd(cmd, args)
+			if err := runtime.StopNode(node); err != nil {
+				log.Fatalln(err)
+			}
 		},
 	}
 
 	// done
 	return cmd
+}
+
+// parseStopNodeCmd parses the command input into variables required to stop a node
+func parseStopNodeCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, *k3d.Node) {
+	// --runtime
+	rt, err := cmd.Flags().GetString("runtime")
+	if err != nil {
+		log.Fatalln("No runtime specified")
+	}
+	runtime, err := runtimes.GetRuntime(rt)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// node name // TODO: allow node filters, e.g. `k3d stop nodes mycluster@worker` to stop all worker nodes of cluster 'mycluster'
+	if len(args) == 0 || len(args[0]) == 0 {
+		log.Fatalln("No node name given")
+	}
+
+	return runtime, &k3d.Node{Name: args[0]} // TODO: validate and allow for more than one
 }

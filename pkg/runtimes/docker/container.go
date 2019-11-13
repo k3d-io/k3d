@@ -147,6 +147,7 @@ func getNodeContainer(node *k3d.Node) (*types.Container, error) {
 
 	containers, err := docker.ContainerList(ctx, types.ContainerListOptions{
 		Filters: filters,
+		All:     true,
 	})
 	if err != nil {
 		log.Errorln("Failed to list containers")
@@ -156,6 +157,10 @@ func getNodeContainer(node *k3d.Node) (*types.Container, error) {
 	if len(containers) > 1 {
 		log.Errorln("Failed to get a single container")
 		return nil, err
+	}
+
+	if len(containers) == 0 {
+		return nil, fmt.Errorf("Didn't find container for node '%s'", node.Name)
 	}
 
 	return &containers[0], nil

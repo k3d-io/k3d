@@ -44,9 +44,9 @@ type Runtime interface {
 	CreateNetworkIfNotPresent(name string) (string, bool, error) // @return NETWORK_NAME, EXISTS, ERROR
 	GetKubeconfig(*k3d.Node) (io.ReadCloser, error)
 	DeleteNetwork(ID string) error
-	// StartContainer() error
+	StartNode(*k3d.Node) error
+	StopNode(*k3d.Node) error
 	// ExecContainer() error
-	// StopContainer() error
 	// DeleteContainer() error
 	// GetContainerLogs() error
 }

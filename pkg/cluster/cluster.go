@@ -214,3 +214,41 @@ func GenerateClusterSecret() string {
 func generateNodeName(cluster string, role k3d.Role, suffix int) string {
 	return fmt.Sprintf("%s-%s-%s-%d", k3d.DefaultObjectNamePrefix, cluster, role, suffix)
 }
+
+// StartCluster starts a whole cluster (i.e. all nodes of the cluster)
+func StartCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
+	log.Infof("Starting cluster '%s'", cluster.Name)
+
+	failed := 0
+	for _, node := range cluster.Nodes {
+		if err := runtime.StartNode(node); err != nil {
+			log.Warningf("Failed to start node '%s': Try to start it manually", node.Name)
+			failed++
+			continue
+		}
+	}
+
+	if failed > 0 {
+		return fmt.Errorf("Failed to start %d nodes: Try to start them manually", failed)
+	}
+	return nil
+}
+
+// StopCluster stops a whole cluster (i.e. all nodes of the cluster)
+func StopCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
+	log.Infof("Stopping cluster '%s'", cluster.Name)
+
+	failed := 0
+	for _, node := range cluster.Nodes {
+		if err := runtime.StopNode(node); err != nil {
+			log.Warningf("Failed to stop node '%s': Try to stop it manually", node.Name)
+			failed++
+			continue
+		}
+	}
+
+	if failed > 0 {
+		return fmt.Errorf("Failed to stop %d nodes: Try to stop them manually", failed)
+	}
+	return nil
+}

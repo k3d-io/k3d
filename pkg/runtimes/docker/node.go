@@ -82,6 +82,64 @@ func (d Docker) GetNodesByLabel(labels map[string]string) ([]*k3d.Node, error) {
 
 }
 
+// StartNode starts an existing node
+func (d Docker) StartNode(node *k3d.Node) error {
+	// (0) create docker client
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("Failed to create docker client. %+v", err)
+	}
+
+	// get container which represents the node
+	nodeContainer, err := getNodeContainer(node)
+	if err != nil {
+		log.Errorf("Failed to get container for node '%s'", node.Name)
+		return err
+	}
+
+	// check if the container is actually managed by
+	if v, ok := nodeContainer.Labels["app"]; !ok || v != "k3d" {
+		return fmt.Errorf("Failed to determine if container '%s' is managed by k3d (needs label 'app=k3d')", nodeContainer.ID)
+	}
+
+	// actually start the container
+	if err := docker.ContainerStart(ctx, nodeContainer.ID, types.ContainerStartOptions{}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// StopNode stops an existing node
+func (d Docker) StopNode(node *k3d.Node) error {
+	// (0) create docker client
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("Failed to create docker client. %+v", err)
+	}
+
+	// get container which represents the node
+	nodeContainer, err := getNodeContainer(node)
+	if err != nil {
+		log.Errorf("Failed to get container for node '%s'", node.Name)
+		return err
+	}
+
+	// check if the container is actually managed by
+	if v, ok := nodeContainer.Labels["app"]; !ok || v != "k3d" {
+		return fmt.Errorf("Failed to determine if container '%s' is managed by k3d (needs label 'app=k3d')", nodeContainer.ID)
+	}
+
+	// actually stop the container
+	if err := docker.ContainerStop(ctx, nodeContainer.ID, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func getContainersByLabel(labels map[string]string) ([]types.Container, error) {
 	// (0) create docker client
 	ctx := context.Background()

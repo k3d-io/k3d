@@ -22,9 +22,11 @@ THE SOFTWARE.
 package start
 
 import (
+	"github.com/rancher/k3d/pkg/cluster"
+	"github.com/rancher/k3d/pkg/runtimes"
 	"github.com/spf13/cobra"
 
-	"github.com/rancher/k3d/pkg/types"
+	k3d "github.com/rancher/k3d/pkg/types"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -39,14 +41,66 @@ func NewCmdStartCluster() *cobra.Command {
 		Long:  `Start an existing k3d cluster`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("start cluster called")
+			runtime, clusters := parseStartClusterCmd(cmd, args)
+			if len(clusters) == 0 {
+				log.Infoln("No clusters found")
+			} else {
+				for _, c := range clusters {
+					if err := cluster.StartCluster(c, runtime); err != nil {
+						log.Fatalln(err)
+					}
+				}
+			}
+
+			log.Debugln("...Finished")
 		},
 	}
 
 	// add flags
-	cmd.Flags().StringP("name", "n", types.DefaultClusterName, "Name of the cluster")
+	cmd.Flags().BoolP("all", "a", false, "Start all existing clusters")
 
 	// add subcommands
 
 	// done
 	return cmd
+}
+
+// parseStartClusterCmd parses the command input into variables required to start clusters
+func parseStartClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, []*k3d.Cluster) {
+	// --runtime
+	rt, err := cmd.Flags().GetString("runtime")
+	if err != nil {
+		log.Fatalln("No runtime specified")
+	}
+	runtime, err := runtimes.GetRuntime(rt)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// --all
+	var clusters []*k3d.Cluster
+
+	if all, err := cmd.Flags().GetBool("all"); err != nil {
+		log.Fatalln(err)
+	} else if all {
+		clusters, err = cluster.GetClusters(runtime)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		return runtime, clusters
+	}
+
+	if len(args) < 1 {
+		log.Fatalln("Expecting at least one cluster name if `--all` is not set")
+	}
+
+	for _, name := range args {
+		cluster, err := cluster.GetCluster(&k3d.Cluster{Name: name}, runtime)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		clusters = append(clusters, cluster)
+	}
+
+	return runtime, clusters
 }
