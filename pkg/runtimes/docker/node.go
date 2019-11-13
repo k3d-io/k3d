@@ -167,3 +167,21 @@ func getContainersByLabel(labels map[string]string) ([]types.Container, error) {
 	}
 	return containers, nil
 }
+
+// GetNode tries to get a node container by its name
+func (d Docker) GetNode(node *k3d.Node) (*k3d.Node, error) {
+	container, err := getNodeContainer(node)
+	if err != nil {
+		log.Errorf("Failed to get container for node '%s'", node.Name)
+		return nil, err
+	}
+
+	node, err = TranslateContainerToNode(container)
+	if err != nil {
+		log.Errorf("Failed to translate container for node '%s' to node object", node.Name)
+		return nil, err
+	}
+
+	return node, nil
+
+}

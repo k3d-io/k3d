@@ -104,7 +104,6 @@ func parseGetClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, runtim
 	return cluster, runtime, headersOff
 }
 
-// TODO: improve (tabular output or output similar to kubectl)
 func printClusters(clusters []*k3d.Cluster, headersOff bool) {
 
 	tabwriter := tabwriter.NewWriter(os.Stdout, 6, 4, 3, ' ', tabwriter.RememberWidths)

@@ -114,3 +114,8 @@ func (d Containerd) StopNode(node *k3d.Node) error {
 func (d Containerd) GetNodesByLabel(labels map[string]string) ([]*k3d.Node, error) {
 	return nil, nil
 }
+
+// GetNode tries to get a node container by its name
+func (d Containerd) GetNode(node *k3d.Node) (*k3d.Node, error) {
+	return nil, nil
+}

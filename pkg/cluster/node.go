@@ -135,3 +135,25 @@ func patchMasterSpec(node *k3d.Node) error {
 	node.Ports = append(node.Ports, fmt.Sprintf("%s:%s:6443/tcp", hostIP, apiPort)) // TODO: get '6443' from defaultport variable
 	return nil
 }
+
+// GetNodes returns a list of all existing clusters
+func GetNodes(runtime k3drt.Runtime) ([]*k3d.Node, error) {
+	nodes, err := runtime.GetNodesByLabel(k3d.DefaultObjectLabels)
+	if err != nil {
+		log.Errorln("Failed to get nodes")
+		return nil, err
+	}
+
+	return nodes, nil
+}
+
+// GetNode returns an existing cluster
+func GetNode(node *k3d.Node, runtime k3drt.Runtime) (*k3d.Node, error) {
+	// get node
+	node, err := runtime.GetNode(node)
+	if err != nil {
+		log.Errorf("Failed to get node '%s'", node.Name)
+	}
+
+	return node, nil
+}
