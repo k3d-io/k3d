@@ -48,7 +48,7 @@ func NewCmdGetCluster() *cobra.Command {
 		Long:    `Get cluster.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("get cluster called")
-			c, rt := parseGetClusterCmd(cmd, args)
+			c, rt, headersOff := parseGetClusterCmd(cmd, args)
 			var existingClusters []*k3d.Cluster
 			if c == nil { // Option a)  no cluster name specified -> get all clusters
 				found, err := cluster.GetClusters(rt)
@@ -64,9 +64,12 @@ func NewCmdGetCluster() *cobra.Command {
 				existingClusters = append(existingClusters, found)
 			}
 			// print existing clusters
-			printClusters(existingClusters)
+			printClusters(existingClusters, headersOff)
 		},
 	}
+
+	// add flags
+	cmd.Flags().Bool("no-headers", false, "Disable headers")
 
 	// add subcommands
 
@@ -74,7 +77,7 @@ func NewCmdGetCluster() *cobra.Command {
 	return cmd
 }
 
-func parseGetClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, runtimes.Runtime) {
+func parseGetClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, runtimes.Runtime, bool) {
 	// --runtime
 	rt, err := cmd.Flags().GetString("runtime")
 	if err != nil {
@@ -85,26 +88,34 @@ func parseGetClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, runtim
 		log.Fatalln(err)
 	}
 
+	// --no-headers
+	headersOff, err := cmd.Flags().GetBool("no-headers")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	// Args = cluster name
 	if len(args) == 0 {
-		return nil, runtime
+		return nil, runtime, headersOff
 	}
 
 	cluster := &k3d.Cluster{Name: args[0]} // TODO: validate name first?
 
-	return cluster, runtime
+	return cluster, runtime, headersOff
 }
 
 // TODO: improve (tabular output or output similar to kubectl)
-func printClusters(clusters []*k3d.Cluster) {
+func printClusters(clusters []*k3d.Cluster, headersOff bool) {
 
 	tabwriter := tabwriter.NewWriter(os.Stdout, 6, 4, 3, ' ', tabwriter.RememberWidths)
 	defer tabwriter.Flush()
 
-	headers := []string{"NAME", "MASTERS", "WORKERS"} // TODO: add status
-	_, err := fmt.Fprintf(tabwriter, "%s\n", strings.Join(headers, "\t"))
-	if err != nil {
-		log.Fatalln("Failed to print headers")
+	if !headersOff {
+		headers := []string{"NAME", "MASTERS", "WORKERS"} // TODO: add status
+		_, err := fmt.Fprintf(tabwriter, "%s\n", strings.Join(headers, "\t"))
+		if err != nil {
+			log.Fatalln("Failed to print headers")
+		}
 	}
 
 	sort.Slice(clusters, func(i, j int) bool {
