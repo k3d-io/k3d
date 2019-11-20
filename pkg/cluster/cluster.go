@@ -72,12 +72,7 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	 * Nodes
 	 */
 
-	// used for node suffices
-	masterCount := 0
-	workerCount := 0
-
-	for _, node := range cluster.Nodes {
-
+	nodeSetup := func(node *k3d.Node, suffix int) error {
 		// cluster specific settings
 		if node.Labels == nil {
 			node.Labels = make(map[string]string) // TODO: maybe create an init function?
@@ -91,18 +86,16 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		}
 
 		// node role specific settings
-		suffix := 0
 		if node.Role == k3d.MasterRole {
-			// name suffix
-			suffix = masterCount
-			masterCount++
-		} else if node.Role == k3d.WorkerRole {
-			// name suffix
-			suffix = workerCount
-			workerCount++
 
+			// the cluster has an init master node, but its not this one, so connect it to the init node
+			if cluster.InitNode != nil && !node.MasterOpts.IsInit {
+				node.Args = append(node.Args, "--server", fmt.Sprintf("https://%s:%d", cluster.InitNode.Name, 6443))
+			}
+
+		} else if node.Role == k3d.WorkerRole {
 			// connection url
-			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=https://%s:%d", generateNodeName(cluster.Name, k3d.MasterRole, 0), 6443)) // TODO: use actual configurable api-port
+			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=https://%s:%d", generateNodeName(cluster.Name, k3d.MasterRole, 0), 6443))
 		}
 
 		node.Name = generateNodeName(cluster.Name, node.Role, suffix)
@@ -115,6 +108,46 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 			return err
 		}
 		log.Debugf("Created node '%s'", node.Name)
+
+		return err
+	}
+
+	// used for node suffices
+	masterCount := 0
+	workerCount := 0
+	suffix := 0
+
+	// create init node first
+	if cluster.InitNode != nil {
+		log.Infoln("Creating initializing master node")
+		cluster.InitNode.Args = append(cluster.InitNode.Args, "--cluster-init")
+		if err := nodeSetup(cluster.InitNode, masterCount); err != nil {
+			return err
+		}
+		masterCount++
+	}
+
+	// create all other nodes, but skip the init node
+	for _, node := range cluster.Nodes {
+		if node.Role == k3d.MasterRole {
+
+			// skip the init node here
+			if node == cluster.InitNode {
+				continue
+			}
+
+			// name suffix
+			suffix = masterCount
+			masterCount++
+
+		} else if node.Role == k3d.WorkerRole {
+			// name suffix
+			suffix = workerCount
+			workerCount++
+		}
+		if err := nodeSetup(node, suffix); err != nil {
+			return err
+		}
 	}
 
 	return nil

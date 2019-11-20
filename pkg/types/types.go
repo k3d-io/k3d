@@ -78,7 +78,9 @@ type Cluster struct {
 	Network            string               `yaml:"network" json:"network,omitempty"`
 	Secret             string               `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
 	Nodes              []*Node              `yaml:"nodes" json:"nodes,omitempty"`
+	InitNode           *Node                // init master node
 	MasterLoadBalancer *ClusterLoadbalancer `yaml:"master_loadbalancer" json:"masterLoadBalancer,omitempty"`
+	ExternalDatastore  ExternalDatastore    `yaml:"external_datastore" json:"externalDatastore,omitempty"`
 }
 
 // Node describes a k3d node
@@ -90,7 +92,7 @@ type Node struct {
 	Env        []string          `yaml:"env" json:"env,omitempty"`
 	Cmd        []string          // filled automatically based on role
 	Args       []string          `yaml:"extra_args" json:"extraArgs,omitempty"`
-	Ports      []string          `yaml:"port_mappings" json:"portMappings,omitempty"` // TODO: make a struct out of this?
+	Ports      []string          `yaml:"port_mappings" json:"portMappings,omitempty"`
 	Restart    bool              `yaml:"restart" json:"restart,omitempty"`
 	Labels     map[string]string // filled automatically
 	Network    string            // filled automatically
@@ -101,6 +103,16 @@ type Node struct {
 // MasterOpts describes some additional master role specific opts
 type MasterOpts struct {
 	ExposeAPI ExposeAPI `yaml:"expose_api" json:"exposeAPI,omitempty"`
+	IsInit    bool      `yaml:"is_initializing_master" json:"isInitializingMaster,omitempty"`
+}
+
+// ExternalDatastore describes an external datastore used for HA/multi-master clusters
+type ExternalDatastore struct {
+	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty"`
+	CAFile   string `yaml:"ca_file" json:"caFile,omitempty"`
+	CertFile string `yaml:"cert_file" json:"certFile,omitempty"`
+	KeyFile  string `yaml:"key_file" json:"keyFile,omitempty"`
+	Network  string `yaml:"network" json:"network,omitempty"`
 }
 
 // ExposeAPI describes specs needed to expose the API-Server

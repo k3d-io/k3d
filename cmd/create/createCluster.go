@@ -203,6 +203,12 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		log.Fatalln(err)
 	}
 
+	// --datastore-endpoint
+	datastoreEndpoint, err := cmd.Flags().GetString("datastore-endpoint")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	// --volume
 	volumeFlags, err := cmd.Flags().GetStringArray("volume")
 	if err != nil {
@@ -283,6 +289,12 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 			Image:      image,
 			MasterOpts: k3d.MasterOpts{},
 		}
+
+		// first master node will be init node if we have more than one master specified but no external datastore
+		if i == 0 && masterCount > 1 && datastoreEndpoint == "" {
+			node.MasterOpts.IsInit = true
+			cluster.InitNode = &node
+		} // TODO: enable external datastore as well
 
 		// append node to list
 		cluster.Nodes = append(cluster.Nodes, &node)
