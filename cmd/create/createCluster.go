@@ -51,7 +51,9 @@ func NewCmdCreateCluster() *cobra.Command {
 		},
 	}
 
-	// add flags
+	/*********
+	 * Flags *
+	 *********/
 	cmd.Flags().StringArrayP("api-port", "a", []string{"6443"}, "Specify the Kubernetes API server port (Format: `--api-port [HOST:]HOSTPORT[@NODEFILTER]`") // TODO: how to handle this for multi-master setups?
 	cmd.Flags().IntP("masters", "m", 1, "Specify how many masters you want to create")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
@@ -61,10 +63,26 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`")
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)")
+
+	/* Multi Master Configuration */ // TODO: to implement (whole multi master thingy)
+	// multi-master - general
 	cmd.Flags().Bool("no-lb", false, "Disable automatic deployment of a load balancer in Multi-Master setups")
 	cmd.Flags().String("lb-port", "0.0.0.0:6443", "Specify port to be exposed by the master load balancer (Format: `[HOST:]HOSTPORT)")
 
-	// add subcommands
+	// multi-master - datastore
+	cmd.Flags().String("datastore-endpoint", "", "Specify external datastore endpoint (e.g. for multi master clusters)")
+	cmd.Flags().String("datastore-network", "", "Specify container network where we can find the datastore-endpoint (add a connection)")
+
+	// TODO: set default paths and hint, that one should simply mount the files using --volume flag
+	cmd.Flags().String("datastore-cafile", "", "Specify external datastore's TLS Certificate Authority (CA) file")
+	cmd.Flags().String("datastore-certfile", "", "Specify external datastore's TLS certificate file'")
+	cmd.Flags().String("datastore-keyfile", "", "Specify external datastore's TLS key file'")
+
+	/* k3s */ // TODO: to implement extra args
+	cmd.Flags().StringArray("k3s-server-arg", nil, "Additional args passed to the `k3s server` command on master nodes")
+	cmd.Flags().StringArray("k3s-agent-arg", nil, "Additional args passed to the `k3s agent` command on worker nodes")
+
+	/* Subcommands */
 
 	// done
 	return cmd
@@ -129,7 +147,6 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		log.Fatalf("Cannot expose more api-ports than master nodes exist (%d > %d)", len(apiPortFlags), masterCount)
 	}
 
-	// TODO: finish like volume and port maps
 	ipPortCombinations := map[string]struct{}{} // only for finding duplicates
 	apiPortFilters := map[string]struct{}{}     // only for deduplication
 	exposeAPIToFiltersMap := map[k3d.ExposeAPI][]string{}
