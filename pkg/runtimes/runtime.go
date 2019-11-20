@@ -49,7 +49,7 @@ type Runtime interface {
 	StopNode(*k3d.Node) error
 	// ExecContainer() error
 	// DeleteContainer() error
-	// GetContainerLogs() error
+	GetNodeLogs(*k3d.Node) (io.ReadCloser, error)
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it

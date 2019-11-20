@@ -24,6 +24,7 @@ package containerd
 
 import (
 	"context"
+	"io"
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/containers"
@@ -117,5 +118,10 @@ func (d Containerd) GetNodesByLabel(labels map[string]string) ([]*k3d.Node, erro
 
 // GetNode tries to get a node container by its name
 func (d Containerd) GetNode(node *k3d.Node) (*k3d.Node, error) {
+	return nil, nil
+}
+
+// GetNodeLogs returns the logs from a given node
+func (d Containerd) GetNodeLogs(node *k3d.Node) (io.ReadCloser, error) {
 	return nil, nil
 }

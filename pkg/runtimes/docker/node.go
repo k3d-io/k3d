@@ -25,6 +25,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -184,4 +185,29 @@ func (d Docker) GetNode(node *k3d.Node) (*k3d.Node, error) {
 
 	return node, nil
 
+}
+
+// GetNodeLogs returns the logs from a given node
+func (d Docker) GetNodeLogs(node *k3d.Node) (io.ReadCloser, error) {
+	// get the container for the given node
+	container, err := getNodeContainer(node)
+	if err != nil {
+		return nil, err
+	}
+
+	// create docker client
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return nil, err
+	}
+
+	logreader, err := docker.ContainerLogs(ctx, container.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
+	if err != nil {
+		log.Errorf("Failed to get logs from node '%s' (container '%s')", node.Name, container.ID)
+		return nil, err
+	}
+
+	return logreader, nil
 }

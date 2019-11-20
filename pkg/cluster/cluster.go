@@ -22,8 +22,10 @@ THE SOFTWARE.
 package cluster
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
+	"time"
 
 	k3drt "github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -125,8 +127,32 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 			return err
 		}
 		masterCount++
+
+		// wait for the initnode to come up before doing anything else
+		for {
+			log.Debugln("Waiting for initializing master node...")
+			logreader, err := runtime.GetNodeLogs(cluster.InitNode)
+			defer logreader.Close()
+			if err != nil {
+				logreader.Close()
+				log.Errorln(err)
+				log.Errorln("Failed to get logs from the initializig master node.. waiting for 3 seconds instead")
+				time.Sleep(3 * time.Second)
+				goto initNodeFinished
+			}
+			buf := new(bytes.Buffer)
+			nRead, _ := buf.ReadFrom(logreader)
+			logreader.Close()
+			if nRead > 0 && strings.Contains(buf.String(), "Running kubelet") {
+				log.Debugln("Initializing master node is up... continuing")
+				break
+			}
+			time.Sleep(time.Second) // TODO: timeout
+		}
+
 	}
 
+initNodeFinished:
 	// create all other nodes, but skip the init node
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.MasterRole {
