@@ -83,12 +83,18 @@ func CreateCluster(c *cli.Context) error {
 		image = fmt.Sprintf("%s/%s", defaultRegistry, image)
 	}
 
-	// create cluster network
-	networkID, err := createClusterNetwork(c.String("name"))
-	if err != nil {
-		return err
+	// we initiate this variable here to check if --network option is provided
+	// but we will use it later if it's set
+	networkName := c.String("network")
+
+	if networkName == "" {
+		// create cluster network, only if --network option is not provided
+		networkID, err := createClusterNetwork(c.String("name"))
+		if err != nil {
+			return err
+		}
+		log.Printf("Created cluster network with ID %s", networkID)
 	}
-	log.Printf("Created cluster network with ID %s", networkID)
 
 	// environment variables
 	env := []string{"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml"}
@@ -173,7 +179,6 @@ func CreateCluster(c *cli.Context) error {
 
 	// deal with --network option, if specified add it into clusterSpec
 	// will throw error if the network doesn't exist
-	networkName := c.String("network")
 	if networkName != "" {
 		if clusterSpec.Network, err = checkIfNetworkExists(networkName); err != nil {
 			log.Fatalf("Failure on --network usage: %s", err)
