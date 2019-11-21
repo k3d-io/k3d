@@ -18,3 +18,4 @@ _dist/
 # Editors
 .vscode/
 .idea/
+.local/

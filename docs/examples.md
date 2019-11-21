@@ -4,11 +4,14 @@
 
 ### 1. via Ingress
 
+In this example, we will deploy a simple nginx webserver deployment and make it accessible via Iingress.
+Therefore, we have to create the cluster in a way, that the internal port 80 (where the `traefik` ingress controller is listening on) is exposed on the host system.
+
 1. Create a cluster, mapping the ingress port 80 to localhost:8081
 
     `k3d create --api-port 6550 --publish 8081:80 --workers 2`
 
-    - Note: `--api-port 6550` is not required for the example to work. It's used to have `k3s`'s ApiServer listening on port 6550 with that port mapped to the host system.
+    - Note: `--api-port 6550` is not required for the example to work. It's used to have `k3s`'s API-Server listening on port 6550 with that port mapped to the host system.
 
 2. Get the kubeconfig file
 
@@ -23,6 +26,7 @@
     `kubectl create service clusterip nginx --tcp=80:80`
 
 5. Create an ingress object for it with `kubectl apply -f`
+  *Note*: `k3s` deploys [`traefik`](https://github.com/containous/traefik) as the default ingress controller
 
     ```YAML
     apiVersion: extensions/v1beta1
@@ -83,11 +87,13 @@
 ## Connect with a local insecure registry
 
 This guide takes you through setting up a local insecure (http) registry and integrating it into your workflow so that:
+
 - you can push to the registry from your host
 - the cluster managed by k3d can pull from that registry
 
 The registry will be named `registry.local` and run on port `5000`.
-### Create the registry
+
+### Step 1: Create the registry
 
 <pre>
 docker volume create local_registry
@@ -95,11 +101,73 @@ docker volume create local_registry
 docker container run -d --name <b>registry.local</b> -v local_registry:/var/lib/registry --restart always -p <b>5000:5000</b> registry:2
 </pre>
 
-### Create the cluster with k3d
+### Step 2: Prepare configuration to connect to the registry
 
 First we need a place to store the config template: `mkdir -p /home/${USER}/.k3d`
 
+#### Step 2 - Option 1: use `registries.yaml` (for k3s >= v0.10.0)
+
+Create a file named `registries.yaml` in `/home/${USER}/.k3d` with following content:
+
+
+#### Step 2 - Option 2: use `config.toml.tmpl` to directly modify the containerd config (all versions)
+
 Create a file named `config.toml.tmpl` in `/home/${USER}/.k3d`, with following content:
+
+##### Step 2 - Option 2.1 -> for k3s >= v0.10.0
+
+<pre>
+[plugins.opt]
+  path = "{{ .NodeConfig.Containerd.Opt }}"
+[plugins.cri]
+  stream_server_address = "127.0.0.1"
+  stream_server_port = "10010"
+{{- if .IsRunningInUserNS }}
+  disable_cgroup = true
+  disable_apparmor = true
+  restrict_oom_score_adj = true
+{{end}}
+{{- if .NodeConfig.AgentConfig.PauseImage }}
+  sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
+{{end}}
+{{- if not .NodeConfig.NoFlannel }}
+[plugins.cri.cni]
+  bin_dir = "{{ .NodeConfig.AgentConfig.CNIBinDir }}"
+  conf_dir = "{{ .NodeConfig.AgentConfig.CNIConfDir }}"
+{{end}}
+[plugins.cri.containerd.runtimes.runc]
+  runtime_type = "io.containerd.runc.v2"
+{{ if .PrivateRegistryConfig }}
+{{ if .PrivateRegistryConfig.Mirrors }}
+[plugins.cri.registry.mirrors]{{end}}
+{{range $k, $v := .PrivateRegistryConfig.Mirrors }}
+[plugins.cri.registry.mirrors."{{$k}}"]
+  endpoint = [{{range $i, $j := $v.Endpoints}}{{if $i}}, {{end}}{{printf "%q" .}}{{end}}]
+{{end}}
+{{range $k, $v := .PrivateRegistryConfig.Configs }}
+{{ if $v.Auth }}
+[plugins.cri.registry.configs."{{$k}}".auth]
+  {{ if $v.Auth.Username }}username = "{{ $v.Auth.Username }}"{{end}}
+  {{ if $v.Auth.Password }}password = "{{ $v.Auth.Password }}"{{end}}
+  {{ if $v.Auth.Auth }}auth = "{{ $v.Auth.Auth }}"{{end}}
+  {{ if $v.Auth.IdentityToken }}identity_token = "{{ $v.Auth.IdentityToken }}"{{end}}
+{{end}}
+{{ if $v.TLS }}
+[plugins.cri.registry.configs."{{$k}}".tls]
+  {{ if $v.TLS.CAFile }}ca_file = "{{ $v.TLS.CAFile }}"{{end}}
+  {{ if $v.TLS.CertFile }}cert_file = "{{ $v.TLS.CertFile }}"{{end}}
+  {{ if $v.TLS.KeyFile }}key_file = "{{ $v.TLS.KeyFile }}"{{end}}
+{{end}}
+{{end}}
+{{end}}
+
+# Added section: additional registries and the endpoints
+[plugins.cri.registry.mirrors]
+  [plugins.cri.registry.mirrors."<b>registry.local:5000</b>"]
+    endpoint = ["http://<b>registry.local:5000</b>"]
+</pre>
+
+##### Step 2 - Option 2.2 -> for k3s <= v0.9.1
 
 <pre>
 # Original section: no changes
@@ -128,27 +196,32 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
     endpoint = ["http://<b>registry.local:5000</b>"]
 </pre>
 
-Finally start a cluster with k3d, passing-in the config template:
+### Step 3 - Start the cluster
 
-```
-CLUSTER_NAME=k3s-default
+Finally start a cluster with k3d, passing-in the `registries.yaml` or `config.toml.tmpl`:
+
+```bash
 k3d create \
-    --name ${CLUSTER_NAME} \
-    --wait 0 \
-    --auto-restart \
+    --volume /home/${USER}/.k3d/registries.yaml:/etc/rancher/k3s/registries.yaml
+```
+
+or
+
+```bash
+k3d create \
     --volume /home/${USER}/.k3d/config.toml.tmpl:/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
 ```
 
-### Wire them up
+### Step 4 - Wire them up
 
 - Connect the registry to the cluster network: `docker network connect k3d-k3s-default registry.local`
 - Add `127.0.0.1 registry.local` to your `/etc/hosts`
 
-### Test
+### Step 5 - Test
 
 Push an image to the registry:
 
-```
+```bash
 docker pull nginx:latest
 docker tag nginx:latest registry.local:5000/nginx:latest
 docker push registry.local:5000/nginx:latest
@@ -156,7 +229,7 @@ docker push registry.local:5000/nginx:latest
 
 Deploy a pod referencing this image to your cluster:
 
-```
+```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
@@ -188,7 +261,7 @@ EOF
 
 The following script leverages a [Docker loopback volume plugin](https://github.com/ashald/docker-volume-loopback) to mask the problematic filesystem away from k3s by providing a small ext4 filesystem underneath `/var/lib/rancher/k3s` (k3s' data dir).
 
-```
+```bash
 #!/bin/bash -x
 
 CLUSTER_NAME="${1:-k3s-default}"

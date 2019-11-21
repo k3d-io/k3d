@@ -120,6 +120,7 @@ func createServer(spec *ClusterSpec) (string, error) {
 	hostConfig := &container.HostConfig{
 		PortBindings: serverPublishedPorts.PortBindings,
 		Privileged:   true,
+		Init:         &[]bool{true}[0],
 	}
 
 	if spec.AutoRestart {
@@ -187,6 +188,7 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 		},
 		PortBindings: workerPublishedPorts.PortBindings,
 		Privileged:   true,
+		Init:         &[]bool{true}[0],
 	}
 
 	if spec.AutoRestart {

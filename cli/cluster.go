@@ -156,16 +156,21 @@ func createKubeConfigFile(cluster string) error {
 	// set the host name to remote docker machine's IP address.
 	//
 	// Otherwise, the hostname remains as 'localhost'
+	//
+	// Additionally, we replace every occurence of 'default' in the kubeconfig with the actual cluster name
 	apiHost := server[0].Labels["apihost"]
 
+	s := string(trimBytes)
+	s = strings.ReplaceAll(s, "default", cluster)
 	if apiHost != "" {
-		s := string(trimBytes)
 		s = strings.Replace(s, "localhost", apiHost, 1)
-		trimBytes = []byte(s)
+		s = strings.Replace(s, "127.0.0.1", apiHost, 1)
 	}
+	trimBytes = []byte(s)
+
 	_, err = kubeconfigfile.Write(trimBytes)
 	if err != nil {
-		return fmt.Errorf(" Couldn't write to kubeconfig.yaml\n%+v", err)
+		return fmt.Errorf("Couldn't write to kubeconfig.yaml\n%+v", err)
 	}
 
 	return nil
@@ -199,14 +204,13 @@ func getKubeConfig(cluster string) (string, error) {
 }
 
 // printClusters prints the names of existing clusters
-func printClusters() {
+func printClusters() error {
 	clusters, err := getClusters(true, "")
 	if err != nil {
 		log.Fatalf("Couldn't list clusters\n%+v", err)
 	}
 	if len(clusters) == 0 {
-		log.Printf("No clusters found!")
-		return
+		return fmt.Errorf("No clusters found")
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
@@ -226,6 +230,7 @@ func printClusters() {
 	}
 
 	table.Render()
+	return nil
 }
 
 // Classify cluster state: Running, Stopped or Abnormal

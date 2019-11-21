@@ -21,9 +21,11 @@ You have several options there:
   - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
   - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
 - use the install script to grab a specific release (via `TAG` environment variable):
-  - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.3.1 bash`
-  - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.3.1 bash`
+  - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.3.4 bash`
+  - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.3.4 bash`
 
+- Use [Homebrew](https://brew.sh): `brew install k3d` (Homebrew is avaiable for MacOS and Linux)
+  - Formula can be found in [homebrew/homebrew-core](https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb) and is mirrored to [homebrew/linuxbrew-core](https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb)
 - Grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
 - Via go: `go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
 
@@ -44,6 +46,7 @@ or...
 Check out what you can do via `k3d help`
 
 Example Workflow: Create a new cluster and use it with `kubectl`
+(*Note:* `kubectl` is not part of `k3d`, so you have to [install it first if needed](https://kubernetes.io/docs/tasks/tools/install-kubectl/))
 
 1. `k3d create` to create a new single-node cluster (docker container)
 2. `export KUBECONFIG=$(k3d get-kubeconfig)` to make `kubectl` to use the kubeconfig for that cluster

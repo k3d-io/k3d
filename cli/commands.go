@@ -131,6 +131,9 @@ func CreateCluster(c *cli.Context) error {
 	}
 
 	if c.IsSet("agent-arg") {
+		if c.Int("workers") < 1 {
+			log.Warnln("--agent-arg supplied, but --workers is 0, so no agents will be created")
+		}
 		k3AgentArgs = append(k3AgentArgs, c.StringSlice("agent-arg")...)
 	}
 
@@ -249,10 +252,18 @@ kubectl cluster-info`, os.Args[0], c.String("name"))
 
 // DeleteCluster removes the containers belonging to a cluster and its local directory
 func DeleteCluster(c *cli.Context) error {
+
 	clusters, err := getClusters(c.Bool("all"), c.String("name"))
 
 	if err != nil {
 		return err
+	}
+
+	if len(clusters) == 0 {
+		if !c.IsSet("all") && !c.IsSet("name") {
+			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to delete other clusters)", c.String("name"))
+		}
+		return fmt.Errorf("No cluster(s) found")
 	}
 
 	// remove clusters one by one instead of appending all names to the docker command
@@ -374,7 +385,9 @@ func ListClusters(c *cli.Context) error {
 		log.Info("--all is on by default, thus no longer required. This option will be removed in v2.0.0")
 
 	}
-	printClusters()
+	if err := printClusters(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -385,9 +398,19 @@ func GetKubeConfig(c *cli.Context) error {
 		return err
 	}
 
+	if len(clusters) == 0 {
+		if !c.IsSet("all") && !c.IsSet("name") {
+			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to check other clusters)", c.String("name"))
+		}
+		return fmt.Errorf("No cluster(s) found")
+	}
+
 	for _, cluster := range clusters {
 		kubeConfigPath, err := getKubeConfig(cluster.name)
 		if err != nil {
+			if !c.Bool("all") {
+				return err
+			}
 			log.Println(err)
 			continue
 		}
