@@ -290,6 +290,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 			MasterOpts: k3d.MasterOpts{},
 		}
 
+		// TODO: by default, we don't expose an PI port, even if we only have a single master: should we change that?
+		// -> if we want to change that, simply add the exposeAPI struct here
+
 		// first master node will be init node if we have more than one master specified but no external datastore
 		if i == 0 && masterCount > 1 && datastoreEndpoint == "" {
 			node.MasterOpts.IsInit = true

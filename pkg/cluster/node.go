@@ -112,27 +112,26 @@ func patchWorkerSpec(node *k3d.Node) error {
 
 // patchMasterSpec adds worker node specific settings to a node
 func patchMasterSpec(node *k3d.Node) error {
+
+	// command / arguments
 	node.Args = append([]string{"server"}, node.Args...)
+
+	// role label
 	node.Labels["k3d.role"] = string(k3d.MasterRole) // TODO: maybe put those in a global var DefaultMasterNodeSpec?
 
-	hostIP := "0.0.0.0" // TODO: from defaults
-	apiPort := "6443"   // TODO: from defaults
-
+	// extra settings to expose the API port (if wanted)
 	if node.MasterOpts.ExposeAPI.Port != "" {
-		apiPort = node.MasterOpts.ExposeAPI.Port
-		node.Labels["k3d.master.api.port"] = node.MasterOpts.ExposeAPI.Port
-	}
-
-	if node.MasterOpts.ExposeAPI.Host != "" {
-		hostIP = node.MasterOpts.ExposeAPI.HostIP
+		if node.MasterOpts.ExposeAPI.Host == "" {
+			node.MasterOpts.ExposeAPI.Host = "0.0.0.0"
+		}
 		node.Labels["k3d.master.api.hostIP"] = node.MasterOpts.ExposeAPI.HostIP // TODO: maybe get docker machine IP here
 
 		node.Labels["k3d.master.api.host"] = node.MasterOpts.ExposeAPI.Host
 
 		node.Args = append(node.Args, "--tls-san", node.MasterOpts.ExposeAPI.Host) // add TLS SAN for non default host name
+		node.Labels["k3d.master.api.port"] = node.MasterOpts.ExposeAPI.Port
+		node.Ports = append(node.Ports, fmt.Sprintf("%s:%s:6443/tcp", node.MasterOpts.ExposeAPI.Host, node.MasterOpts.ExposeAPI.Port)) // TODO: get '6443' from defaultport variable
 	}
-
-	node.Ports = append(node.Ports, fmt.Sprintf("%s:%s:6443/tcp", hostIP, apiPort)) // TODO: get '6443' from defaultport variable
 	return nil
 }
 
