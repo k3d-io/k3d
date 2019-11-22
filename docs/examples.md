@@ -109,6 +109,12 @@ First we need a place to store the config template: `mkdir -p /home/${USER}/.k3d
 
 Create a file named `registries.yaml` in `/home/${USER}/.k3d` with following content:
 
+```yaml
+mirrors:
+  "registry.local:5000":
+    endpoint:
+    - http://registry.local:5000
+```
 
 #### Step 2 - Option 2: use `config.toml.tmpl` to directly modify the containerd config (all versions)
 
