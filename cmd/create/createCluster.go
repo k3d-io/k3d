@@ -70,13 +70,15 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().String("lb-port", "0.0.0.0:6443", "Specify port to be exposed by the master load balancer (Format: `[HOST:]HOSTPORT)")
 
 	// multi-master - datastore
-	cmd.Flags().String("datastore-endpoint", "", "Specify external datastore endpoint (e.g. for multi master clusters)")
+	cmd.Flags().String("datastore-endpoint", "", "[WIP] Specify external datastore endpoint (e.g. for multi master clusters)")
+	/* TODO: activate
 	cmd.Flags().String("datastore-network", "", "Specify container network where we can find the datastore-endpoint (add a connection)")
 
 	// TODO: set default paths and hint, that one should simply mount the files using --volume flag
 	cmd.Flags().String("datastore-cafile", "", "Specify external datastore's TLS Certificate Authority (CA) file")
 	cmd.Flags().String("datastore-certfile", "", "Specify external datastore's TLS certificate file'")
 	cmd.Flags().String("datastore-keyfile", "", "Specify external datastore's TLS key file'")
+	*/
 
 	/* k3s */ // TODO: to implement extra args
 	cmd.Flags().StringArray("k3s-server-arg", nil, "Additional args passed to the `k3s server` command on master nodes")
@@ -207,6 +209,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	datastoreEndpoint, err := cmd.Flags().GetString("datastore-endpoint")
 	if err != nil {
 		log.Fatalln(err)
+	}
+	if datastoreEndpoint != "" {
+		log.Fatalln("Using an external datastore for HA clusters is not yet supported.")
 	}
 
 	// --volume

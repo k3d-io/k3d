@@ -83,3 +83,98 @@ Here's how k3d types should translate to a runtime type:
   - when deleting the cluster, parse the labels, deduplicate the results and delete the additional resources
   - DONE for network
     - new labels `k3d.cluster.network=<ID>` and `k3d.cluster.network.external=<true|false>` (determine whether to try to delete it when you delete a cluster, since network may have been created manually)
+
+
+# Comparison to k3d v1
+
+- k3d
+  - check-tools
+  - shell
+    - --name
+    - --command
+    - --shell
+      - auto, bash, zsh
+  - create
+    - --name
+    - --volume
+    - --port
+    - --api-port
+    - --wait
+    - --image
+    - --server-arg
+    - --agent-arg
+    - --env
+    - --workers
+    - --auto-restart
+  - (add-node)
+    - --role
+    - --name
+    - --count
+    - --image
+    - --arg
+    - --env
+    - --volume
+    - --k3s
+    - --k3s-secret
+    - --k3s-token
+  - delete
+    - --name
+    - --all
+  - stop
+    - --name
+    - --all
+  - start
+    - --name
+    - --all
+  - list
+  - get-kubeconfig
+    - --name
+    - --all
+  - import-images
+    - --name
+    - --no-remove
+
+- k3d
+  - create
+    - cluster NAME
+      - --api-port
+      - --datastore-cafile
+      - --datastore-certfile
+      - --datastore-endpoint
+      - --datastore-keyfile
+      - --datastore-network
+      - --image
+      - --k3s-agent-arg
+      - --k3s-server-arg
+      - --lb-port
+      - --masters
+      - --network
+      - --no-lb
+      - --port
+      - --secret
+      - --volume
+      - --workers
+    - node NAME
+      - --cluster
+      - --image
+      - --replicas
+      - --role
+  - delete
+    - cluster NAME
+      - --all
+    - node NAME
+  - get
+    - cluster NAME
+      - --no-headers
+    - node NAME
+      - --no-headers
+    - kubeconfig NAME
+      - --output
+  - start
+    - cluster NAME
+      - --all
+    - node NAME
+  - stop
+    - cluster NAME
+      - --all
+    - node NAME
