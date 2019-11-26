@@ -95,16 +95,16 @@ Here's how k3d types should translate to a runtime type:
     - --shell
       - auto, bash, zsh
   - create
-    - --name
-    - --volume
-    - --port
-    - --api-port
+    - --name          -> y
+    - --volume        -> y
+    - --port          -> y
+    - --api-port      -> y
     - --wait
-    - --image
-    - --server-arg
-    - --agent-arg
+    - --image         -> y
+    - --server-arg    -> y
+    - --agent-arg     -> y
     - --env
-    - --workers
+    - --workers       -> y
     - --auto-restart
   - (add-node)
     - --role
