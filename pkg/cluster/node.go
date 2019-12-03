@@ -26,8 +26,6 @@ import (
 	"fmt"
 
 	k3drt "github.com/rancher/k3d/pkg/runtimes"
-	k3dContainerd "github.com/rancher/k3d/pkg/runtimes/containerd"
-	k3dDocker "github.com/rancher/k3d/pkg/runtimes/docker"
 	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
@@ -89,13 +87,7 @@ func CreateNode(node *k3d.Node, runtime k3drt.Runtime) error {
 }
 
 // DeleteNode deletes an existing node
-func DeleteNode(node *k3d.Node, runtimeChoice string) error {
-	var runtime k3drt.Runtime
-	if runtimeChoice == "docker" {
-		runtime = k3dDocker.Docker{}
-	} else {
-		runtime = k3dContainerd.Containerd{}
-	}
+func DeleteNode(runtime k3drt.Runtime, node *k3d.Node) error {
 
 	if err := runtime.DeleteNode(node); err != nil {
 		log.Error(err)

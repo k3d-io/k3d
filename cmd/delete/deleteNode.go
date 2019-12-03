@@ -23,6 +23,7 @@ package delete
 
 import (
 	"github.com/rancher/k3d/pkg/cluster"
+	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -39,22 +40,68 @@ func NewCmdDeleteNode() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1), // at least one node has to be specified
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("delete node called")
-			rt, err := cmd.Flags().GetString("runtime")
-			if err != nil {
-				log.Debugln("runtime not defined")
-			}
-			for _, name := range args {
-				if err := cluster.DeleteNode(&k3d.Node{Name: name}, rt); err != nil {
-					log.Errorln(err)
+
+			runtime, nodes := parseDeleteNodeCmd(cmd, args)
+
+			if len(nodes) == 0 {
+				log.Infoln("No nodes found")
+			} else {
+				for _, node := range nodes {
+					if err := cluster.DeleteNode(runtime, node); err != nil {
+						log.Fatalln(err)
+					}
 				}
 			}
+
+			log.Debugln("...Finished")
 		},
 	}
 
 	// add subcommands
 
 	// add flags
+	cmd.Flags().BoolP("all", "a", false, "Delete all existing clusters")
 
 	// done
 	return cmd
+}
+
+// parseDeleteNodeCmd parses the command input into variables required to delete nodes
+func parseDeleteNodeCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, []*k3d.Node) {
+	// --runtime
+	rt, err := cmd.Flags().GetString("runtime")
+	if err != nil {
+		log.Fatalln("No runtime specified")
+	}
+	runtime, err := runtimes.GetRuntime(rt)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// --all
+	var nodes []*k3d.Node
+
+	if all, err := cmd.Flags().GetBool("all"); err != nil {
+		log.Fatalln(err)
+	} else if all {
+		nodes, err = cluster.GetNodes(runtime)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		return runtime, nodes
+	}
+
+	if len(args) < 1 {
+		log.Fatalln("Expecting at least one node name if `--all` is not set")
+	}
+
+	for _, name := range args {
+		node, err := cluster.GetNode(&k3d.Node{Name: name}, runtime)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		nodes = append(nodes, node)
+	}
+
+	return runtime, nodes
 }
