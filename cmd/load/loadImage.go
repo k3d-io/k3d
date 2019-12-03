@@ -47,6 +47,7 @@ func NewCmdLoadImage() *cobra.Command {
 	/*********
 	 * Flags *
 	 *********/
+	cmd.Flags().StringArrayP("cluster", "c", []string{k3d.DefaultClusterName}, "Select clusters to load the image to.")
 
 	/* Subcommands */
 
@@ -56,5 +57,31 @@ func NewCmdLoadImage() *cobra.Command {
 
 // parseLoadImageCmd parses the command input into variables required to create a cluster
 func parseLoadImageCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, []string, []k3d.Cluster) {
-	return nil, nil, nil
+	// --runtime
+	rt, err := cmd.Flags().GetString("runtime")
+	if err != nil {
+		log.Fatalln("No runtime specified")
+	}
+	runtime, err := runtimes.GetRuntime(rt)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// --cluster
+	clusterNames, err := cmd.Flags().GetStringArray("cluster")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	clusters := []k3d.Cluster{}
+	for _, clusterName := range clusterNames {
+		clusters = append(clusters, k3d.Cluster{Name: clusterName})
+	}
+
+	// images
+	images := args
+	if len(images) == 0 {
+		log.Fatalln("No images specified!")
+	}
+
+	return runtime, images, clusters
 }
