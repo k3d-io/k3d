@@ -23,3 +23,8 @@ THE SOFTWARE.
 package containerd
 
 type Containerd struct{}
+
+// GetRuntimePath returns the path of the containerd socket
+func (d Containerd) GetRuntimePath() string {
+	return "/run/containerd/containerd.sock"
+}

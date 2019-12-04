@@ -125,3 +125,8 @@ func (d Containerd) GetNode(node *k3d.Node) (*k3d.Node, error) {
 func (d Containerd) GetNodeLogs(node *k3d.Node) (io.ReadCloser, error) {
 	return nil, nil
 }
+
+// ExecInNode execs a command inside a node
+func (d Containerd) ExecInNode(node *k3d.Node, cmd []string) error {
+	return nil
+}

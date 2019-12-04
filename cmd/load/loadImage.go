@@ -25,6 +25,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/rancher/k3d/pkg/runtimes"
+	"github.com/rancher/k3d/pkg/tools"
 	k3d "github.com/rancher/k3d/pkg/types"
 
 	log "github.com/sirupsen/logrus"
@@ -40,8 +41,16 @@ func NewCmdLoadImage() *cobra.Command {
 		Long:  `Load an image from docker into a k3d cluster.`,
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			runtime, images, clusters := parseLoadImageCmd(cmd, args)
+			runtime, images, clusters, keepTarball := parseLoadImageCmd(cmd, args)
 			log.Debugf("Load images [%+v] from runtime [%s] into clusters [%+v]", runtime, images, clusters)
+			for _, cluster := range clusters {
+				log.Debugf("Loading images into '%s'", cluster.Name)
+				if err := tools.LoadImagesIntoCluster(runtime, images, &cluster, keepTarball); err != nil {
+					log.Errorf("Failed to load images into cluster '%s'", cluster.Name)
+					log.Errorln(err)
+				}
+			}
+			log.Debugln("Finished loading images into clusters")
 		},
 	}
 
@@ -49,6 +58,7 @@ func NewCmdLoadImage() *cobra.Command {
 	 * Flags *
 	 *********/
 	cmd.Flags().StringArrayP("cluster", "c", []string{k3d.DefaultClusterName}, "Select clusters to load the image to.")
+	cmd.Flags().BoolP("keep-tarball", "k", false, "Do not delete the tarball which contains the saved images from the shared volume")
 
 	/* Subcommands */
 
@@ -57,13 +67,19 @@ func NewCmdLoadImage() *cobra.Command {
 }
 
 // parseLoadImageCmd parses the command input into variables required to create a cluster
-func parseLoadImageCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, []string, []k3d.Cluster) {
+func parseLoadImageCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, []string, []k3d.Cluster, bool) {
 	// --runtime
 	rt, err := cmd.Flags().GetString("runtime")
 	if err != nil {
 		log.Fatalln("No runtime specified")
 	}
 	runtime, err := runtimes.GetRuntime(rt)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// --keep-tarball
+	keepTarball, err := cmd.Flags().GetBool("keep-tarball")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -84,5 +100,5 @@ func parseLoadImageCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, []s
 		log.Fatalln("No images specified!")
 	}
 
-	return runtime, images, clusters
+	return runtime, images, clusters, keepTarball
 }

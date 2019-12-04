@@ -186,8 +186,17 @@ Here's how k3d types should translate to a runtime type:
   - e.g. `k3d tools import-images`
   - let's you set tools container version
     - `k3d tools --image k3d-tools:v2 import-images`
+- add `k3d create --image-vol NAME` flag to re-use existing image volume
+  - will add `k3d.volumes.imagevolume.external: true` label to nodes
+    - should not be deleted with cluster
+  - possibly add `k3d create volume` and `k3d create network` to create external networks?
 
 ## extra commands
 
 - `k3d prune` to prune all dangling resources
   - nodes, volumes, networks
+
+## use OCI
+
+- [https://github.com/opencontainers/runtime-spec/blob/master/specs-go/config.go](https://github.com/opencontainers/runtime-spec/blob/master/specs-go/config.go)
+- move node -> container translation out of runtime

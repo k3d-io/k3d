@@ -26,6 +26,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -210,4 +212,87 @@ func (d Docker) GetNodeLogs(node *k3d.Node) (io.ReadCloser, error) {
 	}
 
 	return logreader, nil
+}
+
+// ExecInNode execs a command inside a node
+func (d Docker) ExecInNode(node *k3d.Node, cmd []string) error {
+
+	log.Debugf("Exec cmds '%+v' in node '%s'", cmd, node.Name)
+
+	// get the container for the given node
+	container, err := getNodeContainer(node)
+	if err != nil {
+		return err
+	}
+
+	// create docker client
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return err
+	}
+
+	// exec
+	exec, err := docker.ContainerExecCreate(ctx, container.ID, types.ExecConfig{
+		Privileged:   true,
+		Tty:          true,
+		AttachStderr: true,
+		AttachStdout: true,
+		Cmd:          cmd,
+	})
+	if err != nil {
+		log.Errorf("Failed to create exec config for node '%s'", node.Name)
+		return err
+	}
+
+	execConnection, err := docker.ContainerExecAttach(ctx, exec.ID, types.ExecStartCheck{
+		Tty: true,
+	})
+	if err != nil {
+		log.Errorf("Failed to connect to exec process in node '%s'", node.Name)
+		return err
+	}
+	defer execConnection.Close()
+
+	if err := docker.ContainerExecStart(ctx, exec.ID, types.ExecStartCheck{Tty: true}); err != nil {
+		log.Errorf("Failed to start exec process in node '%s'", node.Name)
+		return err
+	}
+
+	for {
+		// get info about exec process inside container
+		execInfo, err := docker.ContainerExecInspect(ctx, exec.ID)
+		if err != nil {
+			log.Errorln("Failed to inspect exec process in node '%s'", node.Name)
+			return err
+		}
+
+		// if still running, continue loop
+		if execInfo.Running {
+			log.Debugf("Exec process '%+v' still running in node '%s'.. sleeping for 1 second...", cmd, node.Name)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		// check exitcode
+		if execInfo.ExitCode == 0 { // success
+			log.Debugf("Exec process in node '%s' exited with '0'", node.Name)
+			break
+		}
+
+		if execInfo.ExitCode != 0 { // failed
+
+			logs, err := ioutil.ReadAll(execConnection.Reader)
+			if err != nil {
+				log.Errorln("Failed to get logs from node '%s'", node.Name)
+				return err
+			}
+
+			return fmt.Errorf("Logs from failed access process:\n%s", string(logs))
+		}
+
+	}
+
+	return nil
 }

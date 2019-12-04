@@ -24,6 +24,7 @@ package cluster
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -42,21 +43,26 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	 * Network
 	 */
 
+	// error out if external cluster network should be used but no name was set
+	if cluster.Network.Name == "" && cluster.Network.External {
+		return fmt.Errorf("Failed to use external network because no name was specified")
+	}
+
 	// generate cluster network name, if not set
-	if cluster.Network == "" {
-		cluster.Network = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
+	if cluster.Network.Name == "" && !cluster.Network.External {
+		cluster.Network.Name = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
 	}
 
 	// create cluster network or use an existing one
-	networkID, networkExists, err := runtime.CreateNetworkIfNotPresent(cluster.Network)
+	networkID, networkExists, err := runtime.CreateNetworkIfNotPresent(cluster.Network.Name)
 	if err != nil {
 		log.Errorln("Failed to create cluster network")
 		return err
 	}
-	cluster.Network = networkID
+	cluster.Network.Name = networkID
 	extraLabels := map[string]string{
 		"k3d.cluster.network":          networkID,
-		"k3d.cluster.network.external": "false",
+		"k3d.cluster.network.external": strconv.FormatBool(cluster.Network.External),
 	}
 	if networkExists {
 		extraLabels["k3d.cluster.network.external"] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)
@@ -75,7 +81,7 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	 * - image volume (for importing images)
 	 */
 	if !cluster.ClusterCreationOpts.DisableImageVolume {
-		imageVolumeName := fmt.Sprintf("%s-images", cluster.Name)
+		imageVolumeName := fmt.Sprintf("%s-%s-images", k3d.DefaultObjectNamePrefix, cluster.Name)
 		if err := runtime.CreateVolume(imageVolumeName, map[string]string{"k3d.cluster": cluster.Name}); err != nil {
 			log.Errorln("Failed to create image volume '%s' for cluster '%s'", imageVolumeName, cluster.Name)
 			return err
@@ -120,7 +126,7 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		}
 
 		node.Name = generateNodeName(cluster.Name, node.Role, suffix)
-		node.Network = cluster.Network
+		node.Network = cluster.Network.Name
 
 		// create node
 		log.Infof("Creating node '%s'", node.Name)
@@ -214,7 +220,7 @@ func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 	// Delete the cluster network, if it was created for/by this cluster (and if it's not in use anymore) // TODO: does this make sense or should we always try to delete it? (Will fail anyway, if it's still in use)
 	if network, ok := cluster.Nodes[0].Labels["k3d.cluster.network"]; ok {
-		if cluster.Nodes[0].Labels["k3d.cluster.network.external"] == "false" {
+		if !cluster.Network.External || cluster.Nodes[0].Labels["k3d.cluster.network.external"] == "false" {
 			log.Infof("Deleting cluster network '%s'", network)
 			if err := runtime.DeleteNetwork(network); err != nil {
 				if strings.HasSuffix(err.Error(), "active endpoints") {
@@ -223,7 +229,7 @@ func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 					log.Warningf("Failed to delete cluster network '%s': '%+v'", network, err)
 				}
 			}
-		} else if cluster.Nodes[0].Labels["k3d.cluster.network.external"] == "true" {
+		} else if cluster.Network.External || cluster.Nodes[0].Labels["k3d.cluster.network.external"] == "true" {
 			log.Debugf("Skip deletion of cluster network '%s' because it's managed externally", network)
 		}
 	}
@@ -270,7 +276,42 @@ func GetClusters(runtime k3drt.Runtime) ([]*k3d.Cluster, error) {
 			})
 		}
 	}
+
+	// enrich cluster structs with label values
+	for _, cluster := range clusters {
+		if err := populateClusterFieldsFromLabels(cluster); err != nil {
+			log.Warnf("Failed to populate cluster fields from node label values for cluster '%s'", cluster.Name)
+			log.Warnln(err)
+		}
+	}
 	return clusters, nil
+}
+
+// populateClusterFieldsFromLabels inspects labels attached to nodes and translates them to struct fields
+func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
+	networkExternalSet := false
+
+	for _, node := range cluster.Nodes {
+
+		// get the name of the cluster network
+		if cluster.Network.Name == "" {
+			if networkName, ok := node.Labels["k3d.cluster.network"]; ok {
+				cluster.Network.Name = networkName
+			}
+		}
+
+		// check if the network is external
+		// since the struct value is a bool, initialized as false, we cannot check if it's unset
+		if !cluster.Network.External && !networkExternalSet {
+			if networkExternalString, ok := node.Labels["k3d.cluster.network.external"]; ok {
+				if networkExternal, err := strconv.ParseBool(networkExternalString); err == nil {
+					cluster.Network.External = networkExternal
+					networkExternalSet = true
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // GetCluster returns an existing cluster
@@ -288,6 +329,11 @@ func GetCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) (*k3d.Cluster, erro
 	// append nodes
 	for _, node := range nodes {
 		cluster.Nodes = append(cluster.Nodes, node)
+	}
+
+	if err := populateClusterFieldsFromLabels(cluster); err != nil {
+		log.Warnf("Failed to populate cluster fields from node labels")
+		log.Warnln(err)
 	}
 
 	return cluster, nil

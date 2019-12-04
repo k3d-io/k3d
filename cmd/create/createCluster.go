@@ -58,7 +58,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().IntP("masters", "m", 1, "Specify how many masters you want to create")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
 	// cmd.Flags().String("config", "", "Specify a cluster configuration file")                                     // TODO: to implement
-	cmd.Flags().String("image", k3d.DefaultK3sImageRepo, "Specify k3s image that you want to use for the nodes") // TODO: get image version
+	cmd.Flags().String("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, "v1.0.0"), "Specify k3s image that you want to use for the nodes") // TODO: get image version
 	cmd.Flags().String("network", "", "Join an existing network")
 	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`")
@@ -130,9 +130,14 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	}
 
 	// --network
-	network, err := cmd.Flags().GetString("network")
+	networkName, err := cmd.Flags().GetString("network")
 	if err != nil {
 		log.Fatalln(err)
+	}
+	network := k3d.ClusterNetwork{}
+	if networkName != "" {
+		network.Name = networkName
+		network.External = true
 	}
 
 	// --secret

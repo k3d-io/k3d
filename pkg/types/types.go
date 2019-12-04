@@ -48,6 +48,7 @@ type Role string
 const (
 	MasterRole Role = "master"
 	WorkerRole Role = "worker"
+	NoRole     Role = "nope"
 )
 
 // DefaultK3dRoles defines the roles available for nodes
@@ -72,6 +73,9 @@ var DefaultNodeEnv = []string{
 	"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml",
 }
 
+// DefaultToolsContainerImage defines the default image used for the tools container
+const DefaultToolsContainerImage = "docker.io/iwilltry42/k3d-tools:v0.0.2" // TODO: get version dynamically or at build time
+
 // DefaultImageVolumeMountPath defines the mount path inside k3d nodes where we will mount the shared image volume by default
 const DefaultImageVolumeMountPath = "/k3d/images"
 
@@ -80,10 +84,16 @@ type ClusterCreationOpts struct {
 	DisableImageVolume bool
 }
 
+// ClusterNetwork describes a network which a cluster is running in
+type ClusterNetwork struct {
+	Name     string `yaml:"name" json:"name,omitempty"`
+	External bool   `yaml:"external" json:"isExternal,omitempty"`
+}
+
 // Cluster describes a k3d cluster
 type Cluster struct {
 	Name                string               `yaml:"name" json:"name,omitempty"`
-	Network             string               `yaml:"network" json:"network,omitempty"`
+	Network             ClusterNetwork       `yaml:"network" json:"network,omitempty"`
 	Secret              string               `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
 	Nodes               []*Node              `yaml:"nodes" json:"nodes,omitempty"`
 	InitNode            *Node                // init master node

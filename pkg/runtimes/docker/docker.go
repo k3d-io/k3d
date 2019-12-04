@@ -23,3 +23,8 @@ THE SOFTWARE.
 package docker
 
 type Docker struct{}
+
+// GetRuntimePath returns the path of the docker socket
+func (d Docker) GetRuntimePath() string {
+	return "/var/run/docker.sock"
+}
