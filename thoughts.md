@@ -163,6 +163,7 @@ Here's how k3d types should translate to a runtime type:
     - cluster NAME
       - --all
     - node NAME
+      - --all
   - get
     - cluster NAME
       - --no-headers
@@ -178,3 +179,15 @@ Here's how k3d types should translate to a runtime type:
     - cluster NAME
       - --all
     - node NAME
+
+## tools
+
+- maybe rename `k3d load` to `k3d tools` and add tool cmds there?
+  - e.g. `k3d tools import-images`
+  - let's you set tools container version
+    - `k3d tools --image k3d-tools:v2 import-images`
+
+## extra commands
+
+- `k3d prune` to prune all dangling resources
+  - nodes, volumes, networks

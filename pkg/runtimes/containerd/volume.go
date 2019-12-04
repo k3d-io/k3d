@@ -19,23 +19,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package cluster
+package containerd
 
-import (
-	"github.com/rancher/k3d/pkg/runtimes"
-	k3d "github.com/rancher/k3d/pkg/types"
-	log "github.com/sirupsen/logrus"
-)
-
-// LoadImagesIntoCluster starts up a k3d tools container for the selected clusters and uses it to export
-// images from the runtime to import them into the nodes of the selected cluster
-func LoadImagesIntoCluster(runtime runtimes.Runtime, images []string, clusters *k3d.Cluster) {
-
+// CreateVolume creates a new named volume
+func (d Containerd) CreateVolume(name string, labels map[string]string) error {
+	return nil
 }
 
-// startToolsContainer will start a new k3d tools container and connect it to the network of the chosen cluster
-func startToolsContainer(runtime runtimes.Runtime, cluster *k3d.Cluster) (string, error) {
-	log.Debugln("starttoolscontainer")
-
-	return "", nil
+// DeleteVolume creates a new named volume
+func (d Containerd) DeleteVolume(name string) error {
+	return nil
 }

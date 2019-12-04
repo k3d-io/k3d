@@ -47,6 +47,8 @@ type Runtime interface {
 	DeleteNetwork(ID string) error
 	StartNode(*k3d.Node) error
 	StopNode(*k3d.Node) error
+	CreateVolume(string, map[string]string) error
+	DeleteVolume(string) error
 	// ExecContainer() error
 	// DeleteContainer() error
 	GetNodeLogs(*k3d.Node) (io.ReadCloser, error)

@@ -72,15 +72,24 @@ var DefaultNodeEnv = []string{
 	"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml",
 }
 
+// DefaultImageVolumeMountPath defines the mount path inside k3d nodes where we will mount the shared image volume by default
+const DefaultImageVolumeMountPath = "/k3d/images"
+
+// ClusterCreationOpts describe a set of options one can set when creating a cluster
+type ClusterCreationOpts struct {
+	DisableImageVolume bool
+}
+
 // Cluster describes a k3d cluster
 type Cluster struct {
-	Name               string               `yaml:"name" json:"name,omitempty"`
-	Network            string               `yaml:"network" json:"network,omitempty"`
-	Secret             string               `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
-	Nodes              []*Node              `yaml:"nodes" json:"nodes,omitempty"`
-	InitNode           *Node                // init master node
-	MasterLoadBalancer *ClusterLoadbalancer `yaml:"master_loadbalancer" json:"masterLoadBalancer,omitempty"`
-	ExternalDatastore  ExternalDatastore    `yaml:"external_datastore" json:"externalDatastore,omitempty"`
+	Name                string               `yaml:"name" json:"name,omitempty"`
+	Network             string               `yaml:"network" json:"network,omitempty"`
+	Secret              string               `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
+	Nodes               []*Node              `yaml:"nodes" json:"nodes,omitempty"`
+	InitNode            *Node                // init master node
+	MasterLoadBalancer  *ClusterLoadbalancer `yaml:"master_loadbalancer" json:"masterLoadBalancer,omitempty"`
+	ExternalDatastore   ExternalDatastore    `yaml:"external_datastore" json:"externalDatastore,omitempty"`
+	ClusterCreationOpts *ClusterCreationOpts `yaml:"options" json:"options,omitempty"`
 }
 
 // Node describes a k3d node

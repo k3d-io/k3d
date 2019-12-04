@@ -64,6 +64,9 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`")
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)")
 
+	/* Image Importing */
+	cmd.Flags().Bool("no-image-volume", false, "Disable the creation of a volume for importing images")
+
 	/* Multi Master Configuration */ // TODO: to implement (whole multi master thingy)
 	// multi-master - general
 	cmd.Flags().Bool("no-lb", false, "Disable automatic deployment of a load balancer in Multi-Master setups")
@@ -277,11 +280,22 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		}
 	}
 
-	/* generate cluster */
+	// --no-image-volume
+	noImageVolume, err := cmd.Flags().GetBool("no-image-volume")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	/*******************
+	* generate cluster *
+	********************/
 	cluster := &k3d.Cluster{
 		Name:    args[0], // TODO: validate name0
 		Network: network,
 		Secret:  secret,
+		ClusterCreationOpts: &k3d.ClusterCreationOpts{
+			DisableImageVolume: noImageVolume,
+		},
 	}
 
 	// generate list of nodes

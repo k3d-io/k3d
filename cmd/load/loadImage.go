@@ -38,9 +38,10 @@ func NewCmdLoadImage() *cobra.Command {
 		Use:   "image",
 		Short: "Load an image from docker into a k3d cluster.",
 		Long:  `Load an image from docker into a k3d cluster.`,
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			runtime, images, clusters := parseLoadImageCmd(cmd, args)
-			log.Debugln("Load Images not yet implemented: ", runtime, images, clusters)
+			log.Debugf("Load images [%+v] from runtime [%s] into clusters [%+v]", runtime, images, clusters)
 		},
 	}
 

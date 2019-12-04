@@ -71,6 +71,25 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	}
 
 	/*
+	 * Cluster-Wide volumes
+	 * - image volume (for importing images)
+	 */
+	if !cluster.ClusterCreationOpts.DisableImageVolume {
+		imageVolumeName := fmt.Sprintf("%s-images", cluster.Name)
+		if err := runtime.CreateVolume(imageVolumeName, map[string]string{"k3d.cluster": cluster.Name}); err != nil {
+			log.Errorln("Failed to create image volume '%s' for cluster '%s'", imageVolumeName, cluster.Name)
+			return err
+		}
+
+		extraLabels["k3d.cluster.volumes.imagevolume"] = imageVolumeName
+
+		// attach volume to nodes
+		for _, node := range cluster.Nodes {
+			node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s", imageVolumeName, k3d.DefaultImageVolumeMountPath))
+		}
+	}
+
+	/*
 	 * Nodes
 	 */
 
@@ -209,6 +228,15 @@ func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		}
 	}
 
+	// delete image volume
+	if imagevolume, ok := cluster.Nodes[0].Labels["k3d.cluster.volumes.imagevolume"]; ok {
+		log.Infof("Deleting image volume '%s'", imagevolume)
+		if err := runtime.DeleteVolume(imagevolume); err != nil {
+			log.Warningf("Failed to delete image volume '%s' of cluster '%s': Try to delete it manually", cluster.Name, imagevolume)
+		}
+	}
+
+	// return error if we failed to delete a node
 	if failed > 0 {
 		return fmt.Errorf("Failed to delete %d nodes: Try to delete them manually", failed)
 	}
