@@ -24,8 +24,9 @@ package version
 // Version is the string that contains version
 var Version string
 
-// K3sVersion contains the latest version tag of K3s
-var K3sVersion = "latest"
+// K3sVersion should contain the latest version tag of k3s (hardcoded at build time)
+// we're setting a default version v1.0.0, because it's stable and because the 'latest' tag is not actively maintained
+var K3sVersion = "v1.0.0" // TODO: can we try to dynamically fetch the latest version at runtime and only fallback to this if it fails?
 
 // GetVersion returns the version for cli, it gets it from "git describe --tags" or returns "dev" when doing simple go build
 func GetVersion() string {
