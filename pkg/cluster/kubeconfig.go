@@ -30,6 +30,7 @@ import (
 
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
+	"github.com/rancher/k3d/pkg/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -111,7 +112,14 @@ func GetKubeconfigPath(runtime runtimes.Runtime, cluster *k3d.Cluster, path stri
 		output = os.Stdout
 	} else {
 		if path == "" {
-			path = "/tmp/test.yaml" // TODO: set proper default
+			basepath, err := util.GetConfigDirOrCreate()
+			if err != nil {
+				log.Errorln("Failed to create kubeconfig")
+				return "", err
+			}
+			path = fmt.Sprintf("%s/%s-%s.yaml", basepath, k3d.DefaultKubeconfigPrefix, cluster.Name)
+		} else if !(strings.HasSuffix(path, ".yaml") || strings.HasSuffix(path, ".yml")) {
+			log.Warnf("Supplied path '%s' for kubeconfig does not have .yaml or .yml extension", path)
 		}
 		output, err = os.Create(path)
 		if err != nil {

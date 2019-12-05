@@ -79,6 +79,12 @@ const DefaultToolsContainerImage = "docker.io/iwilltry42/k3d-tools:v0.0.2" // TO
 // DefaultImageVolumeMountPath defines the mount path inside k3d nodes where we will mount the shared image volume by default
 const DefaultImageVolumeMountPath = "/k3d/images"
 
+// DefaultConfigDirName defines the name of the config directory (where we'll e.g. put the kubeconfigs)
+const DefaultConfigDirName = ".k3d" // should end up in $HOME/
+
+// DefaultKubeconfigPrefix defines the default prefix for kubeconfig files
+const DefaultKubeconfigPrefix = DefaultObjectNamePrefix + "-kubeconfig"
+
 // ClusterCreationOpts describe a set of options one can set when creating a cluster
 type ClusterCreationOpts struct {
 	DisableImageVolume bool

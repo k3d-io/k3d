@@ -40,6 +40,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 		Use:   "kubeconfig",
 		Short: "Get kubeconfig",
 		Long:  `Get kubeconfig.`,
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("get kubeconfig called")
 			rt, c, path := parseGetKubeconfigCmd(cmd, args)
@@ -57,6 +58,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 
 	// add flags
 	cmd.Flags().StringP("output", "o", "", "Define output [ - | <file> ]")
+	// cmd.Flags().BoolP("all", "a", false, "Get kubeconfigs from all existing clusters") // TODO:
 
 	// done
 	return cmd
