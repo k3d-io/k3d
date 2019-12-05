@@ -21,7 +21,9 @@ THE SOFTWARE.
 */
 package types
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // DefaultClusterName specifies the default name used for newly created clusters
 const DefaultClusterName = "k3s-default"
@@ -88,6 +90,7 @@ const DefaultKubeconfigPrefix = DefaultObjectNamePrefix + "-kubeconfig"
 // ClusterCreationOpts describe a set of options one can set when creating a cluster
 type ClusterCreationOpts struct {
 	DisableImageVolume bool
+	WaitForMaster      int
 }
 
 // ClusterNetwork describes a network which a cluster is running in

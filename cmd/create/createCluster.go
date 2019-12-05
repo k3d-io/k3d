@@ -68,6 +68,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d create -w 2 -v /my/path@worker[0,1] -v /tmp/test:/tmp/other@master[0]`")
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d create -w 2 -p 8080:80@worker[0] -p 8081@worker[1]`")
+	cmd.Flags().Int("wait", -1, "Wait for a specified amount of time (seconds, >= 0, 0 = forever) for the master(s) to be ready or timeout and rollback before returning")
 
 	/* Image Importing */
 	cmd.Flags().Bool("no-image-volume", false, "Disable the creation of a volume for importing images")
@@ -149,6 +150,18 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	secret, err := cmd.Flags().GetString("secret")
 	if err != nil {
 		log.Fatalln(err)
+	}
+
+	// --wait
+	wait, err := cmd.Flags().GetInt("wait")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if cmd.Flags().Changed("wait") && wait < 0 {
+		log.Fatalln("Value of '--wait' can't be less than 0")
+	}
+	if cmd.Flags().Changed("wait") {
+		log.Warnln("--wait not implemented yet") // TODO:
 	}
 
 	// --api-port
@@ -305,6 +318,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		Secret:  secret,
 		ClusterCreationOpts: &k3d.ClusterCreationOpts{
 			DisableImageVolume: noImageVolume,
+			WaitForMaster:      wait,
 		},
 	}
 
