@@ -89,6 +89,7 @@ func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) ([]byte, erro
 
 	// replace host and port where the API is exposed with what we've found in the master node labels (or use the default)
 	trimBytes = []byte(strings.Replace(string(trimBytes), "localhost:6443", fmt.Sprintf("%s:%s", APIHost, APIPort), 1)) // replace localhost:6443 with <apiHost>:<mappedAPIPort> in kubeconfig
+	trimBytes = []byte(strings.Replace(string(trimBytes), "127.0.0.1:6443", fmt.Sprintf("%s:%s", APIHost, APIPort), 1)) // replace 127.0.0.1:6443 with <apiHost>:<mappedAPIPort> in kubeconfig
 
 	// replace 'default' in kubeconfig with <cluster name> // TODO: only do this for the context and cluster name (?) -> parse yaml
 	trimBytes = []byte(strings.ReplaceAll(string(trimBytes), "default", cluster.Name))
