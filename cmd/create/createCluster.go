@@ -23,6 +23,7 @@ package create
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -49,6 +50,9 @@ func NewCmdCreateCluster() *cobra.Command {
 			if err := k3dCluster.CreateCluster(cluster, runtime); err != nil {
 				log.Fatalln(err)
 			}
+			log.Infof("Cluster '%s' created successfully. You can now use it like this:", cluster.Name)
+			fmt.Printf("export KUBECONFIG=$(%s get kubeconfig %s)\n", os.Args[0], cluster.Name)
+			fmt.Println("kubectl cluster-info")
 		},
 	}
 

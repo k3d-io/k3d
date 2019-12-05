@@ -94,7 +94,7 @@ Here's how k3d types should translate to a runtime type:
     - --command
     - --shell
       - auto, bash, zsh
-  - create
+  - create          -> `k3d create cluster CLUSTERNAME`
     - --name          -> y
     - --volume        -> y
     - --port          -> y
@@ -106,7 +106,7 @@ Here's how k3d types should translate to a runtime type:
     - --env
     - --workers       -> y
     - --auto-restart
-  - (add-node)
+  - (add-node)      -> `k3d create node NODENAME`
     - --role
     - --name
     - --count
@@ -117,22 +117,22 @@ Here's how k3d types should translate to a runtime type:
     - --k3s
     - --k3s-secret
     - --k3s-token
-  - delete
+  - delete          -> `k3d delete cluster CLUSTERNAME`
     - --name
     - --all
-  - stop
+  - stop            -> `k3d stop cluster CLUSTERNAME`
     - --name
     - --all
-  - start
+  - start           -> `k3d start cluster CLUSTERNAME`
     - --name
     - --all
   - list
-  - get-kubeconfig
-    - --name
+  - get-kubeconfig  -> `k3d get kubeconfig CLUSTERNAME`
+    - --name        -> y
     - --all
-  - import-images
-    - --name
-    - --no-remove
+  - import-images   -> `k3d load image [--cluster CLUSTERNAME] [--keep] IMAGES`
+    - --name        -> y
+    - --no-remove   -> y
 
 - k3d
   - create
