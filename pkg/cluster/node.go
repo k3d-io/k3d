@@ -24,14 +24,64 @@ package cluster
 
 import (
 	"fmt"
+	"strings"
 
-	k3drt "github.com/rancher/k3d/pkg/runtimes"
+	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
+// AddNodeToCluster adds a node to an existing cluster
+func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Cluster) error {
+	cluster, err := GetCluster(cluster, runtime)
+	if err != nil {
+		log.Errorf("Failed to find specified cluster '%s'", cluster.Name)
+		return err
+	}
+
+	log.Debugf("Adding node to cluster %+v", cluster)
+
+	// network
+	node.Network = cluster.Network.Name
+
+	// skeleton
+	node.Labels = map[string]string{}
+	node.Env = []string{}
+
+	// copy labels and env vars from a similar node in the selected cluster
+	for _, existingNode := range cluster.Nodes {
+		if existingNode.Role == node.Role {
+
+			log.Debugf("Copying configuration from existing node %+v", existingNode)
+
+			for k, v := range existingNode.Labels {
+				if strings.HasPrefix(k, "k3d") {
+					node.Labels[k] = v
+				}
+				if k == "k3d.cluster.url" {
+					node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", v))
+				}
+				if k == "k3d.cluster.secret" {
+					node.Env = append(node.Env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", v))
+				}
+			}
+
+			for _, env := range existingNode.Env {
+				if strings.HasPrefix(env, "K3S_") {
+					node.Env = append(node.Env, env)
+				}
+			}
+			break
+		}
+	}
+
+	log.Debugf("Resulting node %+v", node)
+
+	return CreateNode(node, runtime)
+}
+
 // CreateNodes creates a list of nodes
-func CreateNodes(nodes []*k3d.Node, runtime k3drt.Runtime) { // TODO: pass `--atomic` flag, so we stop and return an error if any node creation fails?
+func CreateNodes(nodes []*k3d.Node, runtime runtimes.Runtime) { // TODO: pass `--atomic` flag, so we stop and return an error if any node creation fails?
 	for _, node := range nodes {
 		if err := CreateNode(node, runtime); err != nil {
 			log.Error(err)
@@ -40,7 +90,7 @@ func CreateNodes(nodes []*k3d.Node, runtime k3drt.Runtime) { // TODO: pass `--at
 }
 
 // CreateNode creates a new containerized k3s node
-func CreateNode(node *k3d.Node, runtime k3drt.Runtime) error {
+func CreateNode(node *k3d.Node, runtime runtimes.Runtime) error {
 	log.Debugf("Creating node from spec\n%+v", node)
 
 	/*
@@ -87,7 +137,7 @@ func CreateNode(node *k3d.Node, runtime k3drt.Runtime) error {
 }
 
 // DeleteNode deletes an existing node
-func DeleteNode(runtime k3drt.Runtime, node *k3d.Node) error {
+func DeleteNode(runtime runtimes.Runtime, node *k3d.Node) error {
 
 	if err := runtime.DeleteNode(node); err != nil {
 		log.Error(err)
@@ -128,7 +178,7 @@ func patchMasterSpec(node *k3d.Node) error {
 }
 
 // GetNodes returns a list of all existing clusters
-func GetNodes(runtime k3drt.Runtime) ([]*k3d.Node, error) {
+func GetNodes(runtime runtimes.Runtime) ([]*k3d.Node, error) {
 	nodes, err := runtime.GetNodesByLabel(k3d.DefaultObjectLabels)
 	if err != nil {
 		log.Errorln("Failed to get nodes")
@@ -139,7 +189,7 @@ func GetNodes(runtime k3drt.Runtime) ([]*k3d.Node, error) {
 }
 
 // GetNode returns an existing cluster
-func GetNode(node *k3d.Node, runtime k3drt.Runtime) (*k3d.Node, error) {
+func GetNode(node *k3d.Node, runtime runtimes.Runtime) (*k3d.Node, error) {
 	// get node
 	node, err := runtime.GetNode(node)
 	if err != nil {

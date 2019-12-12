@@ -106,6 +106,7 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		}
 		node.Labels["k3d.cluster"] = cluster.Name
 		node.Env = append(node.Env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", cluster.Secret))
+		node.Labels["k3d.cluster.secret"] = cluster.Secret
 
 		// append extra labels
 		for k, v := range extraLabels {
@@ -122,7 +123,9 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 		} else if node.Role == k3d.WorkerRole {
 			// connection url
-			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=https://%s:%d", generateNodeName(cluster.Name, k3d.MasterRole, 0), 6443))
+			connectionURL := fmt.Sprintf("https://%s:%d", generateNodeName(cluster.Name, k3d.MasterRole, 0), 6443)
+			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", connectionURL))
+			node.Labels["k3d.cluster.url"] = connectionURL
 		}
 
 		node.Name = generateNodeName(cluster.Name, node.Role, suffix)
