@@ -37,7 +37,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "kubeconfig",
+		Use:   "kubeconfig NAME", // TODO: enable putting more than one name or even --all
 		Short: "Get kubeconfig",
 		Long:  `Get kubeconfig.`,
 		Args:  cobra.MinimumNArgs(1),

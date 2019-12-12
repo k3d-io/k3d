@@ -34,7 +34,7 @@ func NewCmdDeleteNode() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:   "node",
+		Use:   "node (NAME | --all)",
 		Short: "Delete a node.",
 		Long:  `Delete a node.`,
 		Args:  cobra.MinimumNArgs(1), // at least one node has to be specified

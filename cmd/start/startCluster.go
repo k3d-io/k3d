@@ -36,7 +36,7 @@ func NewCmdStartCluster() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "cluster",
+		Use:   "cluster (NAME [NAME...] | --all)",
 		Short: "Start an existing k3d cluster",
 		Long:  `Start an existing k3d cluster`,
 		Run: func(cmd *cobra.Command, args []string) {

@@ -37,7 +37,7 @@ func NewCmdCreateNode() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "node",
+		Use:   "node NAME",
 		Short: "Create a new k3s node in docker",
 		Long:  `Create a new containerized k3s node (k3s in docker).`,
 		Args:  cobra.ExactArgs(1), // exactly one name accepted // TODO: if not specified, inherit from cluster that the node shall belong to, if that is specified

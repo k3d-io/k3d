@@ -41,7 +41,7 @@ func NewCmdCreateCluster() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "cluster",
+		Use:   "cluster NAME",
 		Short: "Create a new k3s cluster in docker",
 		Long:  `Create a new k3s cluster with containerized nodes (k3s in docker).`,
 		Args:  cobra.ExactArgs(1), // exactly one cluster name can be set // TODO: if not specified, use k3d.DefaultClusterName

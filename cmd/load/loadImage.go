@@ -36,7 +36,7 @@ func NewCmdLoadImage() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "image",
+		Use:   "image [IMAGE [IMAGE...]]",
 		Short: "Load an image from docker into a k3d cluster.",
 		Long:  `Load an image from docker into a k3d cluster.`,
 		Args:  cobra.MinimumNArgs(1),

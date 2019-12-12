@@ -41,7 +41,7 @@ func NewCmdGetNode() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:     "node",
+		Use:     "node", // TODO: set one or more names or --all flag
 		Short:   "Get node",
 		Aliases: []string{"nodes"},
 		Long:    `Get node.`,

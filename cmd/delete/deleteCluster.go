@@ -35,19 +35,20 @@ func NewCmdDeleteCluster() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:   "cluster",
+		Use:   "cluster (NAME | --all)",
 		Short: "Delete a cluster.",
 		Long:  `Delete a cluster.`,
+		Args:  cobra.MinimumNArgs(0), // 0 or n arguments; 0 only if --all is set
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("delete cluster called")
 
-			rt, cs := parseDeleteClusterCmd(cmd, args)
+			runtime, clusters := parseDeleteClusterCmd(cmd, args)
 
-			if len(cs) == 0 {
+			if len(clusters) == 0 {
 				log.Infoln("No clusters found")
 			} else {
-				for _, c := range cs {
-					if err := cluster.DeleteCluster(c, rt); err != nil {
+				for _, c := range clusters {
+					if err := cluster.DeleteCluster(c, runtime); err != nil {
 						log.Fatalln(err)
 					}
 				}

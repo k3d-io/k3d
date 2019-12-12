@@ -42,10 +42,11 @@ func NewCmdGetCluster() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:     "cluster",
+		Use:     "cluster [NAME [NAME...]]",
 		Aliases: []string{"clusters"},
 		Short:   "Get cluster",
 		Long:    `Get cluster.`,
+		Args:    cobra.MinimumNArgs(0), // 0 or more; 0 = all
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("get cluster called")
 			c, rt, headersOff := parseGetClusterCmd(cmd, args)

@@ -34,7 +34,7 @@ func NewCmdStartNode() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "node",
+		Use:   "node NAME", // TODO: allow one or more names or --all
 		Short: "Start an existing k3d node",
 		Long:  `Start an existing k3d node.`,
 		Run: func(cmd *cobra.Command, args []string) {
