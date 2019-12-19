@@ -23,6 +23,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -114,11 +115,11 @@ func initLogging() {
 }
 
 // Completion
-var completionFunctions = map[string]interface{}{
-	"bash":       rootCmd.GenBashCompletion(os.Stdout),
-	"zsh":        rootCmd.GenZshCompletion(os.Stdout),
-	"psh":        rootCmd.GenPowerShellCompletion(os.Stdout),
-	"powershell": rootCmd.GenPowerShellCompletion(os.Stdout),
+var completionFunctions = map[string]func(io.Writer) error{
+	"bash":       rootCmd.GenBashCompletion,
+	"zsh":        rootCmd.GenZshCompletion,
+	"psh":        rootCmd.GenPowerShellCompletion,
+	"powershell": rootCmd.GenPowerShellCompletion,
 }
 
 // NewCmdCompletion creates a new completion command
@@ -132,7 +133,7 @@ func NewCmdCompletion() *cobra.Command {
 		Args:  cobra.ExactArgs(1), // TODO: add support for 0 args = auto detection
 		Run: func(cmd *cobra.Command, args []string) {
 			if f, ok := completionFunctions[args[0]]; ok {
-				if err := f; err != nil {
+				if err := f(os.Stdout); err != nil {
 					log.Fatalf("Failed to generate completion script for shell '%s'", args[0])
 				}
 				return
