@@ -59,6 +59,10 @@ func NewCmdLoadImage() *cobra.Command {
 	 *********/
 	cmd.Flags().StringArrayP("cluster", "c", []string{k3d.DefaultClusterName}, "Select clusters to load the image to.")
 	cmd.Flags().BoolP("keep-tarball", "k", false, "Do not delete the tarball which contains the saved images from the shared volume")
+	cmd.Flags().StringP("tar", "t", "", "Import image from local tarball")
+	if err := cmd.MarkFlagFilename("tar", ".tar"); err != nil {
+		log.Fatalln("Failed to mark --tar flag as filename")
+	}
 
 	/* Subcommands */
 
@@ -76,6 +80,15 @@ func parseLoadImageCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, []s
 	runtime, err := runtimes.GetRuntime(rt)
 	if err != nil {
 		log.Fatalln(err)
+	}
+
+	// --tar
+	localTarball, err := cmd.Flags().GetString("tar")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if cmd.Flags().Changed("tar") { // TODO: implement import from local tarball
+		log.Fatalf("--tar flag not supported yet '%s'", localTarball)
 	}
 
 	// --keep-tarball

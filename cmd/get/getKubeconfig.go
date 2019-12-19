@@ -58,6 +58,9 @@ func NewCmdGetKubeconfig() *cobra.Command {
 
 	// add flags
 	cmd.Flags().StringP("output", "o", "", "Define output [ - | <file> ]")
+	if err := cmd.MarkFlagFilename("output"); err != nil {
+		log.Fatalln("Failed to mark flag --output as filename")
+	}
 	// cmd.Flags().BoolP("all", "a", false, "Get kubeconfigs from all existing clusters") // TODO:
 
 	// done
