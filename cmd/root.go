@@ -79,6 +79,7 @@ func init() {
 	// add local flags
 
 	// add subcommands
+	rootCmd.AddCommand(NewCmdCompletion())
 	rootCmd.AddCommand(create.NewCmdCreate())
 	rootCmd.AddCommand(delete.NewCmdDelete())
 	rootCmd.AddCommand(get.NewCmdGet())
@@ -110,4 +111,34 @@ func initLogging() {
 			log.SetLevel(log.InfoLevel)
 		}
 	}
+}
+
+// Completion
+var completionFunctions = map[string]interface{}{
+	"bash":       rootCmd.GenBashCompletion(os.Stdout),
+	"zsh":        rootCmd.GenZshCompletion(os.Stdout),
+	"psh":        rootCmd.GenPowerShellCompletion(os.Stdout),
+	"powershell": rootCmd.GenPowerShellCompletion(os.Stdout),
+}
+
+// NewCmdCompletion creates a new completion command
+// FIXME: this does not really work yet
+func NewCmdCompletion() *cobra.Command {
+	// create new cobra command
+	cmd := &cobra.Command{
+		Use:   "completion SHELL",
+		Short: "Generate completion scripts for [bash, zsh, powershell | psh]",
+		Long:  `Generate completion scripts for [bash, zsh, powershell | psh]`,
+		Args:  cobra.ExactArgs(1), // TODO: add support for 0 args = auto detection
+		Run: func(cmd *cobra.Command, args []string) {
+			if f, ok := completionFunctions[args[0]]; ok {
+				if err := f; err != nil {
+					log.Fatalf("Failed to generate completion script for shell '%s'", args[0])
+				}
+				return
+			}
+			log.Fatalf("Shell '%s' not supported for completion", args[0])
+		},
+	}
+	return cmd
 }
