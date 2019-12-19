@@ -56,7 +56,11 @@ func NewCmdCreateNode() *cobra.Command {
 	// add flags
 	cmd.Flags().Int("replicas", 1, "Number of replicas of this node specification.")
 	cmd.Flags().String("role", string(k3d.WorkerRole), "Specify node role [master, worker]")
-	cmd.Flags().StringP("cluster", "c", "", "Select the cluster that the node shall connect to.")
+	cmd.Flags().StringP("cluster", "c", "", "[REQUIRED] Select the cluster that the node shall connect to.")
+	if err := cmd.MarkFlagRequired("cluster"); err != nil {
+		log.Fatalln("Failed to mark required flag '--cluster'")
+	}
+
 	cmd.Flags().String("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.K3sVersion), "Specify k3s image used for the node(s)") // TODO: get image version tag
 
 	// done

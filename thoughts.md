@@ -200,3 +200,49 @@ Here's how k3d types should translate to a runtime type:
 
 - [https://github.com/opencontainers/runtime-spec/blob/master/specs-go/config.go](https://github.com/opencontainers/runtime-spec/blob/master/specs-go/config.go)
 - move node -> container translation out of runtime
+
+## node configuration comparison
+
+- master node(s)
+  - ENV
+    - `K3S_CLUSTER_INIT`
+      - if num_masters > 1 && no external datastore configured
+    - `K3S_KUBECONFIG_OUTPUT`
+      - k3d default -> `/output/kubeconfig.yaml`
+  - CMD/ARGS
+    - `--https-listen-port`
+      - can/should be left default (unset = 6443), since we handle it via port mapping
+      - `--tls-san=<some-ip-or-hostname>`
+        - get from `--api-port` k3d flag and/or from docker machine
+  - Runtime Configuration
+    - nothing special
+- all nodes
+  - ENV
+    - `K3S_TOKEN` for node authentication
+      - TODO: replaces `K3S_CLUSTER_SECRET`
+  - CMD/ARGS
+    - nothing special
+  - Runtime Configuration
+    - Volumes
+      - shared image volume
+        - cluster-specific (create cluster) or inherit from existing (create node)
+      - tmpfs for k3s to work properly
+        - `/run`
+        - `/var/run`
+    - Capabilities/Security Context
+      - `privileged`
+    - Network
+      - cluster network or external/inherited
+- worker nodes
+  - ENV
+    - `K3S_URL` to connect to master node
+      - server hostname + port (6443)
+      - cluster-specific or inherited
+  - CMD/ARGS
+    - nothing special
+  - Runtime Configuration
+    - nothing special
+
+## Features
+
+- remove/add nodes -> needs to remove line in `/var/lib/rancher/k3s/server/cred/node-passwd` for the deleted node

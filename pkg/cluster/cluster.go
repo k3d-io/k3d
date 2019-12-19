@@ -105,7 +105,7 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 			node.Labels = make(map[string]string) // TODO: maybe create an init function?
 		}
 		node.Labels["k3d.cluster"] = cluster.Name
-		node.Env = append(node.Env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", cluster.Secret))
+		node.Env = append(node.Env, fmt.Sprintf("K3S_TOKEN=%s", cluster.Secret))
 		node.Labels["k3d.cluster.secret"] = cluster.Secret
 
 		// append extra labels

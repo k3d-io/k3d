@@ -143,7 +143,7 @@ func getNodeContainer(node *k3d.Node) (*types.Container, error) {
 	for k, v := range node.Labels {
 		filters.Add("label", fmt.Sprintf("%s=%s", k, v))
 	}
-	filters.Add("name", node.Name)
+	filters.Add("name", fmt.Sprintf("^%s$", node.Name)) // regex filtering for exact name match
 
 	containers, err := docker.ContainerList(ctx, types.ContainerListOptions{
 		Filters: filters,

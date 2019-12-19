@@ -33,9 +33,10 @@ import (
 
 // AddNodeToCluster adds a node to an existing cluster
 func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Cluster) error {
+	clusterName := cluster.Name
 	cluster, err := GetCluster(cluster, runtime)
 	if err != nil {
-		log.Errorf("Failed to find specified cluster '%s'", cluster.Name)
+		log.Errorf("Failed to find specified cluster '%s'", clusterName)
 		return err
 	}
 
@@ -62,7 +63,7 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 					node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", v))
 				}
 				if k == "k3d.cluster.secret" {
-					node.Env = append(node.Env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", v))
+					node.Env = append(node.Env, fmt.Sprintf("K3S_TOKEN=%s", v))
 				}
 			}
 
