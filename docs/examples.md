@@ -103,11 +103,11 @@ docker container run -d --name <b>registry.local</b> -v local_registry:/var/lib/
 
 ### Step 2: Prepare configuration to connect to the registry
 
-First we need a place to store the config template: `mkdir -p /home/${USER}/.k3d`
+First we need a place to store the config template: `mkdir -p ${HOME}/.k3d`
 
 #### Step 2 - Option 1: use `registries.yaml` (for k3s >= v0.10.0)
 
-Create a file named `registries.yaml` in `/home/${USER}/.k3d` with following content:
+Create a file named `registries.yaml` in `${HOME}/.k3d` with following content:
 
 ```yaml
 mirrors:
@@ -118,7 +118,7 @@ mirrors:
 
 #### Step 2 - Option 2: use `config.toml.tmpl` to directly modify the containerd config (all versions)
 
-Create a file named `config.toml.tmpl` in `/home/${USER}/.k3d`, with following content:
+Create a file named `config.toml.tmpl` in `${HOME}/.k3d`, with following content:
 
 ##### Step 2 - Option 2.1 -> for k3s >= v0.10.0
 
@@ -208,14 +208,14 @@ Finally start a cluster with k3d, passing-in the `registries.yaml` or `config.to
 
 ```bash
 k3d create \
-    --volume /home/${USER}/.k3d/registries.yaml:/etc/rancher/k3s/registries.yaml
+    --volume ${HOME}/.k3d/registries.yaml:/etc/rancher/k3s/registries.yaml
 ```
 
 or
 
 ```bash
 k3d create \
-    --volume /home/${USER}/.k3d/config.toml.tmpl:/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+    --volume ${HOME}/.k3d/config.toml.tmpl:/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
 ```
 
 ### Step 4: Wire them up
@@ -265,20 +265,20 @@ EOF
 
 ## Connect with a private secure registry
 
-This guide takes you through setting up a private secure (https) registry with a non-publicly-trusted CA and integrating it into your workflow so that:
+This guide takes you through setting up a private secure (https) registry with a non-publicly trusted CA and integrating it into your workflow so that:
 
-- you can push to the registry from your host
+- you can push to the registry
 - the cluster managed by k3d can pull from that registry
 
-The registry will be named `registry.companyinternal.net` and run on port `5000`.
+The registry will be named `registry.companyinternal.net` and it is assumed to already be set up, with a non-publicly trusted cert.
 
 ### Step 1: Prepare configuration to connect to the registry
 
-First we need a place to store the config template: `mkdir -p /home/${USER}/.k3d`
+First we need a place to store the config template: `mkdir -p ${HOME}/.k3d`
 
 ### Step 2: Configure `registries.yaml` (for k3s >= v0.10.0) to point to your root CA
 
-Create a file named `registries.yaml` in `/home/${USER}/.k3d` with following content:
+Create a file named `registries.yaml` in `${HOME}/.k3d` with following content:
 
 ```yaml
 mirrors:
@@ -293,7 +293,7 @@ configs:
 
 ### Step 3: Get a copy of the root CA
 
-Download it to `/home/${USER}/.k3d/companycaroot.pem`
+Download it to `${HOME}/.k3d/companycaroot.pem`
 
 ### Step 4: Start the cluster
 
@@ -301,8 +301,8 @@ Finally start a cluster with k3d, passing-in the `registries.yaml` and root CA c
 
 ```bash
 k3d create \
-    --volume /home/${USER}/.k3d/registries.yaml:/etc/rancher/k3s/registries.yaml \
-    --volume /home/${USER}/.k3d/companycaroot.pem:/etc/ssl/certs/companycaroot.pem
+    --volume ${HOME}/.k3d/registries.yaml:/etc/rancher/k3s/registries.yaml \
+    --volume ${HOME}/.k3d/companycaroot.pem:/etc/ssl/certs/companycaroot.pem
 ```
 
 ## Running on filesystems k3s doesn't like (btrfs, tmpfs, …)
