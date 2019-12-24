@@ -84,9 +84,9 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
     `curl localhost:8082/`
 
-## Connect with a local insecure registry
+## Connect with a private insecure registry
 
-This guide takes you through setting up a local insecure (http) registry and integrating it into your workflow so that:
+This guide takes you through setting up a private insecure (http) registry and integrating it into your workflow so that:
 
 - you can push to the registry from your host
 - the cluster managed by k3d can pull from that registry
@@ -202,7 +202,7 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
     endpoint = ["http://<b>registry.local:5000</b>"]
 </pre>
 
-### Step 3 - Start the cluster
+### Step 3: Start the cluster
 
 Finally start a cluster with k3d, passing-in the `registries.yaml` or `config.toml.tmpl`:
 
@@ -218,12 +218,12 @@ k3d create \
     --volume /home/${USER}/.k3d/config.toml.tmpl:/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
 ```
 
-### Step 4 - Wire them up
+### Step 4: Wire them up
 
 - Connect the registry to the cluster network: `docker network connect k3d-k3s-default registry.local`
 - Add `127.0.0.1 registry.local` to your `/etc/hosts`
 
-### Step 5 - Test
+### Step 5: Test
 
 Push an image to the registry:
 
@@ -262,6 +262,48 @@ EOF
 ```
 
 ... and check that the pod is running: `kubectl get pods -l "app=nginx-test-registry"`
+
+## Connect with a private secure registry
+
+This guide takes you through setting up a private secure (https) registry with a non-publicly-trusted CA and integrating it into your workflow so that:
+
+- you can push to the registry from your host
+- the cluster managed by k3d can pull from that registry
+
+The registry will be named `registry.companyinternal.net` and run on port `5000`.
+
+### Step 1: Prepare configuration to connect to the registry
+
+First we need a place to store the config template: `mkdir -p /home/${USER}/.k3d`
+
+### Step 2: Configure `registries.yaml` (for k3s >= v0.10.0) to point to your root CA
+
+Create a file named `registries.yaml` in `/home/${USER}/.k3d` with following content:
+
+```yaml
+mirrors:
+  registry.companyinternal.net:
+    endpoint:
+            - https://registry.companyinternal.net
+configs:
+  registry.companyinternal.net:
+    tls:
+      ca_file: "/etc/ssl/certs/companycaroot.pem"
+```
+
+### Step 3: Get a copy of the root CA
+
+Download it to `/home/${USER}/.k3d/companycaroot.pem`
+
+### Step 4: Start the cluster
+
+Finally start a cluster with k3d, passing-in the `registries.yaml` and root CA cert:
+
+```bash
+k3d create \
+    --volume /home/${USER}/.k3d/registries.yaml:/etc/rancher/k3s/registries.yaml \
+    --volume /home/${USER}/.k3d/companycaroot.pem:/etc/ssl/certs/companycaroot.pem
+```
 
 ## Running on filesystems k3s doesn't like (btrfs, tmpfs, …)
 
