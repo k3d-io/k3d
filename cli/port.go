@@ -8,12 +8,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// PublishedPorts is a struct used for exposing container ports on the host system
-type PublishedPorts struct {
-	ExposedPorts map[nat.Port]struct{}
-	PortBindings map[nat.Port][]nat.PortBinding
-}
-
 // mapNodesToPortSpecs maps nodes to portSpecs
 func mapNodesToPortSpecs(specs []string, createdNodes []string) (map[string][]string, error) {
 

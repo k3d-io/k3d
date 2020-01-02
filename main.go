@@ -71,8 +71,9 @@ func main() {
 					Usage: "Mount one or more volumes into every node of the cluster (Docker notation: `source:destination`)",
 				},
 				cli.StringSliceFlag{
-					Name:  "publish, add-port",
-					Usage: "Publish k3s node ports to the host (Format: `[ip:][host-port:]container-port[/protocol]@node-specifier`, use multiple options to expose more ports)",
+					// TODO: remove publish/add-port soon, to clean up
+					Name:  "port, p, publish, add-port",
+					Usage: "Publish k3s node ports to the host (Format: `-p [ip:][host-port:]container-port[/protocol]@node-specifier`, use multiple options to expose more ports)",
 				},
 				cli.IntFlag{
 					Name:  "port-auto-offset",
@@ -80,15 +81,9 @@ func main() {
 					Usage: "Automatically add an offset (* worker number) to the chosen host port when using `--publish` to map the same container-port from multiple k3d workers to the host",
 				},
 				cli.StringFlag{
-					// TODO: to be deprecated
-					Name:  "version",
-					Usage: "Choose the k3s image version",
-				},
-				cli.StringFlag{
-					// TODO: only --api-port, -a soon since we want to use --port, -p for the --publish/--add-port functionality
-					Name:  "api-port, a, port, p",
+					Name:  "api-port, a",
 					Value: "6443",
-					Usage: "Specify the Kubernetes cluster API server port (Format: `[host:]port` (Note: --port/-p will be used for arbitrary port mapping as of v2.0.0, use --api-port/-a instead for setting the api port)",
+					Usage: "Specify the Kubernetes cluster API server port (Format: `-a [host:]port`",
 				},
 				cli.IntFlag{
 					Name:  "wait, t",
@@ -123,6 +118,63 @@ func main() {
 				},
 			},
 			Action: run.CreateCluster,
+		},
+		/*
+		 * Add a new node to an existing k3d/k3s cluster (choosing k3d by default)
+		 */
+		{
+			Name:  "add-node",
+			Usage: "[EXPERIMENTAL] Add nodes to an existing k3d/k3s cluster (k3d by default)",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "role, r",
+					Usage: "Choose role of the node you want to add [agent|server]",
+					Value: "agent",
+				},
+				cli.StringFlag{
+					Name:  "name, n",
+					Usage: "Name of the k3d cluster that you want to add a node to [only for node name if --k3s is set]",
+					Value: defaultK3sClusterName,
+				},
+				cli.IntFlag{
+					Name:  "count, c",
+					Usage: "Number of nodes that you want to add",
+					Value: 1,
+				},
+				cli.StringFlag{
+					Name:  "image, i",
+					Usage: "Specify a k3s image (Format: <repo>/<image>:<tag>)",
+					Value: fmt.Sprintf("%s:%s", defaultK3sImage, version.GetK3sVersion()),
+				},
+				cli.StringSliceFlag{
+					Name:  "arg, x",
+					Usage: "Pass arguments to the k3s server/agent command.",
+				},
+				cli.StringSliceFlag{
+					Name:  "env, e",
+					Usage: "Pass an additional environment variable (new flag per variable)",
+				},
+				cli.StringSliceFlag{
+					Name:  "volume, v",
+					Usage: "Mount one or more volumes into every created node (Docker notation: `source:destination`)",
+				},
+				/*
+				 * Connect to a non-dockerized k3s cluster
+				 */
+				cli.StringFlag{
+					Name:  "k3s",
+					Usage: "Add a k3d node to a non-k3d k3s cluster (specify k3s server URL like this `https://<host>:<port>`) [requires k3s-secret or k3s-token]",
+				},
+				cli.StringFlag{
+					Name:  "k3s-secret, s",
+					Usage: "Specify k3s cluster secret (or use --k3s-token to use a node token)",
+				},
+				cli.StringFlag{
+					Name:  "k3s-token, t",
+					Usage: "Specify k3s node token (or use --k3s-secret to use a cluster secret)[overrides k3s-secret]",
+				},
+			},
+			Action: run.AddNode,
 		},
 		{
 			// delete deletes an existing k3s cluster (remove container and cluster directory)
@@ -181,13 +233,7 @@ func main() {
 			Name:    "list",
 			Aliases: []string{"ls", "l"},
 			Usage:   "List all clusters",
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "all, a",
-					Usage: "Also show non-running clusters",
-				},
-			},
-			Action: run.ListClusters,
+			Action:  run.ListClusters,
 		},
 		{
 			// get-kubeconfig grabs the kubeconfig from the cluster and prints the path to it

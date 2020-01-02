@@ -22,15 +22,6 @@ const (
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
 
-// defaultNodes describes the default node group (master)
-const defaultNodes = "server"
-
-// mapping a node role to groups that should be applied to it
-var nodeRuleGroupsMap = map[string][]string{
-	"worker": {"all", "workers"},
-	"server": {"all", "server", "master"},
-}
-
 var src = rand.NewSource(time.Now().UnixNano())
 
 // GenerateRandomString thanks to https://stackoverflow.com/a/31832326/6450189
