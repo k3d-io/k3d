@@ -211,7 +211,7 @@ func CreateCluster(c *cli.Context) error {
 		nRead, _ := buf.ReadFrom(out)
 		out.Close()
 		output := buf.String()
-		if nRead > 0 && strings.Contains(string(output), "Running kubelet") {
+		if nRead > 0 && strings.Contains(string(output), "Wrote kubeconfig") {
 			break
 		}
 
