@@ -124,7 +124,7 @@ func main() {
 		 */
 		{
 			Name:  "add-node",
-			Usage: "Add nodes to an existing k3d/k3s cluster (k3d by default)",
+			Usage: "[EXPERIMENTAL] Add nodes to an existing k3d/k3s cluster (k3d by default)",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "role, r",
