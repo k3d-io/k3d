@@ -152,6 +152,9 @@ func CreateCluster(c *cli.Context) error {
 	 * Add user-supplied arguments for the k3s agent
 	 */
 	if c.IsSet("agent-arg") {
+		if c.Int("workers") < 1 {
+			log.Warnln("--agent-arg supplied, but --workers is 0, so no agents will be created")
+		}
 		k3AgentArgs = append(k3AgentArgs, c.StringSlice("agent-arg")...)
 	}
 
@@ -239,7 +242,7 @@ func CreateCluster(c *cli.Context) error {
 	// We're simply scanning the container logs for a line that tells us that everything's up and running
 	// TODO: also wait for worker nodes
 	if c.IsSet("wait") {
-		if err := waitForContainerLogMessage(serverContainerID, "Running kubelet", c.Int("wait")); err != nil {
+		if err := waitForContainerLogMessage(serverContainerID, "Wrote kubeconfig", c.Int("wait")); err != nil {
 			deleteCluster()
 			return fmt.Errorf("ERROR: failed while waiting for server to come up\n%+v", err)
 		}
@@ -277,6 +280,7 @@ kubectl cluster-info`, os.Args[0], c.String("name"))
 
 // DeleteCluster removes the containers belonging to a cluster and its local directory
 func DeleteCluster(c *cli.Context) error {
+
 	clusters, err := getClusters(c.Bool("all"), c.String("name"))
 
 	if err != nil {
@@ -284,6 +288,9 @@ func DeleteCluster(c *cli.Context) error {
 	}
 
 	if len(clusters) == 0 {
+		if !c.IsSet("all") && !c.IsSet("name") {
+			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to delete other clusters)", c.String("name"))
+		}
 		return fmt.Errorf("No cluster(s) found")
 	}
 
@@ -416,6 +423,9 @@ func GetKubeConfig(c *cli.Context) error {
 	}
 
 	if len(clusters) == 0 {
+		if !c.IsSet("all") && !c.IsSet("name") {
+			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to check other clusters)", c.String("name"))
+		}
 		return fmt.Errorf("No cluster(s) found")
 	}
 

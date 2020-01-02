@@ -179,6 +179,7 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 		},
 		PortBindings: workerPublishedPorts.PortBindings,
 		Privileged:   true,
+		Init:         &[]bool{true}[0],
 	}
 
 	if spec.AutoRestart {
