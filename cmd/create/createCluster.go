@@ -63,7 +63,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().IntP("masters", "m", 1, "Specify how many masters you want to create")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
 	// cmd.Flags().String("config", "", "Specify a cluster configuration file")                                     // TODO: to implement
-	cmd.Flags().String("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.K3sVersion), "Specify k3s image that you want to use for the nodes")
+	cmd.Flags().String("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
 	cmd.Flags().String("network", "", "Join an existing network")
 	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d create -w 2 -v /my/path@worker[0,1] -v /tmp/test:/tmp/other@master[0]`")
@@ -116,6 +116,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 	if err != nil {
 		log.Errorln("No image specified")
 		log.Fatalln(err)
+	}
+	if image == "latest" {
+		image = version.GetK3sVersion(true)
 	}
 
 	// --masters

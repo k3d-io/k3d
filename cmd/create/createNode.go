@@ -61,7 +61,7 @@ func NewCmdCreateNode() *cobra.Command {
 		log.Fatalln("Failed to mark required flag '--cluster'")
 	}
 
-	cmd.Flags().String("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.K3sVersion), "Specify k3s image used for the node(s)") // TODO: get image version tag
+	cmd.Flags().String("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image used for the node(s)")
 
 	// done
 	return cmd

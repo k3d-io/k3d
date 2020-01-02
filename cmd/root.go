@@ -117,13 +117,12 @@ func initLogging() {
 // Completion
 var completionFunctions = map[string]func(io.Writer) error{
 	"bash":       rootCmd.GenBashCompletion,
-	"zsh":        rootCmd.GenZshCompletion,
+	"zsh":        rootCmd.GenZshCompletion, // FIXME: zsh completion requires https://github.com/spf13/cobra/pull/899 due to square brackets in our help texts
 	"psh":        rootCmd.GenPowerShellCompletion,
 	"powershell": rootCmd.GenPowerShellCompletion,
 }
 
 // NewCmdCompletion creates a new completion command
-// FIXME: this does not really work yet
 func NewCmdCompletion() *cobra.Command {
 	// create new cobra command
 	cmd := &cobra.Command{

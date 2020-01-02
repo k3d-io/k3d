@@ -79,7 +79,11 @@ github.com/containerd/ttrpc
 # github.com/containerd/typeurl v0.0.0-20190911142611-5eb25027c9fd
 github.com/containerd/typeurl
 # github.com/docker/distribution v0.0.0-20190905152932-14b96e55d84c
+github.com/docker/distribution
 github.com/docker/distribution/digestset
+github.com/docker/distribution/manifest
+github.com/docker/distribution/manifest/schema1
+github.com/docker/distribution/manifest/schema2
 github.com/docker/distribution/reference
 github.com/docker/distribution/registry/api/errcode
 # github.com/docker/docker v1.4.2-0.20190905191220-3b23f9033967
@@ -109,6 +113,8 @@ github.com/docker/go-connections/tlsconfig
 github.com/docker/go-events
 # github.com/docker/go-units v0.4.0
 github.com/docker/go-units
+# github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7
+github.com/docker/libtrust
 # github.com/go-test/deep v1.0.4
 github.com/go-test/deep
 # github.com/gogo/googleapis v1.3.0
@@ -123,6 +129,8 @@ github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
+# github.com/heroku/docker-registry-client v0.0.0-20190909225348-afc9e1acc3d5
+github.com/heroku/docker-registry-client/registry
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1

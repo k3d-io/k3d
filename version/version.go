@@ -21,6 +21,11 @@ THE SOFTWARE.
 */
 package version
 
+import (
+	"github.com/heroku/docker-registry-client/registry"
+	log "github.com/sirupsen/logrus"
+)
+
 // Version is the string that contains version
 var Version string
 
@@ -37,6 +42,39 @@ func GetVersion() string {
 }
 
 // GetK3sVersion returns the version string for K3s
-func GetK3sVersion() string {
+func GetK3sVersion(latest bool) string {
+	if latest {
+		version, err := fetchLatestK3sVersion()
+		if err != nil || version == "" {
+			log.Warnln("Failed to fetch latest K3s version from DockerHub, falling back to hardcoded version.")
+			return K3sVersion
+		}
+		return version
+	}
 	return K3sVersion
+}
+
+// fetchLatestK3sVersion tries to fetch the latest version of k3s from DockerHub
+func fetchLatestK3sVersion() (string, error) {
+
+	url := "https://registry-1.docker.io/"
+	username := "" // anonymous
+	password := "" // anonymous
+	repository := "rancher/k3s"
+
+	hub, err := registry.New(url, username, password)
+	if err != nil {
+		return "", err
+	}
+
+	tags, err := hub.Tags(repository)
+	if err != nil || len(tags) == 0 {
+		return "", err
+	}
+
+	log.Debugln("Fetched the following tags for rancher/k3s from DockerHub:")
+	log.Debugln(tags)
+
+	return "sampleTag", nil
+
 }
