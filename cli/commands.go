@@ -459,6 +459,9 @@ func ImportImage(c *cli.Context) error {
 	} else {
 		images = append(images, c.Args()...)
 	}
+	if len(images) == 0 {
+		return fmt.Errorf("No images specified for import")
+	}
 	return importImage(c.String("name"), images, c.Bool("no-remove"))
 }
 
