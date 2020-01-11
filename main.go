@@ -107,6 +107,10 @@ func main() {
 					Name:  "env, e",
 					Usage: "Pass an additional environment variable (new flag per variable)",
 				},
+				cli.StringSliceFlag{
+					Name:  "label, l",
+					Usage: "Add one or more docker labels to every node container of the cluster, using Docker notation `key=value` (new flag per label)",
+				},
 				cli.IntFlag{
 					Name:  "workers, w",
 					Value: 0,
@@ -153,6 +157,10 @@ func main() {
 				cli.StringSliceFlag{
 					Name:  "env, e",
 					Usage: "Pass an additional environment variable (new flag per variable)",
+				},
+				cli.StringSliceFlag{
+					Name:  "label, l",
+					Usage: "Add one or more docker labels to every node container of the cluster (Docker notation: `key=value`)",
 				},
 				cli.StringSliceFlag{
 					Name:  "volume, v",

@@ -142,6 +142,16 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 	containerLabels["created"] = time.Now().Format("2006-01-02 15:04:05")
 	containerLabels["cluster"] = spec.ClusterName
 
+	for _, label := range spec.Labels {
+		labelSlice := strings.SplitN(label, "=", 2)
+
+		if len(labelSlice) > 1 {
+			containerLabels[labelSlice[0]] = labelSlice[1]
+		} else {
+			containerLabels[labelSlice[0]] = ""
+		}
+	}
+
 	containerName := GetContainerName("worker", spec.ClusterName, postfix)
 	env := spec.Env
 

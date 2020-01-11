@@ -37,6 +37,7 @@ type ClusterSpec struct {
 	AutoRestart       bool
 	ClusterName       string
 	Env               []string
+	Labels            []string
 	Image             string
 	NodeToPortSpecMap map[string][]string
 	PortAutoOffset    int

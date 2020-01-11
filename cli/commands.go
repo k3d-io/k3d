@@ -104,6 +104,14 @@ func CreateCluster(c *cli.Context) error {
 	env = append(env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", GenerateRandomString(20)))
 
 	/*
+	 * --label, -l
+	 * Docker container labels that will be added to the k3d node containers
+	 */
+	// labels
+	labels := []string{}
+	labels = append(labels, c.StringSlice("label")...)
+
+	/*
 	 * Arguments passed on to the k3s server and agent, will be filled later
 	 */
 	k3AgentArgs := []string{}
@@ -204,6 +212,7 @@ func CreateCluster(c *cli.Context) error {
 		AutoRestart:       c.Bool("auto-restart"),
 		ClusterName:       c.String("name"),
 		Env:               env,
+		Labels:            labels,
 		Image:             image,
 		NodeToPortSpecMap: portmap,
 		PortAutoOffset:    c.Int("port-auto-offset"),
@@ -481,6 +490,7 @@ func AddNode(c *cli.Context) error {
 		AutoRestart:       false,
 		ClusterName:       clusterName,
 		Env:               nil,
+		Labels:            nil,
 		Image:             "",
 		NodeToPortSpecMap: nil,
 		PortAutoOffset:    0,
@@ -558,6 +568,13 @@ func AddNode(c *cli.Context) error {
 		}
 		return nil
 	}
+
+	/* (0.6)
+	 * --label, -l <key1=val1>
+	 * Docker container labels that will be added to the k3d node containers
+	 */
+	clusterSpec.Labels = []string{}
+	clusterSpec.Labels = append(clusterSpec.Labels, c.StringSlice("label")...)
 
 	/*
 	 * (1) Check cluster
