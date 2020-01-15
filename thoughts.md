@@ -231,9 +231,16 @@ Here's how k3d types should translate to a runtime type:
   - similar to [https://github.com/rancher/k3d/pull/161](https://github.com/rancher/k3d/pull/161)
 - add `k3d create registry` command to create external registry (maybe instead of flags as in PR #161?)
 
+### Syntactical shortcuts for k3d v1 backwards compatibility
+
+- e.g. `k3d create` -> `k3d create cluster k3s-default`
+
 ### Unsorted Ideas
 
 - Integrate build tool (e.g. buildkit, buildah, ...)
+- use `tools.go` to keep tools (like `golangci-lint` and `gox`) dependencies
+  - see e.g. [https://github.com/golang/go/wiki/Modules#how-can-i-track-tool-dependencies-for-a-module](https://github.com/golang/go/wiki/Modules#how-can-i-track-tool-dependencies-for-a-module)
+  - see e.g. [https://github.com/golang/go/wiki/Modules#how-can-i-track-tool-dependencies-for-a-module](https://github.com/golang/go/wiki/Modules#how-can-i-track-tool-dependencies-for-a-module)
 
 ### Required Enhancements
 
