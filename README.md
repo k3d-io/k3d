@@ -56,11 +56,12 @@ Check out the [examples here](docs/examples.md).
 
 ## What now?
 
-Find more details under the following Links:
+### More Information
 
 - [Further documentation](docs/documentation.md)
 - [Usage examples](docs/examples.md)
 - [Frequently asked questions and nice-to-know facts](docs/faq.md)
+- [Design/Architecture Thoughts, Plans, Unsorted Ideas and more](thoughts.md)
 
 ### Connect
 
