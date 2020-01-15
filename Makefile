@@ -10,13 +10,16 @@ ifeq ($(GIT_TAG),)
 GIT_TAG   := $(shell git describe --always)
 endif
 
-# get latest k3s version
-K3S_TAG		:= $(shell curl --silent "https://api.github.com/repos/rancher/k3s/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+# get latest k3s version: grep the tag JSON field, extract the tag and replace + with - (difference between git and dockerhub tags)
+K3S_TAG		:= $(shell curl --silent "https://api.github.com/repos/rancher/k3s/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | sed -E 's/\+/\-/')
 ifeq ($(K3S_TAG),)
 $(warning K3S_TAG undefined: couldn't get latest k3s image tag!)
 $(warning Output of curl: $(shell curl --silent "https://api.github.com/repos/rancher/k3s/releases/latest"))
 $(error exiting)
 endif
+
+# determine if make is being executed from interactive terminal
+INTERACTIVE:=$(shell [ -t 0 ] && echo 1)
 
 # Go options
 GO        ?= go
@@ -32,8 +35,8 @@ BINARIES  := k3d
 
 # Go Package required
 PKG_GOX := github.com/mitchellh/gox@v1.0.1
-PKG_GOLANGCI_LINT_VERSION := v1.20.0
-PKG_GOLANGCI_LINT := github.com/golangci/golangci-lint/cmd/golangci-lint@${PKG_GOLANGCI_LINT_VERSION}
+PKG_GOLANGCI_LINT_VERSION := 1.22.2
+PKG_GOLANGCI_LINT := github.com/golangci/golangci-lint/cmd/golangci-lint@v${PKG_GOLANGCI_LINT_VERSION}
 
 # configuration adjustments for golangci-lint
 GOLANGCI_LINT_DISABLED_LINTERS := "" # disabling typecheck, because it currently (06.09.2019) fails with Go 1.13
@@ -87,12 +90,23 @@ check: check-fmt lint
 
 # Check for required executables
 HAS_GOX := $(shell command -v gox 2> /dev/null)
-HAS_GOLANGCI  := $(shell command -v golangci-lint 2> /dev/null)
+HAS_GOLANGCI  := $(shell command -v golangci-lint)
+HAS_GOLANGCI_VERSION := $(shell golangci-lint --version | grep "version $(PKG_GOLANGCI_LINT_VERSION) " 2>&1)
 
 install-tools:
 ifndef HAS_GOX
 	($(GO) get $(PKG_GOX))
 endif
 ifndef HAS_GOLANGCI
-	(curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${GOPATH}/bin ${PKG_GOLANGCI_LINT_VERSION})
+	(curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${GOPATH}/bin v${PKG_GOLANGCI_LINT_VERSION})
+endif
+ifdef HAS_GOLANGCI
+ifeq ($(HAS_GOLANGCI_VERSION),)
+ifdef INTERACTIVE
+	@echo "Warning: Your installed version of golangci-lint (interactive: ${INTERACTIVE}) differs from what we'd like to use. Switch to v${PKG_GOLANGCI_LINT_VERSION}? [Y/n]"
+	@read line; if [ $$line == "y" ]; then (curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${GOPATH}/bin v${PKG_GOLANGCI_LINT_VERSION}); fi
+else
+	@echo "Warning: you're not using the same version of golangci-lint as us (v${PKG_GOLANGCI_LINT_VERSION})"
+endif
+endif
 endif
