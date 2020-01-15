@@ -242,6 +242,7 @@ Here's how k3d types should translate to a runtime type:
   - see e.g. [https://github.com/golang/go/wiki/Modules#how-can-i-track-tool-dependencies-for-a-module](https://github.com/golang/go/wiki/Modules#how-can-i-track-tool-dependencies-for-a-module)
   - see e.g. [https://github.com/golang/go/wiki/Modules#how-can-i-track-tool-dependencies-for-a-module](https://github.com/golang/go/wiki/Modules#how-can-i-track-tool-dependencies-for-a-module)
 
-### Required Enhancements
+### Possible Enhancements
 
-- remove/add nodes -> needs to remove line in `/var/lib/rancher/k3s/server/cred/node-passwd` for the deleted node
+- [!] remove/add nodes -> needs to remove line in `/var/lib/rancher/k3s/server/cred/node-passwd` for the deleted node
+- directly use cluster struct in `createClusterCmd` filled by flag values
