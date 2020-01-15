@@ -36,8 +36,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// createClusterOpts describes a set of options set via CLI flags
+type createClusterOpts struct {
+	K3sServerArgs []string
+	K3sAgentArgs  []string
+}
+
 // NewCmdCreateCluster returns a new cobra command
 func NewCmdCreateCluster() *cobra.Command {
+
+	opts := &createClusterOpts{}
 
 	// create new command
 	cmd := &cobra.Command{
@@ -46,7 +54,7 @@ func NewCmdCreateCluster() *cobra.Command {
 		Long:  `Create a new k3s cluster with containerized nodes (k3s in docker).`,
 		Args:  cobra.ExactArgs(1), // exactly one cluster name can be set // TODO: if not specified, use k3d.DefaultClusterName
 		Run: func(cmd *cobra.Command, args []string) {
-			runtime, cluster := parseCreateClusterCmd(cmd, args)
+			runtime, cluster := parseCreateClusterCmd(cmd, args, opts)
 			if err := k3dCluster.CreateCluster(cluster, runtime); err != nil {
 				log.Fatalln(err)
 			}
@@ -90,8 +98,8 @@ func NewCmdCreateCluster() *cobra.Command {
 	*/
 
 	/* k3s */ // TODO: to implement extra args
-	cmd.Flags().StringArray("k3s-server-arg", nil, "[WIP] Additional args passed to the `k3s server` command on master nodes")
-	cmd.Flags().StringArray("k3s-agent-arg", nil, "[WIP] Additional args passed to the `k3s agent` command on worker nodes")
+	cmd.Flags().StringArrayVar(&opts.K3sServerArgs, "k3s-server-arg", nil, "Additional args passed to the `k3s server` command on master nodes (new flag per arg)")
+	cmd.Flags().StringArrayVar(&opts.K3sAgentArgs, "k3s-agent-arg", nil, "Additional args passed to the `k3s agent` command on worker nodes (new flag per arg)")
 
 	/* Subcommands */
 
@@ -100,7 +108,7 @@ func NewCmdCreateCluster() *cobra.Command {
 }
 
 // parseCreateClusterCmd parses the command input into variables required to create a cluster
-func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, *k3d.Cluster) {
+func parseCreateClusterCmd(cmd *cobra.Command, args []string, opts *createClusterOpts) (runtimes.Runtime, *k3d.Cluster) {
 	// --runtime
 	rt, err := cmd.Flags().GetString("runtime")
 	if err != nil {
@@ -333,6 +341,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		node := k3d.Node{
 			Role:       k3d.MasterRole,
 			Image:      image,
+			Args:       opts.K3sServerArgs,
 			MasterOpts: k3d.MasterOpts{},
 		}
 
@@ -354,6 +363,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		node := k3d.Node{
 			Role:  k3d.WorkerRole,
 			Image: image,
+			Args:  opts.K3sAgentArgs,
 		}
 
 		cluster.Nodes = append(cluster.Nodes, &node)
