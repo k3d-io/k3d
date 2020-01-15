@@ -72,3 +72,5 @@ google.golang.org/grpc/connectivity
 google.golang.org/grpc/grpclog
 google.golang.org/grpc/internal
 google.golang.org/grpc/status
+# gopkg.in/yaml.v2 v2.2.7
+gopkg.in/yaml.v2
