@@ -14,6 +14,8 @@ import (
 // defaultK3sImage specifies the default image being used for server and workers
 const defaultK3sImage = "docker.io/rancher/k3s"
 const defaultK3sClusterName string = "k3s-default"
+const defaultRegistryName = "registry.local"
+const defaultRegistryPort = 5000
 
 // main represents the CLI application
 func main() {
@@ -120,6 +122,20 @@ func main() {
 					Name:  "auto-restart",
 					Usage: "Set docker's --restart=unless-stopped flag on the containers",
 				},
+				cli.BoolFlag{
+					Name:  "enable-registry",
+					Usage: "Start a local Docker registry",
+				},
+				cli.StringFlag{
+					Name:  "registry-name",
+					Value: defaultRegistryName,
+					Usage: "Name of the local registry container",
+				},
+				cli.IntFlag{
+					Name:  "registry-port",
+					Value: defaultRegistryPort,
+					Usage: "Port of the local registry container",
+				},
 			},
 			Action: run.CreateCluster,
 		},
@@ -194,6 +210,10 @@ func main() {
 				cli.BoolFlag{
 					Name:  "all, a",
 					Usage: "Delete all existing clusters (this ignores the --name/-n flag)",
+				},
+				cli.BoolFlag{
+					Name:  "registry-volume",
+					Usage: "Delete the local Docker registry volume",
 				},
 			},
 			Action: run.DeleteCluster,
