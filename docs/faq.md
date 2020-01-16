@@ -10,4 +10,4 @@
   - Possible [fix/workaround by @zer0def](https://github.com/rancher/k3d/issues/133#issuecomment-549065666):
     - use a docker storage driver which cleans up properly (e.g. overlay2)
     - clean up or expand docker root filesystem
-    - change the kubelet's eviction thresholds upon cluster creation: `k3d create --agent-arg '--eviction-hard=imagefs.available<1%,nodefs.available<1%' --agent-arg '--eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%'`
+    - change the kubelet's eviction thresholds upon cluster creation: `k3d create --agent-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%' --agent-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%'`
