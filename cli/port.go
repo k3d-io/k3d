@@ -16,7 +16,7 @@ func mapNodesToPortSpecs(specs []string, createdNodes []string) (map[string][]st
 	}
 
 	// check node-specifier possibilitites
-	possibleNodeSpecifiers := []string{"all", "workers", "server", "master"}
+	possibleNodeSpecifiers := []string{"all", "workers", "agents", "server", "master"}
 	possibleNodeSpecifiers = append(possibleNodeSpecifiers, createdNodes...)
 
 	nodeToPortSpecMap := make(map[string][]string)
