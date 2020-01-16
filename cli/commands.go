@@ -108,8 +108,10 @@ func CreateCluster(c *cli.Context) error {
 	 * Docker container labels that will be added to the k3d node containers
 	 */
 	// labels
-	labels := []string{}
-	labels = append(labels, c.StringSlice("label")...)
+	labelmap, err := mapNodesToLabelSpecs(c.StringSlice("label"), GetAllContainerNames(c.String("name"), DefaultServerCount, c.Int("workers")))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	/*
 	 * Arguments passed on to the k3s server and agent, will be filled later
@@ -207,17 +209,17 @@ func CreateCluster(c *cli.Context) error {
 	 * Defines, with which specifications, the cluster and the nodes inside should be created
 	 */
 	clusterSpec := &ClusterSpec{
-		AgentArgs:         k3AgentArgs,
-		APIPort:           *apiPort,
-		AutoRestart:       c.Bool("auto-restart"),
-		ClusterName:       c.String("name"),
-		Env:               env,
-		Labels:            labels,
-		Image:             image,
-		NodeToPortSpecMap: portmap,
-		PortAutoOffset:    c.Int("port-auto-offset"),
-		ServerArgs:        k3sServerArgs,
-		Volumes:           volumesSpec,
+		AgentArgs:          k3AgentArgs,
+		APIPort:            *apiPort,
+		AutoRestart:        c.Bool("auto-restart"),
+		ClusterName:        c.String("name"),
+		Env:                env,
+		NodeToLabelSpecMap: labelmap,
+		Image:              image,
+		NodeToPortSpecMap:  portmap,
+		PortAutoOffset:     c.Int("port-auto-offset"),
+		ServerArgs:         k3sServerArgs,
+		Volumes:            volumesSpec,
 	}
 
 	/******************
@@ -485,17 +487,17 @@ func AddNode(c *cli.Context) error {
 	nodeCount := c.Int("count")
 
 	clusterSpec := &ClusterSpec{
-		AgentArgs:         nil,
-		APIPort:           apiPort{},
-		AutoRestart:       false,
-		ClusterName:       clusterName,
-		Env:               nil,
-		Labels:            nil,
-		Image:             "",
-		NodeToPortSpecMap: nil,
-		PortAutoOffset:    0,
-		ServerArgs:        nil,
-		Volumes:           &Volumes{},
+		AgentArgs:          nil,
+		APIPort:            apiPort{},
+		AutoRestart:        false,
+		ClusterName:        clusterName,
+		Env:                nil,
+		NodeToLabelSpecMap: nil,
+		Image:              "",
+		NodeToPortSpecMap:  nil,
+		PortAutoOffset:     0,
+		ServerArgs:         nil,
+		Volumes:            &Volumes{},
 	}
 
 	/* (0.1)
@@ -568,13 +570,6 @@ func AddNode(c *cli.Context) error {
 		}
 		return nil
 	}
-
-	/* (0.6)
-	 * --label, -l <key1=val1>
-	 * Docker container labels that will be added to the k3d node containers
-	 */
-	clusterSpec.Labels = []string{}
-	clusterSpec.Labels = append(clusterSpec.Labels, c.StringSlice("label")...)
 
 	/*
 	 * (1) Check cluster

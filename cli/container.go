@@ -75,8 +75,16 @@ func createServer(spec *ClusterSpec) (string, error) {
 
 	containerName := GetContainerName("server", spec.ClusterName, -1)
 
+	// labels to be created to the server belong to roles
+	// all, server, master or <server-container-name>
+	serverLabels, err := MergeLabelSpecs(spec.NodeToLabelSpecMap, "server", containerName)
+	if err != nil {
+		return "", err
+	}
+	containerLabels = MergeLabels(containerLabels, serverLabels)
+
 	// ports to be assigned to the server belong to roles
-	// all, server or <server-container-name>
+	// all, server, master or <server-container-name>
 	serverPorts, err := MergePortSpecs(spec.NodeToPortSpecMap, "server", containerName)
 	if err != nil {
 		return "", err
@@ -142,16 +150,6 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 	containerLabels["created"] = time.Now().Format("2006-01-02 15:04:05")
 	containerLabels["cluster"] = spec.ClusterName
 
-	for _, label := range spec.Labels {
-		labelSlice := strings.SplitN(label, "=", 2)
-
-		if len(labelSlice) > 1 {
-			containerLabels[labelSlice[0]] = labelSlice[1]
-		} else {
-			containerLabels[labelSlice[0]] = ""
-		}
-	}
-
 	containerName := GetContainerName("worker", spec.ClusterName, postfix)
 	env := spec.Env
 
@@ -166,8 +164,16 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 		env = append(spec.Env, fmt.Sprintf("K3S_URL=https://k3d-%s-server:%s", spec.ClusterName, spec.APIPort.Port))
 	}
 
-	// ports to be assigned to the server belong to roles
-	// all, server or <server-container-name>
+	// labels to be created to the worker belong to roles
+	// all, worker, agent or <server-container-name>
+	workerLabels, err := MergeLabelSpecs(spec.NodeToLabelSpecMap, "worker", containerName)
+	if err != nil {
+		return "", err
+	}
+	containerLabels = MergeLabels(containerLabels, workerLabels)
+
+	// ports to be assigned to the worker belong to roles
+	// all, worker, agent or <server-container-name>
 	workerPorts, err := MergePortSpecs(spec.NodeToPortSpecMap, "worker", containerName)
 	if err != nil {
 		return "", err

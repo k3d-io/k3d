@@ -93,7 +93,7 @@ func extractNodes(spec string) ([]string, string) {
 	return nodes, portSpec
 }
 
-// Offset creates a new PublishedPort structure, with all host ports are changed by a fixed  'offset'
+// Offset creates a new PublishedPort structure, with all host ports are changed by a fixed 'offset'
 func (p PublishedPorts) Offset(offset int) *PublishedPorts {
 	var newExposedPorts = make(map[nat.Port]struct{}, len(p.ExposedPorts))
 	var newPortBindings = make(map[nat.Port][]nat.PortBinding, len(p.PortBindings))

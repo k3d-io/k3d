@@ -14,6 +14,9 @@ const (
 // defaultNodes describes the type of nodes on which a port should be exposed by default
 const defaultNodes = "server"
 
+// defaultLabelNodes describes the type of nodes on which a label should be applied by default
+const defaultLabelNodes = "all"
+
 // mapping a node role to groups that should be applied to it
 var nodeRuleGroupsMap = map[string][]string{
 	"worker": {"all", "workers", "agents"},
@@ -32,17 +35,17 @@ type Cluster struct {
 
 // ClusterSpec defines the specs for a cluster that's up for creation
 type ClusterSpec struct {
-	AgentArgs         []string
-	APIPort           apiPort
-	AutoRestart       bool
-	ClusterName       string
-	Env               []string
-	Labels            []string
-	Image             string
-	NodeToPortSpecMap map[string][]string
-	PortAutoOffset    int
-	ServerArgs        []string
-	Volumes           *Volumes
+	AgentArgs          []string
+	APIPort            apiPort
+	AutoRestart        bool
+	ClusterName        string
+	Env                []string
+	NodeToLabelSpecMap map[string][]string
+	Image              string
+	NodeToPortSpecMap  map[string][]string
+	PortAutoOffset     int
+	ServerArgs         []string
+	Volumes            *Volumes
 }
 
 // PublishedPorts is a struct used for exposing container ports on the host system
