@@ -109,6 +109,16 @@ func CreateCluster(c *cli.Context) error {
 	env = append(env, fmt.Sprintf("K3S_CLUSTER_SECRET=%s", GenerateRandomString(20)))
 
 	/*
+	 * --label, -l
+	 * Docker container labels that will be added to the k3d node containers
+	 */
+	// labels
+	labelmap, err := mapNodesToLabelSpecs(c.StringSlice("label"), GetAllContainerNames(c.String("name"), DefaultServerCount, c.Int("workers")))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	/*
 	 * Arguments passed on to the k3s server and agent, will be filled later
 	 */
 	k3AgentArgs := []string{}
@@ -204,16 +214,17 @@ func CreateCluster(c *cli.Context) error {
 	 * Defines, with which specifications, the cluster and the nodes inside should be created
 	 */
 	clusterSpec := &ClusterSpec{
-		AgentArgs:         k3AgentArgs,
-		APIPort:           *apiPort,
-		AutoRestart:       c.Bool("auto-restart"),
-		ClusterName:       c.String("name"),
-		Env:               env,
-		Image:             image,
-		NodeToPortSpecMap: portmap,
-		PortAutoOffset:    c.Int("port-auto-offset"),
-		ServerArgs:        k3sServerArgs,
-		Volumes:           volumesSpec,
+		AgentArgs:          k3AgentArgs,
+		APIPort:            *apiPort,
+		AutoRestart:        c.Bool("auto-restart"),
+		ClusterName:        c.String("name"),
+		Env:                env,
+		NodeToLabelSpecMap: labelmap,
+		Image:              image,
+		NodeToPortSpecMap:  portmap,
+		PortAutoOffset:     c.Int("port-auto-offset"),
+		ServerArgs:         k3sServerArgs,
+		Volumes:            volumesSpec,
 	}
 
 	/******************
@@ -481,16 +492,17 @@ func AddNode(c *cli.Context) error {
 	nodeCount := c.Int("count")
 
 	clusterSpec := &ClusterSpec{
-		AgentArgs:         nil,
-		APIPort:           apiPort{},
-		AutoRestart:       false,
-		ClusterName:       clusterName,
-		Env:               nil,
-		Image:             "",
-		NodeToPortSpecMap: nil,
-		PortAutoOffset:    0,
-		ServerArgs:        nil,
-		Volumes:           &Volumes{},
+		AgentArgs:          nil,
+		APIPort:            apiPort{},
+		AutoRestart:        false,
+		ClusterName:        clusterName,
+		Env:                nil,
+		NodeToLabelSpecMap: nil,
+		Image:              "",
+		NodeToPortSpecMap:  nil,
+		PortAutoOffset:     0,
+		ServerArgs:         nil,
+		Volumes:            &Volumes{},
 	}
 
 	/* (0.1)
