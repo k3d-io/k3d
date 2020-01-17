@@ -48,6 +48,11 @@ func CreateCluster(c *cli.Context) error {
 		}
 	}
 
+	// validate --wait flag
+	if c.IsSet("wait") && c.Int("wait") < 0 {
+		log.Fatalf("Negative value for '--wait' not allowed (set '%d')", c.Int("wait"))
+	}
+
 	/**********************
 	 *										*
 	 *		CONFIGURATION		*
