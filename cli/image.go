@@ -58,9 +58,12 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 		},
 	}
 
-	toolsContainerID, err := startContainer(&containerConfig, &hostConfig, &network.NetworkingConfig{}, toolsContainerName)
+	toolsContainerID, err := createContainer(&containerConfig, &hostConfig, &network.NetworkingConfig{}, toolsContainerName)
 	if err != nil {
 		return err
+	}
+	if err := startContainer(toolsContainerID); err != nil {
+		return fmt.Errorf(" Couldn't start container %s\n%w", toolsContainerName, err)
 	}
 
 	defer func() {

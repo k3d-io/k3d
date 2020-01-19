@@ -223,6 +223,9 @@ func CreateCluster(c *cli.Context) error {
 		Image:              image,
 		NodeToPortSpecMap:  portmap,
 		PortAutoOffset:     c.Int("port-auto-offset"),
+		RegistryEnabled:    c.Bool("enable-registry"),
+		RegistryName:       c.String("registry-name"),
+		RegistryPort:       c.Int("registry-port"),
 		ServerArgs:         k3sServerArgs,
 		Volumes:            volumesSpec,
 	}
@@ -242,6 +245,17 @@ func CreateCluster(c *cli.Context) error {
 	createClusterDir(c.String("name"))
 
 	/* (1)
+	 * Registry (optional)
+	 * Create the (optional) registry container
+	 */
+	if clusterSpec.RegistryEnabled {
+		if _, err = createRegistry(*clusterSpec); err != nil {
+			deleteCluster()
+			return err
+		}
+	}
+
+	/* (2)
 	 * Server
 	 * Create the server node container
 	 */
@@ -251,7 +265,7 @@ func CreateCluster(c *cli.Context) error {
 		return err
 	}
 
-	/* (1.1)
+	/* (2.1)
 	 * Wait
 	 * Wait for k3s server to be done initializing, if wanted
 	 */
@@ -264,7 +278,7 @@ func CreateCluster(c *cli.Context) error {
 		}
 	}
 
-	/* (2)
+	/* (3)
 	 * Workers
 	 * Create the worker node containers
 	 */
@@ -281,11 +295,17 @@ func CreateCluster(c *cli.Context) error {
 		}
 	}
 
-	/* (3)
+	/* (4)
 	 * Done
 	 * Finished creating resources.
 	 */
 	log.Printf("SUCCESS: created cluster [%s]", c.String("name"))
+
+	if clusterSpec.RegistryEnabled {
+		log.Printf("A local registry has been started as %s:%d", clusterSpec.RegistryName, clusterSpec.RegistryPort)
+		log.Printf("Make sure you have an alias in your /etc/hosts file like '127.0.0.1 %s'", clusterSpec.RegistryName)
+	}
+
 	log.Printf(`You can now use the cluster with:
 
 export KUBECONFIG="$(%s get-kubeconfig --name='%s')"
@@ -328,6 +348,10 @@ func DeleteCluster(c *cli.Context) error {
 		log.Println("...Removing server")
 		if err := removeContainer(cluster.server.ID); err != nil {
 			return fmt.Errorf(" Couldn't remove server for cluster %s\n%+v", cluster.name, err)
+		}
+
+		if err := disconnectRegistryFromNetwork(cluster.name); err != nil {
+			log.Warningf("Couldn't disconnect Registry from network %s\n%+v", cluster.name, err)
 		}
 
 		if err := deleteClusterNetwork(cluster.name); err != nil {

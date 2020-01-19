@@ -6,6 +6,7 @@ package run
  */
 
 import (
+	"archive/tar"
 	"bytes"
 	"context"
 	"fmt"
@@ -19,10 +20,11 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
-func startContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
+func createContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
 	ctx := context.Background()
 
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -57,11 +59,21 @@ func startContainer(config *container.Config, hostConfig *container.HostConfig, 
 		return "", fmt.Errorf(" Couldn't create container %s\n%+v", containerName, err)
 	}
 
-	if err := docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return "", err
+	return resp.ID, nil
+}
+
+func startContainer(ID string) error {
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("Couldn't create docker client\n%+v", err)
 	}
 
-	return resp.ID, nil
+	if err := docker.ContainerStart(ctx, ID, types.ContainerStartOptions{}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func createServer(spec *ClusterSpec) (string, error) {
@@ -134,9 +146,18 @@ func createServer(spec *ClusterSpec) (string, error) {
 		Env:          spec.Env,
 		Labels:       containerLabels,
 	}
-	id, err := startContainer(config, hostConfig, networkingConfig, containerName)
+	id, err := createContainer(config, hostConfig, networkingConfig, containerName)
 	if err != nil {
 		return "", fmt.Errorf(" Couldn't create container %s\n%+v", containerName, err)
+	}
+
+	// copy the registry configuration
+	if err := writeRegistriesConfigInContainer(spec, id); err != nil {
+		return "", err
+	}
+
+	if err := startContainer(id); err != nil {
+		return "", fmt.Errorf(" Couldn't start container %s\n%+v", containerName, err)
 	}
 
 	return id, nil
@@ -221,11 +242,19 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 		ExposedPorts: workerPublishedPorts.ExposedPorts,
 	}
 
-	id, err := startContainer(config, hostConfig, networkingConfig, containerName)
+	id, err := createContainer(config, hostConfig, networkingConfig, containerName)
 	if err != nil {
-		return "", fmt.Errorf(" Couldn't start container %s\n%+v", containerName, err)
+		return "", fmt.Errorf(" Couldn't create container %s\n%+v", containerName, err)
 	}
 
+	// copy the registry configuration
+	if err := writeRegistriesConfigInContainer(spec, id); err != nil {
+		return "", err
+	}
+
+	if err := startContainer(id); err != nil {
+		return "", fmt.Errorf(" Couldn't start container %s\n%+v", containerName, err)
+	}
 	return id, nil
 }
 
@@ -248,11 +277,52 @@ func removeContainer(ID string) error {
 	return nil
 }
 
+// getContainerNetworks returns the networks a container is connected to
+func getContainerNetworks(ID string) (map[string]*network.EndpointSettings, error) {
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := docker.ContainerInspect(ctx, ID)
+	if err != nil {
+		return nil, fmt.Errorf(" Couldn't get details about container %s: %w", ID, err)
+	}
+	return c.NetworkSettings.Networks, nil
+}
+
+// connectContainerToNetwork connects a container to a given network
+func connectContainerToNetwork(ID string, networkID string, aliases []string) error {
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
+	}
+
+	networkingConfig := &network.EndpointSettings{
+		Aliases: aliases,
+	}
+
+	return docker.NetworkConnect(ctx, networkID, ID, networkingConfig)
+}
+
+// disconnectContainerFromNetwork disconnects a container from a given network
+func disconnectContainerFromNetwork(ID string, networkID string) error {
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
+	}
+
+	return docker.NetworkDisconnect(ctx, networkID, ID, false)
+}
+
 func waitForContainerLogMessage(containerID string, message string, timeoutSeconds int) error {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return err
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	start := time.Now()
@@ -278,6 +348,33 @@ func waitForContainerLogMessage(containerID string, message string, timeoutSecon
 		}
 
 		time.Sleep(1 * time.Second)
+	}
+	return nil
+}
+
+func copyToContainer(ID string, dstPath string, content []byte) error {
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
+	}
+
+	buf := new(bytes.Buffer)
+	tw := tar.NewWriter(buf)
+	hdr := &tar.Header{Name: dstPath, Mode: 0644, Size: int64(len(content))}
+	if err := tw.WriteHeader(hdr); err != nil {
+		return errors.Wrap(err, "failed to write a tar header")
+	}
+	if _, err := tw.Write(content); err != nil {
+		return errors.Wrap(err, "failed to write a tar body")
+	}
+	if err := tw.Close(); err != nil {
+		return errors.Wrap(err, "failed to close tar archive")
+	}
+
+	r := bytes.NewReader(buf.Bytes())
+	if err := docker.CopyToContainer(ctx, ID, "/", r, types.CopyToContainerOptions{AllowOverwriteDirWithFile: true}); err != nil {
+		return errors.Wrap(err, "failed to copy source code")
 	}
 	return nil
 }
