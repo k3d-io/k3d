@@ -8,8 +8,15 @@ source "$CURR_DIR/common.sh"
 
 #########################################################################################
 
+FIXTURES_DIR=$CURR_DIR/fixtures
+
+# a dummy registries.yaml file
+REGISTRIES_YAML=$FIXTURES_DIR/01-registries-empty.yaml
+
+#########################################################################################
+
 info "Creating two clusters..."
-$EXE create --wait 60 --name "c1" --api-port 6443 || failed "could not create cluster c1"
+$EXE create --wait 60 --name "c1" --api-port 6443 -v $REGISTRIES_YAML:/etc/rancher/k3s/registries.yaml || failed "could not create cluster c1"
 $EXE create --wait 60 --name "c2" --api-port 6444 || failed "could not create cluster c2"
 
 info "Checking we have access to both clusters..."
