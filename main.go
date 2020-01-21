@@ -136,6 +136,10 @@ func main() {
 					Value: defaultRegistryPort,
 					Usage: "Port of the local registry container",
 				},
+				cli.StringFlag{
+					Name:  "registries-file",
+					Usage: "registries.yaml config file",
+				},
 			},
 			Action: run.CreateCluster,
 		},

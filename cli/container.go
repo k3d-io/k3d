@@ -152,7 +152,7 @@ func createServer(spec *ClusterSpec) (string, error) {
 	}
 
 	// copy the registry configuration
-	if spec.RegistryEnabled {
+	if spec.RegistryEnabled || len(spec.RegistriesFile) > 0 {
 		if err := writeRegistriesConfigInContainer(spec, id); err != nil {
 			return "", err
 		}
@@ -250,7 +250,7 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 	}
 
 	// copy the registry configuration
-	if spec.RegistryEnabled {
+	if spec.RegistryEnabled || len(spec.RegistriesFile) > 0 {
 		if err := writeRegistriesConfigInContainer(spec, id); err != nil {
 			return "", err
 		}

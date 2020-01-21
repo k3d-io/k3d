@@ -13,9 +13,11 @@ REGISTRY_PORT="5000"
 REGISTRY="$REGISTRY_NAME:$REGISTRY_PORT"
 TEST_IMAGE="nginx:latest"
 
-check_registry() {
-  check_url $REGISTRY/v2/_catalog
-}
+FIXTURES_DIR=$CURR_DIR/fixtures
+
+# a dummy registries.yaml file
+REGISTRIES_YAML=$FIXTURES_DIR/01-registries-empty.yaml
+
 
 #########################################################################################
 
@@ -32,9 +34,10 @@ fi
 
 info "Creating two clusters (with a registry)..."
 $EXE create --wait 60 --name "c1" --api-port 6443 --enable-registry || failed "could not create cluster c1"
-$EXE create --wait 60 --name "c2" --api-port 6444 --enable-registry || failed "could not create cluster c2"
+$EXE create --wait 60 --name "c2" --api-port 6444 --enable-registry --registries-file "$REGISTRIES_YAML" || failed "could not create cluster c2"
 
 check_k3d_clusters "c1" "c2" || failed "error checking cluster"
+dump_registries_yaml_in "c1" "c2"
 
 check_registry || abort "local registry not available at $REGISTRY"
 passed "Local registry running at $REGISTRY"

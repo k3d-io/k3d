@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path"
 	"time"
 
@@ -73,34 +72,32 @@ func getGlobalRegistriesConfFilename() (string, error) {
 
 // writeRegistriesConfigInContainer creates a valid registries configuration file in a container
 func writeRegistriesConfigInContainer(spec *ClusterSpec, ID string) error {
-	globalRegistriesConfig, err := getGlobalRegistriesConfFilename()
-	if err != nil {
-		return err
-	}
 	registryInternalAddress := fmt.Sprintf("%s:%d", spec.RegistryName, defaultRegistryPort)
 	registryExternalAddress := fmt.Sprintf("%s:%d", spec.RegistryName, spec.RegistryPort)
 
 	privRegistries := &Registry{}
 
-	// if ~/.k3d/registries.yaml exists, load it
-	privRegistryFile, err := ioutil.ReadFile(globalRegistriesConfig)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			return err
+	// load the base registry file
+	if len(spec.RegistriesFile) > 0 {
+		log.Printf("Using registries definitions from %q...\n", spec.RegistriesFile)
+		privRegistryFile, err := ioutil.ReadFile(spec.RegistriesFile)
+		if err != nil {
+			return err // the file must exist at this point
 		}
-	} else {
-		if err := yaml.Unmarshal([]byte(privRegistryFile), &privRegistries); err != nil {
+		if err := yaml.Unmarshal(privRegistryFile, &privRegistries); err != nil {
 			return err
 		}
 	}
 
-	if len(privRegistries.Mirrors) == 0 {
-		privRegistries.Mirrors = map[string]Mirror{}
-	}
+	if spec.RegistryEnabled {
+		if len(privRegistries.Mirrors) == 0 {
+			privRegistries.Mirrors = map[string]Mirror{}
+		}
 
-	// the add the private registry
-	privRegistries.Mirrors[registryExternalAddress] = Mirror{
-		Endpoints: []string{fmt.Sprintf("http://%s", registryInternalAddress)},
+		// the add the private registry
+		privRegistries.Mirrors[registryExternalAddress] = Mirror{
+			Endpoints: []string{fmt.Sprintf("http://%s", registryInternalAddress)},
+		}
 	}
 
 	d, err := yaml.Marshal(&privRegistries)

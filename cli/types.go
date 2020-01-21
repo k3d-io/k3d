@@ -44,6 +44,7 @@ type ClusterSpec struct {
 	Image              string
 	NodeToPortSpecMap  map[string][]string
 	PortAutoOffset     int
+	RegistriesFile     string
 	RegistryEnabled    bool
 	RegistryName       string
 	RegistryPort       int

@@ -210,6 +210,27 @@ func CreateCluster(c *cli.Context) error {
 	volumesSpec.DefaultVolumes = append(volumesSpec.DefaultVolumes, fmt.Sprintf("%s:/images", imageVolume.Name))
 
 	/*
+	 * --registry-file
+	 * check if there is a registries file
+	 */
+	registriesFile := ""
+	if c.IsSet("registries-file") {
+		registriesFile = c.String("registries-file")
+		if !fileExists(registriesFile) {
+			log.Fatalf("registries-file %q does not exists", registriesFile)
+		}
+	} else {
+		registriesFile, err = getGlobalRegistriesConfFilename()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if !fileExists(registriesFile) {
+			// if the default registries file does not exists, go ahead but do not try to load it
+			registriesFile = ""
+		}
+	}
+
+	/*
 	 * clusterSpec
 	 * Defines, with which specifications, the cluster and the nodes inside should be created
 	 */
@@ -223,6 +244,7 @@ func CreateCluster(c *cli.Context) error {
 		Image:              image,
 		NodeToPortSpecMap:  portmap,
 		PortAutoOffset:     c.Int("port-auto-offset"),
+		RegistriesFile:     registriesFile,
 		RegistryEnabled:    c.Bool("enable-registry"),
 		RegistryName:       c.String("registry-name"),
 		RegistryPort:       c.Int("registry-port"),
