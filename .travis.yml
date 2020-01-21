@@ -10,7 +10,7 @@ install: true
 before_script:
 - make ci-setup
 script:
-- make ci-tests ci-dist
+- make ci-tests-dind ci-dist
 deploy:
   provider: releases
   skip_cleanup: true
