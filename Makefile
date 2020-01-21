@@ -90,7 +90,7 @@ e2e: build
 
 e2e-dind: build-dockerfile
 	@echo "Running e2e tests in k3d:$(K3D_IMAGE_TAG)"
-	tests/setup.sh "${K3D_IMAGE_TAG}"
+	tests/dind.sh "${K3D_IMAGE_TAG}"
 
 # check-fmt returns an error code if any source code contains format error.
 check-fmt:
