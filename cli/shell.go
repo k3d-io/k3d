@@ -51,7 +51,7 @@ func subShell(cluster, shell, command string) error {
 	}
 
 	// get kubeconfig for selected cluster
-	kubeConfigPath, err := getKubeConfig(cluster)
+	kubeConfigPath, err := getKubeConfig(cluster, true)
 	if err != nil {
 		return err
 	}

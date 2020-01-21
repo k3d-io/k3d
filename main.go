@@ -273,6 +273,10 @@ func main() {
 					Name:  "all, a",
 					Usage: "Get kubeconfig for all clusters (this ignores the --name/-n flag)",
 				},
+				cli.BoolFlag{
+					Name:  "overwrite, o",
+					Usage: "Overwrite any existing file with the same name",
+				},
 			},
 			Action: run.GetKubeConfig,
 		},

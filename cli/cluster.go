@@ -167,7 +167,7 @@ func createKubeConfigFile(cluster string) error {
 	return nil
 }
 
-func getKubeConfig(cluster string) (string, error) {
+func getKubeConfig(cluster string, overwrite bool) (string, error) {
 	kubeConfigPath, err := getClusterKubeConfigPath(cluster)
 	if err != nil {
 		return "", err
@@ -180,14 +180,25 @@ func getKubeConfig(cluster string) (string, error) {
 		return "", fmt.Errorf("Cluster %s does not exist", cluster)
 	}
 
-	// If kubeconfi.yaml has not been created, generate it now
-	if _, err := os.Stat(kubeConfigPath); err != nil {
-		if os.IsNotExist(err) {
-			if err = createKubeConfigFile(cluster); err != nil {
+	// Create or overwrite file no matter if it exists or not
+	if overwrite {
+		log.Debugf("Creating/Overwriting file %s...", kubeConfigPath)
+		if err = createKubeConfigFile(cluster); err != nil {
+			return "", err
+		}
+	} else {
+		// If kubeconfi.yaml has not been created, generate it now
+		if _, err := os.Stat(kubeConfigPath); err != nil {
+			if os.IsNotExist(err) {
+				log.Debugf("File %s does not exist. Creating it now...", kubeConfigPath)
+				if err = createKubeConfigFile(cluster); err != nil {
+					return "", err
+				}
+			} else {
 				return "", err
 			}
 		} else {
-			return "", err
+			log.Debugf("File %s exists, leaving it as it is...", kubeConfigPath)
 		}
 	}
 
