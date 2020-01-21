@@ -198,7 +198,7 @@ func getRegistryContainer() (string, error) {
 	}
 
 	cFilter := filters.NewArgs()
-	cFilter.Add("name", fmt.Sprintf("^%s$", defaultRegistryContainerName))
+	cFilter.Add("name", defaultRegistryContainerName)
 	// filter with the standard list of labels of our registry
 	for k, v := range defaultRegistryLabels {
 		cFilter.Add("label", fmt.Sprintf("%s=%s", k, v))
