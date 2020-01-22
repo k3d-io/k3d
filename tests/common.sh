@@ -51,6 +51,13 @@ passed() {
   fi
 }
 
+dump_registries_yaml_in() {
+  for cluster in $@ ; do
+    info "registries.yaml in cluster $cluster:"
+    docker exec -t k3d-$cluster-server cat /etc/rancher/k3s/registries.yaml
+  done
+}
+
 # checks that a URL is available, with an optional error message
 check_url() {
   command_exists curl || abort "curl is not installed"
@@ -71,3 +78,8 @@ check_k3d_clusters() {
   done
   return 0
 }
+
+check_registry() {
+  check_url $REGISTRY/v2/_catalog
+}
+
