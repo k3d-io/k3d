@@ -63,6 +63,7 @@ Check out the [examples here](docs/examples.md).
 Find more details under the following Links:
 
 - [Further documentation](docs/documentation.md)
+- [Using registries](docs/registries.md)
 - [Usage examples](docs/examples.md)
 - [Frequently asked questions and nice-to-know facts](docs/faq.md)
 
