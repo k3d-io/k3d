@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -270,7 +271,9 @@ func CreateCluster(c *cli.Context) error {
 	 * Registry (optional)
 	 * Create the (optional) registry container
 	 */
+	var registryNameExists *dnsNameCheck
 	if clusterSpec.RegistryEnabled {
+		registryNameExists = newAsyncNameExists(clusterSpec.RegistryName, 1*time.Second)
 		if _, err = createRegistry(*clusterSpec); err != nil {
 			deleteCluster()
 			return err
@@ -325,7 +328,11 @@ func CreateCluster(c *cli.Context) error {
 
 	if clusterSpec.RegistryEnabled {
 		log.Printf("A local registry has been started as %s:%d", clusterSpec.RegistryName, clusterSpec.RegistryPort)
-		log.Printf("Make sure you have an alias in your /etc/hosts file like '127.0.0.1 %s'", clusterSpec.RegistryName)
+
+		exists, err := registryNameExists.Exists()
+		if !exists || err != nil {
+			log.Printf("Make sure you have an alias in your /etc/hosts file like '127.0.0.1 %s'", clusterSpec.RegistryName)
+		}
 	}
 
 	log.Printf(`You can now use the cluster with:

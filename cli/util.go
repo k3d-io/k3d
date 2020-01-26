@@ -126,3 +126,36 @@ func fileExists(filename string) bool {
 	_, err := os.Stat(filename)
 	return !os.IsNotExist(err)
 }
+
+type dnsNameCheck struct {
+	res     chan bool
+	err     chan error
+	timeout time.Duration
+}
+
+func newAsyncNameExists(name string, timeout time.Duration) *dnsNameCheck {
+	d := &dnsNameCheck{
+		res:     make(chan bool),
+		err:     make(chan error),
+		timeout: timeout,
+	}
+	go func() {
+		addresses, err := net.LookupHost(name)
+		if err != nil {
+			d.err <- err
+		}
+		d.res <- len(addresses) > 0
+	}()
+	return d
+}
+
+func (d dnsNameCheck) Exists() (bool, error) {
+	select {
+	case r := <-d.res:
+		return r, nil
+	case e := <-d.err:
+		return false, e
+	case <-time.After(d.timeout):
+		return false, nil
+	}
+}
