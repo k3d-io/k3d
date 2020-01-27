@@ -51,13 +51,6 @@ passed() {
   fi
 }
 
-dump_registries_yaml_in() {
-  for cluster in $@ ; do
-    info "registries.yaml in cluster $cluster:"
-    docker exec -t k3d-$cluster-server cat /etc/rancher/k3s/registries.yaml
-  done
-}
-
 # checks that a URL is available, with an optional error message
 check_url() {
   command_exists curl || abort "curl is not installed"
@@ -67,7 +60,7 @@ check_url() {
 check_k3d_clusters() {
   [ -n "$EXE" ] || abort "EXE is not defined"
   for c in "c1" "c2" ; do
-    kc=$($EXE get-kubeconfig --name "$c")
+    kc=$($EXE get kubeconfig $c)
     [ -n "$kc" ] || abort "could not obtain a kubeconfig for $c"
     if kubectl --kubeconfig="$kc" cluster-info ; then
       passed "cluster $c is reachable (with kubeconfig=$kc)"
