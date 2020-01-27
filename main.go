@@ -216,8 +216,8 @@ func main() {
 					Usage: "Delete all existing clusters (this ignores the --name/-n flag)",
 				},
 				cli.BoolFlag{
-					Name:  "registry-volume",
-					Usage: "Delete the local Docker registry volume",
+					Name:  "prune",
+					Usage: "Disconnect any other non-k3d containers in the network before deleting the cluster",
 				},
 			},
 			Action: run.DeleteCluster,
