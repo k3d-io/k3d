@@ -59,7 +59,13 @@ func NewCmdCreateCluster() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			runtime, cluster := parseCreateClusterCmd(cmd, args, opts)
 			if err := k3dCluster.CreateCluster(cluster, runtime); err != nil {
-				log.Fatalln(err)
+				log.Errorln(err)
+				log.Errorln("Failed to create cluster >>> Rolling Back")
+				if err := k3dCluster.DeleteCluster(cluster, runtime); err != nil {
+					log.Errorln(err)
+					log.Fatalln("Cluster creation FAILED, also FAILED to rollback changes!")
+				}
+				log.Fatalln("Cluster creation FAILED, all changes have been rolled back!")
 			}
 			log.Infof("Cluster '%s' created successfully. You can now use it like this:", cluster.Name)
 			fmt.Printf("export KUBECONFIG=$(%s get kubeconfig %s)\n", os.Args[0], cluster.Name)
