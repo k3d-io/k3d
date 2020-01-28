@@ -1,4 +1,5 @@
-/*
+/*Package create ...
+
 Copyright © 2020 The k3d Author(s)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -37,9 +38,11 @@ import (
 )
 
 // createClusterOpts describes a set of options set via CLI flags
-type createClusterOpts struct {
+type createClusterOpts struct { // TODO: merge createClusterOpts with types.ClusterCreationOpts
 	K3sServerArgs []string
 	K3sAgentArgs  []string
+
+	WaitTime int
 }
 
 // NewCmdCreateCluster returns a new cobra command
@@ -76,7 +79,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d create -w 2 -v /my/path@worker[0,1] -v /tmp/test:/tmp/other@master[0]`")
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d create -w 2 -p 8080:80@worker[0] -p 8081@worker[1]`")
-	cmd.Flags().Int("wait", -1, "Wait for a specified amount of time (seconds, >= 0, 0 = forever) for the master(s) to be ready or timeout and rollback before returning")
+	cmd.Flags().IntVar(&opts.WaitTime, "wait", -1, "Wait for a specified amount of time (seconds >= 0, where 0 means forever) for the master(s) to be ready or timeout and rollback before returning")
 
 	/* Image Importing */
 	cmd.Flags().Bool("no-image-volume", false, "Disable the creation of a volume for importing images")
@@ -164,15 +167,8 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, opts *createCluste
 	}
 
 	// --wait
-	wait, err := cmd.Flags().GetInt("wait")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	if cmd.Flags().Changed("wait") && wait < 0 {
+	if cmd.Flags().Changed("wait") && opts.WaitTime < 0 {
 		log.Fatalln("Value of '--wait' can't be less than 0")
-	}
-	if cmd.Flags().Changed("wait") {
-		log.Warnln("--wait not implemented yet") // TODO:
 	}
 
 	// --api-port
@@ -329,7 +325,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, opts *createCluste
 		Secret:  secret,
 		ClusterCreationOpts: &k3d.ClusterCreationOpts{
 			DisableImageVolume: noImageVolume,
-			WaitForMaster:      wait,
+			WaitForMaster:      opts.WaitTime,
 		},
 	}
 

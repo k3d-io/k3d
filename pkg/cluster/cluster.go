@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	k3drt "github.com/rancher/k3d/pkg/runtimes"
@@ -181,6 +182,11 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	}
 
 initNodeFinished:
+
+	// vars to support waiting for master nodes to be ready
+	var waitForMasterWaitgroup sync.WaitGroup
+	waitForMasterErrChan := make(chan error, 1)
+
 	// create all other nodes, but skip the init node
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.MasterRole {
@@ -201,6 +207,34 @@ initNodeFinished:
 		}
 		if err := nodeSetup(node, suffix); err != nil {
 			return err
+		}
+
+		// asynchronously wait for this master node to be ready (by checking the logs for a specific log mesage)
+		if node.Role == k3d.MasterRole && cluster.ClusterCreationOpts.WaitForMaster >= 0 {
+			waitForMasterWaitgroup.Add(1)
+			go func(masterNode *k3d.Node, waitgroup *sync.WaitGroup) {
+				defer waitgroup.Done()
+				log.Debugf("Starting to wait for master node '%s'", masterNode.Name)
+				// TODO: it may be better to give endtime=starttime+timeout here so that there is no difference between the instances (go func may be called with a few (milli-)seconds difference)
+				if err := WaitForNodeLogMessage(runtime, masterNode, "Wrote kubeconfig", (time.Duration(cluster.ClusterCreationOpts.WaitForMaster) * time.Second)); err != nil {
+					waitForMasterErrChan <- err
+				}
+				log.Debugf("Master Node '%s' ready", masterNode.Name)
+			}(node, &waitForMasterWaitgroup)
+		}
+	}
+
+	// block until all masters are ready (if --wait was set)
+	if cluster.ClusterCreationOpts.WaitForMaster >= 0 {
+		waitForMasterWaitgroup.Wait()
+		close(waitForMasterErrChan)
+		if len(waitForMasterErrChan) != 0 {
+			log.Errorln("Failed to bring up all master nodes in time")
+			errs := []error{}
+			for elem := range waitForMasterErrChan {
+				errs = append(errs, elem)
+			}
+			return fmt.Errorf("Combined error log:\n%+v", errs)
 		}
 	}
 
