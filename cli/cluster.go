@@ -111,14 +111,21 @@ func createKubeConfigFile(cluster string) error {
 	}
 
 	// get kubeconfig file from container and read contents
+
+	kubeconfigerror := func() {
+		log.Warnf("Couldn't get the kubeconfig from cluster '%s': Maybe it's not ready yet and you can try again later.", cluster)
+	}
+
 	reader, _, err := docker.CopyFromContainer(ctx, server[0].ID, "/output/kubeconfig.yaml")
 	if err != nil {
+		kubeconfigerror()
 		return fmt.Errorf(" Couldn't copy kubeconfig.yaml from server container %s\n%+v", server[0].ID, err)
 	}
 	defer reader.Close()
 
 	readBytes, err := ioutil.ReadAll(reader)
 	if err != nil {
+		kubeconfigerror()
 		return fmt.Errorf(" Couldn't read kubeconfig from container\n%+v", err)
 	}
 
