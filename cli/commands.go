@@ -383,6 +383,26 @@ func DeleteCluster(c *cli.Context) error {
 			log.Warningf("Couldn't disconnect Registry from network %s\n%+v", cluster.name, err)
 		}
 
+		if c.IsSet("prune") {
+			// disconnect any other container that is connected to the k3d network
+			nid, err := getClusterNetwork(cluster.name)
+			if err != nil {
+				log.Warningf("Couldn't get the network for cluster %q\n%+v", cluster.name, err)
+			}
+			cids, err := getContainersInNetwork(nid)
+			if err != nil {
+				log.Warningf("Couldn't get the list of containers connected to network %q\n%+v", nid, err)
+			}
+			for _, cid := range cids {
+				err := disconnectContainerFromNetwork(cid, nid)
+				if err != nil {
+					log.Warningf("Couldn't disconnect container %q from network %q", cid, nid)
+					continue
+				}
+				log.Printf("...%q has been forced to disconnect from %q's network", cid, cluster.name)
+			}
+		}
+
 		if err := deleteClusterNetwork(cluster.name); err != nil {
 			log.Warningf("Couldn't delete cluster network for cluster %s\n%+v", cluster.name, err)
 		}

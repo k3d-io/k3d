@@ -53,12 +53,11 @@ func createClusterNetwork(clusterName string) (string, error) {
 	return resp.ID, nil
 }
 
-// deleteClusterNetwork deletes a docker network based on the name of a cluster it belongs to
-func deleteClusterNetwork(clusterName string) error {
+func getClusterNetwork(clusterName string) (string, error) {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
+		return "", fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
 	filters := filters.NewArgs()
@@ -69,15 +68,53 @@ func deleteClusterNetwork(clusterName string) error {
 		Filters: filters,
 	})
 	if err != nil {
+		return "", fmt.Errorf(" Couldn't find network for cluster %s\n%+v", clusterName, err)
+	}
+	if len(networks) == 0 {
+		return "", nil
+	}
+	// there should be only one network that matches the name... but who knows?
+	return networks[0].ID, nil
+}
+
+// deleteClusterNetwork deletes a docker network based on the name of a cluster it belongs to
+func deleteClusterNetwork(clusterName string) error {
+	nid, err := getClusterNetwork(clusterName)
+	if err != nil {
 		return fmt.Errorf(" Couldn't find network for cluster %s\n%+v", clusterName, err)
 	}
+	if nid == "" {
+		log.Warningf("couldn't remove network for cluster %s: network does not exist", clusterName)
+		return nil
+	}
 
-	// there should be only one network that matches the name... but who knows?
-	for _, network := range networks {
-		if err := docker.NetworkRemove(ctx, network.ID); err != nil {
-			log.Warningf("couldn't remove network for cluster %s\n%+v", clusterName, err)
-			continue
-		}
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
+	}
+	if err := docker.NetworkRemove(ctx, nid); err != nil {
+		log.Warningf("couldn't remove network for cluster %s\n%+v", clusterName, err)
 	}
 	return nil
+}
+
+// getContainersInNetwork gets a list of containers connected to a network
+func getContainersInNetwork(nid string) ([]string, error) {
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't create docker client\n%+v", err)
+	}
+
+	options := types.NetworkInspectOptions{}
+	network, err := docker.NetworkInspect(ctx, nid, options)
+	if err != nil {
+		return nil, err
+	}
+	cids := []string{}
+	for cid := range network.Containers {
+		cids = append(cids, cid)
+	}
+	return cids, nil
 }
