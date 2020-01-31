@@ -455,6 +455,20 @@ func StartCluster(c *cli.Context) error {
 	for _, cluster := range clusters {
 		log.Printf("Starting cluster [%s]", cluster.name)
 
+		// TODO: consider only touching the registry if it's really in use by a cluster
+		registryContainer, err := getRegistryContainer()
+		if err != nil {
+			log.Warn("Couldn't get registry container, if you know you have one, try starting it manually via `docker start`")
+		}
+		if registryContainer != "" {
+			log.Infof("...Starting registry container '%s'", registryContainer)
+			if err := docker.ContainerStart(ctx, registryContainer, types.ContainerStartOptions{}); err != nil {
+				log.Warnf("Failed to start the registry container '%s', try starting it manually via `docker start %s`", registryContainer, registryContainer)
+			}
+		} else {
+			log.Debugln("No registry container found. Proceeding.")
+		}
+
 		log.Println("...Starting server")
 		if err := docker.ContainerStart(ctx, cluster.server.ID, types.ContainerStartOptions{}); err != nil {
 			return fmt.Errorf(" Couldn't start server for cluster %s\n%+v", cluster.name, err)

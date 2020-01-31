@@ -122,7 +122,10 @@ func createRegistry(spec ClusterSpec) (string, error) {
 
 	if cid != "" {
 		// TODO: we should check given-registry-name == existing-registry-name
-		log.Printf("Registry already present: connecting it to the %s network...\n", netName)
+		log.Printf("Registry already present: ensuring that it's running and connecting it to the '%s' network...\n", netName)
+		if err := startContainer(cid); err != nil {
+			log.Warnf("Failed to start registry container. Try starting it manually via `docker start %s`", cid)
+		}
 		if err := connectRegistryToNetwork(cid, netName, []string{spec.RegistryName}); err != nil {
 			return "", err
 		}
@@ -201,7 +204,7 @@ func getRegistryContainer() (string, error) {
 		cFilter.Add("label", fmt.Sprintf("%s=%s", k, v))
 	}
 
-	containers, err := docker.ContainerList(ctx, types.ContainerListOptions{Filters: cFilter})
+	containers, err := docker.ContainerList(ctx, types.ContainerListOptions{Filters: cFilter, All: true})
 	if err != nil {
 		return "", fmt.Errorf(" Couldn't list containers: %w", err)
 	}
