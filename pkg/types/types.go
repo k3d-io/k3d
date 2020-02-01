@@ -89,10 +89,11 @@ const DefaultKubeconfigPrefix = DefaultObjectNamePrefix + "-kubeconfig"
 
 // CreateClusterOpts describe a set of options one can set when creating a cluster
 type CreateClusterOpts struct {
-	DisableImageVolume bool
-	WaitForMaster      int
-	K3sServerArgs      []string
-	K3sAgentArgs       []string
+	DisableImageVolume  bool
+	DisableLoadbalancer bool
+	WaitForMaster       int
+	K3sServerArgs       []string
+	K3sAgentArgs        []string
 }
 
 // ClusterNetwork describes a network which a cluster is running in

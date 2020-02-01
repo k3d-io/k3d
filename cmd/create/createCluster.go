@@ -84,8 +84,8 @@ func NewCmdCreateCluster() *cobra.Command {
 
 	/* Multi Master Configuration */ // TODO: to implement (whole multi master thingy)
 	// multi-master - general
-	cmd.Flags().Bool("no-lb", false, "[WIP] Disable automatic deployment of a load balancer in Multi-Master setups")                         // TODO: to implement
-	cmd.Flags().String("lb-port", "0.0.0.0:6443", "[WIP] Specify port to be exposed by the master load balancer (Format: `[HOST:]HOSTPORT)") // TODO: to implement
+	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadbalancer, "no-lb", false, "[WIP] Disable automatic deployment of a load balancer in Multi-Master setups") // TODO: to implement
+	cmd.Flags().String("lb-port", "0.0.0.0:6443", "[WIP] Specify port to be exposed by the master load balancer (Format: `[HOST:]HOSTPORT)")                    // TODO: to implement
 
 	// multi-master - datastore
 	cmd.Flags().String("datastore-endpoint", "", "[WIP] Specify external datastore endpoint (e.g. for multi master clusters)")
@@ -224,12 +224,6 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		exposeAPIToFiltersMap[exposeAPI] = filters
 	}
 
-	// --no-lb
-	noLB, err := cmd.Flags().GetBool("no-lb")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	// --lb-port
 	lbPort, err := cmd.Flags().GetString("lb-port")
 	if err != nil {
@@ -310,9 +304,12 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 
 	log.Debugln(portFilterMap)
 
-	/*******************
-	* generate cluster *
-	********************/
+	/********************
+	 *									*
+	 * generate cluster *
+	 *									*
+	 ********************/
+
 	cluster := &k3d.Cluster{
 		Name:              args[0], // TODO: validate name0
 		Network:           network,
@@ -323,7 +320,10 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 	// generate list of nodes
 	cluster.Nodes = []*k3d.Node{}
 
-	// -> master nodes
+	/****************
+	 * Master Nodes *
+	 ****************/
+
 	for i := 0; i < masterCount; i++ {
 		node := k3d.Node{
 			Role:       k3d.MasterRole,
@@ -345,7 +345,10 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		cluster.Nodes = append(cluster.Nodes, &node)
 	}
 
-	// -> worker nodes
+	/****************
+	 * Worker Nodes *
+	 ****************/
+
 	for i := 0; i < workerCount; i++ {
 		node := k3d.Node{
 			Role:  k3d.WorkerRole,
@@ -394,6 +397,10 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 			node.Ports = append(node.Ports, portmap)
 		}
 	}
+
+	/**********************
+	 * Utility Containers *
+	 **********************/
 
 	// TODO: create load balancer and other util containers // TODO: for now, this will only work with the docker provider (?) -> can replace dynamic docker lookup with static traefik config (?)
 	if masterCount > 1 && !noLB { // TODO: add traefik to the same network and add traefik labels to the master node containers
