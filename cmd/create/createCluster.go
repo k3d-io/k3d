@@ -316,6 +316,8 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, opts *createCluste
 		}
 	}
 
+	log.Debugln(portFilterMap)
+
 	// --no-image-volume
 	noImageVolume, err := cmd.Flags().GetBool("no-image-volume")
 	if err != nil {
@@ -398,6 +400,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, opts *createCluste
 
 	// append ports
 	for portmap, filters := range portFilterMap {
+		if len(filters) == 0 && (masterCount+workerCount) > 1 {
+			log.Fatalf("Malformed portmapping '%s' lacks a node filter, but there is more than one node.", portmap)
+		}
 		nodes, err := cliutil.FilterNodes(cluster.Nodes, filters)
 		if err != nil {
 			log.Fatalln(err)
