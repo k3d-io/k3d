@@ -403,7 +403,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 	 **********************/
 
 	// TODO: create load balancer and other util containers // TODO: for now, this will only work with the docker provider (?) -> can replace dynamic docker lookup with static traefik config (?)
-	if masterCount > 1 && !noLB { // TODO: add traefik to the same network and add traefik labels to the master node containers
+	if masterCount > 1 && !createClusterOpts.DisableLoadbalancer { // TODO: add traefik to the same network and add traefik labels to the master node containers
 		log.Debugln("Creating LB in front of master nodes")
 		cluster.MasterLoadBalancer = &k3d.ClusterLoadbalancer{
 			Image:       k3d.DefaultLBImage,
