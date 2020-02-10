@@ -8,9 +8,7 @@ source "$CURR_DIR/common.sh"
 
 #########################################################################################
 
-REGISTRY_NAME="registry.local"
-REGISTRY_PORT="5000"
-REGISTRY="$REGISTRY_NAME:$REGISTRY_PORT"
+REGISTRY="registry.localhost:5000"
 TEST_IMAGE="nginx:latest"
 
 FIXTURES_DIR=$CURR_DIR/fixtures
@@ -20,17 +18,6 @@ REGISTRIES_YAML=$FIXTURES_DIR/01-registries-empty.yaml
 
 
 #########################################################################################
-
-info "Checking that $REGISTRY_NAME is resolvable"
-grep -q $REGISTRY_NAME /etc/hosts
-if [ $? -ne 0 ] ; then
-  [ "$CI" = "true" ] || abort "$REGISTRY_NAME is not in /etc/hosts: please add an entry manually."
-
-  info "Adding '127.0.0.1 $REGISTRY_NAME' to /etc/hosts"
-  echo "127.0.0.1 $REGISTRY_NAME"  | sudo tee -a /etc/hosts
-else
-  passed "... good: $REGISTRY_NAME is in /etc/hosts"
-fi
 
 info "Creating two clusters (with a registry)..."
 $EXE create --wait 60 --name "c1" --api-port 6443 --enable-registry || failed "could not create cluster c1"

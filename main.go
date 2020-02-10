@@ -14,7 +14,7 @@ import (
 // defaultK3sImage specifies the default image being used for server and workers
 const defaultK3sImage = "docker.io/rancher/k3s"
 const defaultK3sClusterName string = "k3s-default"
-const defaultRegistryName = "registry.local"
+const defaultRegistryName = "registry.localhost"
 const defaultRegistryPort = 5000
 
 // main represents the CLI application
