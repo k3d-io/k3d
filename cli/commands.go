@@ -353,7 +353,7 @@ func DeleteCluster(c *cli.Context) error {
 	}
 
 	if len(clusters) == 0 {
-		if !c.IsSet("all") && !c.IsSet("name") {
+		if !c.IsSet("all") && c.IsSet("name") {
 			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to delete other clusters)", c.String("name"))
 		}
 		return fmt.Errorf("No cluster(s) found")
@@ -426,6 +426,13 @@ func StopCluster(c *cli.Context) error {
 		return err
 	}
 
+	if len(clusters) == 0 {
+		if !c.IsSet("all") && c.IsSet("name") {
+			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to stop other clusters)", c.String("name"))
+		}
+		return fmt.Errorf("No cluster(s) found")
+	}
+
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -462,6 +469,13 @@ func StartCluster(c *cli.Context) error {
 
 	if err != nil {
 		return err
+	}
+
+	if len(clusters) == 0 {
+		if !c.IsSet("all") && c.IsSet("name") {
+			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to start other clusters)", c.String("name"))
+		}
+		return fmt.Errorf("No cluster(s) found")
 	}
 
 	ctx := context.Background()
@@ -526,7 +540,7 @@ func GetKubeConfig(c *cli.Context) error {
 	}
 
 	if len(clusters) == 0 {
-		if !c.IsSet("all") && !c.IsSet("name") {
+		if !c.IsSet("all") && c.IsSet("name") {
 			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to check other clusters)", c.String("name"))
 		}
 		return fmt.Errorf("No cluster(s) found")
