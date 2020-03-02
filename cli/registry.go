@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path"
+	"strconv"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -27,9 +28,19 @@ const defaultRegistryPort = 5000
 
 const defaultFullRegistriesPath = "/etc/rancher/k3s/registries.yaml"
 
-var defaultRegistryLabels = map[string]string{
+const defaultRegistryMountPath = "/var/lib/registry"
+
+// default labels assigned to the registry container
+var defaultRegistryContainerLabels = map[string]string{
 	"app":       "k3d",
 	"component": "registry",
+}
+
+// default labels assigned to the registry volume
+var defaultRegistryVolumeLabels = map[string]string{
+	"app":       "k3d",
+	"component": "registry",
+	"managed":   "true",
 }
 
 // NOTE: structs copied from https://github.com/rancher/k3s/blob/master/pkg/agent/templates/registry.go
@@ -137,7 +148,7 @@ func createRegistry(spec ClusterSpec) (string, error) {
 	containerLabels := make(map[string]string)
 
 	// add a standard list of labels to our registry
-	for k, v := range defaultRegistryLabels {
+	for k, v := range defaultRegistryContainerLabels {
 		containerLabels[k] = v
 	}
 	containerLabels["created"] = time.Now().Format("2006-01-02 15:04:05")
@@ -160,6 +171,32 @@ func createRegistry(spec ClusterSpec) (string, error) {
 	}
 
 	spec.Volumes = &Volumes{} // we do not need in the registry any of the volumes used by the other containers
+	if spec.RegistryVolume != "" {
+		vol, err := getVolume(spec.RegistryVolume, map[string]string{})
+		if err != nil {
+			return "", fmt.Errorf(" Couldn't check if volume %s exists: %w", spec.RegistryVolume, err)
+		}
+		if vol != nil {
+			log.Printf("Using existing volume %s for the Registry\n", spec.RegistryVolume)
+		} else {
+			log.Printf("Creating Registry volume %s...\n", spec.RegistryVolume)
+
+			// assign some labels (so we can recognize the volume later on)
+			volLabels := map[string]string{
+				"registry-name": spec.RegistryName,
+				"registry-port": strconv.Itoa(spec.RegistryPort),
+			}
+			for k, v := range defaultRegistryVolumeLabels {
+				volLabels[k] = v
+			}
+			_, err := createVolume(spec.RegistryVolume, volLabels)
+			if err != nil {
+				return "", fmt.Errorf(" Couldn't create volume %s for registry: %w", spec.RegistryVolume, err)
+			}
+		}
+		mount := fmt.Sprintf("%s:%s", spec.RegistryVolume, defaultRegistryMountPath)
+		hostConfig.Binds = []string{mount}
+	}
 
 	// connect the registry to this k3d network
 	networkingConfig := &network.NetworkingConfig{
@@ -200,7 +237,7 @@ func getRegistryContainer() (string, error) {
 	cFilter := filters.NewArgs()
 	cFilter.Add("name", defaultRegistryContainerName)
 	// filter with the standard list of labels of our registry
-	for k, v := range defaultRegistryLabels {
+	for k, v := range defaultRegistryContainerLabels {
 		cFilter.Add("label", fmt.Sprintf("%s=%s", k, v))
 	}
 
@@ -224,7 +261,7 @@ func connectRegistryToNetwork(ID string, networkID string, aliases []string) err
 
 // disconnectRegistryFromNetwork disconnects the Registry from a Network
 // if the Registry container is not connected to any more networks, it is stopped
-func disconnectRegistryFromNetwork(name string) error {
+func disconnectRegistryFromNetwork(name string, keepRegistryVolume bool) error {
 	// disconnect the registry from this cluster's network
 	netName := k3dNetworkName(name)
 	cid, err := getRegistryContainer()
@@ -248,8 +285,32 @@ func disconnectRegistryFromNetwork(name string) error {
 	}
 	if len(networks) == 0 {
 		log.Printf("...Removing the Registry\n")
+		volName, err := getVolumeMountedIn(cid, defaultRegistryMountPath)
+		if err != nil {
+			log.Printf("...warning: could not detect registry volume\n")
+		}
+
 		if err := removeContainer(cid); err != nil {
 			log.Println(err)
+		}
+
+		// check if the volume mounted in /var/lib/registry was managed by us. In that case (and only if
+		// the user does not want to keep the volume alive), delete the registry volume
+		if volName != "" {
+			vol, err := getVolume(volName, defaultRegistryVolumeLabels)
+			if err != nil {
+				return fmt.Errorf(" Couldn't remove volume for registry %s\n%w", defaultRegistryContainerName, err)
+			}
+			if vol != nil {
+				if keepRegistryVolume {
+					log.Printf("...(keeping the Registry volume %s)\n", volName)
+				} else {
+					log.Printf("...Removing the Registry volume %s\n", volName)
+					if err := deleteVolume(volName); err != nil {
+						return fmt.Errorf(" Couldn't remove volume for registry %s\n%w", defaultRegistryContainerName, err)
+					}
+				}
+			}
 		}
 	}
 

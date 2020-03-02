@@ -83,3 +83,6 @@ check_registry() {
   check_url $REGISTRY/v2/_catalog
 }
 
+check_volume_exists() {
+  docker volume inspect "$1" >/dev/null 2>&1
+}

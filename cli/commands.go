@@ -249,6 +249,7 @@ func CreateCluster(c *cli.Context) error {
 		RegistryEnabled:    c.Bool("enable-registry"),
 		RegistryName:       c.String("registry-name"),
 		RegistryPort:       c.Int("registry-port"),
+		RegistryVolume:     c.String("registry-volume"),
 		ServerArgs:         k3sServerArgs,
 		Volumes:            volumesSpec,
 	}
@@ -379,7 +380,7 @@ func DeleteCluster(c *cli.Context) error {
 			return fmt.Errorf(" Couldn't remove server for cluster %s\n%+v", cluster.name, err)
 		}
 
-		if err := disconnectRegistryFromNetwork(cluster.name); err != nil {
+		if err := disconnectRegistryFromNetwork(cluster.name, c.IsSet("keep-registry-volume")); err != nil {
 			log.Warningf("Couldn't disconnect Registry from network %s\n%+v", cluster.name, err)
 		}
 
