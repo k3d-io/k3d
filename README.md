@@ -2,6 +2,10 @@
 
 [![Build Status](https://travis-ci.com/rancher/k3d.svg?branch=master)](https://travis-ci.com/rancher/k3d)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d)](https://goreportcard.com/report/github.com/rancher/k3d)
+[![License](https://img.shields.io/github/license/rancher/k3d)](./LICENSE.md)
+![Downloads](https://img.shields.io/github/downloads/rancher/k3d/total.svg)
+[![Releases](https://img.shields.io/github/release/rancher/k3d.svg)](https://github.com/rancher/k3d/releases/latest)
+[![Homebrew](https://img.shields.io/homebrew/v/k3d)](https://formulae.brew.sh/formula/k3d)
 
 ## k3s in docker
 
