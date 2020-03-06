@@ -48,6 +48,7 @@ type ClusterSpec struct {
 	RegistryEnabled    bool
 	RegistryName       string
 	RegistryPort       int
+	RegistryVolume     string
 	ServerArgs         []string
 	Volumes            *Volumes
 }

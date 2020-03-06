@@ -18,9 +18,8 @@ type Volumes struct {
 	GroupSpecificVolumes map[string][]string
 }
 
-// createImageVolume will create a new docker volume used for storing image tarballs that can be loaded into the clusters
-func createImageVolume(clusterName string) (types.Volume, error) {
-
+// createVolume will create a new docker volume
+func createVolume(volName string, volLabels map[string]string) (types.Volume, error) {
 	var vol types.Volume
 
 	ctx := context.Background()
@@ -29,41 +28,97 @@ func createImageVolume(clusterName string) (types.Volume, error) {
 		return vol, fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
-	volName := fmt.Sprintf("k3d-%s-images", clusterName)
-
 	volumeCreateOptions := volume.VolumeCreateBody{
-		Name: volName,
-		Labels: map[string]string{
-			"app":     "k3d",
-			"cluster": clusterName,
-		},
+		Name:       volName,
+		Labels:     volLabels,
 		Driver:     "local", //TODO: allow setting driver + opts
 		DriverOpts: map[string]string{},
 	}
 	vol, err = docker.VolumeCreate(ctx, volumeCreateOptions)
 	if err != nil {
-		return vol, fmt.Errorf("failed to create image volume [%s] for cluster [%s]\n%+v", volName, clusterName, err)
+		return vol, fmt.Errorf("failed to create image volume [%s]\n%+v", volName, err)
 	}
 
 	return vol, nil
 }
 
-// deleteImageVolume will delete the volume we created for sharing images with this cluster
-func deleteImageVolume(clusterName string) error {
-
+// deleteVolume will delete a volume
+func deleteVolume(volName string) error {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return fmt.Errorf(" Couldn't create docker client\n%+v", err)
 	}
 
-	volName := fmt.Sprintf("k3d-%s-images", clusterName)
-
 	if err = docker.VolumeRemove(ctx, volName, true); err != nil {
-		return fmt.Errorf(" Couldn't remove volume [%s] for cluster [%s]\n%+v", volName, clusterName, err)
+		return fmt.Errorf(" Couldn't remove volume [%s]\n%+v", volName, err)
 	}
 
 	return nil
+}
+
+// getVolume checks if a docker volume exists. The volume can be specified with a name and/or some labels.
+func getVolume(volName string, volLabels map[string]string) (*types.Volume, error) {
+	ctx := context.Background()
+
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return nil, fmt.Errorf(" Couldn't create docker client: %w", err)
+	}
+
+	vFilter := filters.NewArgs()
+	if volName != "" {
+		vFilter.Add("name", volName)
+	}
+	for k, v := range volLabels {
+		vFilter.Add("label", fmt.Sprintf("%s=%s", k, v))
+	}
+
+	volumes, err := docker.VolumeList(ctx, vFilter)
+	if err != nil {
+		return nil, fmt.Errorf(" Couldn't list volumes: %w", err)
+	}
+	if len(volumes.Volumes) == 0 {
+		return nil, nil
+	}
+	return volumes.Volumes[0], nil
+}
+
+// getVolumeMountedIn gets the volume that is mounted in some container in some path
+func getVolumeMountedIn(ID string, path string) (string, error) {
+	ctx := context.Background()
+
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return "", fmt.Errorf(" Couldn't create docker client: %w", err)
+	}
+
+	c, err := docker.ContainerInspect(ctx, ID)
+	if err != nil {
+		return "", fmt.Errorf(" Couldn't inspect container %s: %w", ID, err)
+	}
+	for _, mount := range c.Mounts {
+		if mount.Destination == path {
+			return mount.Name, nil
+		}
+	}
+	return "", nil
+}
+
+// createImageVolume will create a new docker volume used for storing image tarballs that can be loaded into the clusters
+func createImageVolume(clusterName string) (types.Volume, error) {
+	volName := fmt.Sprintf("k3d-%s-images", clusterName)
+	volLabels := map[string]string{
+		"app":     "k3d",
+		"cluster": clusterName,
+	}
+	return createVolume(volName, volLabels)
+}
+
+// deleteImageVolume will delete the volume we created for sharing images with this cluster
+func deleteImageVolume(clusterName string) error {
+	volName := fmt.Sprintf("k3d-%s-images", clusterName)
+	return deleteVolume(volName)
 }
 
 // getImageVolume returns the docker volume object representing the imagevolume for the cluster

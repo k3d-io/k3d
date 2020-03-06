@@ -137,6 +137,10 @@ func main() {
 					Usage: "Port of the local registry container",
 				},
 				cli.StringFlag{
+					Name:  "registry-volume",
+					Usage: "Use a specific volume for the registry storage (will be created if not existing)",
+				},
+				cli.StringFlag{
 					Name:  "registries-file",
 					Usage: "registries.yaml config file",
 				},
@@ -218,6 +222,10 @@ func main() {
 				cli.BoolFlag{
 					Name:  "prune",
 					Usage: "Disconnect any other non-k3d containers in the network before deleting the cluster",
+				},
+				cli.BoolFlag{
+					Name:  "keep-registry-volume",
+					Usage: "Do not delete the registry volume",
 				},
 			},
 			Action: run.DeleteCluster,
