@@ -36,12 +36,12 @@ K3D_IMAGE_TAG := $(GIT_TAG)
 
 # Go Package required
 PKG_GOX := github.com/mitchellh/gox@v1.0.1
-PKG_GOLANGCI_LINT_VERSION := 1.22.2
+PKG_GOLANGCI_LINT_VERSION := 1.23.8
 PKG_GOLANGCI_LINT_SCRIPT := https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
 PKG_GOLANGCI_LINT := github.com/golangci/golangci-lint/cmd/golangci-lint@v${PKG_GOLANGCI_LINT_VERSION}
 
 # configuration adjustments for golangci-lint
-GOLANGCI_LINT_DISABLED_LINTERS := "" # disabling typecheck, because it currently (06.09.2019) fails with Go 1.13
+GOLANGCI_LINT_DISABLED_LINTERS := ""
 
 # Use Go Modules for everything
 export GO111MODULE=on
