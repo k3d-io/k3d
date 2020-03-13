@@ -35,22 +35,23 @@ type Cluster struct {
 
 // ClusterSpec defines the specs for a cluster that's up for creation
 type ClusterSpec struct {
-	AgentArgs          []string
-	APIPort            apiPort
-	AutoRestart        bool
-	ClusterName        string
-	Env                []string
-	NodeToLabelSpecMap map[string][]string
-	Image              string
-	NodeToPortSpecMap  map[string][]string
-	PortAutoOffset     int
-	RegistriesFile     string
-	RegistryEnabled    bool
-	RegistryName       string
-	RegistryPort       int
-	RegistryVolume     string
-	ServerArgs         []string
-	Volumes            *Volumes
+	AgentArgs            []string
+	APIPort              apiPort
+	AutoRestart          bool
+	ClusterName          string
+	Env                  []string
+	NodeToLabelSpecMap   map[string][]string
+	Image                string
+	NodeToPortSpecMap    map[string][]string
+	PortAutoOffset       int
+	RegistriesFile       string
+	RegistryEnabled      bool
+	RegistryCacheEnabled bool
+	RegistryName         string
+	RegistryPort         int
+	RegistryVolume       string
+	ServerArgs           []string
+	Volumes              *Volumes
 }
 
 // PublishedPorts is a struct used for exposing container ports on the host system

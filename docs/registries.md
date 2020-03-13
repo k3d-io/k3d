@@ -129,6 +129,22 @@ The easiest solution for this is to add an entry in your `/etc/hosts` file like 
 Once again, this will only work with k3s >= v0.10.0 (see the [section below](#k3s-old)
 when using k3s <= v0.9.1)
 
+### <a name="registry-volume"></a>Local registry volume
+
+The local k3d registry uses a volume for storying the images. This volume will be destroyed
+when the k3d registry is released. In order to persist this volume and make these images survive
+the removal of the registry, you can specify a volume with the `--registry-volume` and use the
+`--keep-registry-volume` flag when deleting the cluster. This will create a volume with the given
+name the first time the registry is used, while successive invocations will just mount this
+existing volume in the k3d registry container. 
+
+### <a name="docker-hub-cache"></a>Docker Hub cache
+
+The local k3d registry can also be used for caching images from the Docker Hub. You can start the
+registry as a pull-through cache when the cluster is created with `--enable-registry-cache`. Used
+in conjuction with `--registry-volume`/`--keep-registry-volume` can speed up all the downloads
+from the Hub by keeping a persistent cache of images in your local machine.
+
 ## <a name="testing"></a>Testing your registry
 
 You should test that you can
