@@ -18,17 +18,23 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const defaultRegistryContainerName = "k3d-registry"
+const (
+	defaultRegistryContainerName = "k3d-registry"
 
-const defaultRegistryImage = "registry:2"
+	defaultRegistryImage = "registry:2"
 
-// Default registry port, both for the external and the internal ports
-// Note well, that the internal port is never changed.
-const defaultRegistryPort = 5000
+	// Default registry port, both for the external and the internal ports
+	// Note well, that the internal port is never changed.
+	defaultRegistryPort = 5000
 
-const defaultFullRegistriesPath = "/etc/rancher/k3s/registries.yaml"
+	defaultFullRegistriesPath = "/etc/rancher/k3s/registries.yaml"
 
-const defaultRegistryMountPath = "/var/lib/registry"
+	defaultRegistryMountPath = "/var/lib/registry"
+
+	defaultDockerHubAddress = "docker.io"
+
+	defaultDockerRegistryHubAddress = "registry-1.docker.io"
+)
 
 // default labels assigned to the registry container
 var defaultRegistryContainerLabels = map[string]string{
@@ -105,9 +111,16 @@ func writeRegistriesConfigInContainer(spec *ClusterSpec, ID string) error {
 			privRegistries.Mirrors = map[string]Mirror{}
 		}
 
-		// the add the private registry
+		// then add the private registry
 		privRegistries.Mirrors[registryExternalAddress] = Mirror{
 			Endpoints: []string{fmt.Sprintf("http://%s", registryInternalAddress)},
+		}
+
+		// with the cache, redirect all the PULLs to the Docker Hub to the local registry
+		if spec.RegistryCacheEnabled {
+			privRegistries.Mirrors[defaultDockerHubAddress] = Mirror{
+				Endpoints: []string{fmt.Sprintf("http://%s", registryInternalAddress)},
+			}
 		}
 	}
 
@@ -212,6 +225,15 @@ func createRegistry(spec ClusterSpec) (string, error) {
 		Image:        defaultRegistryImage,
 		ExposedPorts: registryPublishedPorts.ExposedPorts,
 		Labels:       containerLabels,
+	}
+
+	// we can enable the cache in the Registry by just adding a new env variable
+	// (see https://docs.docker.com/registry/configuration/#override-specific-configuration-options)
+	if spec.RegistryCacheEnabled {
+		log.Printf("Activating pull-through cache to Docker Hub\n")
+		cacheConfigKey := "REGISTRY_PROXY_REMOTEURL"
+		cacheConfigValues := fmt.Sprintf("https://%s", defaultDockerRegistryHubAddress)
+		config.Env = []string{fmt.Sprintf("%s=%s", cacheConfigKey, cacheConfigValues)}
 	}
 
 	id, err := createContainer(config, hostConfig, networkingConfig, defaultRegistryContainerName)

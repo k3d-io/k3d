@@ -144,6 +144,10 @@ func main() {
 					Name:  "registries-file",
 					Usage: "registries.yaml config file",
 				},
+				cli.BoolFlag{
+					Name:  "enable-registry-cache",
+					Usage: "Use the local registry as a cache for the Docker Hub",
+				},
 			},
 			Action: run.CreateCluster,
 		},
