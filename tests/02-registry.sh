@@ -22,9 +22,9 @@ REGISTRIES_YAML=$FIXTURES_DIR/01-registries-empty.yaml
 #########################################################################################
 
 info "Checking that $REGISTRY_NAME is resolvable"
-grep -q $REGISTRY_NAME /etc/hosts
+getent hosts $REGISTRY_NAME
 if [ $? -ne 0 ] ; then
-  [ "$CI" = "true" ] || abort "$REGISTRY_NAME is not in /etc/hosts: please add an entry manually."
+  [ "$CI" = "true" ] || abort "$REGISTRY_NAME is not in resolvable. please add an entry in /etc/hosts manually."
 
   info "Adding '127.0.0.1 $REGISTRY_NAME' to /etc/hosts"
   echo "127.0.0.1 $REGISTRY_NAME"  | sudo tee -a /etc/hosts
