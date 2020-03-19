@@ -94,8 +94,8 @@ In order to enable the k3d registry when creating a new cluster, you must run k3
 k3d create --enable-registry ...
 ```
 
-Then you must add an entry in `/etc/hosts` as described in [the next section](#etc-hosts). And
-then you should [check you local registry](#testing).
+Then you must make it accessible as described in [the next section](#etc-hosts). And
+then you should [check your local registry](#testing).
 
 ### Using your own local registry 
 
@@ -106,12 +106,12 @@ docker volume create local_registry
 docker container run -d --name registry.localhost -v local_registry:/var/lib/registry --restart always -p 5000:5000 registry:2
 ```
 
-These commands will start you registry in `registry.localhost:5000`. In order to push to this registry, you will
-need to add the line at `/etc/hosts` as we described in [the previous section ](#etc-hosts). Once your
+These commands will start your registry in `registry.localhost:5000`. In order to push to this registry, you will
+need to make it accessible as we described in [the next section ](#etc-hosts). Once your
 registry is up and running, we will need to add it to your [`registries.yaml` configuration file](#registries-file).
 Finally, you must connect the registry network to the k3d cluster network:
 `docker network connect k3d-k3s-default registry.localhost`. And then you can
-[check you local registry](#testing).
+[check your local registry](#testing).
 
 ### <a name="etc-hosts"></a>Pushing to your local registry address
 
@@ -121,7 +121,8 @@ DNS server provided by the Docker daemon) but, in order to be able to push to th
 but also be resolved from your host.
 
 Luckily, (NSS-myhostname)[http://man7.org/linux/man-pages/man8/nss-myhostname.8.html] should be installed on a desktop environment
-and should resolve `*.localhost` automatically to `127.0.0.1`.
+and should resolve `*.localhost` automatically to `127.0.0.1`.  
+Otherwise, it's installable using `sudo apt install libnss-myhostname`.
 
 If it's not the case, you can add an entry in your `/etc/hosts` file like this:
 
