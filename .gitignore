@@ -18,3 +18,5 @@ _dist/
 # Editors
 .vscode/
 .local/
+.idea/
+*.iml
