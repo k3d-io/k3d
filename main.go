@@ -182,6 +182,10 @@ func main() {
 					Name:  "arg, x",
 					Usage: "Pass arguments to the k3s server/agent command.",
 				},
+				cli.BoolFlag{
+					Name:  "auto-restart",
+					Usage: "Set docker's --restart=unless-stopped flag on the containers",
+				},
 				cli.StringSliceFlag{
 					Name:  "env, e",
 					Usage: "Pass an additional environment variable (new flag per variable)",

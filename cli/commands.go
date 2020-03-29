@@ -590,14 +590,13 @@ func AddNode(c *cli.Context) error {
 	/*
 	 * (0) Check flags
 	 */
-
 	clusterName := c.String("name")
 	nodeCount := c.Int("count")
 
 	clusterSpec := &ClusterSpec{
 		AgentArgs:          nil,
 		APIPort:            apiPort{},
-		AutoRestart:        false,
+		AutoRestart:          c.Bool("auto-restart"),
 		ClusterName:        clusterName,
 		Env:                nil,
 		NodeToLabelSpecMap: nil,
