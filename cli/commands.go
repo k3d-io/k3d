@@ -806,7 +806,7 @@ func AddNode(c *cli.Context) error {
 func addNodeToK3s(c *cli.Context, clusterSpec *ClusterSpec, nodeRole string) error {
 
 	k3sURLEnvVar := fmt.Sprintf("K3S_URL=%s", c.String("k3s"))
-	k3sConnSecretEnvVar := fmt.Sprintf("K3S_SECRET=%s", c.String("k3s-secret"))
+	k3sConnSecretEnvVar := fmt.Sprintf("K3S_CLUSTER_SECRET=%s", c.String("k3s-secret"))
 	if c.IsSet("k3s-token") {
 		k3sConnSecretEnvVar = fmt.Sprintf("K3S_TOKEN=%s", c.String("k3s-token"))
 	}
