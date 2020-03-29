@@ -589,9 +589,7 @@ func GetK3sSecret(c *cli.Context) error {
 	}
 
 	containerService, err := k3dContainer.K3dContainer()
-	if err != nil {
-		return err
-	}
+	if err != nil { return err }
 
 	for _, cluster := range clusters {
 		containerName := cluster.server.Names[0][1:]
@@ -625,6 +623,62 @@ func GetK3sSecret(c *cli.Context) error {
     }
 
     return nil
+}
+
+// GetK3sToken retrieve the k3s token from the cluster server
+func GetK3sToken(c *cli.Context) error {
+	clusters, err := getClusters(c.Bool("all"), c.String("name"))
+	if err != nil {
+		return fmt.Errorf(" Couldn't get cluster by name [%s]\n%+v", c.String("name"), err)
+	}
+
+	if len(clusters) == 0 {
+		if !c.IsSet("all") && c.IsSet("name") {
+			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to check other clusters)", c.String("name"))
+		}
+		return fmt.Errorf("No cluster(s) found")
+	}
+
+	execConfig := types.ExecConfig{
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd: []string{ "cat", "/var/lib/rancher/k3s/server/node-token" },
+		Tty: true,
+		Detach: true,
+	}
+
+	containerService, err := k3dContainer.K3dContainer()
+	if err != nil { return err }
+
+	for _, cluster := range clusters {
+		containerName := cluster.server.Names[0][1:]
+		log.Debugf("retrieve k3s token from server container [%s]", containerName)
+
+		// 1 check k3sToken into container env
+		envsMap, err := containerService.GetContainerEnv(cluster.server.ID)
+		if err != nil{
+			return fmt.Errorf(" fail to fetch k3s cluster secret from container environment variable [%s]\n%+v", containerName, err)
+		}
+
+		// 1.1 : if yes extract it
+		if k3sSecret, ok := envsMap["K3S_TOKEN"]; ok {
+			// 2 : print k3s secret
+			fmt.Println(k3sSecret)
+			return nil
+		}
+
+		// 1.2 : else run command to retrieve into /var/lib/rancher/k3s/server/node-token
+		execStdout, err := containerService.ExecIntoContainer(cluster.server.ID, &execConfig)
+		if err != nil {
+			return fmt.Errorf(" Couldn't get k3s token into container [%s]\n%+v", containerName, err)
+		}
+
+		// 2 : print k3s secret
+		// K3S_TOKEN format XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX::<server|agent>:<XXXXXXXXXXXXXXX>
+		fmt.Println(string(execStdout))
+	}
+
+	return nil
 }
 
 // Shell starts a new subshell with the KUBECONFIG pointing to the selected cluster

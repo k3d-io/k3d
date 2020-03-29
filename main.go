@@ -318,6 +318,23 @@ func main() {
 			Action: run.GetK3sSecret,
 		},
 		{
+			// get-server-token retrieve the k3s token from the cluster server
+			Name: "get-k3s-token",
+			Usage: "Get k3s server token for cluster",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name: "name, n",
+					Value: defaultK3sClusterName,
+					Usage: "Name of the cluster",
+				},
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "Get token for all clusters (this ignores the --name/-n flag)",
+				},
+			},
+			Action: run.GetK3sToken,
+		},
+		{
 			// get-kubeconfig grabs the kubeconfig from the cluster and prints the path to it
 			Name:    "import-images",
 			Aliases: []string{"i"},
