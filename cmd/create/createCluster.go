@@ -29,6 +29,7 @@ import (
 	"github.com/spf13/cobra"
 
 	cliutil "github.com/rancher/k3d/cmd/util"
+	"github.com/rancher/k3d/pkg/cluster"
 	k3dCluster "github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -49,11 +50,11 @@ func NewCmdCreateCluster() *cobra.Command {
 		Long:  `Create a new k3s cluster with containerized nodes (k3s in docker).`,
 		Args:  cobra.ExactArgs(1), // exactly one cluster name can be set // TODO: if not specified, use k3d.DefaultClusterName
 		Run: func(cmd *cobra.Command, args []string) {
-			runtime, cluster := parseCreateClusterCmd(cmd, args, createClusterOpts)
-			if err := k3dCluster.CreateCluster(cluster, runtime); err != nil {
+			cluster := parseCreateClusterCmd(cmd, args, createClusterOpts)
+			if err := k3dCluster.CreateCluster(cluster, runtimes.SelectedRuntime); err != nil {
 				log.Errorln(err)
 				log.Errorln("Failed to create cluster >>> Rolling Back")
-				if err := k3dCluster.DeleteCluster(cluster, runtime); err != nil {
+				if err := k3dCluster.DeleteCluster(cluster, runtimes.SelectedRuntime); err != nil {
 					log.Errorln(err)
 					log.Fatalln("Cluster creation FAILED, also FAILED to rollback changes!")
 				}
@@ -98,7 +99,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().String("datastore-keyfile", "", "Specify external datastore's TLS key file'")
 	*/
 
-	/* k3s */ // TODO: to implement extra args
+	/* k3s */
 	cmd.Flags().StringArrayVar(&createClusterOpts.K3sServerArgs, "k3s-server-arg", nil, "Additional args passed to the `k3s server` command on master nodes (new flag per arg)")
 	cmd.Flags().StringArrayVar(&createClusterOpts.K3sAgentArgs, "k3s-agent-arg", nil, "Additional args passed to the `k3s agent` command on worker nodes (new flag per arg)")
 
@@ -109,16 +110,20 @@ func NewCmdCreateCluster() *cobra.Command {
 }
 
 // parseCreateClusterCmd parses the command input into variables required to create a cluster
-func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts *k3d.CreateClusterOpts) (runtimes.Runtime, *k3d.Cluster) {
-	// --runtime
-	rt, err := cmd.Flags().GetString("runtime")
-	if err != nil {
-		log.Fatalln("No runtime specified")
+func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts *k3d.CreateClusterOpts) *k3d.Cluster {
+
+	/********************************
+	 * Parse and validate arguments *
+	 ********************************/
+
+	clustername := args[0]
+	if err := cluster.CheckName(clustername); err != nil {
+		log.Fatal(err)
 	}
-	runtime, err := runtimes.GetRuntime(rt)
-	if err != nil {
-		log.Fatalln(err)
-	}
+
+	/****************************
+	 * Parse and validate flags *
+	 ****************************/
 
 	// --image
 	image, err := cmd.Flags().GetString("image")
@@ -134,11 +139,6 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 	masterCount, err := cmd.Flags().GetInt("masters")
 	if err != nil {
 		log.Fatalln(err)
-	}
-
-	// TODO: allow more than one master
-	if masterCount > 1 {
-		log.Warnln("Multi-Master is setup not fully implemented/supported right now!")
 	}
 
 	// --workers
@@ -311,7 +311,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 	 ********************/
 
 	cluster := &k3d.Cluster{
-		Name:              args[0], // TODO: validate name0
+		Name:              clustername,
 		Network:           network,
 		Secret:            secret,
 		CreateClusterOpts: createClusterOpts,
@@ -332,7 +332,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 			MasterOpts: k3d.MasterOpts{},
 		}
 
-		// TODO: by default, we don't expose an PI port, even if we only have a single master: should we change that?
+		// TODO: by default, we don't expose an API port, even if we only have a single master: should we change that?
 		// -> if we want to change that, simply add the exposeAPI struct here
 
 		// first master node will be init node if we have more than one master specified but no external datastore
@@ -411,5 +411,5 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		}
 	}
 
-	return runtime, cluster
+	return cluster
 }

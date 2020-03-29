@@ -43,9 +43,9 @@ func NewCmdCreateNode() *cobra.Command {
 		Long:  `Create a new containerized k3s node (k3s in docker).`,
 		Args:  cobra.ExactArgs(1), // exactly one name accepted // TODO: if not specified, inherit from cluster that the node shall belong to, if that is specified
 		Run: func(cmd *cobra.Command, args []string) {
-			nodes, cluster, runtime := parseCreateNodeCmd(cmd, args)
+			nodes, cluster := parseCreateNodeCmd(cmd, args)
 			for _, node := range nodes {
-				if err := k3dc.AddNodeToCluster(runtime, node, cluster); err != nil {
+				if err := k3dc.AddNodeToCluster(runtimes.SelectedRuntime, node, cluster); err != nil {
 					log.Errorf("Failed to add node '%s' to cluster '%s'", node.Name, cluster.Name)
 					log.Errorln(err)
 				}
@@ -68,17 +68,7 @@ func NewCmdCreateNode() *cobra.Command {
 }
 
 // parseCreateNodeCmd parses the command input into variables required to create a cluster
-func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cluster, runtimes.Runtime) {
-
-	// --runtime
-	rt, err := cmd.Flags().GetString("runtime")
-	if err != nil {
-		log.Fatalln("No runtime specified")
-	}
-	runtime, err := runtimes.GetRuntime(rt)
-	if err != nil {
-		log.Fatalln(err)
-	}
+func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cluster) {
 
 	// --replicas
 	replicas, err := cmd.Flags().GetInt("replicas")
@@ -125,5 +115,5 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 		nodes = append(nodes, node)
 	}
 
-	return nodes, cluster, runtime
+	return nodes, cluster
 }

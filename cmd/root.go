@@ -35,6 +35,7 @@ import (
 	"github.com/rancher/k3d/cmd/load"
 	"github.com/rancher/k3d/cmd/start"
 	"github.com/rancher/k3d/cmd/stop"
+	"github.com/rancher/k3d/pkg/runtimes"
 
 	"github.com/rancher/k3d/version"
 
@@ -70,7 +71,7 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initLogging)
+	cobra.OnInitialize(initLogging, initRuntime)
 
 	// add persistent flags (present to all subcommands)
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k3d/config.yaml)")
@@ -112,6 +113,15 @@ func initLogging() {
 			log.SetLevel(log.InfoLevel)
 		}
 	}
+}
+
+func initRuntime() {
+	runtime, err := runtimes.GetRuntime(flags.runtime)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	runtimes.SelectedRuntime = runtime
+	log.Debugf("Selected runtime is '%T'", runtimes.SelectedRuntime)
 }
 
 // Completion
