@@ -43,8 +43,8 @@ func NewCmdGetKubeconfig() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("get kubeconfig called")
-			rt, c, path := parseGetKubeconfigCmd(cmd, args)
-			kubeconfigpath, err := cluster.GetKubeconfigPath(rt, c, path)
+			selectedClusters, path := parseGetKubeconfigCmd(cmd, args)
+			kubeconfigpath, err := cluster.GetKubeconfigPath(runtimes.SelectedRuntime, selectedClusters, path)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -67,16 +67,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 	return cmd
 }
 
-func parseGetKubeconfigCmd(cmd *cobra.Command, args []string) (runtimes.Runtime, *k3d.Cluster, string) {
-	// --runtime
-	rt, err := cmd.Flags().GetString("runtime")
-	if err != nil {
-		log.Fatalln("No runtime specified")
-	}
-	runtime, err := runtimes.GetRuntime(rt)
-	if err != nil {
-		log.Fatalln(err)
-	}
+func parseGetKubeconfigCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, string) {
 
 	// --output
 	output, err := cmd.Flags().GetString("output")
@@ -84,5 +75,5 @@ func parseGetKubeconfigCmd(cmd *cobra.Command, args []string) (runtimes.Runtime,
 		log.Fatalln("No output specified")
 	}
 
-	return runtime, &k3d.Cluster{Name: args[0]}, output // TODO: validate first
+	return &k3d.Cluster{Name: args[0]}, output // TODO: validate first
 }
