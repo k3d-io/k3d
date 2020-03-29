@@ -239,7 +239,7 @@ func main() {
 			Action: run.DeleteCluster,
 		},
 		{
-			// stop stopy a running cluster (its container) so it's restartable
+			// stop a running cluster (its container) so it's restartable
 			Name:  "stop",
 			Usage: "Stop cluster",
 			Flags: []cli.Flag{
@@ -299,6 +299,23 @@ func main() {
 				},
 			},
 			Action: run.GetKubeConfig,
+		},
+		{
+			// get-server-token retrieve the k3s token from the cluster server
+			Name: "get-k3s-secret",
+			Usage: "Get k3s server token for cluster",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name: "name, n",
+					Value: defaultK3sClusterName,
+					Usage: "Name of the cluster",
+				},
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "Get token for all clusters (this ignores the --name/-n flag)",
+				},
+			},
+			Action: run.GetK3sSecret,
 		},
 		{
 			// get-kubeconfig grabs the kubeconfig from the cluster and prints the path to it

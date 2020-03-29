@@ -10,18 +10,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
-	"strings"
-	"time"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"io"
+	"io/ioutil"
+	"os"
+	"strings"
+	"time"
 )
 
 func createContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {

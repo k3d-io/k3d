@@ -15,6 +15,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	k3dContainer "github.com/rancher/k3d/cli/container"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -54,10 +55,10 @@ func CreateCluster(c *cli.Context) error {
 		log.Fatalf("Negative value for '--wait' not allowed (set '%d')", c.Int("wait"))
 	}
 
-	/**********************
-	 *										*
-	 *		CONFIGURATION		*
-	 * vvvvvvvvvvvvvvvvvv *
+	/***********************
+	 *                     *
+	 *   CONFIGURATION     *
+	 *                     *
 	 **********************/
 
 	/*
@@ -122,8 +123,8 @@ func CreateCluster(c *cli.Context) error {
 	/*
 	 * Arguments passed on to the k3s server and agent, will be filled later
 	 */
-	k3AgentArgs := []string{}
-	k3sServerArgs := []string{}
+	var k3AgentArgs []string
+	var k3sServerArgs []string
 
 	/*
 	 * --api-port, -a
@@ -192,10 +193,10 @@ func CreateCluster(c *cli.Context) error {
 	 */
 	// create a docker volume for sharing image tarballs with the cluster
 	imageVolume, err := createImageVolume(c.String("name"))
-	log.Println("Created docker volume ", imageVolume.Name)
 	if err != nil {
 		return err
 	}
+	log.Println("Created docker volume ", imageVolume.Name)
 
 	/*
 	 * --volume, -v
@@ -255,10 +256,10 @@ func CreateCluster(c *cli.Context) error {
 		Volumes:              volumesSpec,
 	}
 
-	/******************
-	 *								*
-	 *		CREATION		*
-	 * vvvvvvvvvvvvvv	*
+	/*******************
+	 *                 *
+	 *     CREATION    *
+	 *                 *
 	 ******************/
 
 	log.Printf("Creating cluster [%s]", c.String("name"))
@@ -563,6 +564,67 @@ func GetKubeConfig(c *cli.Context) error {
 	}
 
 	return nil
+}
+
+// GetK3sSecret retrieve the k3s token from the cluster server
+func GetK3sSecret(c *cli.Context) error {
+	clusters, err := getClusters(c.Bool("all"), c.String("name"))
+	if err != nil {
+		return fmt.Errorf(" Couldn't get cluster by name [%s]\n%+v", c.String("name"), err)
+	}
+
+	if len(clusters) == 0 {
+		if !c.IsSet("all") && c.IsSet("name") {
+			return fmt.Errorf("No cluster with name '%s' found (You can add `--all` and `--name <CLUSTER-NAME>` to check other clusters)", c.String("name"))
+		}
+		return fmt.Errorf("No cluster(s) found")
+	}
+
+	execConfig := types.ExecConfig{
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd: []string{ "cat", "/var/lib/rancher/k3s/server/node-token" },
+		Tty: true,
+		Detach: true,
+	}
+
+	containerService, err := k3dContainer.K3dContainer()
+	if err != nil {
+		return err
+	}
+
+	for _, cluster := range clusters {
+		containerName := cluster.server.Names[0][1:]
+		log.Debugf("retrieve k3s token from server container [%s]", containerName)
+
+		// 1 check k3sToken into container env
+		envsMap, err := containerService.GetContainerEnv(cluster.server.ID)
+		if err != nil{
+			return fmt.Errorf(" fail to fetch k3s cluster secret from container environment variable [%s]\n%+v", containerName, err)
+		}
+
+		// 1.1 : if yes extract it
+		if k3sSecret, ok := envsMap["K3S_CLUSTER_SECRET"]; ok {
+			// 2 : print k3s secret
+			fmt.Println(k3sSecret)
+			return nil
+		}
+
+		// 1.2 : else run command to retrieve into /var/lib/rancher/k3s/server/node-token and split to convert to K3S_CLUSTER_SECRET
+		execStdout, err := containerService.ExecIntoContainer(cluster.server.ID, &execConfig)
+		if err != nil {
+			return fmt.Errorf(" Couldn't get k3s cluster secret into container [%s]\n%+v", containerName, err)
+		}
+		k3sToken := string(execStdout)
+		// K3S_TOKEN format XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX::<server|agent>:<XXXXXXXXXXXXXXX>
+		// second X part is K3S_CLUSTER_SECRET
+		k3sClusterSecret := strings.SplitN(strings.SplitN(k3sToken, "::", 2)[1], ":", 2)[1]
+
+		// 2 : print k3s secret
+		fmt.Println(k3sClusterSecret)
+    }
+
+    return nil
 }
 
 // Shell starts a new subshell with the KUBECONFIG pointing to the selected cluster
