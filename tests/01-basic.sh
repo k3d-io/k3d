@@ -16,15 +16,15 @@ REGISTRIES_YAML=$FIXTURES_DIR/01-registries-empty.yaml
 #########################################################################################
 
 info "Creating two clusters c1 and c2..."
-$EXE create --wait 60 --name "c1" --api-port 6443 -v $REGISTRIES_YAML:/etc/rancher/k3s/registries.yaml || failed "could not create cluster c1"
-$EXE create --wait 60 --name "c2" --api-port 6444 || failed "could not create cluster c2"
+$EXE create --name "c1" --api-port 6443 -v $REGISTRIES_YAML:/etc/rancher/k3s/registries.yaml || failed "could not create cluster c1"
+$EXE create --name "c2" --api-port 6444 || failed "could not create cluster c2"
 
 info "Checking we have access to both clusters..."
 check_k3d_clusters "c1" "c2" || failed "error checking cluster"
 dump_registries_yaml_in "c1" "c2"
 
 info "Creating a cluster with a wrong --registries-file argument..."
-$EXE create --wait 60 --name "c3" --api-port 6445 --registries-file /etc/inexistant || passed "expected error with a --registries-file that does not exist"
+$EXE create --name "c3" --api-port 6445 --registries-file /etc/inexistant || passed "expected error with a --registries-file that does not exist"
 
 info "Attaching a container to c2"
 background=$(docker run -d --rm alpine sleep 3000)

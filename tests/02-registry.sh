@@ -33,8 +33,8 @@ else
 fi
 
 info "Creating two clusters (with a registry)..."
-$EXE create --wait 60 --name "c1" --api-port 6443 --enable-registry --registry-volume "reg-vol" || failed "could not create cluster c1"
-$EXE create --wait 60 --name "c2" --api-port 6444 --enable-registry --registries-file "$REGISTRIES_YAML" || failed "could not create cluster c2"
+$EXE create --name "c1" --api-port 6443 --enable-registry --registry-volume "reg-vol" || failed "could not create cluster c1"
+$EXE create --name "c2" --api-port 6444 --enable-registry --registries-file "$REGISTRIES_YAML" || failed "could not create cluster c2"
 
 check_k3d_clusters "c1" "c2" || failed "error checking cluster"
 dump_registries_yaml_in "c1" "c2"
@@ -94,7 +94,7 @@ passed "The local registry has been removed"
 
 info "Creating a new clusters that uses a registry with an existsing 'reg-vol' volume..."
 check_volume_exists "reg-vol" || abort "the registry volume 'reg-vol' does not exist"
-$EXE create --wait 60 --name "c3" --api-port 6445 --enable-registry --registry-volume "reg-vol" || failed "could not create cluster c3"
+$EXE create --name "c3" --api-port 6445 --enable-registry --registry-volume "reg-vol" || failed "could not create cluster c3"
 
 info "Deleting c3 cluster: the registry should be removed and, this time, the volume too..."
 $EXE delete --name "c3" || failed "could not delete the cluster c3"

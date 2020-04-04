@@ -448,9 +448,9 @@ func createProxy(spec *ClusterSpec, serverContainersIDs []string) (string, error
 	// avoid using hostports to handle HA situations
 	hostConfig := &container.HostConfig{
 		PortBindings: serverPublishedPorts.PortBindings,
-		Privileged: true,
+		Privileged:   true,
 		RestartPolicy: container.RestartPolicy{
-			Name:              "unless-stopped",
+			Name: "unless-stopped",
 		},
 	}
 
@@ -472,7 +472,7 @@ func createProxy(spec *ClusterSpec, serverContainersIDs []string) (string, error
 		}
 		serversIPs = append(serversIPs, serverIP)
 	}
-	spec.Env = append(spec.Env, "SERVERS=" + strings.Join(serversIPs, ","))
+	spec.Env = append(spec.Env, "SERVERS="+strings.Join(serversIPs, ","))
 	config := &container.Config{
 		Hostname:     containerName,
 		Image:        proxyImage,

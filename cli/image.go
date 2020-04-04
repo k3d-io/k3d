@@ -177,38 +177,38 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 	// remove tarball from inside the server container
 	if !noRemove {
 		for _, server := range clusters[clusterName].servers {
-		log.Info("Cleaning up tarball in server %s", server.ID)
+			log.Infof("Cleaning up tarball in server %s", server.ID)
 
-		execID, err := docker.ContainerExecCreate(ctx, server.ID, types.ExecConfig{
-			Cmd: []string{"rm", "-f", tarFileName},
-		})
-		if err != nil {
-			log.Warningf("Failed to delete tarball: couldn't create remove in container [%s]\n%+v", server.ID, err)
-		}
-		err = docker.ContainerExecStart(ctx, execID.ID, types.ExecStartCheck{
-			Detach: true,
-		})
-		if err != nil {
-			log.Warningf("Couldn't start tarball deletion action\n%+v", err)
-		}
-
-		for {
-			execInspect, err := docker.ContainerExecInspect(ctx, execID.ID)
+			execID, err := docker.ContainerExecCreate(ctx, server.ID, types.ExecConfig{
+				Cmd: []string{"rm", "-f", tarFileName},
+			})
 			if err != nil {
-				log.Warningf("Couldn't verify deletion of tarball\n%+v", err)
+				log.Warningf("Failed to delete tarball: couldn't create remove in container [%s]\n%+v", server.ID, err)
+			}
+			err = docker.ContainerExecStart(ctx, execID.ID, types.ExecStartCheck{
+				Detach: true,
+			})
+			if err != nil {
+				log.Warningf("Couldn't start tarball deletion action\n%+v", err)
 			}
 
-			if !execInspect.Running {
-				if execInspect.ExitCode == 0 {
-					log.Info("Deleted tarball")
-					break
-				} else {
-					log.Warning("Failed to delete tarball")
-					break
+			for {
+				execInspect, err := docker.ContainerExecInspect(ctx, execID.ID)
+				if err != nil {
+					log.Warningf("Couldn't verify deletion of tarball\n%+v", err)
+				}
+
+				if !execInspect.Running {
+					if execInspect.ExitCode == 0 {
+						log.Info("Deleted tarball")
+						break
+					} else {
+						log.Warning("Failed to delete tarball")
+						break
+					}
 				}
 			}
 		}
-	}
 	}
 
 	log.Info("...Done")

@@ -49,11 +49,6 @@ func CreateCluster(c *cli.Context) error {
 		}
 	}
 
-	// validate --wait flag
-	if c.IsSet("wait") && c.Int("wait") < 0 {
-		log.Fatalf("Negative value for '--wait' not allowed (set '%d')", c.Int("wait"))
-	}
-
 	/**********************
 	 *										*
 	 *		CONFIGURATION		*
@@ -406,29 +401,29 @@ func DeleteCluster(c *cli.Context) error {
 				return fmt.Errorf(" Couldn't remove server for cluster %s\n%+v", cluster.name, err)
 			}
 		}
-			if err := disconnectRegistryFromNetwork(cluster.name, c.IsSet("keep-registry-volume")); err != nil {
-				log.Warningf("Couldn't disconnect Registry from network %s\n%+v", cluster.name, err)
-			}
+		if err := disconnectRegistryFromNetwork(cluster.name, c.IsSet("keep-registry-volume")); err != nil {
+			log.Warningf("Couldn't disconnect Registry from network %s\n%+v", cluster.name, err)
+		}
 
-			if c.IsSet("prune") {
-				// disconnect any other container that is connected to the k3d network
-				nid, err := getClusterNetwork(cluster.name)
-				if err != nil {
-					log.Warningf("Couldn't get the network for cluster %q\n%+v", cluster.name, err)
-				}
-				cids, err := getContainersInNetwork(nid)
-				if err != nil {
-					log.Warningf("Couldn't get the list of containers connected to network %q\n%+v", nid, err)
-				}
-				for _, cid := range cids {
-					err := disconnectContainerFromNetwork(cid, nid)
-					if err != nil {
-						log.Warningf("Couldn't disconnect container %q from network %q", cid, nid)
-						continue
-					}
-					log.Printf("...%q has been forced to disconnect from %q's network", cid, cluster.name)
-				}
+		if c.IsSet("prune") {
+			// disconnect any other container that is connected to the k3d network
+			nid, err := getClusterNetwork(cluster.name)
+			if err != nil {
+				log.Warningf("Couldn't get the network for cluster %q\n%+v", cluster.name, err)
 			}
+			cids, err := getContainersInNetwork(nid)
+			if err != nil {
+				log.Warningf("Couldn't get the list of containers connected to network %q\n%+v", nid, err)
+			}
+			for _, cid := range cids {
+				err := disconnectContainerFromNetwork(cid, nid)
+				if err != nil {
+					log.Warningf("Couldn't disconnect container %q from network %q", cid, nid)
+					continue
+				}
+				log.Printf("...%q has been forced to disconnect from %q's network", cid, cluster.name)
+			}
+		}
 
 		if err := deleteClusterNetwork(cluster.name); err != nil {
 			log.Warningf("Couldn't delete cluster network for cluster %s\n%+v", cluster.name, err)
@@ -483,11 +478,11 @@ func StopCluster(c *cli.Context) error {
 		if err := docker.ContainerStop(ctx, cluster.proxy.ID, nil); err != nil {
 			return fmt.Errorf(" Couldn't stop proxy for cluster %s\n%+v", cluster.name, err)
 		}
-		log.Println("...Stopping %d servers", len(cluster.servers))
+		log.Printf("...Stopping %d servers\n", len(cluster.servers))
 		for _, server := range cluster.servers {
-		if err := docker.ContainerStop(ctx, server.ID, nil); err != nil {
-			return fmt.Errorf(" Couldn't stop server for cluster %s\n%+v", cluster.name, err)
-		}
+			if err := docker.ContainerStop(ctx, server.ID, nil); err != nil {
+				return fmt.Errorf(" Couldn't stop server for cluster %s\n%+v", cluster.name, err)
+			}
 		}
 
 		log.Infof("Stopped cluster [%s]", cluster.name)
@@ -537,15 +532,16 @@ func StartCluster(c *cli.Context) error {
 		}
 
 		log.Printf("...Starting proxy\n")
-			if err := docker.ContainerStart(ctx, cluster.proxy.ID, types.ContainerStartOptions{}); err != nil {
-				return fmt.Errorf(" Couldn't start proxy for cluster %s\n%+v", cluster.name, err)
-			}
+		if err := docker.ContainerStart(ctx, cluster.proxy.ID, types.ContainerStartOptions{}); err != nil {
+			return fmt.Errorf(" Couldn't start proxy for cluster %s\n%+v", cluster.name, err)
+		}
 
 		log.Printf("...Starting %d servers\n", len(cluster.servers))
 		for _, server := range cluster.servers {
-		if err := docker.ContainerStart(ctx, server.ID, types.ContainerStartOptions{}); err != nil {
-			return fmt.Errorf(" Couldn't start server for cluster %s\n%+v", cluster.name, err)
-		}}
+			if err := docker.ContainerStart(ctx, server.ID, types.ContainerStartOptions{}); err != nil {
+				return fmt.Errorf(" Couldn't start server for cluster %s\n%+v", cluster.name, err)
+			}
+		}
 
 		if len(cluster.workers) > 0 {
 			log.Printf("...Starting %d workers\n", len(cluster.workers))
@@ -865,7 +861,7 @@ func createNodes(clusterSpec *ClusterSpec, role string, suffixNumberStart int, c
 		if role == "agent" {
 			containerID, err = createWorker(clusterSpec, suffix)
 		} else if role == "server" {
-			// containerID, err = createServer(clusterSpec)
+			containerID, err = createServer(clusterSpec, suffix)
 		}
 		if err != nil {
 			log.Errorf("Failed to create %s-node", role)

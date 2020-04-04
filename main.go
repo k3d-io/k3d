@@ -87,11 +87,6 @@ func main() {
 					Value: "6443",
 					Usage: "Specify the Kubernetes cluster API server port (Format: `-a [host:]port`",
 				},
-				cli.IntFlag{
-					Name:  "wait, t",
-					Value: -1,
-					Usage: "Wait for a maximum of `TIMEOUT` seconds (>= 0) for the cluster to be ready and rollback if it doesn't come up in time. Disabled by default (-1).",
-				},
 				cli.StringFlag{
 					Name:  "image, i",
 					Usage: "Specify a k3s image (Format: <repo>/<image>:<tag>)",

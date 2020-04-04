@@ -306,7 +306,9 @@ func getClusters(all bool, name string) (map[string]Cluster, error) {
 				All:     true,
 				Filters: filters,
 			})
-
+			if err != nil {
+				return nil, fmt.Errorf("ERROR: Failed to get server containers for cluster%s\n%+v", clusterName, err)
+			}
 
 			// get workers
 			filters.Del("label", "component=server")
