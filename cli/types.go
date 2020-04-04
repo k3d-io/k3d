@@ -29,8 +29,9 @@ type Cluster struct {
 	image       string
 	status      string
 	serverPorts []string
-	server      types.Container
+	servers     []types.Container
 	workers     []types.Container
+	proxy       types.Container
 }
 
 // ClusterSpec defines the specs for a cluster that's up for creation

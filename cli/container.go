@@ -13,6 +13,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -22,6 +23,10 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+)
+
+const (
+	proxyImage = "husseingalal/k3d-proxy:dev"
 )
 
 func createContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
@@ -76,8 +81,8 @@ func startContainer(ID string) error {
 	return nil
 }
 
-func createServer(spec *ClusterSpec) (string, error) {
-	log.Printf("Creating server using %s...\n", spec.Image)
+func createServer(spec *ClusterSpec, serverNo int) (string, error) {
+	log.Printf("Creating server %d using %s...\n", serverNo, spec.Image)
 
 	containerLabels := make(map[string]string)
 	containerLabels["app"] = "k3d"
@@ -85,7 +90,7 @@ func createServer(spec *ClusterSpec) (string, error) {
 	containerLabels["created"] = time.Now().Format("2006-01-02 15:04:05")
 	containerLabels["cluster"] = spec.ClusterName
 
-	containerName := GetContainerName("server", spec.ClusterName, -1)
+	containerName := GetContainerName("server-"+strconv.Itoa(serverNo), spec.ClusterName, -1)
 
 	// labels to be created to the server belong to roles
 	// all, server, master or <server-container-name>
@@ -118,10 +123,11 @@ func createServer(spec *ClusterSpec) (string, error) {
 		log.Fatalf("Error: failed to parse port specs %+v \n%+v", serverPorts, err)
 	}
 
+	// avoid using hostports to handle HA situations
 	hostConfig := &container.HostConfig{
-		PortBindings: serverPublishedPorts.PortBindings,
-		Privileged:   true,
-		Init:         &[]bool{true}[0],
+		//PortBindings: serverPublishedPorts.PortBindings,
+		Privileged: true,
+		Init:       &[]bool{true}[0],
 	}
 
 	if spec.AutoRestart {
@@ -184,7 +190,7 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 		}
 	}
 	if needServerURL {
-		env = append(spec.Env, fmt.Sprintf("K3S_URL=https://k3d-%s-server:%s", spec.ClusterName, spec.APIPort.Port))
+		env = append(spec.Env, fmt.Sprintf("K3S_URL=https://k3d-%s-server-0:%s", spec.ClusterName, spec.APIPort.Port))
 	}
 
 	// labels to be created to the worker belong to roles
@@ -381,4 +387,114 @@ func copyToContainer(ID string, dstPath string, content []byte) error {
 		return errors.Wrap(err, "failed to copy source code")
 	}
 	return nil
+}
+
+// getContainerIP returns the IP Address of a container
+func getContainerIP(ID string) (string, error) {
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return "", err
+	}
+
+	c, err := docker.ContainerInspect(ctx, ID)
+	if err != nil {
+		return "", fmt.Errorf(" Couldn't get details about container %s: %w", ID, err)
+	}
+	containerAddress := ""
+	for _, network := range c.NetworkSettings.Networks {
+		containerAddress = network.IPAddress
+		if containerAddress != "" {
+			break
+		}
+	}
+	return containerAddress, nil
+}
+
+func createProxy(spec *ClusterSpec, serverContainersIDs []string) (string, error) {
+	log.Printf("Creating proxy using %s...\n", proxyImage)
+
+	containerLabels := make(map[string]string)
+	containerLabels["app"] = "k3d"
+	containerLabels["component"] = "proxy"
+	containerLabels["created"] = time.Now().Format("2006-01-02 15:04:05")
+	containerLabels["cluster"] = spec.ClusterName
+
+	containerName := GetContainerName("proxy", spec.ClusterName, -1)
+
+	// ports to be assigned to the server belong to roles
+	// all, server, master or <server-container-name>
+	serverPorts, err := MergePortSpecs(spec.NodeToPortSpecMap, "server", containerName)
+	if err != nil {
+		return "", err
+	}
+
+	hostIP := "0.0.0.0"
+	containerLabels["apihost"] = "localhost"
+	if spec.APIPort.Host != "" {
+		hostIP = spec.APIPort.HostIP
+		containerLabels["apihost"] = spec.APIPort.Host
+	}
+
+	apiPortSpec := fmt.Sprintf("%s:%s:%s/tcp", hostIP, spec.APIPort.Port, spec.APIPort.Port)
+
+	serverPorts = append(serverPorts, apiPortSpec)
+
+	serverPublishedPorts, err := CreatePublishedPorts(serverPorts)
+	if err != nil {
+		log.Fatalf("Error: failed to parse port specs %+v \n%+v", serverPorts, err)
+	}
+
+	// avoid using hostports to handle HA situations
+	hostConfig := &container.HostConfig{
+		PortBindings: serverPublishedPorts.PortBindings,
+		Privileged: true,
+		RestartPolicy: container.RestartPolicy{
+			Name:              "unless-stopped",
+		},
+	}
+
+	networkingConfig := &network.NetworkingConfig{
+		EndpointsConfig: map[string]*network.EndpointSettings{
+			k3dNetworkName(spec.ClusterName): {
+				Aliases: []string{containerName},
+			},
+		},
+	}
+	if len(serverContainersIDs) == 0 {
+		return "", fmt.Errorf("No server container started")
+	}
+	serversIPs := []string{}
+	for _, id := range serverContainersIDs {
+		serverIP, err := getContainerIP(id)
+		if err != nil {
+			return "", err
+		}
+		serversIPs = append(serversIPs, serverIP)
+	}
+	spec.Env = append(spec.Env, "SERVERS=" + strings.Join(serversIPs, ","))
+	config := &container.Config{
+		Hostname:     containerName,
+		Image:        proxyImage,
+		ExposedPorts: serverPublishedPorts.ExposedPorts,
+		Env:          spec.Env,
+		Labels:       containerLabels,
+	}
+	id, err := createContainer(config, hostConfig, networkingConfig, containerName)
+	if err != nil {
+		return "", fmt.Errorf(" Couldn't create container %s\n%+v", containerName, err)
+	}
+
+	// copy the registry configuration
+	if spec.RegistryEnabled || len(spec.RegistriesFile) > 0 {
+		if err := writeRegistriesConfigInContainer(spec, id); err != nil {
+			return "", err
+		}
+	}
+
+	if err := startContainer(id); err != nil {
+		return "", fmt.Errorf(" Couldn't start container %s\n%+v", containerName, err)
+	}
+
+	return id, nil
 }

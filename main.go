@@ -114,6 +114,11 @@ func main() {
 					Usage: "Add a docker label to node container (Format: `key[=value][@node-specifier]`, new flag per label)",
 				},
 				cli.IntFlag{
+					Name:  "servers, s",
+					Value: 1,
+					Usage: "Specify how many servers nodes you want to spawn (dqlite)",
+				},
+				cli.IntFlag{
 					Name:  "workers, w",
 					Value: 0,
 					Usage: "Specify how many worker nodes you want to spawn",

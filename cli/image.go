@@ -108,7 +108,7 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 	if err != nil {
 		return fmt.Errorf(" Couldn't get cluster by name [%s]\n%+v", clusterName, err)
 	}
-	containerList := []types.Container{clusters[clusterName].server}
+	containerList := clusters[clusterName].servers
 	containerList = append(containerList, clusters[clusterName].workers...)
 
 	// *** second, import the images using ctr in the k3d nodes
@@ -176,13 +176,14 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 
 	// remove tarball from inside the server container
 	if !noRemove {
-		log.Info("Cleaning up tarball")
+		for _, server := range clusters[clusterName].servers {
+		log.Info("Cleaning up tarball in server %s", server.ID)
 
-		execID, err := docker.ContainerExecCreate(ctx, clusters[clusterName].server.ID, types.ExecConfig{
+		execID, err := docker.ContainerExecCreate(ctx, server.ID, types.ExecConfig{
 			Cmd: []string{"rm", "-f", tarFileName},
 		})
 		if err != nil {
-			log.Warningf("Failed to delete tarball: couldn't create remove in container [%s]\n%+v", clusters[clusterName].server.ID, err)
+			log.Warningf("Failed to delete tarball: couldn't create remove in container [%s]\n%+v", server.ID, err)
 		}
 		err = docker.ContainerExecStart(ctx, execID.ID, types.ExecStartCheck{
 			Detach: true,
@@ -207,6 +208,7 @@ func importImage(clusterName string, images []string, noRemove bool) error {
 				}
 			}
 		}
+	}
 	}
 
 	log.Info("...Done")

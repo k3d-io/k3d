@@ -288,28 +288,46 @@ func getClusters(all bool, name string) (map[string]Cluster, error) {
 
 	clusters := make(map[string]Cluster)
 
-	// don't filter for servers but for workers now
-	filters.Del("label", "component=server")
-	filters.Add("label", "component=worker")
-
 	// for all servers created by k3d, get workers and cluster information
 	for _, server := range k3dServers {
 		clusterName := server.Labels["cluster"]
 
+		// don't count servers in the same HA cluster
+		if _, ok := clusters[clusterName]; ok {
+			continue
+		}
 		// Skip the cluster if we don't want all of them, and
 		// the cluster name does not match.
 		if all || name == clusterName {
 
 			// Add the cluster
 			filters.Add("label", fmt.Sprintf("cluster=%s", clusterName))
+			servers, err := docker.ContainerList(ctx, types.ContainerListOptions{
+				All:     true,
+				Filters: filters,
+			})
+
 
 			// get workers
+			filters.Del("label", "component=server")
+			filters.Add("label", "component=worker")
 			workers, err := docker.ContainerList(ctx, types.ContainerListOptions{
 				All:     true,
 				Filters: filters,
 			})
 			if err != nil {
 				log.Warningf("Couldn't get worker containers for cluster %s\n%+v", clusterName, err)
+			}
+
+			// get proxy
+			filters.Del("label", "component=worker")
+			filters.Add("label", "component=proxy")
+			proxy, err := docker.ContainerList(ctx, types.ContainerListOptions{
+				All:     true,
+				Filters: filters,
+			})
+			if err != nil {
+				log.Warningf("Couldn't get proxy containers for cluster %s\n%+v", clusterName, err)
 			}
 
 			// save cluster information
@@ -322,8 +340,9 @@ func getClusters(all bool, name string) (map[string]Cluster, error) {
 				image:       server.Image,
 				status:      getClusterStatus(server, workers),
 				serverPorts: serverPorts,
-				server:      server,
+				servers:     servers,
 				workers:     workers,
+				proxy:       proxy[0],
 			}
 			// clear label filters before searching for next cluster
 			filters.Del("label", fmt.Sprintf("cluster=%s", clusterName))
