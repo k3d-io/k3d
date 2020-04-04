@@ -143,7 +143,6 @@ func createServer(spec *ClusterSpec, serverNo int) (string, error) {
 			},
 		},
 	}
-
 	config := &container.Config{
 		Hostname:     containerName,
 		Image:        spec.Image,
@@ -472,7 +471,7 @@ func createProxy(spec *ClusterSpec, serverContainersIDs []string) (string, error
 		}
 		serversIPs = append(serversIPs, serverIP)
 	}
-	spec.Env = append(spec.Env, "SERVERS="+strings.Join(serversIPs, ","))
+	spec.Env = append(spec.Env, "SERVERS="+strings.Join(serversIPs, ","), "PORT=" + spec.APIPort.Port)
 	config := &container.Config{
 		Hostname:     containerName,
 		Image:        proxyImage,

@@ -283,19 +283,16 @@ func CreateCluster(c *cli.Context) error {
 	 */
 	serverContainersIDs := []string{}
 	for i := 0; i < c.Int("servers"); i++ {
-		serverArgsCpy := []string{}
-		copy(serverArgsCpy, clusterSpec.ServerArgs)
 		if i == 0 {
-			serverArgsCpy = append(serverArgsCpy, "--cluster-init")
+			clusterSpec.ServerArgs = append(clusterSpec.ServerArgs, "--cluster-init")
 		} else {
 			masterServerIP, err := getContainerIP(serverContainersIDs[0])
 			if err != nil {
 				return err
 			}
 			serverAddressArg := fmt.Sprintf("--server=https://%s:%s", masterServerIP, apiPort.Port)
-			serverArgsCpy = append(serverArgsCpy, serverAddressArg)
+			clusterSpec.ServerArgs = append(clusterSpec.ServerArgs, serverAddressArg)
 		}
-		clusterSpec.ServerArgs = serverArgsCpy
 		serverContainerID, err := createServer(clusterSpec, i)
 		if err != nil {
 			deleteCluster()

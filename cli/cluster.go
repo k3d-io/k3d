@@ -328,8 +328,17 @@ func getClusters(all bool, name string) (map[string]Cluster, error) {
 				All:     true,
 				Filters: filters,
 			})
+
+			// reset filters again
+			filters.Del("label", "component=proxy")
+			filters.Add("label", "component=server")
+
 			if err != nil {
 				log.Warningf("Couldn't get proxy containers for cluster %s\n%+v", clusterName, err)
+			}
+			var proxyCont types.Container
+			if len(proxy) > 0 {
+				proxyCont = proxy[0]
 			}
 
 			// save cluster information
@@ -344,7 +353,7 @@ func getClusters(all bool, name string) (map[string]Cluster, error) {
 				serverPorts: serverPorts,
 				servers:     servers,
 				workers:     workers,
-				proxy:       proxy[0],
+				proxy:       proxyCont,
 			}
 			// clear label filters before searching for next cluster
 			filters.Del("label", fmt.Sprintf("cluster=%s", clusterName))
