@@ -72,7 +72,6 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().StringArrayP("api-port", "a", []string{"6443"}, "Specify the Kubernetes API server port (Format: `--api-port [HOST:]HOSTPORT[@NODEFILTER]`\n - Example: `k3d create -m 3 -a 0.0.0.0:6550@master[0] -a 0.0.0.0:6551@master[1]` ")
 	cmd.Flags().IntP("masters", "m", 1, "Specify how many masters you want to create")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
-	// cmd.Flags().String("config", "", "Specify a cluster configuration file")                                     // TODO: to implement
 	cmd.Flags().String("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
 	cmd.Flags().String("network", "", "Join an existing network")
 	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
@@ -83,20 +82,22 @@ func NewCmdCreateCluster() *cobra.Command {
 	/* Image Importing */
 	cmd.Flags().BoolVar(&createClusterOpts.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
 
-	/* Multi Master Configuration */ // TODO: to implement (whole multi master thingy)
+	/* Multi Master Configuration */
 	// multi-master - general
-	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadbalancer, "no-lb", false, "[WIP] Disable automatic deployment of a load balancer in Multi-Master setups") // TODO: to implement
-	cmd.Flags().String("lb-port", "0.0.0.0:6443", "[WIP] Specify port to be exposed by the master load balancer (Format: `[HOST:]HOSTPORT)")                    // TODO: to implement
+	// TODO: implement load-balancer/proxy for multi-master setups
+	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadbalancer, "no-lb", false, "[WIP] Disable automatic deployment of a load balancer in Multi-Master setups")
+	cmd.Flags().String("lb-port", "0.0.0.0:6443", "[WIP] Specify port to be exposed by the master load balancer (Format: `[HOST:]HOSTPORT)")
 
 	// multi-master - datastore
+	// TODO: implement multi-master setups with external data store
 	cmd.Flags().String("datastore-endpoint", "", "[WIP] Specify external datastore endpoint (e.g. for multi master clusters)")
-	/* TODO: activate
-	cmd.Flags().String("datastore-network", "", "Specify container network where we can find the datastore-endpoint (add a connection)")
+	/*
+		cmd.Flags().String("datastore-network", "", "Specify container network where we can find the datastore-endpoint (add a connection)")
 
-	// TODO: set default paths and hint, that one should simply mount the files using --volume flag
-	cmd.Flags().String("datastore-cafile", "", "Specify external datastore's TLS Certificate Authority (CA) file")
-	cmd.Flags().String("datastore-certfile", "", "Specify external datastore's TLS certificate file'")
-	cmd.Flags().String("datastore-keyfile", "", "Specify external datastore's TLS key file'")
+		// TODO: set default paths and hint, that one should simply mount the files using --volume flag
+		cmd.Flags().String("datastore-cafile", "", "Specify external datastore's TLS Certificate Authority (CA) file")
+		cmd.Flags().String("datastore-certfile", "", "Specify external datastore's TLS certificate file'")
+		cmd.Flags().String("datastore-keyfile", "", "Specify external datastore's TLS key file'")
 	*/
 
 	/* k3s */
@@ -342,7 +343,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		if i == 0 && masterCount > 1 && datastoreEndpoint == "" {
 			node.MasterOpts.IsInit = true
 			cluster.InitNode = &node
-		} // TODO: enable external datastore as well
+		}
 
 		// append node to list
 		cluster.Nodes = append(cluster.Nodes, &node)
