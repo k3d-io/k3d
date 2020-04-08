@@ -77,7 +77,7 @@ func parseLoadImageCmd(cmd *cobra.Command, args []string) ([]string, []k3d.Clust
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if cmd.Flags().Changed("tar") { // TODO: implement import from local tarball
+	if cmd.Flags().Changed("tar") { // TODO: loadImage: implement import from local tarball
 		log.Fatalf("--tar flag not supported yet '%s'", localTarball)
 	}
 

@@ -35,7 +35,7 @@ func NewCmdStopNode() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "node NAME", // TODO: allow one or more names or --all",
+		Use:   "node NAME", // TODO: stopNode: allow one or more names or --all",
 		Short: "Stop an existing k3d node",
 		Long:  `Stop an existing k3d node.`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -58,5 +58,5 @@ func parseStopNodeCmd(cmd *cobra.Command, args []string) *k3d.Node {
 		log.Fatalln("No node name given")
 	}
 
-	return &k3d.Node{Name: args[0]} // TODO: validate and allow for more than one
+	return &k3d.Node{Name: args[0]}
 }

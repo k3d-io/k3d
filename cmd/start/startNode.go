@@ -34,7 +34,7 @@ func NewCmdStartNode() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "node NAME", // TODO: allow one or more names or --all
+		Use:   "node NAME", // TODO: startNode: allow one or more names or --all
 		Short: "Start an existing k3d node",
 		Long:  `Start an existing k3d node.`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -52,10 +52,10 @@ func NewCmdStartNode() *cobra.Command {
 
 // parseStartNodeCmd parses the command input into variables required to start a node
 func parseStartNodeCmd(cmd *cobra.Command, args []string) *k3d.Node {
-	// node name // TODO: allow node filters, e.g. `k3d start nodes mycluster@worker` to start all worker nodes of cluster 'mycluster'
+	// node name // TODO: startNode: allow node filters, e.g. `k3d start nodes mycluster@worker` to start all worker nodes of cluster 'mycluster'
 	if len(args) == 0 || len(args[0]) == 0 {
 		log.Fatalln("No node name given")
 	}
 
-	return &k3d.Node{Name: args[0]} // TODO: validate and allow for more than one
+	return &k3d.Node{Name: args[0]}
 }

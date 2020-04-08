@@ -37,7 +37,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "kubeconfig NAME", // TODO: enable putting more than one name or even --all
+		Use:   "kubeconfig NAME", // TODO: getKubeconfig: allow more than one cluster name or even --all
 		Short: "Get kubeconfig",
 		Long:  `Get kubeconfig.`,
 		Args:  cobra.MinimumNArgs(1),
@@ -61,7 +61,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 	if err := cmd.MarkFlagFilename("output"); err != nil {
 		log.Fatalln("Failed to mark flag --output as filename")
 	}
-	// cmd.Flags().BoolP("all", "a", false, "Get kubeconfigs from all existing clusters") // TODO:
+	// cmd.Flags().BoolP("all", "a", false, "Get kubeconfigs from all existing clusters") // TODO: getKubeconfig: enable --all flag
 
 	// done
 	return cmd
@@ -75,5 +75,5 @@ func parseGetKubeconfigCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, str
 		log.Fatalln("No output specified")
 	}
 
-	return &k3d.Cluster{Name: args[0]}, output // TODO: validate first
+	return &k3d.Cluster{Name: args[0]}, output
 }
