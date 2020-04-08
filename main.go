@@ -338,6 +338,7 @@ func main() {
 
 	// init log level
 	app.Before = func(c *cli.Context) error {
+                log.SetOutput(os.Stdout)
 		if c.GlobalBool("verbose") {
 			log.SetLevel(log.DebugLevel)
 		} else {
