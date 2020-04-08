@@ -191,6 +191,7 @@ initNodeFinished:
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.MasterRole {
 
+			time.Sleep(1) // FIXME: arbitrary wait for one second to avoid race conditions of masters registering
 			// skip the init node here
 			if node == cluster.InitNode {
 				continue
