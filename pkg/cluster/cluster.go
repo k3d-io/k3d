@@ -117,6 +117,8 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		// node role specific settings
 		if node.Role == k3d.MasterRole {
 
+			node.MasterOpts.ExposeAPI = cluster.ExposeAPI
+
 			// the cluster has an init master node, but its not this one, so connect it to the init node
 			if cluster.InitNode != nil && !node.MasterOpts.IsInit {
 				node.Args = append(node.Args, "--server", fmt.Sprintf("https://%s:%d", cluster.InitNode.Name, 6443))
@@ -245,6 +247,37 @@ initNodeFinished:
 		}
 	}
 
+	/*
+	 * Auxiliary Containers
+	 */
+	// MasterLoadBalancer
+	servers := ""
+	for _, node := range cluster.Nodes {
+		if node.Role == k3d.MasterRole {
+			log.Debugf("Node NAME: %s", node.Name)
+			if servers == "" {
+				servers = node.Name
+			} else {
+				servers = fmt.Sprintf("%s,%s", servers, node.Name)
+			}
+		}
+	}
+	lbNode := &k3d.Node{
+		Name:  fmt.Sprintf("%s-%s-masterlb", k3d.DefaultObjectNamePrefix, cluster.Name),
+		Image: k3d.DefaultLBImage,
+		Ports: []string{fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort)},
+		Env: []string{
+			fmt.Sprintf("SERVERS=%s", servers),
+			fmt.Sprintf("PORT=%s", k3d.DefaultAPIPort),
+		},
+		Role:    k3d.NoRole,
+		Labels:  k3d.DefaultObjectLabels, // TODO: createLoadBalancer: add more expressive labels
+		Network: cluster.Network.Name,
+	}
+	if err := CreateNode(lbNode, runtime); err != nil {
+		log.Errorln("Failed to create loadbalancer")
+		return err
+	}
 	return nil
 }
 
