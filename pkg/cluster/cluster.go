@@ -193,11 +193,12 @@ initNodeFinished:
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.MasterRole {
 
-			time.Sleep(1) // FIXME: arbitrary wait for one second to avoid race conditions of masters registering
 			// skip the init node here
 			if node == cluster.InitNode {
 				continue
 			}
+
+			time.Sleep(1 * time.Second) // FIXME: arbitrary wait for one second to avoid race conditions of masters registering
 
 			// name suffix
 			suffix = masterCount
@@ -216,6 +217,8 @@ initNodeFinished:
 		if node.Role == k3d.MasterRole && cluster.CreateClusterOpts.WaitForMaster >= 0 {
 			waitForMasterWaitgroup.Add(1)
 			go func(masterNode *k3d.Node) {
+				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
+				// ... by scanning for this line in logs and restarting the container in case it appears
 				log.Debugf("Starting to wait for master node '%s'", masterNode.Name)
 				// TODO: it may be better to give endtime=starttime+timeout here so that there is no difference between the instances (go func may be called with a few (milli-)seconds difference)
 				err := WaitForNodeLogMessage(runtime, masterNode, "Wrote kubeconfig", (time.Duration(cluster.CreateClusterOpts.WaitForMaster) * time.Second))
@@ -251,7 +254,9 @@ initNodeFinished:
 	/*
 	 * Auxiliary Containers
 	 */
-	// MasterLoadBalancer
+	// *** MasterLoadBalancer ***
+
+	// Generate a comma-separated list of master/server names to pass to the proxy container
 	servers := ""
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.MasterRole {
@@ -263,6 +268,8 @@ initNodeFinished:
 			}
 		}
 	}
+
+	// Create proxy as a modified node with proxyRole
 	lbNode := &k3d.Node{
 		Name:  fmt.Sprintf("%s-%s-masterlb", k3d.DefaultObjectNamePrefix, cluster.Name),
 		Image: k3d.DefaultLBImage,
@@ -275,6 +282,7 @@ initNodeFinished:
 		Labels:  k3d.DefaultObjectLabels, // TODO: createLoadBalancer: add more expressive labels
 		Network: cluster.Network.Name,
 	}
+	log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
 	if err := CreateNode(lbNode, runtime); err != nil {
 		log.Errorln("Failed to create loadbalancer")
 		return err
