@@ -23,9 +23,9 @@ package docker
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -45,8 +45,7 @@ func (d Docker) CreateNetworkIfNotPresent(name string) (string, bool, error) {
 	}
 
 	// (1) configure list filters
-	args := GetDefaultObjectLabelsFilter("")
-	args.Del("label", fmt.Sprintf("k3d.cluster=%s", "")) // We don't filter for cluster name here
+	args := filters.NewArgs()
 	args.Add("name", name)
 
 	// (2) get filtered list of networks
