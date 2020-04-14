@@ -118,6 +118,7 @@ type Cluster struct {
 	ExternalDatastore ExternalDatastore  `yaml:"external_datastore" json:"externalDatastore,omitempty"`
 	CreateClusterOpts *CreateClusterOpts `yaml:"options" json:"options,omitempty"`
 	ExposeAPI         ExposeAPI          `yaml:"expose_api" json:"exposeAPI,omitempty"`
+	ImageVolume       string             `yaml:"image_volume" json:"imageVolume,omitempty"`
 }
 
 // Node describes a k3d node
