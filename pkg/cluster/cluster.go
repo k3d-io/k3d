@@ -167,7 +167,7 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 				log.Errorln(err)
 				log.Errorln("Failed to get logs from the initializig master node.. waiting for 3 seconds instead")
 				time.Sleep(3 * time.Second)
-				goto initNodeFinished
+				break
 			}
 			buf := new(bytes.Buffer)
 			nRead, _ := buf.ReadFrom(logreader)
@@ -180,8 +180,6 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		}
 
 	}
-
-initNodeFinished:
 
 	// vars to support waiting for master nodes to be ready
 	var waitForMasterWaitgroup sync.WaitGroup
