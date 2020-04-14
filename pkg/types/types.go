@@ -112,6 +112,7 @@ type Cluster struct {
 	MasterLoadBalancer *ClusterLoadbalancer `yaml:"master_loadbalancer" json:"masterLoadBalancer,omitempty"`
 	ExternalDatastore  ExternalDatastore    `yaml:"external_datastore" json:"externalDatastore,omitempty"`
 	CreateClusterOpts  *CreateClusterOpts   `yaml:"options" json:"options,omitempty"`
+	ImageVolume        string               `yaml:"image_volume" json:"imageVolume,omitempty"`
 }
 
 // Node describes a k3d node

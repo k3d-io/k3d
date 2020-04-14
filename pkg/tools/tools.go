@@ -45,10 +45,10 @@ func LoadImagesIntoCluster(runtime runtimes.Runtime, images []string, cluster *k
 		return fmt.Errorf("Failed to get network for cluster '%s'", cluster.Name)
 	}
 
-	if _, ok := cluster.Nodes[0].Labels["k3d.cluster.volumes.imagevolume"]; !ok { // TODO: add failover solution
+	if _, ok := cluster.Nodes[0].Labels["k3d.cluster.imageVolume"]; !ok { // TODO: add failover solution
 		return fmt.Errorf("Failed to find image volume for cluster '%s'", cluster.Name)
 	}
-	imageVolume := cluster.Nodes[0].Labels["k3d.cluster.volumes.imagevolume"]
+	imageVolume := cluster.Nodes[0].Labels["k3d.cluster.imageVolume"]
 
 	// create tools node to export images
 	log.Infoln("Starting k3d-tools node...")

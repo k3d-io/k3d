@@ -88,7 +88,7 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 			return err
 		}
 
-		extraLabels["k3d.cluster.volumes.imagevolume"] = imageVolumeName
+		extraLabels["k3d.cluster.imageVolume"] = imageVolumeName
 
 		// attach volume to nodes
 		for _, node := range cluster.Nodes {
@@ -253,6 +253,7 @@ initNodeFinished:
 func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 	log.Infof("Deleting cluster '%s'", cluster.Name)
+	log.Debugf("%+v", cluster)
 
 	failed := 0
 	for _, node := range cluster.Nodes {
@@ -263,27 +264,27 @@ func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		}
 	}
 
-	// Delete the cluster network, if it was created for/by this cluster (and if it's not in use anymore) // TODO: does this make sense or should we always try to delete it? (Will fail anyway, if it's still in use)
-	if network, ok := cluster.Nodes[0].Labels["k3d.cluster.network"]; ok {
-		if !cluster.Network.External || cluster.Nodes[0].Labels["k3d.cluster.network.external"] == "false" {
-			log.Infof("Deleting cluster network '%s'", network)
-			if err := runtime.DeleteNetwork(network); err != nil {
+	// Delete the cluster network, if it was created for/by this cluster (and if it's not in use anymore)
+	if cluster.Network.Name != "" {
+		if !cluster.Network.External {
+			log.Infof("Deleting cluster network '%s'", cluster.Network.Name)
+			if err := runtime.DeleteNetwork(cluster.Network.Name); err != nil {
 				if strings.HasSuffix(err.Error(), "active endpoints") {
-					log.Warningf("Failed to delete cluster network '%s' because it's still in use: is there another cluster using it?", network)
+					log.Warningf("Failed to delete cluster network '%s' because it's still in use: is there another cluster using it?", cluster.Network.Name)
 				} else {
-					log.Warningf("Failed to delete cluster network '%s': '%+v'", network, err)
+					log.Warningf("Failed to delete cluster network '%s': '%+v'", cluster.Network.Name, err)
 				}
 			}
-		} else if cluster.Network.External || cluster.Nodes[0].Labels["k3d.cluster.network.external"] == "true" {
-			log.Debugf("Skip deletion of cluster network '%s' because it's managed externally", network)
+		} else if cluster.Network.External {
+			log.Debugf("Skip deletion of cluster network '%s' because it's managed externally", cluster.Network.Name)
 		}
 	}
 
 	// delete image volume
-	if imagevolume, ok := cluster.Nodes[0].Labels["k3d.cluster.volumes.imagevolume"]; ok {
-		log.Infof("Deleting image volume '%s'", imagevolume)
-		if err := runtime.DeleteVolume(imagevolume); err != nil {
-			log.Warningf("Failed to delete image volume '%s' of cluster '%s': Try to delete it manually", cluster.Name, imagevolume)
+	if cluster.ImageVolume != "" {
+		log.Infof("Deleting image volume '%s'", cluster.ImageVolume)
+		if err := runtime.DeleteVolume(cluster.ImageVolume); err != nil {
+			log.Warningf("Failed to delete image volume '%s' of cluster '%s': Try to delete it manually", cluster.ImageVolume, cluster.Name)
 		}
 	}
 
@@ -355,7 +356,16 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 				}
 			}
 		}
+
+		// get image volume // TODO: enable external image volumes the same way we do it with networks
+		if cluster.ImageVolume == "" {
+			if imageVolumeName, ok := node.Labels["k3d.cluster.imageVolume"]; ok {
+				cluster.ImageVolume = imageVolumeName
+			}
+		}
+
 	}
+
 	return nil
 }
 
