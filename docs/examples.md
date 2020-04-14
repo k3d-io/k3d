@@ -4,7 +4,7 @@
 
 ### 1. via Ingress
 
-In this example, we will deploy a simple nginx webserver deployment and make it accessible via Iingress.
+In this example, we will deploy a simple nginx webserver deployment and make it accessible via ingress.
 Therefore, we have to create the cluster in a way, that the internal port 80 (where the `traefik` ingress controller is listening on) is exposed on the host system.
 
 1. Create a cluster, mapping the ingress port 80 to localhost:8081
