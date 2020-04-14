@@ -51,6 +51,9 @@ func NewCmdCreateCluster() *cobra.Command {
 		Args:  cobra.RangeArgs(0, 1), // exactly one cluster name can be set (default: k3d.DefaultClusterName)
 		Run: func(cmd *cobra.Command, args []string) {
 			cluster := parseCreateClusterCmd(cmd, args, createClusterOpts)
+			if _, err := k3dCluster.GetCluster(cluster, runtimes.SelectedRuntime); err == nil {
+				log.Fatalf("Failed to create cluster '%s' because a cluster with that name already exists", cluster.Name)
+			}
 			if err := k3dCluster.CreateCluster(cluster, runtimes.SelectedRuntime); err != nil {
 				log.Errorln(err)
 				log.Errorln("Failed to create cluster >>> Rolling Back")
