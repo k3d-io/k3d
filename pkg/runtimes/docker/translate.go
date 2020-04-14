@@ -89,9 +89,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 
 	/* Network */
 	networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
-		node.Network: { // TODO: fill
-			Aliases: []string{node.Name}, // TODO: fill
-		},
+		node.Network: {},
 	}
 
 	return &NodeInDocker{
