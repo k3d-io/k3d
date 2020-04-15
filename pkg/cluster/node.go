@@ -125,8 +125,6 @@ func CreateNode(node *k3d.Node, runtime runtimes.Runtime) error {
 			return err
 		}
 		log.Debugf("spec = %+v\n", node)
-	} else {
-		return fmt.Errorf("Unknown node role '%s'", node.Role)
 	}
 
 	/*
@@ -164,19 +162,14 @@ func patchMasterSpec(node *k3d.Node) error {
 	// role label
 	node.Labels["k3d.role"] = string(k3d.MasterRole) // TODO: maybe put those in a global var DefaultMasterNodeSpec?
 
-	// extra settings to expose the API port (if wanted)
-	if node.MasterOpts.ExposeAPI.Port != "" {
-		if node.MasterOpts.ExposeAPI.Host == "" {
-			node.MasterOpts.ExposeAPI.Host = "0.0.0.0"
-		}
-		node.Labels["k3d.master.api.hostIP"] = node.MasterOpts.ExposeAPI.HostIP // TODO: maybe get docker machine IP here
+	// Add labels and TLS SAN for the exposed API
+	// FIXME: For now, the labels concerning the API on the master nodes are only being used for configuring the kubeconfig
+	node.Labels["k3d.master.api.hostIP"] = node.MasterOpts.ExposeAPI.HostIP // TODO: maybe get docker machine IP here
+	node.Labels["k3d.master.api.host"] = node.MasterOpts.ExposeAPI.Host
+	node.Labels["k3d.master.api.port"] = node.MasterOpts.ExposeAPI.Port
 
-		node.Labels["k3d.master.api.host"] = node.MasterOpts.ExposeAPI.Host
+	node.Args = append(node.Args, "--tls-san", node.MasterOpts.ExposeAPI.Host) // add TLS SAN for non default host name
 
-		node.Args = append(node.Args, "--tls-san", node.MasterOpts.ExposeAPI.Host) // add TLS SAN for non default host name
-		node.Labels["k3d.master.api.port"] = node.MasterOpts.ExposeAPI.Port
-		node.Ports = append(node.Ports, fmt.Sprintf("%s:%s:6443/tcp", node.MasterOpts.ExposeAPI.Host, node.MasterOpts.ExposeAPI.Port)) // TODO: get '6443' from defaultport variable
-	}
 	return nil
 }
 

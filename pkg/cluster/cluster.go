@@ -117,6 +117,8 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		// node role specific settings
 		if node.Role == k3d.MasterRole {
 
+			node.MasterOpts.ExposeAPI = cluster.ExposeAPI
+
 			// the cluster has an init master node, but its not this one, so connect it to the init node
 			if cluster.InitNode != nil && !node.MasterOpts.IsInit {
 				node.Args = append(node.Args, "--server", fmt.Sprintf("https://%s:%d", cluster.InitNode.Name, 6443))
@@ -189,11 +191,12 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.MasterRole {
 
-			time.Sleep(1) // FIXME: arbitrary wait for one second to avoid race conditions of masters registering
 			// skip the init node here
 			if node == cluster.InitNode {
 				continue
 			}
+
+			time.Sleep(1 * time.Second) // FIXME: arbitrary wait for one second to avoid race conditions of masters registering
 
 			// name suffix
 			suffix = masterCount
@@ -212,6 +215,8 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		if node.Role == k3d.MasterRole && cluster.CreateClusterOpts.WaitForMaster >= 0 {
 			waitForMasterWaitgroup.Add(1)
 			go func(masterNode *k3d.Node) {
+				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
+				// ... by scanning for this line in logs and restarting the container in case it appears
 				log.Debugf("Starting to wait for master node '%s'", masterNode.Name)
 				// TODO: it may be better to give endtime=starttime+timeout here so that there is no difference between the instances (go func may be called with a few (milli-)seconds difference)
 				err := WaitForNodeLogMessage(runtime, masterNode, "Wrote kubeconfig", (time.Duration(cluster.CreateClusterOpts.WaitForMaster) * time.Second))
@@ -244,6 +249,42 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		}
 	}
 
+	/*
+	 * Auxiliary Containers
+	 */
+	// *** MasterLoadBalancer ***
+
+	// Generate a comma-separated list of master/server names to pass to the proxy container
+	servers := ""
+	for _, node := range cluster.Nodes {
+		if node.Role == k3d.MasterRole {
+			log.Debugf("Node NAME: %s", node.Name)
+			if servers == "" {
+				servers = node.Name
+			} else {
+				servers = fmt.Sprintf("%s,%s", servers, node.Name)
+			}
+		}
+	}
+
+	// Create proxy as a modified node with proxyRole
+	lbNode := &k3d.Node{
+		Name:  fmt.Sprintf("%s-%s-masterlb", k3d.DefaultObjectNamePrefix, cluster.Name),
+		Image: k3d.DefaultLBImage,
+		Ports: []string{fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort)},
+		Env: []string{
+			fmt.Sprintf("SERVERS=%s", servers),
+			fmt.Sprintf("PORT=%s", k3d.DefaultAPIPort),
+		},
+		Role:    k3d.NoRole,
+		Labels:  k3d.DefaultObjectLabels, // TODO: createLoadBalancer: add more expressive labels
+		Network: cluster.Network.Name,
+	}
+	log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
+	if err := CreateNode(lbNode, runtime); err != nil {
+		log.Errorln("Failed to create loadbalancer")
+		return err
+	}
 	return nil
 }
 

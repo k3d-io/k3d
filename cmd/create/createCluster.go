@@ -72,7 +72,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	/*********
 	 * Flags *
 	 *********/
-	cmd.Flags().StringArrayP("api-port", "a", []string{"6443"}, "Specify the Kubernetes API server port (Format: `--api-port [HOST:]HOSTPORT[@NODEFILTER]`\n - Example: `k3d create -m 3 -a 0.0.0.0:6550@master[0] -a 0.0.0.0:6551@master[1]` ")
+	cmd.Flags().StringP("api-port", "a", k3d.DefaultAPIPort, "Specify the Kubernetes API server port (Format: `--api-port [HOST:]HOSTPORT`\n - Example: `k3d create -m 3 -a 0.0.0.0:6550` ")
 	cmd.Flags().IntP("masters", "m", 1, "Specify how many masters you want to create")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
 	cmd.Flags().String("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
@@ -86,10 +86,6 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().BoolVar(&createClusterOpts.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
 
 	/* Multi Master Configuration */
-	// multi-master - general
-	// TODO: implement load-balancer/proxy for multi-master setups
-	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadbalancer, "no-lb", false, "[WIP] Disable automatic deployment of a load balancer in Multi-Master setups")
-	cmd.Flags().String("lb-port", "0.0.0.0:6443", "[WIP] Specify port to be exposed by the master load balancer (Format: `[HOST:]HOSTPORT)")
 
 	// multi-master - datastore
 	// TODO: implement multi-master setups with external data store
@@ -177,64 +173,21 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 	}
 
 	// --api-port
-	apiPortFlags, err := cmd.Flags().GetStringArray("api-port")
+	apiPort, err := cmd.Flags().GetString("api-port")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	// error out if we have more api-ports than masters specified
-	if len(apiPortFlags) > masterCount {
-		log.Fatalf("Cannot expose more api-ports than master nodes exist (%d > %d)", len(apiPortFlags), masterCount)
-	}
-
-	ipPortCombinations := map[string]struct{}{} // only for finding duplicates
-	apiPortFilters := map[string]struct{}{}     // only for deduplication
-	exposeAPIToFiltersMap := map[k3d.ExposeAPI][]string{}
-	for _, apiPortFlag := range apiPortFlags {
-
-		// split the flag value from the node filter
-		apiPortString, filters, err := cliutil.SplitFiltersFromFlag(apiPortFlag)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// if there's only one master node, we don't need a node filter, but if there's more than one, we need exactly one node filter per api-port flag
-		if len(filters) > 1 || (len(filters) == 0 && masterCount > 1) {
-			log.Fatalf("Exactly one node filter required per '--api-port' flag, but got %d on flag %s", len(filters), apiPortFlag)
-		}
-
-		// add default, if no filter was set and we only have a single master node
-		if len(filters) == 0 && masterCount == 1 {
-			filters = []string{"master[0]"}
-		}
-
-		// only one api-port mapping allowed per master node
-		if _, exists := apiPortFilters[filters[0]]; exists {
-			log.Fatalf("Cannot assign multiple api-port mappings to the same node: duplicate '%s'", filters[0])
-		}
-		apiPortFilters[filters[0]] = struct{}{}
-
-		// parse the port mapping
-		exposeAPI, err := cliutil.ParseAPIPort(apiPortString)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// error out on duplicates
-		ipPort := fmt.Sprintf("%s:%s", exposeAPI.HostIP, exposeAPI.Port)
-		if _, exists := ipPortCombinations[ipPort]; exists {
-			log.Fatalf("Duplicate IP:PORT combination '%s' for the Api Port is not allowed", ipPort)
-		}
-		ipPortCombinations[ipPort] = struct{}{}
-
-		// add to map
-		exposeAPIToFiltersMap[exposeAPI] = filters
-	}
-
-	// --lb-port
-	lbPort, err := cmd.Flags().GetString("lb-port")
+	// parse the port mapping
+	exposeAPI, err := cliutil.ParseAPIPort(apiPort)
 	if err != nil {
 		log.Fatalln(err)
+	}
+	if exposeAPI.Host == "" {
+		exposeAPI.Host = k3d.DefaultAPIHost
+	}
+	if exposeAPI.HostIP == "" {
+		exposeAPI.HostIP = k3d.DefaultAPIHost
 	}
 
 	// --datastore-endpoint
@@ -322,6 +275,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		Network:           network,
 		Secret:            secret,
 		CreateClusterOpts: createClusterOpts,
+		ExposeAPI:         exposeAPI,
 	}
 
 	// generate list of nodes
@@ -339,7 +293,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 			MasterOpts: k3d.MasterOpts{},
 		}
 
-		// TODO: by default, we don't expose an API port, even if we only have a single master: should we change that?
+		// TODO: by default, we don't expose an API port: should we change that?
 		// -> if we want to change that, simply add the exposeAPI struct here
 
 		// first master node will be init node if we have more than one master specified but no external datastore
@@ -364,20 +318,6 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		}
 
 		cluster.Nodes = append(cluster.Nodes, &node)
-	}
-
-	// add masterOpts
-	for exposeAPI, filters := range exposeAPIToFiltersMap {
-		nodes, err := cliutil.FilterNodes(cluster.Nodes, filters)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		for _, node := range nodes {
-			if node.Role != k3d.MasterRole {
-				log.Fatalf("Node returned by filters '%+v' for exposing the API is not a master node", filters)
-			}
-			node.MasterOpts.ExposeAPI = exposeAPI
-		}
 	}
 
 	// append volumes
@@ -408,15 +348,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 	/**********************
 	 * Utility Containers *
 	 **********************/
-
-	// TODO: create load balancer and other util containers // TODO: for now, this will only work with the docker provider (?) -> can replace dynamic docker lookup with static traefik config (?)
-	if masterCount > 1 && !createClusterOpts.DisableLoadbalancer { // TODO: add traefik to the same network and add traefik labels to the master node containers
-		log.Debugln("Creating LB in front of master nodes")
-		cluster.MasterLoadBalancer = &k3d.ClusterLoadbalancer{
-			Image:       k3d.DefaultLBImage,
-			ExposedPort: lbPort,
-		}
-	}
+	// ...
 
 	return cluster
 }

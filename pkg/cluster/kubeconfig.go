@@ -37,6 +37,7 @@ import (
 // GetKubeconfig grabs the kubeconfig file from /output from a master node container and puts it into a local directory
 func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) ([]byte, error) {
 	// get all master nodes for the selected cluster
+	// TODO: getKubeconfig: we should make sure, that the master node we're trying to getch is actually running
 	masterNodes, err := runtime.GetNodesByLabel(map[string]string{"k3d.cluster": cluster.Name, "k3d.role": string(k3d.MasterRole)})
 	if err != nil {
 		log.Errorln("Failed to get master nodes")
@@ -49,8 +50,8 @@ func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) ([]byte, erro
 	// prefer a master node, which actually has the port exposed
 	var chosenMaster *k3d.Node
 	chosenMaster = nil
-	APIPort := "6443"      // TODO: use default from types
-	APIHost := "localhost" // TODO: use default from types
+	APIPort := k3d.DefaultAPIPort
+	APIHost := k3d.DefaultAPIHost
 
 	for _, master := range masterNodes {
 		if _, ok := master.Labels["k3d.master.api.port"]; ok {
