@@ -27,6 +27,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -225,6 +226,7 @@ func WaitForNodeLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 			break
 		}
 	}
+	time.Sleep(500 * time.Millisecond) // wait for half a second to avoid overloading docker (error `socket: too many open files`)
 	log.Debugf("Finished waiting for log message '%s' from node '%s'", message, node.Name)
 	return nil
 }
