@@ -23,6 +23,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 )
 
 // DefaultClusterName specifies the default name used for newly created clusters
@@ -97,7 +98,8 @@ const DefaultAPIHost = "0.0.0.0"
 // CreateClusterOpts describe a set of options one can set when creating a cluster
 type CreateClusterOpts struct {
 	DisableImageVolume bool
-	WaitForMaster      int
+	WaitForMaster      bool
+	Timeout            time.Duration
 	K3sServerArgs      []string
 	K3sAgentArgs       []string
 }

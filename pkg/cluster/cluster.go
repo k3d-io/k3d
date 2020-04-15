@@ -23,6 +23,7 @@ package cluster
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -39,6 +40,11 @@ import (
 // - some containerized k3s nodes
 // - a docker network
 func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
+
+	log.Debugf("Cluster creation will timeout after %s at %s", cluster.CreateClusterOpts.Timeout, time.Now().Add(cluster.CreateClusterOpts.Timeout))
+
+	ctx, cancel := context.WithTimeout(context.Background(), cluster.CreateClusterOpts.Timeout)
+	defer cancel()
 
 	/*
 	 * Network
@@ -212,14 +218,14 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		}
 
 		// asynchronously wait for this master node to be ready (by checking the logs for a specific log mesage)
-		if node.Role == k3d.MasterRole && cluster.CreateClusterOpts.WaitForMaster >= 0 {
+		if node.Role == k3d.MasterRole && cluster.CreateClusterOpts.Timeout >= time.Second {
 			waitForMasterWaitgroup.Add(1)
 			go func(masterNode *k3d.Node) {
 				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 				// ... by scanning for this line in logs and restarting the container in case it appears
 				log.Debugf("Starting to wait for master node '%s'", masterNode.Name)
 				// TODO: it may be better to give endtime=starttime+timeout here so that there is no difference between the instances (go func may be called with a few (milli-)seconds difference)
-				err := WaitForNodeLogMessage(runtime, masterNode, "Wrote kubeconfig", (time.Duration(cluster.CreateClusterOpts.WaitForMaster) * time.Second))
+				err := WaitForNodeLogMessage(runtime, masterNode, "Wrote kubeconfig", (time.Duration(cluster.CreateClusterOpts.Timeout) * time.Second))
 				waitForMasterErrChan <- err
 				if err == nil {
 					log.Debugf("Master Node '%s' ready", masterNode.Name)
@@ -229,7 +235,7 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	}
 
 	// block until all masters are ready (if --wait was set) and collect errors if not
-	if cluster.CreateClusterOpts.WaitForMaster >= 0 {
+	if cluster.CreateClusterOpts.Timeout >= time.Second {
 		errs := []error{}
 		go func() {
 			for elem := range waitForMasterErrChan {
