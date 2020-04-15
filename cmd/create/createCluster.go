@@ -60,7 +60,7 @@ func NewCmdCreateCluster() *cobra.Command {
 			}
 
 			// create cluster
-			if err := k3dCluster.CreateCluster(cluster, runtimes.SelectedRuntime); err != nil {
+			if err := k3dCluster.CreateCluster(cmd.Context(), cluster, runtimes.SelectedRuntime); err != nil {
 				// rollback if creation failed
 				log.Errorln(err)
 				log.Errorln("Failed to create cluster >>> Rolling Back")
