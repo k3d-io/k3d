@@ -23,22 +23,28 @@ package cluster
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	k3drt "github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
 	"github.com/rancher/k3d/pkg/util"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 )
 
 // CreateCluster creates a new cluster consisting of
 // - some containerized k3s nodes
 // - a docker network
-func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
+func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runtime) error {
+	if cluster.CreateClusterOpts.Timeout > 0*time.Second {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, cluster.CreateClusterOpts.Timeout)
+		defer cancel()
+	}
 
 	/*
 	 * Network
@@ -161,6 +167,12 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 		// wait for the initnode to come up before doing anything else
 		for {
+			select {
+			case <-ctx.Done():
+				log.Errorln("Failed to bring up initializing master node in time")
+				return fmt.Errorf(">>> %w", ctx.Err())
+			default:
+			}
 			log.Debugln("Waiting for initializing master node...")
 			logreader, err := runtime.GetNodeLogs(cluster.InitNode)
 			defer logreader.Close()
@@ -178,14 +190,13 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 				log.Debugln("Initializing master node is up... continuing")
 				break
 			}
-			time.Sleep(time.Second) // TODO: timeout
+			time.Sleep(time.Second)
 		}
 
 	}
 
 	// vars to support waiting for master nodes to be ready
-	var waitForMasterWaitgroup sync.WaitGroup
-	waitForMasterErrChan := make(chan error, 1) // FIXME: we should do something different here, e.g. concurrently read from the channel and append to a slice of errors
+	waitForMasterWaitgroup, ctx := errgroup.WithContext(ctx)
 
 	// create all other nodes, but skip the init node
 	for _, node := range cluster.Nodes {
@@ -212,41 +223,21 @@ func CreateCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 		}
 
 		// asynchronously wait for this master node to be ready (by checking the logs for a specific log mesage)
-		if node.Role == k3d.MasterRole && cluster.CreateClusterOpts.WaitForMaster >= 0 {
-			waitForMasterWaitgroup.Add(1)
-			go func(masterNode *k3d.Node) {
+		if node.Role == k3d.MasterRole && cluster.CreateClusterOpts.WaitForMaster {
+			masterNode := node
+			waitForMasterWaitgroup.Go(func() error {
 				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 				// ... by scanning for this line in logs and restarting the container in case it appears
 				log.Debugf("Starting to wait for master node '%s'", masterNode.Name)
-				// TODO: it may be better to give endtime=starttime+timeout here so that there is no difference between the instances (go func may be called with a few (milli-)seconds difference)
-				err := WaitForNodeLogMessage(runtime, masterNode, "Wrote kubeconfig", (time.Duration(cluster.CreateClusterOpts.WaitForMaster) * time.Second))
-				waitForMasterErrChan <- err
-				if err == nil {
-					log.Debugf("Master Node '%s' ready", masterNode.Name)
-				}
-			}(node)
+				return WaitForNodeLogMessage(ctx, runtime, masterNode, "Wrote kubeconfig")
+			})
 		}
 	}
 
-	// block until all masters are ready (if --wait was set) and collect errors if not
-	if cluster.CreateClusterOpts.WaitForMaster >= 0 {
-		errs := []error{}
-		go func() {
-			for elem := range waitForMasterErrChan {
-				if elem != nil {
-					errs = append(errs, elem)
-				}
-				waitForMasterWaitgroup.Done()
-			}
-		}()
-		waitForMasterWaitgroup.Wait()
-		if len(errs) != 0 {
-			log.Errorln("Failed to bring up all master nodes in time. Check the logs:")
-			for _, e := range errs {
-				log.Errorln(">>> ", e)
-			}
-			return fmt.Errorf("Failed to bring up cluster") // TODO: in case of failure, we should rollback
-		}
+	if err := waitForMasterWaitgroup.Wait(); err != nil {
+		log.Errorln("Failed to bring up all master nodes in time. Check the logs:")
+		log.Errorln(">>> ", err)
+		return fmt.Errorf("Failed to bring up cluster")
 	}
 
 	/*

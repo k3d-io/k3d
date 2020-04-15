@@ -25,6 +25,7 @@ package create
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -50,11 +51,17 @@ func NewCmdCreateCluster() *cobra.Command {
 		Long:  `Create a new k3s cluster with containerized nodes (k3s in docker).`,
 		Args:  cobra.RangeArgs(0, 1), // exactly one cluster name can be set (default: k3d.DefaultClusterName)
 		Run: func(cmd *cobra.Command, args []string) {
+			// parse args and flags
 			cluster := parseCreateClusterCmd(cmd, args, createClusterOpts)
+
+			// check if a cluster with that name exists already
 			if _, err := k3dCluster.GetCluster(cluster, runtimes.SelectedRuntime); err == nil {
 				log.Fatalf("Failed to create cluster '%s' because a cluster with that name already exists", cluster.Name)
 			}
-			if err := k3dCluster.CreateCluster(cluster, runtimes.SelectedRuntime); err != nil {
+
+			// create cluster
+			if err := k3dCluster.CreateCluster(cmd.Context(), cluster, runtimes.SelectedRuntime); err != nil {
+				// rollback if creation failed
 				log.Errorln(err)
 				log.Errorln("Failed to create cluster >>> Rolling Back")
 				if err := k3dCluster.DeleteCluster(cluster, runtimes.SelectedRuntime); err != nil {
@@ -63,6 +70,8 @@ func NewCmdCreateCluster() *cobra.Command {
 				}
 				log.Fatalln("Cluster creation FAILED, all changes have been rolled back!")
 			}
+
+			// print information on how to use the cluster with kubectl
 			log.Infof("Cluster '%s' created successfully. You can now use it like this:", cluster.Name)
 			fmt.Printf("export KUBECONFIG=$(%s get kubeconfig %s)\n", os.Args[0], cluster.Name)
 			fmt.Println("kubectl cluster-info")
@@ -80,7 +89,8 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d create -w 2 -v /my/path@worker[0,1] -v /tmp/test:/tmp/other@master[0]`")
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d create -w 2 -p 8080:80@worker[0] -p 8081@worker[1]`")
-	cmd.Flags().IntVar(&createClusterOpts.WaitForMaster, "wait", -1, "Wait for a specified amount of time (seconds >= 0, where 0 means forever) for the master(s) to be ready or timeout and rollback before returning")
+	cmd.Flags().BoolVar(&createClusterOpts.WaitForMaster, "wait", false, "Wait for for the master(s) to be ready before returning. Use `--timeout DURATION` to not wait forever.")
+	cmd.Flags().DurationVar(&createClusterOpts.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
 
 	/* Image Importing */
 	cmd.Flags().BoolVar(&createClusterOpts.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
@@ -167,9 +177,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		log.Fatalln(err)
 	}
 
-	// --wait
-	if cmd.Flags().Changed("wait") && createClusterOpts.WaitForMaster < 0 {
-		log.Fatalln("Value of '--wait' can't be less than 0")
+	// --timeout
+	if cmd.Flags().Changed("timeout") && createClusterOpts.Timeout <= 0*time.Second {
+		log.Fatalln("--timeout DURATION must be >= 1s")
 	}
 
 	// --api-port

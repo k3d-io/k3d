@@ -24,6 +24,7 @@ package cluster
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -196,16 +197,13 @@ func GetNode(node *k3d.Node, runtime runtimes.Runtime) (*k3d.Node, error) {
 }
 
 // WaitForNodeLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
-func WaitForNodeLogMessage(runtime runtimes.Runtime, node *k3d.Node, message string, timeout time.Duration) error {
-	start := time.Now()
+func WaitForNodeLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string) error {
 	for {
-
-		// return error if we've reached the timeout without having read the message
-		if timeout != 0 && time.Now().After(start.Add(timeout)) {
-			return fmt.Errorf("Timed out waiting for log message '%s' from node '%s'", message, node.Name)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
 		}
-
-		log.Debugf("Waiting for log message '%s' from node '%s'...", message, node.Name)
 
 		// read the logs
 		out, err := runtime.GetNodeLogs(node)
@@ -227,7 +225,8 @@ func WaitForNodeLogMessage(runtime runtimes.Runtime, node *k3d.Node, message str
 		if nRead > 0 && strings.Contains(output, message) {
 			break
 		}
-		time.Sleep(1 * time.Second)
 	}
+	time.Sleep(500 * time.Millisecond) // wait for half a second to avoid overloading docker (error `socket: too many open files`)
+	log.Debugf("Finished waiting for log message '%s' from node '%s'", message, node.Name)
 	return nil
 }
