@@ -32,6 +32,7 @@ import (
 	k3d "github.com/rancher/k3d/pkg/types"
 	"github.com/rancher/k3d/pkg/util"
 	log "github.com/sirupsen/logrus"
+	kubeconfig "k8s.io/client-go/tools/clientcmd"
 )
 
 // GetKubeconfig grabs the kubeconfig file from /output from a master node container and puts it into a local directory
@@ -86,14 +87,35 @@ func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) ([]byte, erro
 	// and trim any NULL characters
 	trimBytes := bytes.Trim(readBytes[512:], "\x00")
 
-	// TODO: parse yaml and modify fields directly?
+	/*
+	 * Modify the kubeconfig
+	 */
+	kc, err := kubeconfig.Load(trimBytes)
+	if err != nil {
+		return nil, err
+	}
 
-	// replace host and port where the API is exposed with what we've found in the master node labels (or use the default)
-	trimBytes = []byte(strings.Replace(string(trimBytes), "localhost:6443", fmt.Sprintf("%s:%s", APIHost, APIPort), 1)) // replace localhost:6443 with <apiHost>:<mappedAPIPort> in kubeconfig
-	trimBytes = []byte(strings.Replace(string(trimBytes), "127.0.0.1:6443", fmt.Sprintf("%s:%s", APIHost, APIPort), 1)) // replace 127.0.0.1:6443 with <apiHost>:<mappedAPIPort> in kubeconfig
+	// update the server URL
+	kc.Clusters["default"].Server = fmt.Sprintf("https://%s:%s", APIHost, APIPort)
 
-	// replace 'default' in kubeconfig with <cluster name> // TODO: only do this for the context and cluster name (?) -> parse yaml
-	trimBytes = []byte(strings.ReplaceAll(string(trimBytes), "default", cluster.Name))
+	// rename user from default to admin
+	kc.AuthInfos[fmt.Sprintf("admin@%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)] = kc.AuthInfos["default"]
+	delete(kc.AuthInfos, "default")
+
+	// rename cluster from default to clustername
+	kc.Clusters[fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)] = kc.Clusters["default"]
+	delete(kc.Clusters, "default")
+
+	// rename context from default to admin@clustername
+	kc.Contexts[fmt.Sprintf("admin@%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)] = kc.Contexts["default"]
+	delete(kc.Contexts, "default")
+	log.Debugf("Modified Kubeconfig: %+v", kc)
+
+	trimBytes, err = kubeconfig.Write(*kc)
+	if err != nil {
+		log.Errorln("Failed to serialize modified kubeconfig")
+		return nil, err
+	}
 
 	return trimBytes, nil
 }
