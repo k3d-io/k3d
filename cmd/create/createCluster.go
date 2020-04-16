@@ -170,6 +170,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		network.Name = networkName
 		network.External = true
 	}
+	if networkName == "host" && (masterCount+workerCount) > 1 {
+		log.Fatalln("Can only run a single node in hostnetwork mode")
+	}
 
 	// --secret
 	secret, err := cmd.Flags().GetString("secret")

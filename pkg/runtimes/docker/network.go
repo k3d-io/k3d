@@ -93,3 +93,14 @@ func (d Docker) DeleteNetwork(ID string) error {
 	// (3) delete network
 	return docker.NetworkRemove(ctx, ID)
 }
+
+// GetNetwork gets information about a network by its ID
+func GetNetwork(ID string) (types.NetworkResource, error) {
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return types.NetworkResource{}, err
+	}
+	return docker.NetworkInspect(ctx, ID, types.NetworkInspectOptions{})
+}

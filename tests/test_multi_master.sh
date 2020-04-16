@@ -7,7 +7,7 @@ CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$CURR_DIR/common.sh"
 
 info "Creating cluster multimaster..."
-$EXE create cluster "multimaster" --masters 3 --api-port 6443 --wait --timeout 360 || failed "could not create cluster multimaster"
+$EXE --verbose create cluster "multimaster" --masters 3 --api-port 6443 --wait --timeout 360s || failed "could not create cluster multimaster"
 
 info "Checking we have access to the cluster..."
 check_k3d_clusters "multimaster" || failed "error checking cluster"

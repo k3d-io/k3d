@@ -86,10 +86,16 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	}
 	containerConfig.ExposedPorts = exposedPorts
 	hostConfig.PortBindings = portBindings
-
 	/* Network */
 	networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
 		node.Network: {},
+	}
+	netInfo, err := GetNetwork(node.Network)
+	if err != nil {
+		log.Warnln("Failed to get network information")
+		log.Warnln(err)
+	} else if netInfo.Driver == "host" {
+		hostConfig.NetworkMode = "host"
 	}
 
 	return &NodeInDocker{
