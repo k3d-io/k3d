@@ -83,7 +83,7 @@ func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) ([]byte, erro
 		return nil, err
 	}
 
-	// drop the first 512 bytes which contain file metadata
+	// drop the first 512 bytes which contain file metadata/control characters
 	// and trim any NULL characters
 	trimBytes := bytes.Trim(readBytes[512:], "\x00")
 
@@ -99,16 +99,27 @@ func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) ([]byte, erro
 	kc.Clusters["default"].Server = fmt.Sprintf("https://%s:%s", APIHost, APIPort)
 
 	// rename user from default to admin
-	kc.AuthInfos[fmt.Sprintf("admin@%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)] = kc.AuthInfos["default"]
+	newAuthInfoName := fmt.Sprintf("admin@%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
+	kc.AuthInfos[newAuthInfoName] = kc.AuthInfos["default"]
 	delete(kc.AuthInfos, "default")
 
 	// rename cluster from default to clustername
-	kc.Clusters[fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)] = kc.Clusters["default"]
+	newClusterName := fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
+	kc.Clusters[newClusterName] = kc.Clusters["default"]
 	delete(kc.Clusters, "default")
 
 	// rename context from default to admin@clustername
-	kc.Contexts[fmt.Sprintf("admin@%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)] = kc.Contexts["default"]
+	newContextName := fmt.Sprintf("admin@%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
+	kc.Contexts[newContextName] = kc.Contexts["default"]
 	delete(kc.Contexts, "default")
+
+	// update context with new values for cluster and user
+	kc.Contexts[newContextName].AuthInfo = newAuthInfoName
+	kc.Contexts[newContextName].Cluster = newClusterName
+
+	// set current-context to new context name
+	kc.CurrentContext = newContextName
+
 	log.Debugf("Modified Kubeconfig: %+v", kc)
 
 	trimBytes, err = kubeconfig.Write(*kc)
