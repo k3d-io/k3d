@@ -127,12 +127,12 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 
 			// the cluster has an init master node, but its not this one, so connect it to the init node
 			if cluster.InitNode != nil && !node.MasterOpts.IsInit {
-				node.Args = append(node.Args, "--server", fmt.Sprintf("https://%s:%d", cluster.InitNode.Name, 6443))
+				node.Args = append(node.Args, "--server", fmt.Sprintf("https://%s:%s", cluster.InitNode.Name, k3d.DefaultAPIPort))
 			}
 
 		} else if node.Role == k3d.WorkerRole {
 			// connection url
-			connectionURL := fmt.Sprintf("https://%s:%d", generateNodeName(cluster.Name, k3d.MasterRole, 0), 6443)
+			connectionURL := fmt.Sprintf("https://%s:%s", generateNodeName(cluster.Name, k3d.MasterRole, 0), k3d.DefaultAPIPort)
 			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", connectionURL))
 			node.Labels["k3d.cluster.url"] = connectionURL
 		}
