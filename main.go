@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus/hooks/writer"
 	"github.com/urfave/cli"
 
 	run "github.com/rancher/k3d/cli"
@@ -338,7 +340,26 @@ func main() {
 
 	// init log level
 	app.Before = func(c *cli.Context) error {
-                log.SetOutput(os.Stdout)
+		log.SetOutput(ioutil.Discard)
+		log.AddHook(&writer.Hook{
+			Writer: os.Stderr,
+			LogLevels: []log.Level{
+				log.PanicLevel,
+				log.FatalLevel,
+				log.ErrorLevel,
+				log.WarnLevel,
+			},
+		})
+		log.AddHook(&writer.Hook{
+			Writer: os.Stdout,
+			LogLevels: []log.Level{
+				log.InfoLevel,
+				log.DebugLevel,
+			},
+		})
+		log.SetFormatter(&log.TextFormatter{
+			ForceColors: true,
+		})
 		if c.GlobalBool("verbose") {
 			log.SetLevel(log.DebugLevel)
 		} else {
@@ -347,8 +368,10 @@ func main() {
 		if c.GlobalBool("timestamp") {
 			log.SetFormatter(&log.TextFormatter{
 				FullTimestamp: true,
+				ForceColors:   true,
 			})
 		}
+
 		return nil
 	}
 
