@@ -54,8 +54,9 @@ github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
-# github.com/sirupsen/logrus v1.4.2
+# github.com/sirupsen/logrus v1.5.0
 github.com/sirupsen/logrus
+github.com/sirupsen/logrus/hooks/writer
 # github.com/urfave/cli v1.20.0
 github.com/urfave/cli
 # golang.org/x/net v0.0.0-20190403144856-b630fd6fe46b
