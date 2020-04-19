@@ -24,6 +24,7 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -40,6 +41,7 @@ import (
 	"github.com/rancher/k3d/version"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus/hooks/writer"
 )
 
 // RootFlags describes a struct that holds flags that can be set on root level of the command
@@ -113,6 +115,26 @@ func initLogging() {
 			log.SetLevel(log.InfoLevel)
 		}
 	}
+	log.SetOutput(ioutil.Discard)
+	log.AddHook(&writer.Hook{
+		Writer: os.Stderr,
+		LogLevels: []log.Level{
+			log.PanicLevel,
+			log.FatalLevel,
+			log.ErrorLevel,
+			log.WarnLevel,
+		},
+	})
+	log.AddHook(&writer.Hook{
+		Writer: os.Stdout,
+		LogLevels: []log.Level{
+			log.InfoLevel,
+			log.DebugLevel,
+		},
+	})
+	log.SetFormatter(&log.TextFormatter{
+		ForceColors: true,
+	})
 }
 
 func initRuntime() {
