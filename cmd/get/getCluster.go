@@ -91,7 +91,7 @@ func parseGetClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, bool) 
 		return nil, headersOff
 	}
 
-	cluster := &k3d.Cluster{Name: args[0]} // TODO: validate name first?
+	cluster := &k3d.Cluster{Name: args[0]}
 
 	return cluster, headersOff
 }
@@ -102,7 +102,7 @@ func printClusters(clusters []*k3d.Cluster, headersOff bool) {
 	defer tabwriter.Flush()
 
 	if !headersOff {
-		headers := []string{"NAME", "MASTERS", "WORKERS"} // TODO: add status
+		headers := []string{"NAME", "MASTERS", "WORKERS"} // TODO: getCluster: add status column
 		_, err := fmt.Fprintf(tabwriter, "%s\n", strings.Join(headers, "\t"))
 		if err != nil {
 			log.Fatalln("Failed to print headers")

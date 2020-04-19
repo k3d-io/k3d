@@ -161,7 +161,7 @@ func NewCmdCompletion() *cobra.Command {
 		Use:   "completion SHELL",
 		Short: "Generate completion scripts for [bash, zsh, powershell | psh]",
 		Long:  `Generate completion scripts for [bash, zsh, powershell | psh]`,
-		Args:  cobra.ExactArgs(1), // TODO: add support for 0 args = auto detection
+		Args:  cobra.ExactArgs(1), // TODO: NewCmdCompletion: add support for 0 args = auto detection
 		Run: func(cmd *cobra.Command, args []string) {
 			if f, ok := completionFunctions[args[0]]; ok {
 				if err := f(os.Stdout); err != nil {

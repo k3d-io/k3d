@@ -56,7 +56,7 @@ func NewCmdCreateNode() *cobra.Command {
 	// add flags
 	cmd.Flags().Int("replicas", 1, "Number of replicas of this node specification.")
 	cmd.Flags().String("role", string(k3d.WorkerRole), "Specify node role [master, worker]")
-	cmd.Flags().StringP("cluster", "c", "", "[REQUIRED] Select the cluster that the node shall connect to.")
+	cmd.Flags().StringP("cluster", "c", k3d.DefaultClusterName, "Select the cluster that the node shall connect to.")
 	if err := cmd.MarkFlagRequired("cluster"); err != nil {
 		log.Fatalln("Failed to mark required flag '--cluster'")
 	}
@@ -78,6 +78,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 	}
 
 	// --role
+	// TODO: createNode: for --role=master, update the nginx config and add TLS-SAN and server connection, etc.
 	roleStr, err := cmd.Flags().GetString("role")
 	if err != nil {
 		log.Errorln("No node role specified")

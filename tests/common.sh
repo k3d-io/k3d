@@ -59,8 +59,8 @@ check_url() {
 
 check_k3d_clusters() {
   [ -n "$EXE" ] || abort "EXE is not defined"
-  for c in "c1" "c2" ; do
-    kc=$($EXE get kubeconfig $c)
+  for c in "$@" ; do
+    kc=$($EXE get kubeconfig "$c")
     [ -n "$kc" ] || abort "could not obtain a kubeconfig for $c"
     if kubectl --kubeconfig="$kc" cluster-info ; then
       passed "cluster $c is reachable (with kubeconfig=$kc)"
@@ -76,3 +76,6 @@ check_registry() {
   check_url $REGISTRY/v2/_catalog
 }
 
+check_volume_exists() {
+  docker volume inspect "$1" >/dev/null 2>&1
+}
