@@ -37,6 +37,11 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
+type WriteKubeConfigOptions struct {
+	UpdateExisting         bool
+	ExistingKubeConfigPath string
+}
+
 // GetKubeconfig grabs the kubeconfig file from /output from a master node container,
 // modifies it by updating some fields with cluster-specific information
 // and returns a Config object for further processing
@@ -190,11 +195,11 @@ func UpdateDefaultKubeConfig(newKubeConfig *clientcmdapi.Config) error {
 		log.Errorln("Failed to load default kubeconfig")
 		return err
 	}
-	return MergeKubeConfig(newKubeConfig, existingKubeConfig, existingKubeConfigPath)
+	return UpdateKubeConfig(newKubeConfig, existingKubeConfig, existingKubeConfigPath)
 }
 
-// MergeKubeConfig merges a new kubeconfig into the existing default kubeconfig
-func MergeKubeConfig(newKubeConfig *clientcmdapi.Config, existingKubeConfig *clientcmdapi.Config, outPath string) error {
+// UpdateKubeConfig merges a new kubeconfig into the existing default kubeconfig
+func UpdateKubeConfig(newKubeConfig *clientcmdapi.Config, existingKubeConfig *clientcmdapi.Config, outPath string) error {
 
 	log.Debugf("Merging new KubeConfig:\n%+v\n>>> into existing KubeConfig:\n%+v", newKubeConfig, existingKubeConfig)
 

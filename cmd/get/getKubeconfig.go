@@ -37,12 +37,11 @@ func NewCmdGetKubeconfig() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "kubeconfig NAME", // TODO: getKubeconfig: allow more than one cluster name or even --all
+		Use:   "kubeconfig CLUSTER", // TODO: getKubeconfig: allow more than one cluster name or even --all
 		Short: "Get kubeconfig",
 		Long:  `Get kubeconfig.`,
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("get kubeconfig called")
 			selectedClusters, path := parseGetKubeconfigCmd(cmd, args)
 			kubeconfigpath, err := cluster.GetKubeconfigPath(runtimes.SelectedRuntime, selectedClusters, path)
 			if err != nil {
