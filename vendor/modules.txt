@@ -181,9 +181,10 @@ github.com/opencontainers/runc/libcontainer/user
 github.com/opencontainers/runtime-spec/specs-go
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
-# github.com/sirupsen/logrus v1.4.2
+# github.com/sirupsen/logrus v1.5.0
 ## explicit
 github.com/sirupsen/logrus
+github.com/sirupsen/logrus/hooks/writer
 # github.com/spf13/cobra v1.0.0
 ## explicit
 github.com/spf13/cobra
