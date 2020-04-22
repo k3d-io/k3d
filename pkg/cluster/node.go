@@ -112,6 +112,8 @@ func CreateNode(node *k3d.Node, runtime runtimes.Runtime) error {
 		labels[k] = v
 	}
 	node.Labels = labels
+	// second most important: the node role label
+	node.Labels["k3d.role"] = string(node.Role)
 
 	// ### Environment ###
 	node.Env = append(node.Env, k3d.DefaultNodeEnv...) // append default node env vars
@@ -150,7 +152,6 @@ func DeleteNode(runtime runtimes.Runtime, node *k3d.Node) error {
 // patchWorkerSpec adds worker node specific settings to a node
 func patchWorkerSpec(node *k3d.Node) error {
 	node.Args = append([]string{"agent"}, node.Args...)
-	node.Labels["k3d.role"] = string(k3d.WorkerRole) // TODO: maybe put those in a global var DefaultWorkerNodeSpec?
 	return nil
 }
 
@@ -159,9 +160,6 @@ func patchMasterSpec(node *k3d.Node) error {
 
 	// command / arguments
 	node.Args = append([]string{"server"}, node.Args...)
-
-	// role label
-	node.Labels["k3d.role"] = string(k3d.MasterRole) // TODO: maybe put those in a global var DefaultMasterNodeSpec?
 
 	// Add labels and TLS SAN for the exposed API
 	// FIXME: For now, the labels concerning the API on the master nodes are only being used for configuring the kubeconfig

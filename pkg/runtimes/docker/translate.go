@@ -63,7 +63,6 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	}
 
 	/* Tmpfs Mounts */
-	// TODO: do we need this or can the default be a map with empty values already?
 	hostConfig.Tmpfs = make(map[string]string)
 	for _, mnt := range k3d.DefaultTmpfsMounts {
 		hostConfig.Tmpfs[mnt] = ""
@@ -111,7 +110,7 @@ func TranslateContainerToNode(cont *types.Container) (*k3d.Node, error) {
 		Name:   cont.Names[0],
 		Image:  cont.Image,
 		Labels: cont.Labels,
-		Role:   k3d.DefaultK3dRoles[cont.Labels["k3d.role"]], // TODO: what if this is not present?
+		Role:   k3d.NodeRoles[cont.Labels["k3d.role"]], // TODO: what if this is not present?
 		// TODO: all the rest
 	}
 	return node, nil

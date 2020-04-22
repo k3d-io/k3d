@@ -49,16 +49,17 @@ type Role string
 
 // existing k3d node roles
 const (
-	MasterRole Role = "master"
-	WorkerRole Role = "worker"
-	NoRole     Role = "noRole"
-	ProxyRole  Role = "proxy"
+	MasterRole       Role = "master"
+	WorkerRole       Role = "worker"
+	NoRole           Role = "noRole"
+	LoadBalancerRole Role = "loadbalancer"
 )
 
-// DefaultK3dRoles defines the roles available for nodes
-var DefaultK3dRoles = map[string]Role{
-	string(MasterRole): MasterRole,
-	string(WorkerRole): WorkerRole,
+// NodeRoles defines the roles available for nodes
+var NodeRoles = map[string]Role{
+	string(MasterRole):       MasterRole,
+	string(WorkerRole):       WorkerRole,
+	string(LoadBalancerRole): LoadBalancerRole,
 }
 
 // DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default

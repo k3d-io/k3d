@@ -111,6 +111,8 @@ func initLogging() {
 			log.SetLevel(log.DebugLevel)
 		case "WARN":
 			log.SetLevel(log.WarnLevel)
+		case "ERROR":
+			log.SetLevel(log.ErrorLevel)
 		default:
 			log.SetLevel(log.InfoLevel)
 		}

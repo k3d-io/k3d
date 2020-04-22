@@ -245,7 +245,7 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 	 */
 	// *** MasterLoadBalancer ***
 
-	// Generate a comma-separated list of master/server names to pass to the proxy container
+	// Generate a comma-separated list of master/server names to pass to the LB container
 	servers := ""
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.MasterRole {
@@ -258,7 +258,7 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 		}
 	}
 
-	// Create proxy as a modified node with proxyRole
+	// Create LB as a modified node with loadbalancerRole
 	lbNode := &k3d.Node{
 		Name:  fmt.Sprintf("%s-%s-masterlb", k3d.DefaultObjectNamePrefix, cluster.Name),
 		Image: k3d.DefaultLBImage,
@@ -267,7 +267,7 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 			fmt.Sprintf("SERVERS=%s", servers),
 			fmt.Sprintf("PORT=%s", k3d.DefaultAPIPort),
 		},
-		Role:    k3d.NoRole,
+		Role:    k3d.LoadBalancerRole,
 		Labels:  k3d.DefaultObjectLabels, // TODO: createLoadBalancer: add more expressive labels
 		Network: cluster.Network.Name,
 	}
@@ -438,11 +438,29 @@ func StartCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 	log.Infof("Starting cluster '%s'", cluster.Name)
 
 	failed := 0
+	var masterlb *k3d.Node
 	for _, node := range cluster.Nodes {
+
+		// skip the LB, because we want to start it last
+		if node.Role == k3d.LoadBalancerRole {
+			masterlb = node
+			continue
+		}
+
+		// start node
 		if err := runtime.StartNode(node); err != nil {
 			log.Warningf("Failed to start node '%s': Try to start it manually", node.Name)
 			failed++
 			continue
+		}
+	}
+
+	// start masterlb
+	if masterlb != nil {
+		log.Debugln("Starting masterlb...")
+		if err := runtime.StartNode(masterlb); err != nil { // FIXME: we could run into a nullpointer exception here
+			log.Warningf("Failed to start masterlb '%s': Try to start it manually", masterlb.Name)
+			failed++
 		}
 	}
 

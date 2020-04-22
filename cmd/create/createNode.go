@@ -84,10 +84,10 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 		log.Errorln("No node role specified")
 		log.Fatalln(err)
 	}
-	if _, ok := k3d.DefaultK3dRoles[roleStr]; !ok {
+	if _, ok := k3d.NodeRoles[roleStr]; !ok {
 		log.Fatalf("Unknown node role '%s'\n", roleStr)
 	}
-	role := k3d.DefaultK3dRoles[roleStr]
+	role := k3d.NodeRoles[roleStr]
 
 	// --image
 	image, err := cmd.Flags().GetString("image")

@@ -107,6 +107,7 @@ func (d Docker) StartNode(node *k3d.Node) error {
 	}
 
 	// actually start the container
+	log.Infof("Starting Node '%s'", node.Name)
 	if err := docker.ContainerStart(ctx, nodeContainer.ID, types.ContainerStartOptions{}); err != nil {
 		return err
 	}
