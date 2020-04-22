@@ -9,20 +9,22 @@ source "$CURR_DIR/common.sh"
 info "Creating cluster multimaster..."
 $EXE --verbose create cluster "multimaster" --masters 3 --api-port 6443 --wait --timeout 360s || failed "could not create cluster multimaster"
 
-info "Checking we have access to the cluster..."
+info "Checking that we have access to the cluster..."
 check_k3d_clusters "multimaster" || failed "error checking cluster"
 
-info "Checking that we have 3 servers online..."
+info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
+sleep 5
+
+info "Checking that we have 3 master nodes online..."
 check_multi_master() {
   for c in "$@" ; do
-    kc=$($EXE get kubeconfig "$c")
-    [ -n "$kc" ] || abort "could not obtain a kubeconfig for $c"
-    nodeCount=$(kubectl --kubeconfig="$kc" get nodes -o=custom-columns=NAME:.metadata.name --no-headers | wc -l)
+    $EXE get kubeconfig "$c" --switch
+    nodeCount=$(kubectl get nodes -o=custom-columns=NAME:.metadata.name --no-headers | wc -l)
     if [[ $nodeCount == 3 ]]; then
       passed "cluster $c has 3 nodes, as expected"
     else
       warn "cluster $c has incorrect number of nodes: $nodeCount != 3"
-      kubectl --kubeconfig="$kc" get nodes -o=custom-columns=NAME:.metadata.name --no-headers
+      kubectl get nodes -o=custom-columns=NAME:.metadata.name --no-headers
       return 1
     fi
   done

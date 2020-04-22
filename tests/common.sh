@@ -60,12 +60,12 @@ check_url() {
 check_k3d_clusters() {
   [ -n "$EXE" ] || abort "EXE is not defined"
   for c in "$@" ; do
-    kc=$($EXE get kubeconfig "$c")
-    [ -n "$kc" ] || abort "could not obtain a kubeconfig for $c"
-    if kubectl --kubeconfig="$kc" cluster-info ; then
-      passed "cluster $c is reachable (with kubeconfig=$kc)"
+    $EXE --verbose get kubeconfig "$c" --switch
+    #[ -n "$kc" ] || abort "could not obtain a kubeconfig for $c"
+    if kubectl cluster-info ; then
+      passed "cluster $c is reachable"
     else
-      warn "could not obtain cluster info for $c (with kubeconfig=$kc). Contents:\n$(cat $kc)"
+      warn "could not obtain cluster info for $c. Kubeconfig:\n$(kubectl config view)"
       return 1
     fi
   done
