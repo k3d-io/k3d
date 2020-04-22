@@ -25,6 +25,9 @@ endif
 # determine if make is being executed from interactive terminal
 INTERACTIVE:=$(shell [ -t 0 ] && echo 1)
 
+# E2E test settings
+E2E_LOG_LEVEL ?= WARN
+
 # Go options
 GO        ?= go
 PKG       := $(shell go mod vendor)
@@ -91,7 +94,7 @@ fmt:
 
 e2e: build-docker
 	@echo "Running e2e tests in k3d:$(K3D_IMAGE_TAG)"
-	tests/dind.sh "${K3D_IMAGE_TAG}"
+	LOG_LEVEL=$(E2E_LOG_LEVEL) tests/dind.sh "${K3D_IMAGE_TAG}"
 # check-fmt returns an error code if any source code contains format error.
 check-fmt:
 	@test -z $(shell gofmt -s -l $(GO_SRC) | tee /dev/stderr) || echo "[WARN] Fix formatting issues with 'make fmt'"
