@@ -7,30 +7,16 @@ CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$CURR_DIR/common.sh"
 
 info "Creating cluster multimaster..."
-$EXE --verbose create cluster "multimaster" --masters 3 --api-port 6443 --wait --timeout 360s || failed "could not create cluster multimaster"
+$EXE create cluster "multimaster" --masters 3 --api-port 6443 --wait --timeout 360s || failed "could not create cluster multimaster"
 
 info "Checking that we have access to the cluster..."
-check_k3d_clusters "multimaster" || failed "error checking cluster"
+check_clusters "multimaster" || failed "error checking cluster"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
 sleep 5
 
 info "Checking that we have 3 master nodes online..."
-check_multi_master() {
-  for c in "$@" ; do
-    $EXE get kubeconfig "$c" --switch
-    nodeCount=$(kubectl get nodes -o=custom-columns=NAME:.metadata.name --no-headers | wc -l)
-    if [[ $nodeCount == 3 ]]; then
-      passed "cluster $c has 3 nodes, as expected"
-    else
-      warn "cluster $c has incorrect number of nodes: $nodeCount != 3"
-      kubectl get nodes -o=custom-columns=NAME:.metadata.name --no-headers
-      return 1
-    fi
-  done
-  return 0
-}
-check_multi_master "multimaster"
+check_multi_node "multimaster" 3 || failed "failed to verify number of nodes"
 
 info "Deleting cluster multimaster..."
 $EXE delete cluster "multimaster" || failed "could not delete the cluster multimaster"
