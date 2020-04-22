@@ -28,6 +28,7 @@ import (
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/tools/clientcmd"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -35,32 +36,35 @@ import (
 // NewCmdGetKubeconfig returns a new cobra command
 func NewCmdGetKubeconfig() *cobra.Command {
 
+	writeKubeConfigOptions := cluster.WriteKubeConfigOptions{}
+
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "kubeconfig NAME", // TODO: getKubeconfig: allow more than one cluster name or even --all
+		Use:   "kubeconfig CLUSTER", // TODO: getKubeconfig: allow more than one cluster name or even --all
 		Short: "Get kubeconfig",
 		Long:  `Get kubeconfig.`,
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("get kubeconfig called")
-			selectedClusters, path := parseGetKubeconfigCmd(cmd, args)
-			kubeconfigpath, err := cluster.GetKubeconfigPath(runtimes.SelectedRuntime, selectedClusters, path)
-			if err != nil {
+			selectedClusters, output := parseGetKubeconfigCmd(cmd, args)
+			if err := cluster.GetAndWriteKubeConfig(runtimes.SelectedRuntime, selectedClusters, output, &writeKubeConfigOptions); err != nil {
 				log.Fatalln(err)
 			}
 
 			// only print kubeconfig file path if output is not stdout ("-")
-			if path != "-" {
-				fmt.Println(kubeconfigpath)
+			if output != "-" {
+				fmt.Println(output)
 			}
 		},
 	}
 
 	// add flags
-	cmd.Flags().StringP("output", "o", "", "Define output [ - | <file> ]")
+	cmd.Flags().StringP("output", "o", clientcmd.RecommendedHomeFile, "Define output [ - | FILE ]")
 	if err := cmd.MarkFlagFilename("output"); err != nil {
 		log.Fatalln("Failed to mark flag --output as filename")
 	}
+	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateExisting, "update", "u", true, "Update conflicting fields in existing KubeConfig")
+	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateCurrentContext, "switch", "s", false, "Switch to new context")
+	cmd.Flags().BoolVar(&writeKubeConfigOptions.OverwriteExisting, "overwrite", false, "[Careful!] Overwrite existing file, ignoring its contents")
 	// cmd.Flags().BoolP("all", "a", false, "Get kubeconfigs from all existing clusters") // TODO: getKubeconfig: enable --all flag
 
 	// done
