@@ -43,9 +43,9 @@ check_multi_node "$clustername" 2 || failed "failed to verify number of nodes"
 
 # 4. load an image into the cluster
 info "Loading an image into the cluster..."
-docker pull nginx:latest
-docker tag nginx:latest nginx:local
-$EXE load image nginx:local -c $clustername
+docker pull nginx:latest > /dev/null
+docker tag nginx:latest nginx:local > /dev/null
+$EXE load image nginx:local -c $clustername || failed "could not import image in $clustername"
 
 # Cleanup
 
