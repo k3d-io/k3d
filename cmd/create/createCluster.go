@@ -40,6 +40,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const createClusterDescription = `
+Create a new k3s cluster with containerized nodes (k3s in docker).
+Every cluster will consist of at least 2 containers:
+	- 1 master node container (k3s)
+	- 1 loadbalancer container as the entrypoint to the cluster (nginx)
+`
+
 // NewCmdCreateCluster returns a new cobra command
 func NewCmdCreateCluster() *cobra.Command {
 
@@ -49,7 +56,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cluster NAME",
 		Short: "Create a new k3s cluster in docker",
-		Long:  `Create a new k3s cluster with containerized nodes (k3s in docker).`,
+		Long:  createClusterDescription,
 		Args:  cobra.RangeArgs(0, 1), // exactly one cluster name can be set (default: k3d.DefaultClusterName)
 		Run: func(cmd *cobra.Command, args []string) {
 			// parse args and flags
@@ -86,7 +93,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	/*********
 	 * Flags *
 	 *********/
-	cmd.Flags().StringP("api-port", "a", k3d.DefaultAPIPort, "Specify the Kubernetes API server port (Format: `--api-port [HOST:]HOSTPORT`\n - Example: `k3d create -m 3 -a 0.0.0.0:6550` ")
+	cmd.Flags().StringP("api-port", "a", k3d.DefaultAPIPort, "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `--api-port [HOST:]HOSTPORT`)\n - Example: `k3d create -m 3 -a 0.0.0.0:6550`")
 	cmd.Flags().IntP("masters", "m", 1, "Specify how many masters you want to create")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
 	cmd.Flags().String("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
