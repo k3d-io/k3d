@@ -333,7 +333,7 @@ func CreateCluster(c *cli.Context) error {
 
 		exists, err := registryNameExists.Exists()
 		if !exists || err != nil {
-			log.Printf("Make sure you have an alias in your /etc/hosts file like '127.0.0.1 %s'", clusterSpec.RegistryName)
+			log.Printf("Make sure %s resolves to '127.0.0.1' (using /etc/hosts f.e)", clusterSpec.RegistryName)
 		}
 	}
 

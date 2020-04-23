@@ -94,8 +94,8 @@ In order to enable the k3d registry when creating a new cluster, you must run k3
 k3d create --enable-registry ...
 ```
 
-Then you must add an entry in `/etc/hosts` as described in [the next section](#etc-hosts). And
-then you should [check you local registry](#testing).
+Then you must make it accessible as described in [the next section](#etc-hosts). And
+then you should [check your local registry](#testing).
 
 ### Using your own local registry 
 
@@ -103,27 +103,31 @@ If you don't want k3d to manage your registry, you can start it with some `docke
 
 ```shell script
 docker volume create local_registry
-docker container run -d --name registry.local -v local_registry:/var/lib/registry --restart always -p 5000:5000 registry:2
+docker container run -d --name registry.localhost -v local_registry:/var/lib/registry --restart always -p 5000:5000 registry:2
 ```
 
-These commands will start you registry in `registry.local:5000`. In order to push to this registry, you will
-need to add the line at `/etc/hosts` as we described in [the previous section ](#etc-hosts). Once your
+These commands will start your registry in `registry.localhost:5000`. In order to push to this registry, you will
+need to make it accessible as we described in [the next section ](#etc-hosts). Once your
 registry is up and running, we will need to add it to your [`registries.yaml` configuration file](#registries-file).
 Finally, you must connect the registry network to the k3d cluster network:
-`docker network connect k3d-k3s-default registry.local`. And then you can
-[check you local registry](#testing).
+`docker network connect k3d-k3s-default registry.localhost`. And then you can
+[check your local registry](#testing).
 
 ### <a name="etc-hosts"></a>Pushing to your local registry address
 
-The registry will be located, by default, at `registry.local:5000` (customizable with the `--registry-name`
+The registry will be located, by default, at `registry.localhost:5000` (customizable with the `--registry-name`
 and `--registry-port` parameters). All the nodes in your k3d cluster can resolve this hostname (thanks to the
 DNS server provided by the Docker daemon) but, in order to be able to push to this registry, this hostname
 but also be resolved from your host.
 
-The easiest solution for this is to add an entry in your `/etc/hosts` file like this:
+Luckily, (NSS-myhostname)[http://man7.org/linux/man-pages/man8/nss-myhostname.8.html] should be installed on a desktop environment
+and should resolve `*.localhost` automatically to `127.0.0.1`.  
+Otherwise, it's installable using `sudo apt install libnss-myhostname`.
+
+If it's not the case, you can add an entry in your `/etc/hosts` file like this:
 
 ```shell script
-127.0.0.1 registry.local
+127.0.0.1 registry.localhost
 ``` 
 
 Once again, this will only work with k3s >= v0.10.0 (see the [section below](#k3s-old)
@@ -151,7 +155,7 @@ You should test that you can
 * push to your registry from your local development machine.
 * use images from that registry in `Deployments` in your k3d cluster.
 
-We will verify these two things for a local registry (located at `registry.local:5000`) running
+We will verify these two things for a local registry (located at `registry.localhost:5000`) running
 in your development machine. Things would be basically the same for checking an external
 registry, but some additional configuration could be necessary in your local machine when
 using an authenticated or secure registry (please refer to Docker's documentation for this).
@@ -160,8 +164,8 @@ Firstly, we can download some image (like `nginx`) and push it to our local regi
 
 ```shell script
 docker pull nginx:latest
-docker tag nginx:latest registry.local:5000/nginx:latest
-docker push registry.local:5000/nginx:latest
+docker tag nginx:latest registry.localhost:5000/nginx:latest
+docker push registry.localhost:5000/nginx:latest
 ```
 
 Then we can deploy a pod referencing this image to your cluster:
@@ -186,7 +190,7 @@ spec:
     spec:
       containers:
       - name: nginx-test-registry
-        image: registry.local:5000/nginx:latest
+        image: registry.localhost:5000/nginx:latest
         ports:
         - containerPort: 80
 EOF
@@ -224,8 +228,8 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
 
 # Added section: additional registries and the endpoints
 [plugins.cri.registry.mirrors]
-  [plugins.cri.registry.mirrors."<b>registry.local:5000</b>"]
-    endpoint = ["http://<b>registry.local:5000</b>"]
+  [plugins.cri.registry.mirrors."<b>registry.localhost:5000</b>"]
+    endpoint = ["http://<b>registry.localhost:5000</b>"]
 </pre>
 
 and then mount it at `/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl` (where
