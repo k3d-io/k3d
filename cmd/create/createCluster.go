@@ -25,6 +25,7 @@ package create
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -73,6 +74,10 @@ func NewCmdCreateCluster() *cobra.Command {
 
 			// print information on how to use the cluster with kubectl
 			log.Infof("Cluster '%s' created successfully. You can now use it like this:", cluster.Name)
+			if runtime.GOOS == "windows" {
+				log.Debugf("GOOS is %s", runtime.GOOS)
+				fmt.Printf("$env:KUBECONFIG=(%s get kubeconfig %s)\n", os.Args[0], cluster.Name)
+			}
 			fmt.Printf("export KUBECONFIG=$(%s get kubeconfig %s)\n", os.Args[0], cluster.Name)
 			fmt.Println("kubectl cluster-info")
 		},
