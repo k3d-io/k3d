@@ -240,6 +240,12 @@ func UpdateKubeConfig(newKubeConfig *clientcmdapi.Config, existingKubeConfig *cl
 		existingKubeConfig.Contexts[k] = v
 	}
 
+	// Set current context if it's
+	// a) empty
+	// b) not empty, but we want to update it
+	if existingKubeConfig.CurrentContext == "" {
+		updateCurrentContext = true
+	}
 	if updateCurrentContext {
 		log.Debugf("Setting new current-context '%s'", newKubeConfig.CurrentContext)
 		existingKubeConfig.CurrentContext = newKubeConfig.CurrentContext
