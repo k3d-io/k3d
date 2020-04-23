@@ -41,6 +41,12 @@ check_clusters "$clustername" || failed "error checking cluster"
 info "Checking that we have 2 nodes online..."
 check_multi_node "$clustername" 2 || failed "failed to verify number of nodes"
 
+# 4. load an image into the cluster
+info "Loading an image into the cluster..."
+docker pull nginx:latest
+docker tag nginx:latest nginx:local
+$EXE load image nginx:local -c $clustername
+
 # Cleanup
 
 info "Deleting cluster $clustername..."
