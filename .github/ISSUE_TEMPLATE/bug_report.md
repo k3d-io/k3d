@@ -7,32 +7,34 @@ assignees: ''
 
 ---
 
-**What did you do?**
+### Describe what you did leading up to the issue
 
 - How was the cluster created?
-    - `k3d create -x A -y B`
+  - `k3d create -x A -y B`
 
 - What did you do afterwards?
-    - k3d commands?
-    - docker commands?
-    - OS operations (e.g. shutdown/reboot)?
+  - k3d commands?
+  - docker commands?
+  - OS operations (e.g. shutdown/reboot)?
 
-**What did you expect to happen?**
+### Describe what you expected to happen
 
 Concise description of what you expected to happen after doing what you described above.
 
-**Screenshots or terminal output**
+### Add screenshots or terminal output
 
 If applicable, add screenshots or terminal output (code block) to help explain your problem.
 
-**Which OS & Architecture?**
+### Describe your Setup
+
+#### OS / Architecture
 
 - Linux, Windows, MacOS / amd64, x86, ...?
 
-**Which version of `k3d`?**
+#### k3d version
 
 - output of `k3d --version`
 
-**Which version of docker?**
+### docker version
 
 - output of `docker version`
