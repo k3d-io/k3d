@@ -148,7 +148,7 @@ func main() {
 				},
 				cli.BoolFlag{
 					Name:  "enable-registry-cache",
-					Usage: "Use the local registry as a cache for the Docker Hub",
+					Usage: "Use the local registry as a cache for the Docker Hub (Note: This disables pushing local images to the registry!)",
 				},
 			},
 			Action: run.CreateCluster,

@@ -142,12 +142,14 @@ the removal of the registry, you can specify a volume with the `--registry-volum
 name the first time the registry is used, while successive invocations will just mount this
 existing volume in the k3d registry container.
 
-### <a name="docker-hub-cache"></a>Docker Hub cache
+### <a name="docker-hub-cache"></a>Docker Hub Cache
 
 The local k3d registry can also be used for caching images from the Docker Hub. You can start the
 registry as a pull-through cache when the cluster is created with `--enable-registry-cache`. Used
 in conjuction with `--registry-volume`/`--keep-registry-volume` can speed up all the downloads
 from the Hub by keeping a persistent cache of images in your local machine.
+
+**Note**: This disables the registry for pushing local images to it! ([Comment](https://github.com/rancher/k3d/pull/207#issuecomment-617318637))
 
 ## <a name="testing"></a>Testing your registry
 
