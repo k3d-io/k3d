@@ -97,7 +97,7 @@ k3d create --enable-registry ...
 Then you must make it accessible as described in [the next section](#etc-hosts). And
 then you should [check your local registry](#testing).
 
-### Using your own local registry 
+### Using your own local registry
 
 If you don't want k3d to manage your registry, you can start it with some `docker` commands, like:
 
@@ -120,7 +120,7 @@ and `--registry-port` parameters). All the nodes in your k3d cluster can resolve
 DNS server provided by the Docker daemon) but, in order to be able to push to this registry, this hostname
 but also be resolved from your host.
 
-Luckily, (NSS-myhostname)[http://man7.org/linux/man-pages/man8/nss-myhostname.8.html] should be installed on a desktop environment
+Luckily (for Linux users), [NSS-myhostname](http://man7.org/linux/man-pages/man8/nss-myhostname.8.html) ships with many Linux distributions
 and should resolve `*.localhost` automatically to `127.0.0.1`.  
 Otherwise, it's installable using `sudo apt install libnss-myhostname`.
 
@@ -128,7 +128,7 @@ If it's not the case, you can add an entry in your `/etc/hosts` file like this:
 
 ```shell script
 127.0.0.1 registry.localhost
-``` 
+```
 
 Once again, this will only work with k3s >= v0.10.0 (see the [section below](#k3s-old)
 when using k3s <= v0.9.1)
@@ -140,7 +140,7 @@ when the k3d registry is released. In order to persist this volume and make thes
 the removal of the registry, you can specify a volume with the `--registry-volume` and use the
 `--keep-registry-volume` flag when deleting the cluster. This will create a volume with the given
 name the first time the registry is used, while successive invocations will just mount this
-existing volume in the k3d registry container. 
+existing volume in the k3d registry container.
 
 ### <a name="docker-hub-cache"></a>Docker Hub cache
 
@@ -152,6 +152,7 @@ from the Hub by keeping a persistent cache of images in your local machine.
 ## <a name="testing"></a>Testing your registry
 
 You should test that you can
+
 * push to your registry from your local development machine.
 * use images from that registry in `Deployments` in your k3d cluster.
 
@@ -239,5 +240,3 @@ the `containerd` in your k3d nodes will load it) when creating the k3d cluster:
 k3d create \
     --volume ${HOME}/.k3d/config.toml.tmpl:/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
 ```
-
-
