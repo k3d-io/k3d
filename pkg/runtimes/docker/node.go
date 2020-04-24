@@ -206,6 +206,7 @@ func (d Docker) GetNodeLogs(node *k3d.Node) (io.ReadCloser, error) {
 		return nil, err
 	}
 
+	// FIXME: return error if container is down
 	logreader, err := docker.ContainerLogs(ctx, container.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
 	if err != nil {
 		log.Errorf("Failed to get logs from node '%s' (container '%s')", node.Name, container.ID)
