@@ -51,10 +51,15 @@ func NewCmdDeleteCluster() *cobra.Command {
 					if err := cluster.DeleteCluster(c, runtimes.SelectedRuntime); err != nil {
 						log.Fatalln(err)
 					}
+					log.Infoln("Removing cluster details from default kubeconfig")
+					if err := cluster.RemoveClusterFromDefaultKubeConfig(c); err != nil {
+						log.Warnln("Failed to remove cluster details from default kubeconfig")
+						log.Warnln(err)
+					}
+
+					log.Infof("Successfully deleted cluster %s!", c.Name)
 				}
 			}
-
-			log.Debugln("...Finished")
 
 		},
 	}

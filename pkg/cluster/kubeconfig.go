@@ -56,11 +56,10 @@ func GetAndWriteKubeConfig(runtime runtimes.Runtime, cluster *k3d.Cluster, outpu
 
 	// empty output parameter = write to default
 	if output == "" {
-		defaultKubeConfigLoadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
-		if len(defaultKubeConfigLoadingRules.GetLoadingPrecedence()) > 1 {
-			return fmt.Errorf("Multiple kubeconfigs specified via KUBECONFIG env var: Please reduce to one entry, unset KUBECONFIG or explicitly choose an output")
+		output, err = GetDefaultKubeConfigPath()
+		if err != nil {
+			return err
 		}
-		output = defaultKubeConfigLoadingRules.GetDefaultFilename()
 	}
 
 	// simply write to the output, ignoring existing contents
@@ -262,18 +261,79 @@ func UpdateKubeConfig(newKubeConfig *clientcmdapi.Config, existingKubeConfig *cl
 
 	log.Debugf("Merged KubeConfig:\n%+v", existingKubeConfig)
 
-	// Write updated/merged KubeConfig to new temporary file
-	mergedConfigPath := fmt.Sprintf("%s.k3d_%s", outPath, time.Now().Format("20060102_150405.000000"))
-	if err := clientcmd.WriteToFile(*existingKubeConfig, mergedConfigPath); err != nil {
-		log.Errorf("Failed to write merged kubeconfig to temporary file '%s'", mergedConfigPath)
+	return WriteKubeConfig(existingKubeConfig, outPath)
+}
+
+// WriteKubeConfig writes a kubeconfig to a path atomically
+func WriteKubeConfig(kubeconfig *clientcmdapi.Config, path string) error {
+	tempPath := fmt.Sprintf("%s.k3d_%s", path, time.Now().Format("20060102_150405.000000"))
+	if err := clientcmd.WriteToFile(*kubeconfig, tempPath); err != nil {
+		log.Errorf("Failed to write merged kubeconfig to temporary file '%s'", tempPath)
 		return err
 	}
 
 	// Move temporary file over existing KubeConfig
-	if err := os.Rename(mergedConfigPath, outPath); err != nil {
-		log.Errorf("Failed to overwrite existing KubeConfig '%s' with new KubeConfig '%s'", outPath, mergedConfigPath)
+	if err := os.Rename(tempPath, path); err != nil {
+		log.Errorf("Failed to overwrite existing KubeConfig '%s' with new KubeConfig '%s'", path, tempPath)
 		return err
 	}
 
 	return nil
+}
+
+// GetDefaultKubeConfig loads the default KubeConfig file
+func GetDefaultKubeConfig() (*clientcmdapi.Config, error) {
+	path, err := GetDefaultKubeConfigPath()
+	if err != nil {
+		return nil, err
+	}
+	return clientcmd.LoadFromFile(path)
+}
+
+// GetDefaultKubeConfigPath returns the path of the default kubeconfig, but errors if the KUBECONFIG env var specifies more than one file
+func GetDefaultKubeConfigPath() (string, error) {
+	defaultKubeConfigLoadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	if len(defaultKubeConfigLoadingRules.GetLoadingPrecedence()) > 1 {
+		return "", fmt.Errorf("Multiple kubeconfigs specified via KUBECONFIG env var: Please reduce to one entry, unset KUBECONFIG or explicitly choose an output")
+	}
+	return defaultKubeConfigLoadingRules.GetDefaultFilename(), nil
+}
+
+// RemoveClusterFromDefaultKubeConfig removes a cluster's details from the default kubeconfig
+func RemoveClusterFromDefaultKubeConfig(cluster *k3d.Cluster) error {
+	defaultKubeConfigPath, err := GetDefaultKubeConfigPath()
+	if err != nil {
+		return err
+	}
+	kubeconfig, err := GetDefaultKubeConfig()
+	if err != nil {
+		return err
+	}
+	kubeconfig = RemoveClusterFromKubeConfig(cluster, kubeconfig)
+	return WriteKubeConfig(kubeconfig, defaultKubeConfigPath)
+}
+
+// RemoveClusterFromKubeConfig removes a cluster's details from a given kubeconfig
+func RemoveClusterFromKubeConfig(cluster *k3d.Cluster, kubeconfig *clientcmdapi.Config) *clientcmdapi.Config {
+	clusterName := fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
+	contextName := fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
+	authInfoName := fmt.Sprintf("admin@%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
+
+	// delete elements from kubeconfig if they're present
+	delete(kubeconfig.Contexts, contextName)
+	delete(kubeconfig.Clusters, clusterName)
+	delete(kubeconfig.AuthInfos, authInfoName)
+
+	// set current-context to any other context, if it was set to the given cluster before
+	if kubeconfig.CurrentContext == contextName {
+		for k := range kubeconfig.Contexts {
+			kubeconfig.CurrentContext = k
+			break
+		}
+		// if current-context didn't change, unset it
+		if kubeconfig.CurrentContext == contextName {
+			kubeconfig.CurrentContext = ""
+		}
+	}
+	return kubeconfig
 }
