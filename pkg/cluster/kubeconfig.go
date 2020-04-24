@@ -168,8 +168,8 @@ func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) (*clientcmdap
 	kc.Clusters[newClusterName] = kc.Clusters["default"]
 	delete(kc.Clusters, "default")
 
-	// rename context from default to admin@clustername
-	newContextName := fmt.Sprintf("admin@%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
+	// rename context from default to clustername
+	newContextName := fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
 	kc.Contexts[newContextName] = kc.Contexts["default"]
 	delete(kc.Contexts, "default")
 
