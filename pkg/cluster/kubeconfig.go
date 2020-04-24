@@ -54,6 +54,15 @@ func GetAndWriteKubeConfig(runtime runtimes.Runtime, cluster *k3d.Cluster, outpu
 		return err
 	}
 
+	// empty output parameter = write to default
+	if output == "" {
+		defaultKubeConfigLoadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+		if len(defaultKubeConfigLoadingRules.GetLoadingPrecedence()) > 1 {
+			return fmt.Errorf("Multiple kubeconfigs specified via KUBECONFIG env var: Please reduce to one entry, unset KUBECONFIG or explicitly choose an output")
+		}
+		output = defaultKubeConfigLoadingRules.GetDefaultFilename()
+	}
+
 	// simply write to the output, ignoring existing contents
 	if writeKubeConfigOptions.OverwriteExisting || output == "-" {
 		return WriteKubeConfigToPath(kubeconfig, output)
@@ -176,7 +185,7 @@ func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) (*clientcmdap
 	return kc, nil
 }
 
-// WriteKubeConfigToPath uses GetKubeConfig to grab the kubeconfig from the cluster master node, writes it to a file and outputs the path
+// WriteKubeConfigToPath takes a kubeconfig and writes it to some path, which can be '-' for os.Stdout
 func WriteKubeConfigToPath(kubeconfig *clientcmdapi.Config, path string) error {
 	var output *os.File
 	defer output.Close()
@@ -209,7 +218,7 @@ func WriteKubeConfigToPath(kubeconfig *clientcmdapi.Config, path string) error {
 
 }
 
-// UpdateKubeConfig merges a new kubeconfig into the existing default kubeconfig
+// UpdateKubeConfig merges a new kubeconfig into an existing kubeconfig and returns the result
 func UpdateKubeConfig(newKubeConfig *clientcmdapi.Config, existingKubeConfig *clientcmdapi.Config, outPath string, overwriteConflicting bool, updateCurrentContext bool) error {
 
 	log.Debugf("Merging new KubeConfig:\n%+v\n>>> into existing KubeConfig:\n%+v", newKubeConfig, existingKubeConfig)
@@ -268,10 +277,3 @@ func UpdateKubeConfig(newKubeConfig *clientcmdapi.Config, existingKubeConfig *cl
 
 	return nil
 }
-
-/*func UpdateKubeConfigOrCreate(outPath string) error {
-	_, err := os.Stat(outPath)
-	if os.IsNotExist(err) {
-		Create
-	}
-}*/

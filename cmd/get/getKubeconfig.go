@@ -58,7 +58,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 	}
 
 	// add flags
-	cmd.Flags().StringP("output", "o", clientcmd.RecommendedHomeFile, "Define output [ - | FILE ]")
+	cmd.Flags().StringP("output", "o", "", fmt.Sprintf("Define output [ - | FILE ] (default from $KUBECONFIG or %s", clientcmd.RecommendedHomeFile))
 	if err := cmd.MarkFlagFilename("output"); err != nil {
 		log.Fatalln("Failed to mark flag --output as filename")
 	}

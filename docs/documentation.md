@@ -10,3 +10,7 @@
     * all other master nodes will refer to the initializing master node via `--server https://<init-node>:6443`
 * API-Ports
   * by default, we don't expose any API-Port (no host port mapping)
+* kubeconfig
+  * if no output is set explicitly (via the `--output` flag), we use the default loading rules to get the default kubeconfig:
+    * First: kubeconfig specified via the KUBECONFIG environment variable (error out if multiple are specified)
+    * Second: default kubeconfig in home directory (e.g. `$HOME/.kube/config`)
