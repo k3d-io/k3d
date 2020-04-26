@@ -175,14 +175,16 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 			}
 			log.Debugln("Waiting for initializing master node...")
 			logreader, err := runtime.GetNodeLogs(cluster.InitNode)
-			defer logreader.Close()
 			if err != nil {
-				logreader.Close()
+				if logreader != nil {
+					logreader.Close()
+				}
 				log.Errorln(err)
 				log.Errorln("Failed to get logs from the initializig master node.. waiting for 3 seconds instead")
 				time.Sleep(3 * time.Second)
 				break
 			}
+			defer logreader.Close()
 			buf := new(bytes.Buffer)
 			nRead, _ := buf.ReadFrom(logreader)
 			logreader.Close()

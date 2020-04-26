@@ -206,7 +206,16 @@ func (d Docker) GetNodeLogs(node *k3d.Node) (io.ReadCloser, error) {
 		return nil, err
 	}
 
-	// FIXME: return error if container is down
+	containerInspectResponse, err := docker.ContainerInspect(ctx, container.ID)
+	if err != nil {
+		log.Errorln("Failed to inspect container '%s'", container.ID)
+		return nil, err
+	}
+
+	if !containerInspectResponse.ContainerJSONBase.State.Running {
+		return nil, fmt.Errorf("Node '%s' (container '%s') not running", node.Name, containerInspectResponse.ID)
+	}
+
 	logreader, err := docker.ContainerLogs(ctx, container.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
 	if err != nil {
 		log.Errorf("Failed to get logs from node '%s' (container '%s')", node.Name, container.ID)
