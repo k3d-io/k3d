@@ -1,8 +1,4 @@
-# Documentation
-
-## Functionality
-
-### Defaults
+# Defaults
 
 * multiple master nodes
   * by default, when `--master` > 1 and no `--datastore-x` option is set, the first master node (master-0) will be the initializing master node

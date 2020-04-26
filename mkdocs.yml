@@ -1,0 +1,22 @@
+# Project information
+site_name: k3d
+site_description: Little helper to run Rancher Lab's k3s in Docker
+site_url: https://k3d.io/
+
+copyright: "Copyright &copy; 2020 k3d Authors"
+
+# Repo Information
+repo_url: https://github.com/rancher/k3d
+strict: True
+
+# Theme
+theme: 
+  name: material
+
+# Navigation
+nav:
+  - Overview: index.md
+  - Command Tree: commands.md
+  - Defaults: defaults.md
+  - Examples: examples.md
+  - FAQ: faq.md
