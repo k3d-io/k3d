@@ -20,3 +20,7 @@ nav:
   - Defaults: defaults.md
   - Examples: examples.md
   - FAQ: faq.md
+
+# Extensions
+markdown_extensions:
+  - codehilite
