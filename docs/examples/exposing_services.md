@@ -51,7 +51,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
 1. Create a cluster, mapping the port 30080 from worker-0 to localhost:8082
 
-    `k3d create cluster mycluster -p 8082:30080@kworker[0] --workers 2`
+    `k3d create cluster mycluster -p 8082:30080@worker[0] --workers 2`
 
     - Note: Kubernetes' default NodePort range is [`30000-32767`](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
 

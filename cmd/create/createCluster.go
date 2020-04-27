@@ -114,12 +114,12 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().StringP("api-port", "a", k3d.DefaultAPIPort, "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `--api-port [HOST:]HOSTPORT`)\n - Example: `k3d create -m 3 -a 0.0.0.0:6550`")
 	cmd.Flags().IntP("masters", "m", 1, "Specify how many masters you want to create")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
-	cmd.Flags().String("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
+	cmd.Flags().StringP("image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
 	cmd.Flags().String("network", "", "Join an existing network")
 	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d create -w 2 -v /my/path@worker[0,1] -v /tmp/test:/tmp/other@master[0]`")
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d create -w 2 -p 8080:80@worker[0] -p 8081@worker[1]`")
-	cmd.Flags().BoolVar(&createClusterOpts.WaitForMaster, "wait", false, "Wait for for the master(s) to be ready before returning. Use `--timeout DURATION` to not wait forever.")
+	cmd.Flags().BoolVar(&createClusterOpts.WaitForMaster, "wait", false, "Wait for the master(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
 	cmd.Flags().DurationVar(&createClusterOpts.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
 	cmd.Flags().BoolVar(&updateKubeconfig, "update-kubeconfig", false, "Directly update the default kubeconfig with the new cluster's context")
 
@@ -130,7 +130,7 @@ func NewCmdCreateCluster() *cobra.Command {
 
 	// multi-master - datastore
 	// TODO: implement multi-master setups with external data store
-	cmd.Flags().String("datastore-endpoint", "", "[WIP] Specify external datastore endpoint (e.g. for multi master clusters)")
+	// cmd.Flags().String("datastore-endpoint", "", "[WIP] Specify external datastore endpoint (e.g. for multi master clusters)")
 	/*
 		cmd.Flags().String("datastore-network", "", "Specify container network where we can find the datastore-endpoint (add a connection)")
 
@@ -234,15 +234,6 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		exposeAPI.HostIP = k3d.DefaultAPIHost
 	}
 
-	// --datastore-endpoint
-	datastoreEndpoint, err := cmd.Flags().GetString("datastore-endpoint")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	if datastoreEndpoint != "" {
-		log.Fatalln("Using an external datastore for HA clusters is not yet supported.")
-	}
-
 	// --volume
 	volumeFlags, err := cmd.Flags().GetStringArray("volume")
 	if err != nil {
@@ -341,7 +332,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		// -> if we want to change that, simply add the exposeAPI struct here
 
 		// first master node will be init node if we have more than one master specified but no external datastore
-		if i == 0 && masterCount > 1 && datastoreEndpoint == "" {
+		if i == 0 && masterCount > 1 {
 			node.MasterOpts.IsInit = true
 			cluster.InitNode = &node
 		}
