@@ -6,12 +6,18 @@ site_url: https://k3d.io/
 copyright: "Copyright &copy; 2020 k3d Authors"
 
 # Repo Information
+repo_name: rancher/k3d
 repo_url: https://github.com/rancher/k3d
-strict: True
 
 # Theme
 theme: 
   name: material
+  language: en
+  feature:
+    tabs: true
+  palette:
+    primary: "black"
+    accent: "grey"
 
 # Navigation
 nav:
@@ -23,4 +29,20 @@ nav:
 
 # Extensions
 markdown_extensions:
-  - codehilite
+  - toc:
+      permalink: true
+  - admonition # https://squidfunk.github.io/mkdocs-material/extensions/admonition/
+  - codehilite # https://squidfunk.github.io/mkdocs-material/extensions/codehilite/
+  - pymdownx.inlinehilite # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#inlinehilite
+  - pymdownx.superfences # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#superfences
+  - pymdownx.tabbed # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#tabbed
+  - smarty # https://python-markdown.github.io/extensions/smarty/
+
+# Plugins
+plugins:
+  - search
+  - git-revision-date-localized: # https://squidfunk.github.io/mkdocs-material/plugins/revision-date/
+      type: date
+
+# Other Settings
+strict: true # halt processing when a warning is raised
