@@ -43,6 +43,7 @@ func (d Docker) CreateNetworkIfNotPresent(name string) (string, bool, error) {
 		log.Errorln("Failed to create docker client")
 		return "", false, err
 	}
+	defer docker.Close()
 
 	// (1) configure list filters
 	args := filters.NewArgs()
@@ -89,6 +90,7 @@ func (d Docker) DeleteNetwork(ID string) error {
 		log.Errorln("Failed to create docker client")
 		return err
 	}
+	defer docker.Close()
 
 	// (3) delete network
 	return docker.NetworkRemove(ctx, ID)
@@ -102,5 +104,6 @@ func GetNetwork(ID string) (types.NetworkResource, error) {
 		log.Errorln("Failed to create docker client")
 		return types.NetworkResource{}, err
 	}
+	defer docker.Close()
 	return docker.NetworkInspect(ctx, ID, types.NetworkInspectOptions{})
 }

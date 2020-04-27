@@ -49,6 +49,7 @@ func createContainer(dockerNode *NodeInDocker, name string) error {
 		log.Errorln("Failed to create docker client")
 		return err
 	}
+	defer docker.Close()
 
 	// create container
 	var resp container.ContainerCreateCreatedBody
@@ -88,6 +89,7 @@ func removeContainer(ID string) error {
 		log.Errorln("Failed to create docker client")
 		return err
 	}
+	defer docker.Close()
 
 	// (1) define remove options
 	options := types.ContainerRemoveOptions{
@@ -141,6 +143,7 @@ func getNodeContainer(node *k3d.Node) (*types.Container, error) {
 		log.Errorln("Failed to create docker client")
 		return nil, err
 	}
+	defer docker.Close()
 
 	// (1) list containers which have the default k3d labels attached
 	filters := filters.NewArgs()

@@ -93,6 +93,7 @@ func (d Docker) StartNode(node *k3d.Node) error {
 	if err != nil {
 		return fmt.Errorf("Failed to create docker client. %+v", err)
 	}
+	defer docker.Close()
 
 	// get container which represents the node
 	nodeContainer, err := getNodeContainer(node)
@@ -123,6 +124,7 @@ func (d Docker) StopNode(node *k3d.Node) error {
 	if err != nil {
 		return fmt.Errorf("Failed to create docker client. %+v", err)
 	}
+	defer docker.Close()
 
 	// get container which represents the node
 	nodeContainer, err := getNodeContainer(node)
@@ -151,6 +153,7 @@ func getContainersByLabel(labels map[string]string) ([]types.Container, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create docker client. %+v", err)
 	}
+	defer docker.Close()
 
 	// (1) list containers which have the default k3d labels attached
 	filters := filters.NewArgs()
@@ -205,10 +208,11 @@ func (d Docker) GetNodeLogs(node *k3d.Node) (io.ReadCloser, error) {
 		log.Errorln("Failed to create docker client")
 		return nil, err
 	}
+	defer docker.Close()
 
 	containerInspectResponse, err := docker.ContainerInspect(ctx, container.ID)
 	if err != nil {
-		log.Errorln("Failed to inspect container '%s'", container.ID)
+		log.Errorf("Failed to inspect container '%s'", container.ID)
 		return nil, err
 	}
 
@@ -243,6 +247,7 @@ func (d Docker) ExecInNode(node *k3d.Node, cmd []string) error {
 		log.Errorln("Failed to create docker client")
 		return err
 	}
+	defer docker.Close()
 
 	// exec
 	exec, err := docker.ContainerExecCreate(ctx, container.ID, types.ExecConfig{
