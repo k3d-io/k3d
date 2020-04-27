@@ -13,19 +13,14 @@ repo_url: https://github.com/rancher/k3d
 theme: 
   name: material
   language: en
-  feature:
-    tabs: true
+  features:
+    - tabs
   palette:
     primary: "black"
     accent: "grey"
 
 # Navigation
-nav:
-  - Overview: index.md
-  - Command Tree: commands.md
-  - Defaults: defaults.md
-  - Examples: examples.md
-  - FAQ: faq.md
+# nav: ommitted, because we're using the awesome-pages plugin (https://squidfunk.github.io/mkdocs-material/plugins/awesome-pages/)
 
 # Extensions
 markdown_extensions:
@@ -43,6 +38,7 @@ plugins:
   - search
   - git-revision-date-localized: # https://squidfunk.github.io/mkdocs-material/plugins/revision-date/
       type: date
+  - awesome-pages # https://squidfunk.github.io/mkdocs-material/plugins/awesome-pages/
 
 # Other Settings
 strict: true # halt processing when a warning is raised
