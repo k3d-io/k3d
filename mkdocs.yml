@@ -31,6 +31,7 @@ markdown_extensions:
   - pymdownx.inlinehilite # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#inlinehilite
   - pymdownx.superfences # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#superfences
   - pymdownx.tabbed # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#tabbed
+  - pymdownx.details # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#details
   - smarty # https://python-markdown.github.io/extensions/smarty/
 
 # Plugins
