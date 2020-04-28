@@ -30,7 +30,7 @@ matrix:
           tags: true
     - dist: bionic
       language: python
-      python: 3
+      python: 3.8
       before_script: 
         - python3 -m pip install -r docs/requirements.txt
       script:
