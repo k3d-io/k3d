@@ -1,5 +1,5 @@
 arrange:
   - index.md
-  - commands.md
-  - defaults.md
-  - faq.md
+  - usage
+  - internals
+  - faq
