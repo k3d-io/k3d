@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"time"
 
 	"github.com/rancher/k3d/pkg/runtimes"
@@ -73,11 +74,24 @@ func GetAndWriteKubeConfig(runtime runtimes.Runtime, cluster *k3d.Cluster, outpu
 	for {
 		existingKubeConfig, err = clientcmd.LoadFromFile(output) // will return an empty config if file is empty
 		if err != nil {
+
+			// the output file does not exist: try to create it and try again
 			if os.IsNotExist(err) && firstRun {
-				if _, err := os.Create(output); err != nil {
-					log.Errorln("Failed to create output file")
+				log.Debugf("Output path '%s' doesn't exist, trying to create it...", output)
+
+				// create directory path
+				if err := os.MkdirAll(path.Dir(output), 0755); err != nil {
+					log.Errorf("Failed to create output directory '%s'", path.Dir(output))
 					return err
 				}
+
+				// create output file
+				if _, err := os.Create(output); err != nil {
+					log.Errorf("Failed to create output file '%s'", output)
+					return err
+				}
+
+				// try again, but do not try to create the file this time
 				firstRun = false
 				continue
 			}
@@ -213,6 +227,8 @@ func WriteKubeConfigToPath(kubeconfig *clientcmdapi.Config, path string) error {
 		return err
 	}
 
+	log.Debugf("Wrote kubeconfig to '%s'", output.Name)
+
 	return nil
 
 }
@@ -278,6 +294,8 @@ func WriteKubeConfig(kubeconfig *clientcmdapi.Config, path string) error {
 		return err
 	}
 
+	log.Debugf("Wrote kubeconfig to '%s'", path)
+
 	return nil
 }
 
@@ -287,6 +305,7 @@ func GetDefaultKubeConfig() (*clientcmdapi.Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Debugf("Using default kubeconfig '%s'", path)
 	return clientcmd.LoadFromFile(path)
 }
 
