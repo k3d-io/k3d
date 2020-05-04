@@ -273,6 +273,7 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 		Labels:  k3d.DefaultObjectLabels, // TODO: createLoadBalancer: add more expressive labels
 		Network: cluster.Network.Name,
 	}
+	cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
 	log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
 	if err := CreateNode(lbNode, runtime); err != nil {
 		log.Errorln("Failed to create loadbalancer")
