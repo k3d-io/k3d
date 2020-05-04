@@ -57,8 +57,9 @@ var flags = RootFlags{}
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "k3d",
-	Short: "Run k3s in Docker!",
-	Long: `k3d is a wrapper CLI that helps you to easily create k3s clusters inside docker.
+	Short: "https://k3d.io/ -> Run k3s in Docker!",
+	Long: `https://k3d.io/
+k3d is a wrapper CLI that helps you to easily create k3s clusters inside docker.
 Nodes of a k3d cluster are docker containers running a k3s image.
 All Nodes of a k3d cluster are part of the same docker network.`,
 }
