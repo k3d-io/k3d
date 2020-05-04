@@ -60,6 +60,15 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 		cluster.Network.Name = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
 	}
 
+	// handle hostnetwork
+	useHostNet := false
+	if cluster.Network.Name == "host" {
+		useHostNet = true
+		if len(cluster.Nodes) > 1 {
+			return fmt.Errorf("Only one master node supported when using host network")
+		}
+	}
+
 	// create cluster network or use an existing one
 	networkID, networkExists, err := runtime.CreateNetworkIfNotPresent(cluster.Network.Name)
 	if err != nil {
@@ -246,38 +255,41 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 	 * Auxiliary Containers
 	 */
 	// *** MasterLoadBalancer ***
-
-	// Generate a comma-separated list of master/server names to pass to the LB container
-	servers := ""
-	for _, node := range cluster.Nodes {
-		if node.Role == k3d.MasterRole {
-			log.Debugf("Node NAME: %s", node.Name)
-			if servers == "" {
-				servers = node.Name
-			} else {
-				servers = fmt.Sprintf("%s,%s", servers, node.Name)
+	if !useHostNet { // masterlb not supported in hostnetwork mode due to port collisions with master node
+		// Generate a comma-separated list of master/server names to pass to the LB container
+		servers := ""
+		for _, node := range cluster.Nodes {
+			if node.Role == k3d.MasterRole {
+				log.Debugf("Node NAME: %s", node.Name)
+				if servers == "" {
+					servers = node.Name
+				} else {
+					servers = fmt.Sprintf("%s,%s", servers, node.Name)
+				}
 			}
 		}
-	}
 
-	// Create LB as a modified node with loadbalancerRole
-	lbNode := &k3d.Node{
-		Name:  fmt.Sprintf("%s-%s-masterlb", k3d.DefaultObjectNamePrefix, cluster.Name),
-		Image: k3d.DefaultLBImage,
-		Ports: []string{fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort)},
-		Env: []string{
-			fmt.Sprintf("SERVERS=%s", servers),
-			fmt.Sprintf("PORT=%s", k3d.DefaultAPIPort),
-		},
-		Role:    k3d.LoadBalancerRole,
-		Labels:  k3d.DefaultObjectLabels, // TODO: createLoadBalancer: add more expressive labels
-		Network: cluster.Network.Name,
-	}
-	cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
-	log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
-	if err := CreateNode(lbNode, runtime); err != nil {
-		log.Errorln("Failed to create loadbalancer")
-		return err
+		// Create LB as a modified node with loadbalancerRole
+		lbNode := &k3d.Node{
+			Name:  fmt.Sprintf("%s-%s-masterlb", k3d.DefaultObjectNamePrefix, cluster.Name),
+			Image: k3d.DefaultLBImage,
+			Ports: []string{fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort)},
+			Env: []string{
+				fmt.Sprintf("SERVERS=%s", servers),
+				fmt.Sprintf("PORT=%s", k3d.DefaultAPIPort),
+			},
+			Role:    k3d.LoadBalancerRole,
+			Labels:  k3d.DefaultObjectLabels, // TODO: createLoadBalancer: add more expressive labels
+			Network: cluster.Network.Name,
+		}
+		cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
+		log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
+		if err := CreateNode(lbNode, runtime); err != nil {
+			log.Errorln("Failed to create loadbalancer")
+			return err
+		}
+	} else {
+		log.Infoln("Hostnetwork selected -> Skipping creation of Master LoadBalancer")
 	}
 	return nil
 }
