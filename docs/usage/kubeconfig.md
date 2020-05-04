@@ -30,3 +30,9 @@ To get a kubeconfig set up for you to connect to a k3d cluster, you can go diffe
 ## Removing cluster details from the kubeconfig
 
 `#!bash k3d delete cluster mycluster` will always remove the details for `mycluster` from the default kubeconfig.
+
+## Handling multiple clusters
+
+`k3d get kubeconfig` let's you specify one or more clusters via arguments _or_ all via `--all`.
+All kubeconfigs will then be merged into a single file, which is either the default kubeconfig or the kubeconfig specified via `--output FILE`.
+Note, that with multiple cluster specified, the `--switch` flag will change the current context to the cluster which was last in the list.

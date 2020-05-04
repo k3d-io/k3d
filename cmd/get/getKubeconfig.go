@@ -23,6 +23,7 @@ package get
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
@@ -33,51 +34,77 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type getKubeconfigFlags struct {
+	all    bool
+	output string
+}
+
 // NewCmdGetKubeconfig returns a new cobra command
 func NewCmdGetKubeconfig() *cobra.Command {
 
 	writeKubeConfigOptions := cluster.WriteKubeConfigOptions{}
 
+	getKubeconfigFlags := getKubeconfigFlags{}
+
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "kubeconfig CLUSTER", // TODO: getKubeconfig: allow more than one cluster name or even --all
+		Use:   "kubeconfig [CLUSTER [CLUSTER [...]] | --all]", // TODO: getKubeconfig: allow more than one cluster name or even --all
 		Short: "Get kubeconfig",
 		Long:  `Get kubeconfig.`,
-		Args:  cobra.MinimumNArgs(1),
+		Args: func(cmd *cobra.Command, args []string) error {
+			if (len(args) < 1 && !getKubeconfigFlags.all) || (len(args) > 0 && getKubeconfigFlags.all) {
+				return fmt.Errorf("Need to specify one or more cluster names *or* set `--all` flag")
+			}
+			return nil
+		},
 		Run: func(cmd *cobra.Command, args []string) {
-			selectedClusters, output := parseGetKubeconfigCmd(cmd, args)
-			if err := cluster.GetAndWriteKubeConfig(runtimes.SelectedRuntime, selectedClusters, output, &writeKubeConfigOptions); err != nil {
-				log.Fatalln(err)
+			var clusters []*k3d.Cluster
+			var err error
+
+			// generate list of clusters
+			if getKubeconfigFlags.all {
+				clusters, err = cluster.GetClusters(runtimes.SelectedRuntime)
+				if err != nil {
+					log.Fatalln(err)
+				}
+			} else {
+				for _, clusterName := range args {
+					clusters = append(clusters, &k3d.Cluster{Name: clusterName})
+				}
+			}
+
+			// get kubeconfigs from all clusters
+			errorGettingKubeconfig := false
+			for _, c := range clusters {
+				log.Debugf("Getting kubeconfig for cluster '%s'", c.Name)
+				if err := cluster.GetAndWriteKubeConfig(runtimes.SelectedRuntime, c, getKubeconfigFlags.output, &writeKubeConfigOptions); err != nil {
+					log.Errorln(err)
+					errorGettingKubeconfig = true
+				}
 			}
 
 			// only print kubeconfig file path if output is not stdout ("-")
-			if output != "-" {
-				fmt.Println(output)
+			if getKubeconfigFlags.output != "-" {
+				fmt.Println(getKubeconfigFlags.output)
+			}
+
+			// return with non-zero exit code, if there was an error for one of the clusters
+			if errorGettingKubeconfig {
+				os.Exit(1)
 			}
 		},
 	}
 
 	// add flags
-	cmd.Flags().StringP("output", "o", "", fmt.Sprintf("Define output [ - | FILE ] (default from $KUBECONFIG or %s", clientcmd.RecommendedHomeFile))
+	cmd.Flags().StringVarP(&getKubeconfigFlags.output, "output", "o", "", fmt.Sprintf("Define output [ - | FILE ] (default from $KUBECONFIG or %s", clientcmd.RecommendedHomeFile))
 	if err := cmd.MarkFlagFilename("output"); err != nil {
 		log.Fatalln("Failed to mark flag --output as filename")
 	}
 	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateExisting, "update", "u", true, "Update conflicting fields in existing KubeConfig")
 	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateCurrentContext, "switch", "s", false, "Switch to new context")
 	cmd.Flags().BoolVar(&writeKubeConfigOptions.OverwriteExisting, "overwrite", false, "[Careful!] Overwrite existing file, ignoring its contents")
-	// cmd.Flags().BoolP("all", "a", false, "Get kubeconfigs from all existing clusters") // TODO: getKubeconfig: enable --all flag
+	cmd.Flags().BoolVarP(&getKubeconfigFlags.all, "all", "a", false, "Get kubeconfigs from all existing clusters")
 
 	// done
 	return cmd
-}
-
-func parseGetKubeconfigCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, string) {
-
-	// --output
-	output, err := cmd.Flags().GetString("output")
-	if err != nil {
-		log.Fatalln("No output specified")
-	}
-
-	return &k3d.Cluster{Name: args[0]}, output
 }

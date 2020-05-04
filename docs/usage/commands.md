@@ -40,14 +40,20 @@ k3d
     node  # stop a node
   get
     cluster [CLUSTERNAME [CLUSTERNAME ...]]
-      --no-headers
-    node
-    kubeconfig CLUSTERNAME
+      --no-headers  # do not print headers
+    node NODENAME
+      --no-headers  # do not print headers
+    kubeconfig (CLUSTERNAME [CLUSTERNAME ...] | --all)
+      -a, --all  # get kubeconfigs from all clusters
+          --output  # specify the output file where the kubeconfig should be written to
+          --overwrite  # [Careful!] forcefully overwrite the output file, ignoring existing contents
+      -s, --switch  # switch current-context in kubeconfig to the new context
+      -u, --update  # update conflicting fields in existing kubeconfig (default: true)
   load
     image  [IMAGE [IMAGE ...]]  # Load one or more images from the local runtime environment into k3d clusters
-      -c, --cluster
-      -k, --keep-tarball, -k
-      -t, --tar, -t
+      -c, --cluster  # clusters to load the image into
+      -k, --keep-tarball  # do not delete the image tarball from the shared volume after completion
+      -t, --tar  # do not export image from runtime daemon, but directly import it from a tarball
   completion SHELL  # Generate completion scripts
   version  # show k3d build version
   help [COMMAND]  # show help text for any command

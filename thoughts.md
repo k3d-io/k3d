@@ -42,6 +42,7 @@
       - --overwrite
       - --switch
       - --update
+      - --all
   - start
     - cluster NAME
       - --all
