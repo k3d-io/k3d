@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.com/rancher/k3d.svg?branch=master)](https://travis-ci.com/rancher/k3d)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d)](https://goreportcard.com/report/github.com/rancher/k3d)
+[![License](https://img.shields.io/github/license/rancher/k3d)](./LICENSE.md)
+![Downloads](https://img.shields.io/github/downloads/rancher/k3d/total.svg)
 
 ## [k3s in docker](https://k3d.io)
 
@@ -13,16 +15,30 @@ k3d creates containerized k3s clusters. This means, that you can spin up a multi
 
 - [docker](https://docs.docker.com/install/)
 
+## Releases
+
+**Note**: In May 2020 we upgraded from v1.7.x to **v3.0.0** after a complete rewrite of k3d!
+
+[![Releases](https://img.shields.io/github/release/rancher/k3d.svg)](https://github.com/rancher/k3d/releases/latest)
+
+[![Homebrew](https://img.shields.io/homebrew/v/k3d)](https://formulae.brew.sh/formula/k3d)
+
 ## Get
 
 You have several options there:
 
-- via brew (homebrew/linuxbrew): `brew install k3d`
 - use the install script to grab the latest release:
   - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
   - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
-- Grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
-- Via go: `go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
+- use the install script to grab a specific release (via `TAG` environment variable):
+  - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v3.0.0-beta.0 bash`
+  - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v3.0.0-beta.0 bash`
+
+- use [Homebrew](https://brew.sh): `brew install k3d` (Homebrew is available for MacOS and Linux)
+  - Formula can be found in [homebrew/homebrew-core](https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb) and is mirrored to [homebrew/linuxbrew-core](https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb)
+- install via [AUR](https://aur.archlinux.org/) package [rancher-k3d-bin](https://aur.archlinux.org/packages/rancher-k3d-bin/): `yay -S rancher-k3d-bin`
+- grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
+- install via go: `go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
 
 or...
 
