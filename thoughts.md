@@ -108,7 +108,7 @@
   - list                          -> dropped, implemented as `k3d get clusters`
   - get-kubeconfig                -> `k3d get kubeconfig CLUSTERNAME`
     - --name                      -> dropped, implemented as arg
-    - --all                       -> planned
+    - --all                       -> implemented
     - --overwrite                 -> implemented
   - import-images                 -> `k3d load image [--cluster CLUSTERNAME] [--keep] IMAGES`
     - --name                      -> implemented as `--cluster`
