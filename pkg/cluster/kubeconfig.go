@@ -47,25 +47,25 @@ type WriteKubeConfigOptions struct {
 // 1. fetches the KubeConfig from the first master node retrieved for a given cluster
 // 2. modifies it by updating some fields with cluster-specific information
 // 3. writes it to the specified output
-func GetAndWriteKubeConfig(runtime runtimes.Runtime, cluster *k3d.Cluster, output string, writeKubeConfigOptions *WriteKubeConfigOptions) error {
+func GetAndWriteKubeConfig(runtime runtimes.Runtime, cluster *k3d.Cluster, output string, writeKubeConfigOptions *WriteKubeConfigOptions) (string, error) {
 
 	// get kubeconfig from cluster node
 	kubeconfig, err := GetKubeconfig(runtime, cluster)
 	if err != nil {
-		return err
+		return output, err
 	}
 
 	// empty output parameter = write to default
 	if output == "" {
 		output, err = GetDefaultKubeConfigPath()
 		if err != nil {
-			return err
+			return output, err
 		}
 	}
 
 	// simply write to the output, ignoring existing contents
 	if writeKubeConfigOptions.OverwriteExisting || output == "-" {
-		return WriteKubeConfigToPath(kubeconfig, output)
+		return output, WriteKubeConfigToPath(kubeconfig, output)
 	}
 
 	// load config from existing file or fail if it has non-kubeconfig contents
@@ -82,13 +82,13 @@ func GetAndWriteKubeConfig(runtime runtimes.Runtime, cluster *k3d.Cluster, outpu
 				// create directory path
 				if err := os.MkdirAll(path.Dir(output), 0755); err != nil {
 					log.Errorf("Failed to create output directory '%s'", path.Dir(output))
-					return err
+					return output, err
 				}
 
 				// create output file
 				if _, err := os.Create(output); err != nil {
 					log.Errorf("Failed to create output file '%s'", output)
-					return err
+					return output, err
 				}
 
 				// try again, but do not try to create the file this time
@@ -96,13 +96,13 @@ func GetAndWriteKubeConfig(runtime runtimes.Runtime, cluster *k3d.Cluster, outpu
 				continue
 			}
 			log.Errorf("Failed to open output file '%s' or it's not a KubeConfig", output)
-			return err
+			return output, err
 		}
 		break
 	}
 
 	// update existing kubeconfig, but error out if there are conflicting fields but we don't want to update them
-	return UpdateKubeConfig(kubeconfig, existingKubeConfig, output, writeKubeConfigOptions.UpdateExisting, writeKubeConfigOptions.UpdateCurrentContext)
+	return output, UpdateKubeConfig(kubeconfig, existingKubeConfig, output, writeKubeConfigOptions.UpdateExisting, writeKubeConfigOptions.UpdateCurrentContext)
 
 }
 

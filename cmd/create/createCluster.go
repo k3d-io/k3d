@@ -87,7 +87,7 @@ func NewCmdCreateCluster() *cobra.Command {
 
 			if updateKubeconfig {
 				log.Debugf("Updating default kubeconfig with a new context for cluster %s", cluster.Name)
-				if err := k3dCluster.GetAndWriteKubeConfig(runtimes.SelectedRuntime, cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: false}); err != nil {
+				if _, err := k3dCluster.GetAndWriteKubeConfig(runtimes.SelectedRuntime, cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: false}); err != nil {
 					log.Fatalln(err)
 				}
 			}
