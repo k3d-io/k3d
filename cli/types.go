@@ -2,6 +2,7 @@ package run
 
 import (
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 )
 
@@ -40,6 +41,7 @@ type ClusterSpec struct {
 	AutoRestart          bool
 	ClusterName          string
 	Env                  []string
+	HostConfig           *container.HostConfig
 	NodeToLabelSpecMap   map[string][]string
 	Image                string
 	NodeToPortSpecMap    map[string][]string

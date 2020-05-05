@@ -20,7 +20,9 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -124,6 +126,11 @@ func createServer(spec *ClusterSpec) (string, error) {
 		Init:         &[]bool{true}[0],
 	}
 
+	// merge clusterSpec hostConfig on top of the local hostConfig
+	if err := mergo.Merge(hostConfig, spec.HostConfig); err != nil {
+		return "", err
+	}
+
 	if spec.AutoRestart {
 		hostConfig.RestartPolicy.Name = "unless-stopped"
 	}
@@ -219,6 +226,11 @@ func createWorker(spec *ClusterSpec, postfix int) (string, error) {
 		PortBindings: workerPublishedPorts.PortBindings,
 		Privileged:   true,
 		Init:         &[]bool{true}[0],
+	}
+
+	// merge clusterSpec hostConfig on top of the local hostConfig
+	if err := mergo.Merge(hostConfig, spec.HostConfig); err != nil {
+		return "", err
 	}
 
 	if spec.AutoRestart {

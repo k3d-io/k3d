@@ -150,6 +150,10 @@ func main() {
 					Name:  "enable-registry-cache",
 					Usage: "Use the local registry as a cache for the Docker Hub (Note: This disables pushing local images to the registry!)",
 				},
+				cli.StringSliceFlag{
+					Name:  "dns",
+					Usage: "Set custom DNS servers",
+				},
 			},
 			Action: run.CreateCluster,
 		},

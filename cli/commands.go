@@ -7,12 +7,14 @@ package run
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
@@ -36,6 +38,15 @@ func CheckTools(c *cli.Context) error {
 	return nil
 }
 
+// ValidateIPAddress validates an Ip address.
+func ValidateIPAddress(val string) (string, error) {
+	var ip = net.ParseIP(strings.TrimSpace(val))
+	if ip != nil {
+		return ip.String(), nil
+	}
+	return "", fmt.Errorf("%s is not an ip address", val)
+}
+
 // CreateCluster creates a new single-node cluster container and initializes the cluster directory
 func CreateCluster(c *cli.Context) error {
 
@@ -52,6 +63,15 @@ func CreateCluster(c *cli.Context) error {
 	// validate --wait flag
 	if c.IsSet("wait") && c.Int("wait") < 0 {
 		log.Fatalf("Negative value for '--wait' not allowed (set '%d')", c.Int("wait"))
+	}
+
+	// validate --dns flag
+	if c.IsSet("dns") {
+		for _, dnsIP := range c.StringSlice("dns") {
+			if _, err := ValidateIPAddress(dnsIP); err != nil {
+				log.Fatalf("invalid argument \"%s\" for \"--dns\" flag: %s", dnsIP, err)
+			}
+		}
 	}
 
 	/**********************
@@ -231,6 +251,9 @@ func CreateCluster(c *cli.Context) error {
 		}
 	}
 
+	hostConfig := &container.HostConfig{
+		DNS: c.StringSlice("dns"),
+	}
 	/*
 	 * clusterSpec
 	 * Defines, with which specifications, the cluster and the nodes inside should be created
@@ -241,6 +264,7 @@ func CreateCluster(c *cli.Context) error {
 		AutoRestart:          c.Bool("auto-restart"),
 		ClusterName:          c.String("name"),
 		Env:                  env,
+		HostConfig:           hostConfig,
 		NodeToLabelSpecMap:   labelmap,
 		Image:                image,
 		NodeToPortSpecMap:    portmap,

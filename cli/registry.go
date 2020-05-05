@@ -13,6 +13,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -177,6 +178,11 @@ func createRegistry(spec ClusterSpec) (string, error) {
 		PortBindings: registryPublishedPorts.PortBindings,
 		Privileged:   true,
 		Init:         &[]bool{true}[0],
+	}
+
+	// merge clusterSpec hostConfig on top of the local hostConfig
+	if err := mergo.Merge(hostConfig, spec.HostConfig); err != nil {
+		return "", err
 	}
 
 	if spec.AutoRestart {
