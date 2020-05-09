@@ -10,7 +10,7 @@ events {
 stream {
   upstream kube_apiserver {
     {{ $servers := split (getenv "SERVERS") "," }}{{range $servers}}
-    server {{.}}:{{getenv "PORT"}};
+    server {{.}}:{{getenv "PORT"}} max_fails=1 fail_timeout=10s slow_start=10s;
     {{end}}
   }
 
