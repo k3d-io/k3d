@@ -94,7 +94,19 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 
 	log.Debugf("Resulting node %+v", node)
 
-	return CreateNode(node, runtime)
+	if err := CreateNode(node, runtime); err != nil {
+		return err
+	}
+
+	// if it's a master node, then update the loadbalancer configuration to include it
+	if node.Role == k3d.MasterRole {
+		if err := AddMasterToLoadBalancer(runtime, cluster, node); err != nil {
+			log.Errorln("Failed to add new master node to cluster loadbalancer")
+			return err
+		}
+	}
+
+	return nil
 }
 
 // CreateNodes creates a list of nodes
@@ -196,7 +208,7 @@ func GetNodes(runtime runtimes.Runtime) ([]*k3d.Node, error) {
 	return nodes, nil
 }
 
-// GetNode returns an existing cluster
+// GetNode returns a node matching the specified node fields
 func GetNode(node *k3d.Node, runtime runtimes.Runtime) (*k3d.Node, error) {
 	// get node
 	node, err := runtime.GetNode(node)

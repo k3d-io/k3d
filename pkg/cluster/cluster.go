@@ -427,7 +427,7 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 	return nil
 }
 
-// GetCluster returns an existing cluster
+// GetCluster returns an existing cluster with all fields and node lists populated
 func GetCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) (*k3d.Cluster, error) {
 	// get nodes that belong to the selected cluster
 	nodes, err := runtime.GetNodesByLabel(map[string]string{"k3d.cluster": cluster.Name})

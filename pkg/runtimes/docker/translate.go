@@ -23,6 +23,8 @@ THE SOFTWARE.
 package docker
 
 import (
+	"strings"
+
 	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -107,10 +109,10 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 // TranslateContainerToNode translates a docker container object into a k3d node representation
 func TranslateContainerToNode(cont *types.Container) (*k3d.Node, error) {
 	node := &k3d.Node{
-		Name:   cont.Names[0],
+		Name:   strings.TrimPrefix(cont.Names[0], "/"), // container name with leading '/' cut off
 		Image:  cont.Image,
 		Labels: cont.Labels,
-		Role:   k3d.NodeRoles[cont.Labels["k3d.role"]], // TODO: what if this is not present?
+		Role:   k3d.NodeRoles[cont.Labels["k3d.role"]],
 		// TODO: all the rest
 	}
 	return node, nil
