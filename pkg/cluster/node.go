@@ -36,10 +36,9 @@ import (
 
 // AddNodeToCluster adds a node to an existing cluster
 func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Cluster) error {
-	clusterName := cluster.Name
 	cluster, err := GetCluster(cluster, runtime)
 	if err != nil {
-		log.Errorf("Failed to find specified cluster '%s'", clusterName)
+		log.Errorf("Failed to find specified cluster '%s'", cluster.Name)
 		return err
 	}
 
@@ -53,29 +52,43 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 	node.Env = []string{}
 
 	// copy labels and env vars from a similar node in the selected cluster
+	var chosenNode *k3d.Node
 	for _, existingNode := range cluster.Nodes {
 		if existingNode.Role == node.Role {
-
-			log.Debugf("Copying configuration from existing node %+v", existingNode)
-
-			for k, v := range existingNode.Labels {
-				if strings.HasPrefix(k, "k3d") {
-					node.Labels[k] = v
-				}
-				if k == "k3d.cluster.url" {
-					node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", v))
-				}
-				if k == "k3d.cluster.secret" {
-					node.Env = append(node.Env, fmt.Sprintf("K3S_TOKEN=%s", v))
-				}
-			}
-
-			for _, env := range existingNode.Env {
-				if strings.HasPrefix(env, "K3S_") {
-					node.Env = append(node.Env, env)
-				}
-			}
+			chosenNode = existingNode
 			break
+		}
+	}
+	// if we didn't find a node with the same role in the cluster, just choose any other node
+	if chosenNode == nil {
+		log.Debugf("Didn't find node with role '%s' in cluster '%s'. Choosing any other node...", node.Role, cluster.Name)
+		for _, existingNode := range cluster.Nodes {
+			if existingNode.Role != k3d.LoadBalancerRole { // any role except for the LoadBalancer role
+				chosenNode = existingNode
+				break
+			}
+		}
+	}
+
+	log.Debugf("Copying configuration from existing node %+v", chosenNode)
+
+	// get config from labels
+	for k, v := range chosenNode.Labels {
+		if strings.HasPrefix(k, "k3d") {
+			node.Labels[k] = v
+		}
+		if k == "k3d.cluster.url" {
+			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", v))
+		}
+		if k == "k3d.cluster.secret" {
+			node.Env = append(node.Env, fmt.Sprintf("K3S_TOKEN=%s", v))
+		}
+	}
+
+	// backup: get config from environment variables
+	for _, env := range chosenNode.Env {
+		if strings.HasPrefix(env, "K3S_") {
+			node.Env = append(node.Env, env)
 		}
 	}
 
