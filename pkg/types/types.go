@@ -98,11 +98,12 @@ const DefaultAPIHost = "0.0.0.0"
 
 // CreateClusterOpts describe a set of options one can set when creating a cluster
 type CreateClusterOpts struct {
-	DisableImageVolume bool
-	WaitForMaster      bool
-	Timeout            time.Duration
-	K3sServerArgs      []string
-	K3sAgentArgs       []string
+	DisableImageVolume  bool
+	WaitForMaster       bool
+	Timeout             time.Duration
+	DisableLoadBalancer bool
+	K3sServerArgs       []string
+	K3sAgentArgs        []string
 }
 
 // ClusterNetwork describes a network which a cluster is running in

@@ -122,6 +122,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().BoolVar(&createClusterOpts.WaitForMaster, "wait", false, "Wait for the master(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
 	cmd.Flags().DurationVar(&createClusterOpts.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
 	cmd.Flags().BoolVar(&updateKubeconfig, "update-kubeconfig", false, "Directly update the default kubeconfig with the new cluster's context")
+	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadBalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the master nodes")
 
 	/* Image Importing */
 	cmd.Flags().BoolVar(&createClusterOpts.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
