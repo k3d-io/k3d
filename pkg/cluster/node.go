@@ -170,7 +170,9 @@ func DeleteNode(runtime runtimes.Runtime, node *k3d.Node) error {
 
 // patchWorkerSpec adds worker node specific settings to a node
 func patchWorkerSpec(node *k3d.Node) error {
-	node.Args = append([]string{"agent"}, node.Args...)
+	if node.Cmd == nil {
+		node.Cmd = []string{"agent"}
+	}
 	return nil
 }
 
@@ -178,7 +180,9 @@ func patchWorkerSpec(node *k3d.Node) error {
 func patchMasterSpec(node *k3d.Node) error {
 
 	// command / arguments
-	node.Args = append([]string{"server"}, node.Args...)
+	if node.Cmd == nil {
+		node.Cmd = []string{"server"}
+	}
 
 	// Add labels and TLS SAN for the exposed API
 	// FIXME: For now, the labels concerning the API on the master nodes are only being used for configuring the kubeconfig
