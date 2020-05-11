@@ -298,7 +298,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		}
 	}
 
-	log.Debugln(portFilterMap)
+	log.Debugf("PortFilterMap: %+v", portFilterMap)
 
 	/********************
 	 *									*
@@ -316,6 +316,13 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 
 	// generate list of nodes
 	cluster.Nodes = []*k3d.Node{}
+
+	// MasterLoadBalancer
+	if !createClusterOpts.DisableLoadBalancer {
+		cluster.MasterLoadBalancer = &k3d.Node{
+			Role: k3d.LoadBalancerRole,
+		}
+	}
 
 	/****************
 	 * Master Nodes *
@@ -372,7 +379,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		if len(filters) == 0 && (masterCount+workerCount) > 1 {
 			log.Fatalf("Malformed portmapping '%s' lacks a node filter, but there is more than one node.", portmap)
 		}
-		nodes, err := cliutil.FilterNodes(cluster.Nodes, filters)
+		nodes, err := cliutil.FilterNodes(append(cluster.Nodes, cluster.MasterLoadBalancer), filters)
 		if err != nil {
 			log.Fatalln(err)
 		}

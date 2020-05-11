@@ -1,3 +1,6 @@
+{{- $servers := split (getenv "SERVERS") "," -}}
+{{- $ports := split (getenv "PORTS") "," -}}
+
 error_log stderr notice;
 
 worker_processes auto;
@@ -8,16 +11,18 @@ events {
 }
 
 stream {
-  upstream kube_apiserver {
-    {{ $servers := split (getenv "SERVERS") "," }}{{range $servers}}
-    server {{.}}:{{getenv "PORT"}} max_fails=1 fail_timeout=10s slow_start=10s;
-    {{end}}
+  {{- range $port := $ports }}
+  upstream master_nodes_{{ $port }} {
+    {{- range $server := $servers }}
+    server {{ $server }}:{{ $port }} max_fails=1 fail_timeout=10s;
+    {{- end }}
   }
 
   server {
-    listen        {{getenv "PORT"}};
-    proxy_pass    kube_apiserver;
+    listen        {{ $port }};
+    proxy_pass    master_nodes_{{ $port }};
     proxy_timeout 30;
     proxy_connect_timeout 2s;
   }
+  {{- end }}
 }

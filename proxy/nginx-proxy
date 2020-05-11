@@ -3,5 +3,10 @@
 # Run confd
 confd -onetime -backend env
 
+# Output Configuration
+echo "===== Initial nginx configuration ====="
+cat /etc/nginx/nginx.conf
+echo "======================================="
+
 # Start nginx
 nginx -g 'daemon off;'

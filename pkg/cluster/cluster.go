@@ -240,8 +240,10 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 			suffix = workerCount
 			workerCount++
 		}
-		if err := nodeSetup(node, suffix); err != nil {
-			return err
+		if node.Role == k3d.MasterRole || node.Role == k3d.WorkerRole {
+			if err := nodeSetup(node, suffix); err != nil {
+				return err
+			}
 		}
 
 		// asynchronously wait for this master node to be ready (by checking the logs for a specific log mesage)
@@ -281,14 +283,21 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 				}
 			}
 
+			// generate comma-separated list of extra ports to forward
+			ports := k3d.DefaultAPIPort
+			for _, portString := range cluster.MasterLoadBalancer.Ports {
+				split := strings.Split(portString, ":")
+				ports += "," + split[len(split)-1]
+			}
+
 			// Create LB as a modified node with loadbalancerRole
 			lbNode := &k3d.Node{
 				Name:  fmt.Sprintf("%s-%s-masterlb", k3d.DefaultObjectNamePrefix, cluster.Name),
 				Image: k3d.DefaultLBImage,
-				Ports: []string{fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort)},
+				Ports: append(cluster.MasterLoadBalancer.Ports, fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort)),
 				Env: []string{
 					fmt.Sprintf("SERVERS=%s", servers),
-					fmt.Sprintf("PORT=%s", k3d.DefaultAPIPort),
+					fmt.Sprintf("PORTS=%s", ports),
 				},
 				Role:    k3d.LoadBalancerRole,
 				Labels:  k3d.DefaultObjectLabels, // TODO: createLoadBalancer: add more expressive labels

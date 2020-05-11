@@ -34,7 +34,7 @@ import (
 )
 
 // Regexp pattern to match node filters
-var filterRegexp = regexp.MustCompile(`^(?P<group>master|worker|all)(?P<subsetSpec>\[(?P<subset>(?P<subsetList>(\d+,?)+)|(?P<subsetRange>\d*:\d*)|(?P<subsetWildcard>\*))\])?$`)
+var filterRegexp = regexp.MustCompile(`^(?P<group>master|worker|loadbalancer|all)(?P<subsetSpec>\[(?P<subset>(?P<subsetList>(\d+,?)+)|(?P<subsetRange>\d*:\d*)|(?P<subsetWildcard>\*))\])?$`)
 
 // SplitFiltersFromFlag separates a flag's value from the node filter, if there is one
 func SplitFiltersFromFlag(flag string) (string, []string, error) {
@@ -74,11 +74,14 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 	// map roles to subsets
 	masterNodes := []*k3d.Node{}
 	workerNodes := []*k3d.Node{}
+	var masterlb *k3d.Node
 	for _, node := range nodes {
 		if node.Role == k3d.MasterRole {
 			masterNodes = append(masterNodes, node)
 		} else if node.Role == k3d.WorkerRole {
 			workerNodes = append(workerNodes, node)
+		} else if node.Role == k3d.LoadBalancerRole {
+			masterlb = node
 		}
 	}
 
@@ -111,6 +114,9 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 			groupNodes = masterNodes
 		} else if submatches["group"] == string(k3d.WorkerRole) {
 			groupNodes = workerNodes
+		} else if submatches["group"] == string(k3d.LoadBalancerRole) {
+			filteredNodes = append(filteredNodes, masterlb)
+			return filteredNodes, nil // early exit if filtered group is the loadbalancer
 		}
 
 		/* Option 1) subset defined by list */

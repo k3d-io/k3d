@@ -39,7 +39,7 @@ const DefaultClusterNameMaxLength = 32
 const DefaultK3sImageRepo = "docker.io/rancher/k3s"
 
 // DefaultLBImage defines the default cluster load balancer image
-const DefaultLBImage = "docker.io/iwilltry42/k3d-proxy:v0.0.1"
+const DefaultLBImage = "docker.io/iwilltry42/k3d-proxy:v0.0.2"
 
 // DefaultObjectNamePrefix defines the name prefix for every object created by k3d
 const DefaultObjectNamePrefix = "k3d"
@@ -114,15 +114,16 @@ type ClusterNetwork struct {
 
 // Cluster describes a k3d cluster
 type Cluster struct {
-	Name              string             `yaml:"name" json:"name,omitempty"`
-	Network           ClusterNetwork     `yaml:"network" json:"network,omitempty"`
-	Secret            string             `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
-	Nodes             []*Node            `yaml:"nodes" json:"nodes,omitempty"`
-	InitNode          *Node              // init master node
-	ExternalDatastore ExternalDatastore  `yaml:"external_datastore" json:"externalDatastore,omitempty"`
-	CreateClusterOpts *CreateClusterOpts `yaml:"options" json:"options,omitempty"`
-	ExposeAPI         ExposeAPI          `yaml:"expose_api" json:"exposeAPI,omitempty"`
-	ImageVolume       string             `yaml:"image_volume" json:"imageVolume,omitempty"`
+	Name               string             `yaml:"name" json:"name,omitempty"`
+	Network            ClusterNetwork     `yaml:"network" json:"network,omitempty"`
+	Secret             string             `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
+	Nodes              []*Node            `yaml:"nodes" json:"nodes,omitempty"`
+	InitNode           *Node              // init master node
+	ExternalDatastore  ExternalDatastore  `yaml:"external_datastore" json:"externalDatastore,omitempty"`
+	CreateClusterOpts  *CreateClusterOpts `yaml:"options" json:"options,omitempty"`
+	ExposeAPI          ExposeAPI          `yaml:"expose_api" json:"exposeAPI,omitempty"`
+	MasterLoadBalancer *Node              `yaml:"master_loadbalancer" json:"masterLoadBalancer,omitempty"`
+	ImageVolume        string             `yaml:"image_volume" json:"imageVolume,omitempty"`
 }
 
 // Node describes a k3d node
