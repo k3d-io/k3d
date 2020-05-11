@@ -7,9 +7,14 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
 1. Create a cluster, mapping the ingress port 80 to localhost:8081
 
-    `k3d create cluster --api-port 6550 -p 8081:80 --workers 2`
+    `k3d create cluster --api-port 6550 -p 8081:80@loadbalancer --workers 2`
 
-    - Note: `--api-port 6550` is not required for the example to work. It's used to have `k3s`'s API-Server listening on port 6550 with that port mapped to the host system.
+  !!! note "NOTE"
+      - `--api-port 6550` is not required for the example to work. It's used to have `k3s`'s API-Server listening on port 6550 with that port mapped to the host system.
+      - the port-mapping construct `8081:80@loadbalancer` means
+        - map port `8081` from the host to port `80` on the container which matches the nodefilter `loadbalancer`
+      - the `loadbalancer` nodefilter matches only the `masterlb` that's deployed in front of a cluster's master nodes
+        - all ports exposed on the `masterlb` will be proxied to the same ports on all master nodes in the cluster
 
 2. Get the kubeconfig file
 
