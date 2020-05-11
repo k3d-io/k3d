@@ -25,10 +25,10 @@ package cluster
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
+	"github.com/imdario/mergo"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
@@ -70,27 +70,21 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 		}
 	}
 
+	// get node details
+	chosenNode, err = GetNode(chosenNode, runtime)
+	if err != nil {
+		return err
+	}
+
 	log.Debugf("Copying configuration from existing node %+v", chosenNode)
 
-	// get config from labels
-	for k, v := range chosenNode.Labels {
-		if strings.HasPrefix(k, "k3d") {
-			node.Labels[k] = v
-		}
-		if k == "k3d.cluster.url" {
-			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", v))
-		}
-		if k == "k3d.cluster.secret" {
-			node.Env = append(node.Env, fmt.Sprintf("K3S_TOKEN=%s", v))
-		}
+	// merge node config of new node into existing node config
+	if err := mergo.MergeWithOverwrite(chosenNode, *node); err != nil {
+		log.Errorln("Failed to merge new node config into existing node config")
+		return err
 	}
 
-	// backup: get config from environment variables
-	for _, env := range chosenNode.Env {
-		if strings.HasPrefix(env, "K3S_") {
-			node.Env = append(node.Env, env)
-		}
-	}
+	node = chosenNode
 
 	log.Debugf("Resulting node %+v", node)
 

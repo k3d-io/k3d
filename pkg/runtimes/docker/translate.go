@@ -23,6 +23,7 @@ THE SOFTWARE.
 package docker
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/docker/docker/api/types"
@@ -114,6 +115,82 @@ func TranslateContainerToNode(cont *types.Container) (*k3d.Node, error) {
 		Labels: cont.Labels,
 		Role:   k3d.NodeRoles[cont.Labels["k3d.role"]],
 		// TODO: all the rest
+	}
+	return node, nil
+}
+
+// TranslateContainerDetailsToNode translates a docker containerJSON object into a k3d node representation
+func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d.Node, error) {
+
+	// translate portMap to string representation
+	ports := []string{}
+	for containerPort, portBindingList := range containerDetails.HostConfig.PortBindings {
+		for _, hostInfo := range portBindingList {
+			ports = append(ports, fmt.Sprintf("%s:%s:%s", hostInfo.HostIP, hostInfo.HostPort, containerPort))
+		}
+	}
+
+	// restart -> we only set 'unless-stopped' upon cluster creation
+	restart := false
+	if containerDetails.HostConfig.RestartPolicy.IsAlways() || containerDetails.HostConfig.RestartPolicy.IsUnlessStopped() {
+		restart = true
+	}
+
+	// get the clusterNetwork
+	clusterNetwork := ""
+	for networkName := range containerDetails.NetworkSettings.Networks {
+		if strings.HasPrefix(networkName, fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, containerDetails.Config.Labels["k3d.cluster"])) { // FIXME: catch error if label 'k3d.cluster' does not exist, but this should also never be the case
+			clusterNetwork = networkName
+		}
+	}
+
+	// masterOpts
+	masterOpts := k3d.MasterOpts{IsInit: false}
+	for k, v := range containerDetails.Config.Labels {
+		/*
+			node.Labels["k3d.master.api.hostIP"] = node.MasterOpts.ExposeAPI.HostIP // TODO: maybe get docker machine IP here
+			node.Labels["k3d.master.api.host"] = node.MasterOpts.ExposeAPI.Host
+			node.Labels["k3d.master.api.port"] = node.MasterOpts.ExposeAPI.Port
+		*/
+		if k == "k3d.master.api.hostIP" {
+			masterOpts.ExposeAPI.HostIP = v
+		} else if k == "k3d.master.api.host" {
+			masterOpts.ExposeAPI.Host = v
+		} else if k == "k3d.master.api.port" {
+			masterOpts.ExposeAPI.Port = v
+		}
+	}
+
+	// env vars: only copy K3S_* and K3D_* // FIXME: should we really do this? Might be unexpected, if user has e.g. HTTP_PROXY vars
+	env := []string{}
+	for _, envVar := range containerDetails.Config.Env {
+		if strings.HasPrefix(envVar, "K3D_") || strings.HasPrefix(envVar, "K3S_") {
+			env = append(env, envVar)
+		}
+	}
+
+	// labels: only copy k3d.* labels
+	labels := map[string]string{}
+	for k, v := range containerDetails.Config.Labels {
+		if strings.HasPrefix(k, "k3d") {
+			labels[k] = v
+		}
+	}
+
+	node := &k3d.Node{
+		Name:       strings.TrimPrefix(containerDetails.Name, "/"), // container name with leading '/' cut off
+		Role:       k3d.NodeRoles[containerDetails.Config.Labels["k3d.role"]],
+		Image:      containerDetails.Image,
+		Volumes:    containerDetails.HostConfig.Binds,
+		Env:        env,
+		Cmd:        containerDetails.Config.Cmd,
+		Args:       []string{}, // empty, since Cmd already contains flags
+		Ports:      ports,
+		Restart:    restart,
+		Labels:     labels,
+		Network:    clusterNetwork,
+		MasterOpts: masterOpts,
+		WorkerOpts: k3d.WorkerOpts{},
 	}
 	return node, nil
 }

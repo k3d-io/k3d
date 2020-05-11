@@ -38,7 +38,6 @@ import (
 
 // CreateNode creates a new container
 func (d Docker) CreateNode(node *k3d.Node) error {
-	log.Debugln("docker.CreateNode...")
 
 	// translate node spec to docker container specs
 	dockerNode, err := TranslateNodeToContainer(node)
@@ -172,7 +171,28 @@ func getContainersByLabel(labels map[string]string) ([]types.Container, error) {
 		log.Errorln("Failed to list containers")
 		return nil, err
 	}
+
 	return containers, nil
+}
+
+// getContainer details returns the containerjson with more details
+func getContainerDetails(containerID string) (types.ContainerJSON, error) {
+	// (0) create docker client
+	ctx := context.Background()
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return types.ContainerJSON{}, fmt.Errorf("Failed to create docker client. %+v", err)
+	}
+	defer docker.Close()
+
+	containerDetails, err := docker.ContainerInspect(ctx, containerID)
+	if err != nil {
+		log.Errorln("Failed to get details for container '%s'", containerID)
+		return types.ContainerJSON{}, err
+	}
+
+	return containerDetails, nil
+
 }
 
 // GetNode tries to get a node container by its name
@@ -183,9 +203,14 @@ func (d Docker) GetNode(node *k3d.Node) (*k3d.Node, error) {
 		return nil, err
 	}
 
-	node, err = TranslateContainerToNode(container)
+	containerDetails, err := getContainerDetails(container.ID)
 	if err != nil {
-		log.Errorf("Failed to translate container for node '%s' to node object", node.Name)
+		return nil, err
+	}
+
+	node, err = TranslateContainerDetailsToNode(containerDetails)
+	if err != nil {
+		log.Errorf("Failed to translate container details for node '%s' to node object", node.Name)
 		return nil, err
 	}
 
