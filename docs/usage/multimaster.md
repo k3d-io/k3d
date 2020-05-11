@@ -1,6 +1,6 @@
 # Creating multi-master clusters
 
-!!! note "Important note"
+!!! info "Important note"
     For the best results (and less unexpected issues), choose 1, 3, 5, ... master nodes.
 
 ## Embedded dqlite
@@ -20,6 +20,6 @@ In theory (and also in practice in most cases), this is as easy as executing the
     k3d create node newmaster --cluster multimaster --role master
 ```
 
-!!! note "There's a trap!"
+!!! important "There's a trap!"
     If your cluster was initially created with only a single master node, then this will fail.
     That's because the initial master node was not started with the `--cluster-init` flag and thus is not using the dqlite backend.

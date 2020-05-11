@@ -7,28 +7,28 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
 1. Create a cluster, mapping the ingress port 80 to localhost:8081
 
-    `k3d create cluster --api-port 6550 -p 8081:80@loadbalancer --workers 2`
+    `#!bash k3d create cluster --api-port 6550 -p 8081:80@loadbalancer --workers 2`
 
-  !!! note "NOTE"
-      - `--api-port 6550` is not required for the example to work. It's used to have `k3s`'s API-Server listening on port 6550 with that port mapped to the host system.
-      - the port-mapping construct `8081:80@loadbalancer` means
-        - map port `8081` from the host to port `80` on the container which matches the nodefilter `loadbalancer`
-      - the `loadbalancer` nodefilter matches only the `masterlb` that's deployed in front of a cluster's master nodes
-        - all ports exposed on the `masterlb` will be proxied to the same ports on all master nodes in the cluster
+    !!! info "Good to know"
+        - `--api-port 6550` is not required for the example to work. It's used to have `k3s`'s API-Server listening on port 6550 with that port mapped to the host system.
+        - the port-mapping construct `8081:80@loadbalancer` means
+            - map port `8081` from the host to port `80` on the container which matches the nodefilter `loadbalancer`
+        - the `loadbalancer` nodefilter matches only the `masterlb` that's deployed in front of a cluster's master nodes
+            - all ports exposed on the `masterlb` will be proxied to the same ports on all master nodes in the cluster
 
 2. Get the kubeconfig file
 
-    `export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"`
+    `#!bash export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"`
 
 3. Create a nginx deployment
 
-    `kubectl create deployment nginx --image=nginx`
+    `#!bash kubectl create deployment nginx --image=nginx`
 
 4. Create a ClusterIP service for it
 
-    `kubectl create service clusterip nginx --tcp=80:80`
+    `#!bash kubectl create service clusterip nginx --tcp=80:80`
 
-5. Create an ingress object for it with `kubectl apply -f`
+5. Create an ingress object for it with `#!bash kubectl apply -f`
   *Note*: `k3s` deploys [`traefik`](https://github.com/containous/traefik) as the default ingress controller
 
     ```YAML
@@ -50,19 +50,19 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
 6. Curl it via localhost
 
-    `curl localhost:8081/`
+    `#!bash curl localhost:8081/`
 
 ## 2. via NodePort
 
 1. Create a cluster, mapping the port 30080 from worker-0 to localhost:8082
 
-    `k3d create cluster mycluster -p 8082:30080@worker[0] --workers 2`
+    `#!bash k3d create cluster mycluster -p 8082:30080@worker[0] --workers 2`
 
     - Note: Kubernetes' default NodePort range is [`30000-32767`](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
 
 ... (Steps 2 and 3 like above) ...
 
-1. Create a NodePort service for it with `kubectl apply -f`
+1. Create a NodePort service for it with `#!bash kubectl apply -f`
 
     ```YAML
     apiVersion: v1
@@ -85,4 +85,4 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
 2. Curl it via localhost
 
-    `curl localhost:8082/`
+    `#!bash curl localhost:8082/`
