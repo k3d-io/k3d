@@ -25,6 +25,7 @@ package cluster
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -87,6 +88,21 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 	node = chosenNode
 
 	log.Debugf("Resulting node %+v", node)
+
+	k3sURLFound := false
+	for _, envVar := range node.Env {
+		if strings.HasPrefix(envVar, "K3S_URL") {
+			k3sURLFound = true
+			break
+		}
+	}
+	if !k3sURLFound {
+		if url, ok := node.Labels["k3d.cluster.url"]; ok {
+			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", url))
+		} else [
+			log.Warnln("Failed to find K3S_URL value!")
+		]
+	}
 
 	if err := CreateNode(node, runtime); err != nil {
 		return err
