@@ -99,9 +99,9 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 	if !k3sURLFound {
 		if url, ok := node.Labels["k3d.cluster.url"]; ok {
 			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", url))
-		} else [
+		} else {
 			log.Warnln("Failed to find K3S_URL value!")
-		]
+		}
 	}
 
 	if err := CreateNode(node, runtime); err != nil {
