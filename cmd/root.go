@@ -37,7 +37,6 @@ import (
 	"github.com/rancher/k3d/cmd/start"
 	"github.com/rancher/k3d/cmd/stop"
 	"github.com/rancher/k3d/pkg/runtimes"
-
 	"github.com/rancher/k3d/version"
 
 	log "github.com/sirupsen/logrus"
@@ -47,6 +46,7 @@ import (
 // RootFlags describes a struct that holds flags that can be set on root level of the command
 type RootFlags struct {
 	debugLogging bool
+	version      bool
 	runtime      string
 }
 
@@ -62,6 +62,11 @@ var rootCmd = &cobra.Command{
 k3d is a wrapper CLI that helps you to easily create k3s clusters inside docker.
 Nodes of a k3d cluster are docker containers running a k3s image.
 All Nodes of a k3d cluster are part of the same docker network.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if flags.version {
+			printVersion()
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -82,6 +87,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&flags.runtime, "runtime", "r", "docker", "Choose a container runtime environment [docker, containerd]")
 
 	// add local flags
+	rootCmd.Flags().BoolVar(&flags.version, "version", false, "Show k3d and default k3s version")
 
 	// add subcommands
 	rootCmd.AddCommand(NewCmdCompletion())
@@ -97,7 +103,7 @@ func init() {
 		Short: "Print k3d version",
 		Long:  "Print k3d version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("k3d version %s\n", version.GetVersion())
+			printVersion()
 		},
 	})
 }
@@ -147,6 +153,11 @@ func initRuntime() {
 	}
 	runtimes.SelectedRuntime = runtime
 	log.Debugf("Selected runtime is '%T'", runtimes.SelectedRuntime)
+}
+
+func printVersion() {
+	fmt.Printf("k3d version %s\n", version.GetVersion())
+	fmt.Printf("k3s version %s (default)\n", version.K3sVersion)
 }
 
 // Completion
