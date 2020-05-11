@@ -12,7 +12,7 @@ matrix:
       before_script:
         - make ci-setup
       script:
-        - make ci-tests build-cross
+        - make -e "E2E_SKIP=test_multi_master" ci-tests build-cross
       deploy:
         provider: releases
         skip_cleanup: true

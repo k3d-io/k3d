@@ -16,6 +16,7 @@ k3de2e=$(docker run -d \
           -e EXE="$K3D_EXE" \
           -e CI="true" \
           -e LOG_LEVEL="$LOG_LEVEL" \
+          -e E2E_SKIP="$E2E_SKIP" \
           --name "k3d-e2e-runner-$TIMESTAMP" \
           k3d:$K3D_IMAGE_TAG)
 
