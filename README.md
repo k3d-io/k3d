@@ -11,6 +11,12 @@ k3s is the lightweight Kubernetes distribution by Rancher: [rancher/k3s](https:/
 
 k3d creates containerized k3s clusters. This means, that you can spin up a multi-node k3s cluster on a single machine using docker.
 
+## Learning
+
+- Website with documentation: [k3d.io](https://k3d.io/)
+- [Rancher Meetup - May 2020 - Simplifying Your Cloud-Native Development Workflow With K3s, K3c and K3d (YouTube)](https://www.youtube.com/watch?v=hMr3prm9gDM)
+  - k3d demo repository: [iwilltry42/k3d-demo](https://github.com/iwilltry42/k3d-demo)
+
 ## Requirements
 
 - [docker](https://docs.docker.com/install/)
