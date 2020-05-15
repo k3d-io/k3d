@@ -43,5 +43,5 @@ matrix:
         local_dir: site
         on:
           repo: rancher/k3d
-          branch: master-v3
+          branch: master
 
