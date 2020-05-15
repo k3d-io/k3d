@@ -27,9 +27,11 @@ k3d creates containerized k3s clusters. This means, that you can spin up a multi
 
 **Note**: In May 2020 we upgraded from v1.7.x to **v3.0.0** after a complete rewrite of k3d!
 
-[![Releases](https://img.shields.io/github/release/rancher/k3d.svg)](https://github.com/rancher/k3d/releases/latest)
-
-[![Homebrew](https://img.shields.io/homebrew/v/k3d)](https://formulae.brew.sh/formula/k3d)
+| Platform | Stage | Version | Release Date |  |
+|-----------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|---|
+| [**GitHub Releases**](https://github.com/rancher/k3d/releases) | stable | [![GitHub release (latest by date)](https://img.shields.io/github/v/release/rancher/k3d?label=%20&style=for-the-badge&logo=github)](https://github.com/rancher/k3d/releases/latest) | [![GitHub Release Date](https://img.shields.io/github/release-date/rancher/k3d?label=%20&style=for-the-badge)](https://github.com/rancher/k3d/releases/latest) |  |
+| [**GitHub Releases**](https://github.com/rancher/k3d/releases) | latest | [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/rancher/k3d?include_prereleases&label=%20&style=for-the-badge&logo=github)](https://github.com/rancher/k3d/releases) | [![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/rancher/k3d?label=%20&style=for-the-badge)](https://github.com/rancher/k3d/releases) |  |
+| [**Homebrew**](https://formulae.brew.sh/formula/k3d) | - | [![homebrew](https://img.shields.io/homebrew/v/k3d?label=%20&style=for-the-badge)](https://formulae.brew.sh/formula/k3d) | - |  |
 
 ## Get
 
