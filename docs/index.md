@@ -4,6 +4,8 @@ k3d is a lightweight wrapper to run [k3s](https://github.com/rancher/k3s) (Ranch
 
 k3d makes it very easy to create single- and multi-node [k3s](https://github.com/rancher/k3s) clusters in docker, e.g. for local development on Kubernetes.
 
+[![asciicast](https://asciinema.org/a/330413.svg)](https://asciinema.org/a/330413)
+
 ## Learning
 
 - [Rancher Meetup - May 2020 - Simplifying Your Cloud-Native Development Workflow With K3s, K3c and K3d (YouTube)](https://www.youtube.com/watch?v=hMr3prm9gDM)
