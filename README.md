@@ -5,6 +5,8 @@
 [![License](https://img.shields.io/github/license/rancher/k3d)](./LICENSE.md)
 ![Downloads](https://img.shields.io/github/downloads/rancher/k3d/total.svg)
 
+**Please Note:** `master` is now v3.0.0 and the code for v1.x can be found in the `master-v1` branch!
+
 ## [k3s in docker](https://k3d.io)
 
 k3s is the lightweight Kubernetes distribution by Rancher: [rancher/k3s](https://github.com/rancher/k3s)
