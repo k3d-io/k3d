@@ -5,6 +5,13 @@ site_url: https://k3d.io/
 
 copyright: "Copyright &copy; 2020 k3d Authors"
 
+# Extra Files
+extra_javascript:
+  - static/js/asciinema-player.js
+
+extra_css:
+  - static/css/asciinema-player.css
+
 # Repo Information
 repo_name: rancher/k3d
 repo_url: https://github.com/rancher/k3d
