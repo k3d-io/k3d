@@ -1,4 +1,6 @@
-# rancher/k3d
+# Overview
+
+![k3d](static/img/k3d_logo_black_blue.svg)
 
 k3d is a lightweight wrapper to run [k3s](https://github.com/rancher/k3s) (Rancher Lab's minimal Kubernetes distribution) in docker.
 

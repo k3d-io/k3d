@@ -1,11 +1,9 @@
-# [k3d](https://k3d.io)
+# [![k3d](docs/static/img/k3d_logo_black_blue.svg)](https://k3d.io/)
 
 [![Build Status](https://travis-ci.com/rancher/k3d.svg?branch=master)](https://travis-ci.com/rancher/k3d)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d)](https://goreportcard.com/report/github.com/rancher/k3d)
 [![License](https://img.shields.io/github/license/rancher/k3d)](./LICENSE.md)
 ![Downloads](https://img.shields.io/github/downloads/rancher/k3d/total.svg)
-
-![k3d_logo](docs/static/img/k3d_logo_black_blue.svg)
 
 **Please Note:** `master` is now v3.0.0 and the code for v1.x can be found in the `master-v1` branch!
 
