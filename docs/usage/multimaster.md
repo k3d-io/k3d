@@ -9,7 +9,7 @@ Create a cluster with 3 master nodes using k3s' embedded dqlite database.
 The first master to be created will use the `--cluster-init` flag and k3d will wait for it to be up and running before creating (and connecting) the other master nodes.
 
 ```bash
-    k3d create cluster multimaser --masters 3
+    k3d create cluster multimaster --masters 3
 ```
 
 ## Adding master nodes to a running cluster
