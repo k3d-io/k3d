@@ -22,6 +22,7 @@ THE SOFTWARE.
 package cluster
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/rancher/k3d/pkg/runtimes"
@@ -30,7 +31,7 @@ import (
 )
 
 // AddMasterToLoadBalancer adds a new master node to the loadbalancer configuration
-func AddMasterToLoadBalancer(runtime runtimes.Runtime, cluster *k3d.Cluster, newNode *k3d.Node) error {
+func AddMasterToLoadBalancer(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, newNode *k3d.Node) error {
 	// find the LoadBalancer for the target cluster
 	masterNodes := ""
 	var loadbalancer *k3d.Node

@@ -22,6 +22,7 @@ THE SOFTWARE.
 package tools
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -34,8 +35,8 @@ import (
 
 // LoadImagesIntoCluster starts up a k3d tools container for the selected cluster and uses it to export
 // images from the runtime to import them into the nodes of the selected cluster
-func LoadImagesIntoCluster(runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, keepTarball bool) error {
-	cluster, err := k3dc.GetCluster(cluster, runtime)
+func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, keepTarball bool) error {
+	cluster, err := k3dc.GetCluster(ctx, cluster, runtime)
 	if err != nil {
 		log.Errorf("Failed to find the specified cluster")
 		return err
@@ -63,6 +64,7 @@ func LoadImagesIntoCluster(runtime runtimes.Runtime, images []string, cluster *k
 	// create tools node to export images
 	log.Infoln("Starting k3d-tools node...")
 	toolsNode, err := startToolsNode( // TODO: re-use existing container
+		ctx,
 		runtime,
 		cluster,
 		cluster.Network.Name,
@@ -123,7 +125,7 @@ func LoadImagesIntoCluster(runtime runtimes.Runtime, images []string, cluster *k
 }
 
 // startToolsNode will start a new k3d tools container and connect it to the network of the chosen cluster
-func startToolsNode(runtime runtimes.Runtime, cluster *k3d.Cluster, network string, volumes []string) (*k3d.Node, error) {
+func startToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, network string, volumes []string) (*k3d.Node, error) {
 	node := &k3d.Node{
 		Name:    fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name),
 		Image:   k3d.DefaultToolsContainerImage,

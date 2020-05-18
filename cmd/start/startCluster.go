@@ -46,7 +46,7 @@ func NewCmdStartCluster() *cobra.Command {
 				log.Infoln("No clusters found")
 			} else {
 				for _, c := range clusters {
-					if err := cluster.StartCluster(c, runtimes.SelectedRuntime); err != nil {
+					if err := cluster.StartCluster(cmd.Context(), c, runtimes.SelectedRuntime); err != nil {
 						log.Fatalln(err)
 					}
 				}
@@ -73,7 +73,7 @@ func parseStartClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	if all, err := cmd.Flags().GetBool("all"); err != nil {
 		log.Fatalln(err)
 	} else if all {
-		clusters, err = cluster.GetClusters(runtimes.SelectedRuntime)
+		clusters, err = cluster.GetClusters(cmd.Context(), runtimes.SelectedRuntime)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -85,7 +85,7 @@ func parseStartClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	}
 
 	for _, name := range args {
-		cluster, err := cluster.GetCluster(&k3d.Cluster{Name: name}, runtimes.SelectedRuntime)
+		cluster, err := cluster.GetCluster(cmd.Context(), &k3d.Cluster{Name: name}, runtimes.SelectedRuntime)
 		if err != nil {
 			log.Fatalln(err)
 		}

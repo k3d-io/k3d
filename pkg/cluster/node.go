@@ -36,8 +36,8 @@ import (
 )
 
 // AddNodeToCluster adds a node to an existing cluster
-func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Cluster) error {
-	cluster, err := GetCluster(cluster, runtime)
+func AddNodeToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Cluster) error {
+	cluster, err := GetCluster(ctx, cluster, runtime)
 	if err != nil {
 		log.Errorf("Failed to find specified cluster '%s'", cluster.Name)
 		return err
@@ -72,7 +72,7 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 	}
 
 	// get node details
-	chosenNode, err = GetNode(chosenNode, runtime)
+	chosenNode, err = GetNode(ctx, chosenNode, runtime)
 	if err != nil {
 		return err
 	}
@@ -104,13 +104,13 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 		}
 	}
 
-	if err := CreateNode(node, runtime); err != nil {
+	if err := CreateNode(ctx, node, runtime); err != nil {
 		return err
 	}
 
 	// if it's a master node, then update the loadbalancer configuration to include it
 	if node.Role == k3d.MasterRole {
-		if err := AddMasterToLoadBalancer(runtime, cluster, node); err != nil {
+		if err := AddMasterToLoadBalancer(ctx, runtime, cluster, node); err != nil {
 			log.Errorln("Failed to add new master node to cluster loadbalancer")
 			return err
 		}
@@ -120,16 +120,16 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 }
 
 // CreateNodes creates a list of nodes
-func CreateNodes(nodes []*k3d.Node, runtime runtimes.Runtime) { // TODO: pass `--atomic` flag, so we stop and return an error if any node creation fails?
+func CreateNodes(ctx context.Context, nodes []*k3d.Node, runtime runtimes.Runtime) { // TODO: pass `--atomic` flag, so we stop and return an error if any node creation fails?
 	for _, node := range nodes {
-		if err := CreateNode(node, runtime); err != nil {
+		if err := CreateNode(ctx, node, runtime); err != nil {
 			log.Error(err)
 		}
 	}
 }
 
 // CreateNode creates a new containerized k3s node
-func CreateNode(node *k3d.Node, runtime runtimes.Runtime) error {
+func CreateNode(ctx context.Context, node *k3d.Node, runtime runtimes.Runtime) error {
 	log.Debugf("Creating node from spec\n%+v", node)
 
 	/*
@@ -176,7 +176,7 @@ func CreateNode(node *k3d.Node, runtime runtimes.Runtime) error {
 }
 
 // DeleteNode deletes an existing node
-func DeleteNode(runtime runtimes.Runtime, node *k3d.Node) error {
+func DeleteNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) error {
 
 	if err := runtime.DeleteNode(node); err != nil {
 		log.Error(err)
@@ -212,7 +212,7 @@ func patchMasterSpec(node *k3d.Node) error {
 }
 
 // GetNodes returns a list of all existing clusters
-func GetNodes(runtime runtimes.Runtime) ([]*k3d.Node, error) {
+func GetNodes(ctx context.Context, runtime runtimes.Runtime) ([]*k3d.Node, error) {
 	nodes, err := runtime.GetNodesByLabel(k3d.DefaultObjectLabels)
 	if err != nil {
 		log.Errorln("Failed to get nodes")
@@ -223,7 +223,7 @@ func GetNodes(runtime runtimes.Runtime) ([]*k3d.Node, error) {
 }
 
 // GetNode returns a node matching the specified node fields
-func GetNode(node *k3d.Node, runtime runtimes.Runtime) (*k3d.Node, error) {
+func GetNode(ctx context.Context, node *k3d.Node, runtime runtimes.Runtime) (*k3d.Node, error) {
 	// get node
 	node, err := runtime.GetNode(node)
 	if err != nil {

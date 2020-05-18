@@ -45,7 +45,7 @@ func NewCmdLoadImage() *cobra.Command {
 			log.Debugf("Load images [%+v] from runtime [%s] into clusters [%+v]", runtimes.SelectedRuntime, images, clusters)
 			for _, cluster := range clusters {
 				log.Debugf("Loading images into '%s'", cluster.Name)
-				if err := tools.LoadImagesIntoCluster(runtimes.SelectedRuntime, images, &cluster, keepTarball); err != nil {
+				if err := tools.LoadImagesIntoCluster(cmd.Context(), runtimes.SelectedRuntime, images, &cluster, keepTarball); err != nil {
 					log.Errorf("Failed to load images into cluster '%s'", cluster.Name)
 					log.Errorln(err)
 				}

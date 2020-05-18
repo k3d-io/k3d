@@ -45,7 +45,7 @@ func NewCmdCreateNode() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			nodes, cluster := parseCreateNodeCmd(cmd, args)
 			for _, node := range nodes {
-				if err := k3dc.AddNodeToCluster(runtimes.SelectedRuntime, node, cluster); err != nil {
+				if err := k3dc.AddNodeToCluster(cmd.Context(), runtimes.SelectedRuntime, node, cluster); err != nil {
 					log.Errorf("Failed to add node '%s' to cluster '%s'", node.Name, cluster.Name)
 					log.Errorln(err)
 				}

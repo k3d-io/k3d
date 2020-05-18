@@ -64,7 +64,7 @@ func NewCmdCreateCluster() *cobra.Command {
 			cluster := parseCreateClusterCmd(cmd, args, createClusterOpts)
 
 			// check if a cluster with that name exists already
-			if _, err := k3dCluster.GetCluster(cluster, runtimes.SelectedRuntime); err == nil {
+			if _, err := k3dCluster.GetCluster(cmd.Context(), cluster, runtimes.SelectedRuntime); err == nil {
 				log.Fatalf("Failed to create cluster '%s' because a cluster with that name already exists", cluster.Name)
 			}
 
@@ -77,7 +77,7 @@ func NewCmdCreateCluster() *cobra.Command {
 				// rollback if creation failed
 				log.Errorln(err)
 				log.Errorln("Failed to create cluster >>> Rolling Back")
-				if err := k3dCluster.DeleteCluster(cluster, runtimes.SelectedRuntime); err != nil {
+				if err := k3dCluster.DeleteCluster(cmd.Context(), cluster, runtimes.SelectedRuntime); err != nil {
 					log.Errorln(err)
 					log.Fatalln("Cluster creation FAILED, also FAILED to rollback changes!")
 				}
@@ -87,7 +87,7 @@ func NewCmdCreateCluster() *cobra.Command {
 
 			if updateKubeconfig {
 				log.Debugf("Updating default kubeconfig with a new context for cluster %s", cluster.Name)
-				if _, err := k3dCluster.GetAndWriteKubeConfig(runtimes.SelectedRuntime, cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: false}); err != nil {
+				if _, err := k3dCluster.GetAndWriteKubeConfig(cmd.Context(), runtimes.SelectedRuntime, cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: false}); err != nil {
 					log.Fatalln(err)
 				}
 			}
