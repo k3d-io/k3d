@@ -48,7 +48,6 @@ func NewCmdGetCluster() *cobra.Command {
 		Long:    `Get cluster.`,
 		Args:    cobra.MinimumNArgs(0), // 0 or more; 0 = all
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("get cluster called")
 			clusters, headersOff := parseGetClusterCmd(cmd, args)
 			var existingClusters []*k3d.Cluster
 			if clusters == nil { // Option a)  no cluster name specified -> get all clusters

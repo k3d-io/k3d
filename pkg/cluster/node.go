@@ -162,7 +162,6 @@ func CreateNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) e
 		if err := patchMasterSpec(node); err != nil {
 			return err
 		}
-		log.Debugf("spec = %+v\n", node)
 	}
 
 	/*

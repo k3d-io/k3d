@@ -40,7 +40,6 @@ func NewCmdStopCluster() *cobra.Command {
 		Short: "Stop an existing k3d cluster",
 		Long:  `Stop an existing k3d cluster.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("stop cluster called")
 			clusters := parseStopClusterCmd(cmd, args)
 			if len(clusters) == 0 {
 				log.Infoln("No clusters found")
@@ -51,8 +50,6 @@ func NewCmdStopCluster() *cobra.Command {
 					}
 				}
 			}
-
-			log.Debugln("...Finished")
 		},
 	}
 

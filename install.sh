@@ -23,7 +23,7 @@ initArch() {
 
 # initOS discovers the operating system for this system.
 initOS() {
-  OS=$(echo `uname`|tr '[:upper:]' '[:lower:]')
+  OS=$(uname|tr '[:upper:]' '[:lower:]')
 
   case "$OS" in
     # Minimalist GNU for Windows

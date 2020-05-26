@@ -40,7 +40,6 @@ func NewCmdStartCluster() *cobra.Command {
 		Short: "Start an existing k3d cluster",
 		Long:  `Start an existing k3d cluster`,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("start cluster called")
 			clusters := parseStartClusterCmd(cmd, args)
 			if len(clusters) == 0 {
 				log.Infoln("No clusters found")
@@ -51,8 +50,6 @@ func NewCmdStartCluster() *cobra.Command {
 					}
 				}
 			}
-
-			log.Debugln("...Finished")
 		},
 	}
 

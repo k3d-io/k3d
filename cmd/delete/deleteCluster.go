@@ -40,8 +40,6 @@ func NewCmdDeleteCluster() *cobra.Command {
 		Long:  `Delete a cluster.`,
 		Args:  cobra.MinimumNArgs(0), // 0 or n arguments; 0 only if --all is set
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("delete cluster called")
-
 			clusters := parseDeleteClusterCmd(cmd, args)
 
 			if len(clusters) == 0 {

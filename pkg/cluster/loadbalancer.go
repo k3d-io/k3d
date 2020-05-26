@@ -47,7 +47,7 @@ func AddMasterToLoadBalancer(ctx context.Context, runtime runtimes.Runtime, clus
 	}
 	masterNodes += newNode.Name // append the new master node to the end of the list
 
-	log.Debugf("SERVERS=%s", masterNodes)
+	log.Debugf("Servers as passed to masterlb: '%s'", masterNodes)
 
 	command := fmt.Sprintf("SERVERS=%s %s", masterNodes, "confd -onetime -backend env && nginx -s reload")
 	if err := runtime.ExecInNode(ctx, loadbalancer, []string{"sh", "-c", command}); err != nil {

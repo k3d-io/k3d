@@ -46,7 +46,6 @@ func NewCmdGetNode() *cobra.Command {
 		Aliases: []string{"nodes"},
 		Long:    `Get node.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("get node called")
 			node, headersOff := parseGetNodeCmd(cmd, args)
 			var existingNodes []*k3d.Node
 			if node == nil { // Option a)  no name specified -> get all nodes
