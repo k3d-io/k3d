@@ -42,7 +42,7 @@ func NewCmdLoadImage() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			images, clusters, keepTarball := parseLoadImageCmd(cmd, args)
-			log.Debugf("Load images [%+v] from runtime [%s] into clusters [%+v]", runtimes.SelectedRuntime, images, clusters)
+			log.Debugf("Load images [%+v] from runtime [%s] into clusters [%+v]", images, runtimes.SelectedRuntime, clusters)
 			for _, cluster := range clusters {
 				log.Debugf("Loading images into '%s'", cluster.Name)
 				if err := tools.LoadImagesIntoCluster(cmd.Context(), runtimes.SelectedRuntime, images, &cluster, keepTarball); err != nil {

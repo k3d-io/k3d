@@ -39,7 +39,7 @@ import (
 // CreateCluster creates a new cluster consisting of
 // - some containerized k3s nodes
 // - a docker network
-func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runtime) error {
+func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
 	if cluster.CreateClusterOpts.Timeout > 0*time.Second {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, cluster.CreateClusterOpts.Timeout)
@@ -153,7 +153,7 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 
 		// create node
 		log.Infof("Creating node '%s'", node.Name)
-		if err := CreateNode(ctx, node, runtime); err != nil {
+		if err := CreateNode(ctx, runtime, node); err != nil {
 			log.Errorln("Failed to create node")
 			return err
 		}
@@ -305,7 +305,7 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 			}
 			cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
 			log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
-			if err := CreateNode(ctx, lbNode, runtime); err != nil {
+			if err := CreateNode(ctx, runtime, lbNode); err != nil {
 				log.Errorln("Failed to create loadbalancer")
 				return err
 			}
@@ -317,7 +317,7 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 }
 
 // DeleteCluster deletes an existing cluster
-func DeleteCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runtime) error {
+func DeleteCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
 
 	log.Infof("Deleting cluster '%s'", cluster.Name)
 	log.Debugf("%+v", cluster)
@@ -437,7 +437,7 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 }
 
 // GetCluster returns an existing cluster with all fields and node lists populated
-func GetCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runtime) (*k3d.Cluster, error) {
+func GetCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) (*k3d.Cluster, error) {
 	// get nodes that belong to the selected cluster
 	nodes, err := runtime.GetNodesByLabel(map[string]string{"k3d.cluster": cluster.Name})
 	if err != nil {
@@ -471,7 +471,7 @@ func generateNodeName(cluster string, role k3d.Role, suffix int) string {
 }
 
 // StartCluster starts a whole cluster (i.e. all nodes of the cluster)
-func StartCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runtime) error {
+func StartCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
 	log.Infof("Starting cluster '%s'", cluster.Name)
 
 	failed := 0
@@ -508,7 +508,7 @@ func StartCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runti
 }
 
 // StopCluster stops a whole cluster (i.e. all nodes of the cluster)
-func StopCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runtime) error {
+func StopCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
 	log.Infof("Stopping cluster '%s'", cluster.Name)
 
 	failed := 0

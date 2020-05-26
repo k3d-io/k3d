@@ -58,7 +58,7 @@ func NewCmdGetCluster() *cobra.Command {
 				}
 				existingClusters = append(existingClusters, found...)
 			} else { // Option b) cluster name specified -> get specific cluster
-				found, err := cluster.GetCluster(cmd.Context(), clusters, runtimes.SelectedRuntime)
+				found, err := cluster.GetCluster(cmd.Context(), runtimes.SelectedRuntime, clusters)
 				if err != nil {
 					log.Fatalln(err)
 				}

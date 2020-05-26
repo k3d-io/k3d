@@ -37,7 +37,7 @@ import (
 
 // AddNodeToCluster adds a node to an existing cluster
 func AddNodeToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Cluster) error {
-	cluster, err := GetCluster(ctx, cluster, runtime)
+	cluster, err := GetCluster(ctx, runtime, cluster)
 	if err != nil {
 		log.Errorf("Failed to find specified cluster '%s'", cluster.Name)
 		return err
@@ -72,7 +72,7 @@ func AddNodeToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	}
 
 	// get node details
-	chosenNode, err = GetNode(ctx, chosenNode, runtime)
+	chosenNode, err = GetNode(ctx, runtime, chosenNode)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func AddNodeToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		}
 	}
 
-	if err := CreateNode(ctx, node, runtime); err != nil {
+	if err := CreateNode(ctx, runtime, node); err != nil {
 		return err
 	}
 
@@ -120,16 +120,16 @@ func AddNodeToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 }
 
 // CreateNodes creates a list of nodes
-func CreateNodes(ctx context.Context, nodes []*k3d.Node, runtime runtimes.Runtime) { // TODO: pass `--atomic` flag, so we stop and return an error if any node creation fails?
+func CreateNodes(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d.Node) { // TODO: pass `--atomic` flag, so we stop and return an error if any node creation fails?
 	for _, node := range nodes {
-		if err := CreateNode(ctx, node, runtime); err != nil {
+		if err := CreateNode(ctx, runtime, node); err != nil {
 			log.Error(err)
 		}
 	}
 }
 
 // CreateNode creates a new containerized k3s node
-func CreateNode(ctx context.Context, node *k3d.Node, runtime runtimes.Runtime) error {
+func CreateNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) error {
 	log.Debugf("Creating node from spec\n%+v", node)
 
 	/*
@@ -223,7 +223,7 @@ func GetNodes(ctx context.Context, runtime runtimes.Runtime) ([]*k3d.Node, error
 }
 
 // GetNode returns a node matching the specified node fields
-func GetNode(ctx context.Context, node *k3d.Node, runtime runtimes.Runtime) (*k3d.Node, error) {
+func GetNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3d.Node, error) {
 	// get node
 	node, err := runtime.GetNode(node)
 	if err != nil {

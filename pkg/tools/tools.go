@@ -36,7 +36,7 @@ import (
 // LoadImagesIntoCluster starts up a k3d tools container for the selected cluster and uses it to export
 // images from the runtime to import them into the nodes of the selected cluster
 func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, keepTarball bool) error {
-	cluster, err := k3dc.GetCluster(ctx, cluster, runtime)
+	cluster, err := k3dc.GetCluster(ctx, runtime, cluster)
 	if err != nil {
 		log.Errorf("Failed to find the specified cluster")
 		return err

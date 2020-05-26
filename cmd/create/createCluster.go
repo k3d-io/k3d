@@ -64,7 +64,7 @@ func NewCmdCreateCluster() *cobra.Command {
 			cluster := parseCreateClusterCmd(cmd, args, createClusterOpts)
 
 			// check if a cluster with that name exists already
-			if _, err := k3dCluster.GetCluster(cmd.Context(), cluster, runtimes.SelectedRuntime); err == nil {
+			if _, err := k3dCluster.GetCluster(cmd.Context(), runtimes.SelectedRuntime, cluster); err == nil {
 				log.Fatalf("Failed to create cluster '%s' because a cluster with that name already exists", cluster.Name)
 			}
 
@@ -73,11 +73,11 @@ func NewCmdCreateCluster() *cobra.Command {
 				log.Debugln("'--update-kubeconfig set: enabling wait-for-master")
 				cluster.CreateClusterOpts.WaitForMaster = true
 			}
-			if err := k3dCluster.CreateCluster(cmd.Context(), cluster, runtimes.SelectedRuntime); err != nil {
+			if err := k3dCluster.CreateCluster(cmd.Context(), runtimes.SelectedRuntime, cluster); err != nil {
 				// rollback if creation failed
 				log.Errorln(err)
 				log.Errorln("Failed to create cluster >>> Rolling Back")
-				if err := k3dCluster.DeleteCluster(cmd.Context(), cluster, runtimes.SelectedRuntime); err != nil {
+				if err := k3dCluster.DeleteCluster(cmd.Context(), runtimes.SelectedRuntime, cluster); err != nil {
 					log.Errorln(err)
 					log.Fatalln("Cluster creation FAILED, also FAILED to rollback changes!")
 				}

@@ -87,7 +87,7 @@ func parseDeleteNodeCmd(cmd *cobra.Command, args []string) []*k3d.Node {
 	}
 
 	for _, name := range args {
-		node, err := cluster.GetNode(cmd.Context(), &k3d.Node{Name: name}, runtimes.SelectedRuntime)
+		node, err := cluster.GetNode(cmd.Context(), runtimes.SelectedRuntime, &k3d.Node{Name: name})
 		if err != nil {
 			log.Fatalln(err)
 		}
