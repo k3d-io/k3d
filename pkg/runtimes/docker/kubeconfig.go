@@ -32,8 +32,7 @@ import (
 )
 
 // GetKubeconfig grabs the kubeconfig from inside a k3d node
-func (d Docker) GetKubeconfig(node *k3d.Node) (io.ReadCloser, error) {
-	ctx := context.Background()
+func (d Docker) GetKubeconfig(ctx context.Context, node *k3d.Node) (io.ReadCloser, error) {
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")
@@ -41,7 +40,7 @@ func (d Docker) GetKubeconfig(node *k3d.Node) (io.ReadCloser, error) {
 	}
 	defer docker.Close()
 
-	container, err := getNodeContainer(node)
+	container, err := getNodeContainer(ctx, node)
 	if err != nil {
 		return nil, err
 	}

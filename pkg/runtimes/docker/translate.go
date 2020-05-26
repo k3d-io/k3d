@@ -23,6 +23,7 @@ THE SOFTWARE.
 package docker
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -92,7 +93,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
 		node.Network: {},
 	}
-	netInfo, err := GetNetwork(node.Network)
+	netInfo, err := GetNetwork(context.Background(), node.Network)
 	if err != nil {
 		log.Warnln("Failed to get network information")
 		log.Warnln(err)

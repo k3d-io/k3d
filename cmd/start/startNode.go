@@ -40,7 +40,7 @@ func NewCmdStartNode() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("start node called")
 			node := parseStartNodeCmd(cmd, args)
-			if err := runtimes.SelectedRuntime.StartNode(node); err != nil {
+			if err := runtimes.SelectedRuntime.StartNode(cmd.Context(), node); err != nil {
 				log.Fatalln(err)
 			}
 		},

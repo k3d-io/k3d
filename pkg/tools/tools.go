@@ -79,7 +79,7 @@ func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images
 	// save image to tarfile in shared volume
 	log.Infoln("Saving images...")
 	tarName := fmt.Sprintf("%s/k3d-%s-images-%s.tar", k3d.DefaultImageVolumeMountPath, cluster.Name, time.Now().Format("20060102150405")) // FIXME: change
-	if err := runtime.ExecInNode(toolsNode, append([]string{"./k3d-tools", "save-image", "-d", tarName}, images...)); err != nil {
+	if err := runtime.ExecInNode(ctx, toolsNode, append([]string{"./k3d-tools", "save-image", "-d", tarName}, images...)); err != nil {
 		log.Errorf("Failed to save images in tools container for cluster '%s'", cluster.Name)
 		return err
 	}
@@ -93,7 +93,7 @@ func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images
 			importWaitgroup.Add(1)
 			go func(node *k3d.Node, wg *sync.WaitGroup) {
 				log.Infof("Importing images into node '%s'...", node.Name)
-				if err := runtime.ExecInNode(node, []string{"ctr", "image", "import", tarName}); err != nil {
+				if err := runtime.ExecInNode(ctx, node, []string{"ctr", "image", "import", tarName}); err != nil {
 					log.Errorf("Failed to import images in node '%s'", node.Name)
 					log.Errorln(err)
 				}
@@ -106,7 +106,7 @@ func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images
 	// remove tarball
 	if !keepTarball {
 		log.Infoln("Removing the tarball...")
-		if err := runtime.ExecInNode(cluster.Nodes[0], []string{"rm", "-f", tarName}); err != nil { // TODO: do this in tools node (requires rm)
+		if err := runtime.ExecInNode(ctx, cluster.Nodes[0], []string{"rm", "-f", tarName}); err != nil { // TODO: do this in tools node (requires rm)
 			log.Errorf("Failed to delete tarball '%s'", tarName)
 			log.Errorln(err)
 		}
@@ -114,7 +114,7 @@ func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images
 
 	// delete tools container
 	log.Infoln("Removing k3d-tools node...")
-	if err := runtime.DeleteNode(toolsNode); err != nil {
+	if err := runtime.DeleteNode(ctx, toolsNode); err != nil {
 		log.Errorln("Failed to delete tools node '%s': Try to delete it manually", toolsNode.Name)
 	}
 
@@ -135,7 +135,7 @@ func startToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 		Cmd:     []string{},
 		Args:    []string{"noop"},
 	}
-	if err := runtime.CreateNode(node); err != nil {
+	if err := runtime.CreateNode(ctx, node); err != nil {
 		log.Errorf("Failed to create tools container for cluster '%s'", cluster.Name)
 		return node, err
 	}

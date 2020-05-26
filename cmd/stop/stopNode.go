@@ -41,7 +41,7 @@ func NewCmdStopNode() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debugln("stop node called")
 			node := parseStopNodeCmd(cmd, args)
-			if err := runtimes.SelectedRuntime.StopNode(node); err != nil {
+			if err := runtimes.SelectedRuntime.StopNode(cmd.Context(), node); err != nil {
 				log.Fatalln(err)
 			}
 		},

@@ -37,7 +37,7 @@ import (
 )
 
 // CreateNode creates a new container
-func (d Docker) CreateNode(node *k3d.Node) error {
+func (d Docker) CreateNode(ctx context.Context, node *k3d.Node) error {
 
 	// translate node spec to docker container specs
 	dockerNode, err := TranslateNodeToContainer(node)
@@ -47,7 +47,7 @@ func (d Docker) CreateNode(node *k3d.Node) error {
 	}
 
 	// create node
-	if err := createContainer(dockerNode, node.Name); err != nil {
+	if err := createContainer(ctx, dockerNode, node.Name); err != nil {
 		log.Errorln("Failed to create k3d node")
 		return err
 	}
@@ -56,16 +56,16 @@ func (d Docker) CreateNode(node *k3d.Node) error {
 }
 
 // DeleteNode deletes a node
-func (d Docker) DeleteNode(nodeSpec *k3d.Node) error {
+func (d Docker) DeleteNode(ctx context.Context, nodeSpec *k3d.Node) error {
 	log.Debugln("docker.DeleteNode...")
-	return removeContainer(nodeSpec.Name)
+	return removeContainer(ctx, nodeSpec.Name)
 }
 
 // GetNodesByLabel returns a list of existing nodes
-func (d Docker) GetNodesByLabel(labels map[string]string) ([]*k3d.Node, error) {
+func (d Docker) GetNodesByLabel(ctx context.Context, labels map[string]string) ([]*k3d.Node, error) {
 
 	// (0) get containers
-	containers, err := getContainersByLabel(labels)
+	containers, err := getContainersByLabel(ctx, labels)
 	if err != nil {
 		return nil, err
 	}
@@ -85,9 +85,8 @@ func (d Docker) GetNodesByLabel(labels map[string]string) ([]*k3d.Node, error) {
 }
 
 // StartNode starts an existing node
-func (d Docker) StartNode(node *k3d.Node) error {
+func (d Docker) StartNode(ctx context.Context, node *k3d.Node) error {
 	// (0) create docker client
-	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return fmt.Errorf("Failed to create docker client. %+v", err)
@@ -95,7 +94,7 @@ func (d Docker) StartNode(node *k3d.Node) error {
 	defer docker.Close()
 
 	// get container which represents the node
-	nodeContainer, err := getNodeContainer(node)
+	nodeContainer, err := getNodeContainer(ctx, node)
 	if err != nil {
 		log.Errorf("Failed to get container for node '%s'", node.Name)
 		return err
@@ -116,9 +115,8 @@ func (d Docker) StartNode(node *k3d.Node) error {
 }
 
 // StopNode stops an existing node
-func (d Docker) StopNode(node *k3d.Node) error {
+func (d Docker) StopNode(ctx context.Context, node *k3d.Node) error {
 	// (0) create docker client
-	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return fmt.Errorf("Failed to create docker client. %+v", err)
@@ -126,7 +124,7 @@ func (d Docker) StopNode(node *k3d.Node) error {
 	defer docker.Close()
 
 	// get container which represents the node
-	nodeContainer, err := getNodeContainer(node)
+	nodeContainer, err := getNodeContainer(ctx, node)
 	if err != nil {
 		log.Errorf("Failed to get container for node '%s'", node.Name)
 		return err
@@ -145,9 +143,8 @@ func (d Docker) StopNode(node *k3d.Node) error {
 	return nil
 }
 
-func getContainersByLabel(labels map[string]string) ([]types.Container, error) {
+func getContainersByLabel(ctx context.Context, labels map[string]string) ([]types.Container, error) {
 	// (0) create docker client
-	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create docker client. %+v", err)
@@ -176,9 +173,8 @@ func getContainersByLabel(labels map[string]string) ([]types.Container, error) {
 }
 
 // getContainer details returns the containerjson with more details
-func getContainerDetails(containerID string) (types.ContainerJSON, error) {
+func getContainerDetails(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	// (0) create docker client
-	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return types.ContainerJSON{}, fmt.Errorf("Failed to create docker client. %+v", err)
@@ -196,14 +192,14 @@ func getContainerDetails(containerID string) (types.ContainerJSON, error) {
 }
 
 // GetNode tries to get a node container by its name
-func (d Docker) GetNode(node *k3d.Node) (*k3d.Node, error) {
-	container, err := getNodeContainer(node)
+func (d Docker) GetNode(ctx context.Context, node *k3d.Node) (*k3d.Node, error) {
+	container, err := getNodeContainer(ctx, node)
 	if err != nil {
 		log.Errorf("Failed to get container for node '%s'", node.Name)
 		return nil, err
 	}
 
-	containerDetails, err := getContainerDetails(container.ID)
+	containerDetails, err := getContainerDetails(ctx, container.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -219,15 +215,14 @@ func (d Docker) GetNode(node *k3d.Node) (*k3d.Node, error) {
 }
 
 // GetNodeLogs returns the logs from a given node
-func (d Docker) GetNodeLogs(node *k3d.Node) (io.ReadCloser, error) {
+func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node) (io.ReadCloser, error) {
 	// get the container for the given node
-	container, err := getNodeContainer(node)
+	container, err := getNodeContainer(ctx, node)
 	if err != nil {
 		return nil, err
 	}
 
 	// create docker client
-	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")
@@ -255,18 +250,17 @@ func (d Docker) GetNodeLogs(node *k3d.Node) (io.ReadCloser, error) {
 }
 
 // ExecInNode execs a command inside a node
-func (d Docker) ExecInNode(node *k3d.Node, cmd []string) error {
+func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) error {
 
 	log.Debugf("Exec cmds '%+v' in node '%s'", cmd, node.Name)
 
 	// get the container for the given node
-	container, err := getNodeContainer(node)
+	container, err := getNodeContainer(ctx, node)
 	if err != nil {
 		return err
 	}
 
 	// create docker client
-	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")

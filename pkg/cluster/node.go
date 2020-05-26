@@ -168,7 +168,7 @@ func CreateNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) e
 	/*
 	 * CREATION
 	 */
-	if err := runtime.CreateNode(node); err != nil {
+	if err := runtime.CreateNode(ctx, node); err != nil {
 		return err
 	}
 
@@ -178,7 +178,7 @@ func CreateNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) e
 // DeleteNode deletes an existing node
 func DeleteNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) error {
 
-	if err := runtime.DeleteNode(node); err != nil {
+	if err := runtime.DeleteNode(ctx, node); err != nil {
 		log.Error(err)
 	}
 	return nil
@@ -213,7 +213,7 @@ func patchMasterSpec(node *k3d.Node) error {
 
 // GetNodes returns a list of all existing clusters
 func GetNodes(ctx context.Context, runtime runtimes.Runtime) ([]*k3d.Node, error) {
-	nodes, err := runtime.GetNodesByLabel(k3d.DefaultObjectLabels)
+	nodes, err := runtime.GetNodesByLabel(ctx, k3d.DefaultObjectLabels)
 	if err != nil {
 		log.Errorln("Failed to get nodes")
 		return nil, err
@@ -225,7 +225,7 @@ func GetNodes(ctx context.Context, runtime runtimes.Runtime) ([]*k3d.Node, error
 // GetNode returns a node matching the specified node fields
 func GetNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3d.Node, error) {
 	// get node
-	node, err := runtime.GetNode(node)
+	node, err := runtime.GetNode(ctx, node)
 	if err != nil {
 		log.Errorf("Failed to get node '%s'", node.Name)
 	}
@@ -243,7 +243,7 @@ func WaitForNodeLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 		}
 
 		// read the logs
-		out, err := runtime.GetNodeLogs(node)
+		out, err := runtime.GetNodeLogs(ctx, node)
 		if err != nil {
 			if out != nil {
 				out.Close()

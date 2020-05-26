@@ -113,7 +113,7 @@ func GetAndWriteKubeConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 func GetKubeconfig(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*clientcmdapi.Config, error) {
 	// get all master nodes for the selected cluster
 	// TODO: getKubeconfig: we should make sure, that the master node we're trying to fetch from is actually running
-	masterNodes, err := runtime.GetNodesByLabel(map[string]string{"k3d.cluster": cluster.Name, "k3d.role": string(k3d.MasterRole)})
+	masterNodes, err := runtime.GetNodesByLabel(ctx, map[string]string{"k3d.cluster": cluster.Name, "k3d.role": string(k3d.MasterRole)})
 	if err != nil {
 		log.Errorln("Failed to get master nodes")
 		return nil, err
@@ -143,7 +143,7 @@ func GetKubeconfig(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.C
 		chosenMaster = masterNodes[0]
 	}
 	// get the kubeconfig from the first master node
-	reader, err := runtime.GetKubeconfig(chosenMaster)
+	reader, err := runtime.GetKubeconfig(ctx, chosenMaster)
 	if err != nil {
 		log.Errorf("Failed to get kubeconfig from node '%s'", chosenMaster.Name)
 		return nil, err

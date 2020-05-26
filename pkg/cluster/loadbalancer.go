@@ -50,7 +50,7 @@ func AddMasterToLoadBalancer(ctx context.Context, runtime runtimes.Runtime, clus
 	log.Debugf("SERVERS=%s", masterNodes)
 
 	command := fmt.Sprintf("SERVERS=%s %s", masterNodes, "confd -onetime -backend env && nginx -s reload")
-	if err := runtime.ExecInNode(loadbalancer, []string{"sh", "-c", command}); err != nil {
+	if err := runtime.ExecInNode(ctx, loadbalancer, []string{"sh", "-c", command}); err != nil {
 		log.Errorln("Failed to update loadbalancer configuration")
 		return err
 	}

@@ -22,6 +22,7 @@ THE SOFTWARE.
 package runtimes
 
 import (
+	"context"
 	"fmt"
 	"io"
 
@@ -41,21 +42,21 @@ var Runtimes = map[string]Runtime{
 
 // Runtime defines an interface that can be implemented for various container runtime environments (docker, containerd, etc.)
 type Runtime interface {
-	CreateNode(*k3d.Node) error
-	DeleteNode(*k3d.Node) error
-	GetNodesByLabel(map[string]string) ([]*k3d.Node, error)
-	GetNode(*k3d.Node) (*k3d.Node, error)
-	CreateNetworkIfNotPresent(name string) (string, bool, error) // @return NETWORK_NAME, EXISTS, ERROR
-	GetKubeconfig(*k3d.Node) (io.ReadCloser, error)
-	DeleteNetwork(ID string) error
-	StartNode(*k3d.Node) error
-	StopNode(*k3d.Node) error
-	CreateVolume(string, map[string]string) error
-	DeleteVolume(string) error
+	CreateNode(context.Context, *k3d.Node) error
+	DeleteNode(context.Context, *k3d.Node) error
+	GetNodesByLabel(context.Context, map[string]string) ([]*k3d.Node, error)
+	GetNode(context.Context, *k3d.Node) (*k3d.Node, error)
+	CreateNetworkIfNotPresent(context.Context, string) (string, bool, error) // @return NETWORK_NAME, EXISTS, ERROR
+	GetKubeconfig(context.Context, *k3d.Node) (io.ReadCloser, error)
+	DeleteNetwork(context.Context, string) error
+	StartNode(context.Context, *k3d.Node) error
+	StopNode(context.Context, *k3d.Node) error
+	CreateVolume(context.Context, string, map[string]string) error
+	DeleteVolume(context.Context, string) error
 	GetRuntimePath() string // returns e.g. '/var/run/docker.sock' for a default docker setup
-	ExecInNode(*k3d.Node, []string) error
+	ExecInNode(context.Context, *k3d.Node, []string) error
 	// DeleteContainer() error
-	GetNodeLogs(*k3d.Node) (io.ReadCloser, error)
+	GetNodeLogs(context.Context, *k3d.Node) (io.ReadCloser, error)
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it

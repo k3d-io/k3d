@@ -21,12 +21,14 @@ THE SOFTWARE.
 */
 package containerd
 
+import "context"
+
 // CreateNetworkIfNotPresent creates a new docker network
-func (d Containerd) CreateNetworkIfNotPresent(name string) (string, bool, error) {
+func (d Containerd) CreateNetworkIfNotPresent(ctx context.Context, name string) (string, bool, error) {
 	return "", false, nil
 }
 
 // DeleteNetwork deletes a network
-func (d Containerd) DeleteNetwork(ID string) error {
+func (d Containerd) DeleteNetwork(ctx context.Context, ID string) error {
 	return nil
 }
