@@ -56,7 +56,7 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 		resp, err = docker.ContainerCreate(ctx, &dockerNode.ContainerConfig, &dockerNode.HostConfig, &dockerNode.NetworkingConfig, name)
 		if err != nil {
 			if client.IsErrNotFound(err) {
-				if err := pullImage(&ctx, docker, dockerNode.ContainerConfig.Image); err != nil {
+				if err := pullImage(ctx, docker, dockerNode.ContainerConfig.Image); err != nil {
 					log.Errorf("Failed to create container '%s'", name)
 					return err
 				}
@@ -107,9 +107,9 @@ func removeContainer(ctx context.Context, ID string) error {
 }
 
 // pullImage pulls a container image and outputs progress if --verbose flag is set
-func pullImage(ctx *context.Context, docker *client.Client, image string) error {
+func pullImage(ctx context.Context, docker *client.Client, image string) error {
 
-	resp, err := docker.ImagePull(*ctx, image, types.ImagePullOptions{})
+	resp, err := docker.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
 		log.Errorf("Failed to pull image '%s'", image)
 		return err
