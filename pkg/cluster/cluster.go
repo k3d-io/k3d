@@ -320,7 +320,7 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 func DeleteCluster(cluster *k3d.Cluster, runtime k3drt.Runtime) error {
 
 	log.Infof("Deleting cluster '%s'", cluster.Name)
-	log.Debugf("%+v", cluster)
+	log.Debugf("Cluster Details: %+v", cluster)
 
 	failed := 0
 	for _, node := range cluster.Nodes {

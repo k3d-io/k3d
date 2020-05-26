@@ -46,7 +46,7 @@ func AddMasterToLoadBalancer(runtime runtimes.Runtime, cluster *k3d.Cluster, new
 	}
 	masterNodes += newNode.Name // append the new master node to the end of the list
 
-	log.Debugf("SERVERS=%s", masterNodes)
+	log.Debugf("Servers as passed to masterlb: '%s'", masterNodes)
 
 	command := fmt.Sprintf("SERVERS=%s %s", masterNodes, "confd -onetime -backend env && nginx -s reload")
 	if err := runtime.ExecInNode(loadbalancer, []string{"sh", "-c", command}); err != nil {

@@ -162,7 +162,6 @@ func CreateNode(node *k3d.Node, runtime runtimes.Runtime) error {
 		if err := patchMasterSpec(node); err != nil {
 			return err
 		}
-		log.Debugf("spec = %+v\n", node)
 	}
 
 	/*

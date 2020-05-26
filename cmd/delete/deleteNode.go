@@ -39,7 +39,6 @@ func NewCmdDeleteNode() *cobra.Command {
 		Long:  `Delete a node.`,
 		Args:  cobra.MinimumNArgs(1), // at least one node has to be specified
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("delete node called")
 
 			nodes := parseDeleteNodeCmd(cmd, args)
 
@@ -52,8 +51,6 @@ func NewCmdDeleteNode() *cobra.Command {
 					}
 				}
 			}
-
-			log.Debugln("...Finished")
 		},
 	}
 

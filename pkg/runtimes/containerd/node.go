@@ -34,8 +34,6 @@ import (
 
 // CreateNode creates a new k3d node
 func (d Containerd) CreateNode(node *k3d.Node) error {
-	log.Debugln("containerd.CreateNode...")
-
 	// create containerd client
 	ctx := context.Background()
 	clientOpts := []containerd.ClientOpt{
@@ -78,7 +76,6 @@ func (d Containerd) CreateNode(node *k3d.Node) error {
 
 // DeleteNode deletes an existing k3d node
 func (d Containerd) DeleteNode(node *k3d.Node) error {
-	log.Debugln("containerd.DeleteNode...")
 	ctx := context.Background()
 	clientOpts := []containerd.ClientOpt{
 		containerd.WithDefaultNamespace("k3d"),

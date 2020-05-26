@@ -98,7 +98,6 @@ func NewCmdCreateCluster() *cobra.Command {
 				fmt.Printf("kubectl config use-context %s\n", fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name))
 			} else {
 				if runtime.GOOS == "windows" {
-					log.Debugf("GOOS is %s", runtime.GOOS)
 					fmt.Printf("$env:KUBECONFIG=(%s get kubeconfig %s)\n", os.Args[0], cluster.Name)
 				} else {
 					fmt.Printf("export KUBECONFIG=$(%s get kubeconfig %s)\n", os.Args[0], cluster.Name)

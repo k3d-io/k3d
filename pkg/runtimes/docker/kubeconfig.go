@@ -46,7 +46,7 @@ func (d Docker) GetKubeconfig(node *k3d.Node) (io.ReadCloser, error) {
 		return nil, err
 	}
 
-	log.Debugf("Container: %+v", container)
+	log.Debugf("Container Details: %+v", container)
 
 	reader, _, err := docker.CopyFromContainer(ctx, container.ID, "/output/kubeconfig.yaml")
 	if err != nil {

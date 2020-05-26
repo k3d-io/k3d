@@ -57,7 +57,6 @@ func (d Docker) CreateNode(node *k3d.Node) error {
 
 // DeleteNode deletes a node
 func (d Docker) DeleteNode(nodeSpec *k3d.Node) error {
-	log.Debugln("docker.DeleteNode...")
 	return removeContainer(nodeSpec.Name)
 }
 
@@ -257,7 +256,7 @@ func (d Docker) GetNodeLogs(node *k3d.Node) (io.ReadCloser, error) {
 // ExecInNode execs a command inside a node
 func (d Docker) ExecInNode(node *k3d.Node, cmd []string) error {
 
-	log.Debugf("Exec cmds '%+v' in node '%s'", cmd, node.Name)
+	log.Debugf("Executing command '%+v' in node '%s'", cmd, node.Name)
 
 	// get the container for the given node
 	container, err := getNodeContainer(node)
