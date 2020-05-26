@@ -374,9 +374,13 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 	}
 
 	// append ports
+	lbCount := 1
+	if createClusterOpts.DisableLoadBalancer {
+		lbCount = 0
+	}
 	for portmap, filters := range portFilterMap {
-		if len(filters) == 0 && (masterCount+workerCount) > 1 {
-			log.Fatalf("Malformed portmapping '%s' lacks a node filter, but there is more than one node.", portmap)
+		if len(filters) == 0 && (masterCount+workerCount+lbCount) > 1 {
+			log.Fatalf("Malformed portmapping '%s' lacks a node filter, but there is more than one node (including the loadbalancer, if there is any).", portmap)
 		}
 		nodes, err := cliutil.FilterNodes(append(cluster.Nodes, cluster.MasterLoadBalancer), filters)
 		if err != nil {
