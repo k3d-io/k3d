@@ -57,12 +57,12 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 		if err != nil {
 			if client.IsErrNotFound(err) {
 				if err := pullImage(&ctx, docker, dockerNode.ContainerConfig.Image); err != nil {
-					log.Errorln("Failed to create container")
+					log.Errorf("Failed to create container '%s'", name)
 					return err
 				}
 				continue
 			}
-			log.Errorln("Failed to create container")
+			log.Errorf("Failed to create container '%s'", name)
 			return err
 		}
 		log.Debugln("Created container", resp.ID)

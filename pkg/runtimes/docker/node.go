@@ -48,7 +48,7 @@ func (d Docker) CreateNode(ctx context.Context, node *k3d.Node) error {
 
 	// create node
 	if err := createContainer(ctx, dockerNode, node.Name); err != nil {
-		log.Errorln("Failed to create k3d node")
+		log.Errorf("Failed to create node '%s'", node.Name)
 		return err
 	}
 
