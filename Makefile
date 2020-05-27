@@ -15,7 +15,7 @@ K3S_TAG		:= $(shell curl --silent "https://update.k3s.io/v1-release/channels/sta
 
 ifeq ($(K3S_TAG),)
 $(warning K3S_TAG undefined: couldn't get latest k3s image tag!)
-$(warning Output of curl: $(shell curl --silent "curl --silent "https://update.k3s.io/v1-release/channels/stable""))
+$(warning Output of curl: $(shell curl --silent "https://update.k3s.io/v1-release/channels/stable"))
 $(error exiting)
 endif
 
