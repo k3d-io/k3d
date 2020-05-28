@@ -30,3 +30,8 @@ func (d Containerd) CreateVolume(name string, labels map[string]string) error {
 func (d Containerd) DeleteVolume(name string) error {
 	return nil
 }
+
+// GetVolume tries to get a named volume
+func (d Containerd) GetVolume(name string) (string, error) {
+	return "", nil
+}
