@@ -511,12 +511,12 @@ func StartCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runti
 				return WaitForNodeLogMessage(ctx, runtime, masterNode, "Wrote kubeconfig")
 			})
 		}
+	}
 
-		if err := waitForMasterWaitgroup.Wait(); err != nil {
-			log.Errorln("Failed to bring up all master nodes in time. Check the logs:")
-			log.Errorln(">>> ", err)
-			return fmt.Errorf("Failed to bring up cluster")
-		}
+	if err := waitForMasterWaitgroup.Wait(); err != nil {
+		log.Errorln("Failed to bring up all master nodes in time. Check the logs:")
+		log.Errorln(">>> ", err)
+		return fmt.Errorf("Failed to bring up cluster")
 	}
 
 	// start masterlb
