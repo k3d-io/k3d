@@ -52,6 +52,7 @@ type Runtime interface {
 	StopNode(*k3d.Node) error
 	CreateVolume(string, map[string]string) error
 	DeleteVolume(string) error
+	GetVolume(string) (string, error)
 	GetRuntimePath() string // returns e.g. '/var/run/docker.sock' for a default docker setup
 	ExecInNode(*k3d.Node, []string) error
 	// DeleteContainer() error

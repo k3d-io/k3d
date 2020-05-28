@@ -25,12 +25,16 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/rancher/k3d/pkg/runtimes"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // ValidateVolumeMount checks, if the source of volume mounts exists and if the destination is an absolute path
 // - SRC: source directory/file -> tests: must exist
 // - DEST: source directory/file -> tests: must be absolute path
-func ValidateVolumeMount(volumeMount string) (string, error) {
+func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) (string, error) {
 	src := ""
 	dest := ""
 
@@ -51,8 +55,16 @@ func ValidateVolumeMount(volumeMount string) (string, error) {
 
 	// verify that the source exists
 	if src != "" {
-		if _, err := os.Stat(src); err != nil {
-			return "", fmt.Errorf("Failed to stat file/dir that you're trying to mount: '%s' in '%s'", src, volumeMount)
+		// a) named volume
+		isNamedVolume := true
+		if err := verifyNamedVolume(runtime, src); err != nil {
+			log.Debugf("Source '%s' is not a named volume, assuming it's a path...\n%+v", src, err)
+			isNamedVolume = false
+		}
+		if !isNamedVolume {
+			if _, err := os.Stat(src); err != nil {
+				return "", fmt.Errorf("Failed to stat file/dir that you're trying to mount: '%s' in '%s'", src, volumeMount)
+			}
 		}
 	}
 
@@ -62,4 +74,16 @@ func ValidateVolumeMount(volumeMount string) (string, error) {
 	}
 
 	return fmt.Sprintf("%s:%s", src, dest), nil
+}
+
+// verifyNamedVolume checks whether a named volume exists in the runtime
+func verifyNamedVolume(runtime runtimes.Runtime, volumeName string) error {
+	volumeName, err := runtime.GetVolume(volumeName)
+	if err != nil {
+		return err
+	}
+	if volumeName == "" {
+		return fmt.Errorf("Failed to find named volume '%s'", volumeName)
+	}
+	return nil
 }

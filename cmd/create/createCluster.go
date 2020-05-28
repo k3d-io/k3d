@@ -251,7 +251,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		}
 
 		// validate the specified volume mount and return it in SRC:DEST format
-		volume, err = cliutil.ValidateVolumeMount(volume)
+		volume, err = cliutil.ValidateVolumeMount(runtimes.SelectedRuntime, volume)
 		if err != nil {
 			log.Fatalln(err)
 		}
