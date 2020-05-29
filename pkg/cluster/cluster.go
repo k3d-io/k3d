@@ -259,12 +259,6 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 		}
 	}
 
-	if err := waitForMasterWaitgroup.Wait(); err != nil {
-		log.Errorln("Failed to bring up all master nodes in time. Check the logs:")
-		log.Errorln(">>> ", err)
-		return fmt.Errorf("Failed to bring up cluster")
-	}
-
 	/*
 	 * Auxiliary Containers
 	 */
@@ -310,10 +304,25 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 				log.Errorln("Failed to create loadbalancer")
 				return err
 			}
+			if cluster.CreateClusterOpts.WaitForMaster {
+				waitForMasterWaitgroup.Go(func() error {
+					// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
+					// ... by scanning for this line in logs and restarting the container in case it appears
+					log.Debugf("Starting to wait for loadbalancer node '%s'", lbNode.Name)
+					return WaitForNodeLogMessage(ctx, runtime, lbNode, "start worker processes", time.Time{})
+				})
+			}
 		} else {
 			log.Infoln("Hostnetwork selected -> Skipping creation of Master LoadBalancer")
 		}
 	}
+
+	if err := waitForMasterWaitgroup.Wait(); err != nil {
+		log.Errorln("Failed to bring up all master nodes (and loadbalancer) in time. Check the logs:")
+		log.Errorf(">>> %+v", err)
+		return fmt.Errorf("Failed to bring up cluster")
+	}
+
 	return nil
 }
 
