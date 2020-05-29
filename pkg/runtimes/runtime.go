@@ -24,6 +24,7 @@ package runtimes
 import (
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/rancher/k3d/pkg/runtimes/containerd"
 	"github.com/rancher/k3d/pkg/runtimes/docker"
@@ -56,7 +57,7 @@ type Runtime interface {
 	GetRuntimePath() string // returns e.g. '/var/run/docker.sock' for a default docker setup
 	ExecInNode(*k3d.Node, []string) error
 	// DeleteContainer() error
-	GetNodeLogs(*k3d.Node) (io.ReadCloser, error)
+	GetNodeLogs(*k3d.Node, time.Time) (io.ReadCloser, error)
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it

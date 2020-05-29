@@ -233,7 +233,7 @@ func GetNode(node *k3d.Node, runtime runtimes.Runtime) (*k3d.Node, error) {
 }
 
 // WaitForNodeLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
-func WaitForNodeLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string) error {
+func WaitForNodeLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string, since time.Time) error {
 	for {
 		select {
 		case <-ctx.Done():
@@ -242,7 +242,7 @@ func WaitForNodeLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 		}
 
 		// read the logs
-		out, err := runtime.GetNodeLogs(node)
+		out, err := runtime.GetNodeLogs(node, since)
 		if err != nil {
 			if out != nil {
 				out.Close()

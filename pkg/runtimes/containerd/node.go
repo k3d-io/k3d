@@ -25,6 +25,7 @@ package containerd
 import (
 	"context"
 	"io"
+	"time"
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/containers"
@@ -119,7 +120,7 @@ func (d Containerd) GetNode(node *k3d.Node) (*k3d.Node, error) {
 }
 
 // GetNodeLogs returns the logs from a given node
-func (d Containerd) GetNodeLogs(node *k3d.Node) (io.ReadCloser, error) {
+func (d Containerd) GetNodeLogs(node *k3d.Node, since time.Time) (io.ReadCloser, error) {
 	return nil, nil
 }
 
