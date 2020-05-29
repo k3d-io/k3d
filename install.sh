@@ -62,7 +62,7 @@ verifySupported() {
 # if it needs to be changed.
 checkK3dInstalledVersion() {
   if [[ -f "${K3D_INSTALL_DIR}/${APP_NAME}" ]]; then
-    local version=$(k3d --version | cut -d " " -f3)
+    local version=$(k3d version | cut -d " " -f3)
     if [[ "$version" == "$TAG" ]]; then
       echo "k3d ${version} is already ${DESIRED_VERSION:-latest}"
       return 0
