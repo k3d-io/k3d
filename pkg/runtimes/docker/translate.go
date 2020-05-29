@@ -39,7 +39,9 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 
 	/* initialize everything that we need */
 	containerConfig := docker.Config{}
-	hostConfig := docker.HostConfig{}
+	hostConfig := docker.HostConfig{
+		Init: &[]bool{true}[0],
+	}
 	networkingConfig := network.NetworkingConfig{}
 
 	/* Name & Image */
@@ -76,7 +78,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	hostConfig.Privileged = true
 
 	/* Volumes */
-	// TODO: image volume
+	log.Debugf("Volumes: %+v", node.Volumes)
 	hostConfig.Binds = node.Volumes
 	// containerConfig.Volumes = map[string]struct{}{} // TODO: do we need this? We only used binds before
 
