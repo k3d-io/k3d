@@ -199,18 +199,18 @@ func (d Docker) GetNode(node *k3d.Node) (*k3d.Node, error) {
 	container, err := getNodeContainer(node)
 	if err != nil {
 		log.Errorf("Failed to get container for node '%s'", node.Name)
-		return nil, err
+		return node, err
 	}
 
 	containerDetails, err := getContainerDetails(container.ID)
 	if err != nil {
-		return nil, err
+		return node, err
 	}
 
 	node, err = TranslateContainerDetailsToNode(containerDetails)
 	if err != nil {
 		log.Errorf("Failed to translate container details for node '%s' to node object", node.Name)
-		return nil, err
+		return node, err
 	}
 
 	return node, nil
