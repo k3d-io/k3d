@@ -78,7 +78,6 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 	}
 
 	// --role
-	// TODO: createNode: for --role=master, update the nginx config and add TLS-SAN and server connection, etc.
 	roleStr, err := cmd.Flags().GetString("role")
 	if err != nil {
 		log.Errorln("No node role specified")
@@ -112,6 +111,9 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 			Name:  fmt.Sprintf("%s-%s-%d", k3d.DefaultObjectNamePrefix, args[0], i),
 			Role:  role,
 			Image: image,
+			Labels: map[string]string{
+				"k3d.role": roleStr,
+			},
 		}
 		nodes = append(nodes, node)
 	}

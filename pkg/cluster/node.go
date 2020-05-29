@@ -43,13 +43,15 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 		return err
 	}
 
-	log.Debugf("Adding node to cluster %+v", cluster)
-
 	// network
 	node.Network = cluster.Network.Name
 
 	// skeleton
-	node.Labels = map[string]string{}
+	if node.Labels == nil {
+		node.Labels = map[string]string{
+			"k3d.role": string(node.Role),
+		}
+	}
 	node.Env = []string{}
 
 	// copy labels and env vars from a similar node in the selected cluster
@@ -62,7 +64,8 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 	}
 	// if we didn't find a node with the same role in the cluster, just choose any other node
 	if chosenNode == nil {
-		log.Debugf("Didn't find node with role '%s' in cluster '%s'. Choosing any other node...", node.Role, cluster.Name)
+		log.Debugf("Didn't find node with role '%s' in cluster '%s'. Choosing any other node (and using defaults)...", node.Role, cluster.Name)
+		node.Cmd = k3d.DefaultRoleCmds[node.Role]
 		for _, existingNode := range cluster.Nodes {
 			if existingNode.Role != k3d.LoadBalancerRole { // any role except for the LoadBalancer role
 				chosenNode = existingNode
@@ -77,7 +80,7 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 		return err
 	}
 
-	log.Debugf("Copying configuration from existing node %+v", chosenNode)
+	log.Debugf("Adding node %+v \n>>> to cluster %+v\n>>> based on existing node %+v", node, cluster, chosenNode)
 
 	// merge node config of new node into existing node config
 	if err := mergo.MergeWithOverwrite(chosenNode, *node); err != nil {
