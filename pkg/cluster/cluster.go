@@ -192,7 +192,7 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 			default:
 			}
 			log.Debugln("Waiting for initializing master node...")
-			logreader, err := runtime.GetNodeLogs(cluster.InitNode)
+			logreader, err := runtime.GetNodeLogs(cluster.InitNode, time.Time{})
 			if err != nil {
 				if logreader != nil {
 					logreader.Close()
@@ -254,7 +254,7 @@ func CreateCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runt
 				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 				// ... by scanning for this line in logs and restarting the container in case it appears
 				log.Debugf("Starting to wait for master node '%s'", masterNode.Name)
-				return WaitForNodeLogMessage(ctx, runtime, masterNode, "Wrote kubeconfig")
+				return WaitForNodeLogMessage(ctx, runtime, masterNode, "Wrote kubeconfig", time.Time{})
 			})
 		}
 	}
@@ -475,6 +475,8 @@ func generateNodeName(cluster string, role k3d.Role, suffix int) string {
 func StartCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runtime, startClusterOpts types.StartClusterOpts) error {
 	log.Infof("Starting cluster '%s'", cluster.Name)
 
+	start := time.Now()
+
 	if startClusterOpts.Timeout > 0*time.Second {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, startClusterOpts.Timeout)
@@ -508,15 +510,9 @@ func StartCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runti
 				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 				// ... by scanning for this line in logs and restarting the container in case it appears
 				log.Debugf("Starting to wait for master node '%s'", masterNode.Name)
-				return WaitForNodeLogMessage(ctx, runtime, masterNode, "Wrote kubeconfig")
+				return WaitForNodeLogMessage(ctx, runtime, masterNode, "Wrote kubeconfig", start)
 			})
 		}
-	}
-
-	if err := waitForMasterWaitgroup.Wait(); err != nil {
-		log.Errorln("Failed to bring up all master nodes in time. Check the logs:")
-		log.Errorln(">>> ", err)
-		return fmt.Errorf("Failed to bring up cluster")
 	}
 
 	// start masterlb
@@ -526,6 +522,18 @@ func StartCluster(ctx context.Context, cluster *k3d.Cluster, runtime k3drt.Runti
 			log.Warningf("Failed to start masterlb '%s': Try to start it manually", masterlb.Name)
 			failed++
 		}
+		waitForMasterWaitgroup.Go(func() error {
+			// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
+			// ... by scanning for this line in logs and restarting the container in case it appears
+			log.Debugf("Starting to wait for loadbalancer node '%s'", masterlb.Name)
+			return WaitForNodeLogMessage(ctx, runtime, masterlb, "start worker processes", start)
+		})
+	}
+
+	if err := waitForMasterWaitgroup.Wait(); err != nil {
+		log.Errorln("Failed to bring up all nodes in time. Check the logs:")
+		log.Errorln(">>> ", err)
+		return fmt.Errorf("Failed to bring up cluster")
 	}
 
 	if failed > 0 {
