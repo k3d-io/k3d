@@ -33,6 +33,8 @@ k3d
   start
     cluster CLUSTERNAME  # start a (stopped) cluster
       -a, --all  # start all clusters
+      --wait  # wait for all masters and master-loadbalancer to be up before returning
+      --timeout  # maximum waiting time for '--wait' before canceling/returning
     node NODENAME  # start a (stopped) node
   stop
     cluster CLUSTERNAME  # stop a cluster

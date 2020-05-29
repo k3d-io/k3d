@@ -106,6 +106,12 @@ type CreateClusterOpts struct {
 	K3sAgentArgs        []string
 }
 
+// StartClusterOpts describe a set of options one can set when (re-)starting a cluster
+type StartClusterOpts struct {
+	WaitForMaster bool
+	Timeout       time.Duration
+}
+
 // ClusterNetwork describes a network which a cluster is running in
 type ClusterNetwork struct {
 	Name     string `yaml:"name" json:"name,omitempty"`

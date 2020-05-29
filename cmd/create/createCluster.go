@@ -251,7 +251,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		}
 
 		// validate the specified volume mount and return it in SRC:DEST format
-		volume, err = cliutil.ValidateVolumeMount(volume)
+		volume, err = cliutil.ValidateVolumeMount(runtimes.SelectedRuntime, volume)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -374,11 +374,17 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 	}
 
 	// append ports
+	nodeCount := masterCount + workerCount
+	nodeList := cluster.Nodes
+	if !createClusterOpts.DisableLoadBalancer {
+		nodeCount++
+		nodeList = append(nodeList, cluster.MasterLoadBalancer)
+	}
 	for portmap, filters := range portFilterMap {
-		if len(filters) == 0 && (masterCount+workerCount) > 1 {
-			log.Fatalf("Malformed portmapping '%s' lacks a node filter, but there is more than one node.", portmap)
+		if len(filters) == 0 && (nodeCount) > 1 {
+			log.Fatalf("Malformed portmapping '%s' lacks a node filter, but there is more than one node (including the loadbalancer, if there is any).", portmap)
 		}
-		nodes, err := cliutil.FilterNodes(append(cluster.Nodes, cluster.MasterLoadBalancer), filters)
+		nodes, err := cliutil.FilterNodes(nodeList, filters)
 		if err != nil {
 			log.Fatalln(err)
 		}

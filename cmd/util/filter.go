@@ -67,7 +67,7 @@ func SplitFiltersFromFlag(flag string) (string, []string, error) {
 func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 
 	if len(filters) == 0 || len(filters[0]) == 0 {
-		log.Warnln("No filter specified")
+		log.Warnln("No node filter specified")
 		return nodes, nil
 	}
 

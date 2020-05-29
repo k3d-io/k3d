@@ -30,10 +30,7 @@ check_clusters "$clustername" && failed "cluster was not stopped, since we still
 
 # 3. start the cluster
 info "Starting cluster..."
-$EXE start cluster "$clustername"
-
-info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
-sleep 5
+$EXE start cluster "$clustername" --wait --timeout 360s || failed "cluster didn't come back in time"
 
 info "Checking that we have access to the cluster..."
 check_clusters "$clustername" || failed "error checking cluster"

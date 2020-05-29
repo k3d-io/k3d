@@ -214,7 +214,7 @@ func (d Docker) GetNode(ctx context.Context, node *k3d.Node) (*k3d.Node, error) 
 }
 
 // GetNodeLogs returns the logs from a given node
-func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node) (io.ReadCloser, error) {
+func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time) (io.ReadCloser, error) {
 	// get the container for the given node
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
@@ -239,7 +239,11 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node) (io.ReadCloser,
 		return nil, fmt.Errorf("Node '%s' (container '%s') not running", node.Name, containerInspectResponse.ID)
 	}
 
-	logreader, err := docker.ContainerLogs(ctx, container.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
+	sinceStr := ""
+	if !since.IsZero() {
+		sinceStr = since.Format("2006-01-02T15:04:05")
+	}
+	logreader, err := docker.ContainerLogs(ctx, container.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Since: sinceStr})
 	if err != nil {
 		log.Errorf("Failed to get logs from node '%s' (container '%s')", node.Name, container.ID)
 		return nil, err

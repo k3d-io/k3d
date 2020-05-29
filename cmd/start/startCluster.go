@@ -22,8 +22,11 @@ THE SOFTWARE.
 package start
 
 import (
+	"time"
+
 	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
+	"github.com/rancher/k3d/pkg/types"
 	"github.com/spf13/cobra"
 
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -33,6 +36,8 @@ import (
 
 // NewCmdStartCluster returns a new cobra command
 func NewCmdStartCluster() *cobra.Command {
+
+	startClusterOpts := types.StartClusterOpts{}
 
 	// create new command
 	cmd := &cobra.Command{
@@ -45,7 +50,7 @@ func NewCmdStartCluster() *cobra.Command {
 				log.Infoln("No clusters found")
 			} else {
 				for _, c := range clusters {
-					if err := cluster.StartCluster(cmd.Context(), runtimes.SelectedRuntime, c); err != nil {
+					if err := cluster.StartCluster(cmd.Context(), runtimes.SelectedRuntime, c, startClusterOpts); err != nil {
 						log.Fatalln(err)
 					}
 				}
@@ -55,6 +60,8 @@ func NewCmdStartCluster() *cobra.Command {
 
 	// add flags
 	cmd.Flags().BoolP("all", "a", false, "Start all existing clusters")
+	cmd.Flags().BoolVar(&startClusterOpts.WaitForMaster, "wait", false, "Wait for the master(s) (and loadbalancer) to be ready before returning.")
+	cmd.Flags().DurationVar(&startClusterOpts.Timeout, "timeout", 0*time.Second, "Maximum waiting time for '--wait' before canceling/returning.")
 
 	// add subcommands
 

@@ -25,6 +25,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/rancher/k3d/pkg/runtimes/containerd"
 	"github.com/rancher/k3d/pkg/runtimes/docker"
@@ -53,10 +54,10 @@ type Runtime interface {
 	StopNode(context.Context, *k3d.Node) error
 	CreateVolume(context.Context, string, map[string]string) error
 	DeleteVolume(context.Context, string) error
+	GetVolume(string) (string, error)
 	GetRuntimePath() string // returns e.g. '/var/run/docker.sock' for a default docker setup
 	ExecInNode(context.Context, *k3d.Node, []string) error
-	// DeleteContainer() error
-	GetNodeLogs(context.Context, *k3d.Node) (io.ReadCloser, error)
+	GetNodeLogs(context.Context, *k3d.Node, time.Time) (io.ReadCloser, error)
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it
