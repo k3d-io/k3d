@@ -19,36 +19,26 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package get
+package util
 
 import (
-	log "github.com/sirupsen/logrus"
-
-	"github.com/spf13/cobra"
+	"fmt"
 )
 
-// NewCmdGet returns a new cobra command
-func NewCmdGet() *cobra.Command {
+// struct describe flags which could be validate thanks to this file's functions
+type ValidableFlags struct {
+	All bool
+}
 
-	// create new cobra command
-	cmd := &cobra.Command{
-		Use:   "get",
-		Short: "Get a resource.",
-		Long:  `Get a resource.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			if err := cmd.Help(); err != nil {
-				log.Errorln("Couldn't get help text")
-				log.Fatalln(err)
-			}
-		},
+// ValidateClusterNameOrAllFlag checks, if cluster name or --all arg is set
+func ValidateClusterNameOrAllFlag(args []string, flagStruct ValidableFlags) error {
+
+	clusterNamePresent := len(args) > 0
+	getAllFlagPresent := flagStruct.All
+
+	// xor : provide cluster name or all flags
+	if clusterNamePresent != getAllFlagPresent {
+		return nil
 	}
-
-	// add subcommands
-	cmd.AddCommand(NewCmdGetCluster())
-	cmd.AddCommand(NewCmdGetNode())
-	cmd.AddCommand(NewCmdGetKubeconfig())
-	cmd.AddCommand(NewCmdGetClusterToken())
-
-	// done
-	return cmd
+	return fmt.Errorf("Need to specify one or more cluster names *or* set `--all` flag")
 }

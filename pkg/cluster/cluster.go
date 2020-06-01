@@ -442,6 +442,12 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 			}
 		}
 
+		// get k3s cluster's secret
+		if cluster.Secret == "" {
+			if secretToken, ok := node.Labels[k3d.SecretLabelName]; ok {
+				cluster.Secret = secretToken
+			}
+		}
 	}
 
 	return nil
