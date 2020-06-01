@@ -66,7 +66,10 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 		if flags.version {
 			printVersion()
 		} else {
-			cmd.Usage()
+			if err := cmd.Usage(); err != nil {
+				log.Errorln(err)
+				os.Exit(1)
+			}
 		}
 	},
 }
