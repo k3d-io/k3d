@@ -74,6 +74,14 @@ var DefaultObjectLabels = map[string]string{
 	"app": "k3d",
 }
 
+// List of k3d technical label name
+const (
+	SecretLabelName          string = "k3d.cluster.secret"
+	ImageVolumeLabelName     string = "k3d.cluster.imageVolume"
+	NetworkExternalLabelName string = "k3d.cluster.network.external"
+	NetworkLabelName         string = "k3d.cluster.network"
+)
+
 // DefaultRoleCmds maps the node roles to their respective default commands
 var DefaultRoleCmds = map[Role][]string{
 	MasterRole: {"server"},

@@ -65,6 +65,8 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if flags.version {
 			printVersion()
+		} else {
+			cmd.Usage()
 		}
 	},
 }
