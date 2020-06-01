@@ -19,3 +19,5 @@ site/
 # Editors
 .vscode/
 .local/
+.idea/
+*.iml
