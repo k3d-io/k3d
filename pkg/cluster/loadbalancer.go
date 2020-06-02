@@ -24,28 +24,38 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
-// AddMasterToLoadBalancer adds a new master node to the loadbalancer configuration
-func AddMasterToLoadBalancer(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, newNode *k3d.Node) error {
+// UpdateLoadbalancerConfig updates the loadbalancer config with an updated list of servers belonging to that cluster
+func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) error {
+
+	var err error
+	// update cluster details to ensure that we have the latest node list
+	cluster, err = GetCluster(ctx, runtime, cluster)
+	if err != nil {
+		log.Errorln("Failed to update details for cluster '%s'", cluster.Name)
+		return err
+	}
+
 	// find the LoadBalancer for the target cluster
-	masterNodes := ""
+	masterNodesList := []string{}
 	var loadbalancer *k3d.Node
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.LoadBalancerRole { // get the loadbalancer we want to update
 			loadbalancer = node
 		} else if node.Role == k3d.MasterRole { // create a list of master nodes
-			masterNodes += node.Name + ","
+			masterNodesList = append(masterNodesList, node.Name)
 		}
 	}
+	masterNodes := strings.Join(masterNodesList, ",")
 	if loadbalancer == nil {
 		return fmt.Errorf("Failed to find loadbalancer for cluster '%s'", cluster.Name)
 	}
-	masterNodes += newNode.Name // append the new master node to the end of the list
 
 	log.Debugf("Servers as passed to masterlb: '%s'", masterNodes)
 
@@ -56,5 +66,4 @@ func AddMasterToLoadBalancer(ctx context.Context, runtime runtimes.Runtime, clus
 	}
 
 	return nil
-
 }

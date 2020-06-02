@@ -111,10 +111,10 @@ func AddNodeToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		return err
 	}
 
-	// if it's a master node, then update the loadbalancer configuration to include it
+	// if it's a master node, then update the loadbalancer configuration
 	if node.Role == k3d.MasterRole {
-		if err := AddMasterToLoadBalancer(ctx, runtime, cluster, node); err != nil {
-			log.Errorln("Failed to add new master node to cluster loadbalancer")
+		if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
+			log.Errorln("Failed to update cluster loadbalancer")
 			return err
 		}
 	}
@@ -183,6 +183,21 @@ func DeleteNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) e
 	if err := runtime.DeleteNode(ctx, node); err != nil {
 		log.Error(err)
 	}
+
+	cluster, err := GetCluster(ctx, runtime, &k3d.Cluster{Name: node.Labels["k3d.cluster"]})
+	if err != nil {
+		log.Errorf("Failed to update loadbalancer: Failed to find cluster for node '%s'", node.Name)
+		return err
+	}
+
+	// if it's a master node, then update the loadbalancer configuration
+	if node.Role == k3d.MasterRole {
+		if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
+			log.Errorln("Failed to update cluster loadbalancer")
+			return err
+		}
+	}
+
 	return nil
 }
 
