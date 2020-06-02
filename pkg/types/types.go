@@ -67,6 +67,12 @@ var DefaultObjectLabels = map[string]string{
 	"app": "k3d",
 }
 
+// DefaultRoleCmds maps the node roles to their respective default commands
+var DefaultRoleCmds = map[Role][]string{
+	MasterRole: {"server"},
+	WorkerRole: {"agent"},
+}
+
 // DefaultTmpfsMounts specifies tmpfs mounts that are required for all k3d nodes
 var DefaultTmpfsMounts = []string{
 	"/run",

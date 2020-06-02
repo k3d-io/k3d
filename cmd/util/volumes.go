@@ -40,8 +40,11 @@ func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) (string, 
 
 	// validate 'SRC[:DEST]' substring
 	split := strings.Split(volumeMount, ":")
-	if len(split) < 1 || len(split) > 2 {
-		return "", fmt.Errorf("Invalid volume mount '%s': only one ':' allowed", volumeMount)
+	if len(split) < 1 {
+		return "", fmt.Errorf("No volume/path specified")
+	}
+	if len(split) > 3 {
+		return "", fmt.Errorf("Invalid volume mount '%s': maximal 2 ':' allowed", volumeMount)
 	}
 
 	// we only have SRC specified -> DEST = SRC
@@ -58,12 +61,11 @@ func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) (string, 
 		// a) named volume
 		isNamedVolume := true
 		if err := verifyNamedVolume(runtime, src); err != nil {
-			log.Debugf("Source '%s' is not a named volume, assuming it's a path...\n%+v", src, err)
 			isNamedVolume = false
 		}
 		if !isNamedVolume {
 			if _, err := os.Stat(src); err != nil {
-				return "", fmt.Errorf("Failed to stat file/dir that you're trying to mount: '%s' in '%s'", src, volumeMount)
+				log.Warnf("Failed to stat file/directory/named volume that you're trying to mount: '%s' in '%s' -> Please make sure it exists", src, volumeMount)
 			}
 		}
 	}
@@ -73,7 +75,7 @@ func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) (string, 
 		return "", fmt.Errorf("Volume mount destination doesn't appear to be an absolute path: '%s' in '%s'", dest, volumeMount)
 	}
 
-	return fmt.Sprintf("%s:%s", src, dest), nil
+	return volumeMount, nil
 }
 
 // verifyNamedVolume checks whether a named volume exists in the runtime
