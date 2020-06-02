@@ -81,7 +81,7 @@ docker container run -d --name registry.localhost -v local_registry:/var/lib/reg
 
 These commands will start your registry in `registry.localhost:5000`. In order to push to this registry, you will need to make it accessible as described in the next section.
 Once your registry is up and running, we will need to add it to your `registries.yaml` configuration file.
-Finally, you have to connect the registry network to the k3d cluster network: `#!bash docker network connect k3d-k3s-default registry.localhost`. And then you can [test your local registry](#testing).
+Finally, you have to connect the registry network to the k3d cluster network: `#!bash docker network connect k3d-k3s-default registry.localhost`. And then you can [test your local registry](#testing-your-registry).
 
 ### Pushing to your local registry address
 
@@ -99,7 +99,7 @@ If it's not the case, you can add an entry in your `/etc/hosts` file like this:
 
 Once again, this will only work with k3s >= v0.10.0 (see the some sections below when using k3s <= v0.9.1)
 
-## <a name="testing"></a>Testing your registry
+## Testing your registry
 
 You should test that you can
 
@@ -182,6 +182,6 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
 and then mount it at `/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl` (where `containerd` in your k3d nodes will load it) when creating the k3d cluster:
 
 ```bash
-k3d create \
+k3d create cluster mycluster \
     --volume ${HOME}/.k3d/config.toml.tmpl:/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
 ```
