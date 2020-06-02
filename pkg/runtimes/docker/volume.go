@@ -33,9 +33,8 @@ import (
 )
 
 // CreateVolume creates a new named volume
-func (d Docker) CreateVolume(name string, labels map[string]string) error {
+func (d Docker) CreateVolume(ctx context.Context, name string, labels map[string]string) error {
 	// (0) create new docker client
-	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")
@@ -64,9 +63,8 @@ func (d Docker) CreateVolume(name string, labels map[string]string) error {
 }
 
 // DeleteVolume creates a new named volume
-func (d Docker) DeleteVolume(name string) error {
+func (d Docker) DeleteVolume(ctx context.Context, name string) error {
 	// (0) create new docker client
-	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")

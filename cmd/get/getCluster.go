@@ -51,13 +51,13 @@ func NewCmdGetCluster() *cobra.Command {
 			clusters, headersOff := parseGetClusterCmd(cmd, args)
 			var existingClusters []*k3d.Cluster
 			if clusters == nil { // Option a)  no cluster name specified -> get all clusters
-				found, err := cluster.GetClusters(runtimes.SelectedRuntime)
+				found, err := cluster.GetClusters(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
 					log.Fatalln(err)
 				}
 				existingClusters = append(existingClusters, found...)
 			} else { // Option b) cluster name specified -> get specific cluster
-				found, err := cluster.GetCluster(clusters, runtimes.SelectedRuntime)
+				found, err := cluster.GetCluster(cmd.Context(), runtimes.SelectedRuntime, clusters)
 				if err != nil {
 					log.Fatalln(err)
 				}

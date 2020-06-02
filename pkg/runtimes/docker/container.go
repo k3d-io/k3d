@@ -38,12 +38,11 @@ import (
 )
 
 // createContainer creates a new docker container from translated specs
-func createContainer(dockerNode *NodeInDocker, name string) error {
+func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string) error {
 
 	log.Debugf("Creating docker container with translated config\n%+v\n", dockerNode) // TODO: remove?
 
 	// initialize docker client
-	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")
@@ -57,13 +56,13 @@ func createContainer(dockerNode *NodeInDocker, name string) error {
 		resp, err = docker.ContainerCreate(ctx, &dockerNode.ContainerConfig, &dockerNode.HostConfig, &dockerNode.NetworkingConfig, name)
 		if err != nil {
 			if client.IsErrNotFound(err) {
-				if err := pullImage(&ctx, docker, dockerNode.ContainerConfig.Image); err != nil {
-					log.Errorln("Failed to create container")
+				if err := pullImage(ctx, docker, dockerNode.ContainerConfig.Image); err != nil {
+					log.Errorf("Failed to create container '%s'", name)
 					return err
 				}
 				continue
 			}
-			log.Errorln("Failed to create container")
+			log.Errorf("Failed to create container '%s'", name)
 			return err
 		}
 		log.Debugln("Created container", resp.ID)
@@ -80,10 +79,9 @@ func createContainer(dockerNode *NodeInDocker, name string) error {
 }
 
 // removeContainer deletes a running container (like docker rm -f)
-func removeContainer(ID string) error {
+func removeContainer(ctx context.Context, ID string) error {
 
 	// (0) create docker client
-	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")
@@ -109,9 +107,9 @@ func removeContainer(ID string) error {
 }
 
 // pullImage pulls a container image and outputs progress if --verbose flag is set
-func pullImage(ctx *context.Context, docker *client.Client, image string) error {
+func pullImage(ctx context.Context, docker *client.Client, image string) error {
 
-	resp, err := docker.ImagePull(*ctx, image, types.ImagePullOptions{})
+	resp, err := docker.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
 		log.Errorf("Failed to pull image '%s'", image)
 		return err
@@ -135,9 +133,8 @@ func pullImage(ctx *context.Context, docker *client.Client, image string) error 
 
 }
 
-func getNodeContainer(node *k3d.Node) (*types.Container, error) {
+func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, error) {
 	// (0) create docker client
-	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")

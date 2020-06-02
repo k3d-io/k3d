@@ -23,12 +23,13 @@ THE SOFTWARE.
 package containerd
 
 import (
+	"context"
 	"io"
 
 	k3d "github.com/rancher/k3d/pkg/types"
 )
 
 // GetKubeconfig grabs the kubeconfig from inside a k3d node
-func (d Containerd) GetKubeconfig(node *k3d.Node) (io.ReadCloser, error) {
+func (d Containerd) GetKubeconfig(ctx context.Context, node *k3d.Node) (io.ReadCloser, error) {
 	return nil, nil
 }

@@ -49,13 +49,13 @@ func NewCmdGetNode() *cobra.Command {
 			node, headersOff := parseGetNodeCmd(cmd, args)
 			var existingNodes []*k3d.Node
 			if node == nil { // Option a)  no name specified -> get all nodes
-				found, err := cluster.GetNodes(runtimes.SelectedRuntime)
+				found, err := cluster.GetNodes(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
 					log.Fatalln(err)
 				}
 				existingNodes = append(existingNodes, found...)
 			} else { // Option b) cluster name specified -> get specific cluster
-				found, err := cluster.GetNode(node, runtimes.SelectedRuntime)
+				found, err := cluster.GetNode(cmd.Context(), runtimes.SelectedRuntime, node)
 				if err != nil {
 					log.Fatalln(err)
 				}

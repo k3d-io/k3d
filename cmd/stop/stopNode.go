@@ -40,7 +40,7 @@ func NewCmdStopNode() *cobra.Command {
 		Long:  `Stop an existing k3d node.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			node := parseStopNodeCmd(cmd, args)
-			if err := runtimes.SelectedRuntime.StopNode(node); err != nil {
+			if err := runtimes.SelectedRuntime.StopNode(cmd.Context(), node); err != nil {
 				log.Fatalln(err)
 			}
 		},

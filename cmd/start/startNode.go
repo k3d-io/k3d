@@ -39,7 +39,7 @@ func NewCmdStartNode() *cobra.Command {
 		Long:  `Start an existing k3d node.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			node := parseStartNodeCmd(cmd, args)
-			if err := runtimes.SelectedRuntime.StartNode(node); err != nil {
+			if err := runtimes.SelectedRuntime.StartNode(cmd.Context(), node); err != nil {
 				log.Fatalln(err)
 			}
 		},

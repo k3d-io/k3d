@@ -63,7 +63,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 
 			// generate list of clusters
 			if getKubeconfigFlags.all {
-				clusters, err = cluster.GetClusters(runtimes.SelectedRuntime)
+				clusters, err = cluster.GetClusters(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -77,7 +77,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 			errorGettingKubeconfig := false
 			for _, c := range clusters {
 				log.Debugf("Getting kubeconfig for cluster '%s'", c.Name)
-				if getKubeconfigFlags.output, err = cluster.GetAndWriteKubeConfig(runtimes.SelectedRuntime, c, getKubeconfigFlags.output, &writeKubeConfigOptions); err != nil {
+				if getKubeconfigFlags.output, err = cluster.GetAndWriteKubeConfig(cmd.Context(), runtimes.SelectedRuntime, c, getKubeconfigFlags.output, &writeKubeConfigOptions); err != nil {
 					log.Errorln(err)
 					errorGettingKubeconfig = true
 				}
