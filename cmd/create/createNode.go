@@ -23,6 +23,7 @@ package create
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -36,6 +37,8 @@ import (
 // NewCmdCreateNode returns a new cobra command
 func NewCmdCreateNode() *cobra.Command {
 
+	createNodeOpts := k3d.CreateNodeOpts{}
+
 	// create new command
 	cmd := &cobra.Command{
 		Use:   "node NAME",
@@ -44,11 +47,9 @@ func NewCmdCreateNode() *cobra.Command {
 		Args:  cobra.ExactArgs(1), // exactly one name accepted // TODO: if not specified, inherit from cluster that the node shall belong to, if that is specified
 		Run: func(cmd *cobra.Command, args []string) {
 			nodes, cluster := parseCreateNodeCmd(cmd, args)
-			for _, node := range nodes {
-				if err := k3dc.AddNodeToCluster(cmd.Context(), runtimes.SelectedRuntime, node, cluster); err != nil {
-					log.Errorf("Failed to add node '%s' to cluster '%s'", node.Name, cluster.Name)
-					log.Errorln(err)
-				}
+			if err := k3dc.AddNodesToCluster(cmd.Context(), runtimes.SelectedRuntime, nodes, cluster, createNodeOpts); err != nil {
+				log.Errorf("Failed to add nodes '%+v' to cluster '%s'", nodes, cluster.Name)
+				log.Errorln(err)
 			}
 		},
 	}
@@ -62,6 +63,9 @@ func NewCmdCreateNode() *cobra.Command {
 	}
 
 	cmd.Flags().StringP("image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image used for the node(s)")
+
+	cmd.Flags().BoolVar(&createNodeOpts.Wait, "wait", false, "Wait for the node(s) to be ready before returning.")
+	cmd.Flags().DurationVar(&createNodeOpts.Timeout, "timeout", 0*time.Second, "Maximum waiting time for '--wait' before canceling/returning.")
 
 	// done
 	return cmd

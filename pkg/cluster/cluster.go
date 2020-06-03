@@ -155,7 +155,7 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 
 		// create node
 		log.Infof("Creating node '%s'", node.Name)
-		if err := CreateNode(ctx, runtime, node); err != nil {
+		if err := CreateNode(ctx, runtime, node, k3d.CreateNodeOpts{}); err != nil {
 			log.Errorln("Failed to create node")
 			return err
 		}
@@ -301,7 +301,7 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			}
 			cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
 			log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
-			if err := CreateNode(ctx, runtime, lbNode); err != nil {
+			if err := CreateNode(ctx, runtime, lbNode, k3d.CreateNodeOpts{}); err != nil {
 				log.Errorln("Failed to create loadbalancer")
 				return err
 			}
