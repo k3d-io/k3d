@@ -61,7 +61,10 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 
 	command := fmt.Sprintf("SERVERS=%s %s", masterNodes, "confd -onetime -backend env && nginx -s reload")
 	if err := runtime.ExecInNode(ctx, loadbalancer, []string{"sh", "-c", command}); err != nil {
-		log.Errorln("Failed to update loadbalancer configuration")
+		if strings.Contains(err.Error(), "host not found in upstream") {
+			log.Warnf("Loadbalancer configuration updated, but one or more k3d nodes seem to be down, check the logs:\n%s", err.Error())
+			return nil
+		}
 		return err
 	}
 
