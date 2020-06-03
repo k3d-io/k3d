@@ -51,7 +51,7 @@ Every cluster will consist of at least 2 containers:
 func NewCmdCreateCluster() *cobra.Command {
 
 	createClusterOpts := &k3d.CreateClusterOpts{}
-	var updateKubeconfig bool
+	var updateKubeconfig, updateCurrentContext bool
 
 	// create new command
 	cmd := &cobra.Command{
@@ -69,7 +69,7 @@ func NewCmdCreateCluster() *cobra.Command {
 			}
 
 			// create cluster
-			if updateKubeconfig {
+			if updateKubeconfig || updateCurrentContext {
 				log.Debugln("'--update-kubeconfig set: enabling wait-for-master")
 				cluster.CreateClusterOpts.WaitForMaster = true
 			}
@@ -85,25 +85,25 @@ func NewCmdCreateCluster() *cobra.Command {
 			}
 			log.Infof("Cluster '%s' created successfully!", cluster.Name)
 
-			if updateKubeconfig {
+			if updateKubeconfig || updateCurrentContext {
 				log.Debugf("Updating default kubeconfig with a new context for cluster %s", cluster.Name)
-				if _, err := k3dCluster.GetAndWriteKubeConfig(cmd.Context(), runtimes.SelectedRuntime, cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: false}); err != nil {
+				if _, err := k3dCluster.GetAndWriteKubeConfig(cmd.Context(), runtimes.SelectedRuntime, cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: updateCurrentContext}); err != nil {
 					log.Fatalln(err)
 				}
 			}
 
 			// print information on how to use the cluster with kubectl
 			log.Infoln("You can now use it like this:")
-			if updateKubeconfig {
+			if updateKubeconfig && !updateCurrentContext {
 				fmt.Printf("kubectl config use-context %s\n", fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name))
-			} else {
+			} else if !updateCurrentContext {
 				if runtime.GOOS == "windows" {
 					fmt.Printf("$env:KUBECONFIG=(%s get kubeconfig %s)\n", os.Args[0], cluster.Name)
 				} else {
 					fmt.Printf("export KUBECONFIG=$(%s get kubeconfig %s)\n", os.Args[0], cluster.Name)
 				}
-				fmt.Println("kubectl cluster-info")
 			}
+			fmt.Println("kubectl cluster-info")
 		},
 	}
 
@@ -121,6 +121,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().BoolVar(&createClusterOpts.WaitForMaster, "wait", false, "Wait for the master(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
 	cmd.Flags().DurationVar(&createClusterOpts.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
 	cmd.Flags().BoolVar(&updateKubeconfig, "update-kubeconfig", false, "Directly update the default kubeconfig with the new cluster's context")
+	cmd.Flags().BoolVar(&updateCurrentContext, "switch", false, "Directly switch the default kubeconfig's current-context to the new cluster's context (implies --update-kubeconfig)")
 	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadBalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the master nodes")
 
 	/* Image Importing */
