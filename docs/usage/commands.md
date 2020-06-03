@@ -17,6 +17,7 @@ k3d
       --secret  # specify a cluster secret (default: auto-generated)
       --timeout  # specify a timeout, after which the cluster creation will be interrupted and changes rolled back
       --update-kubeconfig  # enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets '--wait=true')
+      --switch  # (implies --update-kubeconfig) automatically sets the current-context of your default kubeconfig to the new cluster's context
       -v, --volume  # specify additional bind-mounts
       --wait  # enable waiting for all master nodes to be ready before returning
       -w, --workers  # specify how many worker nodes you want to create
