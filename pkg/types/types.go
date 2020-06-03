@@ -44,6 +44,13 @@ const DefaultLBImage = "docker.io/iwilltry42/k3d-proxy:v0.0.2"
 // DefaultObjectNamePrefix defines the name prefix for every object created by k3d
 const DefaultObjectNamePrefix = "k3d"
 
+// ReadyLogMessageMaster defines the log messages we wait for until a master node is considered ready
+var ReadyLogMessageByRole = map[Role]string{
+	MasterRole:       "Wrote kubeconfig",
+	WorkerRole:       "",
+	LoadBalancerRole: "start worker processes",
+}
+
 // Role defines a k3d node role
 type Role string
 

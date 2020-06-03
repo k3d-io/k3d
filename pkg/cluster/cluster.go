@@ -255,7 +255,7 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 				// ... by scanning for this line in logs and restarting the container in case it appears
 				log.Debugf("Starting to wait for master node '%s'", masterNode.Name)
-				return WaitForNodeLogMessage(ctx, runtime, masterNode, "Wrote kubeconfig", time.Time{})
+				return WaitForNodeLogMessage(ctx, runtime, masterNode, k3d.ReadyLogMessageByRole[k3d.MasterRole], time.Time{})
 			})
 		}
 	}
@@ -310,7 +310,7 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 					// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 					// ... by scanning for this line in logs and restarting the container in case it appears
 					log.Debugf("Starting to wait for loadbalancer node '%s'", lbNode.Name)
-					return WaitForNodeLogMessage(ctx, runtime, lbNode, "start worker processes", time.Time{})
+					return WaitForNodeLogMessage(ctx, runtime, lbNode, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], time.Time{})
 				})
 			}
 		} else {
@@ -535,7 +535,7 @@ func StartCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 				// ... by scanning for this line in logs and restarting the container in case it appears
 				log.Debugf("Starting to wait for master node '%s'", masterNode.Name)
-				return WaitForNodeLogMessage(ctx, runtime, masterNode, "Wrote kubeconfig", start)
+				return WaitForNodeLogMessage(ctx, runtime, masterNode, k3d.ReadyLogMessageByRole[k3d.MasterRole], start)
 			})
 		}
 	}
@@ -551,7 +551,7 @@ func StartCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 			// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 			// ... by scanning for this line in logs and restarting the container in case it appears
 			log.Debugf("Starting to wait for loadbalancer node '%s'", masterlb.Name)
-			return WaitForNodeLogMessage(ctx, runtime, masterlb, "start worker processes", start)
+			return WaitForNodeLogMessage(ctx, runtime, masterlb, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], start)
 		})
 	}
 
