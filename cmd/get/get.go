@@ -47,7 +47,6 @@ func NewCmdGet() *cobra.Command {
 	cmd.AddCommand(NewCmdGetCluster())
 	cmd.AddCommand(NewCmdGetNode())
 	cmd.AddCommand(NewCmdGetKubeconfig())
-	cmd.AddCommand(NewCmdGetClusterToken())
 
 	// done
 	return cmd

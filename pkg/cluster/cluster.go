@@ -25,6 +25,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -590,4 +591,12 @@ func StopCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluste
 		return fmt.Errorf("Failed to stop %d nodes: Try to stop them manually", failed)
 	}
 	return nil
+}
+
+// SortClusters : in place sort cluster list by cluster name alphabetical order
+func SortClusters(clusters []*k3d.Cluster) []*k3d.Cluster {
+	sort.Slice(clusters, func(i, j int) bool {
+		return clusters[i].Name < clusters[j].Name
+	})
+	return clusters
 }

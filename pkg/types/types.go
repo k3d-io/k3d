@@ -170,6 +170,27 @@ type Cluster struct {
 	ImageVolume        string             `yaml:"image_volume" json:"imageVolume,omitempty"`
 }
 
+// MasterCount return number of master node into cluster
+func (c *Cluster) MasterCount() int {
+	masterCount := 0
+	for _, node := range c.Nodes {
+		if node.Role == MasterRole {
+			masterCount++
+		}
+	}
+	return masterCount
+}
+// WorkerCount return number of worker node into cluster
+func (c *Cluster) WorkerCount() int {
+	workerCount := 0
+	for _, node := range c.Nodes {
+		if node.Role == WorkerRole {
+			workerCount++
+		}
+	}
+	return workerCount
+}
+
 // Node describes a k3d node
 type Node struct {
 	Name       string            `yaml:"name" json:"name,omitempty"`
