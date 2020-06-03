@@ -107,6 +107,25 @@ func AddNodeToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		}
 	}
 
+	if node.Role == k3d.MasterRole {
+		for _, forbiddenCmd := range k3d.DoNotCopyMasterFlags {
+			for i, cmd := range node.Cmd {
+				// cut out the '--cluster-init' flag as this should only be done by the initializing master node
+				if cmd == forbiddenCmd {
+					log.Debugf("Dropping '%s' from node's cmd", forbiddenCmd)
+					node.Cmd = append(node.Cmd[:i], node.Cmd[i+1:]...)
+				}
+			}
+			for i, arg := range node.Args {
+				// cut out the '--cluster-init' flag as this should only be done by the initializing master node
+				if arg == forbiddenCmd {
+					log.Debugf("Dropping '%s' from node's args", forbiddenCmd)
+					node.Args = append(node.Args[:i], node.Args[i+1:]...)
+				}
+			}
+		}
+	}
+
 	if err := CreateNode(ctx, runtime, node); err != nil {
 		return err
 	}

@@ -102,6 +102,11 @@ const DefaultAPIPort = "6443"
 // DefaultAPIHost defines the default host (IP) for the Kubernetes API
 const DefaultAPIHost = "0.0.0.0"
 
+// DoNotCopyMasterFlags defines a list of commands/args that shouldn't be copied from an existing node when adding a similar node to a cluster
+var DoNotCopyMasterFlags = []string{
+	"--cluster-init",
+}
+
 // CreateClusterOpts describe a set of options one can set when creating a cluster
 type CreateClusterOpts struct {
 	DisableImageVolume  bool

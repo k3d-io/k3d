@@ -83,7 +83,7 @@ check_multi_node() {
     passed "cluster $cluster has $expectedNodeCount nodes, as expected"
   else
     warn "cluster $cluster has incorrect number of nodes: $nodeCount != $expectedNodeCount"
-    kubectl get nodes -o=custom-columns=NAME:.metadata.name --no-headers
+    kubectl get nodes
     docker ps -a
     return 1
   fi

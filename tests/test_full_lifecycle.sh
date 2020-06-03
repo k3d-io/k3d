@@ -38,6 +38,16 @@ check_clusters "$clustername" || failed "error checking cluster"
 info "Checking that we have 2 nodes online..."
 check_multi_node "$clustername" 2 || failed "failed to verify number of nodes"
 
+# 4. adding another worker node
+# info "Adding one worker node..."
+# LOG_LEVEL=debug $EXE create node "extra-worker" --cluster "$clustername" --role "worker" || failed "failed to add worker node"
+#
+# info "Waiting for a bit to give the new node enough time to boot and register..."
+# sleep 10
+#
+# info "Checking that we have 3 nodes available now..."
+# check_multi_node "$clustername" 3 || failed "failed to verify number of nodes"
+
 # 4. load an image into the cluster
 info "Loading an image into the cluster..."
 docker pull nginx:latest > /dev/null
