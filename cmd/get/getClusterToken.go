@@ -60,13 +60,13 @@ func NewCmdGetClusterToken() *cobra.Command {
 
 			// generate list of clusters
 			if getClusterTokenFlags.validableFlags.All {
-				clusters, err = cluster.GetClusters(runtimes.SelectedRuntime)
+				clusters, err = cluster.GetClusters(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
 					log.Fatalln(err)
 				}
 			} else {
 				for _, clusterName := range args {
-					retrievedCluster, err := cluster.GetCluster(&k3d.Cluster{Name: clusterName}, runtimes.SelectedRuntime)
+					retrievedCluster, err := cluster.GetCluster(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
 					if err != nil {
 						log.Fatalln(err)
 					}
