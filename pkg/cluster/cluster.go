@@ -29,6 +29,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/imdario/mergo"
 	k3drt "github.com/rancher/k3d/pkg/runtimes"
 	"github.com/rancher/k3d/pkg/types"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -460,7 +461,22 @@ func GetCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster
 
 	// append nodes
 	for _, node := range nodes {
-		cluster.Nodes = append(cluster.Nodes, node)
+
+		// check if there's already a node in the struct
+		overwroteExisting := false
+		for _, existingNode := range cluster.Nodes {
+
+			// overwrite existing node
+			if existingNode.Name == node.Name {
+				mergo.MergeWithOverwrite(existingNode, node)
+				overwroteExisting = true
+			}
+		}
+
+		// no existing node overwritten: append new node
+		if !overwroteExisting {
+			cluster.Nodes = append(cluster.Nodes, node)
+		}
 	}
 
 	if err := populateClusterFieldsFromLabels(cluster); err != nil {
