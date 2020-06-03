@@ -74,8 +74,8 @@ func NewCmdGetClusterToken() *cobra.Command {
 				}
 			}
 
-			// pretty print secret
-			printSecret(clusters, getClusterTokenFlags.noHeader)
+			// pretty print token
+			printToken(clusters, getClusterTokenFlags.noHeader)
 		},
 	}
 
@@ -87,13 +87,13 @@ func NewCmdGetClusterToken() *cobra.Command {
 	return cmd
 }
 
-func printSecret(clusters []*k3d.Cluster, headersOff bool) {
+func printToken(clusters []*k3d.Cluster, headersOff bool) {
 
 	tabwriter := tabwriter.NewWriter(os.Stdout, 6, 4, 3, ' ', tabwriter.RememberWidths)
 	defer tabwriter.Flush()
 
 	if !headersOff {
-		headers := []string{"CLUSTER", "SECRET"}
+		headers := []string{"CLUSTER", "TOKEN"}
 		_, err := fmt.Fprintf(tabwriter, "%s\n", strings.Join(headers, "\t"))
 		if err != nil {
 			log.Fatalln("Failed to print headers")
@@ -106,6 +106,6 @@ func printSecret(clusters []*k3d.Cluster, headersOff bool) {
 	})
 
 	for _, cluster := range clusters {
-		fmt.Fprintf(tabwriter, "%s\t%s\n", cluster.Name, string(cluster.Secret))
+		fmt.Fprintf(tabwriter, "%s\t%s\n", cluster.Name, string(cluster.Token))
 	}
 }

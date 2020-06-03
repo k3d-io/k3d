@@ -43,7 +43,7 @@ func GetConfigDirOrCreate() (string, error) {
 
 	// create directories if necessary
 	if err := createDirIfNotExists(configDir); err != nil {
-		log.Errorln("Failed to create config path '%s'", configDir)
+		log.Errorf("Failed to create config path '%s'", configDir)
 		return "", err
 	}
 
