@@ -27,7 +27,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/rancher/k3d/pkg/cluster"
+	k3cluster "github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
 	"github.com/spf13/cobra"
@@ -44,24 +44,26 @@ func NewCmdGetCluster() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "cluster [NAME [NAME...]]",
 		Aliases: []string{"clusters"},
-		Short:   "Get cluster",
-		Long:    `Get cluster.`,
+		Short:   "Get cluster(s)",
+		Long:    `Get cluster(s).`,
 		Args:    cobra.MinimumNArgs(0), // 0 or more; 0 = all
 		Run: func(cmd *cobra.Command, args []string) {
 			clusters, headersOff := parseGetClusterCmd(cmd, args)
 			var existingClusters []*k3d.Cluster
-			if clusters == nil { // Option a)  no cluster name specified -> get all clusters
-				found, err := cluster.GetClusters(cmd.Context(), runtimes.SelectedRuntime)
+			if len(clusters) == 0 { // Option a)  no cluster name specified -> get all clusters
+				found, err := k3cluster.GetClusters(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
 					log.Fatalln(err)
 				}
 				existingClusters = append(existingClusters, found...)
 			} else { // Option b) cluster name specified -> get specific cluster
-				found, err := cluster.GetCluster(cmd.Context(), runtimes.SelectedRuntime, clusters)
-				if err != nil {
-					log.Fatalln(err)
+				for _, cluster := range clusters {
+					found, err := k3cluster.GetCluster(cmd.Context(), runtimes.SelectedRuntime, cluster)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					existingClusters = append(existingClusters, found)
 				}
-				existingClusters = append(existingClusters, found)
 			}
 			// print existing clusters
 			printClusters(existingClusters, headersOff)
@@ -77,7 +79,7 @@ func NewCmdGetCluster() *cobra.Command {
 	return cmd
 }
 
-func parseGetClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, bool) {
+func parseGetClusterCmd(cmd *cobra.Command, args []string) ([]*k3d.Cluster, bool) {
 
 	// --no-headers
 	headersOff, err := cmd.Flags().GetBool("no-headers")
@@ -90,9 +92,12 @@ func parseGetClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, bool) 
 		return nil, headersOff
 	}
 
-	cluster := &k3d.Cluster{Name: args[0]}
+	clusters := []*k3d.Cluster{}
+	for _, name := range args {
+		clusters = append(clusters, &k3d.Cluster{Name: name})
+	}
 
-	return cluster, headersOff
+	return clusters, headersOff
 }
 
 func printClusters(clusters []*k3d.Cluster, headersOff bool) {

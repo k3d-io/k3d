@@ -41,25 +41,28 @@ func NewCmdGetNode() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:     "node NAME", // TODO: getNode: allow one or more names or --all flag
-		Short:   "Get node",
+		Use:     "node [NAME [NAME...]]",
 		Aliases: []string{"nodes"},
-		Long:    `Get node.`,
+		Short:   "Get node(s)",
+		Long:    `Get node(s).`,
+		Args:    cobra.MinimumNArgs(0), // 0 or more; 0 = all
 		Run: func(cmd *cobra.Command, args []string) {
-			node, headersOff := parseGetNodeCmd(cmd, args)
+			nodes, headersOff := parseGetNodeCmd(cmd, args)
 			var existingNodes []*k3d.Node
-			if node == nil { // Option a)  no name specified -> get all nodes
+			if len(nodes) == 0 { // Option a)  no name specified -> get all nodes
 				found, err := cluster.GetNodes(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
 					log.Fatalln(err)
 				}
 				existingNodes = append(existingNodes, found...)
 			} else { // Option b) cluster name specified -> get specific cluster
-				found, err := cluster.GetNode(cmd.Context(), runtimes.SelectedRuntime, node)
-				if err != nil {
-					log.Fatalln(err)
+				for _, node := range nodes {
+					found, err := cluster.GetNode(cmd.Context(), runtimes.SelectedRuntime, node)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					existingNodes = append(existingNodes, found)
 				}
-				existingNodes = append(existingNodes, found)
 			}
 			// print existing clusters
 			printNodes(existingNodes, headersOff)
@@ -75,7 +78,7 @@ func NewCmdGetNode() *cobra.Command {
 	return cmd
 }
 
-func parseGetNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, bool) {
+func parseGetNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, bool) {
 	// --no-headers
 	headersOff, err := cmd.Flags().GetBool("no-headers")
 	if err != nil {
@@ -87,9 +90,12 @@ func parseGetNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, bool) {
 		return nil, headersOff
 	}
 
-	node := &k3d.Node{Name: args[0]} // TODO: validate name first?
+	nodes := []*k3d.Node{}
+	for _, name := range args {
+		nodes = append(nodes, &k3d.Node{Name: name})
+	}
 
-	return node, headersOff
+	return nodes, headersOff
 }
 
 func printNodes(nodes []*k3d.Node, headersOff bool) {
