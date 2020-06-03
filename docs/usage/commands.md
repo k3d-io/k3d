@@ -25,6 +25,8 @@ k3d
       -i, --image  # specify which k3s image should be used for the node(s)
           --replicas  # specify how many replicas you want to create with this spec
           --role  # specify the node role
+      --wait  # wait for the node to be up and running before returning
+      --timeout # specify a timeout duration, after which the node creation will be interrupted, if not done yet
   delete
     cluster CLUSTERNAME  # delete an existing cluster
       -a, --all  # delete all existing clusters

@@ -47,7 +47,7 @@ const DefaultObjectNamePrefix = "k3d"
 // ReadyLogMessageMaster defines the log messages we wait for until a master node is considered ready
 var ReadyLogMessageByRole = map[Role]string{
 	MasterRole:       "Wrote kubeconfig",
-	WorkerRole:       "",
+	WorkerRole:       "Successfully registered node",
 	LoadBalancerRole: "start worker processes",
 }
 
@@ -128,6 +128,18 @@ type CreateClusterOpts struct {
 type StartClusterOpts struct {
 	WaitForMaster bool
 	Timeout       time.Duration
+}
+
+// CreateNodeOpts describes a set of options one can set when creating a new node
+type CreateNodeOpts struct {
+	Wait    bool
+	Timeout time.Duration
+}
+
+// StartNodeOpts describes a set of options one can set when (re-)starting a node
+type StartNodeOpts struct {
+	Wait    bool
+	Timeout time.Duration
 }
 
 // ClusterNetwork describes a network which a cluster is running in
