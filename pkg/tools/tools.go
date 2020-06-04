@@ -35,7 +35,7 @@ import (
 
 // LoadImagesIntoCluster starts up a k3d tools container for the selected cluster and uses it to export
 // images from the runtime to import them into the nodes of the selected cluster
-func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, keepTarball bool) error {
+func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, loadImageOpts k3d.LoadImageOpts) error {
 	cluster, err := k3dc.GetCluster(ctx, runtime, cluster)
 	if err != nil {
 		log.Errorf("Failed to find the specified cluster")
@@ -76,6 +76,14 @@ func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images
 		log.Errorf("Failed to start tools container for cluster '%s'", cluster.Name)
 	}
 
+	/* TODO:
+	 * Loop over list of images and check, whether they are files (tar archives) and sort them respectively
+	 * Special case: '-' means "read from stdin"
+	 * 1. From daemon: save images -> import
+	 * 2. From file: copy file -> import
+	 * 3. From stdin: save to tar -> import
+	 * Note: temporary storage location is always the shared image volume and actions are always executed by the tools node
+	 */
 	// save image to tarfile in shared volume
 	log.Infoln("Saving images...")
 	tarName := fmt.Sprintf("%s/k3d-%s-images-%s.tar", k3d.DefaultImageVolumeMountPath, cluster.Name, time.Now().Format("20060102150405")) // FIXME: change
@@ -104,7 +112,7 @@ func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images
 	importWaitgroup.Wait()
 
 	// remove tarball
-	if !keepTarball {
+	if !loadImageOpts.KeepTar {
 		log.Infoln("Removing the tarball...")
 		if err := runtime.ExecInNode(ctx, cluster.Nodes[0], []string{"rm", "-f", tarName}); err != nil { // TODO: do this in tools node (requires rm)
 			log.Errorf("Failed to delete tarball '%s'", tarName)

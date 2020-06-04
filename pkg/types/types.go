@@ -142,6 +142,11 @@ type StartNodeOpts struct {
 	Timeout time.Duration
 }
 
+// LoadImageOpts describes a set of options one can set for loading image(s) into cluster(s)
+type LoadImageOpts struct {
+	KeepTar bool
+}
+
 // ClusterNetwork describes a network which a cluster is running in
 type ClusterNetwork struct {
 	Name     string `yaml:"name" json:"name,omitempty"`
