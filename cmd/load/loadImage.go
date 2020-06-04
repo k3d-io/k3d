@@ -34,18 +34,21 @@ import (
 // NewCmdLoadImage returns a new cobra command
 func NewCmdLoadImage() *cobra.Command {
 
+	loadImageOpts := k3d.LoadImageOpts{}
+
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "image [IMAGE [IMAGE...]]",
-		Short: "Load an image from docker into a k3d cluster.",
-		Long:  `Load an image from docker into a k3d cluster.`,
-		Args:  cobra.MinimumNArgs(1),
+		Use:     "image [IMAGE | ARCHIVE [IMAGE | ARCHIVE...]]",
+		Short:   "Load an image from docker into a k3d cluster.",
+		Long:    `Load an image from docker into a k3d cluster.`,
+		Aliases: []string{"images"},
+		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			images, clusters, keepTarball := parseLoadImageCmd(cmd, args)
+			images, clusters := parseLoadImageCmd(cmd, args)
 			log.Debugf("Load images [%+v] from runtime [%s] into clusters [%+v]", images, runtimes.SelectedRuntime, clusters)
 			for _, cluster := range clusters {
 				log.Infof("Loading images into '%s'", cluster.Name)
-				if err := tools.LoadImagesIntoCluster(cmd.Context(), runtimes.SelectedRuntime, images, &cluster, keepTarball); err != nil {
+				if err := tools.LoadImagesIntoCluster(cmd.Context(), runtimes.SelectedRuntime, images, &cluster, loadImageOpts); err != nil {
 					log.Errorf("Failed to load images into cluster '%s'", cluster.Name)
 					log.Errorln(err)
 				}
@@ -58,11 +61,7 @@ func NewCmdLoadImage() *cobra.Command {
 	 * Flags *
 	 *********/
 	cmd.Flags().StringArrayP("cluster", "c", []string{k3d.DefaultClusterName}, "Select clusters to load the image to.")
-	cmd.Flags().BoolP("keep-tarball", "k", false, "Do not delete the tarball which contains the saved images from the shared volume")
-	cmd.Flags().StringP("tar", "t", "", "Import image from local tarball")
-	if err := cmd.MarkFlagFilename("tar", ".tar"); err != nil {
-		log.Fatalln("Failed to mark --tar flag as filename")
-	}
+	cmd.Flags().BoolVarP(&loadImageOpts.KeepTar, "keep-tarball", "k", false, "Do not delete the tarball containing the saved images from the shared volume")
 
 	/* Subcommands */
 
@@ -71,21 +70,7 @@ func NewCmdLoadImage() *cobra.Command {
 }
 
 // parseLoadImageCmd parses the command input into variables required to create a cluster
-func parseLoadImageCmd(cmd *cobra.Command, args []string) ([]string, []k3d.Cluster, bool) {
-	// --tar
-	localTarball, err := cmd.Flags().GetString("tar")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	if cmd.Flags().Changed("tar") { // TODO: loadImage: implement import from local tarball
-		log.Fatalf("--tar flag not supported yet '%s'", localTarball)
-	}
-
-	// --keep-tarball
-	keepTarball, err := cmd.Flags().GetBool("keep-tarball")
-	if err != nil {
-		log.Fatalln(err)
-	}
+func parseLoadImageCmd(cmd *cobra.Command, args []string) ([]string, []k3d.Cluster) {
 
 	// --cluster
 	clusterNames, err := cmd.Flags().GetStringArray("cluster")
@@ -103,5 +88,5 @@ func parseLoadImageCmd(cmd *cobra.Command, args []string) ([]string, []k3d.Clust
 		log.Fatalln("No images specified!")
 	}
 
-	return images, clusters, keepTarball
+	return images, clusters
 }

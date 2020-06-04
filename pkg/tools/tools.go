@@ -24,6 +24,9 @@ package tools
 import (
 	"context"
 	"fmt"
+	"os"
+	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -35,8 +38,47 @@ import (
 
 // LoadImagesIntoCluster starts up a k3d tools container for the selected cluster and uses it to export
 // images from the runtime to import them into the nodes of the selected cluster
-func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, keepTarball bool) error {
-	cluster, err := k3dc.GetCluster(ctx, runtime, cluster)
+func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, loadImageOpts k3d.LoadImageOpts) error {
+
+	var imagesFromRuntime []string
+	var imagesFromTar []string
+
+	runtimeImages, err := runtime.GetImages(ctx)
+	if err != nil {
+		log.Errorln("Failed to fetch list of exsiting images from runtime")
+		return err
+	}
+
+	for _, image := range images {
+		found := false
+		// Check if the current element is a file
+		if _, err := os.Stat(image); os.IsNotExist(err) {
+			// not a file? Check if such an image is present in the container runtime
+			for _, runtimeImage := range runtimeImages {
+				if image == runtimeImage {
+					found = true
+					imagesFromRuntime = append(imagesFromRuntime, image)
+					log.Debugf("Selected image '%s' found in runtime", image)
+					break
+				}
+			}
+		} else {
+			// file exists
+			found = true
+			imagesFromTar = append(imagesFromTar, image)
+			log.Debugf("Selected image '%s' is a file", image)
+		}
+		if !found {
+			log.Warnf("Image '%s' is not a file and couldn't be found in the container runtime", image)
+		}
+	}
+
+	// no images found to load -> exit early
+	if len(imagesFromRuntime)+len(imagesFromTar) == 0 {
+		return fmt.Errorf("No valid images specified")
+	}
+
+	cluster, err = k3dc.GetCluster(ctx, runtime, cluster)
 	if err != nil {
 		log.Errorf("Failed to find the specified cluster")
 		return err
@@ -62,52 +104,84 @@ func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images
 	log.Debugf("Attaching to cluster's image volume '%s'", imageVolume)
 
 	// create tools node to export images
-	log.Infoln("Starting k3d-tools node...")
-	toolsNode, err := startToolsNode( // TODO: re-use existing container
-		ctx,
-		runtime,
-		cluster,
-		cluster.Network.Name,
-		[]string{
-			fmt.Sprintf("%s:%s", imageVolume, k3d.DefaultImageVolumeMountPath),
-			fmt.Sprintf("%s:%s", runtime.GetRuntimePath(), runtime.GetRuntimePath()),
-		})
-	if err != nil {
-		log.Errorf("Failed to start tools container for cluster '%s'", cluster.Name)
+	var toolsNode *k3d.Node
+	toolsNode, err = runtime.GetNode(ctx, &k3d.Node{Name: fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name)})
+	if err != nil || toolsNode == nil {
+		log.Infoln("Starting k3d-tools node...")
+		toolsNode, err = startToolsNode( // TODO: re-use existing container
+			ctx,
+			runtime,
+			cluster,
+			cluster.Network.Name,
+			[]string{
+				fmt.Sprintf("%s:%s", imageVolume, k3d.DefaultImageVolumeMountPath),
+				fmt.Sprintf("%s:%s", runtime.GetRuntimePath(), runtime.GetRuntimePath()),
+			})
+		if err != nil {
+			log.Errorf("Failed to start tools container for cluster '%s'", cluster.Name)
+		}
 	}
 
-	// save image to tarfile in shared volume
-	log.Infoln("Saving images...")
-	tarName := fmt.Sprintf("%s/k3d-%s-images-%s.tar", k3d.DefaultImageVolumeMountPath, cluster.Name, time.Now().Format("20060102150405")) // FIXME: change
-	if err := runtime.ExecInNode(ctx, toolsNode, append([]string{"./k3d-tools", "save-image", "-d", tarName}, images...)); err != nil {
-		log.Errorf("Failed to save images in tools container for cluster '%s'", cluster.Name)
-		return err
+	/* TODO:
+	 * Loop over list of images and check, whether they are files (tar archives) and sort them respectively
+	 * Special case: '-' means "read from stdin"
+	 * 1. From daemon: save images -> import
+	 * 2. From file: copy file -> import
+	 * 3. From stdin: save to tar -> import
+	 * Note: temporary storage location is always the shared image volume and actions are always executed by the tools node
+	 */
+	var importTarNames []string
+
+	if len(imagesFromRuntime) > 0 {
+		// save image to tarfile in shared volume
+		log.Infof("Saving %d image(s) from runtime...", len(imagesFromRuntime))
+		tarName := fmt.Sprintf("%s/k3d-%s-images-%s.tar", k3d.DefaultImageVolumeMountPath, cluster.Name, time.Now().Format("20060102150405"))
+		if err := runtime.ExecInNode(ctx, toolsNode, append([]string{"./k3d-tools", "save-image", "-d", tarName}, imagesFromRuntime...)); err != nil {
+			log.Errorf("Failed to save image(s) in tools container for cluster '%s'", cluster.Name)
+			return err
+		}
+		importTarNames = append(importTarNames, tarName)
+	}
+
+	if len(imagesFromTar) > 0 {
+		// copy tarfiles to shared volume
+		log.Infof("Saving %d tarball(s) to shared image volume...", len(imagesFromTar))
+		for _, file := range imagesFromTar {
+			tarName := fmt.Sprintf("%s/k3d-%s-images-%s-file-%s", k3d.DefaultImageVolumeMountPath, cluster.Name, time.Now().Format("20060102150405"), path.Base(file))
+			if err := runtime.CopyToNode(ctx, file, tarName, toolsNode); err != nil {
+				log.Errorf("Failed to copy image tar '%s' to tools node! Error below:\n%+v", file, err)
+				continue
+			}
+			importTarNames = append(importTarNames, tarName)
+		}
 	}
 
 	// import image in each node
 	log.Infoln("Importing images into nodes...")
 	var importWaitgroup sync.WaitGroup
-	for _, node := range cluster.Nodes {
-		// only import image in master and worker nodes (i.e. ignoring auxiliary nodes like the master loadbalancer)
-		if node.Role == k3d.MasterRole || node.Role == k3d.WorkerRole {
-			importWaitgroup.Add(1)
-			go func(node *k3d.Node, wg *sync.WaitGroup) {
-				log.Infof("Importing images into node '%s'...", node.Name)
-				if err := runtime.ExecInNode(ctx, node, []string{"ctr", "image", "import", tarName}); err != nil {
-					log.Errorf("Failed to import images in node '%s'", node.Name)
-					log.Errorln(err)
-				}
-				wg.Done()
-			}(node, &importWaitgroup)
+	for _, tarName := range importTarNames {
+		for _, node := range cluster.Nodes {
+			// only import image in master and worker nodes (i.e. ignoring auxiliary nodes like the master loadbalancer)
+			if node.Role == k3d.MasterRole || node.Role == k3d.WorkerRole {
+				importWaitgroup.Add(1)
+				go func(node *k3d.Node, wg *sync.WaitGroup, tarPath string) {
+					log.Infof("Importing images from tarball '%s' into node '%s'...", tarPath, node.Name)
+					if err := runtime.ExecInNode(ctx, node, []string{"ctr", "image", "import", tarPath}); err != nil {
+						log.Errorf("Failed to import images in node '%s'", node.Name)
+						log.Errorln(err)
+					}
+					wg.Done()
+				}(node, &importWaitgroup, tarName)
+			}
 		}
 	}
 	importWaitgroup.Wait()
 
 	// remove tarball
-	if !keepTarball {
-		log.Infoln("Removing the tarball...")
-		if err := runtime.ExecInNode(ctx, cluster.Nodes[0], []string{"rm", "-f", tarName}); err != nil { // TODO: do this in tools node (requires rm)
-			log.Errorf("Failed to delete tarball '%s'", tarName)
+	if !loadImageOpts.KeepTar && len(importTarNames) > 0 {
+		log.Infoln("Removing the tarball(s) from image volume...")
+		if err := runtime.ExecInNode(ctx, toolsNode, []string{"rm", "-f", strings.Join(importTarNames, " ")}); err != nil {
+			log.Errorf("Failed to delete one or more tarballs from '%+v'", importTarNames)
 			log.Errorln(err)
 		}
 	}
@@ -118,7 +192,7 @@ func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images
 		log.Errorln("Failed to delete tools node '%s': Try to delete it manually", toolsNode.Name)
 	}
 
-	log.Infoln("...Done")
+	log.Infoln("Successfully imported image(s)")
 
 	return nil
 
@@ -134,7 +208,9 @@ func startToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 		Network: network,
 		Cmd:     []string{},
 		Args:    []string{"noop"},
+		Labels:  k3d.DefaultObjectLabels,
 	}
+	node.Labels["k3d.cluster"] = cluster.Name
 	if err := runtime.CreateNode(ctx, node); err != nil {
 		log.Errorf("Failed to create tools container for cluster '%s'", cluster.Name)
 		return node, err

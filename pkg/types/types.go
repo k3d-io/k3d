@@ -100,7 +100,7 @@ var DefaultNodeEnv = []string{
 }
 
 // DefaultToolsContainerImage defines the default image used for the tools container
-const DefaultToolsContainerImage = "docker.io/iwilltry42/k3d-tools:v0.0.2" // TODO: get version dynamically or at build time
+const DefaultToolsContainerImage = "docker.io/iwilltry42/k3d-tools:v0.0.3" // TODO: get version dynamically or at build time
 
 // DefaultImageVolumeMountPath defines the mount path inside k3d nodes where we will mount the shared image volume by default
 const DefaultImageVolumeMountPath = "/k3d/images"
@@ -150,6 +150,11 @@ type StartNodeOpts struct {
 	Timeout time.Duration
 }
 
+// LoadImageOpts describes a set of options one can set for loading image(s) into cluster(s)
+type LoadImageOpts struct {
+	KeepTar bool
+}
+
 // ClusterNetwork describes a network which a cluster is running in
 type ClusterNetwork struct {
 	Name     string `yaml:"name" json:"name,omitempty"`
@@ -180,6 +185,7 @@ func (c *Cluster) MasterCount() int {
 	}
 	return masterCount
 }
+
 // WorkerCount return number of worker node into cluster
 func (c *Cluster) WorkerCount() int {
 	workerCount := 0

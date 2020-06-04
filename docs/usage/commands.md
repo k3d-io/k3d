@@ -55,10 +55,9 @@ k3d
       -s, --switch  # switch current-context in kubeconfig to the new context
       -u, --update  # update conflicting fields in existing kubeconfig (default: true)
   load
-    image  [IMAGE [IMAGE ...]]  # Load one or more images from the local runtime environment into k3d clusters
+    image  [IMAGE | ARCHIVE [IMAGE | ARCHIVE ...]]  # Load one or more images from the local runtime environment or tar-archives into k3d clusters
       -c, --cluster  # clusters to load the image into
       -k, --keep-tarball  # do not delete the image tarball from the shared volume after completion
-      -t, --tar  # do not export image from runtime daemon, but directly import it from a tarball
   completion SHELL  # Generate completion scripts
   version  # show k3d build version
   help [COMMAND]  # show help text for any command
