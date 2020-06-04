@@ -61,9 +61,6 @@ func NewCmdLoadImage() *cobra.Command {
 	 *********/
 	cmd.Flags().StringArrayP("cluster", "c", []string{k3d.DefaultClusterName}, "Select clusters to load the image to.")
 	cmd.Flags().BoolVarP(&loadImageOpts.KeepTar, "keep-tarball", "k", false, "Do not delete the tarball containing the saved images from the shared volume")
-	if err := cmd.MarkFlagFilename("tar", ".tar"); err != nil {
-		log.Fatalln("Failed to mark --tar flag as filename")
-	}
 
 	/* Subcommands */
 

@@ -116,7 +116,7 @@ func PrintClusters(clusters []*k3d.Cluster, flags clusterFlags) {
 	for _, cluster := range clusters {
 		masterCount := cluster.MasterCount()
 		workerCount := cluster.WorkerCount()
-		
+
 		if flags.token {
 			fmt.Fprintf(tabwriter, "%s\t%d\t%d\t%s\n", cluster.Name, masterCount, workerCount, cluster.Token)
 		} else {

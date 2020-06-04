@@ -58,6 +58,7 @@ type Runtime interface {
 	GetRuntimePath() string // returns e.g. '/var/run/docker.sock' for a default docker setup
 	ExecInNode(context.Context, *k3d.Node, []string) error
 	GetNodeLogs(context.Context, *k3d.Node, time.Time) (io.ReadCloser, error)
+	GetImages(context.Context) ([]string, error)
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it
