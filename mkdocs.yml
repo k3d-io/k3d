@@ -11,6 +11,7 @@ extra_javascript:
 
 extra_css:
   - static/css/asciinema-player.css
+  - static/css/extra.css
 
 # Repo Information
 repo_name: rancher/k3d
@@ -26,7 +27,7 @@ theme:
     primary: "black"
     accent: "grey"
   logo: static/img/k3d_logo_black_green.svg
-  favicon: static/img/favicons_black_blue/favicon.ico
+  favicon: static/img/favicons_black_blue/favicon.png  
 
 # Navigation
 # nav: ommitted, because we're using the awesome-pages plugin (https://squidfunk.github.io/mkdocs-material/plugins/awesome-pages/)
