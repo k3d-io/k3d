@@ -74,6 +74,14 @@ var DefaultObjectLabels = map[string]string{
 	"app": "k3d",
 }
 
+// List of k3d technical label name
+const (
+	LabelToken           string = "k3d.cluster.token"
+	LabelImageVolume     string = "k3d.cluster.imageVolume"
+	LabelNetworkExternal string = "k3d.cluster.network.external"
+	LabelNetwork         string = "k3d.cluster.network"
+)
+
 // DefaultRoleCmds maps the node roles to their respective default commands
 var DefaultRoleCmds = map[Role][]string{
 	MasterRole: {"server"},
@@ -152,7 +160,7 @@ type ClusterNetwork struct {
 type Cluster struct {
 	Name               string             `yaml:"name" json:"name,omitempty"`
 	Network            ClusterNetwork     `yaml:"network" json:"network,omitempty"`
-	Secret             string             `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
+	Token              string             `yaml:"cluster_token" json:"clusterToken,omitempty"`
 	Nodes              []*Node            `yaml:"nodes" json:"nodes,omitempty"`
 	InitNode           *Node              // init master node
 	ExternalDatastore  ExternalDatastore  `yaml:"external_datastore" json:"externalDatastore,omitempty"`
@@ -160,6 +168,27 @@ type Cluster struct {
 	ExposeAPI          ExposeAPI          `yaml:"expose_api" json:"exposeAPI,omitempty"`
 	MasterLoadBalancer *Node              `yaml:"master_loadbalancer" json:"masterLoadBalancer,omitempty"`
 	ImageVolume        string             `yaml:"image_volume" json:"imageVolume,omitempty"`
+}
+
+// MasterCount return number of master node into cluster
+func (c *Cluster) MasterCount() int {
+	masterCount := 0
+	for _, node := range c.Nodes {
+		if node.Role == MasterRole {
+			masterCount++
+		}
+	}
+	return masterCount
+}
+// WorkerCount return number of worker node into cluster
+func (c *Cluster) WorkerCount() int {
+	workerCount := 0
+	for _, node := range c.Nodes {
+		if node.Role == WorkerRole {
+			workerCount++
+		}
+	}
+	return workerCount
 }
 
 // Node describes a k3d node

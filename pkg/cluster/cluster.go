@@ -25,6 +25,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -79,19 +80,19 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	}
 	cluster.Network.Name = networkID
 	extraLabels := map[string]string{
-		"k3d.cluster.network":          networkID,
-		"k3d.cluster.network.external": strconv.FormatBool(cluster.Network.External),
+		k3d.LabelNetwork:         networkID,
+		k3d.LabelNetworkExternal: strconv.FormatBool(cluster.Network.External),
 	}
 	if networkExists {
-		extraLabels["k3d.cluster.network.external"] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)
+		extraLabels[k3d.LabelNetworkExternal] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)
 	}
 
 	/*
-	 * Cluster Secret
+	 * Cluster Token
 	 */
 
-	if cluster.Secret == "" {
-		cluster.Secret = GenerateClusterSecret()
+	if cluster.Token == "" {
+		cluster.Token = GenerateClusterToken()
 	}
 
 	/*
@@ -105,7 +106,7 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			return err
 		}
 
-		extraLabels["k3d.cluster.imageVolume"] = imageVolumeName
+		extraLabels[k3d.LabelImageVolume] = imageVolumeName
 
 		// attach volume to nodes
 		for _, node := range cluster.Nodes {
@@ -127,8 +128,8 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			node.Labels = make(map[string]string) // TODO: maybe create an init function?
 		}
 		node.Labels["k3d.cluster"] = cluster.Name
-		node.Env = append(node.Env, fmt.Sprintf("K3S_TOKEN=%s", cluster.Secret))
-		node.Labels["k3d.cluster.secret"] = cluster.Secret
+		node.Env = append(node.Env, fmt.Sprintf("K3S_TOKEN=%s", cluster.Token))
+		node.Labels[k3d.LabelToken] = cluster.Token
 		node.Labels["k3d.cluster.url"] = connectionURL
 
 		// append extra labels
@@ -419,7 +420,7 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 
 		// get the name of the cluster network
 		if cluster.Network.Name == "" {
-			if networkName, ok := node.Labels["k3d.cluster.network"]; ok {
+			if networkName, ok := node.Labels[k3d.LabelNetwork]; ok {
 				cluster.Network.Name = networkName
 			}
 		}
@@ -427,7 +428,7 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 		// check if the network is external
 		// since the struct value is a bool, initialized as false, we cannot check if it's unset
 		if !cluster.Network.External && !networkExternalSet {
-			if networkExternalString, ok := node.Labels["k3d.cluster.network.external"]; ok {
+			if networkExternalString, ok := node.Labels[k3d.LabelNetworkExternal]; ok {
 				if networkExternal, err := strconv.ParseBool(networkExternalString); err == nil {
 					cluster.Network.External = networkExternal
 					networkExternalSet = true
@@ -437,11 +438,17 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 
 		// get image volume // TODO: enable external image volumes the same way we do it with networks
 		if cluster.ImageVolume == "" {
-			if imageVolumeName, ok := node.Labels["k3d.cluster.imageVolume"]; ok {
+			if imageVolumeName, ok := node.Labels[k3d.LabelImageVolume]; ok {
 				cluster.ImageVolume = imageVolumeName
 			}
 		}
 
+		// get k3s cluster's token
+		if cluster.Token == "" {
+			if token, ok := node.Labels[k3d.LabelToken]; ok {
+				cluster.Token = token
+			}
+		}
 	}
 
 	return nil
@@ -487,8 +494,8 @@ func GetCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster
 	return cluster, nil
 }
 
-// GenerateClusterSecret generates a random 20 character string
-func GenerateClusterSecret() string {
+// GenerateClusterToken generates a random 20 character string
+func GenerateClusterToken() string {
 	return util.GenerateRandomString(20)
 }
 
@@ -584,4 +591,12 @@ func StopCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluste
 		return fmt.Errorf("Failed to stop %d nodes: Try to stop them manually", failed)
 	}
 	return nil
+}
+
+// SortClusters : in place sort cluster list by cluster name alphabetical order
+func SortClusters(clusters []*k3d.Cluster) []*k3d.Cluster {
+	sort.Slice(clusters, func(i, j int) bool {
+		return clusters[i].Name < clusters[j].Name
+	})
+	return clusters
 }

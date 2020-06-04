@@ -40,7 +40,7 @@ check_multi_node "$clustername" 2 || failed "failed to verify number of nodes"
 
 # 4. adding another worker node
 info "Adding one worker node..."
-LOG_LEVEL=debug $EXE create node "extra-worker" --cluster "$clustername" --role "worker" --wait --timeout 360s || failed "failed to add worker node"
+$EXE create node "extra-worker" --cluster "$clustername" --role "worker" --wait --timeout 360s || failed "failed to add worker node"
 
 info "Checking that we have 3 nodes available now..."
 check_multi_node "$clustername" 3 || failed "failed to verify number of nodes"

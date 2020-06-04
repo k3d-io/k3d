@@ -65,6 +65,10 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if flags.version {
 			printVersion()
+		} else {
+			if err := cmd.Usage(); err != nil {
+				log.Fatalln(err)
+			}
 		}
 	},
 }
@@ -73,8 +77,7 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		log.Errorln(err)
-		os.Exit(1)
+		log.Fatalln(err)
 	}
 }
 
