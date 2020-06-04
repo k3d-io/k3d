@@ -38,10 +38,11 @@ func NewCmdLoadImage() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "image [IMAGE [IMAGE...]]",
-		Short: "Load an image from docker into a k3d cluster.",
-		Long:  `Load an image from docker into a k3d cluster.`,
-		Args:  cobra.MinimumNArgs(1),
+		Use:     "image [IMAGE | ARCHIVE [IMAGE | ARCHIVE...]]",
+		Short:   "Load an image from docker into a k3d cluster.",
+		Long:    `Load an image from docker into a k3d cluster.`,
+		Aliases: []string{"images"},
+		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			images, clusters := parseLoadImageCmd(cmd, args)
 			log.Debugf("Load images [%+v] from runtime [%s] into clusters [%+v]", images, runtimes.SelectedRuntime, clusters)
