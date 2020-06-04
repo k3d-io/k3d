@@ -107,3 +107,8 @@ check_registry() {
 check_volume_exists() {
   docker volume inspect "$1" >/dev/null 2>&1
 }
+
+check_cluster_token_exist() {
+  [ -n "$EXE" ] || abort "EXE is not defined"
+  $EXE get cluster "$1" --token | grep "TOKEN" >/dev/null 2>&1
+}

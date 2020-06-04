@@ -33,6 +33,7 @@ TAGS      :=
 TESTS     := .
 TESTFLAGS :=
 LDFLAGS   := -w -s -X github.com/rancher/k3d/version.Version=${GIT_TAG} -X github.com/rancher/k3d/version.K3sVersion=${K3S_TAG}
+GCFLAGS   := 
 GOFLAGS   :=
 BINDIR    := $(CURDIR)/bin
 BINARIES  := k3d
@@ -68,8 +69,11 @@ LINT_DIRS := $(DIRS) $(foreach dir,$(REC_DIRS),$(dir)/...)
 
 all: clean fmt check build
 
+build-debug: GCFLAGS+="all=-N -l"
+build-debug: build
+
 build:
-	CGO_ENABLED=0 $(GO) build $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o '$(BINDIR)/$(BINARIES)'
+	CGO_ENABLED=0 $(GO) build $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -gcflags '$(GCFLAGS)' -o '$(BINDIR)/$(BINARIES)'
 
 build-cross: LDFLAGS += -extldflags "-static"
 build-cross:

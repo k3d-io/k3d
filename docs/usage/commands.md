@@ -14,7 +14,7 @@ k3d
       --network  # specify a network you want to connect to
       --no-image-volume  # disable the creation of a volume for storing images (used for the 'k3d load image' command)
       -p, --port  # add some more port mappings
-      --secret  # specify a cluster secret (default: auto-generated)
+      --token  # specify a cluster token (default: auto-generated)
       --timeout  # specify a timeout, after which the cluster creation will be interrupted and changes rolled back
       --update-kubeconfig  # enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets '--wait=true')
       --switch  # (implies --update-kubeconfig) automatically sets the current-context of your default kubeconfig to the new cluster's context

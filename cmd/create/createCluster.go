@@ -115,7 +115,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
 	cmd.Flags().StringP("image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
 	cmd.Flags().String("network", "", "Join an existing network")
-	cmd.Flags().String("secret", "", "Specify a cluster secret. By default, we generate one.")
+	cmd.Flags().String("token", "", "Specify a cluster token. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `--volume [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d create -w 2 -v /my/path@worker[0,1] -v /tmp/test:/tmp/other@master[0]`")
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d create -w 2 -p 8080:80@worker[0] -p 8081@worker[1]`")
 	cmd.Flags().BoolVar(&createClusterOpts.WaitForMaster, "wait", false, "Wait for the master(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
@@ -206,8 +206,8 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		log.Fatalln("Can only run a single node in hostnetwork mode")
 	}
 
-	// --secret
-	secret, err := cmd.Flags().GetString("secret")
+	// --token
+	token, err := cmd.Flags().GetString("token")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -309,7 +309,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 	cluster := &k3d.Cluster{
 		Name:              clustername,
 		Network:           network,
-		Secret:            secret,
+		Token:             token,
 		CreateClusterOpts: createClusterOpts,
 		ExposeAPI:         exposeAPI,
 	}

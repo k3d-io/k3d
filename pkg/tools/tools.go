@@ -50,7 +50,7 @@ func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images
 	var ok bool
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.MasterRole || node.Role == k3d.WorkerRole {
-			if imageVolume, ok = node.Labels["k3d.cluster.imageVolume"]; ok {
+			if imageVolume, ok = node.Labels[k3d.LabelImageVolume]; ok {
 				break
 			}
 		}
