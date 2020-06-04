@@ -46,6 +46,7 @@ k3d
   get
     cluster [CLUSTERNAME [CLUSTERNAME ...]]
       --no-headers  # do not print headers
+      --token  # show column with cluster tokens
     node NODENAME
       --no-headers  # do not print headers
     kubeconfig (CLUSTERNAME [CLUSTERNAME ...] | --all)
