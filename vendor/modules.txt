@@ -21,6 +21,7 @@ github.com/Microsoft/hcsshim/internal/schema1
 github.com/Microsoft/hcsshim/internal/schema2
 github.com/Microsoft/hcsshim/internal/timeout
 github.com/Microsoft/hcsshim/internal/wclayer
+github.com/Microsoft/hcsshim/osversion
 # github.com/containerd/cgroups v0.0.0-20190923161937-abd0b19954a6
 ## explicit
 # github.com/containerd/containerd v1.3.0-rc.2.0.20190924150618-aba201344ebf
@@ -78,6 +79,7 @@ github.com/containerd/containerd/version
 # github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6
 ## explicit
 github.com/containerd/continuity/fs
+github.com/containerd/continuity/pathdriver
 github.com/containerd/continuity/syscallx
 github.com/containerd/continuity/sysx
 # github.com/containerd/fifo v0.0.0-20190816180239-bda0ff6ed73c
@@ -120,6 +122,14 @@ github.com/docker/docker/api/types/versions
 github.com/docker/docker/api/types/volume
 github.com/docker/docker/client
 github.com/docker/docker/errdefs
+github.com/docker/docker/pkg/archive
+github.com/docker/docker/pkg/fileutils
+github.com/docker/docker/pkg/idtools
+github.com/docker/docker/pkg/ioutils
+github.com/docker/docker/pkg/longpath
+github.com/docker/docker/pkg/mount
+github.com/docker/docker/pkg/pools
+github.com/docker/docker/pkg/system
 # github.com/docker/go-connections v0.4.0
 ## explicit
 github.com/docker/go-connections/nat

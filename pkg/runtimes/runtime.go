@@ -59,6 +59,7 @@ type Runtime interface {
 	ExecInNode(context.Context, *k3d.Node, []string) error
 	GetNodeLogs(context.Context, *k3d.Node, time.Time) (io.ReadCloser, error)
 	GetImages(context.Context) ([]string, error)
+	CopyToNode(context.Context, string, string, *k3d.Node) error
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it

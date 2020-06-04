@@ -194,7 +194,6 @@ func getContainerDetails(ctx context.Context, containerID string) (types.Contain
 func (d Docker) GetNode(ctx context.Context, node *k3d.Node) (*k3d.Node, error) {
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
-		log.Errorf("Failed to get container for node '%s'", node.Name)
 		return node, err
 	}
 
