@@ -73,6 +73,11 @@ func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images
 		}
 	}
 
+	// no images found to load -> exit early
+	if len(imagesFromRuntime)+len(imagesFromTar) == 0 {
+		return fmt.Errorf("No valid images specified")
+	}
+
 	cluster, err = k3dc.GetCluster(ctx, runtime, cluster)
 	if err != nil {
 		log.Errorf("Failed to find the specified cluster")
