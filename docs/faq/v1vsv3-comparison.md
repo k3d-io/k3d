@@ -59,5 +59,5 @@
     - --overwrite                 -> implemented
   - import-images                 -> `k3d load image [--cluster CLUSTERNAME] [--keep] IMAGES`
     - --name                      -> implemented as `--cluster`
-    - --no-remove                 -> implemented as `--keep`
+    - --no-remove                 -> implemented as `--keep-tarball`
 ```
