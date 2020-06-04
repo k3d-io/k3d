@@ -25,24 +25,24 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rancher/k3d/pkg/cluster"
+	k3dutil "github.com/rancher/k3d/cmd/util"
+	k3dcluster "github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
-	k3d "github.com/rancher/k3d/pkg/types"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/tools/clientcmd"
 
 	log "github.com/sirupsen/logrus"
 )
 
+// TODO : deal with --all flag to manage differentiate started cluster and stopped cluster like `docker ps` and `docker ps -a`
 type getKubeconfigFlags struct {
-	all    bool
 	output string
 }
 
 // NewCmdGetKubeconfig returns a new cobra command
 func NewCmdGetKubeconfig() *cobra.Command {
 
-	writeKubeConfigOptions := cluster.WriteKubeConfigOptions{}
+	writeKubeConfigOptions := k3dcluster.WriteKubeConfigOptions{}
 
 	getKubeconfigFlags := getKubeconfigFlags{}
 
@@ -51,37 +51,23 @@ func NewCmdGetKubeconfig() *cobra.Command {
 		Use:   "kubeconfig [CLUSTER [CLUSTER [...]] | --all]", // TODO: getKubeconfig: allow more than one cluster name or even --all
 		Short: "Get kubeconfig",
 		Long:  `Get kubeconfig.`,
-		Args: func(cmd *cobra.Command, args []string) error {
-			if (len(args) < 1 && !getKubeconfigFlags.all) || (len(args) > 0 && getKubeconfigFlags.all) {
-				return fmt.Errorf("Need to specify one or more cluster names *or* set `--all` flag")
-			}
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
-			var clusters []*k3d.Cluster
-			var err error
 
 			// generate list of clusters
-			if getKubeconfigFlags.all {
-				clusters, err = cluster.GetClusters(cmd.Context(), runtimes.SelectedRuntime)
-				if err != nil {
-					log.Fatalln(err)
-				}
-			} else {
-				for _, clusterName := range args {
-					retrievedCluster, err := cluster.GetCluster(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
-					if err != nil {
-						log.Fatalln(err)
-					}
-					clusters = append(clusters, retrievedCluster)
-				}
-			}
+			clusters := k3dutil.BuildClusterList(cmd.Context(), args)
 
 			// get kubeconfigs from all clusters
 			errorGettingKubeconfig := false
-			for _, c := range clusters {
-				log.Debugf("Getting kubeconfig for cluster '%s'", c.Name)
-				if getKubeconfigFlags.output, err = cluster.GetAndWriteKubeConfig(cmd.Context(), runtimes.SelectedRuntime, c, getKubeconfigFlags.output, &writeKubeConfigOptions); err != nil {
+			for _, cluster := range clusters {
+				log.Debugf("Getting kubeconfig for cluster '%s'", cluster.Name)
+				var err error
+				getKubeconfigFlags.output, err = k3dcluster.GetAndWriteKubeConfig(cmd.Context(),
+					runtimes.SelectedRuntime,
+					cluster,
+					getKubeconfigFlags.output,
+					&writeKubeConfigOptions,
+				)
+				if err != nil {
 					log.Errorln(err)
 					errorGettingKubeconfig = true
 				}
@@ -107,7 +93,6 @@ func NewCmdGetKubeconfig() *cobra.Command {
 	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateExisting, "update", "u", true, "Update conflicting fields in existing KubeConfig")
 	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateCurrentContext, "switch", "s", false, "Switch to new context")
 	cmd.Flags().BoolVar(&writeKubeConfigOptions.OverwriteExisting, "overwrite", false, "[Careful!] Overwrite existing file, ignoring its contents")
-	cmd.Flags().BoolVarP(&getKubeconfigFlags.all, "all", "a", false, "Get kubeconfigs from all existing clusters")
 
 	// done
 	return cmd

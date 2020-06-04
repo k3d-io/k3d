@@ -22,13 +22,12 @@ THE SOFTWARE.
 package get
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
 
-	k3cluster "github.com/rancher/k3d/pkg/cluster"
-	"github.com/rancher/k3d/pkg/runtimes"
+	k3dutil "github.com/rancher/k3d/cmd/util"
+	k3dcluster "github.com/rancher/k3d/pkg/cluster"
 	k3d "github.com/rancher/k3d/pkg/types"
 	"github.com/spf13/cobra"
 
@@ -55,7 +54,7 @@ func NewCmdGetCluster() *cobra.Command {
 		Short:   "Get cluster(s)",
 		Long:    `Get cluster(s).`,
 		Run: func(cmd *cobra.Command, args []string) {
-			clusters := buildClusterList(cmd.Context(), args)
+			clusters := k3dutil.BuildClusterList(cmd.Context(), args)
 			PrintClusters(clusters, clusterFlags)
 		},
 	}
@@ -68,30 +67,6 @@ func NewCmdGetCluster() *cobra.Command {
 
 	// done
 	return cmd
-}
-
-func buildClusterList(ctx context.Context, args []string) []*k3d.Cluster {
-	var clusters []*k3d.Cluster
-	var err error
-
-	if len(args) == 0 {
-		// cluster name not specified : get all clusters
-		clusters, err = k3cluster.GetClusters(ctx, runtimes.SelectedRuntime)
-		if err != nil {
-			log.Fatalln(err)
-		}
-	} else {
-		for _, clusterName := range args {
-			// cluster name specified : get specific cluster
-			retrievedCluster, err := k3cluster.GetCluster(ctx, runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
-			if err != nil {
-				log.Fatalln(err)
-			}
-			clusters = append(clusters, retrievedCluster)
-		}
-	}
-
-	return clusters
 }
 
 // PrintPrintClusters : display list of cluster
@@ -111,7 +86,7 @@ func PrintClusters(clusters []*k3d.Cluster, flags clusterFlags) {
 		}
 	}
 
-	k3cluster.SortClusters(clusters)
+	k3dcluster.SortClusters(clusters)
 
 	for _, cluster := range clusters {
 		masterCount := cluster.MasterCount()
