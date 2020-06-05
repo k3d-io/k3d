@@ -24,6 +24,7 @@ package load
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/rancher/k3d/cmd/util"
 	"github.com/rancher/k3d/pkg/runtimes"
 	"github.com/rancher/k3d/pkg/tools"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -61,6 +62,10 @@ func NewCmdLoadImage() *cobra.Command {
 	 * Flags *
 	 *********/
 	cmd.Flags().StringArrayP("cluster", "c", []string{k3d.DefaultClusterName}, "Select clusters to load the image to.")
+	if err := cmd.RegisterFlagCompletionFunc("cluster", util.ValidArgsAvailableClusters); err != nil {
+		log.Fatalln("Failed to register flag completion for '--cluster'", err)
+	}
+
 	cmd.Flags().BoolVarP(&loadImageOpts.KeepTar, "keep-tarball", "k", false, "Do not delete the tarball containing the saved images from the shared volume")
 
 	/* Subcommands */
