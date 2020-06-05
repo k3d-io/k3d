@@ -16,10 +16,14 @@
     align-items: center;
 }
 
-.md-header-nav__title {
-
+.md-ellipsis {
+    display: inline;
 }
 
 [data-md-color-primary=black] .md-tabs {
     background-color: #0DCEFF;
+}
+
+.md-tabs {
+    color: black;
 }
