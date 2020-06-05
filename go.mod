@@ -42,3 +42,5 @@ require (
 	k8s.io/client-go v0.17.0
 	k8s.io/utils v0.0.0-20200109141947-94aeca20bf09 // indirect
 )
+
+replace github.com/spf13/cobra => github.com/villedemontreal/cobra v0.0.6-0.20200602031707-134043491640
