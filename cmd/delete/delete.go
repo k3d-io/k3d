@@ -33,8 +33,8 @@ func NewCmdDelete() *cobra.Command {
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a resource.",
-		Long:  `Delete a resource.`,
+		Short: "Delete a resource [cluster, node].",
+		Long:  `Delete a resource [cluster, node].`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
 				log.Errorln("Couldn't get help text")

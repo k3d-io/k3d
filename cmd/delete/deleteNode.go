@@ -22,6 +22,7 @@ THE SOFTWARE.
 package delete
 
 import (
+	"github.com/rancher/k3d/cmd/util"
 	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -34,10 +35,11 @@ func NewCmdDeleteNode() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:   "node (NAME | --all)",
-		Short: "Delete a node.",
-		Long:  `Delete a node.`,
-		Args:  cobra.MinimumNArgs(1), // at least one node has to be specified
+		Use:               "node (NAME | --all)",
+		Short:             "Delete a node.",
+		Long:              `Delete a node.`,
+		Args:              cobra.MinimumNArgs(1), // at least one node has to be specified
+		ValidArgsFunction: util.ValidArgsAvailableNodes,
 		Run: func(cmd *cobra.Command, args []string) {
 
 			nodes := parseDeleteNodeCmd(cmd, args)

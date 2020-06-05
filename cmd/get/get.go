@@ -33,8 +33,8 @@ func NewCmdGet() *cobra.Command {
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:   "get",
-		Short: "Get a resource.",
-		Long:  `Get a resource.`,
+		Short: "Get a resource [cluster, node, kubeconfig].",
+		Long:  `Get a resource [cluster, node, kubeconfig].`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
 				log.Errorln("Couldn't get help text")

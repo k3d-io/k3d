@@ -27,6 +27,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/rancher/k3d/cmd/util"
 	k3cluster "github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -58,6 +59,7 @@ func NewCmdGetCluster() *cobra.Command {
 			clusters := buildClusterList(cmd.Context(), args)
 			PrintClusters(clusters, clusterFlags)
 		},
+		ValidArgsFunction: util.ValidArgsAvailableClusters,
 	}
 
 	// add flags

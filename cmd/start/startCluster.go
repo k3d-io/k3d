@@ -24,6 +24,7 @@ package start
 import (
 	"time"
 
+	"github.com/rancher/k3d/cmd/util"
 	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	"github.com/rancher/k3d/pkg/types"
@@ -41,9 +42,10 @@ func NewCmdStartCluster() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "cluster (NAME [NAME...] | --all)",
-		Short: "Start an existing k3d cluster",
-		Long:  `Start an existing k3d cluster`,
+		Use:               "cluster (NAME [NAME...] | --all)",
+		Short:             "Start an existing k3d cluster",
+		Long:              `Start an existing k3d cluster`,
+		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Run: func(cmd *cobra.Command, args []string) {
 			clusters := parseStartClusterCmd(cmd, args)
 			if len(clusters) == 0 {

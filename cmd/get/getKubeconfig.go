@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/rancher/k3d/cmd/util"
 	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -48,9 +49,10 @@ func NewCmdGetKubeconfig() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "kubeconfig [CLUSTER [CLUSTER [...]] | --all]", // TODO: getKubeconfig: allow more than one cluster name or even --all
-		Short: "Get kubeconfig",
-		Long:  `Get kubeconfig.`,
+		Use:               "kubeconfig [CLUSTER [CLUSTER [...]] | --all]", // TODO: getKubeconfig: allow more than one cluster name or even --all
+		Short:             "Get kubeconfig",
+		Long:              `Get kubeconfig.`,
+		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if (len(args) < 1 && !getKubeconfigFlags.all) || (len(args) > 0 && getKubeconfigFlags.all) {
 				return fmt.Errorf("Need to specify one or more cluster names *or* set `--all` flag")

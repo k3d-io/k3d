@@ -24,6 +24,7 @@ package stop
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/rancher/k3d/cmd/util"
 	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -36,9 +37,10 @@ func NewCmdStopCluster() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "cluster  (NAME [NAME...] | --all)",
-		Short: "Stop an existing k3d cluster",
-		Long:  `Stop an existing k3d cluster.`,
+		Use:               "cluster  (NAME [NAME...] | --all)",
+		Short:             "Stop an existing k3d cluster",
+		Long:              `Stop an existing k3d cluster.`,
+		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Run: func(cmd *cobra.Command, args []string) {
 			clusters := parseStopClusterCmd(cmd, args)
 			if len(clusters) == 0 {

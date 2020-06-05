@@ -22,6 +22,7 @@ THE SOFTWARE.
 package delete
 
 import (
+	"github.com/rancher/k3d/cmd/util"
 	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -35,10 +36,11 @@ func NewCmdDeleteCluster() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:   "cluster (NAME | --all)",
-		Short: "Delete a cluster.",
-		Long:  `Delete a cluster.`,
-		Args:  cobra.MinimumNArgs(0), // 0 or n arguments; 0 only if --all is set
+		Use:               "cluster (NAME | --all)",
+		Short:             "Delete a cluster.",
+		Long:              `Delete a cluster.`,
+		Args:              cobra.MinimumNArgs(0), // 0 or n arguments; 0 only if --all is set
+		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Run: func(cmd *cobra.Command, args []string) {
 			clusters := parseDeleteClusterCmd(cmd, args)
 

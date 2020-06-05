@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/liggitt/tabwriter"
+	"github.com/rancher/k3d/cmd/util"
 	"github.com/rancher/k3d/pkg/cluster"
 	"github.com/rancher/k3d/pkg/runtimes"
 	k3d "github.com/rancher/k3d/pkg/types"
@@ -41,11 +42,12 @@ func NewCmdGetNode() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:     "node [NAME [NAME...]]",
-		Aliases: []string{"nodes"},
-		Short:   "Get node(s)",
-		Long:    `Get node(s).`,
-		Args:    cobra.MinimumNArgs(0), // 0 or more; 0 = all
+		Use:               "node [NAME [NAME...]]",
+		Aliases:           []string{"nodes"},
+		Short:             "Get node(s)",
+		Long:              `Get node(s).`,
+		Args:              cobra.MinimumNArgs(0), // 0 or more; 0 = all
+		ValidArgsFunction: util.ValidArgsAvailableNodes,
 		Run: func(cmd *cobra.Command, args []string) {
 			nodes, headersOff := parseGetNodeCmd(cmd, args)
 			var existingNodes []*k3d.Node
