@@ -35,6 +35,12 @@ import (
 // SelectedRuntime is a runtime (pun intended) variable determining the selected runtime
 var SelectedRuntime Runtime = docker.Docker{}
 
+// Docker docker
+var Docker = docker.Docker{}
+
+// Containerd containerd
+var Containerd = containerd.Containerd{}
+
 // Runtimes defines a map of implemented k3d runtimes
 var Runtimes = map[string]Runtime{
 	"docker":     docker.Docker{},
