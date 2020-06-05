@@ -32,8 +32,8 @@ func NewCmdLoad() *cobra.Command {
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:   "load",
-		Short: "Load a resource [image].",
-		Long:  `Load a resource [image].`,
+		Short: "Load a resource [image] into a cluster.",
+		Long:  `Load a resource [image] into a cluster.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
 				log.Errorln("Couldn't get help text")

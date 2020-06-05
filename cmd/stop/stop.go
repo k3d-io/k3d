@@ -33,8 +33,8 @@ func NewCmdStop() *cobra.Command {
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:   "stop",
-		Short: "Stop a resource.",
-		Long:  `Stop a resource.`,
+		Short: "Stop a resource [cluster, node].",
+		Long:  `Stop a resource [cluster, node].`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
 				log.Errorln("Couldn't get help text")
