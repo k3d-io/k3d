@@ -164,7 +164,7 @@ func printVersion() {
 // Completion
 var completionFunctions = map[string]func(io.Writer) error{
 	"bash":       rootCmd.GenBashCompletion,
-	"zsh":        rootCmd.GenZshCompletion, // FIXME: zsh completion requires https://github.com/spf13/cobra/pull/899 due to square brackets in our help texts
+	"zsh":        rootCmd.GenZshCompletion,
 	"psh":        rootCmd.GenPowerShellCompletion,
 	"powershell": rootCmd.GenPowerShellCompletion,
 }
