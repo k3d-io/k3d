@@ -2,6 +2,8 @@
 
 ![k3d](static/img/k3d_logo_black_blue.svg)
 
+**This page is targeting k3d v3.0.0 and newer!**
+
 k3d is a lightweight wrapper to run [k3s](https://github.com/rancher/k3s) (Rancher Lab's minimal Kubernetes distribution) in docker.
 
 k3d makes it very easy to create single- and multi-node [k3s](https://github.com/rancher/k3s) clusters in docker, e.g. for local development on Kubernetes.
