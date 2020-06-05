@@ -56,3 +56,28 @@ clusterLoop:
 	}
 	return completions, cobra.ShellCompDirectiveDefault
 }
+
+// ValidArgsAvailableNodes is used for shell completion: proposes the list of existing nodes
+func ValidArgsAvailableNodes(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+
+	var completions []string
+	var nodes []*k3d.Node
+	nodes, err := k3dcluster.GetNodes(context.Background(), runtimes.SelectedRuntime)
+	if err != nil {
+		log.Errorln("Failed to get list of nodes for shell completion")
+		return nil, cobra.ShellCompDirectiveError
+	}
+
+nodeLoop:
+	for _, node := range nodes {
+		for _, arg := range args {
+			if arg == node.Name { // only clusters, that are not in the args yet
+				continue nodeLoop
+			}
+		}
+		if strings.HasPrefix(node.Name, toComplete) {
+			completions = append(completions, node.Name)
+		}
+	}
+	return completions, cobra.ShellCompDirectiveDefault
+}
