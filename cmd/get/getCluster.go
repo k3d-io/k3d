@@ -58,6 +58,7 @@ func NewCmdGetCluster() *cobra.Command {
 			clusters := buildClusterList(cmd.Context(), args)
 			PrintClusters(clusters, clusterFlags)
 		},
+		ValidArgsFunction: validArgsFunc,
 	}
 
 	// add flags
@@ -68,6 +69,31 @@ func NewCmdGetCluster() *cobra.Command {
 
 	// done
 	return cmd
+}
+
+// validArgsFunc is used for shell completion: proposes the list of existing clusters
+func validArgsFunc(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+
+	var completions []string
+	var clusters []*k3d.Cluster
+	clusters, err := k3cluster.GetClusters(context.Background(), runtimes.SelectedRuntime)
+	if err != nil {
+		log.Errorln("Failed to get list of clusters for shell completion")
+		return nil, cobra.ShellCompDirectiveError
+	}
+
+clusterLoop:
+	for _, cluster := range clusters {
+		for _, arg := range args {
+			if arg == cluster.Name { // only clusters, that are not in the args yet
+				continue clusterLoop
+			}
+		}
+		if strings.HasPrefix(cluster.Name, toComplete) {
+			completions = append(completions, cluster.Name)
+		}
+	}
+	return completions, cobra.ShellCompDirectiveDefault
 }
 
 func buildClusterList(ctx context.Context, args []string) []*k3d.Cluster {
