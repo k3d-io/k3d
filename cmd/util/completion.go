@@ -81,3 +81,17 @@ nodeLoop:
 	}
 	return completions, cobra.ShellCompDirectiveDefault
 }
+
+// ValidArgsNodeRoles is used for shell completion: proposes the list of possible node roles
+func ValidArgsNodeRoles(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+
+	var completions []string
+	roles := []string{string(k3d.MasterRole), string(k3d.WorkerRole)}
+
+	for _, role := range roles {
+		if strings.HasPrefix(role, toComplete) {
+			completions = append(completions, role)
+		}
+	}
+	return completions, cobra.ShellCompDirectiveDefault
+}

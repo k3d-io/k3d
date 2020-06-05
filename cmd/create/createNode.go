@@ -58,6 +58,9 @@ func NewCmdCreateNode() *cobra.Command {
 	// add flags
 	cmd.Flags().Int("replicas", 1, "Number of replicas of this node specification.")
 	cmd.Flags().String("role", string(k3d.WorkerRole), "Specify node role [master, worker]")
+	if err := cmd.RegisterFlagCompletionFunc("role", util.ValidArgsNodeRoles); err != nil {
+		log.Fatalln("Failed to register flag completion for '--role'", err)
+	}
 	cmd.Flags().StringP("cluster", "c", k3d.DefaultClusterName, "Select the cluster that the node shall connect to.")
 	if err := cmd.MarkFlagRequired("cluster"); err != nil {
 		log.Fatalln("Failed to mark required flag '--cluster'")
