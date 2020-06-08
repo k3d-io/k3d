@@ -84,3 +84,7 @@ Example Workflow: Create a new cluster and use it with `kubectl`
 ## History
 
 This repository is based on [@zeerorg](https://github.com/zeerorg/)'s [zeerorg/k3s-in-docker](https://github.com/zeerorg/k3s-in-docker), reimplemented in Go by [@iwilltry42](https://github.com/iwilltry42/) in [iwilltry42/k3d](https://github.com/iwilltry42/k3d), which got adopted by Rancher in[rancher/k3d](https://github.com/rancher/k3d).
+
+## Related Projects
+
+* [k3x](https://github.com/inercia/k3x): a graphics interface (for Linux) to k3d.
