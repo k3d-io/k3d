@@ -6,6 +6,8 @@
 *.dylib
 
 # Output folders
+tools/bin/
+tools/_dist/
 bin/
 _dist/
 site/
