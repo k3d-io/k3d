@@ -259,8 +259,8 @@ func UpdateKubeConfig(ctx context.Context, newKubeConfig *clientcmdapi.Config, e
 	}
 
 	for k, v := range newKubeConfig.Contexts {
-		if _, ok := existingKubeConfig.Clusters[k]; ok && !overwriteConflicting {
-			return fmt.Errorf("Cluster '%s' already exists in target KubeConfig", k)
+		if _, ok := existingKubeConfig.Contexts[k]; ok && !overwriteConflicting {
+			return fmt.Errorf("Context '%s' already exists in target KubeConfig", k)
 		}
 		existingKubeConfig.Contexts[k] = v
 	}
