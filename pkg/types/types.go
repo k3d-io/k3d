@@ -39,12 +39,12 @@ const DefaultClusterNameMaxLength = 32
 const DefaultK3sImageRepo = "docker.io/rancher/k3s"
 
 // DefaultLBImage defines the default cluster load balancer image
-const DefaultLBImage = "docker.io/iwilltry42/k3d-proxy:v0.0.2"
+const DefaultLBImage = "docker.io/iwilltry42/k3d-proxy:v0.0.3"
 
 // DefaultObjectNamePrefix defines the name prefix for every object created by k3d
 const DefaultObjectNamePrefix = "k3d"
 
-// ReadyLogMessageMaster defines the log messages we wait for until a master node is considered ready
+// ReadyLogMessageByRole defines the log messages we wait for until a master node is considered ready
 var ReadyLogMessageByRole = map[Role]string{
 	MasterRole:       "Wrote kubeconfig",
 	WorkerRole:       "Successfully registered node",
