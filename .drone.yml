@@ -79,3 +79,25 @@ services:
 volumes:
   - name: dockersock
     temp: {}
+
+---
+
+kind: pipeline
+type: docker
+name: docs
+
+steps:
+
+  - name: build
+    image: python:3.8
+    commands:
+      - python3 -m pip install -r docs/requirements.txt
+      - mkdocs build --verbose --clean --strict
+
+  - name: publish
+    image: plugins/gh-pages
+    settings:
+      password:
+        from_secret: github_token
+        pages_directory: site/
+        target_branch: gh-pages
