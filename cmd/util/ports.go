@@ -54,14 +54,19 @@ func ParseAPIPort(portString string) (k3d.ExposeAPI, error) {
 	}
 
 	// Verify 'port' is an integer and within port ranges
-	p, err := strconv.Atoi(exposeAPI.Port)
-	if err != nil {
-		return exposeAPI, err
-	}
+	if exposeAPI.Port != "" {
+		p, err := strconv.Atoi(exposeAPI.Port)
+		if err != nil {
+			log.Errorln("Failed to parse port mapping")
+			return exposeAPI, err
+		}
 
-	if p < 0 || p > 65535 {
-		log.Errorln("Failed to parse API Port specification")
-		return exposeAPI, fmt.Errorf("port value '%d' out of range", p)
+		if p < 0 || p > 65535 {
+			log.Errorln("Failed to parse API Port specification")
+			return exposeAPI, fmt.Errorf("port value '%d' out of range", p)
+		}
+	} else {
+		log.Debugf("API-Port Mapping didn't specify hostPort!")
 	}
 
 	return exposeAPI, nil
