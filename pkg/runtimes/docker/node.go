@@ -182,7 +182,7 @@ func getContainerDetails(ctx context.Context, containerID string) (types.Contain
 
 	containerDetails, err := docker.ContainerInspect(ctx, containerID)
 	if err != nil {
-		log.Errorln("Failed to get details for container '%s'", containerID)
+		log.Errorf("Failed to get details for container '%s'", containerID)
 		return types.ContainerJSON{}, err
 	}
 
@@ -301,7 +301,7 @@ func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) er
 		// get info about exec process inside container
 		execInfo, err := docker.ContainerExecInspect(ctx, exec.ID)
 		if err != nil {
-			log.Errorln("Failed to inspect exec process in node '%s'", node.Name)
+			log.Errorf("Failed to inspect exec process in node '%s'", node.Name)
 			return err
 		}
 
@@ -322,7 +322,7 @@ func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) er
 
 			logs, err := ioutil.ReadAll(execConnection.Reader)
 			if err != nil {
-				log.Errorln("Failed to get logs from node '%s'", node.Name)
+				log.Errorf("Failed to get logs from node '%s'", node.Name)
 				return err
 			}
 

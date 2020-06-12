@@ -76,10 +76,16 @@ var DefaultObjectLabels = map[string]string{
 
 // List of k3d technical label name
 const (
-	LabelToken           string = "k3d.cluster.token"
+	LabelClusterName     string = "k3d.cluster"
+	LabelClusterURL      string = "k3d.cluster.url"
+	LabelClusterToken    string = "k3d.cluster.token"
 	LabelImageVolume     string = "k3d.cluster.imageVolume"
 	LabelNetworkExternal string = "k3d.cluster.network.external"
 	LabelNetwork         string = "k3d.cluster.network"
+	LabelRole            string = "k3d.role"
+	LabelMasterAPIPort   string = "k3d.master.api.port"
+	LabelMasterAPIHost   string = "k3d.master.api.host"
+	LabelMasterAPIHostIP string = "k3d.master.api.hostIP"
 )
 
 // DefaultRoleCmds maps the node roles to their respective default commands

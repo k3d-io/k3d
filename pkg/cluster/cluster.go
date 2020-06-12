@@ -101,8 +101,8 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	 */
 	if !cluster.CreateClusterOpts.DisableImageVolume {
 		imageVolumeName := fmt.Sprintf("%s-%s-images", k3d.DefaultObjectNamePrefix, cluster.Name)
-		if err := runtime.CreateVolume(ctx, imageVolumeName, map[string]string{"k3d.cluster": cluster.Name}); err != nil {
-			log.Errorln("Failed to create image volume '%s' for cluster '%s'", imageVolumeName, cluster.Name)
+		if err := runtime.CreateVolume(ctx, imageVolumeName, map[string]string{k3d.LabelClusterName: cluster.Name}); err != nil {
+			log.Errorf("Failed to create image volume '%s' for cluster '%s'", imageVolumeName, cluster.Name)
 			return err
 		}
 
@@ -127,10 +127,10 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 		if node.Labels == nil {
 			node.Labels = make(map[string]string) // TODO: maybe create an init function?
 		}
-		node.Labels["k3d.cluster"] = cluster.Name
+		node.Labels[k3d.LabelClusterName] = cluster.Name
 		node.Env = append(node.Env, fmt.Sprintf("K3S_TOKEN=%s", cluster.Token))
-		node.Labels[k3d.LabelToken] = cluster.Token
-		node.Labels["k3d.cluster.url"] = connectionURL
+		node.Labels[k3d.LabelClusterToken] = cluster.Token
+		node.Labels[k3d.LabelClusterURL] = connectionURL
 
 		// append extra labels
 		for k, v := range extraLabels {
@@ -387,7 +387,7 @@ func GetClusters(ctx context.Context, runtime k3drt.Runtime) ([]*k3d.Cluster, er
 	for _, node := range nodes {
 		clusterExists := false
 		for _, cluster := range clusters {
-			if node.Labels["k3d.cluster"] == cluster.Name { // TODO: handle case, where this label doesn't exist
+			if node.Labels[k3d.LabelClusterName] == cluster.Name { // TODO: handle case, where this label doesn't exist
 				cluster.Nodes = append(cluster.Nodes, node)
 				clusterExists = true
 				break
@@ -396,7 +396,7 @@ func GetClusters(ctx context.Context, runtime k3drt.Runtime) ([]*k3d.Cluster, er
 		// cluster is not in the list yet, so we add it with the current node as its first member
 		if !clusterExists {
 			clusters = append(clusters, &k3d.Cluster{
-				Name:  node.Labels["k3d.cluster"],
+				Name:  node.Labels[k3d.LabelClusterName],
 				Nodes: []*k3d.Node{node},
 			})
 		}
@@ -445,7 +445,7 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 
 		// get k3s cluster's token
 		if cluster.Token == "" {
-			if token, ok := node.Labels[k3d.LabelToken]; ok {
+			if token, ok := node.Labels[k3d.LabelClusterToken]; ok {
 				cluster.Token = token
 			}
 		}
@@ -457,7 +457,7 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 // GetCluster returns an existing cluster with all fields and node lists populated
 func GetCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) (*k3d.Cluster, error) {
 	// get nodes that belong to the selected cluster
-	nodes, err := runtime.GetNodesByLabel(ctx, map[string]string{"k3d.cluster": cluster.Name})
+	nodes, err := runtime.GetNodesByLabel(ctx, map[string]string{k3d.LabelClusterName: cluster.Name})
 	if err != nil {
 		log.Errorf("Failed to get nodes for cluster '%s'", cluster.Name)
 	}

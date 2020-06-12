@@ -113,7 +113,7 @@ func GetAndWriteKubeConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 func GetKubeconfig(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*clientcmdapi.Config, error) {
 	// get all master nodes for the selected cluster
 	// TODO: getKubeconfig: we should make sure, that the master node we're trying to fetch from is actually running
-	masterNodes, err := runtime.GetNodesByLabel(ctx, map[string]string{"k3d.cluster": cluster.Name, "k3d.role": string(k3d.MasterRole)})
+	masterNodes, err := runtime.GetNodesByLabel(ctx, map[string]string{k3d.LabelClusterName: cluster.Name, k3d.LabelRole: string(k3d.MasterRole)})
 	if err != nil {
 		log.Errorln("Failed to get master nodes")
 		return nil, err
@@ -129,11 +129,11 @@ func GetKubeconfig(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.C
 	APIHost := k3d.DefaultAPIHost
 
 	for _, master := range masterNodes {
-		if _, ok := master.Labels["k3d.master.api.port"]; ok {
+		if _, ok := master.Labels[k3d.LabelMasterAPIPort]; ok {
 			chosenMaster = master
-			APIPort = master.Labels["k3d.master.api.port"]
-			if _, ok := master.Labels["k3d.master.api.host"]; ok {
-				APIHost = master.Labels["k3d.master.api.host"]
+			APIPort = master.Labels[k3d.LabelMasterAPIPort]
+			if _, ok := master.Labels[k3d.LabelMasterAPIHost]; ok {
+				APIHost = master.Labels[k3d.LabelMasterAPIHost]
 			}
 			break
 		}
@@ -228,7 +228,7 @@ func WriteKubeConfigToPath(ctx context.Context, kubeconfig *clientcmdapi.Config,
 		return err
 	}
 
-	log.Debugf("Wrote kubeconfig to '%s'", output.Name)
+	log.Debugf("Wrote kubeconfig to '%s'", output.Name())
 
 	return nil
 

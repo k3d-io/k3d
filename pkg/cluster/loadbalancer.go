@@ -38,7 +38,7 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 	// update cluster details to ensure that we have the latest node list
 	cluster, err = GetCluster(ctx, runtime, cluster)
 	if err != nil {
-		log.Errorln("Failed to update details for cluster '%s'", cluster.Name)
+		log.Errorf("Failed to update details for cluster '%s'", cluster.Name)
 		return err
 	}
 

@@ -86,7 +86,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	/* Ports */
 	exposedPorts, portBindings, err := nat.ParsePortSpecs(node.Ports)
 	if err != nil {
-		log.Errorln("Failed to parse port specs '%v'", node.Ports)
+		log.Errorf("Failed to parse port specs '%v'", node.Ports)
 		return nil, err
 	}
 	containerConfig.ExposedPorts = exposedPorts
@@ -116,7 +116,7 @@ func TranslateContainerToNode(cont *types.Container) (*k3d.Node, error) {
 		Name:   strings.TrimPrefix(cont.Names[0], "/"), // container name with leading '/' cut off
 		Image:  cont.Image,
 		Labels: cont.Labels,
-		Role:   k3d.NodeRoles[cont.Labels["k3d.role"]],
+		Role:   k3d.NodeRoles[cont.Labels[k3d.LabelRole]],
 		// TODO: all the rest
 	}
 	return node, nil
@@ -142,7 +142,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 	// get the clusterNetwork
 	clusterNetwork := ""
 	for networkName := range containerDetails.NetworkSettings.Networks {
-		if strings.HasPrefix(networkName, fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, containerDetails.Config.Labels["k3d.cluster"])) { // FIXME: catch error if label 'k3d.cluster' does not exist, but this should also never be the case
+		if strings.HasPrefix(networkName, fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, containerDetails.Config.Labels[k3d.LabelClusterName])) { // FIXME: catch error if label 'k3d.cluster' does not exist, but this should also never be the case
 			clusterNetwork = networkName
 		}
 	}
@@ -150,16 +150,11 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 	// masterOpts
 	masterOpts := k3d.MasterOpts{IsInit: false}
 	for k, v := range containerDetails.Config.Labels {
-		/*
-			node.Labels["k3d.master.api.hostIP"] = node.MasterOpts.ExposeAPI.HostIP // TODO: maybe get docker machine IP here
-			node.Labels["k3d.master.api.host"] = node.MasterOpts.ExposeAPI.Host
-			node.Labels["k3d.master.api.port"] = node.MasterOpts.ExposeAPI.Port
-		*/
-		if k == "k3d.master.api.hostIP" {
+		if k == k3d.LabelMasterAPIHostIP {
 			masterOpts.ExposeAPI.HostIP = v
-		} else if k == "k3d.master.api.host" {
+		} else if k == k3d.LabelMasterAPIHost {
 			masterOpts.ExposeAPI.Host = v
-		} else if k == "k3d.master.api.port" {
+		} else if k == k3d.LabelMasterAPIPort {
 			masterOpts.ExposeAPI.Port = v
 		}
 	}
@@ -182,7 +177,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 
 	node := &k3d.Node{
 		Name:       strings.TrimPrefix(containerDetails.Name, "/"), // container name with leading '/' cut off
-		Role:       k3d.NodeRoles[containerDetails.Config.Labels["k3d.role"]],
+		Role:       k3d.NodeRoles[containerDetails.Config.Labels[k3d.LabelRole]],
 		Image:      containerDetails.Image,
 		Volumes:    containerDetails.HostConfig.Binds,
 		Env:        env,

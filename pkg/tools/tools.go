@@ -189,7 +189,7 @@ func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images
 	// delete tools container
 	log.Infoln("Removing k3d-tools node...")
 	if err := runtime.DeleteNode(ctx, toolsNode); err != nil {
-		log.Errorln("Failed to delete tools node '%s': Try to delete it manually", toolsNode.Name)
+		log.Errorf("Failed to delete tools node '%s': Try to delete it manually", toolsNode.Name)
 	}
 
 	log.Infoln("Successfully imported image(s)")
@@ -210,7 +210,7 @@ func startToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 		Args:    []string{"noop"},
 		Labels:  k3d.DefaultObjectLabels,
 	}
-	node.Labels["k3d.cluster"] = cluster.Name
+	node.Labels[k3d.LabelClusterName] = cluster.Name
 	if err := runtime.CreateNode(ctx, node); err != nil {
 		log.Errorf("Failed to create tools container for cluster '%s'", cluster.Name)
 		return node, err

@@ -118,6 +118,6 @@ func printNodes(nodes []*k3d.Node, headersOff bool) {
 	})
 
 	for _, node := range nodes {
-		fmt.Fprintf(tabwriter, "%s\t%s\t%s\n", strings.TrimPrefix(node.Name, "/"), string(node.Role), node.Labels["k3d.cluster"])
+		fmt.Fprintf(tabwriter, "%s\t%s\t%s\n", strings.TrimPrefix(node.Name, "/"), string(node.Role), node.Labels[k3d.LabelClusterName])
 	}
 }

@@ -82,7 +82,7 @@ func (d Docker) DeleteVolume(ctx context.Context, name string) error {
 	// check if volume is still in use
 	if vol.UsageData != nil {
 		if vol.UsageData.RefCount > 0 {
-			log.Errorf("Failed to delete volume '%s'")
+			log.Errorf("Failed to delete volume '%s'", vol.Name)
 			return fmt.Errorf("Volume '%s' is still referenced by %d containers", name, vol.UsageData.RefCount)
 		}
 	}
