@@ -149,6 +149,14 @@ e2e: build-docker-dind
 
 ci-tests: fmt check e2e
 
+##########################
+########## Misc ##########
+##########################
+
+drone:
+	@echo "Running drone pipeline locally with branch=master and event=push"
+	drone exec --trusted --branch master --event push
+
 #########################################
 ########## Setup & Preparation ##########
 #########################################
