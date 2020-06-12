@@ -110,8 +110,10 @@ steps:
     settings:
       password:
         from_secret: github_token
-        pages_directory: site/
-        target_branch: gh-pages
+      username:
+        from_secret: github_username
+      pages_directory: site/
+      target_branch: gh-pages
     when:
       branch:
         - master
