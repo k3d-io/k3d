@@ -54,15 +54,17 @@ func ParseAPIPort(portString string) (k3d.ExposeAPI, error) {
 	}
 
 	// Verify 'port' is an integer and within port ranges
-	if exposeAPI.Port == "" {
+	if exposeAPI.Port == "" || exposeAPI.Port == "random" {
 		log.Debugf("API-Port Mapping didn't specify hostPort, choosing one randomly...")
 		freePort, err := GetFreePort()
 		if err != nil || freePort == 0 {
-			log.Errorln("Failed to get a free port")
-			return exposeAPI, err
+			log.Warnf("Failed to get random free port:\n%+v", err)
+			log.Warnf("Falling back to default port %s (may be blocked though)...", k3d.DefaultAPIPort)
+			exposeAPI.Port = k3d.DefaultAPIPort
+		} else {
+			exposeAPI.Port = strconv.Itoa(freePort)
+			log.Debugf("Got free port for API: '%d'", freePort)
 		}
-		exposeAPI.Port = strconv.Itoa(freePort)
-		log.Debugf("Got free port for API: '%d'", freePort)
 	}
 	p, err := strconv.Atoi(exposeAPI.Port)
 	if err != nil {

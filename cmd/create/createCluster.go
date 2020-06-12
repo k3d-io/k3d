@@ -110,7 +110,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	/*********
 	 * Flags *
 	 *********/
-	cmd.Flags().StringP("api-port", "a", "", "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `--api-port [HOST:]HOSTPORT`)\n - Example: `k3d create -m 3 -a 0.0.0.0:6550`")
+	cmd.Flags().StringP("api-port", "a", "random", "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `--api-port [HOST:]HOSTPORT`)\n - Example: `k3d create -m 3 -a 0.0.0.0:6550`")
 	cmd.Flags().IntP("masters", "m", 1, "Specify how many masters you want to create")
 	cmd.Flags().IntP("workers", "w", 0, "Specify how many workers you want to create")
 	cmd.Flags().StringP("image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
