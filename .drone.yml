@@ -1,0 +1,35 @@
+---
+kind: pipeline
+type: docker
+name: default
+
+steps:
+
+  - name: k3d_lint
+    image: golang:1.14
+    commands:
+      - make ci-setup
+      - make check-fmt lint
+
+  - name: k3d_tests
+    image: docker:19.03
+    volumes:
+      - name: dockersock
+        path: /var/run
+    commands:
+      - apk add git bash curl sudo jq make
+      - sleep 5 # give docker enough time to start
+      - make e2e
+
+services:
+  # Starting the docker service to be used by dind
+  - name: docker
+    image: docker:19.03-dind
+    privileged: true
+    volumes:
+      - name: dockersock
+        path: /var/run
+
+volumes:
+  - name: dockersock
+    temp: {}
