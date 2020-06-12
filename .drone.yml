@@ -86,6 +86,10 @@ kind: pipeline
 type: docker
 name: docs
 
+platform:
+  os: linux
+  arch: amd64
+
 steps:
 
   - name: build
