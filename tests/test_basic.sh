@@ -8,7 +8,7 @@ source "$CURR_DIR/common.sh"
 
 info "Creating two clusters..."
 $EXE create cluster c1 --wait --timeout 60s --api-port 6443 || failed "could not create cluster c1"
-$EXE create cluster c2 --wait --timeout 60s --api-port 6444 || failed "could not create cluster c2"
+$EXE create cluster c2 --wait --timeout 60s || failed "could not create cluster c2"
 
 info "Checking that we can get both clusters..."
 check_cluster_count 2
