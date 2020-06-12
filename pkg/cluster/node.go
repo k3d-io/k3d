@@ -38,9 +38,10 @@ import (
 
 // AddNodeToCluster adds a node to an existing cluster
 func AddNodeToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Cluster, createNodeOpts k3d.CreateNodeOpts) error {
+	targetClusterName := cluster.Name
 	cluster, err := GetCluster(ctx, runtime, cluster)
 	if err != nil {
-		log.Errorf("Failed to find specified cluster '%s'", cluster.Name)
+		log.Errorf("Failed to find specified cluster '%s'", targetClusterName)
 		return err
 	}
 
