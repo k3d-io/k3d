@@ -107,7 +107,7 @@ build-cross:
 
 # build a specific docker target ( '%' matches the target as specified in the Dockerfile)
 build-docker-%:
-	@echo "Building Docker image k3d:$(K3D_IMAGE_TAG)"
+	@echo "Building Docker image k3d:$(K3D_IMAGE_TAG)-$*"
 	docker build . -t k3d:$(K3D_IMAGE_TAG)-$* --target $*
 
 ##############################
@@ -144,7 +144,7 @@ check: check-fmt lint
 
 e2e: build-docker-dind
 	@echo "Running e2e tests in k3d:$(K3D_IMAGE_TAG)"
-	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_SKIP="$(E2E_SKIP)" tests/dind.sh "${K3D_IMAGE_TAG}"
+	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_SKIP="$(E2E_SKIP)" tests/dind.sh "${K3D_IMAGE_TAG}-dind"
 
 ci-tests: fmt check e2e
 
