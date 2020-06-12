@@ -1,7 +1,11 @@
 ---
 kind: pipeline
 type: docker
-name: default
+name: main
+
+platform:
+  os: linux
+  arch: amd64
 
 steps:
 
@@ -10,6 +14,11 @@ steps:
     commands:
       - make ci-setup
       - make check-fmt lint
+    when:
+      event:
+        - push
+        - pull_request
+        - tag
 
   - name: k3d_tests
     image: docker:19.03
@@ -20,6 +29,26 @@ steps:
       - apk add git bash curl sudo jq make
       - sleep 5 # give docker enough time to start
       - make e2e
+    when:
+      event:
+        - push
+        - pull_request
+        - tag
+
+  - name: k3d_build
+    image: golang:1.14
+    commands:
+      - make ci-setup
+      - make build-cross
+    depends_on:
+      - k3d_lint
+      - k3d_tests
+    when:
+      branch:
+        - master
+      event:
+        - push
+        - tag
 
 services:
   # Starting the docker service to be used by dind
