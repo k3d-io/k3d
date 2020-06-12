@@ -66,6 +66,8 @@ steps:
     when:
       event:
         - tag
+      refs:
+        - refs/tags/v*
 
 services:
   # Starting the docker service to be used by dind
@@ -116,6 +118,12 @@ steps:
       event:
         - push
 
+trigger:
+  event:
+    - push
+  ref:
+    - master
+
 ---
 
 kind: pipeline
@@ -144,6 +152,12 @@ steps:
       ref:
         - refs/tags/proxy-v*
 
+trigger:
+  event:
+    - tag
+  ref:
+    - refs/tags/proxy-v*
+
 ---
 
 kind: pipeline
@@ -171,3 +185,9 @@ steps:
         - tag
       ref:
         - refs/tags/tools-v*
+
+trigger:
+  event:
+    - tag
+  ref:
+    - refs/tags/tools-v*
