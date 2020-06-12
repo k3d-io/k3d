@@ -9,7 +9,7 @@ platform:
 
 steps:
 
-  - name: k3d_lint
+  - name: lint
     image: golang:1.14
     commands:
       - make ci-setup
@@ -20,7 +20,7 @@ steps:
         - pull_request
         - tag
 
-  - name: k3d_tests
+  - name: test
     image: docker:19.03
     volumes:
       - name: dockersock
@@ -35,19 +35,36 @@ steps:
         - pull_request
         - tag
 
-  - name: k3d_build
+  - name: build
     image: golang:1.14
     commands:
       - make ci-setup
       - make build-cross
     depends_on:
-      - k3d_lint
-      - k3d_tests
+      - lint
+      - test
     when:
       branch:
         - master
       event:
         - push
+        - tag
+
+  - name: release
+    image: plugins/github-release
+    settings:
+      api_key:
+        from_secret: github_token
+      files:
+        - _dist/*
+      checksum:
+        - sha256
+    depends_on:
+      - lint
+      - test
+      - build
+    when:
+      event:
         - tag
 
 services:
