@@ -14,7 +14,7 @@ source "$CURR_DIR/common.sh"
 
 info "Preparing filesystem and environment..."
 
-mkdir -p /root/.kube
+mkdir -p $HOME/.kube
 
 for i in $CURR_DIR/test_*.sh ; do
   base=$(basename $i .sh)
