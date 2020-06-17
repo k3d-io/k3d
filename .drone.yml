@@ -169,6 +169,9 @@ steps:
     image: plugins/docker
     settings:
       repo: rancher/k3d-proxy
+      tags:
+        - latest
+        - ${DRONE_TAG}
       dockerfile: proxy/Dockerfile
       context: proxy/
       username:
@@ -198,6 +201,9 @@ steps:
     image: plugins/docker
     settings:
       repo: rancher/k3d-tools
+      tags:
+        - latest
+        - ${DRONE_TAG}
       dockerfile: tools/Dockerfile
       context: tools/
       username:
