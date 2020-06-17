@@ -175,9 +175,9 @@ steps:
       dockerfile: proxy/Dockerfile
       context: proxy/
       username:
-        from_secret: dockerhub_username
+        from_secret: docker_username
       password:
-        from_secret: dockerhub_password
+        from_secret: docker_password
     when:
       event:
         - tag
@@ -207,9 +207,9 @@ steps:
       dockerfile: tools/Dockerfile
       context: tools/
       username:
-        from_secret: dockerhub_username
+        from_secret: docker_username
       password:
-        from_secret: dockerhub_password
+        from_secret: docker_password
     when:
       event:
         - tag
