@@ -19,36 +19,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package create
+package types
 
-import (
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
+// Constants describing the docker image used for a k3d-managed registry
+const (
+	DefaultRegistryImageRepo = "docker.io/library/registry"
+	DefaultRegistryImageTag = "2"
 )
-
-// NewCmdCreate returns a new cobra command
-func NewCmdCreate() *cobra.Command {
-
-	// create new cobra command
-	cmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create a resource [cluster, node].",
-		Long:  `Create a resource [cluster, node].`,
-		Run: func(cmd *cobra.Command, args []string) {
-			if err := cmd.Help(); err != nil {
-				log.Errorln("Couldn't get help text")
-				log.Fatalln(err)
-			}
-		},
-	}
-
-	// add subcommands
-	cmd.AddCommand(NewCmdCreateCluster())
-	cmd.AddCommand(NewCmdCreateNode())
-	cmd.AddCommand(NewCmdCreateRegistry())
-
-	// add flags
-
-	// done
-	return cmd
-}
