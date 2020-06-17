@@ -66,8 +66,6 @@ steps:
     when:
       event:
         - tag
-      refs:
-        - refs/tags/v*
 
 services:
   # Starting the docker service to be used by dind
@@ -151,14 +149,10 @@ steps:
     when:
       event:
         - tag
-      ref:
-        - refs/tags/proxy-v*
 
 trigger:
   event:
     - tag
-  ref:
-    - refs/tags/proxy-v*
 
 ---
 
@@ -171,7 +165,6 @@ platform:
   arch: amd64
 
 steps:
-  # TODO: use tag from git (without 'tools-' prefix)
   - name: build_push
     image: plugins/docker
     settings:
@@ -185,11 +178,7 @@ steps:
     when:
       event:
         - tag
-      ref:
-        - refs/tags/tools-v*
 
 trigger:
   event:
     - tag
-  ref:
-    - refs/tags/tools-v*
