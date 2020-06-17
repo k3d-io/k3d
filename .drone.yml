@@ -1,0 +1,184 @@
+---
+kind: pipeline
+type: docker
+name: main
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+
+  - name: lint
+    image: golang:1.14
+    commands:
+      - make ci-setup
+      - make check-fmt lint
+    when:
+      event:
+        - push
+        - pull_request
+        - tag
+
+  - name: test
+    image: docker:19.03
+    volumes:
+      - name: dockersock
+        path: /var/run
+    commands:
+      - apk add git bash curl sudo jq make
+      - sleep 5 # give docker enough time to start
+      - make e2e
+    when:
+      event:
+        - push
+        - pull_request
+        - tag
+
+  - name: build
+    image: golang:1.14
+    commands:
+      - make ci-setup
+      - make build-cross
+    depends_on:
+      - lint
+      - test
+    when:
+      branch:
+        - master
+      event:
+        - push
+        - tag
+
+  - name: release
+    image: plugins/github-release
+    settings:
+      api_key:
+        from_secret: github_token
+      files:
+        - _dist/*
+      checksum:
+        - sha256
+    depends_on:
+      - lint
+      - test
+      - build
+    when:
+      event:
+        - tag
+
+services:
+  # Starting the docker service to be used by dind
+  - name: docker
+    image: docker:19.03-dind
+    privileged: true
+    volumes:
+      - name: dockersock
+        path: /var/run
+
+volumes:
+  - name: dockersock
+    temp: {}
+
+---
+
+kind: pipeline
+type: docker
+name: docs
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+
+  - name: build
+    image: python:3.8
+    commands:
+      - python3 -m pip install -r docs/requirements.txt
+      - mkdocs build --verbose --clean --strict
+    when:
+      branch:
+        - master
+      event:
+        - push
+
+  - name: publish
+    image: plugins/gh-pages
+    settings:
+      password:
+        from_secret: github_token
+      username:
+        from_secret: github_username
+      pages_directory: site/
+      target_branch: gh-pages
+    when:
+      branch:
+        - master
+      event:
+        - push
+
+trigger:
+  event:
+    - push
+  ref:
+    - master
+
+---
+
+kind: pipeline
+type: docker
+name: proxy
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  # TODO: use tag from git (without 'proxy-' prefix)
+  - name: build_push
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d-proxy
+      dockerfile: proxy/Dockerfile
+      context: proxy/
+      username:
+        from_secret: dockerhub_username
+      password:
+        from_secret: dockerhub_password
+    when:
+      event:
+        - tag
+
+trigger:
+  event:
+    - tag
+
+---
+
+kind: pipeline
+type: docker
+name: tools
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: build_push
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d-tools
+      dockerfile: tools/Dockerfile
+      context: tools/
+      username:
+        from_secret: dockerhub_username
+      password:
+        from_secret: dockerhub_password
+    when:
+      event:
+        - tag
+
+trigger:
+  event:
+    - tag
