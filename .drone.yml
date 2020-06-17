@@ -151,7 +151,7 @@ steps:
 trigger:
   event:
     - push
-  ref:
+  branch:
     - master
 
 ---
