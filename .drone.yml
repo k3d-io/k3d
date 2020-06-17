@@ -50,6 +50,29 @@ steps:
         - push
         - tag
 
+  - name: pre-release
+    image: plugins/github-release
+    settings:
+      api_key:
+        from_secret: github_token
+      files:
+        - _dist/*
+      checksum:
+        - sha256
+      prerelease: true
+    depends_on:
+      - lint
+      - test
+      - build
+    when:
+      event:
+        - tag
+      ref:
+        include:
+          - "refs/tags/*rc*"
+          - "refs/tags/*beta*"
+          - "refs/tags/*alpha*"
+
   - name: release
     image: plugins/github-release
     settings:
@@ -66,6 +89,11 @@ steps:
     when:
       event:
         - tag
+      ref:
+        exclude:
+          - "refs/tags/*rc*"
+          - "refs/tags/*beta*"
+          - "refs/tags/*alpha*"
 
 services:
   # Starting the docker service to be used by dind
@@ -135,7 +163,6 @@ platform:
   arch: amd64
 
 steps:
-  # TODO: use tag from git (without 'proxy-' prefix)
   - name: build_push
     image: plugins/docker
     settings:
