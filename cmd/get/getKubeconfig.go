@@ -31,6 +31,7 @@ import (
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/tools/clientcmd"
+	homedir "github.com/mitchellh/go-homedir"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -38,6 +39,7 @@ import (
 type getKubeconfigFlags struct {
 	all    bool
 	output string
+	targetDefault bool
 }
 
 // NewCmdGetKubeconfig returns a new cobra command
@@ -63,6 +65,10 @@ func NewCmdGetKubeconfig() *cobra.Command {
 			var clusters []*k3d.Cluster
 			var err error
 
+			if getKubeconfigFlags.targetDefault && getKubeconfigFlags.output != "" {
+				log.Fatalln("Cannot use both '--output' and '--default' at the same time")
+			}
+
 			// generate list of clusters
 			if getKubeconfigFlags.all {
 				clusters, err = cluster.GetClusters(cmd.Context(), runtimes.SelectedRuntime)
@@ -83,6 +89,13 @@ func NewCmdGetKubeconfig() *cobra.Command {
 			errorGettingKubeconfig := false
 			for _, c := range clusters {
 				log.Debugf("Getting kubeconfig for cluster '%s'", c.Name)
+				output := getKubeconfigFlags.output
+				if output == "" && !getKubeconfigFlags.targetDefault {
+					output, err = util.GetConfigDirOrCreate()
+					if err != nil {
+						log.Fatalln(err)
+					}
+				}
 				if getKubeconfigFlags.output, err = cluster.GetAndWriteKubeConfig(cmd.Context(), runtimes.SelectedRuntime, c, getKubeconfigFlags.output, &writeKubeConfigOptions); err != nil {
 					log.Errorln(err)
 					errorGettingKubeconfig = true
@@ -106,8 +119,9 @@ func NewCmdGetKubeconfig() *cobra.Command {
 	if err := cmd.MarkFlagFilename("output"); err != nil {
 		log.Fatalln("Failed to mark flag --output as filename")
 	}
+	cmd.Flags()BoolVarP(&getgetKubeconfigFlags.targetDefault, "default-kubeconfig", "d", false, fmt.Sprintf("Update the default kubeconfig ($KUBECONFIG or %s", clientcmd.RecommendedHomeFile)
 	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateExisting, "update", "u", true, "Update conflicting fields in existing KubeConfig")
-	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateCurrentContext, "switch", "s", false, "Switch to new context")
+	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateCurrentContext, "switch", "s", true, "Switch to new context")
 	cmd.Flags().BoolVar(&writeKubeConfigOptions.OverwriteExisting, "overwrite", false, "[Careful!] Overwrite existing file, ignoring its contents")
 	cmd.Flags().BoolVarP(&getKubeconfigFlags.all, "all", "a", false, "Get kubeconfigs from all existing clusters")
 
