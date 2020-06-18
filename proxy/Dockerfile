@@ -1,12 +1,12 @@
 FROM nginx:1.16.0-alpine
-ARG ARCH
-# set ARCH from build-arg, if it's set
-ENV ARCH=${ARCH}
-# if ARCH unset, default to amd64
-ENV ARCH=${ARCH:-amd64}
-RUN apk -U --no-cache add curl ca-certificates\
+ARG CONFD_REPO=iwilltry42/confd
+ARG CONFD_VERSION=0.16.1
+ARG OS=linux
+ARG ARCH=amd64
+RUN echo "Building for '${OS}/${ARCH}'..." \
+    && apk -U --no-cache add curl ca-certificates\
     && mkdir -p /etc/confd \
-    && curl -sLf https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-${ARCH} > /usr/bin/confd \
+    && curl -sLf "https://github.com/${CONFD_REPO}/releases/download/v${CONFD_VERSION}/confd-${CONFD_VERSION}-${OS}-${ARCH}" > /usr/bin/confd \
     && chmod +x /usr/bin/confd \
     && apk del curl
 

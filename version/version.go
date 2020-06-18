@@ -22,6 +22,8 @@ THE SOFTWARE.
 package version
 
 import (
+	"os"
+
 	"github.com/heroku/docker-registry-client/registry"
 	log "github.com/sirupsen/logrus"
 )
@@ -43,6 +45,10 @@ func GetVersion() string {
 
 // GetHelperImageVersion returns the CLI version or 'latest'
 func GetHelperImageVersion() string {
+	if tag := os.Getenv("K3D_HELPER_IMAGE_TAG"); tag != "" {
+		log.Infoln("Helper image tag set from env var")
+		return tag
+	}
 	if len(Version) == 0 {
 		return "latest"
 	}
