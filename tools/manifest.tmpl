@@ -1,0 +1,41 @@
+image: rancher/k3d-tools:{{#if build.tag}}{{build.tag}}{{else}}latest{{/if}}
+{{#if build.tags}}
+tags:
+{{#each build.tags}}
+  - {{this}}
+{{/each}}
+{{/if}}
+manifests:
+  -
+    image: rancher/k3d-tools:{{#if build.tag}}{{build.tag}}{{else}}latest{{/if}}-linux-amd64
+    platform:
+      architecture: amd64
+      os: linux
+  -
+    image: rancher/k3d-tools:{{#if build.tag}}{{build.tag}}{{else}}latest{{/if}}-linux-arm
+    platform:
+      architecture: arm
+      os: linux
+  -
+    image: rancher/k3d-tools:{{#if build.tag}}{{build.tag}}{{else}}latest{{/if}}-linux-arm64
+    platform:
+      architecture: arm64
+      os: linux
+  -
+    image: rancher/k3d-tools:{{#if build.tag}}{{build.tag}}{{else}}latest{{/if}}-windows-amd64-1809
+    platform:
+      architecture: amd64
+      os: windows
+      version: 1809
+  -
+    image: rancher/k3d-tools:{{#if build.tag}}{{build.tag}}{{else}}latest{{/if}}-windows-amd64-1903
+    platform:
+      architecture: amd64
+      os: windows
+      version: 1903
+  -
+    image: rancher/k3d-tools:{{#if build.tag}}{{build.tag}}{{else}}latest{{/if}}-windows-amd64-1909
+    platform:
+      architecture: amd64
+      os: windows
+      version: 1909
