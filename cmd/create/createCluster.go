@@ -234,6 +234,11 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 	if exposeAPI.HostIP == "" {
 		exposeAPI.HostIP = k3d.DefaultAPIHost
 	}
+	if networkName == "host" {
+		// in hostNetwork mode, we're not going to map a hostport. Here it should always use 6443.
+		// Note that hostNetwork mode is super inflexible and since we don't change the backend port (on the container), it will only be one hostmode cluster allowed.
+		exposeAPI.Port = k3d.DefaultAPIPort
+	}
 
 	// --volume
 	volumeFlags, err := cmd.Flags().GetStringArray("volume")
