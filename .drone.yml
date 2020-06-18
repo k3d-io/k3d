@@ -42,7 +42,7 @@ steps:
   - name: build
     image: golang:1.14
     environment:
-      GIT_TAG: ${DRONE_TAG}
+      GIT_TAG: "${DRONE_TAG}"
     commands:
       - make ci-setup
       - make build-cross
@@ -180,7 +180,7 @@ steps:
       repo: rancher/k3d-proxy
       tags:
         - latest-linux-amd64
-        - ${DRONE_TAG}-linux-amd64
+        - "${DRONE_TAG}-linux-amd64"
       dockerfile: proxy/Dockerfile
       context: proxy/
       username:
@@ -215,7 +215,7 @@ steps:
       repo: rancher/k3d-proxy
       tags:
         - latest-linux-arm
-        - ${DRONE_TAG}-linux-arm
+        - "${DRONE_TAG}-linux-arm"
       dockerfile: proxy/Dockerfile
       context: proxy/
       username:
@@ -250,7 +250,7 @@ steps:
       repo: rancher/k3d-proxy
       tags:
         - latest-linux-arm64
-        - ${DRONE_TAG}-linux-arm64
+        - "${DRONE_TAG}-linux-arm64"
       dockerfile: proxy/Dockerfile
       context: proxy/
       username:
@@ -286,8 +286,8 @@ steps:
         from_secret: docker_username
       password:
         from_secret: docker_password
-      target: rancher/k3d-proxy:${DRONE_TAG}
-      template: rancher/k3d-proxy:${DRONE_TAG}-OS-ARCH
+      target: "rancher/k3d-proxy:${DRONE_TAG}"
+      template: "rancher/k3d-proxy:${DRONE_TAG}-OS-ARCH"
       platforms:
         - linux/amd64
         - linux/arm
@@ -326,7 +326,7 @@ steps:
       repo: rancher/k3d-tools
       tags:
         - latest-linux-amd64
-        - ${DRONE_TAG}-linux-amd64
+        - "${DRONE_TAG}-linux-amd64"
       dockerfile: tools/Dockerfile
       context: tools/
       username:
@@ -361,7 +361,7 @@ steps:
       repo: rancher/k3d-tools
       tags:
         - latest-linux-arm
-        - ${DRONE_TAG}-linux-arm
+        - "${DRONE_TAG}-linux-arm"
       dockerfile: tools/Dockerfile
       context: tools/
       username:
@@ -395,7 +395,7 @@ steps:
       repo: rancher/k3d-tools
       tags:
         - latest-linux-arm64
-        - ${DRONE_TAG}-linux-arm64
+        - "${DRONE_TAG}-linux-arm64"
       dockerfile: tools/Dockerfile
       context: tools/
       username:
@@ -430,8 +430,8 @@ steps:
         from_secret: docker_username
       password:
         from_secret: docker_password
-      target: rancher/k3d-tools:${DRONE_TAG}
-      template: rancher/k3d-tools:${DRONE_TAG}-OS-ARCH
+      target: "rancher/k3d-tools:${DRONE_TAG}"
+      template: "rancher/k3d-tools:${DRONE_TAG}-OS-ARCH"
       platforms:
         - linux/amd64
         - linux/arm
