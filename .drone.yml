@@ -223,7 +223,7 @@ steps:
       password:
         from_secret: docker_password
       build_args:
-        - ARCH=arm64
+        - ARCH=arm
     when:
       event:
         - tag
