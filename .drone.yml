@@ -222,6 +222,8 @@ steps:
         from_secret: docker_username
       password:
         from_secret: docker_password
+      build_args:
+        - ARCH=arm64
     when:
       event:
         - tag
@@ -257,6 +259,8 @@ steps:
         from_secret: docker_username
       password:
         from_secret: docker_password
+      build_args:
+        - ARCH=arm64
     when:
       event:
         - tag
