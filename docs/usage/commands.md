@@ -16,8 +16,8 @@ k3d
       -p, --port  # add some more port mappings
       --token  # specify a cluster token (default: auto-generated)
       --timeout  # specify a timeout, after which the cluster creation will be interrupted and changes rolled back
-      --update-kubeconfig  # enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets '--wait=true')
-      --switch  # (implies --update-kubeconfig) automatically sets the current-context of your default kubeconfig to the new cluster's context
+      --update-default-kubeconfig  # enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets '--wait=true')
+      --switch  # (implies --update-default-kubeconfig) automatically sets the current-context of your default kubeconfig to the new cluster's context
       -v, --volume  # specify additional bind-mounts
       --wait  # enable waiting for all master nodes to be ready before returning
       -w, --workers  # specify how many worker nodes you want to create
@@ -55,6 +55,7 @@ k3d
           --overwrite  # [Careful!] forcefully overwrite the output file, ignoring existing contents
       -s, --switch  # switch current-context in kubeconfig to the new context
       -u, --update  # update conflicting fields in existing kubeconfig (default: true)
+      -d, --default  # update the default kubeconfig (usually $KUBECONFIG or $HOME/.kube/config)
   load
     image  [IMAGE | ARCHIVE [IMAGE | ARCHIVE ...]]  # Load one or more images from the local runtime environment or tar-archives into k3d clusters
       -c, --cluster  # clusters to load the image into

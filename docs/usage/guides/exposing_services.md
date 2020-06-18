@@ -18,7 +18,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
 2. Get the kubeconfig file
 
-    `#!bash export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"`
+    `#!bash export KUBECONFIG="$(k3d get kubeconfig k3s-default)"`
 
 3. Create a nginx deployment
 

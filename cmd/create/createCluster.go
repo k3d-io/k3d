@@ -51,7 +51,7 @@ Every cluster will consist of at least 2 containers:
 func NewCmdCreateCluster() *cobra.Command {
 
 	createClusterOpts := &k3d.CreateClusterOpts{}
-	var updateKubeconfig, updateCurrentContext bool
+	var updateDefaultKubeconfig, updateCurrentContext bool
 
 	// create new command
 	cmd := &cobra.Command{
@@ -69,8 +69,8 @@ func NewCmdCreateCluster() *cobra.Command {
 			}
 
 			// create cluster
-			if updateKubeconfig || updateCurrentContext {
-				log.Debugln("'--update-kubeconfig set: enabling wait-for-master")
+			if updateDefaultKubeconfig || updateCurrentContext {
+				log.Debugln("'--update-default-kubeconfig set: enabling wait-for-master")
 				cluster.CreateClusterOpts.WaitForMaster = true
 			}
 			if err := k3dCluster.CreateCluster(cmd.Context(), runtimes.SelectedRuntime, cluster); err != nil {
@@ -85,7 +85,7 @@ func NewCmdCreateCluster() *cobra.Command {
 			}
 			log.Infof("Cluster '%s' created successfully!", cluster.Name)
 
-			if updateKubeconfig || updateCurrentContext {
+			if updateDefaultKubeconfig || updateCurrentContext {
 				log.Debugf("Updating default kubeconfig with a new context for cluster %s", cluster.Name)
 				if _, err := k3dCluster.GetAndWriteKubeConfig(cmd.Context(), runtimes.SelectedRuntime, cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: updateCurrentContext}); err != nil {
 					log.Fatalln(err)
@@ -94,7 +94,7 @@ func NewCmdCreateCluster() *cobra.Command {
 
 			// print information on how to use the cluster with kubectl
 			log.Infoln("You can now use it like this:")
-			if updateKubeconfig && !updateCurrentContext {
+			if updateDefaultKubeconfig && !updateCurrentContext {
 				fmt.Printf("kubectl config use-context %s\n", fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name))
 			} else if !updateCurrentContext {
 				if runtime.GOOS == "windows" {
@@ -120,8 +120,8 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d create -w 2 -p 8080:80@worker[0] -p 8081@worker[1]`")
 	cmd.Flags().BoolVar(&createClusterOpts.WaitForMaster, "wait", true, "Wait for the master(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
 	cmd.Flags().DurationVar(&createClusterOpts.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
-	cmd.Flags().BoolVar(&updateKubeconfig, "update-kubeconfig", false, "Directly update the default kubeconfig with the new cluster's context")
-	cmd.Flags().BoolVar(&updateCurrentContext, "switch", false, "Directly switch the default kubeconfig's current-context to the new cluster's context (implies --update-kubeconfig)")
+	cmd.Flags().BoolVar(&updateDefaultKubeconfig, "update-default-kubeconfig", false, "Directly update the default kubeconfig with the new cluster's context")
+	cmd.Flags().BoolVar(&updateCurrentContext, "switch", false, "Directly switch the default kubeconfig's current-context to the new cluster's context (implies --update-default-kubeconfig)")
 	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadBalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the master nodes")
 
 	/* Image Importing */

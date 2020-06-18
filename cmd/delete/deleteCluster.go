@@ -22,10 +22,15 @@ THE SOFTWARE.
 package delete
 
 import (
+	"fmt"
+	"os"
+	"path"
+
 	"github.com/rancher/k3d/v3/cmd/util"
 	"github.com/rancher/k3d/v3/pkg/cluster"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
+	k3dutil "github.com/rancher/k3d/v3/pkg/util"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
@@ -51,10 +56,20 @@ func NewCmdDeleteCluster() *cobra.Command {
 					if err := cluster.DeleteCluster(cmd.Context(), runtimes.SelectedRuntime, c); err != nil {
 						log.Fatalln(err)
 					}
-					log.Infoln("Removing cluster details from default kubeconfig")
+					log.Infoln("Removing cluster details from default kubeconfig...")
 					if err := cluster.RemoveClusterFromDefaultKubeConfig(cmd.Context(), c); err != nil {
 						log.Warnln("Failed to remove cluster details from default kubeconfig")
 						log.Warnln(err)
+					}
+					log.Infoln("Removing standalone kubeconfig file (if there is one)...")
+					configDir, err := k3dutil.GetConfigDirOrCreate()
+					if err != nil {
+						log.Warnf("Failed to delete kubeconfig file: %+v", err)
+					} else {
+						kubeconfigfile := path.Join(configDir, fmt.Sprintf("kubeconfig-%s.yaml", c.Name))
+						if err := os.Remove(kubeconfigfile); err != nil {
+							log.Warnf("Failed to delete kubeconfig file '%s'", kubeconfigfile)
+						}
 					}
 
 					log.Infof("Successfully deleted cluster %s!", c.Name)

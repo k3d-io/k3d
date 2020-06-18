@@ -67,4 +67,4 @@ kubectl get nodes
 
 ## Related Projects
 
-* [k3x](https://github.com/inercia/k3x): a graphics interface (for Linux) to k3d.
+- [k3x](https://github.com/inercia/k3x): a graphics interface (for Linux) to k3d.
