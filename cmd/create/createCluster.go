@@ -30,12 +30,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cliutil "github.com/rancher/k3d/cmd/util"
-	"github.com/rancher/k3d/pkg/cluster"
-	k3dCluster "github.com/rancher/k3d/pkg/cluster"
-	"github.com/rancher/k3d/pkg/runtimes"
-	k3d "github.com/rancher/k3d/pkg/types"
-	"github.com/rancher/k3d/version"
+	cliutil "github.com/rancher/k3d/v3/cmd/util"
+	"github.com/rancher/k3d/v3/pkg/cluster"
+	k3dCluster "github.com/rancher/k3d/v3/pkg/cluster"
+	"github.com/rancher/k3d/v3/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
+	"github.com/rancher/k3d/v3/version"
 
 	log "github.com/sirupsen/logrus"
 )

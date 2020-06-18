@@ -27,9 +27,9 @@ import (
 	"io"
 	"time"
 
-	"github.com/rancher/k3d/pkg/runtimes/containerd"
-	"github.com/rancher/k3d/pkg/runtimes/docker"
-	k3d "github.com/rancher/k3d/pkg/types"
+	"github.com/rancher/k3d/v3/pkg/runtimes/containerd"
+	"github.com/rancher/k3d/v3/pkg/runtimes/docker"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 )
 
 // SelectedRuntime is a runtime (pun intended) variable determining the selected runtime

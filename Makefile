@@ -55,7 +55,7 @@ PKG       := $(shell go mod vendor)
 TAGS      :=
 TESTS     := .
 TESTFLAGS :=
-LDFLAGS   := -w -s -X github.com/rancher/k3d/version.Version=${GIT_TAG} -X github.com/rancher/k3d/version.K3sVersion=${K3S_TAG}
+LDFLAGS   := -w -s -X github.com/rancher/k3d/v3/version.Version=${GIT_TAG} -X github.com/rancher/k3d/v3/version.K3sVersion=${K3S_TAG}
 GCFLAGS   := 
 GOFLAGS   :=
 BINDIR    := $(CURDIR)/bin

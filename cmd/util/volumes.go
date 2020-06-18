@@ -26,7 +26,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rancher/k3d/pkg/runtimes"
+	"github.com/rancher/k3d/v3/pkg/runtimes"
 
 	log "github.com/sirupsen/logrus"
 )

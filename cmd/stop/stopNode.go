@@ -22,11 +22,11 @@ THE SOFTWARE.
 package stop
 
 import (
-	"github.com/rancher/k3d/cmd/util"
-	"github.com/rancher/k3d/pkg/runtimes"
+	"github.com/rancher/k3d/v3/cmd/util"
+	"github.com/rancher/k3d/v3/pkg/runtimes"
 	"github.com/spf13/cobra"
 
-	k3d "github.com/rancher/k3d/pkg/types"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 
 	log "github.com/sirupsen/logrus"
 )

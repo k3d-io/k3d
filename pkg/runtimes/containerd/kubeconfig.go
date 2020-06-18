@@ -26,7 +26,7 @@ import (
 	"context"
 	"io"
 
-	k3d "github.com/rancher/k3d/pkg/types"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 )
 
 // GetKubeconfig grabs the kubeconfig from inside a k3d node

@@ -31,10 +31,10 @@ import (
 	"time"
 
 	"github.com/imdario/mergo"
-	k3drt "github.com/rancher/k3d/pkg/runtimes"
-	"github.com/rancher/k3d/pkg/types"
-	k3d "github.com/rancher/k3d/pkg/types"
-	"github.com/rancher/k3d/pkg/util"
+	k3drt "github.com/rancher/k3d/v3/pkg/runtimes"
+	"github.com/rancher/k3d/v3/pkg/types"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
+	"github.com/rancher/k3d/v3/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
@@ -290,7 +290,7 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			// Create LB as a modified node with loadbalancerRole
 			lbNode := &k3d.Node{
 				Name:  fmt.Sprintf("%s-%s-masterlb", k3d.DefaultObjectNamePrefix, cluster.Name),
-				Image: k3d.DefaultLBImage,
+				Image: k3d.DefaultLBImageRepo,
 				Ports: append(cluster.MasterLoadBalancer.Ports, fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort)),
 				Env: []string{
 					fmt.Sprintf("SERVERS=%s", servers),

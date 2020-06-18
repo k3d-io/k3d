@@ -38,8 +38,8 @@ const DefaultClusterNameMaxLength = 32
 // DefaultK3sImageRepo specifies the default image repository for the used k3s image
 const DefaultK3sImageRepo = "docker.io/rancher/k3s"
 
-// DefaultLBImage defines the default cluster load balancer image
-const DefaultLBImage = "docker.io/iwilltry42/k3d-proxy:v0.0.3"
+// DefaultLBImageRepo defines the default cluster load balancer image
+const DefaultLBImageRepo = "docker.io/iwilltry42/k3d-proxy:v0.0.3"
 
 // DefaultObjectNamePrefix defines the name prefix for every object created by k3d
 const DefaultObjectNamePrefix = "k3d"

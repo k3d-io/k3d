@@ -24,7 +24,7 @@ package containerd
 import (
 	"context"
 
-	k3d "github.com/rancher/k3d/pkg/types"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 )
 
 // CopyToNode copies a file from the local FS to the selected node

@@ -22,9 +22,9 @@ THE SOFTWARE.
 package start
 
 import (
-	"github.com/rancher/k3d/cmd/util"
-	"github.com/rancher/k3d/pkg/runtimes"
-	k3d "github.com/rancher/k3d/pkg/types"
+	"github.com/rancher/k3d/v3/cmd/util"
+	"github.com/rancher/k3d/v3/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 	"github.com/spf13/cobra"
 
 	log "github.com/sirupsen/logrus"
