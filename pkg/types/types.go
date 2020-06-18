@@ -39,7 +39,10 @@ const DefaultClusterNameMaxLength = 32
 const DefaultK3sImageRepo = "docker.io/rancher/k3s"
 
 // DefaultLBImageRepo defines the default cluster load balancer image
-const DefaultLBImageRepo = "docker.io/iwilltry42/k3d-proxy:v0.0.3"
+const DefaultLBImageRepo = "docker.io/rancher/k3d-proxy"
+
+// DefaultToolsImageRepo defines the default image used for the tools container
+const DefaultToolsImageRepo = "docker.io/rancher/k3d-tools"
 
 // DefaultObjectNamePrefix defines the name prefix for every object created by k3d
 const DefaultObjectNamePrefix = "k3d"
@@ -104,9 +107,6 @@ var DefaultTmpfsMounts = []string{
 var DefaultNodeEnv = []string{
 	"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml",
 }
-
-// DefaultToolsContainerImage defines the default image used for the tools container
-const DefaultToolsContainerImage = "docker.io/iwilltry42/k3d-tools:v0.0.3" // TODO: get version dynamically or at build time
 
 // DefaultImageVolumeMountPath defines the mount path inside k3d nodes where we will mount the shared image volume by default
 const DefaultImageVolumeMountPath = "/k3d/images"

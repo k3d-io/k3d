@@ -33,6 +33,7 @@ import (
 	k3dc "github.com/rancher/k3d/v3/pkg/cluster"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
+	"github.com/rancher/k3d/v3/version"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -202,7 +203,7 @@ func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images
 func startToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, network string, volumes []string) (*k3d.Node, error) {
 	node := &k3d.Node{
 		Name:    fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name),
-		Image:   k3d.DefaultToolsContainerImage,
+		Image:   fmt.Sprintf("%s:%s", k3d.DefaultToolsImageRepo, version.GetHelperImageVersion()),
 		Role:    k3d.NoRole,
 		Volumes: volumes,
 		Network: network,
