@@ -31,7 +31,7 @@ steps:
         path: /var/run
     commands:
       - apk add git bash curl sudo jq make
-      - sleep 5 # give docker enough time to start
+      - sleep 5  # give docker enough time to start
       - make e2e
     when:
       event:
@@ -195,6 +195,9 @@ trigger:
   event:
     - tag
 
+depends_on:
+  - main
+
 ---
 
 kind: pipeline
@@ -227,6 +230,9 @@ trigger:
   event:
     - tag
 
+depends_on:
+  - main
+
 ---
 
 kind: pipeline
@@ -258,6 +264,10 @@ steps:
 trigger:
   event:
     - tag
+
+depends_on:
+  - main
+
 ---
 
 kind: pipeline
@@ -291,6 +301,7 @@ trigger:
     - tag
 
 depends_on:
+  - main
   - proxy_linux_amd64
   - proxy_linux_arm
   - proxy_linux_arm64
@@ -330,6 +341,9 @@ trigger:
   event:
     - tag
 
+depends_on:
+  - main
+
 ---
 
 kind: pipeline
@@ -362,6 +376,8 @@ trigger:
   event:
     - tag
 
+depends_on:
+  - main
 ---
 
 kind: pipeline
@@ -393,6 +409,9 @@ steps:
 trigger:
   event:
     - tag
+
+depends_on:
+  - main
 ---
 
 kind: pipeline
@@ -426,6 +445,7 @@ trigger:
     - tag
 
 depends_on:
+  - main
   - tools_linux_amd64
   - tools_linux_arm
   - tools_linux_arm64
