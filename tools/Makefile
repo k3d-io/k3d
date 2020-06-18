@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 # get git tag
-GIT_TAG   := $(shell git describe --tags)
+GIT_TAG   ?= $(shell git describe --tags)
 ifeq ($(GIT_TAG),)
 GIT_TAG   := $(shell git describe --always)
 endif

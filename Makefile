@@ -111,6 +111,13 @@ build-docker-%:
 	@echo "Building Docker image k3d:$(K3D_IMAGE_TAG)-$*"
 	docker build . -t k3d:$(K3D_IMAGE_TAG)-$* --target $*
 
+# build helper images
+build-helper-images:
+	@echo "Building docker image rancher/k3d-proxy:$(GIT_TAG)"
+	docker build proxy/ -f proxy/Dockerfile -t rancher/k3d-proxy:$(GIT_TAG)
+	@echo "Building docker image rancher/k3d-tools:$(GIT_TAG)"
+	docker build --no-cache tools/ -f tools/Dockerfile -t rancher/k3d-tools:$(GIT_TAG) --build-arg GIT_TAG=$(GIT_TAG)
+
 ##############################
 ########## Cleaning ##########
 ##############################

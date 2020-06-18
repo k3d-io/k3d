@@ -14,7 +14,7 @@ RUNNER_START_TIMEOUT=${E2E_RUNNER_START_TIMEOUT:-10}
 # Start the runner container
 TIMESTAMP=$(date "+%y%m%d%H%M%S")
 k3de2e=$(docker run -d \
-          -v "$(pwd)/tests:/tests" \
+          -v "$(pwd):/src" \
           --privileged \
           -e EXE="$K3D_EXE" \
           -e CI="true" \
@@ -43,5 +43,8 @@ until docker inspect "$k3de2e" | jq ".[0].State.Running" && docker logs "$k3de2e
   (( TIMEOUT++ ))
 done
 
+# build helper container images
+docker exec --workdir /src "$k3de2e" make build-helper-images
+
 # execute tests
-docker exec "$k3de2e" /tests/runner.sh
+docker exec "$k3de2e" /src/tests/runner.sh
