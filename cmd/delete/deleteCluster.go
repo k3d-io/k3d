@@ -68,7 +68,9 @@ func NewCmdDeleteCluster() *cobra.Command {
 					} else {
 						kubeconfigfile := path.Join(configDir, fmt.Sprintf("kubeconfig-%s.yaml", c.Name))
 						if err := os.Remove(kubeconfigfile); err != nil {
-							log.Warnf("Failed to delete kubeconfig file '%s'", kubeconfigfile)
+							if !os.IsNotExist(err) {
+								log.Warnf("Failed to delete kubeconfig file '%s'", kubeconfigfile)
+							}
 						}
 					}
 
