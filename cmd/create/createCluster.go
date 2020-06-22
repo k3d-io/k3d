@@ -88,7 +88,7 @@ func NewCmdCreateCluster() *cobra.Command {
 			if updateDefaultKubeconfig || updateCurrentContext {
 				log.Debugf("Updating default kubeconfig with a new context for cluster %s", cluster.Name)
 				if _, err := k3dCluster.GetAndWriteKubeConfig(cmd.Context(), runtimes.SelectedRuntime, cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: updateCurrentContext}); err != nil {
-					log.Fatalln(err)
+					log.Warningln(err)
 				}
 			}
 
@@ -121,7 +121,7 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().BoolVar(&createClusterOpts.WaitForMaster, "wait", true, "Wait for the master(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
 	cmd.Flags().DurationVar(&createClusterOpts.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
 	cmd.Flags().BoolVar(&updateDefaultKubeconfig, "update-default-kubeconfig", false, "Directly update the default kubeconfig with the new cluster's context")
-	cmd.Flags().BoolVar(&updateCurrentContext, "switch", false, "Directly switch the default kubeconfig's current-context to the new cluster's context (implies --update-default-kubeconfig)")
+	cmd.Flags().BoolVar(&updateCurrentContext, "switch-context", false, "Directly switch the default kubeconfig's current-context to the new cluster's context (implies --update-default-kubeconfig)")
 	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadBalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the master nodes")
 
 	/* Image Importing */

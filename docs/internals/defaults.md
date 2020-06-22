@@ -7,6 +7,6 @@
 - API-Ports
     - by default, we don't expose any API-Port (no host port mapping)
 - kubeconfig
-    - if `--default` is set, we use the default loading rules to get the default kubeconfig:
+    - if `--[update|merge]-default-kubeconfig` is set, we use the default loading rules to get the default kubeconfig:
         - First: kubeconfig specified via the KUBECONFIG environment variable (error out if multiple are specified)
         - Second: default kubeconfig in home directory (e.g. `$HOME/.kube/config`)
