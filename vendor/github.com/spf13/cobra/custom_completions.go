@@ -131,6 +131,14 @@ func (c *Command) initCompleteCmd(args []string) {
 					// Remove any description that may be included following a tab character.
 					comp = strings.Split(comp, "\t")[0]
 				}
+
+				// Finally trim the completion.  This is especially important to get rid
+				// of a trailing tab when there are no description following it.
+				// For example, a sub-command without a description should not be completed
+				// with a tab at the end (or else zsh will show a -- following it
+				// although there is no description).
+				comp = strings.TrimSpace(comp)
+
 				// Print each possible completion to stdout for the completion script to consume.
 				fmt.Fprintln(finalCmd.OutOrStdout(), comp)
 			}
@@ -198,9 +206,9 @@ func (c *Command) getCompletions(args []string) (*Command, []string, ShellCompDi
 			}
 
 			// The annotation requests simple file completion.  There is no reason to do
-			// that.  Let's ignore it in case the program also registered a completion
-			// function for this flag.  Even though it is a mistake on the program side,
-			// let's be nice when we can.
+			// that since it is the default behavior anyway.  Let's ignore this annotation
+			// in case the program also registered a completion function for this flag.
+			// Even though it is a mistake on the program's side, let's be nice when we can.
 		}
 
 		if subDir, present := flag.Annotations[BashCompSubdirsInDir]; present {
@@ -272,13 +280,13 @@ func (c *Command) getCompletions(args []string) (*Command, []string, ShellCompDi
 			}
 		})
 
-		// Complete subcommand names
+		// Complete subcommand names, including the help command
 		if len(finalArgs) == 0 && !foundLocalNonPersistentFlag {
 			// We only complete sub-commands if:
 			// - there are no arguments on the command-line and
 			// - there are no local, non-peristent flag on the command-line
 			for _, subCmd := range finalCmd.Commands() {
-				if subCmd.IsAvailableCommand() {
+				if subCmd.IsAvailableCommand() || subCmd == finalCmd.helpCommand {
 					if strings.HasPrefix(subCmd.Name(), toComplete) {
 						completions = append(completions, fmt.Sprintf("%s\t%s", subCmd.Name(), subCmd.Short))
 					}
@@ -294,13 +302,23 @@ func (c *Command) getCompletions(args []string) (*Command, []string, ShellCompDi
 		// This is for commands that have both subcommands and ValidArgs.
 		if len(finalCmd.ValidArgs) > 0 {
 			if len(finalArgs) == 0 {
-				// ValidArgs is only for the first argument
+				// ValidArgs are only for the first argument
 				for _, validArg := range finalCmd.ValidArgs {
 					if strings.HasPrefix(validArg, toComplete) {
 						completions = append(completions, validArg)
 					}
 				}
 				directive = ShellCompDirectiveNoFileComp
+
+				// If no completions were found within commands or ValidArgs,
+				// see if there are any ArgAliases that should be completed.
+				if len(completions) == 0 {
+					for _, argAlias := range finalCmd.ArgAliases {
+						if strings.HasPrefix(argAlias, toComplete) {
+							completions = append(completions, argAlias)
+						}
+					}
+				}
 			}
 
 			// If there are ValidArgs specified (even if they don't match), we stop completion.
@@ -320,14 +338,14 @@ func (c *Command) getCompletions(args []string) (*Command, []string, ShellCompDi
 	} else {
 		completionFn = finalCmd.ValidArgsFunction
 	}
-	if completionFn == nil {
-		// Go custom completion not supported/needed for this flag or command
-		return finalCmd, completions, directive, nil
+	if completionFn != nil {
+		// Go custom completion defined for this flag or command.
+		// Call the registered completion function to get the completions.
+		var comps []string
+		comps, directive = completionFn(finalCmd, finalArgs, toComplete)
+		completions = append(completions, comps...)
 	}
 
-	// Call the registered completion function to get the completions
-	comps, directive := completionFn(finalCmd, finalArgs, toComplete)
-	completions = append(completions, comps...)
 	return finalCmd, completions, directive, nil
 }
 
