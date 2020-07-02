@@ -74,7 +74,7 @@ Check out what you can do via `k3d help` or check the docs @ [k3d.io](https://k3
 Example Workflow: Create a new cluster and use it with `kubectl`
 
 1. `k3d create cluster CLUSTER_NAME` to create a new single-node cluster (= 1 container running k3s)
-2. `k3d get kubeconfig CLUSTER_NAME --switch` to update your default kubeconfig and switch the current-context to the new one
+2. `k3d get-kubeconfig CLUSTER_NAME --switch` to update your default kubeconfig and switch the current-context to the new one
 3. execute some commands like `kubectl get pods --all-namespaces`
 4. `k3d delete cluster CLUSTER_NAME` to delete the default cluster
 
