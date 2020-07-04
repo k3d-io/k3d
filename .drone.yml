@@ -55,7 +55,23 @@ steps:
       event:
         - push
         - tag
-
+  - name: build_push
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d
+      tags:
+        - latest-linux-amd64
+        - "${DRONE_TAG}-linux-amd64"
+      dockerfile: tools/Dockerfile
+      context: tools/
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+    when:
+      event:
+        - tag
+        
   - name: pre-release
     image: plugins/github-release
     settings:
