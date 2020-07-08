@@ -120,8 +120,8 @@ func NewCmdCreateCluster() *cobra.Command {
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d create -w 2 -p 8080:80@worker[0] -p 8081@worker[1]`")
 	cmd.Flags().BoolVar(&createClusterOpts.WaitForMaster, "wait", true, "Wait for the master(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
 	cmd.Flags().DurationVar(&createClusterOpts.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
-	cmd.Flags().BoolVar(&updateDefaultKubeconfig, "update-default-kubeconfig", false, "Directly update the default kubeconfig with the new cluster's context")
-	cmd.Flags().BoolVar(&updateCurrentContext, "switch-context", false, "Directly switch the default kubeconfig's current-context to the new cluster's context (implies --update-default-kubeconfig)")
+	cmd.Flags().BoolVar(&updateDefaultKubeconfig, "update-default-kubeconfig", true, "Directly update the default kubeconfig with the new cluster's context")
+	cmd.Flags().BoolVar(&updateCurrentContext, "switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (implies --update-default-kubeconfig)")
 	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadBalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the master nodes")
 
 	/* Image Importing */
