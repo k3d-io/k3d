@@ -30,9 +30,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/rancher/k3d/v3/cmd/cluster"
 	"github.com/rancher/k3d/v3/cmd/create"
 	"github.com/rancher/k3d/v3/cmd/delete"
 	"github.com/rancher/k3d/v3/cmd/get"
+	"github.com/rancher/k3d/v3/cmd/kubeconfig"
 	"github.com/rancher/k3d/v3/cmd/load"
 	"github.com/rancher/k3d/v3/cmd/start"
 	"github.com/rancher/k3d/v3/cmd/stop"
@@ -98,6 +100,11 @@ func init() {
 	rootCmd.AddCommand(stop.NewCmdStop())
 	rootCmd.AddCommand(start.NewCmdStart())
 	rootCmd.AddCommand(load.NewCmdLoad())
+
+	if os.Getenv("K3D_NEW_SYNTAX") == "1" {
+		rootCmd.AddCommand(cluster.NewCmdCluster())
+		rootCmd.AddCommand(kubeconfig.NewCmdKubeconfig())
+	}
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
