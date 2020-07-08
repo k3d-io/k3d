@@ -549,8 +549,8 @@
       -p, --port  <span class="c1"># add some more port mappings</span>
       --token  <span class="c1"># specify a cluster token (default: auto-generated)</span>
       --timeout  <span class="c1"># specify a timeout, after which the cluster creation will be interrupted and changes rolled back</span>
-      --update-kubeconfig  <span class="c1"># enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets &#39;--wait=true&#39;)</span>
-      --switch  <span class="c1"># (implies --update-kubeconfig) automatically sets the current-context of your default kubeconfig to the new cluster&#39;s context</span>
+      --update-default-kubeconfig  <span class="c1"># enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets &#39;--wait=true&#39;)</span>
+      --switch-context  <span class="c1"># (implies --update-default-kubeconfig) automatically sets the current-context of your default kubeconfig to the new cluster&#39;s context</span>
       -v, --volume  <span class="c1"># specify additional bind-mounts</span>
       --wait  <span class="c1"># enable waiting for all master nodes to be ready before returning</span>
       -w, --workers  <span class="c1"># specify how many worker nodes you want to create</span>
@@ -586,8 +586,9 @@
       -a, --all  <span class="c1"># get kubeconfigs from all clusters</span>
           --output  <span class="c1"># specify the output file where the kubeconfig should be written to</span>
           --overwrite  <span class="c1"># [Careful!] forcefully overwrite the output file, ignoring existing contents</span>
-      -s, --switch  <span class="c1"># switch current-context in kubeconfig to the new context</span>
+      -s, --switch-context  <span class="c1"># switch current-context in kubeconfig to the new context</span>
       -u, --update  <span class="c1"># update conflicting fields in existing kubeconfig (default: true)</span>
+      -d, --merge-default-kubeconfig  <span class="c1"># update the default kubeconfig (usually $KUBECONFIG or $HOME/.kube/config)</span>
   load
     image  <span class="o">[</span>IMAGE <span class="p">|</span> ARCHIVE <span class="o">[</span>IMAGE <span class="p">|</span> ARCHIVE ...<span class="o">]]</span>  <span class="c1"># Load one or more images from the local runtime environment or tar-archives into k3d clusters</span>
       -c, --cluster  <span class="c1"># clusters to load the image into</span>
@@ -604,7 +605,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: June 4, 2020
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 22, 2020</span>
     
   </small>
 </div>

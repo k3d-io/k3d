@@ -535,18 +535,24 @@
                 
                 <h1 id="defaults">Defaults<a class="headerlink" href="#defaults" title="Permanent link">&para;</a></h1>
 <ul>
-<li>multiple master nodes</li>
+<li>multiple master nodes<ul>
 <li>by default, when <code>--master</code> &gt; 1 and no <code>--datastore-x</code> option is set, the first master node (master-0) will be the initializing master node<ul>
 <li>the initializing master node will have the <code>--cluster-init</code> flag appended</li>
 <li>all other master nodes will refer to the initializing master node via <code>--server https://&lt;init-node&gt;:6443</code></li>
 </ul>
 </li>
-<li>API-Ports</li>
+</ul>
+</li>
+<li>API-Ports<ul>
 <li>by default, we don&rsquo;t expose any API-Port (no host port mapping)</li>
-<li>kubeconfig</li>
-<li>if no output is set explicitly (via the <code>--output</code> flag), we use the default loading rules to get the default kubeconfig:<ul>
+</ul>
+</li>
+<li>kubeconfig<ul>
+<li>if <code>--[update|merge]-default-kubeconfig</code> is set, we use the default loading rules to get the default kubeconfig:<ul>
 <li>First: kubeconfig specified via the KUBECONFIG environment variable (error out if multiple are specified)</li>
 <li>Second: default kubeconfig in home directory (e.g. <code>$HOME/.kube/config</code>)</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -558,7 +564,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: April 28, 2020
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 22, 2020</span>
     
   </small>
 </div>
