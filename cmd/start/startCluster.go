@@ -42,9 +42,9 @@ func NewCmdStartCluster() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:               "cluster (NAME [NAME...] | --all)",
-		Short:             "Start an existing k3d cluster",
-		Long:              `Start an existing k3d cluster`,
+		Use:               "cluster [NAME [NAME...] | --all]",
+		Long:              `Start existing k3d cluster(s)`,
+		Short:             "Start existing k3d cluster(s)",
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Run: func(cmd *cobra.Command, args []string) {
 			clusters := parseStartClusterCmd(cmd, args)
@@ -86,11 +86,12 @@ func parseStartClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 		return clusters
 	}
 
-	if len(args) < 1 {
-		log.Fatalln("Expecting at least one cluster name if `--all` is not set")
+	clusternames := []string{k3d.DefaultClusterName}
+	if len(args) != 0 {
+		clusternames = args
 	}
 
-	for _, name := range args {
+	for _, name := range clusternames {
 		cluster, err := cluster.GetCluster(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: name})
 		if err != nil {
 			log.Fatalln(err)

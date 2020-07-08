@@ -57,12 +57,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 		Short:             "Get kubeconfig",
 		Long:              `Get kubeconfig.`,
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
-		Args: func(cmd *cobra.Command, args []string) error {
-			if (len(args) < 1 && !getKubeconfigFlags.all) || (len(args) > 0 && getKubeconfigFlags.all) {
-				return fmt.Errorf("Need to specify one or more cluster names *or* set `--all` flag")
-			}
-			return nil
-		},
+		Args:              cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			var clusters []*k3d.Cluster
 			var err error
@@ -78,7 +73,13 @@ func NewCmdGetKubeconfig() *cobra.Command {
 					log.Fatalln(err)
 				}
 			} else {
-				for _, clusterName := range args {
+
+				clusternames := []string{k3d.DefaultClusterName}
+				if len(args) != 0 {
+					clusternames = args
+				}
+
+				for _, clusterName := range clusternames {
 					retrievedCluster, err := cluster.GetCluster(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
 					if err != nil {
 						log.Fatalln(err)
