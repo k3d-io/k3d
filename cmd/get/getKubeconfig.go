@@ -24,11 +24,14 @@ package get
 import (
 	"fmt"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/rancher/k3d/v3/cmd/util"
 	"github.com/rancher/k3d/v3/pkg/cluster"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
+	k3dutil "github.com/rancher/k3d/v3/pkg/util"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -36,8 +39,9 @@ import (
 )
 
 type getKubeconfigFlags struct {
-	all    bool
-	output string
+	all           bool
+	output        string
+	targetDefault bool
 }
 
 // NewCmdGetKubeconfig returns a new cobra command
@@ -63,6 +67,10 @@ func NewCmdGetKubeconfig() *cobra.Command {
 			var clusters []*k3d.Cluster
 			var err error
 
+			if getKubeconfigFlags.targetDefault && getKubeconfigFlags.output != "" {
+				log.Fatalln("Cannot use both '--output' and '--merge-default-kubeconfig' at the same time")
+			}
+
 			// generate list of clusters
 			if getKubeconfigFlags.all {
 				clusters, err = cluster.GetClusters(cmd.Context(), runtimes.SelectedRuntime)
@@ -81,17 +89,30 @@ func NewCmdGetKubeconfig() *cobra.Command {
 
 			// get kubeconfigs from all clusters
 			errorGettingKubeconfig := false
+			var outputs []string
+			outputDir, err := k3dutil.GetConfigDirOrCreate()
+			if err != nil {
+				log.Errorln(err)
+				log.Fatalln("Failed to save kubeconfig to local directory")
+			}
 			for _, c := range clusters {
 				log.Debugf("Getting kubeconfig for cluster '%s'", c.Name)
-				if getKubeconfigFlags.output, err = cluster.GetAndWriteKubeConfig(cmd.Context(), runtimes.SelectedRuntime, c, getKubeconfigFlags.output, &writeKubeConfigOptions); err != nil {
+				output := getKubeconfigFlags.output
+				if output == "" && !getKubeconfigFlags.targetDefault {
+					output = path.Join(outputDir, fmt.Sprintf("kubeconfig-%s.yaml", c.Name))
+				}
+				output, err = cluster.GetAndWriteKubeConfig(cmd.Context(), runtimes.SelectedRuntime, c, output, &writeKubeConfigOptions)
+				if err != nil {
 					log.Errorln(err)
 					errorGettingKubeconfig = true
+				} else {
+					outputs = append(outputs, output)
 				}
 			}
 
 			// only print kubeconfig file path if output is not stdout ("-")
 			if getKubeconfigFlags.output != "-" {
-				fmt.Println(getKubeconfigFlags.output)
+				fmt.Println(strings.Join(outputs, ":"))
 			}
 
 			// return with non-zero exit code, if there was an error for one of the clusters
@@ -106,8 +127,9 @@ func NewCmdGetKubeconfig() *cobra.Command {
 	if err := cmd.MarkFlagFilename("output"); err != nil {
 		log.Fatalln("Failed to mark flag --output as filename")
 	}
-	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateExisting, "update", "u", true, "Update conflicting fields in existing KubeConfig")
-	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateCurrentContext, "switch", "s", false, "Switch to new context")
+	cmd.Flags().BoolVarP(&getKubeconfigFlags.targetDefault, "merge-default-kubeconfig", "d", false, fmt.Sprintf("Merge into the default kubeconfig ($KUBECONFIG or %s)", clientcmd.RecommendedHomeFile))
+	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateExisting, "update", "u", true, "Update conflicting fields in existing kubeconfig")
+	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateCurrentContext, "switch-context", "s", true, "Switch to new context")
 	cmd.Flags().BoolVar(&writeKubeConfigOptions.OverwriteExisting, "overwrite", false, "[Careful!] Overwrite existing file, ignoring its contents")
 	cmd.Flags().BoolVarP(&getKubeconfigFlags.all, "all", "a", false, "Get kubeconfigs from all existing clusters")
 
