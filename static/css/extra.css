@@ -20,6 +20,10 @@
     display: inline;
 }
 
+.md-header-nav__topic {
+    position: relative;
+}
+
 [data-md-color-primary=black] .md-tabs {
     background-color: #0DCEFF;
 }
