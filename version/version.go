@@ -31,6 +31,9 @@ import (
 // Version is the string that contains version
 var Version string
 
+// HelperVersionOverride decouples the k3d helper image versions from the main version, if needed
+var HelperVersionOverride string
+
 // K3sVersion should contain the latest version tag of k3s (hardcoded at build time)
 // we're setting a default version for edge cases, because the 'latest' tag is not actively maintained
 var K3sVersion = "v1.18.4+k3s1" // TODO: can we try to dynamically fetch the latest version at runtime and only fallback to this if it fails?
@@ -48,6 +51,9 @@ func GetHelperImageVersion() string {
 	if tag := os.Getenv("K3D_HELPER_IMAGE_TAG"); tag != "" {
 		log.Infoln("Helper image tag set from env var")
 		return tag
+	}
+	if len(HelperVersionOverride) > 0 {
+		return HelperVersionOverride
 	}
 	if len(Version) == 0 {
 		return "latest"
