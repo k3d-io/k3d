@@ -36,6 +36,7 @@ import (
 	"github.com/rancher/k3d/v3/cmd/get"
 	"github.com/rancher/k3d/v3/cmd/kubeconfig"
 	"github.com/rancher/k3d/v3/cmd/load"
+	"github.com/rancher/k3d/v3/cmd/node"
 	"github.com/rancher/k3d/v3/cmd/start"
 	"github.com/rancher/k3d/v3/cmd/stop"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
@@ -104,6 +105,7 @@ func init() {
 	if os.Getenv("K3D_NEW_SYNTAX") == "1" {
 		rootCmd.AddCommand(cluster.NewCmdCluster())
 		rootCmd.AddCommand(kubeconfig.NewCmdKubeconfig())
+		rootCmd.AddCommand(node.NewCmdNode())
 	}
 
 	rootCmd.AddCommand(&cobra.Command{
