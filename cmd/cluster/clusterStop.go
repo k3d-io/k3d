@@ -19,7 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package stop
+package cluster
 
 import (
 	"github.com/spf13/cobra"
@@ -32,12 +32,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// NewCmdStopCluster returns a new cobra command
-func NewCmdStopCluster() *cobra.Command {
+// NewCmdClusterStop returns a new cobra command
+func NewCmdClusterStop() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:               "cluster [NAME [NAME...] | --all]",
+		Use:               "stop [NAME [NAME...] | --all]",
 		Short:             "Stop existing k3d cluster(s)",
 		Long:              `Stop existing k3d cluster(s).`,
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
@@ -47,7 +47,7 @@ func NewCmdStopCluster() *cobra.Command {
 				log.Infoln("No clusters found")
 			} else {
 				for _, c := range clusters {
-					if err := cluster.StopCluster(cmd.Context(), runtimes.SelectedRuntime, c); err != nil {
+					if err := cluster.ClusterStop(cmd.Context(), runtimes.SelectedRuntime, c); err != nil {
 						log.Fatalln(err)
 					}
 				}
@@ -72,7 +72,7 @@ func parseStopClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	if all, err := cmd.Flags().GetBool("all"); err != nil {
 		log.Fatalln(err)
 	} else if all {
-		clusters, err = cluster.GetClusters(cmd.Context(), runtimes.SelectedRuntime)
+		clusters, err = cluster.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -85,7 +85,7 @@ func parseStopClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	}
 
 	for _, name := range clusternames {
-		cluster, err := cluster.GetCluster(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: name})
+		cluster, err := cluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: name})
 		if err != nil {
 			log.Fatalln(err)
 		}

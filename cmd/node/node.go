@@ -19,44 +19,38 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package start
+package node
 
 import (
-	"github.com/rancher/k3d/v3/cmd/util"
-	"github.com/rancher/k3d/v3/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-	"github.com/spf13/cobra"
-
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
-// NewCmdStartNode returns a new cobra command
-func NewCmdStartNode() *cobra.Command {
+// NewCmdNode returns a new cobra command
+func NewCmdNode() *cobra.Command {
 
-	// create new command
+	// create new cobra command
 	cmd := &cobra.Command{
-		Use:               "node NAME", // TODO: startNode: allow one or more names or --all
-		Short:             "Start an existing k3d node",
-		Long:              `Start an existing k3d node.`,
-		ValidArgsFunction: util.ValidArgsAvailableNodes,
+		Use:   "node",
+		Short: "Manage node(s)",
+		Long:  `Manage node(s)`,
 		Run: func(cmd *cobra.Command, args []string) {
-			node := parseStartNodeCmd(cmd, args)
-			if err := runtimes.SelectedRuntime.StartNode(cmd.Context(), node); err != nil {
+			if err := cmd.Help(); err != nil {
+				log.Errorln("Couldn't get help text")
 				log.Fatalln(err)
 			}
 		},
 	}
 
+	// add subcommands
+	cmd.AddCommand(NewCmdNodeCreate())
+	cmd.AddCommand(NewCmdNodeStart())
+	cmd.AddCommand(NewCmdNodeStop())
+	cmd.AddCommand(NewCmdNodeDelete())
+	cmd.AddCommand(NewCmdNodeList())
+
+	// add flags
+
 	// done
 	return cmd
-}
-
-// parseStartNodeCmd parses the command input into variables required to start a node
-func parseStartNodeCmd(cmd *cobra.Command, args []string) *k3d.Node {
-	// node name // TODO: startNode: allow node filters, e.g. `k3d start nodes mycluster@worker` to start all worker nodes of cluster 'mycluster'
-	if len(args) == 0 || len(args[0]) == 0 {
-		log.Fatalln("No node name given")
-	}
-
-	return &k3d.Node{Name: args[0]}
 }

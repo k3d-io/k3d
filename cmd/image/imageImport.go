@@ -19,7 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package load
+package image
 
 import (
 	"github.com/spf13/cobra"
@@ -32,16 +32,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// NewCmdLoadImage returns a new cobra command
-func NewCmdLoadImage() *cobra.Command {
+// NewCmdImageImport returns a new cobra command
+func NewCmdImageImport() *cobra.Command {
 
-	loadImageOpts := k3d.LoadImageOpts{}
+	loadImageOpts := k3d.ImageImportOpts{}
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:     "image [IMAGE | ARCHIVE [IMAGE | ARCHIVE...]]",
-		Short:   "Load an image from docker into a k3d cluster.",
-		Long:    `Load an image from docker into a k3d cluster.`,
+		Use:     "import [IMAGE | ARCHIVE [IMAGE | ARCHIVE...]]",
+		Short:   "Import image(s) from docker into k3d cluster(s).",
+		Long:    `Import image(s) from docker into k3d cluster(s).`,
 		Aliases: []string{"images"},
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -49,7 +49,7 @@ func NewCmdLoadImage() *cobra.Command {
 			log.Debugf("Load images [%+v] from runtime [%s] into clusters [%+v]", images, runtimes.SelectedRuntime, clusters)
 			for _, cluster := range clusters {
 				log.Infof("Loading images into '%s'", cluster.Name)
-				if err := tools.LoadImagesIntoCluster(cmd.Context(), runtimes.SelectedRuntime, images, &cluster, loadImageOpts); err != nil {
+				if err := tools.ImageImportIntoClusterMulti(cmd.Context(), runtimes.SelectedRuntime, images, &cluster, loadImageOpts); err != nil {
 					log.Errorf("Failed to load images into cluster '%s'", cluster.Name)
 					log.Errorln(err)
 				}

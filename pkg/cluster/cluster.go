@@ -40,10 +40,10 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// CreateCluster creates a new cluster consisting of
+// ClusterCreate creates a new cluster consisting of
 // - some containerized k3s nodes
 // - a docker network
-func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
 	if cluster.CreateClusterOpts.Timeout > 0*time.Second {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, cluster.CreateClusterOpts.Timeout)
@@ -157,7 +157,7 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 
 		// create node
 		log.Infof("Creating node '%s'", node.Name)
-		if err := CreateNode(ctx, runtime, node, k3d.CreateNodeOpts{}); err != nil {
+		if err := NodeCreate(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
 			log.Errorln("Failed to create node")
 			return err
 		}
@@ -257,7 +257,7 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 				// ... by scanning for this line in logs and restarting the container in case it appears
 				log.Debugf("Starting to wait for master node '%s'", masterNode.Name)
-				return WaitForNodeLogMessage(ctx, runtime, masterNode, k3d.ReadyLogMessageByRole[k3d.MasterRole], time.Time{})
+				return NodeWaitForLogMessage(ctx, runtime, masterNode, k3d.ReadyLogMessageByRole[k3d.MasterRole], time.Time{})
 			})
 		}
 	}
@@ -303,7 +303,7 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			}
 			cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
 			log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
-			if err := CreateNode(ctx, runtime, lbNode, k3d.CreateNodeOpts{}); err != nil {
+			if err := NodeCreate(ctx, runtime, lbNode, k3d.NodeCreateOpts{}); err != nil {
 				log.Errorln("Failed to create loadbalancer")
 				return err
 			}
@@ -312,7 +312,7 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 					// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 					// ... by scanning for this line in logs and restarting the container in case it appears
 					log.Debugf("Starting to wait for loadbalancer node '%s'", lbNode.Name)
-					return WaitForNodeLogMessage(ctx, runtime, lbNode, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], time.Time{})
+					return NodeWaitForLogMessage(ctx, runtime, lbNode, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], time.Time{})
 				})
 			}
 		} else {
@@ -329,8 +329,8 @@ func CreateCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	return nil
 }
 
-// DeleteCluster deletes an existing cluster
-func DeleteCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+// ClusterDelete deletes an existing cluster
+func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
 
 	log.Infof("Deleting cluster '%s'", cluster.Name)
 	log.Debugf("Cluster Details: %+v", cluster)
@@ -375,8 +375,8 @@ func DeleteCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	return nil
 }
 
-// GetClusters returns a list of all existing clusters
-func GetClusters(ctx context.Context, runtime k3drt.Runtime) ([]*k3d.Cluster, error) {
+// ClusterList returns a list of all existing clusters
+func ClusterList(ctx context.Context, runtime k3drt.Runtime) ([]*k3d.Cluster, error) {
 	nodes, err := runtime.GetNodesByLabel(ctx, k3d.DefaultObjectLabels)
 	if err != nil {
 		log.Errorln("Failed to get clusters")
@@ -455,8 +455,8 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 	return nil
 }
 
-// GetCluster returns an existing cluster with all fields and node lists populated
-func GetCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) (*k3d.Cluster, error) {
+// ClusterGet returns an existing cluster with all fields and node lists populated
+func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) (*k3d.Cluster, error) {
 	// get nodes that belong to the selected cluster
 	nodes, err := runtime.GetNodesByLabel(ctx, map[string]string{k3d.LabelClusterName: cluster.Name})
 	if err != nil {
@@ -504,8 +504,8 @@ func generateNodeName(cluster string, role k3d.Role, suffix int) string {
 	return fmt.Sprintf("%s-%s-%s-%d", k3d.DefaultObjectNamePrefix, cluster, role, suffix)
 }
 
-// StartCluster starts a whole cluster (i.e. all nodes of the cluster)
-func StartCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, startClusterOpts types.StartClusterOpts) error {
+// ClusterStart starts a whole cluster (i.e. all nodes of the cluster)
+func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, startClusterOpts types.ClusterStartOpts) error {
 	log.Infof("Starting cluster '%s'", cluster.Name)
 
 	start := time.Now()
@@ -543,7 +543,7 @@ func StartCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 				// ... by scanning for this line in logs and restarting the container in case it appears
 				log.Debugf("Starting to wait for master node '%s'", masterNode.Name)
-				return WaitForNodeLogMessage(ctx, runtime, masterNode, k3d.ReadyLogMessageByRole[k3d.MasterRole], start)
+				return NodeWaitForLogMessage(ctx, runtime, masterNode, k3d.ReadyLogMessageByRole[k3d.MasterRole], start)
 			})
 		}
 	}
@@ -559,7 +559,7 @@ func StartCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 			// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 			// ... by scanning for this line in logs and restarting the container in case it appears
 			log.Debugf("Starting to wait for loadbalancer node '%s'", masterlb.Name)
-			return WaitForNodeLogMessage(ctx, runtime, masterlb, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], start)
+			return NodeWaitForLogMessage(ctx, runtime, masterlb, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], start)
 		})
 	}
 
@@ -575,8 +575,8 @@ func StartCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	return nil
 }
 
-// StopCluster stops a whole cluster (i.e. all nodes of the cluster)
-func StopCluster(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+// ClusterStop stops a whole cluster (i.e. all nodes of the cluster)
+func ClusterStop(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
 	log.Infof("Stopping cluster '%s'", cluster.Name)
 
 	failed := 0

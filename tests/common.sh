@@ -61,7 +61,7 @@ check_url() {
 check_clusters() {
   [ -n "$EXE" ] || abort "EXE is not defined"
   for c in "$@" ; do
-    $EXE get kubeconfig "$c" --merge-default-kubeconfig --switch-context
+    $EXE kubeconfig merge "$c" --switch-context
     if kubectl cluster-info ; then
       passed "cluster $c is reachable"
     else
@@ -75,7 +75,7 @@ check_clusters() {
 
 check_cluster_count() {
   expectedClusterCount=$1
-  actualClusterCount=$($EXE get clusters --no-headers | wc -l)
+  actualClusterCount=$($EXE cluster list --no-headers | wc -l)
   if [[ $actualClusterCount != $expectedClusterCount ]]; then
     failed "incorrect number of clusters available: $actualClusterCount != $expectedClusterCount"
     return 1
@@ -87,7 +87,7 @@ check_cluster_count() {
 check_multi_node() {
   cluster=$1
   expectedNodeCount=$2
-  $EXE get kubeconfig "$cluster" --merge-default-kubeconfig --switch-context
+  $EXE kubeconfig merge "$cluster" --switch-context
   nodeCount=$(kubectl get nodes -o=custom-columns=NAME:.metadata.name --no-headers | wc -l)
   if [[ $nodeCount == $expectedNodeCount ]]; then
     passed "cluster $cluster has $expectedNodeCount nodes, as expected"
@@ -110,5 +110,5 @@ check_volume_exists() {
 
 check_cluster_token_exist() {
   [ -n "$EXE" ] || abort "EXE is not defined"
-  $EXE get cluster "$1" --token | grep "TOKEN" >/dev/null 2>&1
+  $EXE cluster get "$1" --token | grep "TOKEN" >/dev/null 2>&1
 }

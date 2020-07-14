@@ -7,7 +7,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
 1. Create a cluster, mapping the ingress port 80 to localhost:8081
 
-    `#!bash k3d create cluster --api-port 6550 -p 8081:80@loadbalancer --workers 2`
+    `#!bash k3d cluster create --api-port 6550 -p 8081:80@loadbalancer --workers 2`
 
     !!! info "Good to know"
         - `--api-port 6550` is not required for the example to work. It's used to have `k3s`'s API-Server listening on port 6550 with that port mapped to the host system.
@@ -18,7 +18,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
 2. Get the kubeconfig file
 
-    `#!bash export KUBECONFIG="$(k3d get kubeconfig k3s-default)"`
+    `#!bash export KUBECONFIG="$(k3d kubeconfig get k3s-default)"`
 
 3. Create a nginx deployment
 
@@ -56,7 +56,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
 1. Create a cluster, mapping the port 30080 from worker-0 to localhost:8082
 
-    `#!bash k3d create cluster mycluster -p 8082:30080@worker[0] --workers 2`
+    `#!bash k3d cluster create mycluster -p 8082:30080@worker[0] --workers 2`
 
     - Note: Kubernetes' default NodePort range is [`30000-32767`](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
 

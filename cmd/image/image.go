@@ -19,22 +19,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package get
+package image
 
 import (
 	log "github.com/sirupsen/logrus"
-
 	"github.com/spf13/cobra"
 )
 
-// NewCmdGet returns a new cobra command
-func NewCmdGet() *cobra.Command {
+// NewCmdImage returns a new cobra command
+func NewCmdImage() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:   "get",
-		Short: "Get a resource [cluster, node, kubeconfig].",
-		Long:  `Get a resource [cluster, node, kubeconfig].`,
+		Use:   "image",
+		Short: "Handle container images.",
+		Long:  `Handle container images.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
 				log.Errorln("Couldn't get help text")
@@ -44,9 +43,9 @@ func NewCmdGet() *cobra.Command {
 	}
 
 	// add subcommands
-	cmd.AddCommand(NewCmdGetCluster())
-	cmd.AddCommand(NewCmdGetNode())
-	cmd.AddCommand(NewCmdGetKubeconfig())
+	cmd.AddCommand(NewCmdImageImport())
+
+	// add flags
 
 	// done
 	return cmd

@@ -19,7 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package delete
+package node
 
 import (
 	"github.com/rancher/k3d/v3/cmd/util"
@@ -30,14 +30,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewCmdDeleteNode returns a new cobra command
-func NewCmdDeleteNode() *cobra.Command {
+// NewCmdNodeDelete returns a new cobra command
+func NewCmdNodeDelete() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:               "node (NAME | --all)",
-		Short:             "Delete a node.",
-		Long:              `Delete a node.`,
+		Use:               "delete (NAME | --all)",
+		Short:             "Delete node(s).",
+		Long:              `Delete node(s).`,
 		Args:              cobra.MinimumNArgs(1), // at least one node has to be specified
 		ValidArgsFunction: util.ValidArgsAvailableNodes,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -48,7 +48,7 @@ func NewCmdDeleteNode() *cobra.Command {
 				log.Infoln("No nodes found")
 			} else {
 				for _, node := range nodes {
-					if err := cluster.DeleteNode(cmd.Context(), runtimes.SelectedRuntime, node); err != nil {
+					if err := cluster.NodeDelete(cmd.Context(), runtimes.SelectedRuntime, node); err != nil {
 						log.Fatalln(err)
 					}
 				}
@@ -74,7 +74,7 @@ func parseDeleteNodeCmd(cmd *cobra.Command, args []string) []*k3d.Node {
 	if all, err := cmd.Flags().GetBool("all"); err != nil {
 		log.Fatalln(err)
 	} else if all {
-		nodes, err = cluster.GetNodes(cmd.Context(), runtimes.SelectedRuntime)
+		nodes, err = cluster.NodeList(cmd.Context(), runtimes.SelectedRuntime)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -86,7 +86,7 @@ func parseDeleteNodeCmd(cmd *cobra.Command, args []string) []*k3d.Node {
 	}
 
 	for _, name := range args {
-		node, err := cluster.GetNode(cmd.Context(), runtimes.SelectedRuntime, &k3d.Node{Name: name})
+		node, err := cluster.NodeGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Node{Name: name})
 		if err != nil {
 			log.Fatalln(err)
 		}

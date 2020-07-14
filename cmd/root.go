@@ -30,12 +30,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/rancher/k3d/v3/cmd/create"
-	"github.com/rancher/k3d/v3/cmd/delete"
-	"github.com/rancher/k3d/v3/cmd/get"
-	"github.com/rancher/k3d/v3/cmd/load"
-	"github.com/rancher/k3d/v3/cmd/start"
-	"github.com/rancher/k3d/v3/cmd/stop"
+	"github.com/rancher/k3d/v3/cmd/cluster"
+	"github.com/rancher/k3d/v3/cmd/image"
+	"github.com/rancher/k3d/v3/cmd/kubeconfig"
+	"github.com/rancher/k3d/v3/cmd/node"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	"github.com/rancher/k3d/v3/version"
 
@@ -92,12 +90,10 @@ func init() {
 
 	// add subcommands
 	rootCmd.AddCommand(NewCmdCompletion())
-	rootCmd.AddCommand(create.NewCmdCreate())
-	rootCmd.AddCommand(delete.NewCmdDelete())
-	rootCmd.AddCommand(get.NewCmdGet())
-	rootCmd.AddCommand(stop.NewCmdStop())
-	rootCmd.AddCommand(start.NewCmdStart())
-	rootCmd.AddCommand(load.NewCmdLoad())
+	rootCmd.AddCommand(cluster.NewCmdCluster())
+	rootCmd.AddCommand(kubeconfig.NewCmdKubeconfig())
+	rootCmd.AddCommand(node.NewCmdNode())
+	rootCmd.AddCommand(image.NewCmdImage())
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",

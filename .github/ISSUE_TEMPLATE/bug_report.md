@@ -10,7 +10,7 @@ assignees: ''
 **What did you do?**
 
 - How was the cluster created?
-    - `k3d create -x A -y B`
+    - `k3d cluster create -x A -y B`
 
 - What did you do afterwards?
     - k3d commands?
@@ -31,7 +31,7 @@ If applicable, add screenshots or terminal output (code block) to help explain y
 
 **Which version of `k3d`?**
 
-- output of `k3d --version`
+- output of `k3d version`
 
 **Which version of docker?**
 

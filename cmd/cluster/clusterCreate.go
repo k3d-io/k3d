@@ -1,4 +1,4 @@
-/*Package create ...
+/*
 
 Copyright © 2020 The k3d Author(s)
 
@@ -20,7 +20,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package create
+package cluster
 
 import (
 	"fmt"
@@ -40,7 +40,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const createClusterDescription = `
+const clusterCreateDescription = `
 Create a new k3s cluster with containerized nodes (k3s in docker).
 Every cluster will consist of one or more containers:
 	- 1 (or more) master node container (k3s)
@@ -48,24 +48,24 @@ Every cluster will consist of one or more containers:
 	- (optionally) 1 (or more) worker node containers (k3s)
 `
 
-// NewCmdCreateCluster returns a new cobra command
-func NewCmdCreateCluster() *cobra.Command {
+// NewCmdClusterCreate returns a new cobra command
+func NewCmdClusterCreate() *cobra.Command {
 
-	createClusterOpts := &k3d.CreateClusterOpts{}
+	createClusterOpts := &k3d.ClusterCreateOpts{}
 	var updateDefaultKubeconfig, updateCurrentContext bool
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "cluster NAME",
-		Short: "Create a new k3s cluster in docker",
-		Long:  createClusterDescription,
+		Use:   "create NAME",
+		Short: "Create a new cluster",
+		Long:  clusterCreateDescription,
 		Args:  cobra.RangeArgs(0, 1), // exactly one cluster name can be set (default: k3d.DefaultClusterName)
 		Run: func(cmd *cobra.Command, args []string) {
 			// parse args and flags
 			cluster := parseCreateClusterCmd(cmd, args, createClusterOpts)
 
 			// check if a cluster with that name exists already
-			if _, err := k3dCluster.GetCluster(cmd.Context(), runtimes.SelectedRuntime, cluster); err == nil {
+			if _, err := k3dCluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, cluster); err == nil {
 				log.Fatalf("Failed to create cluster '%s' because a cluster with that name already exists", cluster.Name)
 			}
 
@@ -74,11 +74,11 @@ func NewCmdCreateCluster() *cobra.Command {
 				log.Debugln("'--update-default-kubeconfig set: enabling wait-for-master")
 				cluster.CreateClusterOpts.WaitForMaster = true
 			}
-			if err := k3dCluster.CreateCluster(cmd.Context(), runtimes.SelectedRuntime, cluster); err != nil {
+			if err := k3dCluster.ClusterCreate(cmd.Context(), runtimes.SelectedRuntime, cluster); err != nil {
 				// rollback if creation failed
 				log.Errorln(err)
 				log.Errorln("Failed to create cluster >>> Rolling Back")
-				if err := k3dCluster.DeleteCluster(cmd.Context(), runtimes.SelectedRuntime, cluster); err != nil {
+				if err := k3dCluster.ClusterDelete(cmd.Context(), runtimes.SelectedRuntime, cluster); err != nil {
 					log.Errorln(err)
 					log.Fatalln("Cluster creation FAILED, also FAILED to rollback changes!")
 				}
@@ -88,7 +88,7 @@ func NewCmdCreateCluster() *cobra.Command {
 
 			if updateDefaultKubeconfig || updateCurrentContext {
 				log.Debugf("Updating default kubeconfig with a new context for cluster %s", cluster.Name)
-				if _, err := k3dCluster.GetAndWriteKubeConfig(cmd.Context(), runtimes.SelectedRuntime, cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: updateCurrentContext}); err != nil {
+				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: updateCurrentContext}); err != nil {
 					log.Warningln(err)
 				}
 			}
@@ -99,9 +99,9 @@ func NewCmdCreateCluster() *cobra.Command {
 				fmt.Printf("kubectl config use-context %s\n", fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name))
 			} else if !updateCurrentContext {
 				if runtime.GOOS == "windows" {
-					fmt.Printf("$env:KUBECONFIG=(%s get kubeconfig %s)\n", os.Args[0], cluster.Name)
+					fmt.Printf("$env:KUBECONFIG=(%s kubeconfig get %s)\n", os.Args[0], cluster.Name)
 				} else {
-					fmt.Printf("export KUBECONFIG=$(%s get kubeconfig %s)\n", os.Args[0], cluster.Name)
+					fmt.Printf("export KUBECONFIG=$(%s kubeconfig get %s)\n", os.Args[0], cluster.Name)
 				}
 			}
 			fmt.Println("kubectl cluster-info")
@@ -153,7 +153,7 @@ func NewCmdCreateCluster() *cobra.Command {
 }
 
 // parseCreateClusterCmd parses the command input into variables required to create a cluster
-func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts *k3d.CreateClusterOpts) *k3d.Cluster {
+func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts *k3d.ClusterCreateOpts) *k3d.Cluster {
 
 	/********************************
 	 * Parse and validate arguments *

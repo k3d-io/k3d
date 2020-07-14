@@ -19,21 +19,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package load
+package kubeconfig
 
 import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-// NewCmdLoad returns a new cobra command
-func NewCmdLoad() *cobra.Command {
+// NewCmdKubeconfig returns a new cobra command
+func NewCmdKubeconfig() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:   "load",
-		Short: "Load a resource [image] into a cluster.",
-		Long:  `Load a resource [image] into a cluster.`,
+		Use:   "kubeconfig",
+		Short: "Manage kubeconfig(s)",
+		Long:  `Manage kubeconfig(s)`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
 				log.Errorln("Couldn't get help text")
@@ -43,7 +43,8 @@ func NewCmdLoad() *cobra.Command {
 	}
 
 	// add subcommands
-	cmd.AddCommand(NewCmdLoadImage())
+	cmd.AddCommand(NewCmdKubeconfigGet())
+	cmd.AddCommand(NewCmdKubeconfigMerge())
 
 	// add flags
 

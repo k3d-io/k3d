@@ -19,7 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package get
+package kubeconfig
 
 import (
 	"fmt"
@@ -38,37 +38,38 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type getKubeconfigFlags struct {
+type mergeKubeconfigFlags struct {
 	all           bool
 	output        string
 	targetDefault bool
 }
 
-// NewCmdGetKubeconfig returns a new cobra command
-func NewCmdGetKubeconfig() *cobra.Command {
+// NewCmdKubeconfigMerge returns a new cobra command
+func NewCmdKubeconfigMerge() *cobra.Command {
 
 	writeKubeConfigOptions := cluster.WriteKubeConfigOptions{}
 
-	getKubeconfigFlags := getKubeconfigFlags{}
+	mergeKubeconfigFlags := mergeKubeconfigFlags{}
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:               "kubeconfig [CLUSTER [CLUSTER [...]] | --all]", // TODO: getKubeconfig: allow more than one cluster name or even --all
-		Short:             "Get kubeconfig",
-		Long:              `Get kubeconfig.`,
+		Use:               "merge [CLUSTER [CLUSTER [...]] | --all]",
+		Aliases:           []string{"write"},
+		Long:              `Merge/Write kubeconfig(s) from cluster(s) into existing kubeconfig/file.`,
+		Short:             "Merge/Write kubeconfig(s) from cluster(s) into existing kubeconfig/file.",
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Args:              cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			var clusters []*k3d.Cluster
 			var err error
 
-			if getKubeconfigFlags.targetDefault && getKubeconfigFlags.output != "" {
+			if mergeKubeconfigFlags.targetDefault && mergeKubeconfigFlags.output != "" {
 				log.Fatalln("Cannot use both '--output' and '--merge-default-kubeconfig' at the same time")
 			}
 
 			// generate list of clusters
-			if getKubeconfigFlags.all {
-				clusters, err = cluster.GetClusters(cmd.Context(), runtimes.SelectedRuntime)
+			if mergeKubeconfigFlags.all {
+				clusters, err = cluster.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -80,7 +81,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 				}
 
 				for _, clusterName := range clusternames {
-					retrievedCluster, err := cluster.GetCluster(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
+					retrievedCluster, err := cluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
 					if err != nil {
 						log.Fatalln(err)
 					}
@@ -98,11 +99,11 @@ func NewCmdGetKubeconfig() *cobra.Command {
 			}
 			for _, c := range clusters {
 				log.Debugf("Getting kubeconfig for cluster '%s'", c.Name)
-				output := getKubeconfigFlags.output
-				if output == "" && !getKubeconfigFlags.targetDefault {
+				output := mergeKubeconfigFlags.output
+				if output == "" && !mergeKubeconfigFlags.targetDefault {
 					output = path.Join(outputDir, fmt.Sprintf("kubeconfig-%s.yaml", c.Name))
 				}
-				output, err = cluster.GetAndWriteKubeConfig(cmd.Context(), runtimes.SelectedRuntime, c, output, &writeKubeConfigOptions)
+				output, err = cluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, c, output, &writeKubeConfigOptions)
 				if err != nil {
 					log.Errorln(err)
 					errorGettingKubeconfig = true
@@ -112,7 +113,7 @@ func NewCmdGetKubeconfig() *cobra.Command {
 			}
 
 			// only print kubeconfig file path if output is not stdout ("-")
-			if getKubeconfigFlags.output != "-" {
+			if mergeKubeconfigFlags.output != "-" {
 				fmt.Println(strings.Join(outputs, ":"))
 			}
 
@@ -124,15 +125,15 @@ func NewCmdGetKubeconfig() *cobra.Command {
 	}
 
 	// add flags
-	cmd.Flags().StringVarP(&getKubeconfigFlags.output, "output", "o", "", fmt.Sprintf("Define output [ - | FILE ] (default from $KUBECONFIG or %s", clientcmd.RecommendedHomeFile))
+	cmd.Flags().StringVarP(&mergeKubeconfigFlags.output, "output", "o", "", fmt.Sprintf("Define output [ - | FILE ] (default from $KUBECONFIG or %s", clientcmd.RecommendedHomeFile))
 	if err := cmd.MarkFlagFilename("output"); err != nil {
 		log.Fatalln("Failed to mark flag --output as filename")
 	}
-	cmd.Flags().BoolVarP(&getKubeconfigFlags.targetDefault, "merge-default-kubeconfig", "d", false, fmt.Sprintf("Merge into the default kubeconfig ($KUBECONFIG or %s)", clientcmd.RecommendedHomeFile))
+	cmd.Flags().BoolVarP(&mergeKubeconfigFlags.targetDefault, "merge-default-kubeconfig", "d", false, fmt.Sprintf("Merge into the default kubeconfig ($KUBECONFIG or %s)", clientcmd.RecommendedHomeFile))
 	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateExisting, "update", "u", true, "Update conflicting fields in existing kubeconfig")
 	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateCurrentContext, "switch-context", "s", true, "Switch to new context")
 	cmd.Flags().BoolVar(&writeKubeConfigOptions.OverwriteExisting, "overwrite", false, "[Careful!] Overwrite existing file, ignoring its contents")
-	cmd.Flags().BoolVarP(&getKubeconfigFlags.all, "all", "a", false, "Get kubeconfigs from all existing clusters")
+	cmd.Flags().BoolVarP(&mergeKubeconfigFlags.all, "all", "a", false, "Get kubeconfigs from all existing clusters")
 
 	// done
 	return cmd

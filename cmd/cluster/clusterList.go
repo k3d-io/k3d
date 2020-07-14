@@ -19,7 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package get
+package cluster
 
 import (
 	"context"
@@ -44,17 +44,17 @@ type clusterFlags struct {
 	token    bool
 }
 
-// NewCmdGetCluster returns a new cobra command
-func NewCmdGetCluster() *cobra.Command {
+// NewCmdClusterList returns a new cobra command
+func NewCmdClusterList() *cobra.Command {
 
 	clusterFlags := clusterFlags{}
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:     "cluster [NAME [NAME...]]",
-		Aliases: []string{"clusters"},
-		Short:   "Get cluster(s)",
-		Long:    `Get cluster(s).`,
+		Use:     "list [NAME [NAME...]]",
+		Aliases: []string{"ls", "get"},
+		Short:   "List cluster(s)",
+		Long:    `List cluster(s).`,
 		Run: func(cmd *cobra.Command, args []string) {
 			clusters := buildClusterList(cmd.Context(), args)
 			PrintClusters(clusters, clusterFlags)
@@ -78,14 +78,14 @@ func buildClusterList(ctx context.Context, args []string) []*k3d.Cluster {
 
 	if len(args) == 0 {
 		// cluster name not specified : get all clusters
-		clusters, err = k3cluster.GetClusters(ctx, runtimes.SelectedRuntime)
+		clusters, err = k3cluster.ClusterList(ctx, runtimes.SelectedRuntime)
 		if err != nil {
 			log.Fatalln(err)
 		}
 	} else {
 		for _, clusterName := range args {
 			// cluster name specified : get specific cluster
-			retrievedCluster, err := k3cluster.GetCluster(ctx, runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
+			retrievedCluster, err := k3cluster.ClusterGet(ctx, runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
 			if err != nil {
 				log.Fatalln(err)
 			}

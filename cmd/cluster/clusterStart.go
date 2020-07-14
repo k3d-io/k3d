@@ -19,87 +19,67 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package delete
+package cluster
 
 import (
-	"fmt"
-	"os"
-	"path"
+	"time"
 
 	"github.com/rancher/k3d/v3/cmd/util"
 	"github.com/rancher/k3d/v3/pkg/cluster"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-	k3dutil "github.com/rancher/k3d/v3/pkg/util"
-	log "github.com/sirupsen/logrus"
-
+	"github.com/rancher/k3d/v3/pkg/types"
 	"github.com/spf13/cobra"
+
+	k3d "github.com/rancher/k3d/v3/pkg/types"
+
+	log "github.com/sirupsen/logrus"
 )
 
-// NewCmdDeleteCluster returns a new cobra command
-func NewCmdDeleteCluster() *cobra.Command {
+// NewCmdClusterStart returns a new cobra command
+func NewCmdClusterStart() *cobra.Command {
 
-	// create new cobra command
+	startClusterOpts := types.ClusterStartOpts{}
+
+	// create new command
 	cmd := &cobra.Command{
-		Use:               "cluster [NAME [NAME ...] | --all]",
-		Short:             "Delete cluster(s).",
-		Long:              `Delete cluster(s).`,
-		Args:              cobra.MinimumNArgs(0), // 0 or n arguments; 0 = default cluster name
+		Use:               "start [NAME [NAME...] | --all]",
+		Long:              `Start existing k3d cluster(s)`,
+		Short:             "Start existing k3d cluster(s)",
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Run: func(cmd *cobra.Command, args []string) {
-			clusters := parseDeleteClusterCmd(cmd, args)
-
+			clusters := parseStartClusterCmd(cmd, args)
 			if len(clusters) == 0 {
 				log.Infoln("No clusters found")
 			} else {
 				for _, c := range clusters {
-					if err := cluster.DeleteCluster(cmd.Context(), runtimes.SelectedRuntime, c); err != nil {
+					if err := cluster.ClusterStart(cmd.Context(), runtimes.SelectedRuntime, c, startClusterOpts); err != nil {
 						log.Fatalln(err)
 					}
-					log.Infoln("Removing cluster details from default kubeconfig...")
-					if err := cluster.RemoveClusterFromDefaultKubeConfig(cmd.Context(), c); err != nil {
-						log.Warnln("Failed to remove cluster details from default kubeconfig")
-						log.Warnln(err)
-					}
-					log.Infoln("Removing standalone kubeconfig file (if there is one)...")
-					configDir, err := k3dutil.GetConfigDirOrCreate()
-					if err != nil {
-						log.Warnf("Failed to delete kubeconfig file: %+v", err)
-					} else {
-						kubeconfigfile := path.Join(configDir, fmt.Sprintf("kubeconfig-%s.yaml", c.Name))
-						if err := os.Remove(kubeconfigfile); err != nil {
-							if !os.IsNotExist(err) {
-								log.Warnf("Failed to delete kubeconfig file '%s'", kubeconfigfile)
-							}
-						}
-					}
-
-					log.Infof("Successfully deleted cluster %s!", c.Name)
 				}
 			}
-
 		},
 	}
 
-	// add subcommands
-
 	// add flags
-	cmd.Flags().BoolP("all", "a", false, "Delete all existing clusters")
+	cmd.Flags().BoolP("all", "a", false, "Start all existing clusters")
+	cmd.Flags().BoolVar(&startClusterOpts.WaitForMaster, "wait", false, "Wait for the master(s) (and loadbalancer) to be ready before returning.")
+	cmd.Flags().DurationVar(&startClusterOpts.Timeout, "timeout", 0*time.Second, "Maximum waiting time for '--wait' before canceling/returning.")
+
+	// add subcommands
 
 	// done
 	return cmd
 }
 
-// parseDeleteClusterCmd parses the command input into variables required to delete clusters
-func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
-
+// parseStartClusterCmd parses the command input into variables required to start clusters
+func parseStartClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	// --all
 	var clusters []*k3d.Cluster
 
 	if all, err := cmd.Flags().GetBool("all"); err != nil {
 		log.Fatalln(err)
 	} else if all {
-		clusters, err = cluster.GetClusters(cmd.Context(), runtimes.SelectedRuntime)
+		clusters, err = cluster.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -112,7 +92,7 @@ func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	}
 
 	for _, name := range clusternames {
-		cluster, err := cluster.GetCluster(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: name})
+		cluster, err := cluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: name})
 		if err != nil {
 			log.Fatalln(err)
 		}

@@ -19,7 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package create
+package node
 
 import (
 	"fmt"
@@ -35,20 +35,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// NewCmdCreateNode returns a new cobra command
-func NewCmdCreateNode() *cobra.Command {
+// NewCmdNodeCreate returns a new cobra command
+func NewCmdNodeCreate() *cobra.Command {
 
-	createNodeOpts := k3d.CreateNodeOpts{}
+	createNodeOpts := k3d.NodeCreateOpts{}
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:   "node NAME",
+		Use:   "create NAME",
 		Short: "Create a new k3s node in docker",
 		Long:  `Create a new containerized k3s node (k3s in docker).`,
 		Args:  cobra.ExactArgs(1), // exactly one name accepted // TODO: if not specified, inherit from cluster that the node shall belong to, if that is specified
 		Run: func(cmd *cobra.Command, args []string) {
 			nodes, cluster := parseCreateNodeCmd(cmd, args)
-			if err := k3dc.AddNodesToCluster(cmd.Context(), runtimes.SelectedRuntime, nodes, cluster, createNodeOpts); err != nil {
+			if err := k3dc.NodeAddToClusterMulti(cmd.Context(), runtimes.SelectedRuntime, nodes, cluster, createNodeOpts); err != nil {
 				log.Errorf("Failed to add nodes to cluster '%s'", cluster.Name)
 				log.Errorln(err)
 			}

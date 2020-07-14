@@ -128,8 +128,8 @@ var DoNotCopyMasterFlags = []string{
 	"--cluster-init",
 }
 
-// CreateClusterOpts describe a set of options one can set when creating a cluster
-type CreateClusterOpts struct {
+// ClusterCreateOpts describe a set of options one can set when creating a cluster
+type ClusterCreateOpts struct {
 	DisableImageVolume  bool
 	WaitForMaster       bool
 	Timeout             time.Duration
@@ -138,26 +138,26 @@ type CreateClusterOpts struct {
 	K3sAgentArgs        []string
 }
 
-// StartClusterOpts describe a set of options one can set when (re-)starting a cluster
-type StartClusterOpts struct {
+// ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
+type ClusterStartOpts struct {
 	WaitForMaster bool
 	Timeout       time.Duration
 }
 
-// CreateNodeOpts describes a set of options one can set when creating a new node
-type CreateNodeOpts struct {
+// NodeCreateOpts describes a set of options one can set when creating a new node
+type NodeCreateOpts struct {
 	Wait    bool
 	Timeout time.Duration
 }
 
-// StartNodeOpts describes a set of options one can set when (re-)starting a node
-type StartNodeOpts struct {
+// NodeStartOpts describes a set of options one can set when (re-)starting a node
+type NodeStartOpts struct {
 	Wait    bool
 	Timeout time.Duration
 }
 
-// LoadImageOpts describes a set of options one can set for loading image(s) into cluster(s)
-type LoadImageOpts struct {
+// ImageImportOpts describes a set of options one can set for loading image(s) into cluster(s)
+type ImageImportOpts struct {
 	KeepTar bool
 }
 
@@ -175,7 +175,7 @@ type Cluster struct {
 	Nodes              []*Node            `yaml:"nodes" json:"nodes,omitempty"`
 	InitNode           *Node              // init master node
 	ExternalDatastore  ExternalDatastore  `yaml:"external_datastore" json:"externalDatastore,omitempty"`
-	CreateClusterOpts  *CreateClusterOpts `yaml:"options" json:"options,omitempty"`
+	CreateClusterOpts  *ClusterCreateOpts `yaml:"options" json:"options,omitempty"`
 	ExposeAPI          ExposeAPI          `yaml:"expose_api" json:"exposeAPI,omitempty"`
 	MasterLoadBalancer *Node              `yaml:"master_loadbalancer" json:"masterLoadBalancer,omitempty"`
 	ImageVolume        string             `yaml:"image_volume" json:"imageVolume,omitempty"`

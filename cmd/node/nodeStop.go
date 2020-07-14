@@ -19,34 +19,45 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package stop
+package node
 
 import (
-	log "github.com/sirupsen/logrus"
-
+	"github.com/rancher/k3d/v3/cmd/util"
+	"github.com/rancher/k3d/v3/pkg/runtimes"
 	"github.com/spf13/cobra"
+
+	k3d "github.com/rancher/k3d/v3/pkg/types"
+
+	log "github.com/sirupsen/logrus"
 )
 
-// NewCmdStop returns a new cobra command
-func NewCmdStop() *cobra.Command {
+// NewCmdNodeStop returns a new cobra command
+func NewCmdNodeStop() *cobra.Command {
 
-	// create new cobra command
+	// create new command
 	cmd := &cobra.Command{
-		Use:   "stop",
-		Short: "Stop a resource [cluster, node].",
-		Long:  `Stop a resource [cluster, node].`,
+		Use:               "stop NAME", // TODO: stopNode: allow one or more names or --all",
+		Short:             "Stop an existing k3d node",
+		Long:              `Stop an existing k3d node.`,
+		ValidArgsFunction: util.ValidArgsAvailableNodes,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := cmd.Help(); err != nil {
-				log.Errorln("Couldn't get help text")
+			node := parseStopNodeCmd(cmd, args)
+			if err := runtimes.SelectedRuntime.StopNode(cmd.Context(), node); err != nil {
 				log.Fatalln(err)
 			}
 		},
 	}
 
-	// add subcommands
-	cmd.AddCommand(NewCmdStopCluster())
-	cmd.AddCommand(NewCmdStopNode())
-
 	// done
 	return cmd
+}
+
+// parseStopNodeCmd parses the command input into variables required to stop a node
+func parseStopNodeCmd(cmd *cobra.Command, args []string) *k3d.Node {
+	// node name // TODO: allow node filters, e.g. `k3d stop nodes mycluster@worker` to stop all worker nodes of cluster 'mycluster'
+	if len(args) == 0 || len(args[0]) == 0 {
+		log.Fatalln("No node name given")
+	}
+
+	return &k3d.Node{Name: args[0]}
 }

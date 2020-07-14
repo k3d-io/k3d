@@ -19,30 +19,29 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package stop
+package node
 
 import (
 	"github.com/rancher/k3d/v3/cmd/util"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
-	"github.com/spf13/cobra"
-
 	k3d "github.com/rancher/k3d/v3/pkg/types"
+	"github.com/spf13/cobra"
 
 	log "github.com/sirupsen/logrus"
 )
 
-// NewCmdStopNode returns a new cobra command
-func NewCmdStopNode() *cobra.Command {
+// NewCmdNodeStart returns a new cobra command
+func NewCmdNodeStart() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:               "node NAME", // TODO: stopNode: allow one or more names or --all",
-		Short:             "Stop an existing k3d node",
-		Long:              `Stop an existing k3d node.`,
+		Use:               "start NAME", // TODO: startNode: allow one or more names or --all
+		Short:             "Start an existing k3d node",
+		Long:              `Start an existing k3d node.`,
 		ValidArgsFunction: util.ValidArgsAvailableNodes,
 		Run: func(cmd *cobra.Command, args []string) {
-			node := parseStopNodeCmd(cmd, args)
-			if err := runtimes.SelectedRuntime.StopNode(cmd.Context(), node); err != nil {
+			node := parseStartNodeCmd(cmd, args)
+			if err := runtimes.SelectedRuntime.StartNode(cmd.Context(), node); err != nil {
 				log.Fatalln(err)
 			}
 		},
@@ -52,9 +51,9 @@ func NewCmdStopNode() *cobra.Command {
 	return cmd
 }
 
-// parseStopNodeCmd parses the command input into variables required to stop a node
-func parseStopNodeCmd(cmd *cobra.Command, args []string) *k3d.Node {
-	// node name // TODO: allow node filters, e.g. `k3d stop nodes mycluster@worker` to stop all worker nodes of cluster 'mycluster'
+// parseStartNodeCmd parses the command input into variables required to start a node
+func parseStartNodeCmd(cmd *cobra.Command, args []string) *k3d.Node {
+	// node name // TODO: startNode: allow node filters, e.g. `k3d start nodes mycluster@worker` to start all worker nodes of cluster 'mycluster'
 	if len(args) == 0 || len(args[0]) == 0 {
 		log.Fatalln("No node name given")
 	}

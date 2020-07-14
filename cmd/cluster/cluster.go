@@ -19,21 +19,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package create
+package cluster
 
 import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-// NewCmdCreate returns a new cobra command
-func NewCmdCreate() *cobra.Command {
+// NewCmdCluster returns a new cobra command
+func NewCmdCluster() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create a resource [cluster, node].",
-		Long:  `Create a resource [cluster, node].`,
+		Use:   "cluster",
+		Short: "Manage cluster(s)",
+		Long:  `Manage cluster(s)`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
 				log.Errorln("Couldn't get help text")
@@ -43,8 +43,11 @@ func NewCmdCreate() *cobra.Command {
 	}
 
 	// add subcommands
-	cmd.AddCommand(NewCmdCreateCluster())
-	cmd.AddCommand(NewCmdCreateNode())
+	cmd.AddCommand(NewCmdClusterCreate())
+	cmd.AddCommand(NewCmdClusterStart())
+	cmd.AddCommand(NewCmdClusterStop())
+	cmd.AddCommand(NewCmdClusterDelete())
+	cmd.AddCommand(NewCmdClusterList())
 
 	// add flags
 
