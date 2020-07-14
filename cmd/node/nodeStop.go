@@ -54,7 +54,7 @@ func NewCmdNodeStop() *cobra.Command {
 
 // parseStopNodeCmd parses the command input into variables required to stop a node
 func parseStopNodeCmd(cmd *cobra.Command, args []string) *k3d.Node {
-	// node name // TODO: allow node filters, e.g. `k3d stop nodes mycluster@worker` to stop all worker nodes of cluster 'mycluster'
+	// node name // TODO: allow node filters, e.g. `k3d node stop mycluster@agent` to stop all agent nodes of cluster 'mycluster'
 	if len(args) == 0 || len(args[0]) == 0 {
 		log.Fatalln("No node name given")
 	}

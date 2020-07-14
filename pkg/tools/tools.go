@@ -92,7 +92,7 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 	var imageVolume string
 	var ok bool
 	for _, node := range cluster.Nodes {
-		if node.Role == k3d.MasterRole || node.Role == k3d.WorkerRole {
+		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
 			if imageVolume, ok = node.Labels[k3d.LabelImageVolume]; ok {
 				break
 			}
@@ -162,8 +162,8 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 	var importWaitgroup sync.WaitGroup
 	for _, tarName := range importTarNames {
 		for _, node := range cluster.Nodes {
-			// only import image in master and worker nodes (i.e. ignoring auxiliary nodes like the master loadbalancer)
-			if node.Role == k3d.MasterRole || node.Role == k3d.WorkerRole {
+			// only import image in server and agent nodes (i.e. ignoring auxiliary nodes like the server loadbalancer)
+			if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
 				importWaitgroup.Add(1)
 				go func(node *k3d.Node, wg *sync.WaitGroup, tarPath string) {
 					log.Infof("Importing images from tarball '%s' into node '%s'...", tarPath, node.Name)

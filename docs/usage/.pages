@@ -2,5 +2,5 @@ title: Usage
 arrange:
   - commands.md
   - kubeconfig.md
-  - multimaster.md
+  - multiserver.md
   - guides

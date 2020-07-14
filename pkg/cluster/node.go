@@ -109,17 +109,17 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		}
 	}
 
-	if node.Role == k3d.MasterRole {
-		for _, forbiddenCmd := range k3d.DoNotCopyMasterFlags {
+	if node.Role == k3d.ServerRole {
+		for _, forbiddenCmd := range k3d.DoNotCopyServerFlags {
 			for i, cmd := range node.Cmd {
-				// cut out the '--cluster-init' flag as this should only be done by the initializing master node
+				// cut out the '--cluster-init' flag as this should only be done by the initializing server node
 				if cmd == forbiddenCmd {
 					log.Debugf("Dropping '%s' from node's cmd", forbiddenCmd)
 					node.Cmd = append(node.Cmd[:i], node.Cmd[i+1:]...)
 				}
 			}
 			for i, arg := range node.Args {
-				// cut out the '--cluster-init' flag as this should only be done by the initializing master node
+				// cut out the '--cluster-init' flag as this should only be done by the initializing server node
 				if arg == forbiddenCmd {
 					log.Debugf("Dropping '%s' from node's args", forbiddenCmd)
 					node.Args = append(node.Args[:i], node.Args[i+1:]...)
@@ -132,8 +132,8 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		return err
 	}
 
-	// if it's a master node, then update the loadbalancer configuration
-	if node.Role == k3d.MasterRole {
+	// if it's a server node, then update the loadbalancer configuration
+	if node.Role == k3d.ServerRole {
 		if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
 			log.Errorln("Failed to update cluster loadbalancer")
 			return err
@@ -231,12 +231,12 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 	node.Env = append(node.Env, k3d.DefaultNodeEnv...) // append default node env vars
 
 	// specify options depending on node role
-	if node.Role == k3d.WorkerRole { // TODO: check here AND in CLI or only here?
-		if err := patchWorkerSpec(node); err != nil {
+	if node.Role == k3d.AgentRole { // TODO: check here AND in CLI or only here?
+		if err := patchAgentSpec(node); err != nil {
 			return err
 		}
-	} else if node.Role == k3d.MasterRole {
-		if err := patchMasterSpec(node); err != nil {
+	} else if node.Role == k3d.ServerRole {
+		if err := patchServerSpec(node); err != nil {
 			return err
 		}
 	}
@@ -264,8 +264,8 @@ func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) e
 		return err
 	}
 
-	// if it's a master node, then update the loadbalancer configuration
-	if node.Role == k3d.MasterRole {
+	// if it's a server node, then update the loadbalancer configuration
+	if node.Role == k3d.ServerRole {
 		if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
 			log.Errorln("Failed to update cluster loadbalancer")
 			return err
@@ -275,16 +275,16 @@ func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) e
 	return nil
 }
 
-// patchWorkerSpec adds worker node specific settings to a node
-func patchWorkerSpec(node *k3d.Node) error {
+// patchAgentSpec adds agent node specific settings to a node
+func patchAgentSpec(node *k3d.Node) error {
 	if node.Cmd == nil {
 		node.Cmd = []string{"agent"}
 	}
 	return nil
 }
 
-// patchMasterSpec adds worker node specific settings to a node
-func patchMasterSpec(node *k3d.Node) error {
+// patchServerSpec adds agent node specific settings to a node
+func patchServerSpec(node *k3d.Node) error {
 
 	// command / arguments
 	if node.Cmd == nil {
@@ -292,12 +292,12 @@ func patchMasterSpec(node *k3d.Node) error {
 	}
 
 	// Add labels and TLS SAN for the exposed API
-	// FIXME: For now, the labels concerning the API on the master nodes are only being used for configuring the kubeconfig
-	node.Labels[k3d.LabelMasterAPIHostIP] = node.MasterOpts.ExposeAPI.HostIP // TODO: maybe get docker machine IP here
-	node.Labels[k3d.LabelMasterAPIHost] = node.MasterOpts.ExposeAPI.Host
-	node.Labels[k3d.LabelMasterAPIPort] = node.MasterOpts.ExposeAPI.Port
+	// FIXME: For now, the labels concerning the API on the server nodes are only being used for configuring the kubeconfig
+	node.Labels[k3d.LabelServerAPIHostIP] = node.ServerOpts.ExposeAPI.HostIP // TODO: maybe get docker machine IP here
+	node.Labels[k3d.LabelServerAPIHost] = node.ServerOpts.ExposeAPI.Host
+	node.Labels[k3d.LabelServerAPIPort] = node.ServerOpts.ExposeAPI.Port
 
-	node.Args = append(node.Args, "--tls-san", node.MasterOpts.ExposeAPI.Host) // add TLS SAN for non default host name
+	node.Args = append(node.Args, "--tls-san", node.ServerOpts.ExposeAPI.Host) // add TLS SAN for non default host name
 
 	return nil
 }

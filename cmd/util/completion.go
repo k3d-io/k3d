@@ -86,7 +86,7 @@ nodeLoop:
 func ValidArgsNodeRoles(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 
 	var completions []string
-	roles := []string{string(k3d.MasterRole), string(k3d.WorkerRole)}
+	roles := []string{string(k3d.ServerRole), string(k3d.AgentRole)}
 
 	for _, role := range roles {
 		if strings.HasPrefix(role, toComplete) {

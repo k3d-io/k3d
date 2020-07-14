@@ -147,15 +147,15 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		}
 	}
 
-	// masterOpts
-	masterOpts := k3d.MasterOpts{IsInit: false}
+	// serverOpts
+	serverOpts := k3d.ServerOpts{IsInit: false}
 	for k, v := range containerDetails.Config.Labels {
-		if k == k3d.LabelMasterAPIHostIP {
-			masterOpts.ExposeAPI.HostIP = v
-		} else if k == k3d.LabelMasterAPIHost {
-			masterOpts.ExposeAPI.Host = v
-		} else if k == k3d.LabelMasterAPIPort {
-			masterOpts.ExposeAPI.Port = v
+		if k == k3d.LabelServerAPIHostIP {
+			serverOpts.ExposeAPI.HostIP = v
+		} else if k == k3d.LabelServerAPIHost {
+			serverOpts.ExposeAPI.Host = v
+		} else if k == k3d.LabelServerAPIPort {
+			serverOpts.ExposeAPI.Port = v
 		}
 	}
 
@@ -187,8 +187,8 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		Restart:    restart,
 		Labels:     labels,
 		Network:    clusterNetwork,
-		MasterOpts: masterOpts,
-		WorkerOpts: k3d.WorkerOpts{},
+		ServerOpts: serverOpts,
+		AgentOpts:  k3d.AgentOpts{},
 	}
 	return node, nil
 }

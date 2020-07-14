@@ -37,7 +37,7 @@ func TestTranslateNodeToContainer(t *testing.T) {
 
 	inputNode := &k3d.Node{
 		Name:    "test",
-		Role:    k3d.MasterRole,
+		Role:    k3d.ServerRole,
 		Image:   "rancher/k3s:v0.9.0",
 		Volumes: []string{"/test:/tmp/test"},
 		Env:     []string{"TEST_KEY_1=TEST_VAL_1"},
@@ -45,7 +45,7 @@ func TestTranslateNodeToContainer(t *testing.T) {
 		Args:    []string{"--some-boolflag"},
 		Ports:   []string{"0.0.0.0:6443:6443/tcp"},
 		Restart: true,
-		Labels:  map[string]string{k3d.LabelRole: string(k3d.MasterRole), "test_key_1": "test_val_1"},
+		Labels:  map[string]string{k3d.LabelRole: string(k3d.ServerRole), "test_key_1": "test_val_1"},
 	}
 
 	expectedRepresentation := &NodeInDocker{
@@ -54,7 +54,7 @@ func TestTranslateNodeToContainer(t *testing.T) {
 			Image:        "rancher/k3s:v0.9.0",
 			Env:          []string{"TEST_KEY_1=TEST_VAL_1"},
 			Cmd:          []string{"server", "--https-listen-port=6443", "--some-boolflag"},
-			Labels:       map[string]string{k3d.LabelRole: string(k3d.MasterRole), "test_key_1": "test_val_1"},
+			Labels:       map[string]string{k3d.LabelRole: string(k3d.ServerRole), "test_key_1": "test_val_1"},
 			ExposedPorts: nat.PortSet{},
 		},
 		HostConfig: container.HostConfig{

@@ -45,7 +45,7 @@ type WriteKubeConfigOptions struct {
 }
 
 // KubeconfigGetWrite ...
-// 1. fetches the KubeConfig from the first master node retrieved for a given cluster
+// 1. fetches the KubeConfig from the first server node retrieved for a given cluster
 // 2. modifies it by updating some fields with cluster-specific information
 // 3. writes it to the specified output
 func KubeconfigGetWrite(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, output string, writeKubeConfigOptions *WriteKubeConfigOptions) (string, error) {
@@ -107,45 +107,45 @@ func KubeconfigGetWrite(ctx context.Context, runtime runtimes.Runtime, cluster *
 
 }
 
-// KubeconfigGet grabs the kubeconfig file from /output from a master node container,
+// KubeconfigGet grabs the kubeconfig file from /output from a server node container,
 // modifies it by updating some fields with cluster-specific information
 // and returns a Config object for further processing
 func KubeconfigGet(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*clientcmdapi.Config, error) {
-	// get all master nodes for the selected cluster
-	// TODO: getKubeconfig: we should make sure, that the master node we're trying to fetch from is actually running
-	masterNodes, err := runtime.GetNodesByLabel(ctx, map[string]string{k3d.LabelClusterName: cluster.Name, k3d.LabelRole: string(k3d.MasterRole)})
+	// get all server nodes for the selected cluster
+	// TODO: getKubeconfig: we should make sure, that the server node we're trying to fetch from is actually running
+	serverNodes, err := runtime.GetNodesByLabel(ctx, map[string]string{k3d.LabelClusterName: cluster.Name, k3d.LabelRole: string(k3d.ServerRole)})
 	if err != nil {
-		log.Errorln("Failed to get master nodes")
+		log.Errorln("Failed to get server nodes")
 		return nil, err
 	}
-	if len(masterNodes) == 0 {
-		return nil, fmt.Errorf("Didn't find any master node")
+	if len(serverNodes) == 0 {
+		return nil, fmt.Errorf("Didn't find any server node")
 	}
 
-	// prefer a master node, which actually has the port exposed
-	var chosenMaster *k3d.Node
-	chosenMaster = nil
+	// prefer a server node, which actually has the port exposed
+	var chosenServer *k3d.Node
+	chosenServer = nil
 	APIPort := k3d.DefaultAPIPort
 	APIHost := k3d.DefaultAPIHost
 
-	for _, master := range masterNodes {
-		if _, ok := master.Labels[k3d.LabelMasterAPIPort]; ok {
-			chosenMaster = master
-			APIPort = master.Labels[k3d.LabelMasterAPIPort]
-			if _, ok := master.Labels[k3d.LabelMasterAPIHost]; ok {
-				APIHost = master.Labels[k3d.LabelMasterAPIHost]
+	for _, server := range serverNodes {
+		if _, ok := server.Labels[k3d.LabelServerAPIPort]; ok {
+			chosenServer = server
+			APIPort = server.Labels[k3d.LabelServerAPIPort]
+			if _, ok := server.Labels[k3d.LabelServerAPIHost]; ok {
+				APIHost = server.Labels[k3d.LabelServerAPIHost]
 			}
 			break
 		}
 	}
 
-	if chosenMaster == nil {
-		chosenMaster = masterNodes[0]
+	if chosenServer == nil {
+		chosenServer = serverNodes[0]
 	}
-	// get the kubeconfig from the first master node
-	reader, err := runtime.GetKubeconfig(ctx, chosenMaster)
+	// get the kubeconfig from the first server node
+	reader, err := runtime.GetKubeconfig(ctx, chosenServer)
 	if err != nil {
-		log.Errorf("Failed to get kubeconfig from node '%s'", chosenMaster.Name)
+		log.Errorf("Failed to get kubeconfig from node '%s'", chosenServer.Name)
 		return nil, err
 	}
 	defer reader.Close()
