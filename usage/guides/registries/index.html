@@ -724,7 +724,7 @@
                 <h1 id="registries">Registries<a class="headerlink" href="#registries" title="Permanent link">&para;</a></h1>
 <h2 id="registries-configuration-file">Registries configuration file<a class="headerlink" href="#registries-configuration-file" title="Permanent link">&para;</a></h2>
 <p>You can add registries by specifying them in a <code>registries.yaml</code> and mounting them at creation time:
-<code class="highlight">k3d create cluster mycluster --volume /home/YOU/my-registries.yaml:/etc/rancher/k3s/registries.yaml</code>.</p>
+<code class="highlight">k3d cluster create mycluster --volume /home/YOU/my-registries.yaml:/etc/rancher/k3s/registries.yaml</code>.</p>
 <p>This file is a regular <a href="https://rancher.com/docs/k3s/latest/en/installation/private-registry/">k3s registries configuration file</a>, and looks like this:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">mirrors</span><span class="p">:</span>
   <span class="s">&quot;my.company.registry:5000&quot;</span><span class="p p-Indicator">:</span>
@@ -768,7 +768,7 @@ For example, if we mount the CA file in <code>/etc/ssl/certs/my-company-root.pem
 </code></pre></div>
 
 <p>Finally, we can create the cluster, mounting the CA file in the path we specified in <code>ca_file</code>:</p>
-<p><code class="highlight">k3d create cluster --volume <span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/.k3d/my-registries.yaml:/etc/rancher/k3s/registries.yaml --volume <span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/.k3d/my-company-root.pem:/etc/ssl/certs/my-company-root.pem</code></p>
+<p><code class="highlight">k3d cluster create --volume <span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/.k3d/my-registries.yaml:/etc/rancher/k3s/registries.yaml --volume <span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/.k3d/my-company-root.pem:/etc/ssl/certs/my-company-root.pem</code></p>
 <h2 id="using-a-local-registry">Using a local registry<a class="headerlink" href="#using-a-local-registry" title="Permanent link">&para;</a></h2>
 <h3 id="using-the-k3d-registry">Using the k3d registry<a class="headerlink" href="#using-the-k3d-registry" title="Permanent link">&para;</a></h3>
 <div class="admonition info">
@@ -866,7 +866,7 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
 </pre>
 
 <p>and then mount it at <code>/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl</code> (where <code>containerd</code> in your k3d nodes will load it) when creating the k3d cluster:</p>
-<div class="highlight"><pre><span></span><code>k3d create cluster mycluster <span class="se">\</span>
+<div class="highlight"><pre><span></span><code>k3d cluster create mycluster <span class="se">\</span>
     --volume <span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/.k3d/config.toml.tmpl:/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
 </code></pre></div>
                 
@@ -877,7 +877,7 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 2, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 14, 2020</span>
     
   </small>
 </div>

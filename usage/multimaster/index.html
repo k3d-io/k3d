@@ -605,12 +605,12 @@
 <h2 id="embedded-dqlite">Embedded dqlite<a class="headerlink" href="#embedded-dqlite" title="Permanent link">&para;</a></h2>
 <p>Create a cluster with 3 master nodes using k3s&rsquo; embedded dqlite database.
 The first master to be created will use the <code>--cluster-init</code> flag and k3d will wait for it to be up and running before creating (and connecting) the other master nodes.</p>
-<div class="highlight"><pre><span></span><code>    k3d create cluster multimaster --masters <span class="m">3</span>
+<div class="highlight"><pre><span></span><code>    k3d cluster create multimaster --masters <span class="m">3</span>
 </code></pre></div>
 
 <h2 id="adding-master-nodes-to-a-running-cluster">Adding master nodes to a running cluster<a class="headerlink" href="#adding-master-nodes-to-a-running-cluster" title="Permanent link">&para;</a></h2>
 <p>In theory (and also in practice in most cases), this is as easy as executing the following command:</p>
-<div class="highlight"><pre><span></span><code>    k3d create node newmaster --cluster multimaster --role master
+<div class="highlight"><pre><span></span><code>    k3d node create newmaster --cluster multimaster --role master
 </code></pre></div>
 
 <div class="admonition important">
@@ -626,7 +626,7 @@ That&rsquo;s because the initial master node was not started with the <code>--cl
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">May 16, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 14, 2020</span>
     
   </small>
 </div>

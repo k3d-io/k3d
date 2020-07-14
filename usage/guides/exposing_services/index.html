@@ -606,7 +606,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <ol>
 <li>
 <p>Create a cluster, mapping the ingress port 80 to localhost:8081</p>
-<p><code class="highlight">k3d create cluster --api-port <span class="m">6550</span> -p <span class="m">8081</span>:80@loadbalancer --workers <span class="m">2</span></code></p>
+<p><code class="highlight">k3d cluster create --api-port <span class="m">6550</span> -p <span class="m">8081</span>:80@loadbalancer --workers <span class="m">2</span></code></p>
 <div class="admonition info">
 <p class="admonition-title">Good to know</p>
 <ul>
@@ -624,7 +624,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 </li>
 <li>
 <p>Get the kubeconfig file</p>
-<p><code class="highlight"><span class="nb">export</span> <span class="nv">KUBECONFIG</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>k3d get kubeconfig k3s-default<span class="k">)</span><span class="s2">&quot;</span></code></p>
+<p><code class="highlight"><span class="nb">export</span> <span class="nv">KUBECONFIG</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>k3d kubeconfig get k3s-default<span class="k">)</span><span class="s2">&quot;</span></code></p>
 </li>
 <li>
 <p>Create a nginx deployment</p>
@@ -663,7 +663,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <ol>
 <li>
 <p>Create a cluster, mapping the port 30080 from worker-0 to localhost:8082</p>
-<p><code class="highlight">k3d create cluster mycluster -p <span class="m">8082</span>:30080@worker<span class="o">[</span><span class="m">0</span><span class="o">]</span> --workers <span class="m">2</span></code></p>
+<p><code class="highlight">k3d cluster create mycluster -p <span class="m">8082</span>:30080@worker<span class="o">[</span><span class="m">0</span><span class="o">]</span> --workers <span class="m">2</span></code></p>
 <ul>
 <li>Note: Kubernetes&rsquo; default NodePort range is <a href="https://kubernetes.io/docs/concepts/services-networking/service/#nodeport"><code>30000-32767</code></a></li>
 </ul>
@@ -705,7 +705,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 18, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 14, 2020</span>
     
   </small>
 </div>

@@ -629,12 +629,12 @@
 <h2 id="issues-with-btrfs">Issues with BTRFS<a class="headerlink" href="#issues-with-btrfs" title="Permanent link">&para;</a></h2>
 <ul>
 <li>As <a href="https://github.com/jaredallard">@jaredallard</a> <a href="https://github.com/rancher/k3d/pull/48">pointed out</a>, people running <code>k3d</code> on a system with <strong>btrfs</strong>, may need to mount <code>/dev/mapper</code> into the nodes for the setup to work.</li>
-<li>This will do: <code>k3d create cluster CLUSTER_NAME -v /dev/mapper:/dev/mapper</code></li>
+<li>This will do: <code>k3d cluster create CLUSTER_NAME -v /dev/mapper:/dev/mapper</code></li>
 </ul>
 <h2 id="issues-with-zfs">Issues with ZFS<a class="headerlink" href="#issues-with-zfs" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
-<p>k3s currently has <a href="ttps://github.com/rancher/k3s/issues/66">no support for ZFS</a> and thus, creating multi-master setups (e.g. <code>k3d create cluster multimaster --masters 3</code>) fails, because the initializing master node (server flag <code>--cluster-init</code>) errors out with the following log:
+<p>k3s currently has <a href="ttps://github.com/rancher/k3s/issues/66">no support for ZFS</a> and thus, creating multi-master setups (e.g. <code>k3d cluster create multimaster --masters 3</code>) fails, because the initializing master node (server flag <code>--cluster-init</code>) errors out with the following log:
   <div class="highlight"><pre><span></span><code>starting kubernetes: preparing server: start cluster and https: raft_init<span class="o">()</span>: io: create I/O capabilities probe file: posix_allocate: operation not supported on socket
 </code></pre></div></p>
 </li>
@@ -651,7 +651,7 @@
 <li>Possible <a href="https://github.com/rancher/k3d/issues/133#issuecomment-549065666">fix/workaround by @zer0def</a>:<ul>
 <li>use a docker storage driver which cleans up properly (e.g. overlay2)</li>
 <li>clean up or expand docker root filesystem</li>
-<li>change the kubelet&rsquo;s eviction thresholds upon cluster creation: <code>k3d create cluster --k3s-agent-arg '--kubelet-arg=eviction-hard=imagefs.available&lt;1%,nodefs.available&lt;1%' --k3s-agent-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%'</code></li>
+<li>change the kubelet&rsquo;s eviction thresholds upon cluster creation: <code>k3d cluster create --k3s-agent-arg '--kubelet-arg=eviction-hard=imagefs.available&lt;1%,nodefs.available&lt;1%' --k3s-agent-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%'</code></li>
 </ul>
 </li>
 </ul>
@@ -671,7 +671,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 4, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 14, 2020</span>
     
   </small>
 </div>

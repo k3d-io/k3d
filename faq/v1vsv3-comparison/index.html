@@ -592,7 +592,7 @@
     - --command                   -&gt; planned: keep
     - --shell                     -&gt; planned: keep (or second arg)
       - auto, bash, zsh
-  - create                        -&gt; `k3d create cluster CLUSTERNAME`
+  - create                        -&gt; `k3d cluster create CLUSTERNAME`
     - --name                      -&gt; dropped, implemented via arg
     - --volume                    -&gt; implemented
     - --port                      -&gt; implemented
@@ -612,7 +612,7 @@
     - --registry-volume           -&gt; TBD
     - --registries-file           -&gt; TBD
     - --enable-registry-cache     -&gt; TBD
-  - (add-node)                    -&gt; `k3d create node NODENAME`
+  - (add-node)                    -&gt; `k3d node create NODENAME`
     - --role                      -&gt; implemented
     - --name                      -&gt; dropped, implemented as arg
     - --count                     -&gt; implemented as `--replicas`
@@ -623,23 +623,23 @@
     - --k3s                       -&gt; TBD
     - --k3s-secret                -&gt; TBD
     - --k3s-token                 -&gt; TBD
-  - delete                        -&gt; `k3d delete cluster CLUSTERNAME`
+  - delete                        -&gt; `k3d cluster delete CLUSTERNAME`
     - --name                      -&gt; dropped, implemented as arg
     - --all                       -&gt; implemented
     - --prune                     -&gt; TBD
     - --keep-registry-volume      -&gt; TBD
-  - stop                          -&gt; `k3d stop cluster CLUSTERNAME`
+  - stop                          -&gt; `k3d cluster stop CLUSTERNAME`
     - --name                      -&gt; dropped, implemented as arg
     - --all                       -&gt; implemented
-  - start                         -&gt; `k3d start cluster CLUSTERNAME`
+  - start                         -&gt; `k3d cluster start CLUSTERNAME`
     - --name                      -&gt; dropped, implemented as arg
     - --all                       -&gt; implemented
   - list                          -&gt; dropped, implemented as `k3d get clusters`
-  - get-kubeconfig                -&gt; `k3d get kubeconfig CLUSTERNAME`
+  - get-kubeconfig                -&gt; `k3d kubeconfig get|merge CLUSTERNAME`
     - --name                      -&gt; dropped, implemented as arg
     - --all                       -&gt; implemented
     - --overwrite                 -&gt; implemented
-  - import-images                 -&gt; `k3d load image [--cluster CLUSTERNAME] [--keep] IMAGES`
+  - import-images                 -&gt; `k3d image import [--cluster CLUSTERNAME] [--keep] IMAGES`
     - --name                      -&gt; implemented as `--cluster`
     - --no-remove                 -&gt; implemented as `--keep-tarball`
 </code></pre></div>
@@ -651,7 +651,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 4, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 14, 2020</span>
     
   </small>
 </div>

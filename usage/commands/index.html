@@ -535,10 +535,14 @@
                 
                 <h1 id="command-tree">Command Tree<a class="headerlink" href="#command-tree" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code>k3d
-  --runtime  <span class="c1"># choose the container runtime (default: docker)</span>
   --verbose  <span class="c1"># enable verbose (debug) logging (default: false)</span>
-  create
-    cluster <span class="o">[</span>CLUSTERNAME<span class="o">]</span>  <span class="c1"># default cluster name is &#39;k3s-default&#39;</span>
+  --version  <span class="c1"># show k3d and k3s version</span>
+  -h, --help  <span class="c1"># show help text</span>
+  version  <span class="c1"># show k3d and k3s version</span>
+  <span class="nb">help</span> <span class="o">[</span>COMMAND<span class="o">]</span>  <span class="c1"># show help text for any command</span>
+  completion <span class="o">[</span>bash <span class="p">|</span> zsh <span class="p">|</span> <span class="o">(</span>psh <span class="p">|</span> powershell<span class="o">)]</span>  <span class="c1"># generate completion scripts for common shells</span>
+  cluster <span class="o">[</span>CLUSTERNAME<span class="o">]</span>  <span class="c1"># default cluster name is &#39;k3s-default&#39;</span>
+    create
       -a, --api-port  <span class="c1"># specify the port on which the cluster will be accessible (e.g. via kubectl)</span>
       -i, --image  <span class="c1"># specify which k3s image should be used for the nodes</span>
       --k3s-agent-arg  <span class="c1"># add additional arguments to the k3s agent (see https://rancher.com/docs/k3s/latest/en/installation/install-options/agent-config/#k3s-agent-cli-help)</span>
@@ -554,48 +558,45 @@
       -v, --volume  <span class="c1"># specify additional bind-mounts</span>
       --wait  <span class="c1"># enable waiting for all master nodes to be ready before returning</span>
       -w, --workers  <span class="c1"># specify how many worker nodes you want to create</span>
-    node NODENAME  <span class="c1"># Create new nodes (and add them to existing clusters)</span>
+    start CLUSTERNAME  <span class="c1"># start a (stopped) cluster</span>
+      -a, --all  <span class="c1"># start all clusters</span>
+      --wait  <span class="c1"># wait for all masters and master-loadbalancer to be up before returning</span>
+      --timeout  <span class="c1"># maximum waiting time for &#39;--wait&#39; before canceling/returning</span>
+    stop CLUSTERNAME  <span class="c1"># stop a cluster</span>
+      -a, --all  <span class="c1"># stop all clusters</span>
+    delete CLUSTERNAME  <span class="c1"># delete an existing cluster</span>
+      -a, --all  <span class="c1"># delete all existing clusters</span>
+    list <span class="o">[</span>CLUSTERNAME <span class="o">[</span>CLUSTERNAME ...<span class="o">]]</span>
+      --no-headers  <span class="c1"># do not print headers</span>
+      --token  <span class="c1"># show column with cluster tokens</span>
+  node
+    create NODENAME  <span class="c1"># Create new nodes (and add them to existing clusters)</span>
       -c, --cluster  <span class="c1"># specify the cluster that the node shall connect to</span>
       -i, --image  <span class="c1"># specify which k3s image should be used for the node(s)</span>
           --replicas  <span class="c1"># specify how many replicas you want to create with this spec</span>
           --role  <span class="c1"># specify the node role</span>
       --wait  <span class="c1"># wait for the node to be up and running before returning</span>
       --timeout <span class="c1"># specify a timeout duration, after which the node creation will be interrupted, if not done yet</span>
-  delete
-    cluster CLUSTERNAME  <span class="c1"># delete an existing cluster</span>
-      -a, --all  <span class="c1"># delete all existing clusters</span>
-    node NODENAME  <span class="c1"># delete an existing node</span>
+    start NODENAME  <span class="c1"># start a (stopped) node</span>
+    stop NODENAME <span class="c1"># stop a node</span>
+    delete NODENAME  <span class="c1"># delete an existing node</span>
       -a, --all  <span class="c1"># delete all existing nodes</span>
-  start
-    cluster CLUSTERNAME  <span class="c1"># start a (stopped) cluster</span>
-      -a, --all  <span class="c1"># start all clusters</span>
-      --wait  <span class="c1"># wait for all masters and master-loadbalancer to be up before returning</span>
-      --timeout  <span class="c1"># maximum waiting time for &#39;--wait&#39; before canceling/returning</span>
-    node NODENAME  <span class="c1"># start a (stopped) node</span>
-  stop
-    cluster CLUSTERNAME  <span class="c1"># stop a cluster</span>
-      -a, --all  <span class="c1"># stop all clusters</span>
-    node  <span class="c1"># stop a node</span>
-  get
-    cluster <span class="o">[</span>CLUSTERNAME <span class="o">[</span>CLUSTERNAME ...<span class="o">]]</span>
+    list NODENAME
       --no-headers  <span class="c1"># do not print headers</span>
-      --token  <span class="c1"># show column with cluster tokens</span>
-    node NODENAME
-      --no-headers  <span class="c1"># do not print headers</span>
-    kubeconfig <span class="o">(</span>CLUSTERNAME <span class="o">[</span>CLUSTERNAME ...<span class="o">]</span> <span class="p">|</span> --all<span class="o">)</span>
+  kubeconfig
+    get <span class="o">(</span>CLUSTERNAME <span class="o">[</span>CLUSTERNAME ...<span class="o">]</span> <span class="p">|</span> --all<span class="o">)</span> <span class="c1"># get kubeconfig from cluster(s) and save it into a file in $HOME/.k3d</span>
+      -a, --all  <span class="c1"># get kubeconfigs from all clusters</span>
+    merge <span class="o">(</span>CLUSTERNAME <span class="o">[</span>CLUSTERNAME ...<span class="o">]</span> <span class="p">|</span> --all<span class="o">)</span>  <span class="c1"># get kubeconfig from cluster(s) and merge it/them into an existing kubeconfig</span>
       -a, --all  <span class="c1"># get kubeconfigs from all clusters</span>
           --output  <span class="c1"># specify the output file where the kubeconfig should be written to</span>
           --overwrite  <span class="c1"># [Careful!] forcefully overwrite the output file, ignoring existing contents</span>
       -s, --switch-context  <span class="c1"># switch current-context in kubeconfig to the new context</span>
       -u, --update  <span class="c1"># update conflicting fields in existing kubeconfig (default: true)</span>
       -d, --merge-default-kubeconfig  <span class="c1"># update the default kubeconfig (usually $KUBECONFIG or $HOME/.kube/config)</span>
-  load
-    image  <span class="o">[</span>IMAGE <span class="p">|</span> ARCHIVE <span class="o">[</span>IMAGE <span class="p">|</span> ARCHIVE ...<span class="o">]]</span>  <span class="c1"># Load one or more images from the local runtime environment or tar-archives into k3d clusters</span>
+  image
+    import <span class="o">[</span>IMAGE <span class="p">|</span> ARCHIVE <span class="o">[</span>IMAGE <span class="p">|</span> ARCHIVE ...<span class="o">]]</span>  <span class="c1"># Load one or more images from the local runtime environment or tar-archives into k3d clusters</span>
       -c, --cluster  <span class="c1"># clusters to load the image into</span>
       -k, --keep-tarball  <span class="c1"># do not delete the image tarball from the shared volume after completion</span>
-  completion SHELL  <span class="c1"># Generate completion scripts</span>
-  version  <span class="c1"># show k3d build version</span>
-  <span class="nb">help</span> <span class="o">[</span>COMMAND<span class="o">]</span>  <span class="c1"># show help text for any command</span>
 </code></pre></div>
                 
                   
@@ -605,7 +606,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 22, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 14, 2020</span>
     
   </small>
 </div>

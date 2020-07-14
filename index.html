@@ -727,11 +727,11 @@
 </ul>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <p>Create a cluster named <code>mycluster</code> with just a single master node:</p>
-<div class="highlight"><pre><span></span><code>k3d create cluster mycluster
+<div class="highlight"><pre><span></span><code>k3d cluster create mycluster
 </code></pre></div>
 
 <p>Get the new cluster&rsquo;s connection details merged into your default kubeconfig (usually specified using the <code>KUBECONFIG</code> environment variable or the default path <code class="highlight"><span class="nv">$HOME</span>/.kube/config</code>) and directly switch to the new context:</p>
-<div class="highlight"><pre><span></span><code>k3d get kubeconfig mycluster --switch
+<div class="highlight"><pre><span></span><code>k3d kubeconfig merge mycluster --switch-context
 </code></pre></div>
 
 <p>Use the new cluster with <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl/"><code>kubectl</code></a>, e.g.:</p>
@@ -750,7 +750,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 18, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 14, 2020</span>
     
   </small>
 </div>
