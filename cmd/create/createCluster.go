@@ -42,9 +42,10 @@ import (
 
 const createClusterDescription = `
 Create a new k3s cluster with containerized nodes (k3s in docker).
-Every cluster will consist of at least 2 containers:
-	- 1 master node container (k3s)
-	- 1 loadbalancer container as the entrypoint to the cluster (nginx)
+Every cluster will consist of one or more containers:
+	- 1 (or more) master node container (k3s)
+	- (optionally) 1 loadbalancer container as the entrypoint to the cluster (nginx)
+	- (optionally) 1 (or more) worker node containers (k3s)
 `
 
 // NewCmdCreateCluster returns a new cobra command
