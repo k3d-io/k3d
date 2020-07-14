@@ -22,10 +22,15 @@ THE SOFTWARE.
 package cluster
 
 import (
+	"fmt"
+	"os"
+	"path"
+
 	"github.com/rancher/k3d/v3/cmd/util"
 	"github.com/rancher/k3d/v3/pkg/cluster"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
+	k3dutil "github.com/rancher/k3d/v3/pkg/util"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
@@ -36,11 +41,11 @@ func NewCmdClusterDelete() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:               "delete (NAME | --all)",
+		Use:               "delete [NAME [NAME ...] | --all]",
 		Aliases:           []string{"del", "rm"},
 		Short:             "Delete cluster(s).",
 		Long:              `Delete cluster(s).`,
-		Args:              cobra.MinimumNArgs(0), // 0 or n arguments; 0 only if --all is set
+		Args:              cobra.MinimumNArgs(0), // 0 or n arguments; 0 = default cluster name
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Run: func(cmd *cobra.Command, args []string) {
 			clusters := parseDeleteClusterCmd(cmd, args)
@@ -52,10 +57,22 @@ func NewCmdClusterDelete() *cobra.Command {
 					if err := cluster.ClusterDelete(cmd.Context(), runtimes.SelectedRuntime, c); err != nil {
 						log.Fatalln(err)
 					}
-					log.Infoln("Removing cluster details from default kubeconfig")
+					log.Infoln("Removing cluster details from default kubeconfig...")
 					if err := cluster.KubeconfigRemoveClusterFromDefaultConfig(cmd.Context(), c); err != nil {
 						log.Warnln("Failed to remove cluster details from default kubeconfig")
 						log.Warnln(err)
+					}
+					log.Infoln("Removing standalone kubeconfig file (if there is one)...")
+					configDir, err := k3dutil.GetConfigDirOrCreate()
+					if err != nil {
+						log.Warnf("Failed to delete kubeconfig file: %+v", err)
+					} else {
+						kubeconfigfile := path.Join(configDir, fmt.Sprintf("kubeconfig-%s.yaml", c.Name))
+						if err := os.Remove(kubeconfigfile); err != nil {
+							if !os.IsNotExist(err) {
+								log.Warnf("Failed to delete kubeconfig file '%s'", kubeconfigfile)
+							}
+						}
 					}
 
 					log.Infof("Successfully deleted cluster %s!", c.Name)
@@ -90,11 +107,12 @@ func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 		return clusters
 	}
 
-	if len(args) < 1 {
-		log.Fatalln("Expecting at least one cluster name if `--all` is not set")
+	clusternames := []string{k3d.DefaultClusterName}
+	if len(args) != 0 {
+		clusternames = args
 	}
 
-	for _, name := range args {
+	for _, name := range clusternames {
 		cluster, err := cluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: name})
 		if err != nil {
 			log.Fatalln(err)

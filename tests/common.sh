@@ -87,7 +87,11 @@ check_cluster_count() {
 check_multi_node() {
   cluster=$1
   expectedNodeCount=$2
+<<<<<<< HEAD
   $EXE kubeconfig merge "$cluster" --switch
+=======
+  $EXE get kubeconfig "$cluster" --merge-default-kubeconfig --switch-context
+>>>>>>> master
   nodeCount=$(kubectl get nodes -o=custom-columns=NAME:.metadata.name --no-headers | wc -l)
   if [[ $nodeCount == $expectedNodeCount ]]; then
     passed "cluster $cluster has $expectedNodeCount nodes, as expected"

@@ -37,9 +37,9 @@ func NewCmdClusterStop() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:               "stop  (NAME [NAME...] | --all)",
-		Short:             "Stop an existing k3d cluster",
-		Long:              `Stop an existing k3d cluster.`,
+		Use:               "stop [NAME [NAME...] | --all]",
+		Short:             "Stop existing k3d cluster(s)",
+		Long:              `Stop existing k3d cluster(s).`,
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Run: func(cmd *cobra.Command, args []string) {
 			clusters := parseStopClusterCmd(cmd, args)
@@ -79,11 +79,12 @@ func parseStopClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 		return clusters
 	}
 
-	if len(args) < 1 {
-		log.Fatalln("Expecting at least one cluster name if `--all` is not set")
+	clusternames := []string{k3d.DefaultClusterName}
+	if len(args) != 0 {
+		clusternames = args
 	}
 
-	for _, name := range args {
+	for _, name := range clusternames {
 		cluster, err := cluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: name})
 		if err != nil {
 			log.Fatalln(err)
