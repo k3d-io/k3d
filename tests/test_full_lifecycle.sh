@@ -9,7 +9,7 @@ source "$CURR_DIR/common.sh"
 clustername="lifecycletest"
 
 info "Creating cluster $clustername..."
-$EXE cluster create "$clustername" --workers 1 --api-port 6443 --wait --timeout 360s || failed "could not create cluster $clustername"
+$EXE cluster create "$clustername" --agents 1 --api-port 6443 --wait --timeout 360s || failed "could not create cluster $clustername"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
 sleep 5
@@ -38,9 +38,9 @@ check_clusters "$clustername" || failed "error checking cluster"
 info "Checking that we have 2 nodes online..."
 check_multi_node "$clustername" 2 || failed "failed to verify number of nodes"
 
-# 4. adding another worker node
-info "Adding one worker node..."
-$EXE node create "extra-worker" --cluster "$clustername" --role "worker" --wait --timeout 360s || failed "failed to add worker node"
+# 4. adding another agent node
+info "Adding one agent node..."
+$EXE node create "extra-agent" --cluster "$clustername" --role "agent" --wait --timeout 360s || failed "failed to add agent node"
 
 info "Checking that we have 3 nodes available now..."
 check_multi_node "$clustername" 3 || failed "failed to verify number of nodes"

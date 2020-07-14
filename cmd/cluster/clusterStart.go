@@ -62,7 +62,7 @@ func NewCmdClusterStart() *cobra.Command {
 
 	// add flags
 	cmd.Flags().BoolP("all", "a", false, "Start all existing clusters")
-	cmd.Flags().BoolVar(&startClusterOpts.WaitForMaster, "wait", false, "Wait for the master(s) (and loadbalancer) to be ready before returning.")
+	cmd.Flags().BoolVar(&startClusterOpts.WaitForServer, "wait", false, "Wait for the server(s) (and loadbalancer) to be ready before returning.")
 	cmd.Flags().DurationVar(&startClusterOpts.Timeout, "timeout", 0*time.Second, "Maximum waiting time for '--wait' before canceling/returning.")
 
 	// add subcommands

@@ -14,7 +14,7 @@ k3d
       -i, --image  # specify which k3s image should be used for the nodes
       --k3s-agent-arg  # add additional arguments to the k3s agent (see https://rancher.com/docs/k3s/latest/en/installation/install-options/agent-config/#k3s-agent-cli-help)
       --k3s-server-arg  # add additional arguments to the k3s server (see https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/#k3s-server-cli-help)
-      -m, --masters  # specify how many master nodes you want to create
+      -m, --servers  # specify how many server nodes you want to create
       --network  # specify a network you want to connect to
       --no-image-volume  # disable the creation of a volume for storing images (used for the 'k3d load image' command)
       -p, --port  # add some more port mappings
@@ -23,11 +23,11 @@ k3d
       --update-default-kubeconfig  # enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets '--wait=true')
       --switch-context  # (implies --update-default-kubeconfig) automatically sets the current-context of your default kubeconfig to the new cluster's context
       -v, --volume  # specify additional bind-mounts
-      --wait  # enable waiting for all master nodes to be ready before returning
-      -w, --workers  # specify how many worker nodes you want to create
+      --wait  # enable waiting for all server nodes to be ready before returning
+      -a, --agents  # specify how many agent nodes you want to create
     start CLUSTERNAME  # start a (stopped) cluster
       -a, --all  # start all clusters
-      --wait  # wait for all masters and master-loadbalancer to be up before returning
+      --wait  # wait for all servers and server-loadbalancer to be up before returning
       --timeout  # maximum waiting time for '--wait' before canceling/returning
     stop CLUSTERNAME  # stop a cluster
       -a, --all  # stop all clusters

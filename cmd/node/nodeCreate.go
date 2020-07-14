@@ -57,7 +57,7 @@ func NewCmdNodeCreate() *cobra.Command {
 
 	// add flags
 	cmd.Flags().Int("replicas", 1, "Number of replicas of this node specification.")
-	cmd.Flags().String("role", string(k3d.WorkerRole), "Specify node role [master, worker]")
+	cmd.Flags().String("role", string(k3d.AgentRole), "Specify node role [server, agent]")
 	if err := cmd.RegisterFlagCompletionFunc("role", util.ValidArgsNodeRoles); err != nil {
 		log.Fatalln("Failed to register flag completion for '--role'", err)
 	}

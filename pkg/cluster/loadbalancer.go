@@ -43,23 +43,23 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 	}
 
 	// find the LoadBalancer for the target cluster
-	masterNodesList := []string{}
+	serverNodesList := []string{}
 	var loadbalancer *k3d.Node
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.LoadBalancerRole { // get the loadbalancer we want to update
 			loadbalancer = node
-		} else if node.Role == k3d.MasterRole { // create a list of master nodes
-			masterNodesList = append(masterNodesList, node.Name)
+		} else if node.Role == k3d.ServerRole { // create a list of server nodes
+			serverNodesList = append(serverNodesList, node.Name)
 		}
 	}
-	masterNodes := strings.Join(masterNodesList, ",")
+	serverNodes := strings.Join(serverNodesList, ",")
 	if loadbalancer == nil {
 		return fmt.Errorf("Failed to find loadbalancer for cluster '%s'", cluster.Name)
 	}
 
-	log.Debugf("Servers as passed to masterlb: '%s'", masterNodes)
+	log.Debugf("Servers as passed to serverlb: '%s'", serverNodes)
 
-	command := fmt.Sprintf("SERVERS=%s %s", masterNodes, "confd -onetime -backend env && nginx -s reload")
+	command := fmt.Sprintf("SERVERS=%s %s", serverNodes, "confd -onetime -backend env && nginx -s reload")
 	if err := runtime.ExecInNode(ctx, loadbalancer, []string{"sh", "-c", command}); err != nil {
 		if strings.Contains(err.Error(), "host not found in upstream") {
 			log.Warnf("Loadbalancer configuration updated, but one or more k3d nodes seem to be down, check the logs:\n%s", err.Error())

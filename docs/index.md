@@ -47,7 +47,7 @@ You have several options there:
 
 ## Quick Start
 
-Create a cluster named `mycluster` with just a single master node:
+Create a cluster named `mycluster` with just a single server node:
 
 ```bash
 k3d cluster create mycluster

@@ -69,7 +69,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	if cluster.Network.Name == "host" {
 		useHostNet = true
 		if len(cluster.Nodes) > 1 {
-			return fmt.Errorf("Only one master node supported when using host network")
+			return fmt.Errorf("Only one server node supported when using host network")
 		}
 	}
 
@@ -119,9 +119,9 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	 * Nodes
 	 */
 
-	// Worker defaults (per cluster)
-	// connection url is always the name of the first master node (index 0)
-	connectionURL := fmt.Sprintf("https://%s:%s", generateNodeName(cluster.Name, k3d.MasterRole, 0), k3d.DefaultAPIPort)
+	// agent defaults (per cluster)
+	// connection url is always the name of the first server node (index 0)
+	connectionURL := fmt.Sprintf("https://%s:%s", generateNodeName(cluster.Name, k3d.ServerRole, 0), k3d.DefaultAPIPort)
 
 	nodeSetup := func(node *k3d.Node, suffix int) error {
 		// cluster specific settings
@@ -139,16 +139,16 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 		}
 
 		// node role specific settings
-		if node.Role == k3d.MasterRole {
+		if node.Role == k3d.ServerRole {
 
-			node.MasterOpts.ExposeAPI = cluster.ExposeAPI
+			node.ServerOpts.ExposeAPI = cluster.ExposeAPI
 
-			// the cluster has an init master node, but its not this one, so connect it to the init node
-			if cluster.InitNode != nil && !node.MasterOpts.IsInit {
+			// the cluster has an init server node, but its not this one, so connect it to the init node
+			if cluster.InitNode != nil && !node.ServerOpts.IsInit {
 				node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", connectionURL))
 			}
 
-		} else if node.Role == k3d.WorkerRole {
+		} else if node.Role == k3d.AgentRole {
 			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", connectionURL))
 		}
 
@@ -167,41 +167,41 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	}
 
 	// used for node suffices
-	masterCount := 0
-	workerCount := 0
+	serverCount := 0
+	agentCount := 0
 	suffix := 0
 
 	// create init node first
 	if cluster.InitNode != nil {
-		log.Infoln("Creating initializing master node")
+		log.Infoln("Creating initializing server node")
 		cluster.InitNode.Args = append(cluster.InitNode.Args, "--cluster-init")
 
-		// in case the LoadBalancer was disabled, expose the API Port on the initializing master node
+		// in case the LoadBalancer was disabled, expose the API Port on the initializing server node
 		if cluster.CreateClusterOpts.DisableLoadBalancer {
 			cluster.InitNode.Ports = append(cluster.InitNode.Ports, fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort))
 		}
 
-		if err := nodeSetup(cluster.InitNode, masterCount); err != nil {
+		if err := nodeSetup(cluster.InitNode, serverCount); err != nil {
 			return err
 		}
-		masterCount++
+		serverCount++
 
 		// wait for the initnode to come up before doing anything else
 		for {
 			select {
 			case <-ctx.Done():
-				log.Errorln("Failed to bring up initializing master node in time")
+				log.Errorln("Failed to bring up initializing server node in time")
 				return fmt.Errorf(">>> %w", ctx.Err())
 			default:
 			}
-			log.Debugln("Waiting for initializing master node...")
+			log.Debugln("Waiting for initializing server node...")
 			logreader, err := runtime.GetNodeLogs(ctx, cluster.InitNode, time.Time{})
 			if err != nil {
 				if logreader != nil {
 					logreader.Close()
 				}
 				log.Errorln(err)
-				log.Errorln("Failed to get logs from the initializig master node.. waiting for 3 seconds instead")
+				log.Errorln("Failed to get logs from the initializig server node.. waiting for 3 seconds instead")
 				time.Sleep(3 * time.Second)
 				break
 			}
@@ -210,7 +210,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			nRead, _ := buf.ReadFrom(logreader)
 			logreader.Close()
 			if nRead > 0 && strings.Contains(buf.String(), "Running kubelet") {
-				log.Debugln("Initializing master node is up... continuing")
+				log.Debugln("Initializing server node is up... continuing")
 				break
 			}
 			time.Sleep(time.Second)
@@ -218,46 +218,46 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 
 	}
 
-	// vars to support waiting for master nodes to be ready
-	waitForMasterWaitgroup, ctx := errgroup.WithContext(ctx)
+	// vars to support waiting for server nodes to be ready
+	waitForServerWaitgroup, ctx := errgroup.WithContext(ctx)
 
 	// create all other nodes, but skip the init node
 	for _, node := range cluster.Nodes {
-		if node.Role == k3d.MasterRole {
+		if node.Role == k3d.ServerRole {
 
 			// skip the init node here
 			if node == cluster.InitNode {
 				continue
-			} else if masterCount == 0 && cluster.CreateClusterOpts.DisableLoadBalancer {
-				// if this is the first master node and the master loadbalancer is disabled, expose the API Port on this master node
+			} else if serverCount == 0 && cluster.CreateClusterOpts.DisableLoadBalancer {
+				// if this is the first server node and the server loadbalancer is disabled, expose the API Port on this server node
 				node.Ports = append(node.Ports, fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort))
 			}
 
-			time.Sleep(1 * time.Second) // FIXME: arbitrary wait for one second to avoid race conditions of masters registering
+			time.Sleep(1 * time.Second) // FIXME: arbitrary wait for one second to avoid race conditions of servers registering
 
 			// name suffix
-			suffix = masterCount
-			masterCount++
+			suffix = serverCount
+			serverCount++
 
-		} else if node.Role == k3d.WorkerRole {
+		} else if node.Role == k3d.AgentRole {
 			// name suffix
-			suffix = workerCount
-			workerCount++
+			suffix = agentCount
+			agentCount++
 		}
-		if node.Role == k3d.MasterRole || node.Role == k3d.WorkerRole {
+		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
 			if err := nodeSetup(node, suffix); err != nil {
 				return err
 			}
 		}
 
-		// asynchronously wait for this master node to be ready (by checking the logs for a specific log mesage)
-		if node.Role == k3d.MasterRole && cluster.CreateClusterOpts.WaitForMaster {
-			masterNode := node
-			waitForMasterWaitgroup.Go(func() error {
+		// asynchronously wait for this server node to be ready (by checking the logs for a specific log mesage)
+		if node.Role == k3d.ServerRole && cluster.CreateClusterOpts.WaitForServer {
+			serverNode := node
+			waitForServerWaitgroup.Go(func() error {
 				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 				// ... by scanning for this line in logs and restarting the container in case it appears
-				log.Debugf("Starting to wait for master node '%s'", masterNode.Name)
-				return NodeWaitForLogMessage(ctx, runtime, masterNode, k3d.ReadyLogMessageByRole[k3d.MasterRole], time.Time{})
+				log.Debugf("Starting to wait for server node '%s'", serverNode.Name)
+				return NodeWaitForLogMessage(ctx, runtime, serverNode, k3d.ReadyLogMessageByRole[k3d.ServerRole], time.Time{})
 			})
 		}
 	}
@@ -265,13 +265,13 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	/*
 	 * Auxiliary Containers
 	 */
-	// *** MasterLoadBalancer ***
+	// *** ServerLoadBalancer ***
 	if !cluster.CreateClusterOpts.DisableLoadBalancer {
-		if !useHostNet { // masterlb not supported in hostnetwork mode due to port collisions with master node
-			// Generate a comma-separated list of master/server names to pass to the LB container
+		if !useHostNet { // serverlb not supported in hostnetwork mode due to port collisions with server node
+			// Generate a comma-separated list of server/server names to pass to the LB container
 			servers := ""
 			for _, node := range cluster.Nodes {
-				if node.Role == k3d.MasterRole {
+				if node.Role == k3d.ServerRole {
 					log.Debugf("Node NAME: %s", node.Name)
 					if servers == "" {
 						servers = node.Name
@@ -283,16 +283,16 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 
 			// generate comma-separated list of extra ports to forward
 			ports := k3d.DefaultAPIPort
-			for _, portString := range cluster.MasterLoadBalancer.Ports {
+			for _, portString := range cluster.ServerLoadBalancer.Ports {
 				split := strings.Split(portString, ":")
 				ports += "," + split[len(split)-1]
 			}
 
 			// Create LB as a modified node with loadbalancerRole
 			lbNode := &k3d.Node{
-				Name:  fmt.Sprintf("%s-%s-masterlb", k3d.DefaultObjectNamePrefix, cluster.Name),
+				Name:  fmt.Sprintf("%s-%s-serverlb", k3d.DefaultObjectNamePrefix, cluster.Name),
 				Image: fmt.Sprintf("%s:%s", k3d.DefaultLBImageRepo, version.GetHelperImageVersion()),
-				Ports: append(cluster.MasterLoadBalancer.Ports, fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort)),
+				Ports: append(cluster.ServerLoadBalancer.Ports, fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort)),
 				Env: []string{
 					fmt.Sprintf("SERVERS=%s", servers),
 					fmt.Sprintf("PORTS=%s", ports),
@@ -307,8 +307,8 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 				log.Errorln("Failed to create loadbalancer")
 				return err
 			}
-			if cluster.CreateClusterOpts.WaitForMaster {
-				waitForMasterWaitgroup.Go(func() error {
+			if cluster.CreateClusterOpts.WaitForServer {
+				waitForServerWaitgroup.Go(func() error {
 					// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 					// ... by scanning for this line in logs and restarting the container in case it appears
 					log.Debugf("Starting to wait for loadbalancer node '%s'", lbNode.Name)
@@ -316,12 +316,12 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 				})
 			}
 		} else {
-			log.Infoln("Hostnetwork selected -> Skipping creation of Master LoadBalancer")
+			log.Infoln("Hostnetwork selected -> Skipping creation of server LoadBalancer")
 		}
 	}
 
-	if err := waitForMasterWaitgroup.Wait(); err != nil {
-		log.Errorln("Failed to bring up all master nodes (and loadbalancer) in time. Check the logs:")
+	if err := waitForServerWaitgroup.Wait(); err != nil {
+		log.Errorln("Failed to bring up all server nodes (and loadbalancer) in time. Check the logs:")
 		log.Errorf(">>> %+v", err)
 		return fmt.Errorf("Failed to bring up cluster")
 	}
@@ -516,16 +516,16 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		defer cancel()
 	}
 
-	// vars to support waiting for master nodes to be ready
-	waitForMasterWaitgroup, ctx := errgroup.WithContext(ctx)
+	// vars to support waiting for server nodes to be ready
+	waitForServerWaitgroup, ctx := errgroup.WithContext(ctx)
 
 	failed := 0
-	var masterlb *k3d.Node
+	var serverlb *k3d.Node
 	for _, node := range cluster.Nodes {
 
 		// skip the LB, because we want to start it last
 		if node.Role == k3d.LoadBalancerRole {
-			masterlb = node
+			serverlb = node
 			continue
 		}
 
@@ -536,34 +536,34 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 			continue
 		}
 
-		// asynchronously wait for this master node to be ready (by checking the logs for a specific log mesage)
-		if node.Role == k3d.MasterRole && startClusterOpts.WaitForMaster {
-			masterNode := node
-			waitForMasterWaitgroup.Go(func() error {
+		// asynchronously wait for this server node to be ready (by checking the logs for a specific log mesage)
+		if node.Role == k3d.ServerRole && startClusterOpts.WaitForServer {
+			serverNode := node
+			waitForServerWaitgroup.Go(func() error {
 				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 				// ... by scanning for this line in logs and restarting the container in case it appears
-				log.Debugf("Starting to wait for master node '%s'", masterNode.Name)
-				return NodeWaitForLogMessage(ctx, runtime, masterNode, k3d.ReadyLogMessageByRole[k3d.MasterRole], start)
+				log.Debugf("Starting to wait for server node '%s'", serverNode.Name)
+				return NodeWaitForLogMessage(ctx, runtime, serverNode, k3d.ReadyLogMessageByRole[k3d.ServerRole], start)
 			})
 		}
 	}
 
-	// start masterlb
-	if masterlb != nil {
-		log.Debugln("Starting masterlb...")
-		if err := runtime.StartNode(ctx, masterlb); err != nil { // FIXME: we could run into a nullpointer exception here
-			log.Warningf("Failed to start masterlb '%s': Try to start it manually", masterlb.Name)
+	// start serverlb
+	if serverlb != nil {
+		log.Debugln("Starting serverlb...")
+		if err := runtime.StartNode(ctx, serverlb); err != nil { // FIXME: we could run into a nullpointer exception here
+			log.Warningf("Failed to start serverlb '%s': Try to start it manually", serverlb.Name)
 			failed++
 		}
-		waitForMasterWaitgroup.Go(func() error {
+		waitForServerWaitgroup.Go(func() error {
 			// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 			// ... by scanning for this line in logs and restarting the container in case it appears
-			log.Debugf("Starting to wait for loadbalancer node '%s'", masterlb.Name)
-			return NodeWaitForLogMessage(ctx, runtime, masterlb, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], start)
+			log.Debugf("Starting to wait for loadbalancer node '%s'", serverlb.Name)
+			return NodeWaitForLogMessage(ctx, runtime, serverlb, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], start)
 		})
 	}
 
-	if err := waitForMasterWaitgroup.Wait(); err != nil {
+	if err := waitForServerWaitgroup.Wait(); err != nil {
 		log.Errorln("Failed to bring up all nodes in time. Check the logs:")
 		log.Errorln(">>> ", err)
 		return fmt.Errorf("Failed to bring up cluster")

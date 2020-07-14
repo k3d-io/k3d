@@ -53,7 +53,7 @@ func NewCmdNodeStart() *cobra.Command {
 
 // parseStartNodeCmd parses the command input into variables required to start a node
 func parseStartNodeCmd(cmd *cobra.Command, args []string) *k3d.Node {
-	// node name // TODO: startNode: allow node filters, e.g. `k3d start nodes mycluster@worker` to start all worker nodes of cluster 'mycluster'
+	// node name // TODO: startNode: allow node filters, e.g. `k3d node start mycluster@agent` to start all agent nodes of cluster 'mycluster'
 	if len(args) == 0 || len(args[0]) == 0 {
 		log.Fatalln("No node name given")
 	}
