@@ -42,7 +42,7 @@ func NewCmdClusterStart() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:               "cluster (NAME [NAME...] | --all)",
+		Use:               "start (NAME [NAME...] | --all)",
 		Short:             "Start existing k3d cluster(s)",
 		Long:              `Start existing k3d cluster(s)`,
 		ValidArgsFunction: util.ValidArgsAvailableClusters,

@@ -37,7 +37,7 @@ func NewCmdClusterStop() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:               "cluster  (NAME [NAME...] | --all)",
+		Use:               "stop  (NAME [NAME...] | --all)",
 		Short:             "Stop an existing k3d cluster",
 		Long:              `Stop an existing k3d cluster.`,
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
