@@ -10,7 +10,7 @@
     - --command                   -> planned: keep
     - --shell                     -> planned: keep (or second arg)
       - auto, bash, zsh
-  - create                        -> `k3d create cluster CLUSTERNAME`
+  - create                        -> `k3d cluster create CLUSTERNAME`
     - --name                      -> dropped, implemented via arg
     - --volume                    -> implemented
     - --port                      -> implemented
@@ -30,7 +30,7 @@
     - --registry-volume           -> TBD
     - --registries-file           -> TBD
     - --enable-registry-cache     -> TBD
-  - (add-node)                    -> `k3d create node NODENAME`
+  - (add-node)                    -> `k3d node create NODENAME`
     - --role                      -> implemented
     - --name                      -> dropped, implemented as arg
     - --count                     -> implemented as `--replicas`
@@ -41,23 +41,23 @@
     - --k3s                       -> TBD
     - --k3s-secret                -> TBD
     - --k3s-token                 -> TBD
-  - delete                        -> `k3d delete cluster CLUSTERNAME`
+  - delete                        -> `k3d cluster delete CLUSTERNAME`
     - --name                      -> dropped, implemented as arg
     - --all                       -> implemented
     - --prune                     -> TBD
     - --keep-registry-volume      -> TBD
-  - stop                          -> `k3d stop cluster CLUSTERNAME`
+  - stop                          -> `k3d cluster stop CLUSTERNAME`
     - --name                      -> dropped, implemented as arg
     - --all                       -> implemented
-  - start                         -> `k3d start cluster CLUSTERNAME`
+  - start                         -> `k3d cluster start CLUSTERNAME`
     - --name                      -> dropped, implemented as arg
     - --all                       -> implemented
   - list                          -> dropped, implemented as `k3d get clusters`
-  - get-kubeconfig                -> `k3d get kubeconfig CLUSTERNAME`
+  - get-kubeconfig                -> `k3d kubeconfig get|merge CLUSTERNAME`
     - --name                      -> dropped, implemented as arg
     - --all                       -> implemented
     - --overwrite                 -> implemented
-  - import-images                 -> `k3d load image [--cluster CLUSTERNAME] [--keep] IMAGES`
+  - import-images                 -> `k3d image import [--cluster CLUSTERNAME] [--keep] IMAGES`
     - --name                      -> implemented as `--cluster`
     - --no-remove                 -> implemented as `--keep-tarball`
 ```

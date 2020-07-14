@@ -50,13 +50,13 @@ You have several options there:
 Create a cluster named `mycluster` with just a single master node:
 
 ```bash
-k3d create cluster mycluster
+k3d cluster create mycluster
 ```
 
 Get the new cluster's connection details merged into your default kubeconfig (usually specified using the `KUBECONFIG` environment variable or the default path `#!bash $HOME/.kube/config`) and directly switch to the new context:
 
 ```bash
-k3d get kubeconfig mycluster --switch
+k3d kubeconfig merge mycluster --switch
 ```
 
 Use the new cluster with [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/), e.g.:
@@ -67,4 +67,4 @@ kubectl get nodes
 
 ## Related Projects
 
-* [k3x](https://github.com/inercia/k3x): a graphics interface (for Linux) to k3d.
+- [k3x](https://github.com/inercia/k3x): a graphics interface (for Linux) to k3d.

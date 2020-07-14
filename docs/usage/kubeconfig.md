@@ -12,27 +12,27 @@ To get a kubeconfig set up for you to connect to a k3d cluster, you can go diffe
 ## Getting the kubeconfig for a newly created cluster
 
 1. Update your default kubeconfig **upon** cluster creation
-    - `#!bash k3d create cluster mycluster --update-kubeconfig`
+    - `#!bash k3d cluster create mycluster --update-kubeconfig`
         - *Note:* this won't switch the current-context
 2. Update your default kubeconfig **after** cluster creation
-    - `#!bash k3d get kubeconfig mycluster`
+    - `#!bash k3d kubeconfig merge mycluster`
         - *Note:* this won't switch the current-context
 3. Update a different kubeconfig **after** cluster creation
-    - `#!bash k3d get kubeconfig mycluster --output some/other/file.yaml`
+    - `#!bash k3d kubeconfig merge mycluster --output some/other/file.yaml`
         - *Note:* this won't switch the current-context
     - The file will be created if it doesn't exist
 
 !!! info "Switching the current context"
     None of the above options switch the current-context.
     This is intended to be least intrusive, since the current-context has a global effect.
-    You can switch the current-context directly with the `get kubeconfig` command by adding the `--switch` flag.
+    You can switch the current-context directly with the `kubeconfig merge` command by adding the `--switch` flag.
 
 ## Removing cluster details from the kubeconfig
 
-`#!bash k3d delete cluster mycluster` will always remove the details for `mycluster` from the default kubeconfig.
+`#!bash k3d cluster delete mycluster` will always remove the details for `mycluster` from the default kubeconfig.
 
 ## Handling multiple clusters
 
-`k3d get kubeconfig` let's you specify one or more clusters via arguments _or_ all via `--all`.
+`k3s kubeconfig merge` let's you specify one or more clusters via arguments _or_ all via `--all`.
 All kubeconfigs will then be merged into a single file, which is either the default kubeconfig or the kubeconfig specified via `--output FILE`.
 Note, that with multiple cluster specified, the `--switch` flag will change the current context to the cluster which was last in the list.

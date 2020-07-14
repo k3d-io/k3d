@@ -3,7 +3,7 @@
 ## Registries configuration file
 
 You can add registries by specifying them in a `registries.yaml` and mounting them at creation time:
-`#!bash k3d create cluster mycluster --volume /home/YOU/my-registries.yaml:/etc/rancher/k3s/registries.yaml`.
+`#!bash k3d cluster create mycluster --volume /home/YOU/my-registries.yaml:/etc/rancher/k3s/registries.yaml`.
 
 This file is a regular [k3s registries configuration file](https://rancher.com/docs/k3s/latest/en/installation/private-registry/), and looks like this:
 
@@ -61,7 +61,7 @@ configs:
 
 Finally, we can create the cluster, mounting the CA file in the path we specified in `ca_file`:
 
-`#!bash k3d create cluster --volume ${HOME}/.k3d/my-registries.yaml:/etc/rancher/k3s/registries.yaml --volume ${HOME}/.k3d/my-company-root.pem:/etc/ssl/certs/my-company-root.pem`
+`#!bash k3d cluster create --volume ${HOME}/.k3d/my-registries.yaml:/etc/rancher/k3s/registries.yaml --volume ${HOME}/.k3d/my-company-root.pem:/etc/ssl/certs/my-company-root.pem`
 
 ## Using a local registry
 
@@ -182,6 +182,6 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
 and then mount it at `/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl` (where `containerd` in your k3d nodes will load it) when creating the k3d cluster:
 
 ```bash
-k3d create cluster mycluster \
+k3d cluster create mycluster \
     --volume ${HOME}/.k3d/config.toml.tmpl:/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
 ```
