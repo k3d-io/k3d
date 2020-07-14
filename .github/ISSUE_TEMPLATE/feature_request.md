@@ -15,8 +15,9 @@ Please link to the issue/PR here and explain how your request is related to it.
 
 Do you need...
 
-- a new command (next to e.g. `create`, `delete`, etc. used via `k3d <your-command>`)?
-- a new flag for a command (e.g. `k3d create --<your-flag>`)?
+- a new noun (next to e.g. `cluster`, `node`, etc. used via `k3d <noun>`)?
+- a new verb (next to e.g. `cluster create`, `node start`, etc. used via `k3d <noun> <verb>`)
+- a new flag for a command (e.g. `k3d cluster create --<your-flag>`)?
     - which command?
 - different functionality for an existing command/flag
     - which command or flag?
