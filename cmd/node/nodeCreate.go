@@ -38,7 +38,7 @@ import (
 // NewCmdNodeCreate returns a new cobra command
 func NewCmdNodeCreate() *cobra.Command {
 
-	createNodeOpts := k3d.CreateNodeOpts{}
+	createNodeOpts := k3d.NodeCreateOpts{}
 
 	// create new command
 	cmd := &cobra.Command{
@@ -48,7 +48,7 @@ func NewCmdNodeCreate() *cobra.Command {
 		Args:  cobra.ExactArgs(1), // exactly one name accepted // TODO: if not specified, inherit from cluster that the node shall belong to, if that is specified
 		Run: func(cmd *cobra.Command, args []string) {
 			nodes, cluster := parseCreateNodeCmd(cmd, args)
-			if err := k3dc.AddNodesToCluster(cmd.Context(), runtimes.SelectedRuntime, nodes, cluster, createNodeOpts); err != nil {
+			if err := k3dc.NodeAddToClusterMulti(cmd.Context(), runtimes.SelectedRuntime, nodes, cluster, createNodeOpts); err != nil {
 				log.Errorf("Failed to add nodes to cluster '%s'", cluster.Name)
 				log.Errorln(err)
 			}

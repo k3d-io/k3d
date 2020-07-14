@@ -37,9 +37,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// LoadImagesIntoCluster starts up a k3d tools container for the selected cluster and uses it to export
+// ImageImportIntoClusterMulti starts up a k3d tools container for the selected cluster and uses it to export
 // images from the runtime to import them into the nodes of the selected cluster
-func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, loadImageOpts k3d.LoadImageOpts) error {
+func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, loadImageOpts k3d.ImageImportOpts) error {
 
 	var imagesFromRuntime []string
 	var imagesFromTar []string
@@ -79,7 +79,7 @@ func LoadImagesIntoCluster(ctx context.Context, runtime runtimes.Runtime, images
 		return fmt.Errorf("No valid images specified")
 	}
 
-	cluster, err = k3dc.GetCluster(ctx, runtime, cluster)
+	cluster, err = k3dc.ClusterGet(ctx, runtime, cluster)
 	if err != nil {
 		log.Errorf("Failed to find the specified cluster")
 		return err

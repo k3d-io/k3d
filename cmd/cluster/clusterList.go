@@ -78,14 +78,14 @@ func buildClusterList(ctx context.Context, args []string) []*k3d.Cluster {
 
 	if len(args) == 0 {
 		// cluster name not specified : get all clusters
-		clusters, err = k3cluster.GetClusters(ctx, runtimes.SelectedRuntime)
+		clusters, err = k3cluster.ClusterList(ctx, runtimes.SelectedRuntime)
 		if err != nil {
 			log.Fatalln(err)
 		}
 	} else {
 		for _, clusterName := range args {
 			// cluster name specified : get specific cluster
-			retrievedCluster, err := k3cluster.GetCluster(ctx, runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
+			retrievedCluster, err := k3cluster.ClusterGet(ctx, runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
 			if err != nil {
 				log.Fatalln(err)
 			}

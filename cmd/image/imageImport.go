@@ -35,7 +35,7 @@ import (
 // NewCmdImageImport returns a new cobra command
 func NewCmdImageImport() *cobra.Command {
 
-	loadImageOpts := k3d.LoadImageOpts{}
+	loadImageOpts := k3d.ImageImportOpts{}
 
 	// create new command
 	cmd := &cobra.Command{
@@ -49,7 +49,7 @@ func NewCmdImageImport() *cobra.Command {
 			log.Debugf("Load images [%+v] from runtime [%s] into clusters [%+v]", images, runtimes.SelectedRuntime, clusters)
 			for _, cluster := range clusters {
 				log.Infof("Loading images into '%s'", cluster.Name)
-				if err := tools.LoadImagesIntoCluster(cmd.Context(), runtimes.SelectedRuntime, images, &cluster, loadImageOpts); err != nil {
+				if err := tools.ImageImportIntoClusterMulti(cmd.Context(), runtimes.SelectedRuntime, images, &cluster, loadImageOpts); err != nil {
 					log.Errorf("Failed to load images into cluster '%s'", cluster.Name)
 					log.Errorln(err)
 				}

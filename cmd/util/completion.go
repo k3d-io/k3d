@@ -37,7 +37,7 @@ func ValidArgsAvailableClusters(cmd *cobra.Command, args []string, toComplete st
 
 	var completions []string
 	var clusters []*k3d.Cluster
-	clusters, err := k3dcluster.GetClusters(context.Background(), runtimes.SelectedRuntime)
+	clusters, err := k3dcluster.ClusterList(context.Background(), runtimes.SelectedRuntime)
 	if err != nil {
 		log.Errorln("Failed to get list of clusters for shell completion")
 		return nil, cobra.ShellCompDirectiveError
@@ -62,7 +62,7 @@ func ValidArgsAvailableNodes(cmd *cobra.Command, args []string, toComplete strin
 
 	var completions []string
 	var nodes []*k3d.Node
-	nodes, err := k3dcluster.GetNodes(context.Background(), runtimes.SelectedRuntime)
+	nodes, err := k3dcluster.NodeList(context.Background(), runtimes.SelectedRuntime)
 	if err != nil {
 		log.Errorln("Failed to get list of nodes for shell completion")
 		return nil, cobra.ShellCompDirectiveError

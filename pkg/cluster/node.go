@@ -36,10 +36,10 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// AddNodeToCluster adds a node to an existing cluster
-func AddNodeToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Cluster, createNodeOpts k3d.CreateNodeOpts) error {
+// NodeAddToCluster adds a node to an existing cluster
+func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Cluster, createNodeOpts k3d.NodeCreateOpts) error {
 	targetClusterName := cluster.Name
-	cluster, err := GetCluster(ctx, runtime, cluster)
+	cluster, err := ClusterGet(ctx, runtime, cluster)
 	if err != nil {
 		log.Errorf("Failed to find specified cluster '%s'", targetClusterName)
 		return err
@@ -77,7 +77,7 @@ func AddNodeToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	}
 
 	// get node details
-	chosenNode, err = GetNode(ctx, runtime, chosenNode)
+	chosenNode, err = NodeGet(ctx, runtime, chosenNode)
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func AddNodeToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		}
 	}
 
-	if err := CreateNode(ctx, runtime, node, k3d.CreateNodeOpts{}); err != nil {
+	if err := NodeCreate(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
 		return err
 	}
 
@@ -143,8 +143,8 @@ func AddNodeToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	return nil
 }
 
-// AddNodesToCluster adds multiple nodes to a chosen cluster
-func AddNodesToCluster(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d.Node, cluster *k3d.Cluster, createNodeOpts k3d.CreateNodeOpts) error {
+// NodeAddToClusterMulti adds multiple nodes to a chosen cluster
+func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d.Node, cluster *k3d.Cluster, createNodeOpts k3d.NodeCreateOpts) error {
 	if createNodeOpts.Timeout > 0*time.Second {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, createNodeOpts.Timeout)
@@ -153,14 +153,14 @@ func AddNodesToCluster(ctx context.Context, runtime runtimes.Runtime, nodes []*k
 
 	nodeWaitGroup, ctx := errgroup.WithContext(ctx)
 	for _, node := range nodes {
-		if err := AddNodeToCluster(ctx, runtime, node, cluster, k3d.CreateNodeOpts{}); err != nil {
+		if err := NodeAddToCluster(ctx, runtime, node, cluster, k3d.NodeCreateOpts{}); err != nil {
 			return err
 		}
 		if createNodeOpts.Wait {
 			currentNode := node
 			nodeWaitGroup.Go(func() error {
 				log.Debugf("Starting to wait for node '%s'", currentNode.Name)
-				return WaitForNodeLogMessage(ctx, runtime, currentNode, k3d.ReadyLogMessageByRole[currentNode.Role], time.Time{})
+				return NodeWaitForLogMessage(ctx, runtime, currentNode, k3d.ReadyLogMessageByRole[currentNode.Role], time.Time{})
 			})
 		}
 	}
@@ -173,8 +173,8 @@ func AddNodesToCluster(ctx context.Context, runtime runtimes.Runtime, nodes []*k
 	return nil
 }
 
-// CreateNodes creates a list of nodes
-func CreateNodes(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d.Node, createNodeOpts k3d.CreateNodeOpts) error { // TODO: pass `--atomic` flag, so we stop and return an error if any node creation fails?
+// NodeCreateMulti creates a list of nodes
+func NodeCreateMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d.Node, createNodeOpts k3d.NodeCreateOpts) error { // TODO: pass `--atomic` flag, so we stop and return an error if any node creation fails?
 	if createNodeOpts.Timeout > 0*time.Second {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, createNodeOpts.Timeout)
@@ -183,14 +183,14 @@ func CreateNodes(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d.Nod
 
 	nodeWaitGroup, ctx := errgroup.WithContext(ctx)
 	for _, node := range nodes {
-		if err := CreateNode(ctx, runtime, node, k3d.CreateNodeOpts{}); err != nil {
+		if err := NodeCreate(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
 			log.Error(err)
 		}
 		if createNodeOpts.Wait {
 			currentNode := node
 			nodeWaitGroup.Go(func() error {
 				log.Debugf("Starting to wait for node '%s'", currentNode.Name)
-				return WaitForNodeLogMessage(ctx, runtime, currentNode, k3d.ReadyLogMessageByRole[currentNode.Role], time.Time{})
+				return NodeWaitForLogMessage(ctx, runtime, currentNode, k3d.ReadyLogMessageByRole[currentNode.Role], time.Time{})
 			})
 		}
 	}
@@ -205,8 +205,8 @@ func CreateNodes(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d.Nod
 
 }
 
-// CreateNode creates a new containerized k3s node
-func CreateNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, createNodeOpts k3d.CreateNodeOpts) error {
+// NodeCreate creates a new containerized k3s node
+func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, createNodeOpts k3d.NodeCreateOpts) error {
 	log.Debugf("Creating node from spec\n%+v", node)
 
 	/*
@@ -251,14 +251,14 @@ func CreateNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 	return nil
 }
 
-// DeleteNode deletes an existing node
-func DeleteNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) error {
+// NodeDelete deletes an existing node
+func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) error {
 
 	if err := runtime.DeleteNode(ctx, node); err != nil {
 		log.Error(err)
 	}
 
-	cluster, err := GetCluster(ctx, runtime, &k3d.Cluster{Name: node.Labels[k3d.LabelClusterName]})
+	cluster, err := ClusterGet(ctx, runtime, &k3d.Cluster{Name: node.Labels[k3d.LabelClusterName]})
 	if err != nil {
 		log.Errorf("Failed to update loadbalancer: Failed to find cluster for node '%s'", node.Name)
 		return err
@@ -302,8 +302,8 @@ func patchMasterSpec(node *k3d.Node) error {
 	return nil
 }
 
-// GetNodes returns a list of all existing clusters
-func GetNodes(ctx context.Context, runtime runtimes.Runtime) ([]*k3d.Node, error) {
+// NodeList returns a list of all existing clusters
+func NodeList(ctx context.Context, runtime runtimes.Runtime) ([]*k3d.Node, error) {
 	nodes, err := runtime.GetNodesByLabel(ctx, k3d.DefaultObjectLabels)
 	if err != nil {
 		log.Errorln("Failed to get nodes")
@@ -313,8 +313,8 @@ func GetNodes(ctx context.Context, runtime runtimes.Runtime) ([]*k3d.Node, error
 	return nodes, nil
 }
 
-// GetNode returns a node matching the specified node fields
-func GetNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3d.Node, error) {
+// NodeGet returns a node matching the specified node fields
+func NodeGet(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3d.Node, error) {
 	// get node
 	node, err := runtime.GetNode(ctx, node)
 	if err != nil {
@@ -324,8 +324,8 @@ func GetNode(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3
 	return node, nil
 }
 
-// WaitForNodeLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
-func WaitForNodeLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string, since time.Time) error {
+// NodeWaitForLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
+func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string, since time.Time) error {
 	for {
 		select {
 		case <-ctx.Done():
