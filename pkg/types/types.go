@@ -203,6 +203,16 @@ func (c *Cluster) AgentCount() int {
 	return agentCount
 }
 
+// HasLoadBalancer returns true if cluster has a loadbalancer node
+func (c *Cluster) HasLoadBalancer() bool {
+	for _, node := range c.Nodes {
+		if node.Role == LoadBalancerRole {
+			return true
+		}
+	}
+	return false
+}
+
 // Node describes a k3d node
 type Node struct {
 	Name       string            `yaml:"name" json:"name,omitempty"`
