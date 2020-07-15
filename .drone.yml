@@ -51,7 +51,7 @@ steps:
       - test
     when:
       branch:
-        - master
+        - main
       event:
         - push
         - tag
@@ -136,7 +136,7 @@ steps:
       - mkdocs build --verbose --clean --strict
     when:
       branch:
-        - master
+        - main
       event:
         - push
 
@@ -150,7 +150,7 @@ steps:
       target_branch: gh-pages
     when:
       branch:
-        - master
+        - main
       event:
         - push
 
@@ -158,7 +158,7 @@ trigger:
   event:
     - push
   branch:
-    - master
+    - main
 
 ---
 #####################

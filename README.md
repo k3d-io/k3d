@@ -1,6 +1,6 @@
 # [![k3d](docs/static/img/k3d_logo_black_blue.svg)](https://k3d.io/)
 
-[![Build Status](https://img.shields.io/drone/build/rancher/k3d/master?logo=drone&server=https%3A%2F%2Fdrone-publish.rancher.io&style=flat-square)](https://drone-publish.rancher.io/rancher/k3d)
+[![Build Status](https://img.shields.io/drone/build/rancher/k3d/main?logo=drone&server=https%3A%2F%2Fdrone-publish.rancher.io&style=flat-square)](https://drone-publish.rancher.io/rancher/k3d)
 [![License](https://img.shields.io/github/license/rancher/k3d?style=flat-square)](./LICENSE.md)
 ![Downloads](https://img.shields.io/github/downloads/rancher/k3d/total.svg?style=flat-square)
 
@@ -8,7 +8,7 @@
 [![Go version](https://img.shields.io/github/go-mod/go-version/rancher/k3d?logo=go&logoColor=white&style=flat-square)](./go.mod)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d?style=flat-square)](https://goreportcard.com/report/github.com/rancher/k3d)
 
-**Please Note:** `master` is now v3.0.0 and the code for v1.x can be found in the `master-v1` branch!
+**Please Note:** `main` is now v3.0.0 and the code for v1.x can be found in the `main-v1` branch!
 
 ## [k3s in docker](https://k3d.io)
 
@@ -43,11 +43,11 @@ k3d creates containerized k3s clusters. This means, that you can spin up a multi
 You have several options there:
 
 - use the install script to grab the latest release:
-  - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
-  - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
+  - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash`
+  - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash`
 - use the install script to grab a specific release (via `TAG` environment variable):
-  - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v3.0.0-beta.0 bash`
-  - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v3.0.0-beta.0 bash`
+  - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v3.0.0-beta.0 bash`
+  - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v3.0.0-beta.0 bash`
 
 - use [Homebrew](https://brew.sh): `brew install k3d` (Homebrew is available for MacOS and Linux)
   - Formula can be found in [homebrew/homebrew-core](https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb) and is mirrored to [homebrew/linuxbrew-core](https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb)
@@ -59,7 +59,7 @@ or...
 
 ## Build
 
-1. Clone this repo, e.g. via `git clone git@github.com:rancher/k3d.git` or `go get github.com/rancher/k3d/v3@master`
+1. Clone this repo, e.g. via `git clone git@github.com:rancher/k3d.git` or `go get github.com/rancher/k3d/v3@main`
 2. Inside the repo run
    - 'make install-tools' to make sure required go packages are installed
 3. Inside the repo run one of the following commands

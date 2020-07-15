@@ -33,11 +33,11 @@ k3d makes it very easy to create single- and multi-node [k3s](https://github.com
 You have several options there:
 
 - use the install script to grab the latest release:
-    - wget: `#!bash wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
-    - curl: `#!bash curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash`
+    - wget: `#!bash wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash`
+    - curl: `#!bash curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash`
 - use the install script to grab a specific release (via `TAG` environment variable):
-    - wget: `#!bash wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v3.0.0-beta.0 bash`
-    - curl: `#!bash curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v3.0.0-beta.0 bash`
+    - wget: `#!bash wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v3.0.0-beta.0 bash`
+    - curl: `#!bash curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v3.0.0-beta.0 bash`
 
 - use [Homebrew](https://brew.sh): `#!bash brew install k3d` (Homebrew is available for MacOS and Linux)
     - Formula can be found in [homebrew/homebrew-core](https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb) and is mirrored to [homebrew/linuxbrew-core](https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb)

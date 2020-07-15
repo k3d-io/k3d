@@ -161,8 +161,8 @@ ci-tests: fmt check e2e
 ##########################
 
 drone:
-	@echo "Running drone pipeline locally with branch=master and event=push"
-	drone exec --trusted --branch master --event push
+	@echo "Running drone pipeline locally with branch=main and event=push"
+	drone exec --trusted --branch main --event push
 
 #########################################
 ########## Setup & Preparation ##########
