@@ -103,7 +103,7 @@ func PrintClusters(clusters []*k3d.Cluster, flags clusterFlags) {
 	defer tabwriter.Flush()
 
 	if !flags.noHeader {
-		headers := []string{"NAME", "SERVERS", "AGENTS"} // TODO: getCluster: add status column
+		headers := []string{"NAME", "SERVERS", "AGENTS", "LOADBALANCER"} // TODO: getCluster: add status column
 		if flags.token {
 			headers = append(headers, "TOKEN")
 		}
@@ -118,11 +118,12 @@ func PrintClusters(clusters []*k3d.Cluster, flags clusterFlags) {
 	for _, cluster := range clusters {
 		serverCount := cluster.ServerCount()
 		agentCount := cluster.AgentCount()
+		hasLB := cluster.HasLoadBalancer()
 
 		if flags.token {
-			fmt.Fprintf(tabwriter, "%s\t%d\t%d\t%s\n", cluster.Name, serverCount, agentCount, cluster.Token)
+			fmt.Fprintf(tabwriter, "%s\t%d\t%d\t%t\t%s\n", cluster.Name, serverCount, agentCount, hasLB, cluster.Token)
 		} else {
-			fmt.Fprintf(tabwriter, "%s\t%d\t%d\n", cluster.Name, serverCount, agentCount)
+			fmt.Fprintf(tabwriter, "%s\t%d\t%d\t%t\n", cluster.Name, serverCount, agentCount, hasLB)
 		}
 	}
 }
