@@ -389,8 +389,8 @@
 
 
   <li class="md-nav__item">
-    <a href="usage/multimaster/" title="Creating multi-master clusters" class="md-nav__link">
-      Creating multi-master clusters
+    <a href="usage/multiserver/" title="Creating multi-server clusters" class="md-nav__link">
+      Creating multi-server clusters
     </a>
   </li>
 
@@ -654,7 +654,7 @@
 <p><strong>This page is targeting k3d v3.0.0 and newer!</strong></p>
 <p>k3d is a lightweight wrapper to run <a href="https://github.com/rancher/k3s">k3s</a> (Rancher Lab&rsquo;s minimal Kubernetes distribution) in docker.</p>
 <p>k3d makes it very easy to create single- and multi-node <a href="https://github.com/rancher/k3s">k3s</a> clusters in docker, e.g. for local development on Kubernetes.</p>
-<details class="tip"><summary>View a quick demo</summary><p><asciinema-player src="/static/asciicast/20200515_k3d.01.cast" cols=200 rows=32></asciinema-player></p>
+<details class="tip"><summary>View a quick demo</summary><p><asciinema-player src="/static/asciicast/20200715_k3d.01.cast" cols=200 rows=32></asciinema-player></p>
 </details>
 <h2 id="learning">Learning<a class="headerlink" href="#learning" title="Permanent link">&para;</a></h2>
 <ul>
@@ -704,15 +704,15 @@
 <p>You have several options there:</p>
 <ul>
 <li>use the install script to grab the latest release:<ul>
-<li>wget: <code class="highlight">wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh <span class="p">|</span> bash</code></li>
-<li>curl: <code class="highlight">curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh <span class="p">|</span> bash</code></li>
+<li>wget: <code class="highlight">wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> bash</code></li>
+<li>curl: <code class="highlight">curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> bash</code></li>
 </ul>
 </li>
 <li>
 <p>use the install script to grab a specific release (via <code>TAG</code> environment variable):</p>
 <ul>
-<li>wget: <code class="highlight">wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v3.0.0-beta.0 bash</code></li>
-<li>curl: <code class="highlight">curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v3.0.0-beta.0 bash</code></li>
+<li>wget: <code class="highlight">wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v3.0.0-rc.7 bash</code></li>
+<li>curl: <code class="highlight">curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v3.0.0-rc.7 bash</code></li>
 </ul>
 </li>
 <li>
@@ -726,7 +726,7 @@
 <li>install via go: <code class="highlight">go install github.com/rancher/k3d</code> (<strong>Note</strong>: this will give you unreleased/bleeding-edge changes)</li>
 </ul>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
-<p>Create a cluster named <code>mycluster</code> with just a single master node:</p>
+<p>Create a cluster named <code>mycluster</code> with just a single server node:</p>
 <div class="highlight"><pre><span></span><code>k3d cluster create mycluster
 </code></pre></div>
 
@@ -750,7 +750,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 14, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 15, 2020</span>
     
   </small>
 </div>

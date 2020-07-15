@@ -325,8 +325,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../multimaster/" title="Creating multi-master clusters" class="md-nav__link">
-      Creating multi-master clusters
+    <a href="../multiserver/" title="Creating multi-server clusters" class="md-nav__link">
+      Creating multi-server clusters
     </a>
   </li>
 
@@ -547,7 +547,7 @@
       -i, --image  <span class="c1"># specify which k3s image should be used for the nodes</span>
       --k3s-agent-arg  <span class="c1"># add additional arguments to the k3s agent (see https://rancher.com/docs/k3s/latest/en/installation/install-options/agent-config/#k3s-agent-cli-help)</span>
       --k3s-server-arg  <span class="c1"># add additional arguments to the k3s server (see https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/#k3s-server-cli-help)</span>
-      -m, --masters  <span class="c1"># specify how many master nodes you want to create</span>
+      -m, --servers  <span class="c1"># specify how many server nodes you want to create</span>
       --network  <span class="c1"># specify a network you want to connect to</span>
       --no-image-volume  <span class="c1"># disable the creation of a volume for storing images (used for the &#39;k3d load image&#39; command)</span>
       -p, --port  <span class="c1"># add some more port mappings</span>
@@ -556,11 +556,11 @@
       --update-default-kubeconfig  <span class="c1"># enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets &#39;--wait=true&#39;)</span>
       --switch-context  <span class="c1"># (implies --update-default-kubeconfig) automatically sets the current-context of your default kubeconfig to the new cluster&#39;s context</span>
       -v, --volume  <span class="c1"># specify additional bind-mounts</span>
-      --wait  <span class="c1"># enable waiting for all master nodes to be ready before returning</span>
-      -w, --workers  <span class="c1"># specify how many worker nodes you want to create</span>
+      --wait  <span class="c1"># enable waiting for all server nodes to be ready before returning</span>
+      -a, --agents  <span class="c1"># specify how many agent nodes you want to create</span>
     start CLUSTERNAME  <span class="c1"># start a (stopped) cluster</span>
       -a, --all  <span class="c1"># start all clusters</span>
-      --wait  <span class="c1"># wait for all masters and master-loadbalancer to be up before returning</span>
+      --wait  <span class="c1"># wait for all servers and server-loadbalancer to be up before returning</span>
       --timeout  <span class="c1"># maximum waiting time for &#39;--wait&#39; before canceling/returning</span>
     stop CLUSTERNAME  <span class="c1"># stop a cluster</span>
       -a, --all  <span class="c1"># stop all clusters</span>

@@ -314,8 +314,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../usage/multimaster/" title="Creating multi-master clusters" class="md-nav__link">
-      Creating multi-master clusters
+    <a href="../../usage/multiserver/" title="Creating multi-server clusters" class="md-nav__link">
+      Creating multi-server clusters
     </a>
   </li>
 
@@ -522,8 +522,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#restarting-a-multi-master-cluster-or-the-initializing-master-node-fails" class="md-nav__link">
-    Restarting a multi-master cluster or the initializing master node fails
+  <a href="#restarting-a-multi-server-cluster-or-the-initializing-server-node-fails" class="md-nav__link">
+    Restarting a multi-server cluster or the initializing server node fails
   </a>
   
 </li>
@@ -599,8 +599,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#restarting-a-multi-master-cluster-or-the-initializing-master-node-fails" class="md-nav__link">
-    Restarting a multi-master cluster or the initializing master node fails
+  <a href="#restarting-a-multi-server-cluster-or-the-initializing-server-node-fails" class="md-nav__link">
+    Restarting a multi-server cluster or the initializing server node fails
   </a>
   
 </li>
@@ -634,7 +634,7 @@
 <h2 id="issues-with-zfs">Issues with ZFS<a class="headerlink" href="#issues-with-zfs" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
-<p>k3s currently has <a href="ttps://github.com/rancher/k3s/issues/66">no support for ZFS</a> and thus, creating multi-master setups (e.g. <code>k3d cluster create multimaster --masters 3</code>) fails, because the initializing master node (server flag <code>--cluster-init</code>) errors out with the following log:
+<p>k3s currently has <a href="ttps://github.com/rancher/k3s/issues/66">no support for ZFS</a> and thus, creating multi-server setups (e.g. <code>k3d cluster create multiserver --servers 3</code>) fails, because the initializing server node (server flag <code>--cluster-init</code>) errors out with the following log:
   <div class="highlight"><pre><span></span><code>starting kubernetes: preparing server: start cluster and https: raft_init<span class="o">()</span>: io: create I/O capabilities probe file: posix_allocate: operation not supported on socket
 </code></pre></div></p>
 </li>
@@ -655,11 +655,11 @@
 </ul>
 </li>
 </ul>
-<h2 id="restarting-a-multi-master-cluster-or-the-initializing-master-node-fails">Restarting a multi-master cluster or the initializing master node fails<a class="headerlink" href="#restarting-a-multi-master-cluster-or-the-initializing-master-node-fails" title="Permanent link">&para;</a></h2>
+<h2 id="restarting-a-multi-server-cluster-or-the-initializing-server-node-fails">Restarting a multi-server cluster or the initializing server node fails<a class="headerlink" href="#restarting-a-multi-server-cluster-or-the-initializing-server-node-fails" title="Permanent link">&para;</a></h2>
 <ul>
-<li>What you do: You create a cluster with more than one master node and later, you either stop <code>master-0</code> or stop/start the whole cluster</li>
+<li>What you do: You create a cluster with more than one server node and later, you either stop <code>server-0</code> or stop/start the whole cluster</li>
 <li>What fails: After the restart, you cannot connect to the cluster anymore and <code>kubectl</code> will give you a lot of errors</li>
-<li>What causes this issue: it&rsquo;s a <a href="https://github.com/rancher/k3s/issues/1391">known issue with dqlite in <code>k3s</code></a> which doesn&rsquo;t allow the initializing master node to go down</li>
+<li>What causes this issue: it&rsquo;s a <a href="https://github.com/rancher/k3s/issues/1391">known issue with dqlite in <code>k3s</code></a> which doesn&rsquo;t allow the initializing server node to go down</li>
 <li>What&rsquo;s the solution: Hopefully, this will be solved by the planned <a href="https://github.com/rancher/k3s/pull/1770">replacement of dqlite with embedded etcd in k3s</a></li>
 <li>Related issues: <a href="https://github.com/rancher/k3d/issues/262">#262</a></li>
 </ul>

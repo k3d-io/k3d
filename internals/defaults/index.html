@@ -314,8 +314,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../usage/multimaster/" title="Creating multi-master clusters" class="md-nav__link">
-      Creating multi-master clusters
+    <a href="../../usage/multiserver/" title="Creating multi-server clusters" class="md-nav__link">
+      Creating multi-server clusters
     </a>
   </li>
 
@@ -535,10 +535,10 @@
                 
                 <h1 id="defaults">Defaults<a class="headerlink" href="#defaults" title="Permanent link">&para;</a></h1>
 <ul>
-<li>multiple master nodes<ul>
-<li>by default, when <code>--master</code> &gt; 1 and no <code>--datastore-x</code> option is set, the first master node (master-0) will be the initializing master node<ul>
-<li>the initializing master node will have the <code>--cluster-init</code> flag appended</li>
-<li>all other master nodes will refer to the initializing master node via <code>--server https://&lt;init-node&gt;:6443</code></li>
+<li>multiple server nodes<ul>
+<li>by default, when <code>--server</code> &gt; 1 and no <code>--datastore-x</code> option is set, the first server node (server-0) will be the initializing server node<ul>
+<li>the initializing server node will have the <code>--cluster-init</code> flag appended</li>
+<li>all other server nodes will refer to the initializing server node via <code>--server https://&lt;init-node&gt;:6443</code></li>
 </ul>
 </li>
 </ul>
@@ -564,7 +564,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 22, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 14, 2020</span>
     
   </small>
 </div>

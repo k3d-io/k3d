@@ -316,8 +316,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../multimaster/" title="Creating multi-master clusters" class="md-nav__link">
-      Creating multi-master clusters
+    <a href="../../multiserver/" title="Creating multi-server clusters" class="md-nav__link">
+      Creating multi-server clusters
     </a>
   </li>
 
@@ -606,7 +606,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <ol>
 <li>
 <p>Create a cluster, mapping the ingress port 80 to localhost:8081</p>
-<p><code class="highlight">k3d cluster create --api-port <span class="m">6550</span> -p <span class="m">8081</span>:80@loadbalancer --workers <span class="m">2</span></code></p>
+<p><code class="highlight">k3d cluster create --api-port <span class="m">6550</span> -p <span class="m">8081</span>:80@loadbalancer --agents <span class="m">2</span></code></p>
 <div class="admonition info">
 <p class="admonition-title">Good to know</p>
 <ul>
@@ -615,8 +615,8 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <li>map port <code>8081</code> from the host to port <code>80</code> on the container which matches the nodefilter <code>loadbalancer</code></li>
 </ul>
 </li>
-<li>the <code>loadbalancer</code> nodefilter matches only the <code>masterlb</code> that&rsquo;s deployed in front of a cluster&rsquo;s master nodes<ul>
-<li>all ports exposed on the <code>masterlb</code> will be proxied to the same ports on all master nodes in the cluster</li>
+<li>the <code>loadbalancer</code> nodefilter matches only the <code>serverlb</code> that&rsquo;s deployed in front of a cluster&rsquo;s server nodes<ul>
+<li>all ports exposed on the <code>serverlb</code> will be proxied to the same ports on all server nodes in the cluster</li>
 </ul>
 </li>
 </ul>
@@ -662,8 +662,8 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <h2 id="2-via-nodeport">2. via NodePort<a class="headerlink" href="#2-via-nodeport" title="Permanent link">&para;</a></h2>
 <ol>
 <li>
-<p>Create a cluster, mapping the port 30080 from worker-0 to localhost:8082</p>
-<p><code class="highlight">k3d cluster create mycluster -p <span class="m">8082</span>:30080@worker<span class="o">[</span><span class="m">0</span><span class="o">]</span> --workers <span class="m">2</span></code></p>
+<p>Create a cluster, mapping the port 30080 from agent-0 to localhost:8082</p>
+<p><code class="highlight">k3d cluster create mycluster -p <span class="m">8082</span>:30080@agent<span class="o">[</span><span class="m">0</span><span class="o">]</span> --agents <span class="m">2</span></code></p>
 <ul>
 <li>Note: Kubernetes&rsquo; default NodePort range is <a href="https://kubernetes.io/docs/concepts/services-networking/service/#nodeport"><code>30000-32767</code></a></li>
 </ul>
@@ -728,7 +728,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../../multimaster/" title="Creating multi-master clusters" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../../multiserver/" title="Creating multi-server clusters" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -737,7 +737,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Creating multi-master clusters
+                Creating multi-server clusters
               </div>
             </div>
           </a>
