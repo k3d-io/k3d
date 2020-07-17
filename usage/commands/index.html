@@ -543,11 +543,11 @@
   completion <span class="o">[</span>bash <span class="p">|</span> zsh <span class="p">|</span> <span class="o">(</span>psh <span class="p">|</span> powershell<span class="o">)]</span>  <span class="c1"># generate completion scripts for common shells</span>
   cluster <span class="o">[</span>CLUSTERNAME<span class="o">]</span>  <span class="c1"># default cluster name is &#39;k3s-default&#39;</span>
     create
-      -a, --api-port  <span class="c1"># specify the port on which the cluster will be accessible (e.g. via kubectl)</span>
+      --api-port  <span class="c1"># specify the port on which the cluster will be accessible (e.g. via kubectl)</span>
       -i, --image  <span class="c1"># specify which k3s image should be used for the nodes</span>
       --k3s-agent-arg  <span class="c1"># add additional arguments to the k3s agent (see https://rancher.com/docs/k3s/latest/en/installation/install-options/agent-config/#k3s-agent-cli-help)</span>
       --k3s-server-arg  <span class="c1"># add additional arguments to the k3s server (see https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/#k3s-server-cli-help)</span>
-      -m, --servers  <span class="c1"># specify how many server nodes you want to create</span>
+      -s, --servers  <span class="c1"># specify how many server nodes you want to create</span>
       --network  <span class="c1"># specify a network you want to connect to</span>
       --no-image-volume  <span class="c1"># disable the creation of a volume for storing images (used for the &#39;k3d load image&#39; command)</span>
       -p, --port  <span class="c1"># add some more port mappings</span>
@@ -606,7 +606,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 14, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 17, 2020</span>
     
   </small>
 </div>
