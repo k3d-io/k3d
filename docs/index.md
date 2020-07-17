@@ -50,7 +50,7 @@ You have several options there:
 Create a cluster named `mycluster` with just a single server node:
 
 ```bash
-k3d cluster create mycluster
+k3d create mycluster
 ```
 
 Get the new cluster's connection details merged into your default kubeconfig (usually specified using the `KUBECONFIG` environment variable or the default path `#!bash $HOME/.kube/config`) and directly switch to the new context:
