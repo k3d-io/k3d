@@ -97,8 +97,8 @@ func init() {
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
-		Short: "Print k3d version",
-		Long:  "Print k3d version",
+		Short: "Show k3d and default k3s version",
+		Long:  "Show k3d and default k3s version",
 		Run: func(cmd *cobra.Command, args []string) {
 			printVersion()
 		},
