@@ -10,11 +10,11 @@ k3d
   completion [bash | zsh | (psh | powershell)]  # generate completion scripts for common shells
   cluster [CLUSTERNAME]  # default cluster name is 'k3s-default'
     create
-      -a, --api-port  # specify the port on which the cluster will be accessible (e.g. via kubectl)
+      --api-port  # specify the port on which the cluster will be accessible (e.g. via kubectl)
       -i, --image  # specify which k3s image should be used for the nodes
       --k3s-agent-arg  # add additional arguments to the k3s agent (see https://rancher.com/docs/k3s/latest/en/installation/install-options/agent-config/#k3s-agent-cli-help)
       --k3s-server-arg  # add additional arguments to the k3s server (see https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/#k3s-server-cli-help)
-      -m, --servers  # specify how many server nodes you want to create
+      -s, --servers  # specify how many server nodes you want to create
       --network  # specify a network you want to connect to
       --no-image-volume  # disable the creation of a volume for storing images (used for the 'k3d load image' command)
       -p, --port  # add some more port mappings
