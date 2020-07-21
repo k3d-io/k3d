@@ -44,6 +44,7 @@ You have several options there:
 - install via [AUR](https://aur.archlinux.org/) package [rancher-k3d-bin](https://aur.archlinux.org/packages/rancher-k3d-bin/): `yay -S rancher-k3d-bin`
 - grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
 - install via go: `#!bash go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
+- use [arkade](https://github.com/alexellis/arkade): `arkade get k3d`
 
 ## Quick Start
 
