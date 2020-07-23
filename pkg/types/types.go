@@ -38,33 +38,63 @@ const DefaultClusterNameMaxLength = 32
 // DefaultK3sImageRepo specifies the default image repository for the used k3s image
 const DefaultK3sImageRepo = "docker.io/rancher/k3s"
 
-// DefaultLBImage defines the default cluster load balancer image
-const DefaultLBImage = "docker.io/iwilltry42/k3d-proxy:v0.0.2"
+// DefaultLBImageRepo defines the default cluster load balancer image
+const DefaultLBImageRepo = "docker.io/rancher/k3d-proxy"
+
+// DefaultToolsImageRepo defines the default image used for the tools container
+const DefaultToolsImageRepo = "docker.io/rancher/k3d-tools"
 
 // DefaultObjectNamePrefix defines the name prefix for every object created by k3d
 const DefaultObjectNamePrefix = "k3d"
+
+// ReadyLogMessageByRole defines the log messages we wait for until a server node is considered ready
+var ReadyLogMessageByRole = map[Role]string{
+	ServerRole:       "Wrote kubeconfig",
+	AgentRole:        "Successfully registered node",
+	LoadBalancerRole: "start worker processes",
+}
 
 // Role defines a k3d node role
 type Role string
 
 // existing k3d node roles
 const (
-	MasterRole       Role = "master"
-	WorkerRole       Role = "worker"
+	ServerRole       Role = "server"
+	AgentRole        Role = "agent"
 	NoRole           Role = "noRole"
 	LoadBalancerRole Role = "loadbalancer"
 )
 
 // NodeRoles defines the roles available for nodes
 var NodeRoles = map[string]Role{
-	string(MasterRole):       MasterRole,
-	string(WorkerRole):       WorkerRole,
+	string(ServerRole):       ServerRole,
+	string(AgentRole):        AgentRole,
 	string(LoadBalancerRole): LoadBalancerRole,
 }
 
 // DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
 var DefaultObjectLabels = map[string]string{
 	"app": "k3d",
+}
+
+// List of k3d technical label name
+const (
+	LabelClusterName     string = "k3d.cluster"
+	LabelClusterURL      string = "k3d.cluster.url"
+	LabelClusterToken    string = "k3d.cluster.token"
+	LabelImageVolume     string = "k3d.cluster.imageVolume"
+	LabelNetworkExternal string = "k3d.cluster.network.external"
+	LabelNetwork         string = "k3d.cluster.network"
+	LabelRole            string = "k3d.role"
+	LabelServerAPIPort   string = "k3d.server.api.port"
+	LabelServerAPIHost   string = "k3d.server.api.host"
+	LabelServerAPIHostIP string = "k3d.server.api.hostIP"
+)
+
+// DefaultRoleCmds maps the node roles to their respective default commands
+var DefaultRoleCmds = map[Role][]string{
+	ServerRole: {"server"},
+	AgentRole:  {"agent"},
 }
 
 // DefaultTmpfsMounts specifies tmpfs mounts that are required for all k3d nodes
@@ -77,9 +107,6 @@ var DefaultTmpfsMounts = []string{
 var DefaultNodeEnv = []string{
 	"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml",
 }
-
-// DefaultToolsContainerImage defines the default image used for the tools container
-const DefaultToolsContainerImage = "docker.io/iwilltry42/k3d-tools:v0.0.2" // TODO: get version dynamically or at build time
 
 // DefaultImageVolumeMountPath defines the mount path inside k3d nodes where we will mount the shared image volume by default
 const DefaultImageVolumeMountPath = "/k3d/images"
@@ -96,14 +123,42 @@ const DefaultAPIPort = "6443"
 // DefaultAPIHost defines the default host (IP) for the Kubernetes API
 const DefaultAPIHost = "0.0.0.0"
 
-// CreateClusterOpts describe a set of options one can set when creating a cluster
-type CreateClusterOpts struct {
+// DoNotCopyServerFlags defines a list of commands/args that shouldn't be copied from an existing node when adding a similar node to a cluster
+var DoNotCopyServerFlags = []string{
+	"--cluster-init",
+}
+
+// ClusterCreateOpts describe a set of options one can set when creating a cluster
+type ClusterCreateOpts struct {
 	DisableImageVolume  bool
-	WaitForMaster       bool
+	WaitForServer       bool
 	Timeout             time.Duration
 	DisableLoadBalancer bool
 	K3sServerArgs       []string
 	K3sAgentArgs        []string
+}
+
+// ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
+type ClusterStartOpts struct {
+	WaitForServer bool
+	Timeout       time.Duration
+}
+
+// NodeCreateOpts describes a set of options one can set when creating a new node
+type NodeCreateOpts struct {
+	Wait    bool
+	Timeout time.Duration
+}
+
+// NodeStartOpts describes a set of options one can set when (re-)starting a node
+type NodeStartOpts struct {
+	Wait    bool
+	Timeout time.Duration
+}
+
+// ImageImportOpts describes a set of options one can set for loading image(s) into cluster(s)
+type ImageImportOpts struct {
+	KeepTar bool
 }
 
 // ClusterNetwork describes a network which a cluster is running in
@@ -116,14 +171,46 @@ type ClusterNetwork struct {
 type Cluster struct {
 	Name               string             `yaml:"name" json:"name,omitempty"`
 	Network            ClusterNetwork     `yaml:"network" json:"network,omitempty"`
-	Secret             string             `yaml:"cluster_secret" json:"clusterSecret,omitempty"`
+	Token              string             `yaml:"cluster_token" json:"clusterToken,omitempty"`
 	Nodes              []*Node            `yaml:"nodes" json:"nodes,omitempty"`
-	InitNode           *Node              // init master node
+	InitNode           *Node              // init server node
 	ExternalDatastore  ExternalDatastore  `yaml:"external_datastore" json:"externalDatastore,omitempty"`
-	CreateClusterOpts  *CreateClusterOpts `yaml:"options" json:"options,omitempty"`
+	CreateClusterOpts  *ClusterCreateOpts `yaml:"options" json:"options,omitempty"`
 	ExposeAPI          ExposeAPI          `yaml:"expose_api" json:"exposeAPI,omitempty"`
-	MasterLoadBalancer *Node              `yaml:"master_loadbalancer" json:"masterLoadBalancer,omitempty"`
+	ServerLoadBalancer *Node              `yaml:"server_loadbalancer" json:"serverLoadBalancer,omitempty"`
 	ImageVolume        string             `yaml:"image_volume" json:"imageVolume,omitempty"`
+}
+
+// ServerCount return number of server node into cluster
+func (c *Cluster) ServerCount() int {
+	serverCount := 0
+	for _, node := range c.Nodes {
+		if node.Role == ServerRole {
+			serverCount++
+		}
+	}
+	return serverCount
+}
+
+// AgentCount return number of agent node into cluster
+func (c *Cluster) AgentCount() int {
+	agentCount := 0
+	for _, node := range c.Nodes {
+		if node.Role == AgentRole {
+			agentCount++
+		}
+	}
+	return agentCount
+}
+
+// HasLoadBalancer returns true if cluster has a loadbalancer node
+func (c *Cluster) HasLoadBalancer() bool {
+	for _, node := range c.Nodes {
+		if node.Role == LoadBalancerRole {
+			return true
+		}
+	}
+	return false
 }
 
 // Node describes a k3d node
@@ -139,17 +226,17 @@ type Node struct {
 	Restart    bool              `yaml:"restart" json:"restart,omitempty"`
 	Labels     map[string]string // filled automatically
 	Network    string            // filled automatically
-	MasterOpts MasterOpts        `yaml:"master_opts" json:"masterOpts,omitempty"`
-	WorkerOpts WorkerOpts        `yaml:"worker_opts" json:"workerOpts,omitempty"`
+	ServerOpts ServerOpts        `yaml:"server_opts" json:"serverOpts,omitempty"`
+	AgentOpts  AgentOpts         `yaml:"agent_opts" json:"agentOpts,omitempty"`
 }
 
-// MasterOpts describes some additional master role specific opts
-type MasterOpts struct {
-	IsInit    bool      `yaml:"is_initializing_master" json:"isInitializingMaster,omitempty"`
+// ServerOpts describes some additional server role specific opts
+type ServerOpts struct {
+	IsInit    bool      `yaml:"is_initializing_server" json:"isInitializingServer,omitempty"`
 	ExposeAPI ExposeAPI // filled automatically
 }
 
-// ExternalDatastore describes an external datastore used for HA/multi-master clusters
+// ExternalDatastore describes an external datastore used for HA/multi-server clusters
 type ExternalDatastore struct {
 	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty"`
 	CAFile   string `yaml:"ca_file" json:"caFile,omitempty"`
@@ -165,8 +252,8 @@ type ExposeAPI struct {
 	Port   string `yaml:"port" json:"port"`
 }
 
-// WorkerOpts describes some additional worker role specific opts
-type WorkerOpts struct{}
+// AgentOpts describes some additional agent role specific opts
+type AgentOpts struct{}
 
 // GetDefaultObjectName prefixes the passed name with the default prefix
 func GetDefaultObjectName(name string) string {

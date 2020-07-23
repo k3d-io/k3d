@@ -13,9 +13,9 @@ Existing networks won't be managed by k3d together with the cluster lifecycle.
 
 ### `host` network
 
-When using the `--network` flag to connect to the host network (i.e. `k3d create cluster --network host`),
-you won't be able to create more than **one master node**.
-An edge case would be one master node (with agent disabled) and one worker node.
+When using the `--network` flag to connect to the host network (i.e. `k3d cluster create --network host`),
+you won't be able to create more than **one server node**.
+An edge case would be one server node (with agent disabled) and one agent node.
 
 ### `bridge` network
 

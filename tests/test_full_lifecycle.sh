@@ -9,7 +9,7 @@ source "$CURR_DIR/common.sh"
 clustername="lifecycletest"
 
 info "Creating cluster $clustername..."
-$EXE create cluster "$clustername" --workers 1 --api-port 6443 --wait --timeout 360s || failed "could not create cluster $clustername"
+$EXE cluster create "$clustername" --agents 1 --api-port 6443 --wait --timeout 360s || failed "could not create cluster $clustername"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
 sleep 5
@@ -23,17 +23,14 @@ check_multi_node "$clustername" 2 || failed "failed to verify number of nodes"
 
 # 2. stop the cluster
 info "Stopping cluster..."
-$EXE stop cluster "$clustername"
+$EXE cluster stop "$clustername"
 
 info "Checking that cluster was stopped"
 check_clusters "$clustername" && failed "cluster was not stopped, since we still have access"
 
 # 3. start the cluster
 info "Starting cluster..."
-$EXE start cluster "$clustername"
-
-info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
-sleep 5
+$EXE cluster start "$clustername" --wait --timeout 360s || failed "cluster didn't come back in time"
 
 info "Checking that we have access to the cluster..."
 check_clusters "$clustername" || failed "error checking cluster"
@@ -41,16 +38,23 @@ check_clusters "$clustername" || failed "error checking cluster"
 info "Checking that we have 2 nodes online..."
 check_multi_node "$clustername" 2 || failed "failed to verify number of nodes"
 
+# 4. adding another agent node
+info "Adding one agent node..."
+$EXE node create "extra-agent" --cluster "$clustername" --role "agent" --wait --timeout 360s || failed "failed to add agent node"
+
+info "Checking that we have 3 nodes available now..."
+check_multi_node "$clustername" 3 || failed "failed to verify number of nodes"
+
 # 4. load an image into the cluster
 info "Loading an image into the cluster..."
 docker pull nginx:latest > /dev/null
 docker tag nginx:latest nginx:local > /dev/null
-$EXE load image nginx:local -c $clustername || failed "could not import image in $clustername"
+$EXE image import nginx:local -c $clustername || failed "could not import image in $clustername"
 
 # Cleanup
 
 info "Deleting cluster $clustername..."
-$EXE delete cluster "$clustername" || failed "could not delete the cluster $clustername"
+$EXE cluster delete "$clustername" || failed "could not delete the cluster $clustername"
 
 exit 0
 

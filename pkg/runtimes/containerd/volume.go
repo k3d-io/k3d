@@ -21,12 +21,19 @@ THE SOFTWARE.
 */
 package containerd
 
+import "context"
+
 // CreateVolume creates a new named volume
-func (d Containerd) CreateVolume(name string, labels map[string]string) error {
+func (d Containerd) CreateVolume(ctx context.Context, name string, labels map[string]string) error {
 	return nil
 }
 
 // DeleteVolume creates a new named volume
-func (d Containerd) DeleteVolume(name string) error {
+func (d Containerd) DeleteVolume(ctx context.Context, name string) error {
 	return nil
+}
+
+// GetVolume tries to get a named volume
+func (d Containerd) GetVolume(name string) (string, error) {
+	return "", nil
 }

@@ -30,14 +30,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/rancher/k3d/cmd/create"
-	"github.com/rancher/k3d/cmd/delete"
-	"github.com/rancher/k3d/cmd/get"
-	"github.com/rancher/k3d/cmd/load"
-	"github.com/rancher/k3d/cmd/start"
-	"github.com/rancher/k3d/cmd/stop"
-	"github.com/rancher/k3d/pkg/runtimes"
-	"github.com/rancher/k3d/version"
+	"github.com/rancher/k3d/v3/cmd/cluster"
+	"github.com/rancher/k3d/v3/cmd/image"
+	"github.com/rancher/k3d/v3/cmd/kubeconfig"
+	"github.com/rancher/k3d/v3/cmd/node"
+	"github.com/rancher/k3d/v3/pkg/runtimes"
+	"github.com/rancher/k3d/v3/version"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
@@ -47,7 +45,6 @@ import (
 type RootFlags struct {
 	debugLogging bool
 	version      bool
-	runtime      string
 }
 
 var flags = RootFlags{}
@@ -65,6 +62,10 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if flags.version {
 			printVersion()
+		} else {
+			if err := cmd.Usage(); err != nil {
+				log.Fatalln(err)
+			}
 		}
 	},
 }
@@ -73,8 +74,7 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		log.Errorln(err)
-		os.Exit(1)
+		log.Fatalln(err)
 	}
 }
 
@@ -84,24 +84,21 @@ func init() {
 	// add persistent flags (present to all subcommands)
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k3d/config.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
-	rootCmd.PersistentFlags().StringVarP(&flags.runtime, "runtime", "r", "docker", "Choose a container runtime environment [docker, containerd]")
 
 	// add local flags
 	rootCmd.Flags().BoolVar(&flags.version, "version", false, "Show k3d and default k3s version")
 
 	// add subcommands
 	rootCmd.AddCommand(NewCmdCompletion())
-	rootCmd.AddCommand(create.NewCmdCreate())
-	rootCmd.AddCommand(delete.NewCmdDelete())
-	rootCmd.AddCommand(get.NewCmdGet())
-	rootCmd.AddCommand(stop.NewCmdStop())
-	rootCmd.AddCommand(start.NewCmdStart())
-	rootCmd.AddCommand(load.NewCmdLoad())
+	rootCmd.AddCommand(cluster.NewCmdCluster())
+	rootCmd.AddCommand(kubeconfig.NewCmdKubeconfig())
+	rootCmd.AddCommand(node.NewCmdNode())
+	rootCmd.AddCommand(image.NewCmdImage())
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
-		Short: "Print k3d version",
-		Long:  "Print k3d version",
+		Short: "Show k3d and default k3s version",
+		Long:  "Show k3d and default k3s version",
 		Run: func(cmd *cobra.Command, args []string) {
 			printVersion()
 		},
@@ -147,7 +144,7 @@ func initLogging() {
 }
 
 func initRuntime() {
-	runtime, err := runtimes.GetRuntime(flags.runtime)
+	runtime, err := runtimes.GetRuntime("docker")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -163,7 +160,7 @@ func printVersion() {
 // Completion
 var completionFunctions = map[string]func(io.Writer) error{
 	"bash":       rootCmd.GenBashCompletion,
-	"zsh":        rootCmd.GenZshCompletion, // FIXME: zsh completion requires https://github.com/spf13/cobra/pull/899 due to square brackets in our help texts
+	"zsh":        rootCmd.GenZshCompletion,
 	"psh":        rootCmd.GenPowerShellCompletion,
 	"powershell": rootCmd.GenPowerShellCompletion,
 }

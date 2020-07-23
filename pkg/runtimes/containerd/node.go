@@ -25,19 +25,17 @@ package containerd
 import (
 	"context"
 	"io"
+	"time"
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/containers"
-	k3d "github.com/rancher/k3d/pkg/types"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
 // CreateNode creates a new k3d node
-func (d Containerd) CreateNode(node *k3d.Node) error {
-	log.Debugln("containerd.CreateNode...")
-
+func (d Containerd) CreateNode(ctx context.Context, node *k3d.Node) error {
 	// create containerd client
-	ctx := context.Background()
 	clientOpts := []containerd.ClientOpt{
 		containerd.WithDefaultNamespace("k3d"),
 	}
@@ -77,9 +75,7 @@ func (d Containerd) CreateNode(node *k3d.Node) error {
 }
 
 // DeleteNode deletes an existing k3d node
-func (d Containerd) DeleteNode(node *k3d.Node) error {
-	log.Debugln("containerd.DeleteNode...")
-	ctx := context.Background()
+func (d Containerd) DeleteNode(ctx context.Context, node *k3d.Node) error {
 	clientOpts := []containerd.ClientOpt{
 		containerd.WithDefaultNamespace("k3d"),
 	}
@@ -95,7 +91,7 @@ func (d Containerd) DeleteNode(node *k3d.Node) error {
 		return err
 	}
 	if err = container.Delete(ctx, []containerd.DeleteOpts{}...); err != nil {
-		log.Errorln("Failed to delete container", container.ID)
+		log.Errorf("Failed to delete container '%s'", container.ID)
 		return err
 	}
 
@@ -103,30 +99,30 @@ func (d Containerd) DeleteNode(node *k3d.Node) error {
 }
 
 // StartNode starts an existing node
-func (d Containerd) StartNode(node *k3d.Node) error {
+func (d Containerd) StartNode(ctx context.Context, node *k3d.Node) error {
 	return nil // TODO: fill
 }
 
 // StopNode stops an existing node
-func (d Containerd) StopNode(node *k3d.Node) error {
+func (d Containerd) StopNode(ctx context.Context, node *k3d.Node) error {
 	return nil // TODO: fill
 }
 
-func (d Containerd) GetNodesByLabel(labels map[string]string) ([]*k3d.Node, error) {
+func (d Containerd) GetNodesByLabel(ctx context.Context, labels map[string]string) ([]*k3d.Node, error) {
 	return nil, nil
 }
 
 // GetNode tries to get a node container by its name
-func (d Containerd) GetNode(node *k3d.Node) (*k3d.Node, error) {
+func (d Containerd) GetNode(ctx context.Context, node *k3d.Node) (*k3d.Node, error) {
 	return nil, nil
 }
 
 // GetNodeLogs returns the logs from a given node
-func (d Containerd) GetNodeLogs(node *k3d.Node) (io.ReadCloser, error) {
+func (d Containerd) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time) (io.ReadCloser, error) {
 	return nil, nil
 }
 
 // ExecInNode execs a command inside a node
-func (d Containerd) ExecInNode(node *k3d.Node, cmd []string) error {
+func (d Containerd) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) error {
 	return nil
 }

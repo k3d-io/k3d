@@ -23,6 +23,7 @@ THE SOFTWARE.
 package docker
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -30,7 +31,7 @@ import (
 	docker "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
-	k3d "github.com/rancher/k3d/pkg/types"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -39,7 +40,9 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 
 	/* initialize everything that we need */
 	containerConfig := docker.Config{}
-	hostConfig := docker.HostConfig{}
+	hostConfig := docker.HostConfig{
+		Init: &[]bool{true}[0],
+	}
 	networkingConfig := network.NetworkingConfig{}
 
 	/* Name & Image */
@@ -76,14 +79,14 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	hostConfig.Privileged = true
 
 	/* Volumes */
-	// TODO: image volume
+	log.Debugf("Volumes: %+v", node.Volumes)
 	hostConfig.Binds = node.Volumes
 	// containerConfig.Volumes = map[string]struct{}{} // TODO: do we need this? We only used binds before
 
 	/* Ports */
 	exposedPorts, portBindings, err := nat.ParsePortSpecs(node.Ports)
 	if err != nil {
-		log.Errorln("Failed to parse port specs '%v'", node.Ports)
+		log.Errorf("Failed to parse port specs '%v'", node.Ports)
 		return nil, err
 	}
 	containerConfig.ExposedPorts = exposedPorts
@@ -92,7 +95,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
 		node.Network: {},
 	}
-	netInfo, err := GetNetwork(node.Network)
+	netInfo, err := GetNetwork(context.Background(), node.Network)
 	if err != nil {
 		log.Warnln("Failed to get network information")
 		log.Warnln(err)
@@ -113,7 +116,7 @@ func TranslateContainerToNode(cont *types.Container) (*k3d.Node, error) {
 		Name:   strings.TrimPrefix(cont.Names[0], "/"), // container name with leading '/' cut off
 		Image:  cont.Image,
 		Labels: cont.Labels,
-		Role:   k3d.NodeRoles[cont.Labels["k3d.role"]],
+		Role:   k3d.NodeRoles[cont.Labels[k3d.LabelRole]],
 		// TODO: all the rest
 	}
 	return node, nil
@@ -139,25 +142,20 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 	// get the clusterNetwork
 	clusterNetwork := ""
 	for networkName := range containerDetails.NetworkSettings.Networks {
-		if strings.HasPrefix(networkName, fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, containerDetails.Config.Labels["k3d.cluster"])) { // FIXME: catch error if label 'k3d.cluster' does not exist, but this should also never be the case
+		if strings.HasPrefix(networkName, fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, containerDetails.Config.Labels[k3d.LabelClusterName])) { // FIXME: catch error if label 'k3d.cluster' does not exist, but this should also never be the case
 			clusterNetwork = networkName
 		}
 	}
 
-	// masterOpts
-	masterOpts := k3d.MasterOpts{IsInit: false}
+	// serverOpts
+	serverOpts := k3d.ServerOpts{IsInit: false}
 	for k, v := range containerDetails.Config.Labels {
-		/*
-			node.Labels["k3d.master.api.hostIP"] = node.MasterOpts.ExposeAPI.HostIP // TODO: maybe get docker machine IP here
-			node.Labels["k3d.master.api.host"] = node.MasterOpts.ExposeAPI.Host
-			node.Labels["k3d.master.api.port"] = node.MasterOpts.ExposeAPI.Port
-		*/
-		if k == "k3d.master.api.hostIP" {
-			masterOpts.ExposeAPI.HostIP = v
-		} else if k == "k3d.master.api.host" {
-			masterOpts.ExposeAPI.Host = v
-		} else if k == "k3d.master.api.port" {
-			masterOpts.ExposeAPI.Port = v
+		if k == k3d.LabelServerAPIHostIP {
+			serverOpts.ExposeAPI.HostIP = v
+		} else if k == k3d.LabelServerAPIHost {
+			serverOpts.ExposeAPI.Host = v
+		} else if k == k3d.LabelServerAPIPort {
+			serverOpts.ExposeAPI.Port = v
 		}
 	}
 
@@ -179,7 +177,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 
 	node := &k3d.Node{
 		Name:       strings.TrimPrefix(containerDetails.Name, "/"), // container name with leading '/' cut off
-		Role:       k3d.NodeRoles[containerDetails.Config.Labels["k3d.role"]],
+		Role:       k3d.NodeRoles[containerDetails.Config.Labels[k3d.LabelRole]],
 		Image:      containerDetails.Image,
 		Volumes:    containerDetails.HostConfig.Binds,
 		Env:        env,
@@ -189,8 +187,8 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		Restart:    restart,
 		Labels:     labels,
 		Network:    clusterNetwork,
-		MasterOpts: masterOpts,
-		WorkerOpts: k3d.WorkerOpts{},
+		ServerOpts: serverOpts,
+		AgentOpts:  k3d.AgentOpts{},
 	}
 	return node, nil
 }

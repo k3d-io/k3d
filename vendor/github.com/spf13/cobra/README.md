@@ -2,31 +2,9 @@
 
 Cobra is both a library for creating powerful modern CLI applications as well as a program to generate applications and command files.
 
-Many of the most widely used Go projects are built using Cobra, such as:
-[Kubernetes](http://kubernetes.io/),
-[Hugo](http://gohugo.io),
-[rkt](https://github.com/coreos/rkt),
-[etcd](https://github.com/coreos/etcd),
-[Moby (former Docker)](https://github.com/moby/moby),
-[Docker (distribution)](https://github.com/docker/distribution),
-[OpenShift](https://www.openshift.com/),
-[Delve](https://github.com/derekparker/delve),
-[GopherJS](http://www.gopherjs.org/),
-[CockroachDB](http://www.cockroachlabs.com/),
-[Bleve](http://www.blevesearch.com/),
-[ProjectAtomic (enterprise)](http://www.projectatomic.io/),
-[Giant Swarm's gsctl](https://github.com/giantswarm/gsctl),
-[Nanobox](https://github.com/nanobox-io/nanobox)/[Nanopack](https://github.com/nanopack),
-[rclone](http://rclone.org/),
-[nehm](https://github.com/bogem/nehm),
-[Pouch](https://github.com/alibaba/pouch),
-[Istio](https://istio.io),
-[Prototool](https://github.com/uber/prototool),
-[mattermost-server](https://github.com/mattermost/mattermost-server),
-[Gardener](https://github.com/gardener/gardenctl),
-[Linkerd](https://linkerd.io/),
-[Github CLI](https://github.com/cli/cli)
-etc.
+Cobra is used in many Go projects such as [Kubernetes](http://kubernetes.io/),
+[Hugo](https://gohugo.io), and [Github CLI](https://github.com/cli/cli) to
+name a few. [This list](./projects_using_cobra.md) contains a more extensive list of projects using Cobra.
 
 [![Build Status](https://travis-ci.org/spf13/cobra.svg "Travis CI status")](https://travis-ci.org/spf13/cobra)
 [![GoDoc](https://godoc.org/github.com/spf13/cobra?status.svg)](https://godoc.org/github.com/spf13/cobra)
@@ -50,8 +28,7 @@ etc.
   * [PreRun and PostRun Hooks](#prerun-and-postrun-hooks)
   * [Suggestions when "unknown command" happens](#suggestions-when-unknown-command-happens)
   * [Generating documentation for your command](#generating-documentation-for-your-command)
-  * [Generating bash completions](#generating-bash-completions)
-  * [Generating zsh completions](#generating-zsh-completions)
+  * [Generating shell completions](#generating-shell-completions)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -72,7 +49,7 @@ Cobra provides:
 * Intelligent suggestions (`app srver`... did you mean `app server`?)
 * Automatic help generation for commands and flags
 * Automatic help flag recognition of `-h`, `--help`, etc.
-* Automatically generated bash autocomplete for your application
+* Automatically generated shell autocomplete for your application (bash, zsh, fish, powershell)
 * Automatically generated man pages for your application
 * Command aliases so you can change things without breaking them
 * The flexibility to define your own help, usage, etc.
@@ -740,20 +717,11 @@ Run 'kubectl help' for usage.
 
 ## Generating documentation for your command
 
-Cobra can generate documentation based on subcommands, flags, etc. in the following formats:
+Cobra can generate documentation based on subcommands, flags, etc. Read more about it in the [docs generation documentation](doc/README.md).
 
-- [Markdown](doc/md_docs.md)
-- [ReStructured Text](doc/rest_docs.md)
-- [Man Page](doc/man_docs.md)
+## Generating shell completions
 
-## Generating bash completions
-
-Cobra can generate a bash-completion file. If you add more information to your command, these completions can be amazingly powerful and flexible.  Read more about it in [Bash Completions](bash_completions.md).
-
-## Generating zsh completions
-
-Cobra can generate zsh-completion file. Read more about it in
-[Zsh Completions](zsh_completions.md).
+Cobra can generate a shell-completion file for the following shells: Bash, Zsh, Fish, Powershell. If you add more information to your commands, these completions can be amazingly powerful and flexible.  Read more about it in [Shell Completions](shell_completions.md).
 
 # Contributing
 

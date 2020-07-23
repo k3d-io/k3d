@@ -23,14 +23,15 @@ package cluster
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"time"
 
-	"github.com/rancher/k3d/pkg/runtimes"
-	k3d "github.com/rancher/k3d/pkg/types"
+	"github.com/rancher/k3d/v3/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
@@ -43,21 +44,21 @@ type WriteKubeConfigOptions struct {
 	OverwriteExisting    bool
 }
 
-// GetAndWriteKubeConfig ...
-// 1. fetches the KubeConfig from the first master node retrieved for a given cluster
+// KubeconfigGetWrite ...
+// 1. fetches the KubeConfig from the first server node retrieved for a given cluster
 // 2. modifies it by updating some fields with cluster-specific information
 // 3. writes it to the specified output
-func GetAndWriteKubeConfig(runtime runtimes.Runtime, cluster *k3d.Cluster, output string, writeKubeConfigOptions *WriteKubeConfigOptions) (string, error) {
+func KubeconfigGetWrite(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, output string, writeKubeConfigOptions *WriteKubeConfigOptions) (string, error) {
 
 	// get kubeconfig from cluster node
-	kubeconfig, err := GetKubeconfig(runtime, cluster)
+	kubeconfig, err := KubeconfigGet(ctx, runtime, cluster)
 	if err != nil {
 		return output, err
 	}
 
 	// empty output parameter = write to default
 	if output == "" {
-		output, err = GetDefaultKubeConfigPath()
+		output, err = KubeconfigGetDefaultPath()
 		if err != nil {
 			return output, err
 		}
@@ -65,7 +66,7 @@ func GetAndWriteKubeConfig(runtime runtimes.Runtime, cluster *k3d.Cluster, outpu
 
 	// simply write to the output, ignoring existing contents
 	if writeKubeConfigOptions.OverwriteExisting || output == "-" {
-		return output, WriteKubeConfigToPath(kubeconfig, output)
+		return output, KubeconfigWriteToPath(ctx, kubeconfig, output)
 	}
 
 	// load config from existing file or fail if it has non-kubeconfig contents
@@ -102,49 +103,49 @@ func GetAndWriteKubeConfig(runtime runtimes.Runtime, cluster *k3d.Cluster, outpu
 	}
 
 	// update existing kubeconfig, but error out if there are conflicting fields but we don't want to update them
-	return output, UpdateKubeConfig(kubeconfig, existingKubeConfig, output, writeKubeConfigOptions.UpdateExisting, writeKubeConfigOptions.UpdateCurrentContext)
+	return output, KubeconfigMerge(ctx, kubeconfig, existingKubeConfig, output, writeKubeConfigOptions.UpdateExisting, writeKubeConfigOptions.UpdateCurrentContext)
 
 }
 
-// GetKubeconfig grabs the kubeconfig file from /output from a master node container,
+// KubeconfigGet grabs the kubeconfig file from /output from a server node container,
 // modifies it by updating some fields with cluster-specific information
 // and returns a Config object for further processing
-func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) (*clientcmdapi.Config, error) {
-	// get all master nodes for the selected cluster
-	// TODO: getKubeconfig: we should make sure, that the master node we're trying to fetch from is actually running
-	masterNodes, err := runtime.GetNodesByLabel(map[string]string{"k3d.cluster": cluster.Name, "k3d.role": string(k3d.MasterRole)})
+func KubeconfigGet(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*clientcmdapi.Config, error) {
+	// get all server nodes for the selected cluster
+	// TODO: getKubeconfig: we should make sure, that the server node we're trying to fetch from is actually running
+	serverNodes, err := runtime.GetNodesByLabel(ctx, map[string]string{k3d.LabelClusterName: cluster.Name, k3d.LabelRole: string(k3d.ServerRole)})
 	if err != nil {
-		log.Errorln("Failed to get master nodes")
+		log.Errorln("Failed to get server nodes")
 		return nil, err
 	}
-	if len(masterNodes) == 0 {
-		return nil, fmt.Errorf("Didn't find any master node")
+	if len(serverNodes) == 0 {
+		return nil, fmt.Errorf("Didn't find any server node")
 	}
 
-	// prefer a master node, which actually has the port exposed
-	var chosenMaster *k3d.Node
-	chosenMaster = nil
+	// prefer a server node, which actually has the port exposed
+	var chosenServer *k3d.Node
+	chosenServer = nil
 	APIPort := k3d.DefaultAPIPort
 	APIHost := k3d.DefaultAPIHost
 
-	for _, master := range masterNodes {
-		if _, ok := master.Labels["k3d.master.api.port"]; ok {
-			chosenMaster = master
-			APIPort = master.Labels["k3d.master.api.port"]
-			if _, ok := master.Labels["k3d.master.api.host"]; ok {
-				APIHost = master.Labels["k3d.master.api.host"]
+	for _, server := range serverNodes {
+		if _, ok := server.Labels[k3d.LabelServerAPIPort]; ok {
+			chosenServer = server
+			APIPort = server.Labels[k3d.LabelServerAPIPort]
+			if _, ok := server.Labels[k3d.LabelServerAPIHost]; ok {
+				APIHost = server.Labels[k3d.LabelServerAPIHost]
 			}
 			break
 		}
 	}
 
-	if chosenMaster == nil {
-		chosenMaster = masterNodes[0]
+	if chosenServer == nil {
+		chosenServer = serverNodes[0]
 	}
-	// get the kubeconfig from the first master node
-	reader, err := runtime.GetKubeconfig(chosenMaster)
+	// get the kubeconfig from the first server node
+	reader, err := runtime.GetKubeconfig(ctx, chosenServer)
 	if err != nil {
-		log.Errorf("Failed to get kubeconfig from node '%s'", chosenMaster.Name)
+		log.Errorf("Failed to get kubeconfig from node '%s'", chosenServer.Name)
 		return nil, err
 	}
 	defer reader.Close()
@@ -198,8 +199,8 @@ func GetKubeconfig(runtime runtimes.Runtime, cluster *k3d.Cluster) (*clientcmdap
 	return kc, nil
 }
 
-// WriteKubeConfigToPath takes a kubeconfig and writes it to some path, which can be '-' for os.Stdout
-func WriteKubeConfigToPath(kubeconfig *clientcmdapi.Config, path string) error {
+// KubeconfigWriteToPath takes a kubeconfig and writes it to some path, which can be '-' for os.Stdout
+func KubeconfigWriteToPath(ctx context.Context, kubeconfig *clientcmdapi.Config, path string) error {
 	var output *os.File
 	defer output.Close()
 	var err error
@@ -227,14 +228,14 @@ func WriteKubeConfigToPath(kubeconfig *clientcmdapi.Config, path string) error {
 		return err
 	}
 
-	log.Debugf("Wrote kubeconfig to '%s'", output.Name)
+	log.Debugf("Wrote kubeconfig to '%s'", output.Name())
 
 	return nil
 
 }
 
-// UpdateKubeConfig merges a new kubeconfig into an existing kubeconfig and returns the result
-func UpdateKubeConfig(newKubeConfig *clientcmdapi.Config, existingKubeConfig *clientcmdapi.Config, outPath string, overwriteConflicting bool, updateCurrentContext bool) error {
+// KubeconfigMerge merges a new kubeconfig into an existing kubeconfig and returns the result
+func KubeconfigMerge(ctx context.Context, newKubeConfig *clientcmdapi.Config, existingKubeConfig *clientcmdapi.Config, outPath string, overwriteConflicting bool, updateCurrentContext bool) error {
 
 	log.Debugf("Merging new KubeConfig:\n%+v\n>>> into existing KubeConfig:\n%+v", newKubeConfig, existingKubeConfig)
 
@@ -258,8 +259,8 @@ func UpdateKubeConfig(newKubeConfig *clientcmdapi.Config, existingKubeConfig *cl
 	}
 
 	for k, v := range newKubeConfig.Contexts {
-		if _, ok := existingKubeConfig.Clusters[k]; ok && !overwriteConflicting {
-			return fmt.Errorf("Cluster '%s' already exists in target KubeConfig", k)
+		if _, ok := existingKubeConfig.Contexts[k]; ok && !overwriteConflicting {
+			return fmt.Errorf("Context '%s' already exists in target KubeConfig", k)
 		}
 		existingKubeConfig.Contexts[k] = v
 	}
@@ -277,11 +278,11 @@ func UpdateKubeConfig(newKubeConfig *clientcmdapi.Config, existingKubeConfig *cl
 
 	log.Debugf("Merged KubeConfig:\n%+v", existingKubeConfig)
 
-	return WriteKubeConfig(existingKubeConfig, outPath)
+	return KubeconfigWrite(ctx, existingKubeConfig, outPath)
 }
 
-// WriteKubeConfig writes a kubeconfig to a path atomically
-func WriteKubeConfig(kubeconfig *clientcmdapi.Config, path string) error {
+// KubeconfigWrite writes a kubeconfig to a path atomically
+func KubeconfigWrite(ctx context.Context, kubeconfig *clientcmdapi.Config, path string) error {
 	tempPath := fmt.Sprintf("%s.k3d_%s", path, time.Now().Format("20060102_150405.000000"))
 	if err := clientcmd.WriteToFile(*kubeconfig, tempPath); err != nil {
 		log.Errorf("Failed to write merged kubeconfig to temporary file '%s'", tempPath)
@@ -299,9 +300,9 @@ func WriteKubeConfig(kubeconfig *clientcmdapi.Config, path string) error {
 	return nil
 }
 
-// GetDefaultKubeConfig loads the default KubeConfig file
-func GetDefaultKubeConfig() (*clientcmdapi.Config, error) {
-	path, err := GetDefaultKubeConfigPath()
+// KubeconfigGetDefaultFile loads the default KubeConfig file
+func KubeconfigGetDefaultFile() (*clientcmdapi.Config, error) {
+	path, err := KubeconfigGetDefaultPath()
 	if err != nil {
 		return nil, err
 	}
@@ -309,8 +310,8 @@ func GetDefaultKubeConfig() (*clientcmdapi.Config, error) {
 	return clientcmd.LoadFromFile(path)
 }
 
-// GetDefaultKubeConfigPath returns the path of the default kubeconfig, but errors if the KUBECONFIG env var specifies more than one file
-func GetDefaultKubeConfigPath() (string, error) {
+// KubeconfigGetDefaultPath returns the path of the default kubeconfig, but errors if the KUBECONFIG env var specifies more than one file
+func KubeconfigGetDefaultPath() (string, error) {
 	defaultKubeConfigLoadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	if len(defaultKubeConfigLoadingRules.GetLoadingPrecedence()) > 1 {
 		return "", fmt.Errorf("Multiple kubeconfigs specified via KUBECONFIG env var: Please reduce to one entry, unset KUBECONFIG or explicitly choose an output")
@@ -318,22 +319,22 @@ func GetDefaultKubeConfigPath() (string, error) {
 	return defaultKubeConfigLoadingRules.GetDefaultFilename(), nil
 }
 
-// RemoveClusterFromDefaultKubeConfig removes a cluster's details from the default kubeconfig
-func RemoveClusterFromDefaultKubeConfig(cluster *k3d.Cluster) error {
-	defaultKubeConfigPath, err := GetDefaultKubeConfigPath()
+// KubeconfigRemoveClusterFromDefaultConfig removes a cluster's details from the default kubeconfig
+func KubeconfigRemoveClusterFromDefaultConfig(ctx context.Context, cluster *k3d.Cluster) error {
+	defaultKubeConfigPath, err := KubeconfigGetDefaultPath()
 	if err != nil {
 		return err
 	}
-	kubeconfig, err := GetDefaultKubeConfig()
+	kubeconfig, err := KubeconfigGetDefaultFile()
 	if err != nil {
 		return err
 	}
-	kubeconfig = RemoveClusterFromKubeConfig(cluster, kubeconfig)
-	return WriteKubeConfig(kubeconfig, defaultKubeConfigPath)
+	kubeconfig = KubeconfigRemoveCluster(ctx, cluster, kubeconfig)
+	return KubeconfigWrite(ctx, kubeconfig, defaultKubeConfigPath)
 }
 
-// RemoveClusterFromKubeConfig removes a cluster's details from a given kubeconfig
-func RemoveClusterFromKubeConfig(cluster *k3d.Cluster, kubeconfig *clientcmdapi.Config) *clientcmdapi.Config {
+// KubeconfigRemoveCluster removes a cluster's details from a given kubeconfig
+func KubeconfigRemoveCluster(ctx context.Context, cluster *k3d.Cluster, kubeconfig *clientcmdapi.Config) *clientcmdapi.Config {
 	clusterName := fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
 	contextName := fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
 	authInfoName := fmt.Sprintf("admin@%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)

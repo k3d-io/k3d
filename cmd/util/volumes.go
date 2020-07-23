@@ -25,19 +25,26 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/rancher/k3d/v3/pkg/runtimes"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // ValidateVolumeMount checks, if the source of volume mounts exists and if the destination is an absolute path
 // - SRC: source directory/file -> tests: must exist
 // - DEST: source directory/file -> tests: must be absolute path
-func ValidateVolumeMount(volumeMount string) (string, error) {
+func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) (string, error) {
 	src := ""
 	dest := ""
 
 	// validate 'SRC[:DEST]' substring
 	split := strings.Split(volumeMount, ":")
-	if len(split) < 1 || len(split) > 2 {
-		return "", fmt.Errorf("Invalid volume mount '%s': only one ':' allowed", volumeMount)
+	if len(split) < 1 {
+		return "", fmt.Errorf("No volume/path specified")
+	}
+	if len(split) > 3 {
+		return "", fmt.Errorf("Invalid volume mount '%s': maximal 2 ':' allowed", volumeMount)
 	}
 
 	// we only have SRC specified -> DEST = SRC
@@ -51,8 +58,15 @@ func ValidateVolumeMount(volumeMount string) (string, error) {
 
 	// verify that the source exists
 	if src != "" {
-		if _, err := os.Stat(src); err != nil {
-			return "", fmt.Errorf("Failed to stat file/dir that you're trying to mount: '%s' in '%s'", src, volumeMount)
+		// a) named volume
+		isNamedVolume := true
+		if err := verifyNamedVolume(runtime, src); err != nil {
+			isNamedVolume = false
+		}
+		if !isNamedVolume {
+			if _, err := os.Stat(src); err != nil {
+				log.Warnf("Failed to stat file/directory/named volume that you're trying to mount: '%s' in '%s' -> Please make sure it exists", src, volumeMount)
+			}
 		}
 	}
 
@@ -61,5 +75,17 @@ func ValidateVolumeMount(volumeMount string) (string, error) {
 		return "", fmt.Errorf("Volume mount destination doesn't appear to be an absolute path: '%s' in '%s'", dest, volumeMount)
 	}
 
-	return fmt.Sprintf("%s:%s", src, dest), nil
+	return volumeMount, nil
+}
+
+// verifyNamedVolume checks whether a named volume exists in the runtime
+func verifyNamedVolume(runtime runtimes.Runtime, volumeName string) error {
+	volumeName, err := runtime.GetVolume(volumeName)
+	if err != nil {
+		return err
+	}
+	if volumeName == "" {
+		return fmt.Errorf("Failed to find named volume '%s'", volumeName)
+	}
+	return nil
 }

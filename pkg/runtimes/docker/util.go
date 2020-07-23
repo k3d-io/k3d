@@ -22,10 +22,15 @@ THE SOFTWARE.
 package docker
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
-	k3d "github.com/rancher/k3d/pkg/types"
+	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/archive"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
+	log "github.com/sirupsen/logrus"
 )
 
 // GetDefaultObjectLabelsFilter returns docker type filters created from k3d labels
@@ -34,6 +39,52 @@ func GetDefaultObjectLabelsFilter(clusterName string) filters.Args {
 	for key, value := range k3d.DefaultObjectLabels {
 		filters.Add("label", fmt.Sprintf("%s=%s", key, value))
 	}
-	filters.Add("label", fmt.Sprintf("k3d.cluster=%s", clusterName))
+	filters.Add("label", fmt.Sprintf("%s=%s", k3d.LabelClusterName, clusterName))
 	return filters
+}
+
+// CopyToNode copies a file from the local FS to the selected node
+func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k3d.Node) error {
+	// create docker client
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return err
+	}
+	defer docker.Close()
+
+	container, err := getNodeContainer(ctx, node)
+	if err != nil {
+		log.Errorf("Failed to find container for target node '%s'", node.Name)
+		return err
+	}
+
+	// source: docker/cli/cli/command/container/cp
+	srcInfo, err := archive.CopyInfoSourcePath(src, false)
+	if err != nil {
+		log.Errorln("Failed to copy info source path")
+		return err
+	}
+
+	srcArchive, err := archive.TarResource(srcInfo)
+	if err != nil {
+		log.Errorln("Failed to create tar resource")
+		return err
+	}
+	defer srcArchive.Close()
+
+	destInfo := archive.CopyInfo{Path: dest}
+
+	destStat, _ := docker.ContainerStatPath(ctx, container.ID, dest) // don't blame me, docker is also not doing anything if err != nil ¯\_(ツ)_/¯
+
+	destInfo.Exists, destInfo.IsDir = true, destStat.Mode.IsDir()
+
+	destDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, destInfo)
+	if err != nil {
+		log.Errorln("Failed to prepare archive")
+		return err
+	}
+	defer preparedArchive.Close()
+
+	return docker.CopyToContainer(ctx, container.ID, destDir, preparedArchive, types.CopyToContainerOptions{AllowOverwriteDirWithFile: false})
 }

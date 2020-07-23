@@ -30,26 +30,30 @@ import (
 	"time"
 
 	"github.com/imdario/mergo"
-	"github.com/rancher/k3d/pkg/runtimes"
-	k3d "github.com/rancher/k3d/pkg/types"
+	"github.com/rancher/k3d/v3/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 )
 
-// AddNodeToCluster adds a node to an existing cluster
-func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Cluster) error {
-	cluster, err := GetCluster(cluster, runtime)
+// NodeAddToCluster adds a node to an existing cluster
+func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Cluster, createNodeOpts k3d.NodeCreateOpts) error {
+	targetClusterName := cluster.Name
+	cluster, err := ClusterGet(ctx, runtime, cluster)
 	if err != nil {
-		log.Errorf("Failed to find specified cluster '%s'", cluster.Name)
+		log.Errorf("Failed to find specified cluster '%s'", targetClusterName)
 		return err
 	}
-
-	log.Debugf("Adding node to cluster %+v", cluster)
 
 	// network
 	node.Network = cluster.Network.Name
 
 	// skeleton
-	node.Labels = map[string]string{}
+	if node.Labels == nil {
+		node.Labels = map[string]string{
+			k3d.LabelRole: string(node.Role),
+		}
+	}
 	node.Env = []string{}
 
 	// copy labels and env vars from a similar node in the selected cluster
@@ -62,7 +66,8 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 	}
 	// if we didn't find a node with the same role in the cluster, just choose any other node
 	if chosenNode == nil {
-		log.Debugf("Didn't find node with role '%s' in cluster '%s'. Choosing any other node...", node.Role, cluster.Name)
+		log.Debugf("Didn't find node with role '%s' in cluster '%s'. Choosing any other node (and using defaults)...", node.Role, cluster.Name)
+		node.Cmd = k3d.DefaultRoleCmds[node.Role]
 		for _, existingNode := range cluster.Nodes {
 			if existingNode.Role != k3d.LoadBalancerRole { // any role except for the LoadBalancer role
 				chosenNode = existingNode
@@ -72,12 +77,12 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 	}
 
 	// get node details
-	chosenNode, err = GetNode(chosenNode, runtime)
+	chosenNode, err = NodeGet(ctx, runtime, chosenNode)
 	if err != nil {
 		return err
 	}
 
-	log.Debugf("Copying configuration from existing node %+v", chosenNode)
+	log.Debugf("Adding node %+v \n>>> to cluster %+v\n>>> based on existing node %+v", node, cluster, chosenNode)
 
 	// merge node config of new node into existing node config
 	if err := mergo.MergeWithOverwrite(chosenNode, *node); err != nil {
@@ -97,21 +102,40 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 		}
 	}
 	if !k3sURLFound {
-		if url, ok := node.Labels["k3d.cluster.url"]; ok {
+		if url, ok := node.Labels[k3d.LabelClusterURL]; ok {
 			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", url))
 		} else {
 			log.Warnln("Failed to find K3S_URL value!")
 		}
 	}
 
-	if err := CreateNode(node, runtime); err != nil {
+	if node.Role == k3d.ServerRole {
+		for _, forbiddenCmd := range k3d.DoNotCopyServerFlags {
+			for i, cmd := range node.Cmd {
+				// cut out the '--cluster-init' flag as this should only be done by the initializing server node
+				if cmd == forbiddenCmd {
+					log.Debugf("Dropping '%s' from node's cmd", forbiddenCmd)
+					node.Cmd = append(node.Cmd[:i], node.Cmd[i+1:]...)
+				}
+			}
+			for i, arg := range node.Args {
+				// cut out the '--cluster-init' flag as this should only be done by the initializing server node
+				if arg == forbiddenCmd {
+					log.Debugf("Dropping '%s' from node's args", forbiddenCmd)
+					node.Args = append(node.Args[:i], node.Args[i+1:]...)
+				}
+			}
+		}
+	}
+
+	if err := NodeCreate(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
 		return err
 	}
 
-	// if it's a master node, then update the loadbalancer configuration to include it
-	if node.Role == k3d.MasterRole {
-		if err := AddMasterToLoadBalancer(runtime, cluster, node); err != nil {
-			log.Errorln("Failed to add new master node to cluster loadbalancer")
+	// if it's a server node, then update the loadbalancer configuration
+	if node.Role == k3d.ServerRole {
+		if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
+			log.Errorln("Failed to update cluster loadbalancer")
 			return err
 		}
 	}
@@ -119,17 +143,70 @@ func AddNodeToCluster(runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Clu
 	return nil
 }
 
-// CreateNodes creates a list of nodes
-func CreateNodes(nodes []*k3d.Node, runtime runtimes.Runtime) { // TODO: pass `--atomic` flag, so we stop and return an error if any node creation fails?
+// NodeAddToClusterMulti adds multiple nodes to a chosen cluster
+func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d.Node, cluster *k3d.Cluster, createNodeOpts k3d.NodeCreateOpts) error {
+	if createNodeOpts.Timeout > 0*time.Second {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, createNodeOpts.Timeout)
+		defer cancel()
+	}
+
+	nodeWaitGroup, ctx := errgroup.WithContext(ctx)
 	for _, node := range nodes {
-		if err := CreateNode(node, runtime); err != nil {
-			log.Error(err)
+		if err := NodeAddToCluster(ctx, runtime, node, cluster, k3d.NodeCreateOpts{}); err != nil {
+			return err
+		}
+		if createNodeOpts.Wait {
+			currentNode := node
+			nodeWaitGroup.Go(func() error {
+				log.Debugf("Starting to wait for node '%s'", currentNode.Name)
+				return NodeWaitForLogMessage(ctx, runtime, currentNode, k3d.ReadyLogMessageByRole[currentNode.Role], time.Time{})
+			})
 		}
 	}
+	if err := nodeWaitGroup.Wait(); err != nil {
+		log.Errorln("Failed to bring up all nodes in time. Check the logs:")
+		log.Errorf(">>> %+v", err)
+		return fmt.Errorf("Failed to add nodes")
+	}
+
+	return nil
 }
 
-// CreateNode creates a new containerized k3s node
-func CreateNode(node *k3d.Node, runtime runtimes.Runtime) error {
+// NodeCreateMulti creates a list of nodes
+func NodeCreateMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d.Node, createNodeOpts k3d.NodeCreateOpts) error { // TODO: pass `--atomic` flag, so we stop and return an error if any node creation fails?
+	if createNodeOpts.Timeout > 0*time.Second {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, createNodeOpts.Timeout)
+		defer cancel()
+	}
+
+	nodeWaitGroup, ctx := errgroup.WithContext(ctx)
+	for _, node := range nodes {
+		if err := NodeCreate(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
+			log.Error(err)
+		}
+		if createNodeOpts.Wait {
+			currentNode := node
+			nodeWaitGroup.Go(func() error {
+				log.Debugf("Starting to wait for node '%s'", currentNode.Name)
+				return NodeWaitForLogMessage(ctx, runtime, currentNode, k3d.ReadyLogMessageByRole[currentNode.Role], time.Time{})
+			})
+		}
+	}
+
+	if err := nodeWaitGroup.Wait(); err != nil {
+		log.Errorln("Failed to bring up all nodes in time. Check the logs:")
+		log.Errorf(">>> %+v", err)
+		return fmt.Errorf("Failed to create nodes")
+	}
+
+	return nil
+
+}
+
+// NodeCreate creates a new containerized k3s node
+func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, createNodeOpts k3d.NodeCreateOpts) error {
 	log.Debugf("Creating node from spec\n%+v", node)
 
 	/*
@@ -148,52 +225,66 @@ func CreateNode(node *k3d.Node, runtime runtimes.Runtime) error {
 	}
 	node.Labels = labels
 	// second most important: the node role label
-	node.Labels["k3d.role"] = string(node.Role)
+	node.Labels[k3d.LabelRole] = string(node.Role)
 
 	// ### Environment ###
 	node.Env = append(node.Env, k3d.DefaultNodeEnv...) // append default node env vars
 
 	// specify options depending on node role
-	if node.Role == k3d.WorkerRole { // TODO: check here AND in CLI or only here?
-		if err := patchWorkerSpec(node); err != nil {
+	if node.Role == k3d.AgentRole { // TODO: check here AND in CLI or only here?
+		if err := patchAgentSpec(node); err != nil {
 			return err
 		}
-	} else if node.Role == k3d.MasterRole {
-		if err := patchMasterSpec(node); err != nil {
+	} else if node.Role == k3d.ServerRole {
+		if err := patchServerSpec(node); err != nil {
 			return err
 		}
-		log.Debugf("spec = %+v\n", node)
 	}
 
 	/*
 	 * CREATION
 	 */
-	if err := runtime.CreateNode(node); err != nil {
+	if err := runtime.CreateNode(ctx, node); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// DeleteNode deletes an existing node
-func DeleteNode(runtime runtimes.Runtime, node *k3d.Node) error {
+// NodeDelete deletes an existing node
+func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) error {
 
-	if err := runtime.DeleteNode(node); err != nil {
+	if err := runtime.DeleteNode(ctx, node); err != nil {
 		log.Error(err)
 	}
+
+	cluster, err := ClusterGet(ctx, runtime, &k3d.Cluster{Name: node.Labels[k3d.LabelClusterName]})
+	if err != nil {
+		log.Errorf("Failed to update loadbalancer: Failed to find cluster for node '%s'", node.Name)
+		return err
+	}
+
+	// if it's a server node, then update the loadbalancer configuration
+	if node.Role == k3d.ServerRole {
+		if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
+			log.Errorln("Failed to update cluster loadbalancer")
+			return err
+		}
+	}
+
 	return nil
 }
 
-// patchWorkerSpec adds worker node specific settings to a node
-func patchWorkerSpec(node *k3d.Node) error {
+// patchAgentSpec adds agent node specific settings to a node
+func patchAgentSpec(node *k3d.Node) error {
 	if node.Cmd == nil {
 		node.Cmd = []string{"agent"}
 	}
 	return nil
 }
 
-// patchMasterSpec adds worker node specific settings to a node
-func patchMasterSpec(node *k3d.Node) error {
+// patchServerSpec adds agent node specific settings to a node
+func patchServerSpec(node *k3d.Node) error {
 
 	// command / arguments
 	if node.Cmd == nil {
@@ -201,19 +292,19 @@ func patchMasterSpec(node *k3d.Node) error {
 	}
 
 	// Add labels and TLS SAN for the exposed API
-	// FIXME: For now, the labels concerning the API on the master nodes are only being used for configuring the kubeconfig
-	node.Labels["k3d.master.api.hostIP"] = node.MasterOpts.ExposeAPI.HostIP // TODO: maybe get docker machine IP here
-	node.Labels["k3d.master.api.host"] = node.MasterOpts.ExposeAPI.Host
-	node.Labels["k3d.master.api.port"] = node.MasterOpts.ExposeAPI.Port
+	// FIXME: For now, the labels concerning the API on the server nodes are only being used for configuring the kubeconfig
+	node.Labels[k3d.LabelServerAPIHostIP] = node.ServerOpts.ExposeAPI.HostIP // TODO: maybe get docker machine IP here
+	node.Labels[k3d.LabelServerAPIHost] = node.ServerOpts.ExposeAPI.Host
+	node.Labels[k3d.LabelServerAPIPort] = node.ServerOpts.ExposeAPI.Port
 
-	node.Args = append(node.Args, "--tls-san", node.MasterOpts.ExposeAPI.Host) // add TLS SAN for non default host name
+	node.Args = append(node.Args, "--tls-san", node.ServerOpts.ExposeAPI.Host) // add TLS SAN for non default host name
 
 	return nil
 }
 
-// GetNodes returns a list of all existing clusters
-func GetNodes(runtime runtimes.Runtime) ([]*k3d.Node, error) {
-	nodes, err := runtime.GetNodesByLabel(k3d.DefaultObjectLabels)
+// NodeList returns a list of all existing clusters
+func NodeList(ctx context.Context, runtime runtimes.Runtime) ([]*k3d.Node, error) {
+	nodes, err := runtime.GetNodesByLabel(ctx, k3d.DefaultObjectLabels)
 	if err != nil {
 		log.Errorln("Failed to get nodes")
 		return nil, err
@@ -222,10 +313,10 @@ func GetNodes(runtime runtimes.Runtime) ([]*k3d.Node, error) {
 	return nodes, nil
 }
 
-// GetNode returns a node matching the specified node fields
-func GetNode(node *k3d.Node, runtime runtimes.Runtime) (*k3d.Node, error) {
+// NodeGet returns a node matching the specified node fields
+func NodeGet(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3d.Node, error) {
 	// get node
-	node, err := runtime.GetNode(node)
+	node, err := runtime.GetNode(ctx, node)
 	if err != nil {
 		log.Errorf("Failed to get node '%s'", node.Name)
 	}
@@ -233,8 +324,8 @@ func GetNode(node *k3d.Node, runtime runtimes.Runtime) (*k3d.Node, error) {
 	return node, nil
 }
 
-// WaitForNodeLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
-func WaitForNodeLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string) error {
+// NodeWaitForLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
+func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string, since time.Time) error {
 	for {
 		select {
 		case <-ctx.Done():
@@ -243,7 +334,7 @@ func WaitForNodeLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 		}
 
 		// read the logs
-		out, err := runtime.GetNodeLogs(node)
+		out, err := runtime.GetNodeLogs(ctx, node, since)
 		if err != nil {
 			if out != nil {
 				out.Close()

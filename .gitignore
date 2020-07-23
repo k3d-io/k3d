@@ -6,6 +6,8 @@
 *.dylib
 
 # Output folders
+tools/bin/
+tools/_dist/
 bin/
 _dist/
 site/
@@ -19,3 +21,5 @@ site/
 # Editors
 .vscode/
 .local/
+.idea/
+*.iml

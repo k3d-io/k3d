@@ -1,0 +1,7 @@
+.github/
+.local/
+bin/
+_dist/
+tools/
+proxy/
+site/

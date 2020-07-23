@@ -61,7 +61,7 @@ check_url() {
 check_clusters() {
   [ -n "$EXE" ] || abort "EXE is not defined"
   for c in "$@" ; do
-    $EXE get kubeconfig "$c" --switch
+    $EXE kubeconfig merge "$c" --switch-context
     if kubectl cluster-info ; then
       passed "cluster $c is reachable"
     else
@@ -73,17 +73,27 @@ check_clusters() {
   return 0
 }
 
+check_cluster_count() {
+  expectedClusterCount=$1
+  actualClusterCount=$($EXE cluster list --no-headers | wc -l)
+  if [[ $actualClusterCount != $expectedClusterCount ]]; then
+    failed "incorrect number of clusters available: $actualClusterCount != $expectedClusterCount"
+    return 1
+  fi
+  return 0
+}
+
 # check_multi_node verifies that a cluster runs with an expected number of nodes
 check_multi_node() {
   cluster=$1
   expectedNodeCount=$2
-  $EXE get kubeconfig "$cluster" --switch
+  $EXE kubeconfig merge "$cluster" --switch-context
   nodeCount=$(kubectl get nodes -o=custom-columns=NAME:.metadata.name --no-headers | wc -l)
   if [[ $nodeCount == $expectedNodeCount ]]; then
     passed "cluster $cluster has $expectedNodeCount nodes, as expected"
   else
     warn "cluster $cluster has incorrect number of nodes: $nodeCount != $expectedNodeCount"
-    kubectl get nodes -o=custom-columns=NAME:.metadata.name --no-headers
+    kubectl get nodes
     docker ps -a
     return 1
   fi
@@ -96,4 +106,9 @@ check_registry() {
 
 check_volume_exists() {
   docker volume inspect "$1" >/dev/null 2>&1
+}
+
+check_cluster_token_exist() {
+  [ -n "$EXE" ] || abort "EXE is not defined"
+  $EXE cluster get "$1" --token | grep "TOKEN" >/dev/null 2>&1
 }

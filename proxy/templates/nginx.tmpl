@@ -12,7 +12,7 @@ events {
 
 stream {
   {{- range $port := $ports }}
-  upstream master_nodes_{{ $port }} {
+  upstream server_nodes_{{ $port }} {
     {{- range $server := $servers }}
     server {{ $server }}:{{ $port }} max_fails=1 fail_timeout=10s;
     {{- end }}
@@ -20,8 +20,8 @@ stream {
 
   server {
     listen        {{ $port }};
-    proxy_pass    master_nodes_{{ $port }};
-    proxy_timeout 30;
+    proxy_pass    server_nodes_{{ $port }};
+    proxy_timeout 600;
     proxy_connect_timeout 2s;
   }
   {{- end }}

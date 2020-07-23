@@ -28,13 +28,13 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	k3d "github.com/rancher/k3d/pkg/types"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 
 	"regexp"
 )
 
 // Regexp pattern to match node filters
-var filterRegexp = regexp.MustCompile(`^(?P<group>master|worker|loadbalancer|all)(?P<subsetSpec>\[(?P<subset>(?P<subsetList>(\d+,?)+)|(?P<subsetRange>\d*:\d*)|(?P<subsetWildcard>\*))\])?$`)
+var filterRegexp = regexp.MustCompile(`^(?P<group>server|agent|loadbalancer|all)(?P<subsetSpec>\[(?P<subset>(?P<subsetList>(\d+,?)+)|(?P<subsetRange>\d*:\d*)|(?P<subsetWildcard>\*))\])?$`)
 
 // SplitFiltersFromFlag separates a flag's value from the node filter, if there is one
 func SplitFiltersFromFlag(flag string) (string, []string, error) {
@@ -67,21 +67,21 @@ func SplitFiltersFromFlag(flag string) (string, []string, error) {
 func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 
 	if len(filters) == 0 || len(filters[0]) == 0 {
-		log.Warnln("No filter specified")
+		log.Warnln("No node filter specified")
 		return nodes, nil
 	}
 
 	// map roles to subsets
-	masterNodes := []*k3d.Node{}
-	workerNodes := []*k3d.Node{}
-	var masterlb *k3d.Node
+	serverNodes := []*k3d.Node{}
+	agentNodes := []*k3d.Node{}
+	var serverlb *k3d.Node
 	for _, node := range nodes {
-		if node.Role == k3d.MasterRole {
-			masterNodes = append(masterNodes, node)
-		} else if node.Role == k3d.WorkerRole {
-			workerNodes = append(workerNodes, node)
+		if node.Role == k3d.ServerRole {
+			serverNodes = append(serverNodes, node)
+		} else if node.Role == k3d.AgentRole {
+			agentNodes = append(agentNodes, node)
 		} else if node.Role == k3d.LoadBalancerRole {
-			masterlb = node
+			serverlb = node
 		}
 	}
 
@@ -110,12 +110,12 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 
 		// Choose the group of nodes to operate on
 		groupNodes := []*k3d.Node{}
-		if submatches["group"] == string(k3d.MasterRole) {
-			groupNodes = masterNodes
-		} else if submatches["group"] == string(k3d.WorkerRole) {
-			groupNodes = workerNodes
+		if submatches["group"] == string(k3d.ServerRole) {
+			groupNodes = serverNodes
+		} else if submatches["group"] == string(k3d.AgentRole) {
+			groupNodes = agentNodes
 		} else if submatches["group"] == string(k3d.LoadBalancerRole) {
-			filteredNodes = append(filteredNodes, masterlb)
+			filteredNodes = append(filteredNodes, serverlb)
 			return filteredNodes, nil // early exit if filtered group is the loadbalancer
 		}
 

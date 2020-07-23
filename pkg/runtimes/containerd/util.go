@@ -20,3 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 package containerd
+
+import (
+	"context"
+
+	k3d "github.com/rancher/k3d/v3/pkg/types"
+)
+
+// CopyToNode copies a file from the local FS to the selected node
+func (d Containerd) CopyToNode(ctx context.Context, src string, dest string, node *k3d.Node) error {
+	return nil
+}

@@ -27,7 +27,7 @@ import (
 	"strconv"
 	"strings"
 
-	k3d "github.com/rancher/k3d/pkg/types"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -54,14 +54,27 @@ func ParseAPIPort(portString string) (k3d.ExposeAPI, error) {
 	}
 
 	// Verify 'port' is an integer and within port ranges
+	if exposeAPI.Port == "" || exposeAPI.Port == "random" {
+		log.Debugf("API-Port Mapping didn't specify hostPort, choosing one randomly...")
+		freePort, err := GetFreePort()
+		if err != nil || freePort == 0 {
+			log.Warnf("Failed to get random free port:\n%+v", err)
+			log.Warnf("Falling back to default port %s (may be blocked though)...", k3d.DefaultAPIPort)
+			exposeAPI.Port = k3d.DefaultAPIPort
+		} else {
+			exposeAPI.Port = strconv.Itoa(freePort)
+			log.Debugf("Got free port for API: '%d'", freePort)
+		}
+	}
 	p, err := strconv.Atoi(exposeAPI.Port)
 	if err != nil {
+		log.Errorln("Failed to parse port mapping")
 		return exposeAPI, err
 	}
 
 	if p < 0 || p > 65535 {
 		log.Errorln("Failed to parse API Port specification")
-		return exposeAPI, fmt.Errorf("port value '%d' out of range", p)
+		return exposeAPI, fmt.Errorf("Port value '%d' out of range", p)
 	}
 
 	return exposeAPI, nil
@@ -71,4 +84,22 @@ func ParseAPIPort(portString string) (k3d.ExposeAPI, error) {
 // ValidatePortMap validates a port mapping
 func ValidatePortMap(portmap string) (string, error) {
 	return portmap, nil // TODO: ValidatePortMap: add validation of port mapping
+}
+
+// GetFreePort tries to fetch an open port from the OS-Kernel
+func GetFreePort() (int, error) {
+	tcpAddress, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		log.Errorln("Failed to resolve address")
+		return 0, err
+	}
+
+	tcpListener, err := net.ListenTCP("tcp", tcpAddress)
+	if err != nil {
+		log.Errorln("Failed to create TCP Listener")
+		return 0, err
+	}
+	defer tcpListener.Close()
+
+	return tcpListener.Addr().(*net.TCPAddr).Port, nil
 }

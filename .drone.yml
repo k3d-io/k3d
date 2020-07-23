@@ -1,0 +1,455 @@
+---
+###########################################
+##### k3d CLI/binary release pipeline #####
+###########################################
+
+kind: pipeline
+type: docker
+name: main
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+
+  - name: lint
+    image: golang:1.14
+    commands:
+      - make ci-setup
+      - make check-fmt lint
+    when:
+      event:
+        - push
+        - pull_request
+        - tag
+
+  - name: test
+    image: docker:19.03
+    volumes:
+      - name: dockersock
+        path: /var/run
+    commands:
+      - apk add git bash curl sudo jq make
+      - sleep 5  # give docker enough time to start
+      - make e2e
+    when:
+      event:
+        - push
+        - pull_request
+        - tag
+
+  - name: build
+    image: golang:1.14
+    environment:
+      GIT_TAG: "${DRONE_TAG}"
+    commands:
+      - make ci-setup
+      - make build-cross
+    depends_on:
+      - lint
+      - test
+    when:
+      branch:
+        - main
+      event:
+        - push
+        - tag
+
+  - name: pre-release
+    image: plugins/github-release
+    settings:
+      api_key:
+        from_secret: github_token
+      files:
+        - _dist/*
+      checksum:
+        - sha256
+      prerelease: true
+    depends_on:
+      - lint
+      - test
+      - build
+    when:
+      event:
+        - tag
+      ref:
+        include:
+          - "refs/tags/*rc*"
+          - "refs/tags/*beta*"
+          - "refs/tags/*alpha*"
+
+  - name: release
+    image: plugins/github-release
+    settings:
+      api_key:
+        from_secret: github_token
+      files:
+        - _dist/*
+      checksum:
+        - sha256
+    depends_on:
+      - lint
+      - test
+      - build
+    when:
+      event:
+        - tag
+      ref:
+        exclude:
+          - "refs/tags/*rc*"
+          - "refs/tags/*beta*"
+          - "refs/tags/*alpha*"
+
+services:
+  # Starting the docker service to be used by dind
+  - name: docker
+    image: docker:19.03-dind
+    privileged: true
+    volumes:
+      - name: dockersock
+        path: /var/run
+
+volumes:
+  - name: dockersock
+    temp: {}
+
+---
+#########################
+##### Documentation #####
+#########################
+
+kind: pipeline
+type: docker
+name: docs
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+
+  - name: build
+    image: python:3.8
+    commands:
+      - python3 -m pip install -r docs/requirements.txt
+      - mkdocs build --verbose --clean --strict
+    when:
+      branch:
+        - main
+      event:
+        - push
+
+  - name: publish
+    image: plugins/gh-pages
+    settings:
+      password:
+        from_secret: github_token
+      username: rancherio-gh-m
+      pages_directory: site/
+      target_branch: gh-pages
+    when:
+      branch:
+        - main
+      event:
+        - push
+
+trigger:
+  event:
+    - push
+  branch:
+    - main
+
+---
+#####################
+##### k3d-proxy #####
+#####################
+
+kind: pipeline
+type: docker
+name: proxy_linux_amd64
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: build_push
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d-proxy
+      tags:
+        - latest-linux-amd64
+        - "${DRONE_TAG}-linux-amd64"
+      dockerfile: proxy/Dockerfile
+      context: proxy/
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+    when:
+      event:
+        - tag
+
+trigger:
+  event:
+    - tag
+
+depends_on:
+  - main
+
+---
+
+kind: pipeline
+type: docker
+name: proxy_linux_arm
+
+platform:
+  os: linux
+  arch: arm
+
+steps:
+  - name: build_push
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d-proxy
+      tags:
+        - latest-linux-arm
+        - "${DRONE_TAG}-linux-arm"
+      dockerfile: proxy/Dockerfile
+      context: proxy/
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      build_args:
+        - ARCH=arm
+    when:
+      event:
+        - tag
+
+trigger:
+  event:
+    - tag
+
+depends_on:
+  - main
+
+---
+
+kind: pipeline
+type: docker
+name: proxy_linux_arm64
+
+platform:
+  os: linux
+  arch: arm64
+
+steps:
+  - name: build_push
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d-proxy
+      tags:
+        - latest-linux-arm64
+        - "${DRONE_TAG}-linux-arm64"
+      dockerfile: proxy/Dockerfile
+      context: proxy/
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      build_args:
+        - ARCH=arm64
+    when:
+      event:
+        - tag
+
+trigger:
+  event:
+    - tag
+
+depends_on:
+  - main
+
+---
+
+kind: pipeline
+type: docker
+name: proxy_manifest
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: push_manifest
+    image: plugins/manifest
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      target: "rancher/k3d-proxy:${DRONE_TAG}"
+      template: "rancher/k3d-proxy:${DRONE_TAG}-OS-ARCH"
+      platforms:
+        - linux/amd64
+        - linux/arm
+        - linux/arm64
+    when:
+      event:
+        - tag
+
+trigger:
+  event:
+    - tag
+
+depends_on:
+  - main
+  - proxy_linux_amd64
+  - proxy_linux_arm
+  - proxy_linux_arm64
+
+---
+#####################
+##### k3d-tools #####
+#####################
+
+kind: pipeline
+type: docker
+name: tools_linux_amd64
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: build_push
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d-tools
+      tags:
+        - latest-linux-amd64
+        - "${DRONE_TAG}-linux-amd64"
+      dockerfile: tools/Dockerfile
+      context: tools/
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+    when:
+      event:
+        - tag
+
+trigger:
+  event:
+    - tag
+
+depends_on:
+  - main
+
+---
+
+kind: pipeline
+type: docker
+name: tools_linux_arm
+
+platform:
+  os: linux
+  arch: arm
+
+steps:
+  - name: build_push
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d-tools
+      tags:
+        - latest-linux-arm
+        - "${DRONE_TAG}-linux-arm"
+      dockerfile: tools/Dockerfile
+      context: tools/
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+    when:
+      event:
+        - tag
+
+trigger:
+  event:
+    - tag
+
+depends_on:
+  - main
+---
+
+kind: pipeline
+type: docker
+name: tools_linux_arm64
+
+platform:
+  os: linux
+  arch: arm64
+
+steps:
+  - name: build_push
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d-tools
+      tags:
+        - latest-linux-arm64
+        - "${DRONE_TAG}-linux-arm64"
+      dockerfile: tools/Dockerfile
+      context: tools/
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+    when:
+      event:
+        - tag
+
+trigger:
+  event:
+    - tag
+
+depends_on:
+  - main
+---
+
+kind: pipeline
+type: docker
+name: tools_manifest
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: push_manifest
+    image: plugins/manifest
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      target: "rancher/k3d-tools:${DRONE_TAG}"
+      template: "rancher/k3d-tools:${DRONE_TAG}-OS-ARCH"
+      platforms:
+        - linux/amd64
+        - linux/arm
+        - linux/arm64
+    when:
+      event:
+        - tag
+
+trigger:
+  event:
+    - tag
+
+depends_on:
+  - main
+  - tools_linux_amd64
+  - tools_linux_arm
+  - tools_linux_arm64

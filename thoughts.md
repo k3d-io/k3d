@@ -36,10 +36,10 @@ Here's how k3d types should translate to a runtime type:
 
 ## Node Configuration
 
-- master node(s)
+- server node(s)
   - ENV
     - `K3S_CLUSTER_INIT`
-      - if num_masters > 1 && no external datastore configured
+      - if num_servers > 1 && no external datastore configured
     - `K3S_KUBECONFIG_OUTPUT`
       - k3d default -> `/output/kubeconfig.yaml`
   - CMD/ARGS
@@ -65,9 +65,9 @@ Here's how k3d types should translate to a runtime type:
       - `privileged`
     - Network
       - cluster network or external/inherited
-- worker nodes
+- agent nodes
   - ENV
-    - `K3S_URL` to connect to master node
+    - `K3S_URL` to connect to server node
       - server hostname + port (6443)
       - cluster-specific or inherited
   - CMD/ARGS
@@ -81,23 +81,23 @@ Here's how k3d types should translate to a runtime type:
 
 - `--port [host:]port[:containerPort][/protocol][@group_identifier[[index] | @node_identifier]`
   - Examples:
-    - `--port 0.0.0.0:8080:8081/tcp@workers` -> whole group
-    - `--port 80@workers[0]` -> single instance of group by list index
-    - `--port 80@workers[0,2-3]` -> multiple instances of a group by index lists and ranges
-    - `--port 80@k3d-test-worker-0` -> single instance by specific node identifier
-    - `--port 80@k3d-test-master-0@workers[1-5]` -> multiple instances by combination of node and group identifiers
+    - `--port 0.0.0.0:8080:8081/tcp@agents` -> whole group
+    - `--port 80@agents[0]` -> single instance of group by list index
+    - `--port 80@agents[0,2-3]` -> multiple instances of a group by index lists and ranges
+    - `--port 80@k3d-test-agent-0` -> single instance by specific node identifier
+    - `--port 80@k3d-test-server-0@agents[1-5]` -> multiple instances by combination of node and group identifiers
 
 - analogous for volumes
 
-## [WIP] Multi-Master Setup
+## [WIP] Multi-Server Setup
 
-- to make this possible, we always deploy a load-balancer (nginx) in front of the master nodes as an extra container 
+- to make this possible, we always deploy a load-balancer (nginx) in front of the server nodes as an extra container
   - consider that in the kubeconfig file and `--tls-san`
 
 ### Variants
 
 - [x] embedded datastore (dqlite)
-  - if `--masters` > 1 deploy a load-balancer in front of them as an extra container
+  - if `--servers` > 1 deploy a load-balancer in front of them as an extra container
 - [ ] external datastore
 
 ## [DONE] Keep State in Docker Labels

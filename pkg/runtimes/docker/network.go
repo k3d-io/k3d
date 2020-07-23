@@ -28,16 +28,15 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 
-	k3d "github.com/rancher/k3d/pkg/types"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
 // CreateNetworkIfNotPresent creates a new docker network
 // @return: network name, exists, error
-func (d Docker) CreateNetworkIfNotPresent(name string) (string, bool, error) {
+func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (string, bool, error) {
 
 	// (0) create new docker client
-	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")
@@ -82,9 +81,8 @@ func (d Docker) CreateNetworkIfNotPresent(name string) (string, bool, error) {
 }
 
 // DeleteNetwork deletes a network
-func (d Docker) DeleteNetwork(ID string) error {
+func (d Docker) DeleteNetwork(ctx context.Context, ID string) error {
 	// (0) create new docker client
-	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")
@@ -97,8 +95,7 @@ func (d Docker) DeleteNetwork(ID string) error {
 }
 
 // GetNetwork gets information about a network by its ID
-func GetNetwork(ID string) (types.NetworkResource, error) {
-	ctx := context.Background()
+func GetNetwork(ctx context.Context, ID string) (types.NetworkResource, error) {
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")
