@@ -69,8 +69,13 @@ func NewCmdClusterCreate() *cobra.Command {
 				log.Fatalf("Failed to create cluster '%s' because a cluster with that name already exists", cluster.Name)
 			}
 
+			if !updateDefaultKubeconfig && updateCurrentContext {
+				log.Infoln("--update-default-kubeconfig=false --> sets --switch-context=false")
+				updateCurrentContext = false
+			}
+
 			// create cluster
-			if updateDefaultKubeconfig || updateCurrentContext {
+			if updateDefaultKubeconfig {
 				log.Debugln("'--update-default-kubeconfig set: enabling wait-for-server")
 				cluster.CreateClusterOpts.WaitForServer = true
 			}
@@ -86,7 +91,7 @@ func NewCmdClusterCreate() *cobra.Command {
 			}
 			log.Infof("Cluster '%s' created successfully!", cluster.Name)
 
-			if updateDefaultKubeconfig || updateCurrentContext {
+			if updateDefaultKubeconfig {
 				log.Debugf("Updating default kubeconfig with a new context for cluster %s", cluster.Name)
 				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: updateCurrentContext}); err != nil {
 					log.Warningln(err)
@@ -122,7 +127,7 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().BoolVar(&createClusterOpts.WaitForServer, "wait", true, "Wait for the server(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
 	cmd.Flags().DurationVar(&createClusterOpts.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
 	cmd.Flags().BoolVar(&updateDefaultKubeconfig, "update-default-kubeconfig", true, "Directly update the default kubeconfig with the new cluster's context")
-	cmd.Flags().BoolVar(&updateCurrentContext, "switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (implies --update-default-kubeconfig)")
+	cmd.Flags().BoolVar(&updateCurrentContext, "switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (requires --update-default-kubeconfig)")
 	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadBalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
 
 	/* Image Importing */
