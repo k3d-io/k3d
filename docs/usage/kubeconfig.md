@@ -12,9 +12,10 @@ To get a kubeconfig set up for you to connect to a k3d cluster, you can go diffe
 ## Getting the kubeconfig for a newly created cluster
 
 1. Create a new kubeconfig file **after** cluster creation
-    - `#!bash k3d kubeconfig get mycluster`
+    - `#!bash k3d kubeconfig write mycluster`
       - *Note:* this will create (or update) the file `$HOME/.k3d/kubeconfig-mycluster.yaml`
-      - *Tip:* Use it: `#!bash export KUBECONFIG=$(k3d kubeconfig get mycluster)`
+      - *Tip:* Use it: `#!bash export KUBECONFIG=$(k3d kubeconfig write mycluster)`
+      - *Note 2*: alternatively you can use `#!bash k3d kubeconfig get mycluster > some-file.yaml`
 2. Update your default kubeconfig **upon** cluster creation
     - `#!bash k3d cluster create mycluster --update-kubeconfig`
         - *Note:* this won't switch the current-context (append `--switch-context` to do so)

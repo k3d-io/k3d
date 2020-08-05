@@ -55,8 +55,8 @@ func NewCmdKubeconfigMerge() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "merge [CLUSTER [CLUSTER [...]] | --all]",
 		Aliases:           []string{"write"},
-		Long:              `Merge/Write kubeconfig(s) from cluster(s) into existing kubeconfig/file.`,
-		Short:             "Merge/Write kubeconfig(s) from cluster(s) into existing kubeconfig/file.",
+		Long:              `Write/Merge kubeconfig(s) from cluster(s) into new or existing kubeconfig/file.`,
+		Short:             "Write/Merge kubeconfig(s) from cluster(s) into new or existing kubeconfig/file.",
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Args:              cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {

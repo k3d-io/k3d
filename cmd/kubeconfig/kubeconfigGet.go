@@ -52,8 +52,9 @@ func NewCmdKubeconfigGet() *cobra.Command {
 	// create new command
 	cmd := &cobra.Command{
 		Use:               "get [CLUSTER [CLUSTER [...]] | --all]",
-		Short:             "Get kubeconfig from cluster(s).",
-		Long:              `Get kubeconfig from cluster(s).`,
+		Short:             "Print kubeconfig(s) from cluster(s).",
+		Long:              `Print kubeconfig(s) from cluster(s).`,
+		Aliases:           []string{"print", "show"},
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if (len(args) < 1 && !getKubeconfigFlags.all) || (len(args) > 0 && getKubeconfigFlags.all) {
@@ -100,7 +101,7 @@ func NewCmdKubeconfigGet() *cobra.Command {
 	}
 
 	// add flags
-	cmd.Flags().BoolVarP(&getKubeconfigFlags.all, "all", "a", false, "Get kubeconfigs from all existing clusters")
+	cmd.Flags().BoolVarP(&getKubeconfigFlags.all, "all", "a", false, "Output kubeconfigs from all existing clusters")
 
 	// done
 	return cmd

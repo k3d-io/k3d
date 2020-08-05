@@ -51,9 +51,9 @@ k3d
     list NODENAME
       --no-headers  # do not print headers
   kubeconfig
-    get (CLUSTERNAME [CLUSTERNAME ...] | --all) # get kubeconfig from cluster(s) and save it into a file in $HOME/.k3d
+    get (CLUSTERNAME [CLUSTERNAME ...] | --all) # get kubeconfig from cluster(s) and write it to stdout
       -a, --all  # get kubeconfigs from all clusters
-    merge (CLUSTERNAME [CLUSTERNAME ...] | --all)  # get kubeconfig from cluster(s) and merge it/them into an existing kubeconfig
+    merge | write (CLUSTERNAME [CLUSTERNAME ...] | --all)  # get kubeconfig from cluster(s) and merge it/them into into a file in $HOME/.k3d (or whatever you specify via the flags)
       -a, --all  # get kubeconfigs from all clusters
           --output  # specify the output file where the kubeconfig should be written to
           --overwrite  # [Careful!] forcefully overwrite the output file, ignoring existing contents
