@@ -131,13 +131,10 @@ fail_trap() {
 
 # testVersion tests the installed client to make sure it is working.
 testVersion() {
-  set +e
-  K3D="$(which $APP_NAME)"
-  if [ "$?" = "1" ]; then
+  if ! command -v $APP_NAME &> /dev/null; then
     echo "$APP_NAME not found. Is $K3D_INSTALL_DIR on your "'$PATH?'
     exit 1
   fi
-  set -e
   echo "Run '$APP_NAME --help' to see what you can do with it."
 }
 
