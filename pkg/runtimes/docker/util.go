@@ -144,9 +144,6 @@ func GetDockerClient() (*client.Client, error) {
 	var err error
 	var cli *client.Client
 
-	// TODO: this should maybe need to be a global option, not hidden in here?
-	//       though i'm not sure how that works out when there's another Executor :D
-	//		 I really would like something that works on OSX native for eg
 	dockerHost := os.Getenv("DOCKER_HOST")
 
 	if strings.HasPrefix(dockerHost, "ssh://") {
