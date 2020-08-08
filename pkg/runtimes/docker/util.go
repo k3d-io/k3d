@@ -140,6 +140,7 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, no
 	return nil
 }
 
+// GetDockerClient returns a docker client
 func GetDockerClient() (*client.Client, error) {
 	var err error
 	var cli *client.Client

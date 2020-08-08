@@ -296,7 +296,7 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 			return err
 		}
 	} else if node.Role == k3d.ServerRole {
-		if err := patchServerSpec(node); err != nil {
+		if err := patchServerSpec(node, runtime); err != nil {
 			return err
 		}
 	}
@@ -348,7 +348,7 @@ func patchAgentSpec(node *k3d.Node) error {
 }
 
 // patchServerSpec adds agent node specific settings to a node
-func patchServerSpec(node *k3d.Node) error {
+func patchServerSpec(node *k3d.Node, runtime runtimes.Runtime) error {
 
 	// command / arguments
 	if node.Cmd == nil {
@@ -361,7 +361,13 @@ func patchServerSpec(node *k3d.Node) error {
 	node.Labels[k3d.LabelServerAPIHost] = node.ServerOpts.KubeAPI.Host
 	node.Labels[k3d.LabelServerAPIPort] = node.ServerOpts.KubeAPI.Binding.HostPort
 
-	node.Args = append(node.Args, "--tls-san", node.ServerOpts.KubeAPI.Host) // add TLS SAN for non default host name
+	// If the runtime is docker, attempt to use the docker host
+	if runtime.ID() == "docker" && runtime.GetHost() != "" {
+		node.Labels[k3d.LabelServerAPIHostIP] = runtime.GetHost()
+		node.Labels[k3d.LabelServerAPIHost] = runtime.GetHost()
+	}
+
+	node.Args = append(node.Args, "--tls-san", node.Labels[k3d.LabelServerAPIHost]) // add TLS SAN for non default host name
 
 	return nil
 }
