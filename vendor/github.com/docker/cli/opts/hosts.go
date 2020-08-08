@@ -8,25 +8,25 @@ import (
 	"strings"
 )
 
-const (
-	// defaultHTTPPort Default HTTP Port used if only the protocol is provided to -H flag e.g. dockerd -H tcp://
+var (
+	// DefaultHTTPPort Default HTTP Port used if only the protocol is provided to -H flag e.g. dockerd -H tcp://
 	// These are the IANA registered port numbers for use with Docker
 	// see http://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=docker
-	defaultHTTPPort = "2375" // Default HTTP Port
-	// defaultTLSHTTPPort Default HTTP Port used when TLS enabled
-	defaultTLSHTTPPort = "2376" // Default TLS encrypted HTTP Port
-	// defaultUnixSocket Path for the unix socket.
+	DefaultHTTPPort = 2375 // Default HTTP Port
+	// DefaultTLSHTTPPort Default HTTP Port used when TLS enabled
+	DefaultTLSHTTPPort = 2376 // Default TLS encrypted HTTP Port
+	// DefaultUnixSocket Path for the unix socket.
 	// Docker daemon by default always listens on the default unix socket
-	defaultUnixSocket = "/var/run/docker.sock"
-	// defaultTCPHost constant defines the default host string used by docker on Windows
-	defaultTCPHost = "tcp://" + defaultHTTPHost + ":" + defaultHTTPPort
+	DefaultUnixSocket = "/var/run/docker.sock"
+	// DefaultTCPHost constant defines the default host string used by docker on Windows
+	DefaultTCPHost = fmt.Sprintf("tcp://%s:%d", DefaultHTTPHost, DefaultHTTPPort)
 	// DefaultTLSHost constant defines the default host string used by docker for TLS sockets
-	defaultTLSHost = "tcp://" + defaultHTTPHost + ":" + defaultTLSHTTPPort
+	DefaultTLSHost = fmt.Sprintf("tcp://%s:%d", DefaultHTTPHost, DefaultTLSHTTPPort)
 	// DefaultNamedPipe defines the default named pipe used by docker on Windows
-	defaultNamedPipe = `//./pipe/docker_engine`
+	DefaultNamedPipe = `//./pipe/docker_engine`
 	// hostGatewayName defines a special string which users can append to --add-host
 	// to add an extra entry in /etc/hosts that maps host.docker.internal to the host IP
-	// TODO Consider moving the hostGatewayName constant defined in docker at
+	// TODO Consider moving the HostGatewayName constant defined in docker at
 	// github.com/docker/docker/daemon/network/constants.go outside of the "daemon"
 	// package, so that the CLI can consume it.
 	hostGatewayName = "host-gateway"
@@ -52,9 +52,9 @@ func ParseHost(defaultToTLS bool, val string) (string, error) {
 	host := strings.TrimSpace(val)
 	if host == "" {
 		if defaultToTLS {
-			host = defaultTLSHost
+			host = DefaultTLSHost
 		} else {
-			host = defaultHost
+			host = DefaultHost
 		}
 	} else {
 		var err error
@@ -76,11 +76,11 @@ func parseDockerDaemonHost(addr string) (string, error) {
 
 	switch addrParts[0] {
 	case "tcp":
-		return ParseTCPAddr(addrParts[1], defaultTCPHost)
+		return ParseTCPAddr(addrParts[1], DefaultTCPHost)
 	case "unix":
-		return parseSimpleProtoAddr("unix", addrParts[1], defaultUnixSocket)
+		return parseSimpleProtoAddr("unix", addrParts[1], DefaultUnixSocket)
 	case "npipe":
-		return parseSimpleProtoAddr("npipe", addrParts[1], defaultNamedPipe)
+		return parseSimpleProtoAddr("npipe", addrParts[1], DefaultNamedPipe)
 	case "fd":
 		return addr, nil
 	case "ssh":

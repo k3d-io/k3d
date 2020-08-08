@@ -2,8 +2,7 @@
 
 package opts
 
-// defaultHost constant defines the default host string used by docker on other hosts than Windows
-const defaultHost = "unix://" + defaultUnixSocket
+import "fmt"
 
-// defaultHTTPHost Default HTTP Host used if only port is provided to -H flag e.g. dockerd -H tcp://:8080
-const defaultHTTPHost = "localhost"
+// DefaultHost constant defines the default host string used by docker on other hosts than Windows
+var DefaultHost = fmt.Sprintf("unix://%s", DefaultUnixSocket)

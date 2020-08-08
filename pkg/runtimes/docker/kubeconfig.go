@@ -26,14 +26,13 @@ import (
 	"context"
 	"io"
 
-	"github.com/docker/docker/client"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
 // GetKubeconfig grabs the kubeconfig from inside a k3d node
 func (d Docker) GetKubeconfig(ctx context.Context, node *k3d.Node) (io.ReadCloser, error) {
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return nil, err

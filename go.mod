@@ -13,7 +13,7 @@ require (
 	github.com/containerd/go-runc v0.0.0-20201020171139-16b287bc67d0 // indirect
 	github.com/containerd/ttrpc v1.0.2 // indirect
 	github.com/containerd/typeurl v1.0.1 // indirect
-	github.com/docker/cli v20.10.0-beta1.0.20201103165149-c20be83d6b34+incompatible
+	github.com/docker/cli v0.0.0-20200617172703-0ed913b885c8
 	github.com/docker/docker v20.10.0+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
@@ -31,6 +31,7 @@ require (
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
+	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/afero v1.3.4 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
