@@ -93,21 +93,27 @@ var ClusterHealthStates = map[string]ClusterHealth{
 	string(ClusterHealthBroken):           ClusterHealthBroken,
 }
 
-// ClusterState defines a state that a cluster can be in
-type ClusterState string
+// ClusterStatus defines a state that a cluster can be in
+type ClusterStatus string
 
 // possible cluster states
 const (
-	ClusterStateUp      ClusterState = "Up"      // 1 or more servers running
-	ClusterStateDown    ClusterState = "Down"    // no server running
-	ClusterStateStopped ClusterState = "Stopped" // cluster stopped intentionally (k3d cluster stop mycluster)
+	ClusterStatusUp      ClusterStatus = "Up"      // 1 or more servers running
+	ClusterStatusDown    ClusterStatus = "Down"    // no server running
+	ClusterStatusStopped ClusterStatus = "Stopped" // cluster stopped intentionally (k3d cluster stop mycluster)
 )
 
-// ClusterStates defines the possible States a cluster can be in
-var ClusterStates = map[string]ClusterState{
-	string(ClusterStateUp):      ClusterStateUp,
-	string(ClusterStateDown):    ClusterStateDown,
-	string(ClusterStateStopped): ClusterStateStopped,
+// ClusterStatuses defines the possible States a cluster can be in
+var ClusterStatuses = map[string]ClusterStatus{
+	string(ClusterStatusUp):      ClusterStatusUp,
+	string(ClusterStatusDown):    ClusterStatusDown,
+	string(ClusterStatusStopped): ClusterStatusStopped,
+}
+
+// ClusterState consolidates a cluster's status and health into a single struct
+type ClusterState struct {
+	Status ClusterStatus
+	Health ClusterHealth
 }
 
 // DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
@@ -217,6 +223,7 @@ type Cluster struct {
 	ExposeAPI          ExposeAPI          `yaml:"expose_api" json:"exposeAPI,omitempty"`
 	ServerLoadBalancer *Node              `yaml:"server_loadbalancer" json:"serverLoadBalancer,omitempty"`
 	ImageVolume        string             `yaml:"image_volume" json:"imageVolume,omitempty"`
+	State              ClusterState       // filled automatically
 }
 
 // ServerCount return number of server node into cluster
