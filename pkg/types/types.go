@@ -72,6 +72,44 @@ var NodeRoles = map[string]Role{
 	string(LoadBalancerRole): LoadBalancerRole,
 }
 
+// ClusterHealth describes the health of a cluster
+type ClusterHealth string
+
+// possible health states
+const (
+	ClusterHealthOK               ClusterHealth = "OK"                  // all nodes running
+	ClusterHealthDegraded         ClusterHealth = "Degraded"            // 1+ nodes down
+	ClusterHealthOKModified       ClusterHealth = "OK (Modified)"       // some nodes stopped intentionally, rest is running
+	ClusterHealthDegradedModified ClusterHealth = "Degraded (Modified)" // 1+ nodes down and some more stopped intentionally
+	ClusterHealthBroken           ClusterHealth = "Broken"              // all nodes down
+)
+
+// ClusterHealthStates defines the possible health states for a cluster
+var ClusterHealthStates = map[string]ClusterHealth{
+	string(ClusterHealthOK):               ClusterHealthOK,
+	string(ClusterHealthDegraded):         ClusterHealthDegraded,
+	string(ClusterHealthOKModified):       ClusterHealthOKModified,
+	string(ClusterHealthDegradedModified): ClusterHealthDegradedModified,
+	string(ClusterHealthBroken):           ClusterHealthBroken,
+}
+
+// ClusterState defines a state that a cluster can be in
+type ClusterState string
+
+// possible cluster states
+const (
+	ClusterStateUp      ClusterState = "Up"      // 1 or more servers running
+	ClusterStateDown    ClusterState = "Down"    // no server running
+	ClusterStateStopped ClusterState = "Stopped" // cluster stopped intentionally (k3d cluster stop mycluster)
+)
+
+// ClusterStates defines the possible States a cluster can be in
+var ClusterStates = map[string]ClusterState{
+	string(ClusterStateUp):      ClusterStateUp,
+	string(ClusterStateDown):    ClusterStateDown,
+	string(ClusterStateStopped): ClusterStateStopped,
+}
+
 // DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
 var DefaultObjectLabels = map[string]string{
 	"app": "k3d",

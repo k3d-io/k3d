@@ -96,7 +96,7 @@ func buildClusterList(ctx context.Context, args []string) []*k3d.Cluster {
 	return clusters
 }
 
-// PrintPrintClusters : display list of cluster
+// PrintClusters : display list of cluster
 func PrintClusters(clusters []*k3d.Cluster, flags clusterFlags) {
 
 	tabwriter := tabwriter.NewWriter(os.Stdout, 6, 4, 3, ' ', tabwriter.RememberWidths)
