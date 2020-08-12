@@ -15,7 +15,7 @@
       
       
       <link rel="shortcut icon" href="../../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.3">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.5">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.947af8d5.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.63b94e9e.min.css">
       
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.7f672a1f.min.css">
       
@@ -665,7 +665,12 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <p>Create a cluster, mapping the port 30080 from agent-0 to localhost:8082</p>
 <p><code class="highlight">k3d cluster create mycluster -p <span class="m">8082</span>:30080@agent<span class="o">[</span><span class="m">0</span><span class="o">]</span> --agents <span class="m">2</span></code></p>
 <ul>
-<li>Note: Kubernetes&rsquo; default NodePort range is <a href="https://kubernetes.io/docs/concepts/services-networking/service/#nodeport"><code>30000-32767</code></a></li>
+<li>
+<p><strong>Note</strong>: Kubernetes&rsquo; default NodePort range is <a href="https://kubernetes.io/docs/concepts/services-networking/service/#nodeport"><code>30000-32767</code></a></p>
+</li>
+<li>
+<p><strong>Note</strong>: You may as well expose the whole NodePort range from the very beginning, e.g. via <code>k3d cluster create mycluster --agents 3 -p 30000-32767:30000-32767@server[0]</code> (See <a href="https://www.youtube.com/watch?v=5HaU6338lAk">this video from @portainer</a>)</p>
+</li>
 </ul>
 </li>
 </ol>
@@ -705,7 +710,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">August 5, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">August 12, 2020</span>
     
   </small>
 </div>
@@ -780,7 +785,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
       
     </div>
     
-      <script src="../../../assets/javascripts/vendor.c3dc8c49.min.js"></script>
+      <script src="../../../assets/javascripts/vendor.d1f5a259.min.js"></script>
       <script src="../../../assets/javascripts/bundle.f9edbbd5.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
       <script>
@@ -788,7 +793,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
           base: "../../..",
           features: ["tabs"],
           search: Object.assign({
-            worker: "../../../assets/javascripts/worker/search.8e2cddea.min.js"
+            worker: "../../../assets/javascripts/worker/search.fae956e7.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>
