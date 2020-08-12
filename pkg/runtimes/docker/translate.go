@@ -175,6 +175,12 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		}
 	}
 
+	// status
+	nodeState := k3d.NodeState{
+		Running: containerDetails.ContainerJSONBase.State.Running,
+		Status:  containerDetails.ContainerJSONBase.State.Status,
+	}
+
 	node := &k3d.Node{
 		Name:       strings.TrimPrefix(containerDetails.Name, "/"), // container name with leading '/' cut off
 		Role:       k3d.NodeRoles[containerDetails.Config.Labels[k3d.LabelRole]],
@@ -189,6 +195,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		Network:    clusterNetwork,
 		ServerOpts: serverOpts,
 		AgentOpts:  k3d.AgentOpts{},
+		State:      nodeState,
 	}
 	return node, nil
 }

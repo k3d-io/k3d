@@ -228,6 +228,7 @@ type Node struct {
 	Network    string            // filled automatically
 	ServerOpts ServerOpts        `yaml:"server_opts" json:"serverOpts,omitempty"`
 	AgentOpts  AgentOpts         `yaml:"agent_opts" json:"agentOpts,omitempty"`
+	State      NodeState         // filled automatically
 }
 
 // ServerOpts describes some additional server role specific opts
@@ -258,4 +259,10 @@ type AgentOpts struct{}
 // GetDefaultObjectName prefixes the passed name with the default prefix
 func GetDefaultObjectName(name string) string {
 	return fmt.Sprintf("%s-%s", DefaultObjectNamePrefix, name)
+}
+
+// NodeState describes the current state of a node
+type NodeState struct {
+	Running bool
+	Status  string
 }
