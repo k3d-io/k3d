@@ -528,6 +528,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#setting-kubernetes-api-server-flags-eg-to-enable-feature-flags" class="md-nav__link">
+    Setting Kubernetes API Server flags (e.g. to enable feature flags)
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -605,6 +612,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#setting-kubernetes-api-server-flags-eg-to-enable-feature-flags" class="md-nav__link">
+    Setting Kubernetes API Server flags (e.g. to enable feature flags)
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -663,6 +677,13 @@
 <li>What&rsquo;s the solution: Hopefully, this will be solved by the planned <a href="https://github.com/rancher/k3s/pull/1770">replacement of dqlite with embedded etcd in k3s</a></li>
 <li>Related issues: <a href="https://github.com/rancher/k3d/issues/262">#262</a></li>
 </ul>
+<h2 id="setting-kubernetes-api-server-flags-eg-to-enable-feature-flags">Setting Kubernetes API Server flags (e.g. to enable feature flags)<a class="headerlink" href="#setting-kubernetes-api-server-flags-eg-to-enable-feature-flags" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The Problem: Passing a feature flag to the Kubernetes API Server running inside k3s.</li>
+<li>Example: you want to enable the EphemeralContainers feature flag in Kubernetes</li>
+<li>Solution: <code class="highlight">k3d cluster create --k3s-server-arg <span class="s1">&#39;--kube-apiserver-arg=feature-gates=EphemeralContainers=true&#39;</span></code></li>
+<li>Note: Be aware of where the flag require dashes (<code>--</code>) and where not.</li>
+</ul>
                 
                   
                     
@@ -671,7 +692,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 14, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">August 12, 2020</span>
     
   </small>
 </div>
