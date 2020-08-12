@@ -58,7 +58,9 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
     `#!bash k3d cluster create mycluster -p 8082:30080@agent[0] --agents 2`
 
-    - Note: Kubernetes' default NodePort range is [`30000-32767`](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
+    - **Note**: Kubernetes' default NodePort range is [`30000-32767`](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
+
+    - **Note**: You may as well expose the whole NodePort range from the very beginning, e.g. via `k3d cluster create mycluster --agents 3 -p 30000-32767:30000-32767@server[0]` (See [this video from @portainer](https://www.youtube.com/watch?v=5HaU6338lAk))
 
 ... (Steps 2 and 3 like above) ...
 
