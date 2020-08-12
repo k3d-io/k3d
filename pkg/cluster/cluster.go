@@ -285,7 +285,25 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			ports := k3d.DefaultAPIPort
 			for _, portString := range cluster.ServerLoadBalancer.Ports {
 				split := strings.Split(portString, ":")
-				ports += "," + split[len(split)-1]
+				port := split[len(split)-1]
+				if strings.Contains(port, "-") {
+					split := strings.Split(port, "-")
+					start, err := strconv.Atoi(split[0])
+					if err != nil {
+						log.Errorln("Failed to parse port mapping for loadbalancer '%s'", port)
+						return err
+					}
+					end, err := strconv.Atoi(split[1])
+					if err != nil {
+						log.Errorln("Failed to parse port mapping for loadbalancer '%s'", port)
+						return err
+					}
+					for i := start; i <= end; i++ {
+						ports += "," + strconv.Itoa(i)
+					}
+				} else {
+					ports += "," + port
+				}
 			}
 
 			// Create LB as a modified node with loadbalancerRole
@@ -296,6 +314,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 				Env: []string{
 					fmt.Sprintf("SERVERS=%s", servers),
 					fmt.Sprintf("PORTS=%s", ports),
+					fmt.Sprintf("WORKER_PROCESSES=%d", len(strings.Split(ports, ","))),
 				},
 				Role:    k3d.LoadBalancerRole,
 				Labels:  k3d.DefaultObjectLabels, // TODO: createLoadBalancer: add more expressive labels
