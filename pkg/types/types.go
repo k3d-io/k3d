@@ -181,26 +181,34 @@ type Cluster struct {
 	ImageVolume        string             `yaml:"image_volume" json:"imageVolume,omitempty"`
 }
 
-// ServerCount return number of server node into cluster
-func (c *Cluster) ServerCount() int {
+// ServerCountRunning returns the number of server nodes running in the cluster and the total number
+func (c *Cluster) ServerCountRunning() (int, int) {
 	serverCount := 0
+	serversRunning := 0
 	for _, node := range c.Nodes {
 		if node.Role == ServerRole {
 			serverCount++
+			if node.State.Running {
+				serversRunning++
+			}
 		}
 	}
-	return serverCount
+	return serverCount, serversRunning
 }
 
-// AgentCount return number of agent node into cluster
-func (c *Cluster) AgentCount() int {
+// AgentCountRunning returns the number of agent nodes running in the cluster and the total number
+func (c *Cluster) AgentCountRunning() (int, int) {
 	agentCount := 0
+	agentsRunning := 0
 	for _, node := range c.Nodes {
 		if node.Role == AgentRole {
 			agentCount++
+			if node.State.Running {
+				agentsRunning++
+			}
 		}
 	}
-	return agentCount
+	return agentCount, agentsRunning
 }
 
 // HasLoadBalancer returns true if cluster has a loadbalancer node
