@@ -32,3 +32,10 @@
 - What causes this issue: it's a [known issue with dqlite in `k3s`](https://github.com/rancher/k3s/issues/1391) which doesn't allow the initializing server node to go down
 - What's the solution: Hopefully, this will be solved by the planned [replacement of dqlite with embedded etcd in k3s](https://github.com/rancher/k3s/pull/1770)
 - Related issues: [#262](https://github.com/rancher/k3d/issues/262)
+
+## Setting Kubernetes API Server flags (e.g. to enable feature flags)
+
+- The Problem: Passing a feature flag to the Kubernetes API Server running inside k3s.
+- Example: you want to enable the EphemeralContainers feature flag in Kubernetes
+- Solution: `#!bash k3d cluster create --k3s-server-arg '--kube-apiserver-arg=feature-gates=EphemeralContainers=true'`
+  - Note: Be aware of where the flag require dashes (`--`) and where not.
