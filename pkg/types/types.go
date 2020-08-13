@@ -44,6 +44,12 @@ const DefaultLBImageRepo = "docker.io/rancher/k3d-proxy"
 // DefaultToolsImageRepo defines the default image used for the tools container
 const DefaultToolsImageRepo = "docker.io/rancher/k3d-tools"
 
+// DefaultRegistryImageRepo defines the default image used for the k3d-managed registry
+const DefaultRegistryImageRepo = "docker.io/library/registry"
+
+// DefaultRegistryImageTag defines the default image tag used for the k3d-managed registry
+const DefaultRegistryImageTag = "2"
+
 // DefaultObjectNamePrefix defines the name prefix for every object created by k3d
 const DefaultObjectNamePrefix = "k3d"
 
@@ -66,6 +72,7 @@ const (
 	AgentRole        Role = "agent"
 	NoRole           Role = "noRole"
 	LoadBalancerRole Role = "loadbalancer"
+	RegistryRole     Role = "registry"
 )
 
 // NodeRoles defines the roles available for nodes
@@ -73,6 +80,7 @@ var NodeRoles = map[string]Role{
 	string(ServerRole):       ServerRole,
 	string(AgentRole):        AgentRole,
 	string(LoadBalancerRole): LoadBalancerRole,
+	string(RegistryRole):     RegistryRole,
 }
 
 // DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
