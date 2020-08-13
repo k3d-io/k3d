@@ -77,8 +77,12 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, name string, 
 		return err
 	}
 
-	// connect registry to cluster networks
-	return RegistryConnect(ctx, runtime, registryNode, clusters) // TODO: registry: update the registries.yaml file
+	if len(clusters) > 0 {
+		// connect registry to cluster networks
+		return RegistryConnect(ctx, runtime, registryNode, clusters) // TODO: registry: update the registries.yaml file
+	}
+
+	return nil
 
 }
 
