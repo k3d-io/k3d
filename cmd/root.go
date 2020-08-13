@@ -22,6 +22,7 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -34,9 +35,9 @@ import (
 	"github.com/rancher/k3d/v3/cmd/image"
 	"github.com/rancher/k3d/v3/cmd/kubeconfig"
 	"github.com/rancher/k3d/v3/cmd/node"
+	cliutil "github.com/rancher/k3d/v3/cmd/util"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	"github.com/rancher/k3d/v3/version"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
 )
@@ -60,17 +61,6 @@ k3d is a wrapper CLI that helps you to easily create k3s clusters inside docker.
 Nodes of a k3d cluster are docker containers running a k3s image.
 All Nodes of a k3d cluster are part of the same docker network.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) > 1 {
-			parts := args[1:]
-
-			// Check if it's a built-in command, else try to execute it as a plugin
-			if _, _, err := cmd.Find(parts); err != nil {
-				if err := util.HandlePlugin(parts); err != nil {
-					log.Errorf("Failed to execute plugin '%+v'", parts)
-					log.Fatalln(err)
-				}
-			}
-		}
 		if flags.version {
 			printVersion()
 		} else {
@@ -84,6 +74,19 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	if len(os.Args) > 1 {
+		parts := os.Args[1:]
+		// Check if it's a built-in command, else try to execute it as a plugin
+		if _, _, err := rootCmd.Find(parts); err != nil {
+			pluginFound, err := cliutil.HandlePlugin(context.Background(), parts)
+			if err != nil {
+				log.Errorf("Failed to execute plugin '%+v'", parts)
+				log.Fatalln(err)
+			} else if pluginFound {
+				os.Exit(0)
+			}
+		}
+	}
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalln(err)
 	}

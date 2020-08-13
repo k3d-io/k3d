@@ -22,13 +22,17 @@ THE SOFTWARE.
 package util
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
+
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 )
 
-func HandlePlugin(args []string) error {
+// HandlePlugin takes care of finding and executing a plugin based on the longest prefix
+func HandlePlugin(ctx context.Context, args []string) (bool, error) {
 	argsPrefix := []string{}
 
 	for _, arg := range args {
@@ -53,10 +57,10 @@ func HandlePlugin(args []string) error {
 	}
 
 	if execPath == "" {
-		return nil
+		return false, nil
 	}
 
-	return ExecPlugin(execPath, args[len(argsPrefix):], os.Environ())
+	return true, ExecPlugin(ctx, execPath, args[len(argsPrefix):], os.Environ())
 
 }
 
@@ -70,7 +74,11 @@ func FindPlugin(name string) (string, bool) {
 }
 
 // ExecPlugin executes a found plugin
-func ExecPlugin(path string, args []string, env []string) error {
-
-	return nil
+func ExecPlugin(ctx context.Context, path string, args []string, env []string) error {
+	cmd := exec.CommandContext(ctx, path, args...)
+	cmd.Env = env
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	return cmd.Run()
 }
