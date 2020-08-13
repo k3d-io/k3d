@@ -181,26 +181,34 @@ type Cluster struct {
 	ImageVolume        string             `yaml:"image_volume" json:"imageVolume,omitempty"`
 }
 
-// ServerCount return number of server node into cluster
-func (c *Cluster) ServerCount() int {
+// ServerCountRunning returns the number of server nodes running in the cluster and the total number
+func (c *Cluster) ServerCountRunning() (int, int) {
 	serverCount := 0
+	serversRunning := 0
 	for _, node := range c.Nodes {
 		if node.Role == ServerRole {
 			serverCount++
+			if node.State.Running {
+				serversRunning++
+			}
 		}
 	}
-	return serverCount
+	return serverCount, serversRunning
 }
 
-// AgentCount return number of agent node into cluster
-func (c *Cluster) AgentCount() int {
+// AgentCountRunning returns the number of agent nodes running in the cluster and the total number
+func (c *Cluster) AgentCountRunning() (int, int) {
 	agentCount := 0
+	agentsRunning := 0
 	for _, node := range c.Nodes {
 		if node.Role == AgentRole {
 			agentCount++
+			if node.State.Running {
+				agentsRunning++
+			}
 		}
 	}
-	return agentCount
+	return agentCount, agentsRunning
 }
 
 // HasLoadBalancer returns true if cluster has a loadbalancer node
@@ -228,6 +236,7 @@ type Node struct {
 	Network    string            // filled automatically
 	ServerOpts ServerOpts        `yaml:"server_opts" json:"serverOpts,omitempty"`
 	AgentOpts  AgentOpts         `yaml:"agent_opts" json:"agentOpts,omitempty"`
+	State      NodeState         // filled automatically
 }
 
 // ServerOpts describes some additional server role specific opts
@@ -258,4 +267,10 @@ type AgentOpts struct{}
 // GetDefaultObjectName prefixes the passed name with the default prefix
 func GetDefaultObjectName(name string) string {
 	return fmt.Sprintf("%s-%s", DefaultObjectNamePrefix, name)
+}
+
+// NodeState describes the current state of a node
+type NodeState struct {
+	Running bool
+	Status  string
 }

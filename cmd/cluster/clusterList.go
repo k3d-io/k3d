@@ -116,14 +116,14 @@ func PrintClusters(clusters []*k3d.Cluster, flags clusterFlags) {
 	k3cluster.SortClusters(clusters)
 
 	for _, cluster := range clusters {
-		serverCount := cluster.ServerCount()
-		agentCount := cluster.AgentCount()
+		serverCount, serversRunning := cluster.ServerCountRunning()
+		agentCount, agentsRunning := cluster.AgentCountRunning()
 		hasLB := cluster.HasLoadBalancer()
 
 		if flags.token {
-			fmt.Fprintf(tabwriter, "%s\t%d\t%d\t%t\t%s\n", cluster.Name, serverCount, agentCount, hasLB, cluster.Token)
+			fmt.Fprintf(tabwriter, "%s\t%d/%d\t%d/%d\t%t\t%s\n", cluster.Name, serversRunning, serverCount, agentsRunning, agentCount, hasLB, cluster.Token)
 		} else {
-			fmt.Fprintf(tabwriter, "%s\t%d\t%d\t%t\n", cluster.Name, serverCount, agentCount, hasLB)
+			fmt.Fprintf(tabwriter, "%s\t%d/%d\t%d/%d\t%t\n", cluster.Name, serversRunning, serverCount, agentsRunning, agentCount, hasLB)
 		}
 	}
 }

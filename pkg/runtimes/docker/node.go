@@ -72,9 +72,21 @@ func (d Docker) GetNodesByLabel(ctx context.Context, labels map[string]string) (
 	// (1) convert them to node structs
 	nodes := []*k3d.Node{}
 	for _, container := range containers {
-		node, err := TranslateContainerToNode(&container)
+		var node *k3d.Node
+		var err error
+
+		containerDetails, err := getContainerDetails(ctx, container.ID)
 		if err != nil {
-			return nil, err
+			log.Warnf("Failed to get details for container %s", container.Names[0])
+			node, err = TranslateContainerToNode(&container)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			node, err = TranslateContainerDetailsToNode(containerDetails)
+			if err != nil {
+				return nil, err
+			}
 		}
 		nodes = append(nodes, node)
 	}
@@ -210,6 +222,46 @@ func (d Docker) GetNode(ctx context.Context, node *k3d.Node) (*k3d.Node, error) 
 
 	return node, nil
 
+}
+
+// GetNodeStatus returns the status of a node (Running, Started, etc.)
+func (d Docker) GetNodeStatus(ctx context.Context, node *k3d.Node) (bool, string, error) {
+
+	stateString := ""
+	running := false
+
+	// get the container for the given node
+	container, err := getNodeContainer(ctx, node)
+	if err != nil {
+		return running, stateString, err
+	}
+
+	// create docker client
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return running, stateString, err
+	}
+	defer docker.Close()
+
+	containerInspectResponse, err := docker.ContainerInspect(ctx, container.ID)
+	if err != nil {
+		return running, stateString, err
+	}
+
+	running = containerInspectResponse.ContainerJSONBase.State.Running
+	stateString = containerInspectResponse.ContainerJSONBase.State.Status
+
+	return running, stateString, nil
+}
+
+// NodeIsRunning tells the caller if a given node is in "running" state
+func (d Docker) NodeIsRunning(ctx context.Context, node *k3d.Node) (bool, error) {
+	isRunning, _, err := d.GetNodeStatus(ctx, node)
+	if err != nil {
+		return false, err
+	}
+	return isRunning, nil
 }
 
 // GetNodeLogs returns the logs from a given node

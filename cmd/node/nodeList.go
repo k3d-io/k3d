@@ -106,7 +106,7 @@ func printNodes(nodes []*k3d.Node, headersOff bool) {
 	defer tabwriter.Flush()
 
 	if !headersOff {
-		headers := []string{"NAME", "ROLE", "CLUSTER"} // TODO: add status
+		headers := []string{"NAME", "ROLE", "CLUSTER", "STATUS"}
 		_, err := fmt.Fprintf(tabwriter, "%s\n", strings.Join(headers, "\t"))
 		if err != nil {
 			log.Fatalln("Failed to print headers")
@@ -118,6 +118,6 @@ func printNodes(nodes []*k3d.Node, headersOff bool) {
 	})
 
 	for _, node := range nodes {
-		fmt.Fprintf(tabwriter, "%s\t%s\t%s\n", strings.TrimPrefix(node.Name, "/"), string(node.Role), node.Labels[k3d.LabelClusterName])
+		fmt.Fprintf(tabwriter, "%s\t%s\t%s\t%s\n", strings.TrimPrefix(node.Name, "/"), string(node.Role), node.Labels[k3d.LabelClusterName], node.State.Status)
 	}
 }
