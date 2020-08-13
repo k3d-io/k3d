@@ -31,53 +31,53 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ParseAPIPort parses/validates a string to create an exposeAPI struct from it
-func ParseAPIPort(portString string) (k3d.ExposeAPI, error) {
+// ParseExposePort parses/validates a string to create an exposePort struct from it
+func ParseExposePort(portString string) (k3d.ExposePort, error) {
 
-	var exposeAPI k3d.ExposeAPI
+	var exposePort k3d.ExposePort
 
 	split := strings.Split(portString, ":")
 	if len(split) > 2 {
 		log.Errorln("Failed to parse API Port specification")
-		return exposeAPI, fmt.Errorf("api-port format error")
+		return exposePort, fmt.Errorf("api-port format error")
 	}
 
 	if len(split) == 1 {
-		exposeAPI = k3d.ExposeAPI{Port: split[0]}
+		exposePort = k3d.ExposePort{Port: split[0]}
 	} else {
 		// Make sure 'host' can be resolved to an IP address
 		addrs, err := net.LookupHost(split[0])
 		if err != nil {
-			return exposeAPI, err
+			return exposePort, err
 		}
-		exposeAPI = k3d.ExposeAPI{Host: split[0], HostIP: addrs[0], Port: split[1]}
+		exposePort = k3d.ExposePort{Host: split[0], HostIP: addrs[0], Port: split[1]}
 	}
 
 	// Verify 'port' is an integer and within port ranges
-	if exposeAPI.Port == "" || exposeAPI.Port == "random" {
+	if exposePort.Port == "" || exposePort.Port == "random" {
 		log.Debugf("API-Port Mapping didn't specify hostPort, choosing one randomly...")
 		freePort, err := GetFreePort()
 		if err != nil || freePort == 0 {
 			log.Warnf("Failed to get random free port:\n%+v", err)
 			log.Warnf("Falling back to default port %s (may be blocked though)...", k3d.DefaultAPIPort)
-			exposeAPI.Port = k3d.DefaultAPIPort
+			exposePort.Port = k3d.DefaultAPIPort
 		} else {
-			exposeAPI.Port = strconv.Itoa(freePort)
+			exposePort.Port = strconv.Itoa(freePort)
 			log.Debugf("Got free port for API: '%d'", freePort)
 		}
 	}
-	p, err := strconv.Atoi(exposeAPI.Port)
+	p, err := strconv.Atoi(exposePort.Port)
 	if err != nil {
 		log.Errorln("Failed to parse port mapping")
-		return exposeAPI, err
+		return exposePort, err
 	}
 
 	if p < 0 || p > 65535 {
 		log.Errorln("Failed to parse API Port specification")
-		return exposeAPI, fmt.Errorf("Port value '%d' out of range", p)
+		return exposePort, fmt.Errorf("Port value '%d' out of range", p)
 	}
 
-	return exposeAPI, nil
+	return exposePort, nil
 
 }
 

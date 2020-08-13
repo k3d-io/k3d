@@ -100,6 +100,9 @@ const (
 	LabelServerAPIPort   string = "k3d.server.api.port"
 	LabelServerAPIHost   string = "k3d.server.api.host"
 	LabelServerAPIHostIP string = "k3d.server.api.hostIP"
+	LabelRegistryHost    string = "k3d.registry.host"
+	LabelRegistryHostIP  string = "k3d.registry.hostIP"
+	LabelRegistryPort    string = "k3s.registry.port"
 )
 
 // DefaultRoleCmds maps the node roles to their respective default commands
@@ -271,8 +274,8 @@ type ExternalDatastore struct {
 	Network  string `yaml:"network" json:"network,omitempty"`
 }
 
-// ExposeAPI describes specs needed to expose the API-Server
-type ExposeAPI struct {
+// ExposePort describes specs needed to expose the API-Server
+type ExposePort struct {
 	Host   string `yaml:"host" json:"host,omitempty"`
 	HostIP string `yaml:"hostIP" json:"hostIP,omitempty"`
 	Port   string `yaml:"port" json:"port"`
@@ -291,3 +294,16 @@ type NodeState struct {
 	Running bool
 	Status  string
 }
+
+/*
+ * Registry
+ */
+
+// Registry Defaults
+const (
+	DefaultRegistryPort       = "5000"
+	DefaultRegistryName       = DefaultObjectNamePrefix + "-registry"
+	DefaultRegistriesFilePath = "/etc/rancher/k3s/registries.yaml"
+	DefaultRegistryMountPath  = "/var/lib/registry"
+	DefaultDockerHubAddress   = "registry-1.docker.io"
+)

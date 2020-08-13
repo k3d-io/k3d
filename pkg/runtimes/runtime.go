@@ -71,6 +71,7 @@ type Runtime interface {
 	GetImages(context.Context) ([]string, error)
 	CopyToNode(context.Context, string, string, *k3d.Node) error
 	GetHostIP(context.Context, string) (net.IP, error)
+	ConnectNodeToNetwork(context.Context, *k3d.Node, string) error // @param context, node, network name
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it

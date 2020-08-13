@@ -25,5 +25,5 @@ import "github.com/spf13/cobra"
 
 // NewCmdRegistryConnect creates a new cobra command
 func NewCmdRegistryConnect() *cobra.Command {
-	return nil
+	return &cobra.Command{}
 }

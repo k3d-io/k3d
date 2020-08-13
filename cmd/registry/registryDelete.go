@@ -25,5 +25,5 @@ import "github.com/spf13/cobra"
 
 // NewCmdRegistryDelete creates a new cobra command
 func NewCmdRegistryDelete() *cobra.Command {
-	return nil
+	return &cobra.Command{}
 }
