@@ -60,6 +60,17 @@ k3d is a wrapper CLI that helps you to easily create k3s clusters inside docker.
 Nodes of a k3d cluster are docker containers running a k3s image.
 All Nodes of a k3d cluster are part of the same docker network.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) > 1 {
+			parts := args[1:]
+
+			// Check if it's a built-in command, else try to execute it as a plugin
+			if _, _, err := cmd.Find(parts); err != nil {
+				if err := util.HandlePlugin(parts); err != nil {
+					log.Errorf("Failed to execute plugin '%+v'", parts)
+					log.Fatalln(err)
+				}
+			}
+		}
 		if flags.version {
 			printVersion()
 		} else {
