@@ -41,8 +41,8 @@ func NewCmdRegistryCreate() *cobra.Command {
 	// create new command
 	cmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Create a new k3s node in docker",
-		Long:  `Create a new containerized k3s node (k3s in docker).`,
+		Short: "Create a new registry",
+		Long:  `Create a new registry.`,
 		Args:  cobra.MaximumNArgs(1), // maximum one name accepted
 		Run: func(cmd *cobra.Command, args []string) {
 			name, image, port, clusters := parseCreateRegistryCmd(cmd, args)

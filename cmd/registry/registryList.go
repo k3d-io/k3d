@@ -21,9 +21,107 @@ THE SOFTWARE.
 */
 package registry
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+	"os"
+	"sort"
+	"strings"
+
+	"github.com/liggitt/tabwriter"
+	"github.com/rancher/k3d/v3/cmd/util"
+	"github.com/rancher/k3d/v3/pkg/cluster"
+	"github.com/rancher/k3d/v3/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v3/pkg/types"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+)
 
 // NewCmdRegistryList creates a new cobra command
 func NewCmdRegistryList() *cobra.Command {
-	return &cobra.Command{}
+	// create new command
+	cmd := &cobra.Command{
+		Use:               "list [NAME [NAME...]]",
+		Aliases:           []string{"ls", "get"},
+		Short:             "List registries",
+		Long:              `List registries.`,
+		Args:              cobra.MinimumNArgs(0), // 0 or more; 0 = all
+		ValidArgsFunction: util.ValidArgsAvailableNodes,
+		Run: func(cmd *cobra.Command, args []string) {
+			nodes, headersOff := parseRegistryListCmd(cmd, args)
+			var existingNodes []*k3d.Node
+			if len(nodes) == 0 { // Option a)  no name specified -> get all registries
+				found, err := cluster.NodeList(cmd.Context(), runtimes.SelectedRuntime)
+				if err != nil {
+					log.Fatalln(err)
+				}
+				existingNodes = append(existingNodes, found...)
+			} else { // Option b) registry name(s) specified -> get specific registries
+				for _, node := range nodes {
+					log.Debugf("Bla %s", node.Name)
+					found, err := cluster.NodeGet(cmd.Context(), runtimes.SelectedRuntime, node)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					existingNodes = append(existingNodes, found)
+				}
+			}
+			existingNodes = cluster.NodeFilterByRole(existingNodes, k3d.RegistryRole)
+			// print existing registries
+			if len(existingNodes) > 0 {
+				printNodes(existingNodes, headersOff)
+			}
+		},
+	}
+
+	// add flags
+	cmd.Flags().Bool("no-headers", false, "Disable headers")
+
+	// add subcommands
+
+	// done
+	return cmd
+}
+
+func parseRegistryListCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, bool) {
+	// --no-headers
+	headersOff, err := cmd.Flags().GetBool("no-headers")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Args = node name
+	if len(args) == 0 {
+		return nil, headersOff
+	}
+
+	nodes := []*k3d.Node{}
+	for _, name := range args {
+		nodes = append(nodes, &k3d.Node{
+			Name: name,
+		})
+	}
+
+	return nodes, headersOff
+}
+
+func printNodes(nodes []*k3d.Node, headersOff bool) {
+
+	tabwriter := tabwriter.NewWriter(os.Stdout, 6, 4, 3, ' ', tabwriter.RememberWidths)
+	defer tabwriter.Flush()
+
+	if !headersOff {
+		headers := []string{"NAME", "ROLE", "CLUSTER"} // TODO: add status
+		_, err := fmt.Fprintf(tabwriter, "%s\n", strings.Join(headers, "\t"))
+		if err != nil {
+			log.Fatalln("Failed to print headers")
+		}
+	}
+
+	sort.Slice(nodes, func(i, j int) bool {
+		return nodes[i].Name < nodes[j].Name
+	})
+
+	for _, node := range nodes {
+		fmt.Fprintf(tabwriter, "%s\t%s\t%s\n", strings.TrimPrefix(node.Name, "/"), string(node.Role), node.Labels[k3d.LabelClusterName])
+	}
 }
