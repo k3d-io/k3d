@@ -460,6 +460,8 @@ func ClusterList(ctx context.Context, runtime k3drt.Runtime) ([]*k3d.Cluster, er
 		return nil, err
 	}
 
+	nodes = NodeFilterByRoles(nodes, k3d.ClusterInternalNodeRoles, k3d.ClusterExternalNodeRoles)
+
 	clusters := []*k3d.Cluster{}
 	// for each node, check, if we can add it to a cluster or add the cluster if it doesn't exist yet
 	for _, node := range nodes {

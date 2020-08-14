@@ -53,7 +53,7 @@ func NewCmdRegistryCreate() *cobra.Command {
 	}
 
 	// add flags
-	cmd.Flags().StringSliceP("cluster", "c", []string{k3d.DefaultClusterName}, "Select the cluster(s) that the registry shall connect to.")
+	cmd.Flags().StringSliceP("cluster", "c", []string{}, "Select the cluster(s) that the registry shall connect to.")
 	if err := cmd.RegisterFlagCompletionFunc("cluster", cliutil.ValidArgsAvailableClusters); err != nil {
 		log.Fatalln("Failed to register flag completion for '--cluster'", err)
 	}
