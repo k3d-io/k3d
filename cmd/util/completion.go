@@ -71,7 +71,34 @@ func ValidArgsAvailableNodes(cmd *cobra.Command, args []string, toComplete strin
 nodeLoop:
 	for _, node := range nodes {
 		for _, arg := range args {
-			if arg == node.Name { // only clusters, that are not in the args yet
+			if arg == node.Name { // only nodes, that are not in the args yet
+				continue nodeLoop
+			}
+		}
+		if strings.HasPrefix(node.Name, toComplete) {
+			completions = append(completions, node.Name)
+		}
+	}
+	return completions, cobra.ShellCompDirectiveDefault
+}
+
+// ValidArgsAvailableRegistries is used for shell completions: proposes the list of existing registries
+func ValidArgsAvailableRegistries(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+
+	var completions []string
+	var nodes []*k3d.Node
+	nodes, err := k3dcluster.NodeList(context.Background(), runtimes.SelectedRuntime)
+	if err != nil {
+		log.Errorln("Failed to get list of nodes for shell completion")
+		return nil, cobra.ShellCompDirectiveError
+	}
+
+	nodes = k3dcluster.NodeFilterByRoles(nodes, []k3d.Role{k3d.RegistryRole}, []k3d.Role{})
+
+nodeLoop:
+	for _, node := range nodes {
+		for _, arg := range args {
+			if arg == node.Name { // only nodes, that are not in the args yet
 				continue nodeLoop
 			}
 		}

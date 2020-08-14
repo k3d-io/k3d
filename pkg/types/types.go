@@ -83,6 +83,18 @@ var NodeRoles = map[string]Role{
 	string(RegistryRole):     RegistryRole,
 }
 
+// ClusterInternalNodeRoles is a list of roles for nodes that belong to a cluster
+var ClusterInternalNodeRoles = []Role{
+	ServerRole,
+	AgentRole,
+	LoadBalancerRole,
+}
+
+// ClusterExternalNodeRoles is a list of roles for nodes that do not belong to a specific cluster
+var ClusterExternalNodeRoles = []Role{
+	RegistryRole,
+}
+
 // DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
 var DefaultObjectLabels = map[string]string{
 	"app": "k3d",

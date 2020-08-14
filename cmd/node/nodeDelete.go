@@ -59,7 +59,7 @@ func NewCmdNodeDelete() *cobra.Command {
 	// add subcommands
 
 	// add flags
-	cmd.Flags().BoolP("all", "a", false, "Delete all existing clusters")
+	cmd.Flags().BoolP("all", "a", false, "Delete all existing nodes")
 
 	// done
 	return cmd
@@ -78,6 +78,7 @@ func parseDeleteNodeCmd(cmd *cobra.Command, args []string) []*k3d.Node {
 		if err != nil {
 			log.Fatalln(err)
 		}
+		nodes = cluster.NodeFilterByRoles(nodes, k3d.ClusterInternalNodeRoles, k3d.ClusterInternalNodeRoles)
 		return nodes
 	}
 

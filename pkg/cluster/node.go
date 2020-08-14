@@ -367,12 +367,34 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 	return nil
 }
 
-// NodeFilterByRole filters a list of nodes by their roles
-func NodeFilterByRole(nodes []*k3d.Node, role k3d.Role) []*k3d.Node {
+// NodeFilterByRoles filters a list of nodes by their roles
+func NodeFilterByRoles(nodes []*k3d.Node, includeRoles, excludeRoles []k3d.Role) []*k3d.Node {
+
+	// check for conflicting filters
+	for _, includeRole := range includeRoles {
+		for _, excludeRole := range excludeRoles {
+			if includeRole == excludeRole {
+				log.Warnf("You've specified the same role ('%s') for inclusion and exclusion. Exclusion precedes inclusion.")
+			}
+		}
+	}
+
 	resultList := []*k3d.Node{}
+nodeLoop:
 	for _, node := range nodes {
-		if node.Role == role {
-			resultList = append(resultList, node)
+		// exclude > include
+		for _, excludeRole := range excludeRoles {
+			if node.Role == excludeRole {
+				continue nodeLoop
+			}
+		}
+
+		// include < exclude
+		for _, includeRole := range includeRoles {
+			if node.Role == includeRole {
+				resultList = append(resultList, node)
+				continue nodeLoop
+			}
 		}
 	}
 	return resultList

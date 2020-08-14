@@ -45,7 +45,7 @@ func NewCmdRegistryList() *cobra.Command {
 		Short:             "List registries",
 		Long:              `List registries.`,
 		Args:              cobra.MinimumNArgs(0), // 0 or more; 0 = all
-		ValidArgsFunction: util.ValidArgsAvailableNodes,
+		ValidArgsFunction: util.ValidArgsAvailableRegistries,
 		Run: func(cmd *cobra.Command, args []string) {
 			nodes, headersOff := parseRegistryListCmd(cmd, args)
 			var existingNodes []*k3d.Node
@@ -65,7 +65,7 @@ func NewCmdRegistryList() *cobra.Command {
 					existingNodes = append(existingNodes, found)
 				}
 			}
-			existingNodes = cluster.NodeFilterByRole(existingNodes, k3d.RegistryRole)
+			existingNodes = cluster.NodeFilterByRoles(existingNodes, []k3d.Role{k3d.RegistryRole}, []k3d.Role{})
 			// print existing registries
 			if len(existingNodes) > 0 {
 				printNodes(existingNodes, headersOff)
