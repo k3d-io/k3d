@@ -1,0 +1,7 @@
+cluster:
+  name: test-cluster
+  nodes:
+    - name: test-node-0
+      role: server
+    - name: test-node-1
+      role: agent

@@ -13,6 +13,7 @@ require (
 	github.com/docker/distribution v0.0.0-20200319173657-742aab907b54 // indirect
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200528204242-89382f2f2074+incompatible
 	github.com/docker/go-connections v0.4.0
+	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-test/deep v1.0.4
 	github.com/gogo/googleapis v1.3.0 // indirect
 	github.com/golang/protobuf v1.4.2 // indirect
@@ -20,25 +21,31 @@ require (
 	github.com/imdario/mergo v0.3.9
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/moby/sys/mount v0.1.0 // indirect
 	github.com/moby/term v0.0.0-20200507201656-73f35e472e8f // indirect
 	github.com/morikuni/aec v0.0.0-20170113033406-39771216ff4c // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/opencontainers/runtime-spec v1.0.1 // indirect
+	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/sirupsen/logrus v1.6.0
+	github.com/spf13/afero v1.3.4 // indirect
+	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.0.1-0.20200629195214-2c5a0d300f8b
-	github.com/spf13/viper v1.7.1 // indirect
+	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/viper v1.7.1
 	github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2 // indirect
 	go.etcd.io/bbolt v1.3.3 // indirect
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
-	golang.org/x/sys v0.0.0-20200602225109-6fdc65e7d980 // indirect
+	golang.org/x/sys v0.0.0-20200812155832-6a926be9bd1d // indirect
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
 	google.golang.org/genproto v0.0.0-20200604104852-0b0486081ffb // indirect
 	google.golang.org/grpc v1.29.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	gopkg.in/ini.v1 v1.58.0 // indirect
 	gotest.tools/v3 v3.0.2 // indirect
 	k8s.io/client-go v0.17.0
 	k8s.io/utils v0.0.0-20200109141947-94aeca20bf09 // indirect
