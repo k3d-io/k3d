@@ -569,23 +569,27 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 				})
 			}
 		} else {
-			log.Infoln("Node '%s' already running", node.Name)
+			log.Infof("Node '%s' already running", node.Name)
 		}
 	}
 
 	// start serverlb
 	if serverlb != nil {
-		log.Debugln("Starting serverlb...")
-		if err := runtime.StartNode(ctx, serverlb); err != nil { // FIXME: we could run into a nullpointer exception here
-			log.Warningf("Failed to start serverlb '%s': Try to start it manually", serverlb.Name)
-			failed++
+		if !serverlb.State.Running {
+			log.Debugln("Starting serverlb...")
+			if err := runtime.StartNode(ctx, serverlb); err != nil { // FIXME: we could run into a nullpointer exception here
+				log.Warningf("Failed to start serverlb '%s': Try to start it manually", serverlb.Name)
+				failed++
+			}
+			waitForServerWaitgroup.Go(func() error {
+				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
+				// ... by scanning for this line in logs and restarting the container in case it appears
+				log.Debugf("Starting to wait for loadbalancer node '%s'", serverlb.Name)
+				return NodeWaitForLogMessage(ctx, runtime, serverlb, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], start)
+			})
+		} else {
+			log.Infof("Serverlb '%s' already running", serverlb.Name)
 		}
-		waitForServerWaitgroup.Go(func() error {
-			// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
-			// ... by scanning for this line in logs and restarting the container in case it appears
-			log.Debugf("Starting to wait for loadbalancer node '%s'", serverlb.Name)
-			return NodeWaitForLogMessage(ctx, runtime, serverlb, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], start)
-		})
 	}
 
 	if err := waitForServerWaitgroup.Wait(); err != nil {
