@@ -548,22 +548,28 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 			continue
 		}
 
-		// start node
-		if err := runtime.StartNode(ctx, node); err != nil {
-			log.Warningf("Failed to start node '%s': Try to start it manually", node.Name)
-			failed++
-			continue
-		}
+		// check if node is running already to avoid waiting forever when checking for the node log message
+		if !node.State.Running {
 
-		// asynchronously wait for this server node to be ready (by checking the logs for a specific log mesage)
-		if node.Role == k3d.ServerRole && startClusterOpts.WaitForServer {
-			serverNode := node
-			waitForServerWaitgroup.Go(func() error {
-				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
-				// ... by scanning for this line in logs and restarting the container in case it appears
-				log.Debugf("Starting to wait for server node '%s'", serverNode.Name)
-				return NodeWaitForLogMessage(ctx, runtime, serverNode, k3d.ReadyLogMessageByRole[k3d.ServerRole], start)
-			})
+			// start node
+			if err := runtime.StartNode(ctx, node); err != nil {
+				log.Warningf("Failed to start node '%s': Try to start it manually", node.Name)
+				failed++
+				continue
+			}
+
+			// asynchronously wait for this server node to be ready (by checking the logs for a specific log mesage)
+			if node.Role == k3d.ServerRole && startClusterOpts.WaitForServer {
+				serverNode := node
+				waitForServerWaitgroup.Go(func() error {
+					// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
+					// ... by scanning for this line in logs and restarting the container in case it appears
+					log.Debugf("Starting to wait for server node '%s'", serverNode.Name)
+					return NodeWaitForLogMessage(ctx, runtime, serverNode, k3d.ReadyLogMessageByRole[k3d.ServerRole], start)
+				})
+			}
+		} else {
+			log.Infoln("Node '%s' already running", node.Name)
 		}
 	}
 
