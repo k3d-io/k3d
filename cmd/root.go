@@ -31,9 +31,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/rancher/k3d/v3/cmd/cluster"
+	cfg "github.com/rancher/k3d/v3/cmd/config"
 	"github.com/rancher/k3d/v3/cmd/image"
 	"github.com/rancher/k3d/v3/cmd/kubeconfig"
 	"github.com/rancher/k3d/v3/cmd/node"
+	"github.com/rancher/k3d/v3/pkg/config"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	"github.com/rancher/k3d/v3/version"
 
@@ -48,8 +50,6 @@ type RootFlags struct {
 }
 
 var flags = RootFlags{}
-
-// var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -79,10 +79,10 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initLogging, initRuntime)
+	cobra.OnInitialize(initLogging, initRuntime, config.InitConfig)
 
 	// add persistent flags (present to all subcommands)
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k3d/config.yaml)")
+	rootCmd.PersistentFlags().StringVar(&config.CfgFile, "config", "", "Use a config file")
 	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
 
 	// add local flags
@@ -94,6 +94,7 @@ func init() {
 	rootCmd.AddCommand(kubeconfig.NewCmdKubeconfig())
 	rootCmd.AddCommand(node.NewCmdNode())
 	rootCmd.AddCommand(image.NewCmdImage())
+	rootCmd.AddCommand(cfg.NewCmdConfig())
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",

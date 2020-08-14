@@ -23,43 +23,16 @@ package config
 
 import (
 	log "github.com/sirupsen/logrus"
-
-	"github.com/mitchellh/go-homedir"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-	"github.com/spf13/viper"
+	"github.com/spf13/cobra"
 )
 
-// Config describes the toplevel k3d configuration file
-type Config struct {
-	Cluster k3d.Cluster `yaml:"cluster" json:"cluster"`
-}
-
-// InitConfig initializes viper
-func InitConfig() {
-	viper.SetEnvPrefix("K3D_")
-	viper.SetConfigType("yaml")
-
-	if CfgFile != "" {
-		viper.SetConfigFile(CfgFile)
-	} else {
-		home, err := homedir.Dir()
-		if err != nil {
-			log.Fatalln(err)
-		}
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".k3d")
+// NewCmdConfig returns a new cobra command
+func NewCmdConfig() *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "config",
+		Run: func(cmd *cobra.Command, args []string) {
+			log.Infoln("Print config")
+		},
 	}
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err != nil {
-		log.Debugf("Not using config file: %+v", err)
-	}
-
-	log.Infof("Config: %s", viper.ConfigFileUsed())
+	return cmd
 }
-
-// CurrentConfig represents the currently active config
-var CurrentConfig *Config
-
-// CfgFile is the globally set config file
-var CfgFile string
