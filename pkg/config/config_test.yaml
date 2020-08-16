@@ -1,7 +1,6 @@
-cluster:
-  name: foo
-  nodes:
-    - name: foo-server-0
-      role: server
-    - name: foo-agent-0
-      role: agent
+name: foo
+nodes:
+  - name: foo-server-0
+    role: server
+  - name: foo-agent-0
+    role: agent

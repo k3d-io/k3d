@@ -34,6 +34,12 @@ type Config struct {
 	Cluster *k3d.Cluster `yaml:"cluster" json:"cluster"`
 }
 
+// CurrentConfig represents the currently active config
+var CurrentConfig *Config
+
+// CfgFile is the globally set config file
+var CfgFile string
+
 // InitConfig initializes viper
 func InitConfig() {
 
@@ -54,13 +60,16 @@ func InitConfig() {
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Debugf("Not using config file: %+v", err)
+		log.Debugln(err)
+	} else {
+
+		CurrentConfig := &Config{}
+
+		if err := viper.Unmarshal(&CurrentConfig.Cluster); err != nil {
+			log.Warnln("Failed to unmarshal config")
+			log.Warnln(err)
+		}
+
+		log.Infof("Config: %s", viper.ConfigFileUsed())
 	}
-
-	log.Infof("Config: %s", viper.ConfigFileUsed())
 }
-
-// CurrentConfig represents the currently active config
-var CurrentConfig *Config
-
-// CfgFile is the globally set config file
-var CfgFile string

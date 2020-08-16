@@ -54,9 +54,9 @@ func TestReadConfig(t *testing.T) {
 		t.Error(err)
 	}
 
-	var readConfig *Config
+	readConfig := &Config{}
 
-	if err := viper.Unmarshal(&readConfig); err != nil {
+	if err := viper.Unmarshal(&readConfig.Cluster); err != nil {
 		t.Error(err)
 	}
 
