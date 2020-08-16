@@ -31,7 +31,8 @@ import (
 
 // Config describes the toplevel k3d configuration file
 type Config struct {
-	Cluster *k3d.Cluster `yaml:"cluster" json:"cluster"`
+	Cluster           *k3d.Cluster           `yaml:"cluster" json:"cluster"`
+	ClusterCreateOpts *k3d.ClusterCreateOpts `yaml:"clusterCreateOpts" json:"clusterCreateOpts"`
 }
 
 // CurrentConfig represents the currently active config
@@ -65,7 +66,7 @@ func InitConfig() {
 
 		CurrentConfig := &Config{}
 
-		if err := viper.Unmarshal(&CurrentConfig.Cluster); err != nil {
+		if err := viper.Unmarshal(&CurrentConfig); err != nil {
 			log.Warnln("Failed to unmarshal config")
 			log.Warnln(err)
 		}

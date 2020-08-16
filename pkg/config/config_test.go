@@ -45,6 +45,9 @@ func TestReadConfig(t *testing.T) {
 				},
 			},
 		},
+		ClusterCreateOpts: &k3d.ClusterCreateOpts{
+			WaitForServer: true,
+		},
 	}
 
 	viper.SetConfigFile("./config_test.yaml")
@@ -56,7 +59,7 @@ func TestReadConfig(t *testing.T) {
 
 	readConfig := &Config{}
 
-	if err := viper.Unmarshal(&readConfig.Cluster); err != nil {
+	if err := viper.Unmarshal(&readConfig); err != nil {
 		t.Error(err)
 	}
 

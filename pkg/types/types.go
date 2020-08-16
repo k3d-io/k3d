@@ -130,12 +130,12 @@ var DoNotCopyServerFlags = []string{
 
 // ClusterCreateOpts describe a set of options one can set when creating a cluster
 type ClusterCreateOpts struct {
-	DisableImageVolume  bool
-	WaitForServer       bool
-	Timeout             time.Duration
-	DisableLoadBalancer bool
-	K3sServerArgs       []string
-	K3sAgentArgs        []string
+	DisableImageVolume  bool          `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
+	WaitForServer       bool          `yaml:"waitForServer" json:"waitForServer,omitempty"`
+	Timeout             time.Duration `yaml:"timeout" json:"timeout,omitempty"`
+	DisableLoadBalancer bool          `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
+	K3sServerArgs       []string      `yaml:"k3sServerArgs" json:"k3sServerArgs,omitempty"`
+	K3sAgentArgs        []string      `yaml:"k3sAgentArgs" json:"k3sAgentArgs,omitempty"`
 }
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
