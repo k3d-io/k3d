@@ -1,7 +1,17 @@
-cluster:
-  name: test-cluster
-  nodes:
-    - name: test-node-0
-      role: server
-    - name: test-node-1
-      role: agent
+clusters:
+  - name: foo
+    nodes:
+      - name: foo-server-0
+        role: server
+      - name: foo-agent-0
+        role: agent
+  - name: bar
+    nodes:
+      - name: bar-server-0
+        role: server
+      - name: bar-server-1
+        role: server
+      - name: bar-server-2
+        role: server
+      - name: bar-agent-0
+        role: agent

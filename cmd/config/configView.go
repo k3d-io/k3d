@@ -22,20 +22,20 @@ THE SOFTWARE.
 package config
 
 import (
-	log "github.com/sirupsen/logrus"
+	"fmt"
+
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // NewCmdConfig returns a new cobra command
-func NewCmdConfig() *cobra.Command {
+func NewCmdConfigView() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "config",
+		Use:     "view",
+		Aliases: []string{"show"},
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Infoln("Print config")
+			fmt.Printf("%+v", viper.AllSettings())
 		},
 	}
-
-	cmd.AddCommand(NewCmdConfigView())
-
 	return cmd
 }

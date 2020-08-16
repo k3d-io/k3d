@@ -116,10 +116,6 @@ func NewCmdClusterCreate() *cobra.Command {
 	/*********
 	 * Flags *
 	 *********/
-	cmd.Flags().StringP("config", "c", "", "Use a config file")
-	if err := cmd.MarkFlagFilename("config"); err != nil {
-		log.Fatalln("Failed to mark flag --config as filename")
-	}
 	cmd.Flags().String("api-port", "random", "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d cluster create --servers 3 --api-port 0.0.0.0:6550`")
 	cmd.Flags().IntP("servers", "s", 1, "Specify how many servers you want to create")
 	cmd.Flags().IntP("agents", "a", 0, "Specify how many agents you want to create")

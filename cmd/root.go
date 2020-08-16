@@ -83,6 +83,10 @@ func init() {
 
 	// add persistent flags (present to all subcommands)
 	rootCmd.PersistentFlags().StringVar(&config.CfgFile, "config", "", "Use a config file")
+	if err := rootCmd.MarkPersistentFlagFilename("config"); err != nil {
+		log.Errorln("Failed to mark flag --config as filename flag")
+		log.Fatalln(err)
+	}
 	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
 
 	// add local flags

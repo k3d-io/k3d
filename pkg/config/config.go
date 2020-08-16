@@ -31,12 +31,13 @@ import (
 
 // Config describes the toplevel k3d configuration file
 type Config struct {
-	Cluster k3d.Cluster `yaml:"cluster" json:"cluster"`
+	Clusters []*k3d.Cluster `yaml:"clusters" json:"cluster"`
 }
 
 // InitConfig initializes viper
 func InitConfig() {
-	viper.SetEnvPrefix("K3D_")
+
+	viper.SetEnvPrefix(k3d.DefaultObjectNamePrefix)
 	viper.SetConfigType("yaml")
 
 	if CfgFile != "" {
