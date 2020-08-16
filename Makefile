@@ -87,7 +87,7 @@ LINT_DIRS := $(DIRS) $(foreach dir,$(REC_DIRS),$(dir)/...)
 
 .PHONY: all build build-cross clean fmt check-fmt lint check extra-clean install-tools
 
-all: clean fmt check build
+all: clean fmt check test build
 
 ############################
 ########## Builds ##########
@@ -155,6 +155,9 @@ e2e: build-docker-dind
 	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_SKIP="$(E2E_SKIP)" E2E_RUNNER_START_TIMEOUT=$(E2E_RUNNER_START_TIMEOUT) tests/dind.sh "${K3D_IMAGE_TAG}-dind"
 
 ci-tests: fmt check e2e
+
+test:
+	$(GO) test ./...
 
 ##########################
 ########## Misc ##########

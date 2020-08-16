@@ -290,12 +290,12 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 					split := strings.Split(port, "-")
 					start, err := strconv.Atoi(split[0])
 					if err != nil {
-						log.Errorln("Failed to parse port mapping for loadbalancer '%s'", port)
+						log.Errorf("Failed to parse port mapping for loadbalancer '%s'", port)
 						return err
 					}
 					end, err := strconv.Atoi(split[1])
 					if err != nil {
-						log.Errorln("Failed to parse port mapping for loadbalancer '%s'", port)
+						log.Errorf("Failed to parse port mapping for loadbalancer '%s'", port)
 						return err
 					}
 					for i := start; i <= end; i++ {
