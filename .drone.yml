@@ -12,7 +12,6 @@ platform:
   arch: amd64
 
 steps:
-
   - name: lint
     image: golang:1.14
     commands:
@@ -31,7 +30,7 @@ steps:
         path: /var/run
     commands:
       - apk add git bash curl sudo jq make
-      - sleep 5  # give docker enough time to start
+      - sleep 5 # give docker enough time to start
       - make e2e
     when:
       event:
@@ -101,6 +100,48 @@ steps:
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
 
+  - name: release-aur
+    image: archlinux:20200705
+    settings:
+      package_name: rancher-k3d-bin
+      commit_username: Drone CI
+      commit_email: jonas@dellinger.dev
+      commit_message: "[CI] Updated to $NEW_RELEASE"
+      ssh_private_key:
+        from_secret: ssh_private_key
+    commands:
+      - ./deploy-aur.sh
+    when:
+      event:
+        - tag
+      ref:
+        exclude:
+          - "refs/tags/*rc*"
+          - "refs/tags/*beta*"
+          - "refs/tags/*alpha*"
+
+  - name: pre-release-aur
+    image: archlinux:20200705
+    settings:
+      package_name: rancher-k3d-beta-bin
+      commit_username: Drone CI
+      commit_email: jonas@dellinger.dev
+      commit_message: "[CI] Updated to $NEW_RELEASE"
+      ssh_private_key:
+        from_secret: ssh_private_key
+    commands:
+      # AUR Packages are not allowed to use - in the package version. its used to combine pkgver and pkgrel
+      - export DRONE_COMMIT_REF=${DRONE_COMMIT_REF/-/_}
+      - ./deploy-aur.sh
+    when:
+      event:
+        - tag
+      ref:
+        include:
+          - "refs/tags/*rc*"
+          - "refs/tags/*beta*"
+          - "refs/tags/*alpha*"
+
 services:
   # Starting the docker service to be used by dind
   - name: docker
@@ -128,7 +169,6 @@ platform:
   arch: amd64
 
 steps:
-
   - name: build
     image: python:3.8
     commands:
@@ -199,7 +239,6 @@ depends_on:
   - main
 
 ---
-
 kind: pipeline
 type: docker
 name: proxy_linux_arm
@@ -236,7 +275,6 @@ depends_on:
   - main
 
 ---
-
 kind: pipeline
 type: docker
 name: proxy_linux_arm64
@@ -273,7 +311,6 @@ depends_on:
   - main
 
 ---
-
 kind: pipeline
 type: docker
 name: proxy_manifest
@@ -349,7 +386,6 @@ depends_on:
   - main
 
 ---
-
 kind: pipeline
 type: docker
 name: tools_linux_arm
@@ -383,7 +419,6 @@ trigger:
 depends_on:
   - main
 ---
-
 kind: pipeline
 type: docker
 name: tools_linux_arm64
@@ -417,7 +452,6 @@ trigger:
 depends_on:
   - main
 ---
-
 kind: pipeline
 type: docker
 name: tools_manifest
