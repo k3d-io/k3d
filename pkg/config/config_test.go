@@ -32,39 +32,16 @@ import (
 func TestReadConfig(t *testing.T) {
 
 	expectedConfig := Config{
-		Clusters: []*k3d.Cluster{
-			{
-				Name: "foo",
-				Nodes: []*k3d.Node{
-					{
-						Name: "foo-server-0",
-						Role: k3d.ServerRole,
-					},
-					{
-						Name: "foo-agent-0",
-						Role: k3d.AgentRole,
-					},
+		Cluster: &k3d.Cluster{
+			Name: "foo",
+			Nodes: []*k3d.Node{
+				{
+					Name: "foo-server-0",
+					Role: k3d.ServerRole,
 				},
-			},
-			{
-				Name: "bar",
-				Nodes: []*k3d.Node{
-					{
-						Name: "bar-server-0",
-						Role: k3d.ServerRole,
-					},
-					{
-						Name: "bar-server-1",
-						Role: k3d.ServerRole,
-					},
-					{
-						Name: "bar-server-2",
-						Role: k3d.ServerRole,
-					},
-					{
-						Name: "bar-agent-0",
-						Role: k3d.AgentRole,
-					},
+				{
+					Name: "foo-agent-0",
+					Role: k3d.AgentRole,
 				},
 			},
 		},

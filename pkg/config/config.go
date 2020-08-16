@@ -31,7 +31,7 @@ import (
 
 // Config describes the toplevel k3d configuration file
 type Config struct {
-	Clusters []*k3d.Cluster `yaml:"clusters" json:"cluster"`
+	Cluster *k3d.Cluster `yaml:"cluster" json:"cluster"`
 }
 
 // InitConfig initializes viper
