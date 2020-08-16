@@ -44,6 +44,8 @@ var CfgFile string
 // InitConfig initializes viper
 func InitConfig() {
 
+	CurrentConfig := &Config{}
+
 	viper.SetEnvPrefix(k3d.DefaultObjectNamePrefix)
 	viper.SetConfigType("yaml")
 
@@ -63,8 +65,6 @@ func InitConfig() {
 		log.Debugf("Not using config file: %+v", err)
 		log.Debugln(err)
 	} else {
-
-		CurrentConfig := &Config{}
 
 		if err := viper.Unmarshal(&CurrentConfig); err != nil {
 			log.Warnln("Failed to unmarshal config")

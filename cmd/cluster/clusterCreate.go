@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	cliutil "github.com/rancher/k3d/v3/cmd/util"
 	"github.com/rancher/k3d/v3/pkg/cluster"
@@ -63,6 +64,8 @@ func NewCmdClusterCreate() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			// parse args and flags
 			cluster := parseCreateClusterCmd(cmd, args, createClusterOpts)
+
+			fmt.Printf("==========Config==========\n%+v\n==========================\n", viper.AllSettings())
 
 			// check if a cluster with that name exists already
 			if _, err := k3dCluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, cluster); err == nil {
@@ -121,11 +124,17 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().IntP("agents", "a", 0, "Specify how many agents you want to create")
 	cmd.Flags().StringP("image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
 	cmd.Flags().String("network", "", "Join an existing network")
+	if err := viper.BindPFlag("cluster.network.name", cmd.Flags().Lookup("network")); err != nil {
+		log.Fatalln(err)
+	}
 	cmd.Flags().String("token", "", "Specify a cluster token. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v /my/path@agent[0,1] -v /tmp/test:/tmp/other@server[0]`")
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent[0] -p 8081@agent[1]`")
 	cmd.Flags().BoolVar(&createClusterOpts.WaitForServer, "wait", true, "Wait for the server(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
 	cmd.Flags().DurationVar(&createClusterOpts.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
+	if err := viper.BindPFlag("clusterCreateOpts.timeout", cmd.Flags().Lookup("timeout")); err != nil {
+		log.Fatalln(err)
+	}
 	cmd.Flags().BoolVar(&updateDefaultKubeconfig, "update-default-kubeconfig", true, "Directly update the default kubeconfig with the new cluster's context")
 	cmd.Flags().BoolVar(&updateCurrentContext, "switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (requires --update-default-kubeconfig)")
 	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadBalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
