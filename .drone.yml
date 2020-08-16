@@ -109,6 +109,8 @@ steps:
       commit_message: "[CI] Updated to $NEW_RELEASE"
       ssh_private_key:
         from_secret: ssh_private_key
+    depends_on:
+      - release
     commands:
       - ./deploy-aur.sh
     when:
@@ -129,6 +131,8 @@ steps:
       commit_message: "[CI] Updated to $NEW_RELEASE"
       ssh_private_key:
         from_secret: ssh_private_key
+    depends_on:
+      - pre-release
     commands:
       # AUR Packages are not allowed to use - in the package version. its used to combine pkgver and pkgrel
       - export DRONE_COMMIT_REF=${DRONE_COMMIT_REF/-/_}
