@@ -97,6 +97,44 @@ func TestReadClusterConfig(t *testing.T) {
 
 }
 
+func TestReadClusterListConfig(t *testing.T) {
+
+	expectedConfig := ClusterListConfig{
+		Kind: "ClusterList",
+		Clusters: []k3d.Cluster{
+			{
+				Name: "foo",
+				Nodes: []*k3d.Node{
+					{
+						Name: "foo-node-0",
+						Role: k3d.ServerRole,
+					},
+				},
+			},
+			{
+				Name: "bar",
+				Nodes: []*k3d.Node{
+					{
+						Name: "bar-node-0",
+						Role: k3d.ServerRole,
+					},
+				},
+			},
+		},
+	}
+
+	CfgFile = "./config_test_cluster_list.yaml"
+
+	InitConfig()
+
+	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n%+v\n=================================\n", CurrentConfig, viper.AllSettings())
+
+	if diff := deep.Equal(CurrentConfig, &expectedConfig); diff != nil {
+		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", CurrentConfig, expectedConfig, diff)
+	}
+
+}
+
 func TestReadUnknownConfig(t *testing.T) {
 
 	CfgFile = "./config_test_unknown.yaml"

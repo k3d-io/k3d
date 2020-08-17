@@ -58,6 +58,12 @@ type ClusterConfig struct {
 	Cluster k3d.Cluster `mapstructure:",squash" yaml:",inline"`
 }
 
+// ClusterListConfig describes a list of clusters
+type ClusterListConfig struct {
+	Kind     string        `mapstructure:"kind" yaml:"kind" json:"kind,omitempty"`
+	Clusters []k3d.Cluster `mapstructure:"clusters" yaml:"clusters"`
+}
+
 // CurrentConfig represents the currently active config
 var CurrentConfig interface{}
 
@@ -95,6 +101,8 @@ func InitConfig() {
 			CurrentConfig = &SimpleConfig{}
 		case "cluster":
 			CurrentConfig = &ClusterConfig{}
+		case "clusterlist":
+			CurrentConfig = &ClusterListConfig{}
 		case "":
 			log.Fatalln("Missing `kind` in config file")
 		default:
