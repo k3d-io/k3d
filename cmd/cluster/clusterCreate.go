@@ -52,7 +52,7 @@ Every cluster will consist of one or more containers:
 // NewCmdClusterCreate returns a new cobra command
 func NewCmdClusterCreate() *cobra.Command {
 
-	createClusterOpts := &k3d.ClusterCreateOpts{}
+	clusterCreateOpts := &k3d.ClusterCreateOpts{}
 	var updateDefaultKubeconfig, updateCurrentContext bool
 
 	// create new command
@@ -63,7 +63,7 @@ func NewCmdClusterCreate() *cobra.Command {
 		Args:  cobra.RangeArgs(0, 1), // exactly one cluster name can be set (default: k3d.DefaultClusterName)
 		Run: func(cmd *cobra.Command, args []string) {
 			// parse args and flags
-			cluster := parseCreateClusterCmd(cmd, args, createClusterOpts)
+			cluster := parseCreateClusterCmd(cmd, args, clusterCreateOpts)
 
 			fmt.Printf("==========Config==========\n%+v\n==========================\n", viper.AllSettings())
 
@@ -80,7 +80,7 @@ func NewCmdClusterCreate() *cobra.Command {
 			// create cluster
 			if updateDefaultKubeconfig {
 				log.Debugln("'--update-default-kubeconfig set: enabling wait-for-server")
-				cluster.CreateClusterOpts.WaitForServer = true
+				cluster.ClusterCreateOpts.WaitForServer = true
 			}
 			if err := k3dCluster.ClusterCreate(cmd.Context(), runtimes.SelectedRuntime, cluster); err != nil {
 				// rollback if creation failed
@@ -130,17 +130,17 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().String("token", "", "Specify a cluster token. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v /my/path@agent[0,1] -v /tmp/test:/tmp/other@server[0]`")
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent[0] -p 8081@agent[1]`")
-	cmd.Flags().BoolVar(&createClusterOpts.WaitForServer, "wait", true, "Wait for the server(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
-	cmd.Flags().DurationVar(&createClusterOpts.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
+	cmd.Flags().BoolVar(&clusterCreateOpts.WaitForServer, "wait", true, "Wait for the server(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
+	cmd.Flags().DurationVar(&clusterCreateOpts.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
 	if err := viper.BindPFlag("clusterCreateOpts.timeout", cmd.Flags().Lookup("timeout")); err != nil {
 		log.Fatalln(err)
 	}
 	cmd.Flags().BoolVar(&updateDefaultKubeconfig, "update-default-kubeconfig", true, "Directly update the default kubeconfig with the new cluster's context")
 	cmd.Flags().BoolVar(&updateCurrentContext, "switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (requires --update-default-kubeconfig)")
-	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadBalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
+	cmd.Flags().BoolVar(&clusterCreateOpts.DisableLoadBalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
 
 	/* Image Importing */
-	cmd.Flags().BoolVar(&createClusterOpts.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
+	cmd.Flags().BoolVar(&clusterCreateOpts.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
 
 	/* Multi Server Configuration */
 
@@ -157,8 +157,8 @@ func NewCmdClusterCreate() *cobra.Command {
 	*/
 
 	/* k3s */
-	cmd.Flags().StringArrayVar(&createClusterOpts.K3sServerArgs, "k3s-server-arg", nil, "Additional args passed to the `k3s server` command on server nodes (new flag per arg)")
-	cmd.Flags().StringArrayVar(&createClusterOpts.K3sAgentArgs, "k3s-agent-arg", nil, "Additional args passed to the `k3s agent` command on agent nodes (new flag per arg)")
+	cmd.Flags().StringArrayVar(&clusterCreateOpts.K3sServerArgs, "k3s-server-arg", nil, "Additional args passed to the `k3s server` command on server nodes (new flag per arg)")
+	cmd.Flags().StringArrayVar(&clusterCreateOpts.K3sAgentArgs, "k3s-agent-arg", nil, "Additional args passed to the `k3s agent` command on agent nodes (new flag per arg)")
 
 	/* Subcommands */
 
@@ -167,7 +167,7 @@ func NewCmdClusterCreate() *cobra.Command {
 }
 
 // parseCreateClusterCmd parses the command input into variables required to create a cluster
-func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts *k3d.ClusterCreateOpts) *k3d.Cluster {
+func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts *k3d.ClusterCreateOpts) *k3d.Cluster {
 
 	/********************************
 	 * Parse and validate arguments *
@@ -228,7 +228,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 	}
 
 	// --timeout
-	if cmd.Flags().Changed("timeout") && createClusterOpts.Timeout <= 0*time.Second {
+	if cmd.Flags().Changed("timeout") && clusterCreateOpts.Timeout <= 0*time.Second {
 		log.Fatalln("--timeout DURATION must be >= 1s")
 	}
 
@@ -330,7 +330,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		Name:              clustername,
 		Network:           network,
 		Token:             token,
-		CreateClusterOpts: createClusterOpts,
+		ClusterCreateOpts: clusterCreateOpts,
 		ExposeAPI:         exposeAPI,
 	}
 
@@ -338,7 +338,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 	cluster.Nodes = []*k3d.Node{}
 
 	// ServerLoadBalancer
-	if !createClusterOpts.DisableLoadBalancer {
+	if !clusterCreateOpts.DisableLoadBalancer {
 		cluster.ServerLoadBalancer = &k3d.Node{
 			Role: k3d.LoadBalancerRole,
 		}
@@ -352,7 +352,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		node := k3d.Node{
 			Role:       k3d.ServerRole,
 			Image:      image,
-			Args:       createClusterOpts.K3sServerArgs,
+			Args:       clusterCreateOpts.K3sServerArgs,
 			ServerOpts: k3d.ServerOpts{},
 		}
 
@@ -377,7 +377,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		node := k3d.Node{
 			Role:  k3d.AgentRole,
 			Image: image,
-			Args:  createClusterOpts.K3sAgentArgs,
+			Args:  clusterCreateOpts.K3sAgentArgs,
 		}
 
 		cluster.Nodes = append(cluster.Nodes, &node)
@@ -397,7 +397,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 	// append ports
 	nodeCount := serverCount + agentCount
 	nodeList := cluster.Nodes
-	if !createClusterOpts.DisableLoadBalancer {
+	if !clusterCreateOpts.DisableLoadBalancer {
 		nodeCount++
 		nodeList = append(nodeList, cluster.ServerLoadBalancer)
 	}

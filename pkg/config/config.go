@@ -22,6 +22,8 @@ THE SOFTWARE.
 package config
 
 import (
+	"strings"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/mitchellh/go-homedir"
@@ -47,6 +49,8 @@ func InitConfig() {
 	CurrentConfig := &Config{}
 
 	viper.SetEnvPrefix(k3d.DefaultObjectNamePrefix)
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	viper.AutomaticEnv()
 	viper.SetConfigType("yaml")
 
 	if CfgFile != "" {
@@ -59,7 +63,6 @@ func InitConfig() {
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".k3d")
 	}
-	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Debugf("Not using config file: %+v", err)
@@ -71,6 +74,6 @@ func InitConfig() {
 			log.Warnln(err)
 		}
 
-		log.Infof("Config: %s", viper.ConfigFileUsed())
+		log.Infof("Using Config: %s", viper.ConfigFileUsed())
 	}
 }

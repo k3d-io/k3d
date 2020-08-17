@@ -175,7 +175,7 @@ type Cluster struct {
 	Nodes              []*Node            `yaml:"nodes" json:"nodes,omitempty"`
 	InitNode           *Node              // init server node
 	ExternalDatastore  ExternalDatastore  `yaml:"externalDatastore" json:"externalDatastore,omitempty"`
-	CreateClusterOpts  *ClusterCreateOpts `yaml:"options" json:"options,omitempty"`
+	ClusterCreateOpts  *ClusterCreateOpts `yaml:"options" json:"options,omitempty"`
 	ExposeAPI          ExposeAPI          `yaml:"exposeAPI" json:"exposeAPI,omitempty"`
 	ServerLoadBalancer *Node              `yaml:"serverLoadbalancer" json:"serverLoadBalancer,omitempty"`
 	ImageVolume        string             `yaml:"imageVolume" json:"imageVolume,omitempty"`
