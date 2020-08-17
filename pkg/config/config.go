@@ -73,45 +73,65 @@ var CfgFile string
 // InitConfig initializes viper
 func InitConfig() {
 
+	configFile := viper.New()
+	configFile.SetConfigType("yaml")
+
+	log.Debugf("Config at the start: %+v", viper.AllSettings())
+
 	viper.SetEnvPrefix(k3d.DefaultObjectNamePrefix)
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
-	viper.SetConfigType("yaml")
 
+	// lookup config file
 	if CfgFile != "" {
-		viper.SetConfigFile(CfgFile)
+		configFile.SetConfigFile(CfgFile)
 	} else {
 		home, err := homedir.Dir()
 		if err != nil {
 			log.Fatalln(err)
 		}
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".k3d")
+		configFile.AddConfigPath(home)
+		configFile.SetConfigName(".k3d")
 	}
-	if err := viper.ReadInConfig(); err != nil {
+
+	// try to read config into memory (viper map structure)
+	if err := configFile.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			log.Debugln("No config file found!")
 		} else { // config file found but some other error happened
-			log.Debugf("Not using config file: %+v", viper.ConfigFileUsed())
+			log.Debugf("Not using config file: %+v", configFile.ConfigFileUsed())
 			log.Debugln(err)
 		}
-	} else {
-		switch strings.ToLower(viper.GetString("kind")) {
-		case "simple":
-			CurrentConfig = &SimpleConfig{}
-		case "cluster":
-			CurrentConfig = &ClusterConfig{}
-		case "clusterlist":
-			CurrentConfig = &ClusterListConfig{}
-		case "":
-			log.Fatalln("Missing `kind` in config file")
-		default:
-			log.Fatalf("Unknown `kind` '%s' in config file", viper.GetString("kind"))
-		}
-		if err := viper.Unmarshal(&CurrentConfig); err != nil {
-			log.Warnln("Failed to unmarshal config")
-			log.Warnln(err)
-		}
-		log.Infof("Using Config: %s", viper.ConfigFileUsed())
+		return
 	}
+
+	// determine config kind
+	switch strings.ToLower(configFile.GetString("kind")) {
+	case "simple":
+		CurrentConfig = &SimpleConfig{}
+	case "cluster":
+		CurrentConfig = &ClusterConfig{}
+	case "clusterlist":
+		CurrentConfig = &ClusterListConfig{}
+	case "":
+		log.Fatalln("Missing `kind` in config file")
+	default:
+		log.Fatalf("Unknown `kind` '%s' in config file", configFile.GetString("kind"))
+	}
+
+	log.Debugf("Config before merging: %+v", viper.AllSettings())
+	log.Debugf("File Config before merging: %+v", configFile.AllSettings())
+	if err := viper.MergeConfigMap(configFile.AllSettings()); err != nil {
+		log.Errorln(err)
+	}
+	log.Debugf("Config after merging: %+v", viper.AllSettings())
+	log.Debugf("File Config after merging: %+v", configFile.AllSettings())
+
+	// parse config to struct
+	if err := configFile.Unmarshal(&CurrentConfig); err != nil {
+		log.Warnln("Failed to unmarshal config")
+		log.Warnln(err)
+	}
+	log.Infof("Using Config: %s", configFile.ConfigFileUsed())
+
 }
