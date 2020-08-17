@@ -26,47 +26,88 @@ import (
 
 	"github.com/go-test/deep"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestReadConfig(t *testing.T) {
+func TestReadSimpleConfig(t *testing.T) {
 
-	expectedConfig := Config{
-		Cluster: &k3d.Cluster{
+	expectedConfig := SimpleConfig{
+		Kind:    "simple",
+		Servers: 1,
+		Agents:  2,
+		ExposeAPI: k3d.ExposeAPI{
+			HostIP: "0.0.0.0",
+			Port:   "6443",
+		},
+		Image: "rancher/k3s:latest",
+		Volumes: []string{
+			"/my/path:/some/path",
+		},
+		Ports: []string{
+			"80:80@loadbalancer",
+			"0.0.0.0:443:443@loadbalancer",
+		},
+		Options: k3d.ClusterCreateOpts{
+			WaitForServer: true,
+		},
+		KubeconfigOpts: ClusterCreateKubeconfigOptions{
+			UpdateDefaultKubeconfig: true,
+			SwitchCurrentContext:    true,
+		},
+	}
+
+	CfgFile = "./config_test_simple.yaml"
+
+	InitConfig()
+
+	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n%+v\n=================================\n", CurrentConfig, viper.AllSettings())
+
+	if diff := deep.Equal(CurrentConfig, &expectedConfig); diff != nil {
+		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", CurrentConfig, expectedConfig, diff)
+	}
+
+}
+
+func TestReadClusterConfig(t *testing.T) {
+
+	expectedConfig := ClusterConfig{
+		Kind: "cluster",
+		Cluster: k3d.Cluster{
 			Name: "foo",
 			Nodes: []*k3d.Node{
 				{
-					Name: "foo-server-0",
+					Name: "foo-node-0",
 					Role: k3d.ServerRole,
-				},
-				{
-					Name: "foo-agent-0",
-					Role: k3d.AgentRole,
 				},
 			},
 		},
-		ClusterCreateOpts: &k3d.ClusterCreateOpts{
-			WaitForServer: true,
-		},
 	}
 
-	viper.SetConfigFile("./config_test.yaml")
-	viper.SetConfigType("yaml")
+	CfgFile = "./config_test_cluster.yaml"
 
-	if err := viper.ReadInConfig(); err != nil {
-		t.Error(err)
+	InitConfig()
+
+	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n%+v\n=================================\n", CurrentConfig, viper.AllSettings())
+
+	if diff := deep.Equal(CurrentConfig, &expectedConfig); diff != nil {
+		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", CurrentConfig, expectedConfig, diff)
 	}
 
-	readConfig := &Config{}
+}
 
-	if err := viper.Unmarshal(&readConfig); err != nil {
-		t.Error(err)
-	}
+func TestReadUnknownConfig(t *testing.T) {
 
-	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", readConfig)
+	CfgFile = "./config_test_unknown.yaml"
 
-	if diff := deep.Equal(*readConfig, expectedConfig); diff != nil {
-		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", readConfig, expectedConfig, diff)
-	}
+	// catch fatal exit
+	defer func() { log.StandardLogger().ExitFunc = nil }()
+	var fatal bool
+	log.StandardLogger().ExitFunc = func(int) { fatal = true }
+
+	InitConfig()
+
+	assert.Equal(t, true, fatal)
 
 }

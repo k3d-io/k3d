@@ -1,0 +1,5 @@
+kind: cluster
+name: foo
+nodes:
+  - name: foo-node-0
+    role: server

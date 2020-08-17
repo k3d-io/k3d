@@ -121,15 +121,30 @@ func NewCmdClusterCreate() *cobra.Command {
 	 *********/
 	cmd.Flags().String("api-port", "random", "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d cluster create --servers 3 --api-port 0.0.0.0:6550`")
 	cmd.Flags().IntP("servers", "s", 1, "Specify how many servers you want to create")
+	if err := viper.BindPFlag("servers", cmd.Flags().Lookup("servers")); err != nil {
+		log.Fatalln(err)
+	}
 	cmd.Flags().IntP("agents", "a", 0, "Specify how many agents you want to create")
+	if err := viper.BindPFlag("agents", cmd.Flags().Lookup("agents")); err != nil {
+		log.Fatalln(err)
+	}
 	cmd.Flags().StringP("image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
+	if err := viper.BindPFlag("image", cmd.Flags().Lookup("image")); err != nil {
+		log.Fatalln(err)
+	}
 	cmd.Flags().String("network", "", "Join an existing network")
-	if err := viper.BindPFlag("cluster.network.name", cmd.Flags().Lookup("network")); err != nil {
+	if err := viper.BindPFlag("network", cmd.Flags().Lookup("network")); err != nil {
 		log.Fatalln(err)
 	}
 	cmd.Flags().String("token", "", "Specify a cluster token. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v /my/path@agent[0,1] -v /tmp/test:/tmp/other@server[0]`")
+	if err := viper.BindPFlag("volumes", cmd.Flags().Lookup("volume")); err != nil {
+		log.Fatalln(err)
+	}
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent[0] -p 8081@agent[1]`")
+	if err := viper.BindPFlag("ports", cmd.Flags().Lookup("port")); err != nil {
+		log.Fatalln(err)
+	}
 	cmd.Flags().BoolVar(&clusterCreateOpts.WaitForServer, "wait", true, "Wait for the server(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
 	cmd.Flags().DurationVar(&clusterCreateOpts.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
 	if err := viper.BindPFlag("clusterCreateOpts.timeout", cmd.Flags().Lookup("timeout")); err != nil {

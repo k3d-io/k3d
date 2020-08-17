@@ -31,22 +31,41 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Config describes the toplevel k3d configuration file
-type Config struct {
-	Cluster           *k3d.Cluster           `yaml:"cluster" json:"cluster"`
-	ClusterCreateOpts *k3d.ClusterCreateOpts `yaml:"clusterCreateOpts" json:"clusterCreateOpts"`
+// ClusterCreateKubeconfigOptions describes the set of options referring to the kubeconfig during cluster creatio
+type ClusterCreateKubeconfigOptions struct {
+	UpdateDefaultKubeconfig bool `mapstructure:"updateDefaultKubeconfig" yaml:"updateDefaultKubeconfig" json:"udpateDefaultKubeconfig,omitempty"` // default: true
+	SwitchCurrentContext    bool `mapstructure:"switchCurrentContext" yaml:"switchCurrentContext" json:"switchCurrentContext,omitempty"`          // default: true
+}
+
+// SimpleConfig describes the toplevel k3d configuration file
+type SimpleConfig struct {
+	Kind           string                         `mapstructure:"kind" yaml:"kind" json:"kind,omitempty"`
+	Servers        int                            `mapstructure:"servers" yaml:"servers" json:"servers,omitempty"` // default 1
+	Agents         int                            `mapstructure:"agents" yaml:"agents" json:"agents,omitempty"`    // default 0
+	ExposeAPI      k3d.ExposeAPI                  `mapstructure:"exposeAPI" yaml:"exposeAPI" json:"exposeAPI,omitempty"`
+	Image          string                         `mapstructure:"image" yaml:"image" json:"image,omitempty"`
+	Network        string                         `mapstructure:"network" yaml:"network" json:"network,omitempty"`
+	ClusterToken   string                         `mapstructure:"clusterToken" yaml:"clusterToken" json:"clusterToken,omitempty"` // default: auto-generated
+	Volumes        []string                       `mapstructure:"volumes" yaml:"volumes" json:"volumes,omitempty"`
+	Ports          []string                       `mapstructure:"ports" yaml:"ports" json:"ports,omitempty"`
+	Options        k3d.ClusterCreateOpts          `mapstructure:"options" yaml:"options" json:"options,omitempty"`
+	KubeconfigOpts ClusterCreateKubeconfigOptions `mapstructure:"kubeconfig" yaml:"kubeconfig" json:"kubeconfig,omitempty"`
+}
+
+// ClusterConfig describes a single cluster config
+type ClusterConfig struct {
+	Kind    string      `mapstructure:"kind" yaml:"kind" json:"kind,omitempty"`
+	Cluster k3d.Cluster `mapstructure:",squash" yaml:",inline"`
 }
 
 // CurrentConfig represents the currently active config
-var CurrentConfig *Config
+var CurrentConfig interface{}
 
 // CfgFile is the globally set config file
 var CfgFile string
 
 // InitConfig initializes viper
 func InitConfig() {
-
-	CurrentConfig := &Config{}
 
 	viper.SetEnvPrefix(k3d.DefaultObjectNamePrefix)
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
@@ -63,7 +82,6 @@ func InitConfig() {
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".k3d")
 	}
-
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			log.Debugln("No config file found!")
@@ -72,12 +90,20 @@ func InitConfig() {
 			log.Debugln(err)
 		}
 	} else {
-
+		switch strings.ToLower(viper.GetString("kind")) {
+		case "simple":
+			CurrentConfig = &SimpleConfig{}
+		case "cluster":
+			CurrentConfig = &ClusterConfig{}
+		case "":
+			log.Fatalln("Missing `kind` in config file")
+		default:
+			log.Fatalf("Unknown `kind` '%s' in config file", viper.GetString("kind"))
+		}
 		if err := viper.Unmarshal(&CurrentConfig); err != nil {
 			log.Warnln("Failed to unmarshal config")
 			log.Warnln(err)
 		}
-
 		log.Infof("Using Config: %s", viper.ConfigFileUsed())
 	}
 }

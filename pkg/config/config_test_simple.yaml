@@ -1,0 +1,17 @@
+kind: simple
+servers: 1
+agents: 2
+exposeAPI:
+  hostIP: "0.0.0.0"
+  port: "6443"
+image: rancher/k3s:latest
+volumes:
+  - "/my/path:/some/path"
+ports:
+  - 80:80@loadbalancer
+  - 0.0.0.0:443:443@loadbalancer
+options:
+  waitForServer: true
+kubeconfig:
+  updateDefaultKubeconfig: true
+  switchCurrentContext: true
