@@ -65,8 +65,12 @@ func InitConfig() {
 	}
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Debugf("Not using config file: %+v", err)
-		log.Debugln(err)
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			log.Debugln("No config file found!")
+		} else { // config file found but some other error happened
+			log.Debugf("Not using config file: %+v", viper.ConfigFileUsed())
+			log.Debugln(err)
+		}
 	} else {
 
 		if err := viper.Unmarshal(&CurrentConfig); err != nil {
