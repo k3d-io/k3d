@@ -157,12 +157,17 @@ func printVersion() {
 	fmt.Printf("k3s version %s (default)\n", version.K3sVersion)
 }
 
+func generateFishCompletion(writer io.Writer) error {
+	return rootCmd.GenFishCompletion(writer, true)
+}
+
 // Completion
 var completionFunctions = map[string]func(io.Writer) error{
 	"bash":       rootCmd.GenBashCompletion,
 	"zsh":        rootCmd.GenZshCompletion,
 	"psh":        rootCmd.GenPowerShellCompletion,
 	"powershell": rootCmd.GenPowerShellCompletion,
+	"fish":       generateFishCompletion,
 }
 
 // NewCmdCompletion creates a new completion command
@@ -170,8 +175,8 @@ func NewCmdCompletion() *cobra.Command {
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:   "completion SHELL",
-		Short: "Generate completion scripts for [bash, zsh, powershell | psh]",
-		Long:  `Generate completion scripts for [bash, zsh, powershell | psh]`,
+		Short: "Generate completion scripts for [bash, zsh, fish, powershell | psh]",
+		Long:  `Generate completion scripts for [bash, zsh, fish, powershell | psh]`,
 		Args:  cobra.ExactArgs(1), // TODO: NewCmdCompletion: add support for 0 args = auto detection
 		Run: func(cmd *cobra.Command, args []string) {
 			if f, ok := completionFunctions[args[0]]; ok {
