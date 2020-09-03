@@ -62,10 +62,10 @@ func TestReadSimpleConfig(t *testing.T) {
 
 	InitConfig()
 
-	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n%+v\n=================================\n", CurrentConfig, viper.AllSettings())
+	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n%+v\n=================================\n", FileConfig, viper.AllSettings())
 
-	if diff := deep.Equal(CurrentConfig, &expectedConfig); diff != nil {
-		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", CurrentConfig, expectedConfig, diff)
+	if diff := deep.Equal(FileConfig, &expectedConfig); diff != nil {
+		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", FileConfig, expectedConfig, diff)
 	}
 
 }
@@ -89,10 +89,10 @@ func TestReadClusterConfig(t *testing.T) {
 
 	InitConfig()
 
-	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n%+v\n=================================\n", CurrentConfig, viper.AllSettings())
+	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n%+v\n=================================\n", FileConfig, viper.AllSettings())
 
-	if diff := deep.Equal(CurrentConfig, &expectedConfig); diff != nil {
-		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", CurrentConfig, expectedConfig, diff)
+	if diff := deep.Equal(FileConfig, &expectedConfig); diff != nil {
+		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", FileConfig, expectedConfig, diff)
 	}
 
 }
@@ -127,10 +127,10 @@ func TestReadClusterListConfig(t *testing.T) {
 
 	InitConfig()
 
-	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n%+v\n=================================\n", CurrentConfig, viper.AllSettings())
+	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n%+v\n=================================\n", FileConfig, viper.AllSettings())
 
-	if diff := deep.Equal(CurrentConfig, &expectedConfig); diff != nil {
-		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", CurrentConfig, expectedConfig, diff)
+	if diff := deep.Equal(FileConfig, &expectedConfig); diff != nil {
+		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", FileConfig, expectedConfig, diff)
 	}
 
 }

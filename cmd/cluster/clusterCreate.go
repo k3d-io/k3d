@@ -34,6 +34,7 @@ import (
 	cliutil "github.com/rancher/k3d/v3/cmd/util"
 	"github.com/rancher/k3d/v3/pkg/cluster"
 	k3dCluster "github.com/rancher/k3d/v3/pkg/cluster"
+	"github.com/rancher/k3d/v3/pkg/config"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 	"github.com/rancher/k3d/v3/version"
@@ -62,12 +63,6 @@ func NewCmdClusterCreate() *cobra.Command {
 		Long:  clusterCreateDescription,
 		Args:  cobra.RangeArgs(0, 1), // exactly one cluster name can be set (default: k3d.DefaultClusterName)
 		Run: func(cmd *cobra.Command, args []string) {
-
-			// bind flag values to viper config keys
-			if err := bindConfigFlags(cmd); err != nil {
-				log.Errorln("Failed to bind flags to config values")
-				log.Fatalln(err)
-			}
 
 			// parse args and flags
 			cluster := parseCreateClusterCmd(cmd, args, clusterCreateOpts)
@@ -167,38 +162,15 @@ func NewCmdClusterCreate() *cobra.Command {
 	return cmd
 }
 
-// bindConfigFlags binds flag values to the viper config keys
-func bindConfigFlags(cmd *cobra.Command) error {
-	if err := viper.BindPFlag("servers", cmd.Flags().Lookup("servers")); err != nil {
-		return err
-	}
-	if err := viper.BindPFlag("agents", cmd.Flags().Lookup("agents")); err != nil {
-		return err
-	}
-	if err := viper.BindPFlag("image", cmd.Flags().Lookup("image")); err != nil {
-		return err
-	}
-	if err := viper.BindPFlag("network", cmd.Flags().Lookup("network")); err != nil {
-		return err
-	}
-	if err := viper.BindPFlag("volumes", cmd.Flags().Lookup("volume")); err != nil {
-		return err
-	}
-	if err := viper.BindPFlag("ports", cmd.Flags().Lookup("port")); err != nil {
-		return err
-	}
-	if err := viper.BindPFlag("clusterCreateOpts.timeout", cmd.Flags().Lookup("timeout")); err != nil {
-		return err
-	}
-	return nil
-}
-
 // parseCreateClusterCmd parses the command input into variables required to create a cluster
 func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts *k3d.ClusterCreateOpts) *k3d.Cluster {
 
 	/********************************
 	 * Parse and validate arguments *
 	 ********************************/
+
+	createConf := config.SimpleConfig{}
+	createConf.Options = *clusterCreateOpts
 
 	clustername := k3d.DefaultClusterName
 	if len(args) != 0 {
@@ -207,6 +179,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 	if err := cluster.CheckName(clustername); err != nil {
 		log.Fatal(err)
 	}
+	createConf.Name = clustername
 
 	/****************************
 	 * Parse and validate flags *
@@ -221,18 +194,21 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 	if image == "latest" {
 		image = version.GetK3sVersion(true)
 	}
+	createConf.Image = image
 
 	// --servers
 	serverCount, err := cmd.Flags().GetInt("servers")
 	if err != nil {
 		log.Fatalln(err)
 	}
+	createConf.Servers = serverCount
 
 	// --agents
 	agentCount, err := cmd.Flags().GetInt("agents")
 	if err != nil {
 		log.Fatalln(err)
 	}
+	createConf.Agents = agentCount
 
 	// --network
 	networkName, err := cmd.Flags().GetString("network")
@@ -247,12 +223,14 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 	if networkName == "host" && (serverCount+agentCount) > 1 {
 		log.Fatalln("Can only run a single node in hostnetwork mode")
 	}
+	createConf.Network = networkName
 
 	// --token
 	token, err := cmd.Flags().GetString("token")
 	if err != nil {
 		log.Fatalln(err)
 	}
+	createConf.ClusterToken = token
 
 	// --timeout
 	if cmd.Flags().Changed("timeout") && clusterCreateOpts.Timeout <= 0*time.Second {
@@ -281,6 +259,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 		// Note that hostNetwork mode is super inflexible and since we don't change the backend port (on the container), it will only be one hostmode cluster allowed.
 		exposeAPI.Port = k3d.DefaultAPIPort
 	}
+	createConf.ExposeAPI = exposeAPI
 
 	// --volume
 	volumeFlags, err := cmd.Flags().GetStringArray("volume")
@@ -369,6 +348,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 		cluster.ServerLoadBalancer = &k3d.Node{
 			Role: k3d.LoadBalancerRole,
 		}
+		createConf.LoadBalancerEnabled = true
 	}
 
 	/****************
