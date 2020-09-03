@@ -266,6 +266,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 	if err != nil {
 		log.Fatalln(err)
 	}
+	createConf.Volumes = volumeFlags
 
 	// volumeFilterMap will map volume mounts to applied node filters
 	volumeFilterMap := make(map[string][]string, 1)
@@ -296,6 +297,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	createConf.Ports = portFlags
+
 	portFilterMap := make(map[string][]string, 1)
 	for _, portFlag := range portFlags {
 		// split node filter from the specified volume
@@ -425,6 +429,10 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 	 * Utility Containers *
 	 **********************/
 	// ...
+
+	log.Println("========= SIMPLE CONFIG ==========")
+	log.Printf("%+v", createConf)
+	log.Println("==================================")
 
 	return cluster
 }
