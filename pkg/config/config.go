@@ -22,6 +22,7 @@ THE SOFTWARE.
 package config
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -123,6 +124,56 @@ var CLIViper *viper.Viper
 
 // CfgFile is the globally set config file
 var CfgFile string
+
+func ReadConfig(file string) (Config, error) {
+	cfgViper := viper.New()
+
+	cfgViper.SetConfigFile(file)
+
+	cfgViper.SetConfigType("yaml")
+	cfgViper.SetEnvPrefix(k3d.DefaultObjectNamePrefix)
+	cfgViper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	cfgViper.AutomaticEnv()
+
+	// try to read config into memory (viper map structure)
+	if err := cfgViper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			log.Errorln("No config file found!")
+
+			return nil, err
+		} else { // config file found but some other error happened
+			log.Debugf("Failed to read config file: %+v", cfgViper.ConfigFileUsed())
+
+			return nil, err
+		}
+	}
+
+	var cfg Config
+
+	// determine config kind
+	switch strings.ToLower(cfgViper.GetString("kind")) {
+	case "simple":
+		cfg = SimpleConfig{}
+	case "cluster":
+		cfg = ClusterConfig{}
+	case "clusterlist":
+		cfg = ClusterListConfig{}
+	case "":
+		return nil, fmt.Errorf("Missing `kind` in config file")
+	default:
+		return nil, fmt.Errorf("Unknown `kind` '%s' in config file", cfgViper.GetString("kind"))
+	}
+
+	if err := cfgViper.Unmarshal(&cfg); err != nil {
+		log.Errorln("Failed to unmarshal File config")
+
+		return nil, err
+	}
+
+	log.Infof("Using Config: %s", cfgViper.ConfigFileUsed())
+
+	return cfg, nil
+}
 
 // InitConfig initializes viper
 func InitConfig() {

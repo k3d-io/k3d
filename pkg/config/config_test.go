@@ -35,6 +35,7 @@ import (
 func TestReadSimpleConfig(t *testing.T) {
 
 	expectedConfig := SimpleConfig{
+		Name:    "test",
 		Servers: 1,
 		Agents:  2,
 		ExposeAPI: k3d.ExposeAPI{
@@ -75,14 +76,22 @@ func TestReadSimpleConfig(t *testing.T) {
 		},
 	}
 
-	CfgFile = "./config_test_simple.yaml"
+	cfgFile := "./test_assets/config_test_simple.yaml"
 
-	InitConfig()
+	cfg, err := ReadConfig(cfgFile)
+	if err != nil {
+		t.Error(err)
+	}
 
-	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n%+v\n=================================\n", FileConfig, viper.AllSettings())
+	simpleCfg, ok := cfg.(SimpleConfig)
+	if !ok {
+		t.Error("Config is not of type SimpleConfig")
+	}
 
-	if diff := deep.Equal(FileConfig, &expectedConfig); diff != nil {
-		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", FileConfig, expectedConfig, diff)
+	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", simpleCfg)
+
+	if diff := deep.Equal(simpleCfg, expectedConfig); diff != nil {
+		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", simpleCfg, expectedConfig, diff)
 	}
 
 }
@@ -101,7 +110,7 @@ func TestReadClusterConfig(t *testing.T) {
 		},
 	}
 
-	CfgFile = "./config_test_cluster.yaml"
+	CfgFile = "./test_assets/config_test_cluster.yaml"
 
 	InitConfig()
 
@@ -138,7 +147,7 @@ func TestReadClusterListConfig(t *testing.T) {
 		},
 	}
 
-	CfgFile = "./config_test_cluster_list.yaml"
+	CfgFile = "./test_assets/config_test_cluster_list.yaml"
 
 	InitConfig()
 
@@ -152,7 +161,7 @@ func TestReadClusterListConfig(t *testing.T) {
 
 func TestReadUnknownConfig(t *testing.T) {
 
-	CfgFile = "./config_test_unknown.yaml"
+	CfgFile = "./test_assets/config_test_unknown.yaml"
 
 	// catch fatal exit
 	defer func() { log.StandardLogger().ExitFunc = nil }()

@@ -24,45 +24,18 @@ package config
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	"github.com/rancher/k3d/v3/pkg/runtimes"
-	"github.com/rancher/k3d/v3/pkg/util"
-
 	k3d "github.com/rancher/k3d/v3/pkg/types"
-
-	k3dc "github.com/rancher/k3d/v3/pkg/cluster"
-	log "github.com/sirupsen/logrus"
 )
 
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration
 func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtime, simpleConfig SimpleConfig) (*ClusterConfig, error) {
 
-	// VALIDATE
-	if err := k3dc.CheckName(simpleConfig.Name); err != nil {
-		log.Errorf("Provided cluster name '%s' does not match requirements", simpleConfig.Name)
-
-		return nil, err
-	}
-
-	// TODO: image?
-
 	clusterNetwork := k3d.ClusterNetwork{}
 	if simpleConfig.Network != "" {
 		clusterNetwork.Name = simpleConfig.Network
 		clusterNetwork.External = true
-	}
-
-	// network:: edge case: hostnetwork -> only if we have a single node (to avoid port collisions)
-	if clusterNetwork.Name == "host" && (simpleConfig.Servers+simpleConfig.Agents) > 1 {
-		return nil, fmt.Errorf("Can only use hostnetwork mode with a single node (port collisions, etc.)")
-	}
-
-	// TODO: token?
-
-	if simpleConfig.Options.K3dOptions.Timeout < 0*time.Second {
-		return nil, fmt.Errorf("Timeout must be > 0s (is '%s')", simpleConfig.Options.K3dOptions.Timeout)
 	}
 
 	// -> API
@@ -71,26 +44,6 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 	if simpleConfig.ExposeAPI.HostIP == "" {
 		simpleConfig.ExposeAPI.HostIP = k3d.DefaultAPIHost
-	}
-	if simpleConfig.Network == "host" && simpleConfig.ExposeAPI.Port != k3d.DefaultAPIPort {
-		// in hostNetwork mode, we're not going to map a hostport. Here it should always use 6443.
-		// Note that hostNetwork mode is super inflexible and since we don't change the backend port (on the container), it will only be one hostmode cluster allowed.
-		log.Warnf("Cannot change the API Port when using hostnetwork mode: Falling back to default port '%s'", k3d.DefaultAPIPort)
-		simpleConfig.ExposeAPI.Port = k3d.DefaultAPIPort
-	}
-
-	// -> VOLUMES
-	for _, volumeWithNodeFilters := range simpleConfig.Volumes {
-		if err := util.ValidateVolumeMount(runtime, volumeWithNodeFilters.Volume); err != nil {
-			return nil, err
-		}
-	}
-
-	// -> PORTS
-	for _, portWithNodeFilters := range simpleConfig.Ports {
-		if err := util.ValidatePortMap(portWithNodeFilters.Port); err != nil {
-			return nil, err
-		}
 	}
 
 	// FILL CLUSTER CONFIG
