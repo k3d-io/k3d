@@ -6,12 +6,27 @@ exposeAPI:
   port: "6443"
 image: rancher/k3s:latest
 volumes:
-  - "/my/path:/some/path"
+  - volume: /my/path:/some/path
+    nodeFilters:
+      - all
 ports:
-  - 80:80@loadbalancer
-  - 0.0.0.0:443:443@loadbalancer
+  - port: 80:80
+    nodeFilters:
+      - loadbalancer
+  - port: 0.0.0.0:443:443
+    nodeFilters:
+      - loadbalancer
+
 options:
-  waitForServer: true
-kubeconfig:
-  updateDefaultKubeconfig: true
-  switchCurrentContext: true
+  k3d:
+    wait: true
+    timeout: "60s"
+    disableLoadbalancer: false
+    disableImageVolume: false
+  k3s:
+    extraServerArgs:
+      - --tls-san=127.0.0.1
+    extraAgentArgs: []
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: true

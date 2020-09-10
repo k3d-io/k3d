@@ -23,6 +23,7 @@ package config
 
 import (
 	"strings"
+	"time"
 
 	"github.com/imdario/mergo"
 	log "github.com/sirupsen/logrus"
@@ -37,54 +38,78 @@ type Config interface {
 	GetKind() string
 }
 
-// ClusterCreateKubeconfigOptions describes the set of options referring to the kubeconfig during cluster creation.
-type ClusterCreateKubeconfigOptions struct {
+type VolumeWithNodeFilters struct {
+	Volume      string   `mapstructure:"volume" yaml:"volume" json:"volume,omitempty"`
+	NodeFilters []string `mapstructure:"nodeFilters" yaml:"nodeFilters" json:"nodeFilters,omitempty"`
+}
+
+type PortWithNodeFilters struct {
+	Port        string   `mapstructure:"port" yaml:"port" json:"port,omitempty"`
+	NodeFilters []string `mapstructure:"nodeFilters" yaml:"nodeFilters" json:"nodeFilters,omitempty"`
+}
+
+// SimpleConfigOptionsKubeconfig describes the set of options referring to the kubeconfig during cluster creation.
+type SimpleConfigOptionsKubeconfig struct {
 	UpdateDefaultKubeconfig bool `mapstructure:"updateDefaultKubeconfig" yaml:"updateDefaultKubeconfig" json:"updateDefaultKubeconfig,omitempty"` // default: true
 	SwitchCurrentContext    bool `mapstructure:"switchCurrentContext" yaml:"switchCurrentContext" json:"switchCurrentContext,omitempty"`          //nolint:lll    // default: true
 }
 
+type SimpleConfigOptions struct {
+	K3dOptions        SimpleConfigOptionsK3d        `mapstructure:"k3d" yaml:"k3d"`
+	K3sOptions        SimpleConfigOptionsK3s        `mapstructure:"k3s" yaml:"k3s"`
+	KubeconfigOptions SimpleConfigOptionsKubeconfig `mapstructure:"kubeconfig" yaml:"kubeconfig"`
+}
+
+type SimpleConfigOptionsK3d struct {
+	Wait                bool          `mapstructure:"wait" yaml:"wait"`
+	Timeout             time.Duration `mapstructure:"timeout" yaml:"timeout"`
+	DisableLoadbalancer bool          `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer"`
+	DisableImageVolume  bool          `mapstructure:"disableImageVolume yaml:"disableImageVolume"`
+}
+
+type SimpleConfigOptionsK3s struct {
+	ExtraServerArgs []string `mapstructure:"extraServerArgs" yaml:"extraServerArgs"`
+	ExtraAgentArgs  []string `mapstructure:"extraAgentArgs" yaml:"extraAgentArgs"`
+}
+
 // SimpleConfig describes the toplevel k3d configuration file.
 type SimpleConfig struct {
-	Kind                string                         `mapstructure:"kind" yaml:"kind" json:"kind,omitempty"`
-	Name                string                         `mapstructure:"name" yaml:"name" json:"name,omitempty"`
-	Servers             int                            `mapstructure:"servers" yaml:"servers" json:"servers,omitempty"` //nolint:lll    // default 1
-	Agents              int                            `mapstructure:"agents" yaml:"agents" json:"agents,omitempty"`    //nolint:lll    // default 0
-	ExposeAPI           k3d.ExposeAPI                  `mapstructure:"exposeAPI" yaml:"exposeAPI" json:"exposeAPI,omitempty"`
-	Image               string                         `mapstructure:"image" yaml:"image" json:"image,omitempty"`
-	Network             string                         `mapstructure:"network" yaml:"network" json:"network,omitempty"`
-	ClusterToken        string                         `mapstructure:"clusterToken" yaml:"clusterToken" json:"clusterToken,omitempty"` // default: auto-generated
-	Volumes             []string                       `mapstructure:"volumes" yaml:"volumes" json:"volumes,omitempty"`
-	Ports               []string                       `mapstructure:"ports" yaml:"ports" json:"ports,omitempty"`
-	Options             k3d.ClusterCreateOpts          `mapstructure:"options" yaml:"options" json:"options,omitempty"`
-	KubeconfigOpts      ClusterCreateKubeconfigOptions `mapstructure:"kubeconfig" yaml:"kubeconfig" json:"kubeconfig,omitempty"`
-	LoadBalancerEnabled bool                           `mapstructure:"loadbalancerEnabled" yaml:"loadbalancerEnabled" json:"loadbalancerEnabled,omitempty"`
+	Name         string                  `mapstructure:"name" yaml:"name" json:"name,omitempty"`
+	Servers      int                     `mapstructure:"servers" yaml:"servers" json:"servers,omitempty"` //nolint:lll    // default 1
+	Agents       int                     `mapstructure:"agents" yaml:"agents" json:"agents,omitempty"`    //nolint:lll    // default 0
+	ExposeAPI    k3d.ExposeAPI           `mapstructure:"exposeAPI" yaml:"exposeAPI" json:"exposeAPI,omitempty"`
+	Image        string                  `mapstructure:"image" yaml:"image" json:"image,omitempty"`
+	Network      string                  `mapstructure:"network" yaml:"network" json:"network,omitempty"`
+	ClusterToken string                  `mapstructure:"clusterToken" yaml:"clusterToken" json:"clusterToken,omitempty"` // default: auto-generated
+	Volumes      []VolumeWithNodeFilters `mapstructure:"volumes" yaml:"volumes" json:"volumes,omitempty"`
+	Ports        []PortWithNodeFilters   `mapstructure:"ports" yaml:"ports" json:"ports,omitempty"`
+	Options      SimpleConfigOptions     `mapstructure:"options" yaml:"options" json:"options,omitempty"`
 }
 
 // GetKind implements Config.GetKind
 func (c SimpleConfig) GetKind() string {
-	return c.Kind
+	return "Simple"
 }
 
 // ClusterConfig describes a single cluster config
 type ClusterConfig struct {
-	Kind    string      `mapstructure:"kind" yaml:"kind" json:"kind,omitempty"`
-	Cluster k3d.Cluster `mapstructure:",squash" yaml:",inline"`
+	Cluster           k3d.Cluster           `mapstructure:",squash" yaml:",inline"`
+	ClusterCreateOpts k3d.ClusterCreateOpts `mapstructure:"options" yaml:"options"`
 }
 
 // GetKind implements Config.GetKind
 func (c ClusterConfig) GetKind() string {
-	return c.Kind
+	return "Cluster"
 }
 
 // ClusterListConfig describes a list of clusters
 type ClusterListConfig struct {
-	Kind     string        `mapstructure:"kind" yaml:"kind" json:"kind,omitempty"`
 	Clusters []k3d.Cluster `mapstructure:"clusters" yaml:"clusters"`
 }
 
 // GetKind implements Config.GetKind
 func (c ClusterListConfig) GetKind() string {
-	return c.Kind
+	return "ClusterList"
 }
 
 // FileConfig represents the currently active config

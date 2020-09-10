@@ -170,7 +170,11 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 	 ********************************/
 
 	createConf := config.SimpleConfig{}
-	createConf.Options = *clusterCreateOpts
+
+	createConf.Options.K3dOptions.Wait = clusterCreateOpts.WaitForServer
+	createConf.Options.K3dOptions.Timeout = clusterCreateOpts.Timeout
+	createConf.Options.K3dOptions.DisableImageVolume = clusterCreateOpts.DisableImageVolume
+	createConf.Options.K3dOptions.DisableLoadbalancer = clusterCreateOpts.DisableLoadBalancer
 
 	clustername := k3d.DefaultClusterName
 	if len(args) != 0 {
@@ -266,7 +270,6 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 	if err != nil {
 		log.Fatalln(err)
 	}
-	createConf.Volumes = volumeFlags
 
 	// volumeFilterMap will map volume mounts to applied node filters
 	volumeFilterMap := make(map[string][]string, 1)
@@ -274,12 +277,6 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 
 		// split node filter from the specified volume
 		volume, filters, err := cliutil.SplitFiltersFromFlag(volumeFlag)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// validate the specified volume mount and return it in SRC:DEST format
-		volume, err = cliutil.ValidateVolumeMount(runtimes.SelectedRuntime, volume)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -292,13 +289,18 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 		}
 	}
 
+	for volume, nodeFilters := range volumeFilterMap {
+		createConf.Volumes = append(createConf.Volumes, config.VolumeWithNodeFilters{
+			Volume:      volume,
+			NodeFilters: nodeFilters,
+		})
+	}
+
 	// --port
 	portFlags, err := cmd.Flags().GetStringArray("port")
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	createConf.Ports = portFlags
 
 	portFilterMap := make(map[string][]string, 1)
 	for _, portFlag := range portFlags {
@@ -312,20 +314,20 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 			log.Fatalln("Can only apply a Portmap to one node")
 		}
 
-		// the same portmapping can't be applied to multiple nodes
-
-		// validate the specified volume mount and return it in SRC:DEST format
-		portmap, err = cliutil.ValidatePortMap(portmap)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
 		// create new entry or append filter to existing entry
 		if _, exists := portFilterMap[portmap]; exists {
 			log.Fatalln("Same Portmapping can not be used for multiple nodes")
 		} else {
 			portFilterMap[portmap] = filters
 		}
+	}
+
+	for port, nodeFilters := range portFilterMap {
+		createConf.Ports = append(createConf.Ports, config.PortWithNodeFilters{
+			Port:        port,
+			NodeFilters: nodeFilters,
+		})
+		log.Debugf("Port: %s, Filters: %+v", port, nodeFilters)
 	}
 
 	log.Debugf("PortFilterMap: %+v", portFilterMap)
@@ -352,8 +354,8 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 		cluster.ServerLoadBalancer = &k3d.Node{
 			Role: k3d.LoadBalancerRole,
 		}
-		createConf.LoadBalancerEnabled = true
 	}
+	createConf.Options.K3dOptions.DisableLoadbalancer = clusterCreateOpts.DisableLoadBalancer
 
 	/****************
 	 * Server Nodes *

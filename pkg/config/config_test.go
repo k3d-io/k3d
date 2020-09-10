@@ -23,6 +23,7 @@ package config
 
 import (
 	"testing"
+	"time"
 
 	"github.com/go-test/deep"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
@@ -34,7 +35,6 @@ import (
 func TestReadSimpleConfig(t *testing.T) {
 
 	expectedConfig := SimpleConfig{
-		Kind:    "simple",
 		Servers: 1,
 		Agents:  2,
 		ExposeAPI: k3d.ExposeAPI{
@@ -42,19 +42,36 @@ func TestReadSimpleConfig(t *testing.T) {
 			Port:   "6443",
 		},
 		Image: "rancher/k3s:latest",
-		Volumes: []string{
-			"/my/path:/some/path",
+		Volumes: []VolumeWithNodeFilters{
+			{
+				Volume:      "/my/path:/some/path",
+				NodeFilters: []string{"all"},
+			},
 		},
-		Ports: []string{
-			"80:80@loadbalancer",
-			"0.0.0.0:443:443@loadbalancer",
+		Ports: []PortWithNodeFilters{
+			{
+				Port:        "80:80",
+				NodeFilters: []string{"loadbalancer"},
+			}, {
+				Port:        "0.0.0.0:443:443",
+				NodeFilters: []string{"loadbalancer"},
+			},
 		},
-		Options: k3d.ClusterCreateOpts{
-			WaitForServer: true,
-		},
-		KubeconfigOpts: ClusterCreateKubeconfigOptions{
-			UpdateDefaultKubeconfig: true,
-			SwitchCurrentContext:    true,
+		Options: SimpleConfigOptions{
+			K3dOptions: SimpleConfigOptionsK3d{
+				Wait:                true,
+				Timeout:             60 * time.Second,
+				DisableLoadbalancer: false,
+				DisableImageVolume:  false,
+			},
+			K3sOptions: SimpleConfigOptionsK3s{
+				ExtraServerArgs: []string{"--tls-san=127.0.0.1"},
+				ExtraAgentArgs:  []string{},
+			},
+			KubeconfigOptions: SimpleConfigOptionsKubeconfig{
+				UpdateDefaultKubeconfig: true,
+				SwitchCurrentContext:    true,
+			},
 		},
 	}
 
@@ -73,7 +90,6 @@ func TestReadSimpleConfig(t *testing.T) {
 func TestReadClusterConfig(t *testing.T) {
 
 	expectedConfig := ClusterConfig{
-		Kind: "cluster",
 		Cluster: k3d.Cluster{
 			Name: "foo",
 			Nodes: []*k3d.Node{
@@ -100,7 +116,6 @@ func TestReadClusterConfig(t *testing.T) {
 func TestReadClusterListConfig(t *testing.T) {
 
 	expectedConfig := ClusterListConfig{
-		Kind: "ClusterList",
 		Clusters: []k3d.Cluster{
 			{
 				Name: "foo",
