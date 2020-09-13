@@ -29,7 +29,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	cliutil "github.com/rancher/k3d/v3/cmd/util"
 	"github.com/rancher/k3d/v3/pkg/cluster"
@@ -65,9 +64,14 @@ func NewCmdClusterCreate() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			// parse args and flags
-			cluster := parseCreateClusterCmd(cmd, args, clusterCreateOpts)
+			createConf, cluster := parseCreateClusterCmd(cmd, args, clusterCreateOpts)
 
-			fmt.Printf("==========Config==========\n%+v\n==========================\n", viper.AllSettings())
+			fmt.Printf("==========Config==========\n%+v\n==========================\n", createConf)
+			cfg, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, createConf)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			fmt.Printf("===== Transformed Config =====\n%+v\n===== ===== =====\n", cfg)
 
 			// check if a cluster with that name exists already
 			if _, err := k3dCluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, cluster); err == nil {
@@ -163,7 +167,7 @@ func NewCmdClusterCreate() *cobra.Command {
 }
 
 // parseCreateClusterCmd parses the command input into variables required to create a cluster
-func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts *k3d.ClusterCreateOpts) *k3d.Cluster {
+func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts *k3d.ClusterCreateOpts) (config.SimpleConfig, *k3d.Cluster) {
 
 	/********************************
 	 * Parse and validate arguments *
@@ -432,9 +436,5 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, clusterCreateOpts 
 	 **********************/
 	// ...
 
-	log.Println("========= SIMPLE CONFIG ==========")
-	log.Printf("%+v", createConf)
-	log.Println("==================================")
-
-	return cluster
+	return createConf, cluster
 }
