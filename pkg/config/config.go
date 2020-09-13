@@ -65,7 +65,7 @@ type SimpleConfigOptionsK3d struct {
 	Wait                bool          `mapstructure:"wait" yaml:"wait"`
 	Timeout             time.Duration `mapstructure:"timeout" yaml:"timeout"`
 	DisableLoadbalancer bool          `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer"`
-	DisableImageVolume  bool          `mapstructure:"disableImageVolume yaml:"disableImageVolume"`
+	DisableImageVolume  bool          `mapstructure:"disableImageVolume" yaml:"disableImageVolume"`
 }
 
 type SimpleConfigOptionsK3s struct {

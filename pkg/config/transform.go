@@ -24,7 +24,9 @@ package config
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/rancher/k3d/v3/cmd/util"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 )
@@ -62,18 +64,83 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		ExposeAPI: simpleConfig.ExposeAPI,
 	}
 
-	clusterConfig := &ClusterConfig{
-		Cluster:           newCluster,
-		ClusterCreateOpts: *newCluster.ClusterCreateOpts,
-	}
-
 	// -> NODES
 	newCluster.Nodes = []*k3d.Node{}
 
-	if !clusterConfig.ClusterCreateOpts.DisableLoadBalancer {
+	if !simpleConfig.Options.K3dOptions.DisableLoadbalancer {
 		newCluster.ServerLoadBalancer = &k3d.Node{
 			Role: k3d.LoadBalancerRole,
 		}
+	}
+
+	/*************
+	 * Add Nodes *
+	 *************/
+
+	for i := 0; i < simpleConfig.Servers; i++ {
+		serverNode := k3d.Node{
+			Role:       k3d.ServerRole,
+			Image:      simpleConfig.Image,
+			Args:       simpleConfig.Options.K3sOptions.ExtraServerArgs,
+			ServerOpts: k3d.ServerOpts{},
+		}
+		newCluster.Nodes = append(newCluster.Nodes, &serverNode)
+	}
+
+	for i := 0; i < simpleConfig.Agents; i++ {
+		agentNode := k3d.Node{
+			Role:  k3d.AgentRole,
+			Image: simpleConfig.Image,
+			Args:  simpleConfig.Options.K3sOptions.ExtraAgentArgs,
+		}
+		newCluster.Nodes = append(newCluster.Nodes, &agentNode)
+	}
+
+	/****************************
+	 * Extra Node Configuration *
+	 ****************************/
+
+	// -> VOLUMES
+	nodeCount := simpleConfig.Servers + simpleConfig.Agents
+	nodeList := newCluster.Nodes
+	if !simpleConfig.Options.K3dOptions.DisableLoadbalancer {
+		nodeCount++
+		nodeList = append(nodeList, newCluster.ServerLoadBalancer)
+	}
+	for _, volumeWithNodeFilters := range simpleConfig.Volumes {
+		nodes, err := util.FilterNodes(newCluster.Nodes, volumeWithNodeFilters.NodeFilters)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, node := range nodes {
+			node.Volumes = append(node.Volumes, volumeWithNodeFilters.Volume)
+		}
+	}
+
+	// -> PORTS
+	for _, portWithNodeFilters := range simpleConfig.Ports {
+		if len(portWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
+			return nil, fmt.Errorf("Portmapping '%s' lacks a node filter, but there's more than one node", portWithNodeFilters.Port)
+		}
+
+		nodes, err := util.FilterNodes(nodeList, portWithNodeFilters.NodeFilters)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, node := range nodes {
+			node.Ports = append(node.Ports, portWithNodeFilters.Port)
+		}
+	}
+
+	/******************************
+	 * Create Full Cluster Config *
+	 ******************************/
+
+	clusterConfig := &ClusterConfig{
+		Cluster:           newCluster,
+		ClusterCreateOpts: *newCluster.ClusterCreateOpts,
 	}
 
 	return clusterConfig, nil
