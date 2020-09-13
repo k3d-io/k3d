@@ -84,6 +84,13 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			Args:       simpleConfig.Options.K3sOptions.ExtraServerArgs,
 			ServerOpts: k3d.ServerOpts{},
 		}
+
+		// first server node will be init node if we have more than one server specified but no external datastore
+		if i == 0 && simpleConfig.Servers > 1 {
+			serverNode.ServerOpts.IsInit = true
+			newCluster.InitNode = &serverNode
+		}
+
 		newCluster.Nodes = append(newCluster.Nodes, &serverNode)
 	}
 
