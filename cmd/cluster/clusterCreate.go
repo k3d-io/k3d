@@ -65,7 +65,7 @@ func NewCmdClusterCreate() *cobra.Command {
 			// parse args and flags
 			simpleConfig = parseCreateClusterCmd(cmd, args, simpleConfig)
 
-			fmt.Printf("========== Simple Config ==========\n%+v\n==========================\n", simpleConfig)
+			log.Debugf("========== Simple Config ==========\n%+v\n==========================\n", simpleConfig)
 
 			if configFile != "" {
 				configFromFile, err := config.ReadConfig(configFile)
@@ -78,12 +78,12 @@ func NewCmdClusterCreate() *cobra.Command {
 				}
 			}
 
-			fmt.Printf("========== Merged Simple Config ==========\n%+v\n==========================\n", simpleConfig)
+			log.Debugf("========== Merged Simple Config ==========\n%+v\n==========================\n", simpleConfig)
 			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *simpleConfig)
 			if err != nil {
 				log.Fatalln(err)
 			}
-			fmt.Printf("===== Cluster Config =====\n%+v\n===== ===== =====\n", clusterConfig)
+			log.Debugf("===== Cluster Config =====\n%+v\n===== ===== =====\n", clusterConfig)
 			if err := config.ValidateClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *clusterConfig); err != nil {
 				log.Fatalln("Failed Cluster Configuration Validation: ", err)
 			}
