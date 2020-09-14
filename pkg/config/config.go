@@ -26,12 +26,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/imdario/mergo"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/mitchellh/go-homedir"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
 	"github.com/spf13/viper"
+
+	k3d "github.com/rancher/k3d/v3/pkg/types"
 )
 
 // Config interface.
@@ -113,18 +112,6 @@ func (c ClusterListConfig) GetKind() string {
 	return "ClusterList"
 }
 
-// FileConfig represents the currently active config
-var FileConfig Config
-
-var CLIConfig SimpleConfig
-
-var FileViper *viper.Viper
-
-var CLIViper *viper.Viper
-
-// CfgFile is the globally set config file
-var CfgFile string
-
 func ReadConfig(file string) (Config, error) {
 	cfgViper := viper.New()
 
@@ -173,83 +160,4 @@ func ReadConfig(file string) (Config, error) {
 	log.Infof("Using Config: %s", cfgViper.ConfigFileUsed())
 
 	return cfg, nil
-}
-
-// InitConfig initializes viper
-func InitConfig() {
-
-	CLIViper = viper.GetViper()
-
-	FileViper = viper.New()
-	FileViper.SetConfigType("yaml")
-
-	log.Debugf("Config at the start: %+v", viper.AllSettings())
-
-	CLIViper.SetEnvPrefix(k3d.DefaultObjectNamePrefix)
-	CLIViper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	CLIViper.AutomaticEnv()
-
-	// lookup config file
-	if CfgFile != "" {
-		FileViper.SetConfigFile(CfgFile)
-	} else {
-		home, err := homedir.Dir()
-		if err != nil {
-			log.Fatalln(err)
-		}
-		FileViper.AddConfigPath(home)
-		FileViper.SetConfigName(".k3d")
-	}
-
-	// try to read config into memory (viper map structure)
-	if err := FileViper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			log.Debugln("No config file found!")
-		} else { // config file found but some other error happened
-			log.Debugf("Not using config file: %+v", FileViper.ConfigFileUsed())
-			log.Debugln(err)
-		}
-		return
-	}
-
-	// determine config kind
-	switch strings.ToLower(FileViper.GetString("kind")) {
-	case "simple":
-		FileConfig = &SimpleConfig{}
-	case "cluster":
-		FileConfig = &ClusterConfig{}
-	case "clusterlist":
-		FileConfig = &ClusterListConfig{}
-	case "":
-		log.Fatalln("Missing `kind` in config file")
-	default:
-		log.Fatalf("Unknown `kind` '%s' in config file", FileViper.GetString("kind"))
-	}
-
-	// parse config to struct
-	if err := CLIViper.Unmarshal(&CLIConfig); err != nil {
-		log.Warnln("Failed to unmarshal CLI config")
-		log.Warnln(err)
-	}
-
-	if err := FileViper.Unmarshal(&FileConfig); err != nil {
-		log.Warnln("Failed to unmarshal File config")
-		log.Warnln(err)
-	}
-	log.Infof("Using Config: %s", FileViper.ConfigFileUsed())
-
-}
-
-func GetMergedConfig() (Config, error) {
-	mergedConfig := FileConfig
-
-	if err := mergo.MergeWithOverwrite(mergedConfig, CLIConfig, nil); err != nil {
-		log.Errorln("Failed to merge configs")
-		return nil, err
-	}
-
-	log.Debugf("MERGED: %+v", mergedConfig)
-
-	return mergedConfig, nil
-
 }

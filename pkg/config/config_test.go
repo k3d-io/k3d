@@ -26,10 +26,8 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
+
 	k3d "github.com/rancher/k3d/v3/pkg/types"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestReadSimpleConfig(t *testing.T) {
@@ -110,14 +108,17 @@ func TestReadClusterConfig(t *testing.T) {
 		},
 	}
 
-	CfgFile = "./test_assets/config_test_cluster.yaml"
+	cfgFile := "./test_assets/config_test_cluster.yaml"
 
-	InitConfig()
+	readConfig, err := ReadConfig(cfgFile)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n%+v\n=================================\n", FileConfig, viper.AllSettings())
+	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", readConfig)
 
-	if diff := deep.Equal(FileConfig, &expectedConfig); diff != nil {
-		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", FileConfig, expectedConfig, diff)
+	if diff := deep.Equal(readConfig, expectedConfig); diff != nil {
+		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", readConfig, expectedConfig, diff)
 	}
 
 }
@@ -147,29 +148,28 @@ func TestReadClusterListConfig(t *testing.T) {
 		},
 	}
 
-	CfgFile = "./test_assets/config_test_cluster_list.yaml"
+	cfgFile := "./test_assets/config_test_cluster_list.yaml"
 
-	InitConfig()
+	readConfig, err := ReadConfig(cfgFile)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n%+v\n=================================\n", FileConfig, viper.AllSettings())
+	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", readConfig)
 
-	if diff := deep.Equal(FileConfig, &expectedConfig); diff != nil {
-		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", FileConfig, expectedConfig, diff)
+	if diff := deep.Equal(readConfig, expectedConfig); diff != nil {
+		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", readConfig, expectedConfig, diff)
 	}
 
 }
 
 func TestReadUnknownConfig(t *testing.T) {
 
-	CfgFile = "./test_assets/config_test_unknown.yaml"
+	cfgFile := "./test_assets/config_test_unknown.yaml"
 
-	// catch fatal exit
-	defer func() { log.StandardLogger().ExitFunc = nil }()
-	var fatal bool
-	log.StandardLogger().ExitFunc = func(int) { fatal = true }
-
-	InitConfig()
-
-	assert.Equal(t, true, fatal)
+	_, err := ReadConfig(cfgFile)
+	if err == nil {
+		t.Fail()
+	}
 
 }
