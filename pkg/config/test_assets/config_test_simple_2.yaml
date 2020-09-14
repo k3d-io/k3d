@@ -1,0 +1,3 @@
+kind: simple
+name: supertest
+agents: 8

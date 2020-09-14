@@ -52,6 +52,7 @@ Every cluster will consist of one or more containers:
 func NewCmdClusterCreate() *cobra.Command {
 
 	simpleConfig := &config.SimpleConfig{}
+	var configFile string
 
 	// create new command
 	cmd := &cobra.Command{
@@ -64,12 +65,28 @@ func NewCmdClusterCreate() *cobra.Command {
 			// parse args and flags
 			simpleConfig = parseCreateClusterCmd(cmd, args, simpleConfig)
 
-			fmt.Printf("==========Config==========\n%+v\n==========================\n", simpleConfig)
+			fmt.Printf("========== Simple Config ==========\n%+v\n==========================\n", simpleConfig)
+
+			if configFile != "" {
+				configFromFile, err := config.ReadConfig(configFile)
+				if err != nil {
+					log.Fatalln(err)
+				}
+				simpleConfig, err = config.MergeSimple(*simpleConfig, configFromFile.(config.SimpleConfig))
+				if err != nil {
+					log.Fatalln(err)
+				}
+			}
+
+			fmt.Printf("========== Merged Simple Config ==========\n%+v\n==========================\n", simpleConfig)
 			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *simpleConfig)
 			if err != nil {
 				log.Fatalln(err)
 			}
-			fmt.Printf("===== Transformed Config =====\n%+v\n===== ===== =====\n", clusterConfig)
+			fmt.Printf("===== Cluster Config =====\n%+v\n===== ===== =====\n", clusterConfig)
+			if err := config.ValidateClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *clusterConfig); err != nil {
+				log.Fatalln("Failed Cluster Configuration Validation: ", err)
+			}
 
 			// check if a cluster with that name exists already
 			if _, err := k3dCluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster); err == nil {
@@ -139,6 +156,12 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	/* Image Importing */
 	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
+
+	/* Config File */
+	cmd.Flags().StringVarP(&configFile, "config", "c", "", "Path of a config file to use")
+	if err := cobra.MarkFlagFilename(cmd.Flags(), "config", "yaml", "yml"); err != nil {
+		log.Fatalln("Failed to mark flag 'config' as filename flag")
+	}
 
 	/* Multi Server Configuration */
 

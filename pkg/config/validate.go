@@ -41,6 +41,7 @@ func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config
 	// cluster name must be a valid host name
 	if err := k3dc.CheckName(config.Cluster.Name); err != nil {
 		log.Errorf("Provided cluster name '%s' does not match requirements", config.Cluster.Name)
+
 		return err
 	}
 
@@ -64,10 +65,10 @@ func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config
 	// validate nodes one by one
 	for _, node := range config.Cluster.Nodes {
 
-		// node names have to be valid hostnames
-		if err := k3dc.CheckName(node.Name); err != nil {
+		// node names have to be valid hostnames // TODO: validate hostnames once we generate them before this step
+		/*if err := k3dc.CheckName(node.Name); err != nil {
 			return err
-		}
+		}*/
 
 		// volumes have to be either an existing path on the host or a named runtime volume
 		for _, volume := range node.Volumes {
