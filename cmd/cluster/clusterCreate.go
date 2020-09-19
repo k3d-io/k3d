@@ -52,6 +52,7 @@ Every cluster will consist of one or more containers:
 func NewCmdClusterCreate() *cobra.Command {
 
 	createClusterOpts := &k3d.ClusterCreateOpts{}
+	var noRollback bool
 	var updateDefaultKubeconfig, updateCurrentContext bool
 
 	// create new command
@@ -80,8 +81,11 @@ func NewCmdClusterCreate() *cobra.Command {
 				cluster.CreateClusterOpts.WaitForServer = true
 			}
 			if err := k3dCluster.ClusterCreate(cmd.Context(), runtimes.SelectedRuntime, cluster); err != nil {
-				// rollback if creation failed
 				log.Errorln(err)
+				if noRollback {
+					log.Fatalln("Cluster creation FAILED, rollback deactivated.")
+				}
+				// rollback if creation failed
 				log.Errorln("Failed to create cluster >>> Rolling Back")
 				if err := k3dCluster.ClusterDelete(cmd.Context(), runtimes.SelectedRuntime, cluster); err != nil {
 					log.Errorln(err)
@@ -129,6 +133,7 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().BoolVar(&updateDefaultKubeconfig, "update-default-kubeconfig", true, "Directly update the default kubeconfig with the new cluster's context")
 	cmd.Flags().BoolVar(&updateCurrentContext, "switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (requires --update-default-kubeconfig)")
 	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadBalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
+	cmd.Flags().BoolVar(&noRollback, "no-rollback", false, "Disable the automatic rollback actions, if anything goes wrong")
 
 	/* Image Importing */
 	cmd.Flags().BoolVar(&createClusterOpts.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
