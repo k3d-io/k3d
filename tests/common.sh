@@ -51,6 +51,13 @@ passed() {
   fi
 }
 
+section() {
+  title_length=$((${#1}+4))
+  log "$(printf "${CYA}#%.0s${END}" $(eval "echo {1.."$(($title_length))"}"); printf "\n";)"
+  log "$(printf "${CYA}#${END} %s ${CYA}#${END}\n" "$1")"
+  log "$(printf "${CYA}#%.0s${END}" $(eval "echo {1.."$(($title_length))"}"); printf "\n";)"
+}
+
 # checks that a URL is available, with an optional error message
 check_url() {
   command_exists curl || abort "curl is not installed"
