@@ -91,7 +91,7 @@ func (d Containerd) DeleteNode(ctx context.Context, node *k3d.Node) error {
 		return err
 	}
 	if err = container.Delete(ctx, []containerd.DeleteOpts{}...); err != nil {
-		log.Errorf("Failed to delete container '%s'", container.ID)
+		log.Errorf("Failed to delete container '%s'", container.ID())
 		return err
 	}
 
