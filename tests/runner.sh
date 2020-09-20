@@ -21,7 +21,11 @@ section "BASIC TESTS"
 
 for i in $CURR_DIR/test_*.sh ; do
   base=$(basename "$i" .sh)
-  if [[ $E2E_SKIP =~ (^| )$base($| ) ]]; then
+  skip=false
+  for skiptest in "${E2E_SKIP[@]}"; do
+    [[ "$skiptest" =~ (^| )${base}($| ) ]] && skip=true
+  done
+  if [ "$skip" = true ]; then
     highlight "***** Skipping $base *****"
   else
     highlight "***** Running $base *****"
