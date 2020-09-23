@@ -30,6 +30,8 @@ import (
 
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 
+	"github.com/rancher/k3d/v3/pkg/util"
+
 	"regexp"
 )
 
@@ -99,7 +101,7 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 		}
 
 		// map capturing group names to submatches
-		submatches := mapSubexpNames(filterRegexp.SubexpNames(), match)
+		submatches := util.MapSubexpNames(filterRegexp.SubexpNames(), match)
 
 		// if one of the filters is 'all', we only return this and drop all others
 		if submatches["group"] == "all" {

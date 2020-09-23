@@ -23,6 +23,7 @@ package docker
 
 import (
 	"context"
+	"net"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -103,4 +104,16 @@ func GetNetwork(ctx context.Context, ID string) (types.NetworkResource, error) {
 	}
 	defer docker.Close()
 	return docker.NetworkInspect(ctx, ID, types.NetworkInspectOptions{})
+}
+
+// GetGatewayIP returns the IP of the network gateway
+func GetGatewayIP(ctx context.Context, network string) (net.IP, error) {
+	bridgeNetwork, err := GetNetwork(ctx, network)
+	if err != nil {
+		return nil, err
+	}
+
+	gatewayIP := net.ParseIP(bridgeNetwork.IPAM.Config[0].Gateway)
+
+	return gatewayIP, nil
 }

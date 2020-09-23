@@ -19,4 +19,25 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package util
+package docker
+
+import (
+	"context"
+	"fmt"
+	"net"
+	"runtime"
+)
+
+// GetHostIP returns the IP of the docker host (routable from inside the containers)
+func (d Docker) GetHostIP(ctx context.Context, network string) (net.IP, error) {
+	if runtime.GOOS == "linux" {
+		ip, err := GetGatewayIP(ctx, network)
+		if err != nil {
+			return nil, err
+		}
+		return ip, nil
+	}
+
+	return nil, fmt.Errorf("Docker Runtime: GetHostIP only implemented for Linux")
+
+}
