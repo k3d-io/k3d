@@ -110,6 +110,7 @@ func GetNetwork(ctx context.Context, ID string) (types.NetworkResource, error) {
 func GetGatewayIP(ctx context.Context, network string) (net.IP, error) {
 	bridgeNetwork, err := GetNetwork(ctx, network)
 	if err != nil {
+		log.Errorf("Failed to get bridge network with name '%s'", network)
 		return nil, err
 	}
 
