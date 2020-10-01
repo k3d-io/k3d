@@ -373,7 +373,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	}
 
 	patchCmd := `test=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s+host\.k3d\.internal$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$test"`
-	err := runtime.ExecInNode(clusterPrepCtx, cluster.Nodes[0], []string{"sh", "-c", patchCmd})
+	err = runtime.ExecInNode(clusterPrepCtx, cluster.Nodes[0], []string{"sh", "-c", patchCmd})
 	if err != nil {
 		log.Warnf("Failed to patch CoreDNS ConfigMap to include entry '%s': %+v", hostsEntry, err)
 	}
