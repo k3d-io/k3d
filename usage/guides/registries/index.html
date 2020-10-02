@@ -1,7 +1,4 @@
 
-
-
-
 <!doctype html>
 <html lang="en" class="no-js">
   <head>
@@ -16,7 +13,7 @@
       
       
       <link rel="shortcut icon" href="../../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.13">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.0.1">
     
     
       
@@ -24,19 +21,21 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.077507d7.min.css">
-      
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ff0a5ce4.min.css">
-      
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.38780c08.min.css">
       
         
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.3f72e892.min.css">
         
-        <meta name="theme-color" content="#000000">
+          
+          
+          <meta name="theme-color" content="#000000">
+        
       
     
     
     
       
+        
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
@@ -58,9 +57,11 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="black" data-md-color-accent="grey">
-  
     
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="black" data-md-color-accent="grey">
+      
+  
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
@@ -150,70 +151,7 @@
     
     <div class="md-container" data-md-component="container">
       
-        
       
-      
-        
-          
-
-  
-
-<nav class="md-tabs md-tabs--active" aria-label="Tabs" data-md-component="tabs">
-  <div class="md-tabs__inner md-grid">
-    <ul class="md-tabs__list">
-      
-        
-  <li class="md-tabs__item">
-    
-      <a href="../../.." class="md-tabs__link">
-        Overview
-      </a>
-    
-  </li>
-
-      
-        
-  
-  
-    <li class="md-tabs__item">
-      
-        <a href="../../commands/" class="md-tabs__link md-tabs__link--active">
-          Usage
-        </a>
-      
-    </li>
-  
-
-      
-        
-  
-  
-    <li class="md-tabs__item">
-      
-        <a href="../../../internals/defaults/" class="md-tabs__link">
-          Internals
-        </a>
-      
-    </li>
-  
-
-      
-        
-  
-  
-    <li class="md-tabs__item">
-      
-        <a href="../../../faq/faq/" class="md-tabs__link">
-          FAQ
-        </a>
-      
-    </li>
-  
-
-      
-    </ul>
-  </div>
-</nav>
         
       
       <main class="md-main" data-md-component="main">
@@ -697,13 +635,10 @@
                   </a>
                 
                 
-                  
-                
-                
                 <h1 id="registries">Registries<a class="headerlink" href="#registries" title="Permanent link">&para;</a></h1>
 <h2 id="registries-configuration-file">Registries configuration file<a class="headerlink" href="#registries-configuration-file" title="Permanent link">&para;</a></h2>
 <p>You can add registries by specifying them in a <code>registries.yaml</code> and mounting them at creation time:
-<code class="highlight">k3d cluster create mycluster --volume /home/YOU/my-registries.yaml:/etc/rancher/k3s/registries.yaml</code>.</p>
+<code class="highlight">k3d cluster create mycluster --volume <span class="s2">&quot;/home/YOU/my-registries.yaml:/etc/rancher/k3s/registries.yaml&quot;</span></code>.</p>
 <p>This file is a regular <a href="https://rancher.com/docs/k3s/latest/en/installation/private-registry/">k3s registries configuration file</a>, and looks like this:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">mirrors</span><span class="p">:</span>
   <span class="s">&quot;my.company.registry:5000&quot;</span><span class="p p-Indicator">:</span>
@@ -747,7 +682,7 @@ For example, if we mount the CA file in <code>/etc/ssl/certs/my-company-root.pem
 </code></pre></div>
 
 <p>Finally, we can create the cluster, mounting the CA file in the path we specified in <code>ca_file</code>:</p>
-<p><code class="highlight">k3d cluster create --volume <span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/.k3d/my-registries.yaml:/etc/rancher/k3s/registries.yaml --volume <span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/.k3d/my-company-root.pem:/etc/ssl/certs/my-company-root.pem</code></p>
+<p><code class="highlight">k3d cluster create --volume <span class="s2">&quot;</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.k3d/my-registries.yaml:/etc/rancher/k3s/registries.yaml&quot;</span> --volume <span class="s2">&quot;</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.k3d/my-company-root.pem:/etc/ssl/certs/my-company-root.pem&quot;</span></code></p>
 <h2 id="using-a-local-registry">Using a local registry<a class="headerlink" href="#using-a-local-registry" title="Permanent link">&para;</a></h2>
 <h3 id="using-the-k3d-registry">Using the k3d registry<a class="headerlink" href="#using-the-k3d-registry" title="Permanent link">&para;</a></h3>
 <div class="admonition info">
@@ -856,7 +791,7 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 14, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 2, 2020</span>
     
   </small>
 </div>
@@ -931,15 +866,15 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
       
     </div>
     
-      <script src="../../../assets/javascripts/vendor.2d1db4bd.min.js"></script>
-      <script src="../../../assets/javascripts/bundle.6627ddf3.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="../../../assets/javascripts/vendor.77e55a48.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.aa3f9871.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
       
       <script>
         app = initialize({
           base: "../../..",
           features: ['tabs'],
           search: Object.assign({
-            worker: "../../../assets/javascripts/worker/search.5eca75d3.min.js"
+            worker: "../../../assets/javascripts/worker/search.4ac00218.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

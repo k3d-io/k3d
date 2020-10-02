@@ -1,7 +1,4 @@
 
-
-
-
 <!doctype html>
 <html lang="en" class="no-js">
   <head>
@@ -16,7 +13,7 @@
       
       
       <link rel="shortcut icon" href="../../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.13">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.0.1">
     
     
       
@@ -24,19 +21,21 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.077507d7.min.css">
-      
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ff0a5ce4.min.css">
-      
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.38780c08.min.css">
       
         
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.3f72e892.min.css">
         
-        <meta name="theme-color" content="#000000">
+          
+          
+          <meta name="theme-color" content="#000000">
+        
       
     
     
     
       
+        
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
@@ -58,9 +57,11 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="black" data-md-color-accent="grey">
-  
     
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="black" data-md-color-accent="grey">
+      
+  
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
@@ -150,70 +151,7 @@
     
     <div class="md-container" data-md-component="container">
       
-        
       
-      
-        
-          
-
-  
-
-<nav class="md-tabs md-tabs--active" aria-label="Tabs" data-md-component="tabs">
-  <div class="md-tabs__inner md-grid">
-    <ul class="md-tabs__list">
-      
-        
-  <li class="md-tabs__item">
-    
-      <a href="../../.." class="md-tabs__link">
-        Overview
-      </a>
-    
-  </li>
-
-      
-        
-  
-  
-    <li class="md-tabs__item">
-      
-        <a href="../../commands/" class="md-tabs__link md-tabs__link--active">
-          Usage
-        </a>
-      
-    </li>
-  
-
-      
-        
-  
-  
-    <li class="md-tabs__item">
-      
-        <a href="../../../internals/defaults/" class="md-tabs__link">
-          Internals
-        </a>
-      
-    </li>
-  
-
-      
-        
-  
-  
-    <li class="md-tabs__item">
-      
-        <a href="../../../faq/faq/" class="md-tabs__link">
-          FAQ
-        </a>
-      
-    </li>
-  
-
-      
-    </ul>
-  </div>
-</nav>
         
       
       <main class="md-main" data-md-component="main">
@@ -575,9 +513,6 @@
                   </a>
                 
                 
-                  
-                
-                
                 <h1 id="exposing-services">Exposing Services<a class="headerlink" href="#exposing-services" title="Permanent link">&para;</a></h1>
 <h2 id="1-via-ingress">1. via Ingress<a class="headerlink" href="#1-via-ingress" title="Permanent link">&para;</a></h2>
 <p>In this example, we will deploy a simple nginx webserver deployment and make it accessible via ingress.
@@ -585,7 +520,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <ol>
 <li>
 <p>Create a cluster, mapping the ingress port 80 to localhost:8081</p>
-<p><code class="highlight">k3d cluster create --api-port <span class="m">6550</span> -p <span class="m">8081</span>:80@loadbalancer --agents <span class="m">2</span></code></p>
+<p><code class="highlight">k3d cluster create --api-port <span class="m">6550</span> -p <span class="s2">&quot;8081:80@loadbalancer&quot;</span> --agents <span class="m">2</span></code></p>
 <div class="admonition info">
 <p class="admonition-title">Good to know</p>
 <ul>
@@ -642,13 +577,13 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <ol>
 <li>
 <p>Create a cluster, mapping the port 30080 from agent-0 to localhost:8082</p>
-<p><code class="highlight">k3d cluster create mycluster -p <span class="m">8082</span>:30080@agent<span class="o">[</span><span class="m">0</span><span class="o">]</span> --agents <span class="m">2</span></code></p>
+<p><code class="highlight">k3d cluster create mycluster -p <span class="s2">&quot;8082:30080@agent[0]&quot;</span> --agents <span class="m">2</span></code></p>
 <ul>
 <li>
 <p><strong>Note</strong>: Kubernetes&rsquo; default NodePort range is <a href="https://kubernetes.io/docs/concepts/services-networking/service/#nodeport"><code>30000-32767</code></a></p>
 </li>
 <li>
-<p><strong>Note</strong>: You may as well expose the whole NodePort range from the very beginning, e.g. via <code>k3d cluster create mycluster --agents 3 -p 30000-32767:30000-32767@server[0]</code> (See <a href="https://www.youtube.com/watch?v=5HaU6338lAk">this video from @portainer</a>)</p>
+<p><strong>Note</strong>: You may as well expose the whole NodePort range from the very beginning, e.g. via <code>k3d cluster create mycluster --agents 3 -p "30000-32767:30000-32767@server[0]"</code> (See <a href="https://www.youtube.com/watch?v=5HaU6338lAk">this video from @portainer</a>)</p>
 </li>
 </ul>
 </li>
@@ -689,7 +624,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">August 12, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 2, 2020</span>
     
   </small>
 </div>
@@ -764,15 +699,15 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
       
     </div>
     
-      <script src="../../../assets/javascripts/vendor.2d1db4bd.min.js"></script>
-      <script src="../../../assets/javascripts/bundle.6627ddf3.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="../../../assets/javascripts/vendor.77e55a48.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.aa3f9871.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
       
       <script>
         app = initialize({
           base: "../../..",
           features: ['tabs'],
           search: Object.assign({
-            worker: "../../../assets/javascripts/worker/search.5eca75d3.min.js"
+            worker: "../../../assets/javascripts/worker/search.4ac00218.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>
