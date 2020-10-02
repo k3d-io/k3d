@@ -77,6 +77,10 @@ func TestTranslateNodeToContainer(t *testing.T) {
 					},
 				},
 			},
+			SecurityOpt: []string{
+				"seccomp=unconfined",
+				"apparmor=unconfined",
+			},
 		},
 		NetworkingConfig: network.NetworkingConfig{
 			EndpointsConfig: map[string]*network.EndpointSettings{

@@ -42,6 +42,10 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	containerConfig := docker.Config{}
 	hostConfig := docker.HostConfig{
 		Init: &[]bool{true}[0],
+		SecurityOpt: []string{
+			"seccomp=unconfined",
+			"apparmor=unconfined",
+		},
 	}
 	networkingConfig := network.NetworkingConfig{}
 
