@@ -133,12 +133,13 @@ var DoNotCopyServerFlags = []string{
 
 // ClusterCreateOpts describe a set of options one can set when creating a cluster
 type ClusterCreateOpts struct {
-	DisableImageVolume  bool
-	WaitForServer       bool
-	Timeout             time.Duration
-	DisableLoadBalancer bool
-	K3sServerArgs       []string
-	K3sAgentArgs        []string
+	PrepDisableHostIPInjection bool
+	DisableImageVolume         bool
+	WaitForServer              bool
+	Timeout                    time.Duration
+	DisableLoadBalancer        bool
+	K3sServerArgs              []string
+	K3sAgentArgs               []string
 }
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
