@@ -119,3 +119,47 @@ check_cluster_token_exist() {
   [ -n "$EXE" ] || abort "EXE is not defined"
   $EXE cluster get "$1" --token | grep "TOKEN" >/dev/null 2>&1
 }
+
+wait_for_pod_running_by_label() {
+  podname=$(kubectl get pod -l "$1" $([[ -n "$2" ]] && echo "--namespace $2") -o jsonpath='{.items[0].metadata.name}')
+  wait_for_pod_running_by_name "$podname" "$2"
+}
+
+wait_for_pod_running_by_name() {
+  while : ; do
+    podstatus=$(kubectl get pod "$1" $([[ -n "$2" ]] && echo "--namespace $2") -o go-template='{{.status.phase}}')
+    case "$podstatus" in
+      "ErrImagePull" )
+        echo "Pod $1 is NOT running: ErrImagePull"
+        return 1
+        ;;
+      "ContainerCreating" )
+        continue
+        ;;
+      "Pending" )
+        continue
+        ;;
+      "Running" )
+        echo "Pod $1 is Running"
+        return 0
+        ;;
+      * )
+        echo "Pod $1 is NOT running: Unknown status '$podstatus'"
+        kubectl describe pod "$1" || kubectl get pods $([[ -n "$2" ]] && echo "--namespace $2")
+        return 1
+    esac
+  done
+}
+
+wait_for_pod_exec() {
+  # $1 = pod name
+  # $2 = command
+  # $3 = max. retries (default: 10)
+  max_retries=$([[ -n "$3" ]] && echo "$3" || echo "10")
+  for (( i=0; i<=max_retries; i++ )); do
+    echo "Try #$i"
+    kubectl exec "$1" -- $2 && return 0
+  done
+  echo "Command '$2' in pod '$1' did NOT return successfully in $max_retries tries"
+  return 1
+}
