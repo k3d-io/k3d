@@ -46,10 +46,17 @@ info "Checking that we have 3 nodes available now..."
 check_multi_node "$clustername" 3 || failed "failed to verify number of nodes"
 
 # 4. load an image into the cluster
-info "Loading an image into the cluster..."
+info "Importing an image into the cluster..."
 docker pull nginx:latest > /dev/null
 docker tag nginx:latest nginx:local > /dev/null
 $EXE image import nginx:local -c $clustername || failed "could not import image in $clustername"
+
+# 5. use that image
+info "Spawning a pod using the imported image..."
+kubectl run --image nginx:local testimage
+info "Waiting for a bit for the pod to start..."
+sleep 5
+kubectl get pod testimage | grep 'Running' || failed "Pod using the imported image is not running after 5 seconds"
 
 # Cleanup
 
