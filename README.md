@@ -1,4 +1,7 @@
 # [![k3d](docs/static/img/k3d_logo_black_blue.svg)](https://k3d.io/)
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Build Status](https://img.shields.io/drone/build/rancher/k3d/main?logo=drone&server=https%3A%2F%2Fdrone-publish.rancher.io&style=flat-square)](https://drone-publish.rancher.io/rancher/k3d)
 [![License](https://img.shields.io/github/license/rancher/k3d?style=flat-square)](./LICENSE.md)
@@ -101,3 +104,22 @@ k3d is a community-driven project and so we welcome contributions of any form, b
 Please read our [**Contributing Guidelines**](./CONTRIBUTING.md) and the related [**Code of Conduct**](./CODE_OF_CONDUCT.md).
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
+
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://twitter.com/iwilltry42"><img src="https://avatars3.githubusercontent.com/u/25345277?v=4" width="100px;" alt=""/><br /><sub><b>Thorsten Klein</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=iwilltry42" title="Code">💻</a> <a href="https://github.com/rancher/k3d/commits?author=iwilltry42" title="Documentation">📖</a> <a href="#ideas-iwilltry42" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-iwilltry42" title="Maintenance">🚧</a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-enable -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
