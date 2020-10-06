@@ -8,6 +8,8 @@
 [![Go version](https://img.shields.io/github/go-mod/go-version/rancher/k3d?logo=go&logoColor=white&style=flat-square)](./go.mod)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d?style=flat-square)](https://goreportcard.com/report/github.com/rancher/k3d)
 
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
+
 **Please Note:** `main` is now v3.0.0 and the code for v1.x can be found in the `main-v1` branch!
 
 ## [k3s in docker](https://k3d.io)
@@ -91,3 +93,11 @@ This repository is based on [@zeerorg](https://github.com/zeerorg/)'s [zeerorg/k
 ## Related Projects
 
 - [k3x](https://github.com/inercia/k3x): a graphics interface (for Linux) to k3d.
+
+## Contributing
+
+k3d is a community-driven project and so we welcome contributions of any form, be it code, logic, documentation, examples, requests, bug reports, ideas or anything else that pushes this project forward.
+
+Please read our [**Contributing Guidelines**](./CONTRIBUTING.md) and the related [**Code of Conduct**](./CODE_OF_CONDUCT.md).
+
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
