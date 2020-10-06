@@ -469,7 +469,10 @@
       --k3s-server-arg  <span class="c1"># add additional arguments to the k3s server (see https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/#k3s-server-cli-help)</span>
       -s, --servers  <span class="c1"># specify how many server nodes you want to create</span>
       --network  <span class="c1"># specify a network you want to connect to</span>
+      --no-hostip <span class="c1"># disable the automatic injection of the Host IP as &#39;host.k3d.internal&#39; into the containers and CoreDN</span>
       --no-image-volume  <span class="c1"># disable the creation of a volume for storing images (used for the &#39;k3d load image&#39; command)</span>
+      --no-lb <span class="c1"># disable the creation of a LoadBalancer in front of the server nodes</span>
+      --no-rollback <span class="c1"># disable the automatic rollback actions, if anything goes wrong</span>
       -p, --port  <span class="c1"># add some more port mappings</span>
       --token  <span class="c1"># specify a cluster token (default: auto-generated)</span>
       --timeout  <span class="c1"># specify a timeout, after which the cluster creation will be interrupted and changes rolled back</span>
@@ -526,7 +529,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">August 5, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 6, 2020</span>
     
   </small>
 </div>
