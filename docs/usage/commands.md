@@ -16,7 +16,10 @@ k3d
       --k3s-server-arg  # add additional arguments to the k3s server (see https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/#k3s-server-cli-help)
       -s, --servers  # specify how many server nodes you want to create
       --network  # specify a network you want to connect to
+      --no-hostip # disable the automatic injection of the Host IP as 'host.k3d.internal' into the containers and CoreDN
       --no-image-volume  # disable the creation of a volume for storing images (used for the 'k3d load image' command)
+      --no-lb # disable the creation of a LoadBalancer in front of the server nodes
+      --no-rollback # disable the automatic rollback actions, if anything goes wrong
       -p, --port  # add some more port mappings
       --token  # specify a cluster token (default: auto-generated)
       --timeout  # specify a timeout, after which the cluster creation will be interrupted and changes rolled back

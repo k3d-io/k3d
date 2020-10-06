@@ -12,7 +12,7 @@ source "$CURR_DIR/common.sh"
 for version in "${K3S_VERSIONS[@]}"; do
 
   info "Creating a cluster with k3s version $version ..."
-  $EXE cluster create c1 --wait --timeout 60s --api-port 6443 --image "rancher/k3s:$version" || failed "could not create cluster with k3s version $version"
+  $EXE cluster create c1 --wait --timeout 60s --image "rancher/k3s:$version" || failed "could not create cluster with k3s version $version"
 
   info "Checking we have access to the cluster ..."
   check_clusters "c1" || failed "error checking cluster with k3s version $version"
