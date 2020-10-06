@@ -47,16 +47,24 @@ check_multi_node "$clustername" 3 || failed "failed to verify number of nodes"
 
 # 4. load an image into the cluster
 info "Importing an image into the cluster..."
-docker pull nginx:latest > /dev/null
-docker tag nginx:latest nginx:local > /dev/null
-$EXE image import nginx:local -c $clustername || failed "could not import image in $clustername"
+docker pull alpine:latest > /dev/null
+docker tag alpine:latest alpine:local > /dev/null
+$EXE image import alpine:local -c $clustername || failed "could not import image in $clustername"
 
-# 5. use that image
+# 5. use imported image
 info "Spawning a pod using the imported image..."
-kubectl run --image nginx:local testimage
+kubectl run --image alpine:local testimage --command -- tail -f /dev/null
 info "Waiting for a bit for the pod to start..."
 sleep 5
-kubectl get pod testimage | grep 'Running' || failed "Pod using the imported image is not running after 5 seconds"
+
+wait_for_pod_running_by_name "testimage"
+wait_for_pod_running_by_label "k8s-app=kube-dns" "kube-system"
+
+sleep 5
+
+# 6. test host.k3d.internal
+info "Checking DNS Lookup for host.k3d.internal"
+wait_for_pod_exec "testimage" "nslookup host.k3d.internal" 6
 
 # Cleanup
 

@@ -147,7 +147,7 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 	for k, v := range node.Labels {
 		filters.Add("label", fmt.Sprintf("%s=%s", k, v))
 	}
-        // See https://github.com/moby/moby/issues/29997 for explanation around initial /
+	// See https://github.com/moby/moby/issues/29997 for explanation around initial /
 	filters.Add("name", fmt.Sprintf("^/?%s$", node.Name)) // regex filtering for exact name match
 
 	containers, err := docker.ContainerList(ctx, types.ContainerListOptions{

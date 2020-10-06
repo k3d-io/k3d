@@ -41,7 +41,8 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	/* initialize everything that we need */
 	containerConfig := docker.Config{}
 	hostConfig := docker.HostConfig{
-		Init: &[]bool{true}[0],
+		Init:       &[]bool{true}[0],
+		ExtraHosts: node.ExtraHosts,
 	}
 	networkingConfig := network.NetworkingConfig{}
 
