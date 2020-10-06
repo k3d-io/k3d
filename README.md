@@ -1,7 +1,4 @@
 # [![k3d](docs/static/img/k3d_logo_black_blue.svg)](https://k3d.io/)
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Build Status](https://img.shields.io/drone/build/rancher/k3d/main?logo=drone&server=https%3A%2F%2Fdrone-publish.rancher.io&style=flat-square)](https://drone-publish.rancher.io/rancher/k3d)
 [![License](https://img.shields.io/github/license/rancher/k3d?style=flat-square)](./LICENSE.md)
@@ -11,6 +8,9 @@
 [![Go version](https://img.shields.io/github/go-mod/go-version/rancher/k3d?logo=go&logoColor=white&style=flat-square)](./go.mod)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d?style=flat-square)](https://goreportcard.com/report/github.com/rancher/k3d)
 
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
 **Please Note:** `main` is now v3.0.0 and the code for v1.x can be found in the `main-v1` branch!
