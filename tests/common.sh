@@ -157,8 +157,9 @@ wait_for_pod_exec() {
   # $3 = max. retries (default: 10)
   max_retries=$([[ -n "$3" ]] && echo "$3" || echo "10")
   for (( i=0; i<=max_retries; i++ )); do
-    echo "Try #$i"
+    echo "Try #$i: 'kubectl exec $1 -- $2'"
     kubectl exec "$1" -- $2 && return 0
+    sleep 1
   done
   echo "Command '$2' in pod '$1' did NOT return successfully in $max_retries tries"
   return 1

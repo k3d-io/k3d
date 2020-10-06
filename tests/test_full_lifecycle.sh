@@ -64,7 +64,7 @@ sleep 5
 
 # 6. test host.k3d.internal
 info "Checking DNS Lookup for host.k3d.internal"
-wait_for_pod_exec "testimage" "nslookup host.k3d.internal" 6
+wait_for_pod_exec "testimage" "nslookup host.k3d.internal" 10
 
 # Cleanup
 
