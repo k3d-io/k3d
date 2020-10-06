@@ -1,0 +1,27 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "iwilltry42",
+      "name": "Thorsten Klein",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/25345277?v=4",
+      "profile": "https://twitter.com/iwilltry42",
+      "contributions": [
+        "code",
+        "doc",
+        "ideas",
+        "maintenance"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "k3d",
+  "projectOwner": "rancher",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
