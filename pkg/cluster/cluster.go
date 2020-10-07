@@ -360,23 +360,25 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 
 	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
 	if !cluster.CreateClusterOpts.PrepDisableHostIPInjection {
+		log.Infoln("(Optional) Trying to get IP of the docker host and inject it into the cluster as 'host.k3d.internal' for easy access")
 		hostIP, err := GetHostIP(clusterPrepCtx, runtime, cluster)
 		if err != nil {
-			log.Errorln("Failed to get HostIP")
-			return err
+			log.Warnln("Failed to get HostIP: %+v", err)
 		}
-		hostsEntry := fmt.Sprintf("%s %s", hostIP, k3d.DefaultK3dInternalHostRecord)
-		log.Debugf("Adding extra host entry '%s'...", hostsEntry)
-		for _, node := range cluster.Nodes {
-			if err := runtime.ExecInNode(clusterPrepCtx, node, []string{"sh", "-c", fmt.Sprintf("echo '%s' >> /etc/hosts", hostsEntry)}); err != nil {
-				log.Warnf("Failed to add extra entry '%s' to /etc/hosts in node '%s'", hostsEntry, node.Name)
+		if hostIP != nil {
+			hostsEntry := fmt.Sprintf("%s %s", hostIP, k3d.DefaultK3dInternalHostRecord)
+			log.Debugf("Adding extra host entry '%s'...", hostsEntry)
+			for _, node := range cluster.Nodes {
+				if err := runtime.ExecInNode(clusterPrepCtx, node, []string{"sh", "-c", fmt.Sprintf("echo '%s' >> /etc/hosts", hostsEntry)}); err != nil {
+					log.Warnf("Failed to add extra entry '%s' to /etc/hosts in node '%s'", hostsEntry, node.Name)
+				}
 			}
-		}
 
-		patchCmd := `test=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s+host\.k3d\.internal$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$test"`
-		err = runtime.ExecInNode(clusterPrepCtx, cluster.Nodes[0], []string{"sh", "-c", patchCmd})
-		if err != nil {
-			log.Warnf("Failed to patch CoreDNS ConfigMap to include entry '%s': %+v", hostsEntry, err)
+			patchCmd := `test=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s+host\.k3d\.internal$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$test"`
+			err = runtime.ExecInNode(clusterPrepCtx, cluster.Nodes[0], []string{"sh", "-c", patchCmd})
+			if err != nil {
+				log.Warnf("Failed to patch CoreDNS ConfigMap to include entry '%s': %+v", hostsEntry, err)
+			}
 		}
 	}
 

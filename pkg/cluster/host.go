@@ -76,10 +76,7 @@ func GetHostIP(ctx context.Context, rtime rt.Runtime, cluster *k3d.Cluster) (net
 
 func resolveHostnameFromInside(ctx context.Context, rtime rt.Runtime, node *k3d.Node, hostname string) (net.IP, error) {
 
-	logreader, err := rtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", fmt.Sprintf("nslookup %s", hostname)})
-	if err != nil {
-		return nil, err
-	}
+	logreader, execErr := rtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", fmt.Sprintf("nslookup %s", hostname)})
 
 	submatches := map[string]string{}
 	scanner := bufio.NewScanner(logreader)
@@ -92,6 +89,9 @@ func resolveHostnameFromInside(ctx context.Context, rtime rt.Runtime, node *k3d.
 		break
 	}
 	if _, ok := submatches["ip"]; !ok {
+		if execErr != nil {
+			log.Errorln(execErr)
+		}
 		return nil, fmt.Errorf("Failed to read address for '%s' from nslookup response", hostname)
 	}
 
