@@ -9,22 +9,22 @@
         <meta name="description" content="Little helper to run Rancher Lab's k3s in Docker">
       
       
-        <link rel="canonical" href="https://k3d.io/internals/defaults/">
+        <link rel="canonical" href="https://k3d.io/usage/guides/calico/">
       
       
-      <link rel="shortcut icon" href="../../static/img/favicons_black_blue/favicon.png">
+      <link rel="shortcut icon" href="../../../static/img/favicons_black_blue/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.0.2">
     
     
       
-        <title>Defaults - k3d</title>
+        <title>Use Calico instead of Flannel - k3d</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.38780c08.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.38780c08.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.3f72e892.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.3f72e892.min.css">
         
           
           
@@ -43,9 +43,9 @@
     
     
     
-      <link rel="stylesheet" href="../../static/css/asciinema-player.css">
+      <link rel="stylesheet" href="../../../static/css/asciinema-player.css">
     
-      <link rel="stylesheet" href="../../static/css/extra.css">
+      <link rel="stylesheet" href="../../../static/css/extra.css">
     
     
       
@@ -68,7 +68,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#defaults" class="md-skip">
+        <a href="#use-calico-instead-of-flannel" class="md-skip">
           Skip to content
         </a>
       
@@ -81,7 +81,7 @@
   <nav class="md-header-nav md-grid" aria-label="Header">
     <a href="https://k3d.io/" title="k3d" class="md-header-nav__button md-logo" aria-label="k3d">
       
-  <img src="../../static/img/k3d_logo_black_green.svg" alt="logo">
+  <img src="../../../static/img/k3d_logo_black_green.svg" alt="logo">
 
     </a>
     <label class="md-header-nav__button md-icon" for="__drawer">
@@ -95,7 +95,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              Defaults
+              Use Calico instead of Flannel
             
           </span>
         </div>
@@ -165,7 +165,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="https://k3d.io/" title="k3d" class="md-nav__button md-logo" aria-label="k3d">
       
-  <img src="../../static/img/k3d_logo_black_green.svg" alt="logo">
+  <img src="../../../static/img/k3d_logo_black_green.svg" alt="logo">
 
     </a>
     k3d
@@ -192,7 +192,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../.." class="md-nav__link">
+    <a href="../../.." class="md-nav__link">
       Overview
     </a>
   </li>
@@ -202,10 +202,12 @@
       
       
 
+  
 
-  <li class="md-nav__item md-nav__item--nested">
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" checked>
     
     <label class="md-nav__link" for="nav-2">
       Usage
@@ -225,7 +227,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../usage/commands/" class="md-nav__link">
+    <a href="../../commands/" class="md-nav__link">
       Command Tree
     </a>
   </li>
@@ -237,7 +239,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../usage/kubeconfig/" class="md-nav__link">
+    <a href="../../kubeconfig/" class="md-nav__link">
       Handling Kubeconfigs
     </a>
   </li>
@@ -249,7 +251,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../usage/multiserver/" class="md-nav__link">
+    <a href="../../multiserver/" class="md-nav__link">
       Creating multi-server clusters
     </a>
   </li>
@@ -259,10 +261,12 @@
           
           
 
+  
 
-  <li class="md-nav__item md-nav__item--nested">
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-4" type="checkbox" id="nav-2-4">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-4" type="checkbox" id="nav-2-4" checked>
     
     <label class="md-nav__link" for="nav-2-4">
       Guides
@@ -282,7 +286,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../usage/guides/exposing_services/" class="md-nav__link">
+    <a href="../exposing_services/" class="md-nav__link">
       Exposing Services
     </a>
   </li>
@@ -294,7 +298,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../usage/guides/registries/" class="md-nav__link">
+    <a href="../registries/" class="md-nav__link">
       Registries
     </a>
   </li>
@@ -304,34 +308,84 @@
           
           
 
-
-  <li class="md-nav__item">
-    <a href="../../usage/guides/calico/" class="md-nav__link">
-      Use Calico instead of Flannel
-    </a>
-  </li>
-
-        
-      </ul>
-    </nav>
-  </li>
-
-        
-      </ul>
-    </nav>
-  </li>
-
-    
-      
-      
-      
-
   
 
 
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--active">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Use Calico instead of Flannel
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
+    <a href="./" class="md-nav__link md-nav__link--active">
+      Use Calico instead of Flannel
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-download-and-modify-the-calico-descriptor" class="md-nav__link">
+    1. Download and modify the Calico descriptor
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-create-the-cluster-without-flannel-and-with-calico" class="md-nav__link">
+    2. Create the cluster without flannel and with calico
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    References
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
     
     <label class="md-nav__link" for="nav-3">
       Internals
@@ -349,20 +403,11 @@
           
           
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-      
-    
-    
-    <a href="./" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../../../internals/defaults/" class="md-nav__link">
       Defaults
     </a>
-    
   </li>
 
         
@@ -372,7 +417,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../networking/" class="md-nav__link">
+    <a href="../../../internals/networking/" class="md-nav__link">
       Networking
     </a>
   </li>
@@ -410,7 +455,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../faq/faq/" class="md-nav__link">
+    <a href="../../../faq/faq/" class="md-nav__link">
       FAQ / Nice to know
     </a>
   </li>
@@ -422,7 +467,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../faq/v1vsv3-comparison/" class="md-nav__link">
+    <a href="../../../faq/v1vsv3-comparison/" class="md-nav__link">
       Feature Comparison: v1 vs. v3
     </a>
   </li>
@@ -450,6 +495,35 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-download-and-modify-the-calico-descriptor" class="md-nav__link">
+    1. Download and modify the Calico descriptor
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-create-the-cluster-without-flannel-and-with-calico" class="md-nav__link">
+    2. Create the cluster without flannel and with calico
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    References
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -460,34 +534,62 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/rancher/k3d/edit/master/docs/internals/defaults.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/rancher/k3d/edit/master/docs/usage/guides/calico.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="defaults">Defaults<a class="headerlink" href="#defaults" title="Permanent link">&para;</a></h1>
-<ul>
-<li>multiple server nodes<ul>
-<li>by default, when <code>--server</code> &gt; 1 and no <code>--datastore-x</code> option is set, the first server node (server-0) will be the initializing server node<ul>
-<li>the initializing server node will have the <code>--cluster-init</code> flag appended</li>
-<li>all other server nodes will refer to the initializing server node via <code>--server https://&lt;init-node&gt;:6443</code></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>API-Ports<ul>
-<li>by default, we don&rsquo;t expose any API-Port (no host port mapping)</li>
-</ul>
-</li>
-<li>kubeconfig<ul>
-<li>if <code>--[update|merge]-default-kubeconfig</code> is set, we use the default loading rules to get the default kubeconfig:<ul>
-<li>First: kubeconfig specified via the KUBECONFIG environment variable (error out if multiple are specified)</li>
-<li>Second: default kubeconfig in home directory (e.g. <code>$HOME/.kube/config</code>)</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
+                <h1 id="use-calico-instead-of-flannel">Use Calico instead of Flannel<a class="headerlink" href="#use-calico-instead-of-flannel" title="Permanent link">&para;</a></h1>
+<p>If you want to use NetworkPolicy you can use Calico in k3s instead of Flannel.</p>
+<h3 id="1-download-and-modify-the-calico-descriptor">1. Download and modify the Calico descriptor<a class="headerlink" href="#1-download-and-modify-the-calico-descriptor" title="Permanent link">&para;</a></h3>
+<p>You can following the <a href="https://docs.projectcalico.org/master/reference/cni-plugin/configuration">documentation</a></p>
+<p>And then you have to change the ConfigMap <code>calico-config</code>. On the <code>cni_network_config</code> add the entry for allowing IP forwarding<br />
+<div class="highlight"><pre><span></span><code>    <span class="s2">&quot;container_settings&quot;</span><span class="err">:</span> <span class="p">{</span>
+        <span class="nt">&quot;allow_ip_forwarding&quot;</span><span class="p">:</span> <span class="kc">true</span>
+    <span class="p">}</span>
+</code></pre></div>
+Or you can directly use this <a href="../calico.yaml">calico.yaml</a> manifest</p>
+<h2 id="2-create-the-cluster-without-flannel-and-with-calico">2. Create the cluster without flannel and with calico<a class="headerlink" href="#2-create-the-cluster-without-flannel-and-with-calico" title="Permanent link">&para;</a></h2>
+<p>On the k3s cluster creation :
+- add the flag <code>--flannel-backend=none</code>. For this, on k3d you need to forward this flag to k3s with the option <code>--k3s-server-arg</code>.
+- mount (<code>--volume</code>) the calico descriptor in the auto deploy manifest directory of k3s <code>/var/lib/rancher/k3s/server/manifests/</code></p>
+<p>So the command of the cluster creation is (when you are at root of the k3d repository)
+<div class="highlight"><pre><span></span><code>    k3d cluster create <span class="s2">&quot;</span><span class="si">${</span><span class="nv">clustername</span><span class="si">}</span><span class="s2">&quot;</span> --k3s-server-arg <span class="s1">&#39;--flannel-backend=none&#39;</span> --volume <span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/docs/usage/guides/calico.yaml:/var/lib/rancher/k3s/server/manifests/calico.yaml&quot;</span>
+</code></pre></div>
+In this example :
+- change <code>"${clustername}"</code> with the name of the cluster (or set a variable). 
+- <code>$(pwd)/docs/usage/guides/calico.yaml</code> is the absolute path of the calico manifest, you can adapt it.</p>
+<p>You can add other options, <a href="../../commands/">see</a>.  </p>
+<p>The cluster will start without flannel and with Calico as CNI Plugin.</p>
+<p>For watching for the pod(s) deployment
+<div class="highlight"><pre><span></span><code>    watch <span class="s2">&quot;kubectl get pods -n kube-system&quot;</span>    
+</code></pre></div></p>
+<p>You will have something like this at begining (with the command line <code>kubectl get pods -n kube-system</code>)
+<div class="highlight"><pre><span></span><code>NAME                                       READY   STATUS     RESTARTS   AGE
+helm-install-traefik-pn84f                 0/1     Pending    0          3s
+calico-node-97rx8                          0/1     Init:0/3   0          3s
+metrics-server-7566d596c8-hwnqq            0/1     Pending    0          2s
+calico-kube-controllers-58b656d69f-2z7cn   0/1     Pending    0          2s
+local-path-provisioner-6d59f47c7-rmswg     0/1     Pending    0          2s
+coredns-8655855d6-cxtnr                    0/1     Pending    0          2s
+</code></pre></div></p>
+<p>And when it finish to start
+<div class="highlight"><pre><span></span><code>NAME                                       READY   STATUS      RESTARTS   AGE
+metrics-server-7566d596c8-hwnqq            1/1     Running     0          56s
+calico-node-97rx8                          1/1     Running     0          57s
+helm-install-traefik-pn84f                 0/1     Completed   1          57s
+svclb-traefik-lmjr5                        2/2     Running     0          28s
+calico-kube-controllers-58b656d69f-2z7cn   1/1     Running     0          56s
+local-path-provisioner-6d59f47c7-rmswg     1/1     Running     0          56s
+traefik-758cd5fc85-x8p57                   1/1     Running     0          28s
+coredns-8655855d6-cxtnr                    1/1     Running     0          56s
+</code></pre></div></p>
+<p>Note : 
+- you can use the auto deploy manifest or a kubectl apply depending on your needs
+- <!----> Calico is not as quick as Flannel (but it provides more features)</p>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<p>https://rancher.com/docs/k3s/latest/en/installation/network-options/<br />
+https://docs.projectcalico.org/getting-started/kubernetes/k3s/</p>
                 
                   
                     
@@ -496,7 +598,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 14, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 7, 2020</span>
     
   </small>
 </div>
@@ -519,7 +621,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../../usage/guides/calico/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../registries/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -528,19 +630,19 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Use Calico instead of Flannel
+                Registries
               </div>
             </div>
           </a>
         
         
-          <a href="../networking/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../../../internals/defaults/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Networking
+                Defaults
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">
@@ -571,20 +673,20 @@
       
     </div>
     
-      <script src="../../assets/javascripts/vendor.77e55a48.min.js"></script>
-      <script src="../../assets/javascripts/bundle.9554a270.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
+      <script src="../../../assets/javascripts/vendor.77e55a48.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.9554a270.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
       
       <script>
         app = initialize({
-          base: "../..",
+          base: "../../..",
           features: ['tabs'],
           search: Object.assign({
-            worker: "../../assets/javascripts/worker/search.4ac00218.min.js"
+            worker: "../../../assets/javascripts/worker/search.4ac00218.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>
       
-        <script src="../../static/js/asciinema-player.js"></script>
+        <script src="../../../static/js/asciinema-player.js"></script>
       
     
   </body>
