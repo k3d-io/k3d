@@ -521,12 +521,10 @@
 The first server to be created will use the <code>--cluster-init</code> flag and k3d will wait for it to be up and running before creating (and connecting) the other server nodes.</p>
 <div class="highlight"><pre><span></span><code>    k3d cluster create multiserver --servers <span class="m">3</span>
 </code></pre></div>
-
 <h2 id="adding-server-nodes-to-a-running-cluster">Adding server nodes to a running cluster<a class="headerlink" href="#adding-server-nodes-to-a-running-cluster" title="Permanent link">&para;</a></h2>
 <p>In theory (and also in practice in most cases), this is as easy as executing the following command:</p>
 <div class="highlight"><pre><span></span><code>    k3d node create newserver --cluster multiserver --role server
 </code></pre></div>
-
 <div class="admonition important">
 <p class="admonition-title">There&rsquo;s a trap!</p>
 <p>If your cluster was initially created with only a single server node, then this will fail.

@@ -645,7 +645,6 @@
     <span class="nt">endpoint</span><span class="p">:</span>
       <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">http://my.company.registry:5000</span>
 </code></pre></div>
-
 <p>In this example, an image with a name like <code>my.company.registry:5000/nginx:latest</code> would be
 <em>pulled</em> from the registry running at <code>http://my.company.registry:5000</code>.</p>
 <p>Note well there is an important limitation: <strong>this configuration file will only work with k3s &gt;= v0.10.0</strong>. It will fail silently with previous versions of k3s, but you find in the <a href="#k3s-old">section below</a> an alternative solution.</p>
@@ -664,7 +663,6 @@
       <span class="nt">username</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">aladin</span>
       <span class="nt">password</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">abracadabra</span>
 </code></pre></div>
-
 <h3 id="secure-registries">Secure registries<a class="headerlink" href="#secure-registries" title="Permanent link">&para;</a></h3>
 <p>When using secure registries, the <a href="#registries-file"><code>registries.yaml</code> file</a> must include information about the certificates. For example, if you want to use images from the secure registry running at <code>https://my.company.registry</code>, you must first download a CA file valid for that server and store it in some well-known directory like <code>${HOME}/.k3d/my-company-root.pem</code>.  </p>
 <p>Then you have to mount the CA file in some directory in the nodes in the cluster and include that mounted file in a <code>configs</code> section in the <a href="#registries-file"><code>registries.yaml</code> file</a>.
@@ -680,7 +678,6 @@ For example, if we mount the CA file in <code>/etc/ssl/certs/my-company-root.pem
       <span class="c1"># we will mount &quot;my-company-root.pem&quot; in the /etc/ssl/certs/ directory.</span>
       <span class="nt">ca_file</span><span class="p">:</span> <span class="s">&quot;/etc/ssl/certs/my-company-root.pem&quot;</span>
 </code></pre></div>
-
 <p>Finally, we can create the cluster, mounting the CA file in the path we specified in <code>ca_file</code>:</p>
 <p><code class="highlight">k3d cluster create --volume <span class="s2">&quot;</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.k3d/my-registries.yaml:/etc/rancher/k3s/registries.yaml&quot;</span> --volume <span class="s2">&quot;</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.k3d/my-company-root.pem:/etc/ssl/certs/my-company-root.pem&quot;</span></code></p>
 <h2 id="using-a-local-registry">Using a local registry<a class="headerlink" href="#using-a-local-registry" title="Permanent link">&para;</a></h2>
@@ -694,7 +691,6 @@ For example, if we mount the CA file in <code>/etc/ssl/certs/my-company-root.pem
 <div class="highlight"><pre><span></span><code>docker volume create local_registry
 docker container run -d --name registry.localhost -v local_registry:/var/lib/registry --restart always -p <span class="m">5000</span>:5000 registry:2
 </code></pre></div>
-
 <p>These commands will start your registry in <code>registry.localhost:5000</code>. In order to push to this registry, you will need to make it accessible as described in the next section.
 Once your registry is up and running, we will need to add it to your <code>registries.yaml</code> configuration file.
 Finally, you have to connect the registry network to the k3d cluster network: <code class="highlight">docker network connect k3d-k3s-default registry.localhost</code>. And then you can <a href="#testing-your-registry">test your local registry</a>.</p>
@@ -706,7 +702,6 @@ Otherwise, it&rsquo;s installable using <code>sudo apt install libnss-myhostname
 <p>If it&rsquo;s not the case, you can add an entry in your <code>/etc/hosts</code> file like this:</p>
 <div class="highlight"><pre><span></span><code><span class="m">127</span>.0.0.1 registry.localhost
 </code></pre></div>
-
 <p>Once again, this will only work with k3s &gt;= v0.10.0 (see the some sections below when using k3s &lt;= v0.9.1)</p>
 <h2 id="testing-your-registry">Testing your registry<a class="headerlink" href="#testing-your-registry" title="Permanent link">&para;</a></h2>
 <p>You should test that you can</p>

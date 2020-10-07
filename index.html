@@ -646,15 +646,12 @@
 <p>Create a cluster named <code>mycluster</code> with just a single server node:</p>
 <div class="highlight"><pre><span></span><code>k3d cluster create mycluster
 </code></pre></div>
-
 <p>Get the new cluster&rsquo;s connection details merged into your default kubeconfig (usually specified using the <code>KUBECONFIG</code> environment variable or the default path <code class="highlight"><span class="nv">$HOME</span>/.kube/config</code>) and directly switch to the new context:</p>
 <div class="highlight"><pre><span></span><code>k3d kubeconfig merge mycluster --switch-context
 </code></pre></div>
-
 <p>Use the new cluster with <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl/"><code>kubectl</code></a>, e.g.:</p>
 <div class="highlight"><pre><span></span><code>kubectl get nodes
 </code></pre></div>
-
 <h2 id="related-projects">Related Projects<a class="headerlink" href="#related-projects" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://github.com/inercia/k3x">k3x</a>: a graphics interface (for Linux) to k3d.</li>
