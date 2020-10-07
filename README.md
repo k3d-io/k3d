@@ -9,7 +9,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d?style=flat-square)](https://goreportcard.com/report/github.com/rancher/k3d)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
@@ -116,6 +116,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tr>
     <td align="center"><a href="https://twitter.com/iwilltry42"><img src="https://avatars3.githubusercontent.com/u/25345277?v=4" width="100px;" alt=""/><br /><sub><b>Thorsten Klein</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=iwilltry42" title="Code">💻</a> <a href="https://github.com/rancher/k3d/commits?author=iwilltry42" title="Documentation">📖</a> <a href="#ideas-iwilltry42" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-iwilltry42" title="Maintenance">🚧</a></td>
     <td align="center"><a href="https://blog.zeerorg.site/"><img src="https://avatars0.githubusercontent.com/u/13547997?v=4" width="100px;" alt=""/><br /><sub><b>Rishabh Gupta</b></sub></a><br /><a href="#ideas-zeerorg" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/rancher/k3d/commits?author=zeerorg" title="Code">💻</a></td>
+    <td align="center"><a href="http://www.zenika.com"><img src="https://avatars3.githubusercontent.com/u/25585516?v=4" width="100px;" alt=""/><br /><sub><b>Louis Tournayre</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=louiznk" title="Documentation">📖</a></td>
   </tr>
 </table>
 
