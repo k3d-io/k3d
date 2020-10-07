@@ -80,6 +80,16 @@ func resolveHostnameFromInside(ctx context.Context, rtime rt.Runtime, node *k3d.
 
 	submatches := map[string]string{}
 	scanner := bufio.NewScanner(logreader)
+	if scanner == nil {
+		if execErr != nil {
+			return nil, execErr
+		}
+		return nil, fmt.Errorf("Failed to scan logs for host IP")
+	}
+	if scanner != nil && execErr != nil {
+		log.Debugln("Exec Process Failed, but we still got logs, so we're at least trying to get the IP from there...")
+		log.Tracef("-> Exec Process Error was: %+v", execErr)
+	}
 	for scanner.Scan() {
 		log.Tracef("Scanning Log Line '%s'", scanner.Text())
 		match := nsLookupAddressRegexp.FindStringSubmatch(scanner.Text())

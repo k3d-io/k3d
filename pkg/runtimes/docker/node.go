@@ -308,7 +308,7 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 func (d Docker) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []string) (*bufio.Reader, error) {
 	resp, err := executeInNode(ctx, node, cmd)
 	if err != nil {
-		return nil, err
+		return resp.Reader, err
 	}
 	return resp.Reader, nil
 }
