@@ -27,11 +27,35 @@ In this example :
 
 You can add other options, [see](../commands.md).  
 
-The cluster will start without flannel (and without other CNI).
+The cluster will start without flannel and with Calico as CNI Plugin.
 
 For watching for the pod(s) deployment
+```bash
+    watch "kubectl get pods -n kube-system"    
 ```
-    watch "kubectl get pods -n kube-system"
+
+You will have something like this at begining (with the command line `kubectl get pods -n kube-system`)
+```
+NAME                                       READY   STATUS     RESTARTS   AGE
+helm-install-traefik-pn84f                 0/1     Pending    0          3s
+calico-node-97rx8                          0/1     Init:0/3   0          3s
+metrics-server-7566d596c8-hwnqq            0/1     Pending    0          2s
+calico-kube-controllers-58b656d69f-2z7cn   0/1     Pending    0          2s
+local-path-provisioner-6d59f47c7-rmswg     0/1     Pending    0          2s
+coredns-8655855d6-cxtnr                    0/1     Pending    0          2s
+```
+
+And when it finish to start
+```
+NAME                                       READY   STATUS      RESTARTS   AGE
+metrics-server-7566d596c8-hwnqq            1/1     Running     0          56s
+calico-node-97rx8                          1/1     Running     0          57s
+helm-install-traefik-pn84f                 0/1     Completed   1          57s
+svclb-traefik-lmjr5                        2/2     Running     0          28s
+calico-kube-controllers-58b656d69f-2z7cn   1/1     Running     0          56s
+local-path-provisioner-6d59f47c7-rmswg     1/1     Running     0          56s
+traefik-758cd5fc85-x8p57                   1/1     Running     0          28s
+coredns-8655855d6-cxtnr                    1/1     Running     0          56s
 ```
 
 Note : 
