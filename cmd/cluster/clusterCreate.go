@@ -315,7 +315,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 		}
 	}
 
-	log.Debugf("PortFilterMap: %+v", portFilterMap)
+	log.Tracef("PortFilterMap: %+v", portFilterMap)
 
 	/********************
 	 *									*

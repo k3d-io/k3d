@@ -44,7 +44,7 @@ func GetHostIP(ctx context.Context, rtime rt.Runtime, cluster *k3d.Cluster) (net
 	// Docker Runtime
 	if rtime == rt.Docker {
 
-		log.Debugf("Runtime GOOS: %s", runtime.GOOS)
+		log.Tracef("Runtime GOOS: %s", runtime.GOOS)
 
 		// "native" Docker on Linux
 		if runtime.GOOS == "linux" {
@@ -81,11 +81,14 @@ func resolveHostnameFromInside(ctx context.Context, rtime rt.Runtime, node *k3d.
 	submatches := map[string]string{}
 	scanner := bufio.NewScanner(logreader)
 	for scanner.Scan() {
+		log.Tracef("Scanning Log Line '%s'", scanner.Text())
 		match := nsLookupAddressRegexp.FindStringSubmatch(scanner.Text())
 		if len(match) == 0 {
 			continue
 		}
+		log.Tracef("-> Match(es): '%+v'", match)
 		submatches = util.MapSubexpNames(nsLookupAddressRegexp.SubexpNames(), match)
+		log.Tracef(" -> Submatch(es): %+v", submatches)
 		break
 	}
 	if _, ok := submatches["ip"]; !ok {

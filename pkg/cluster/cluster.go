@@ -277,7 +277,6 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			servers := ""
 			for _, node := range cluster.Nodes {
 				if node.Role == k3d.ServerRole {
-					log.Debugf("Node NAME: %s", node.Name)
 					if servers == "" {
 						servers = node.Name
 					} else {

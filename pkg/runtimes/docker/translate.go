@@ -80,7 +80,6 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	hostConfig.Privileged = true
 
 	/* Volumes */
-	log.Debugf("Volumes: %+v", node.Volumes)
 	hostConfig.Binds = node.Volumes
 	// containerConfig.Volumes = map[string]struct{}{} // TODO: do we need this? We only used binds before
 

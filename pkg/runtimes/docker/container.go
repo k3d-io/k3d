@@ -40,7 +40,7 @@ import (
 // createContainer creates a new docker container from translated specs
 func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string) error {
 
-	log.Debugf("Creating docker container with translated config\n%+v\n", dockerNode) // TODO: remove?
+	log.Tracef("Creating docker container with translated config\n%+v\n", dockerNode)
 
 	// initialize docker client
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -65,7 +65,7 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 			log.Errorf("Failed to create container '%s'", name)
 			return err
 		}
-		log.Debugln("Created container", resp.ID)
+		log.Debugf("Created container %s (ID: %s)", name, resp.ID)
 		break
 	}
 

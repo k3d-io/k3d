@@ -45,6 +45,7 @@ import (
 // RootFlags describes a struct that holds flags that can be set on root level of the command
 type RootFlags struct {
 	debugLogging bool
+	traceLogging bool
 	version      bool
 }
 
@@ -98,6 +99,7 @@ func init() {
 	// add persistent flags (present to all subcommands)
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k3d/config.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
+	rootCmd.PersistentFlags().BoolVar(&flags.traceLogging, "trace", false, "Enable super verbose output (trace logging)")
 
 	// add local flags
 	rootCmd.Flags().BoolVar(&flags.version, "version", false, "Show k3d and default k3s version")
@@ -121,10 +123,14 @@ func init() {
 
 // initLogging initializes the logger
 func initLogging() {
-	if flags.debugLogging {
+	if flags.traceLogging {
+		log.SetLevel(log.TraceLevel)
+	} else if flags.debugLogging {
 		log.SetLevel(log.DebugLevel)
 	} else {
 		switch logLevel := strings.ToUpper(os.Getenv("LOG_LEVEL")); logLevel {
+		case "TRACE":
+			log.SetLevel(log.TraceLevel)
 		case "DEBUG":
 			log.SetLevel(log.DebugLevel)
 		case "WARN":
@@ -150,6 +156,7 @@ func initLogging() {
 		LogLevels: []log.Level{
 			log.InfoLevel,
 			log.DebugLevel,
+			log.TraceLevel,
 		},
 	})
 	log.SetFormatter(&log.TextFormatter{

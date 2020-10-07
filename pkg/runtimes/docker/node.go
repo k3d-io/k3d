@@ -373,7 +373,7 @@ func executeInNode(ctx context.Context, node *k3d.Node, cmd []string) (*types.Hi
 
 		// if still running, continue loop
 		if execInfo.Running {
-			log.Debugf("Exec process '%+v' still running in node '%s'.. sleeping for 1 second...", cmd, node.Name)
+			log.Tracef("Exec process '%+v' still running in node '%s'.. sleeping for 1 second...", cmd, node.Name)
 			time.Sleep(1 * time.Second)
 			continue
 		}
