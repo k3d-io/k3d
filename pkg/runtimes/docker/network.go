@@ -23,6 +23,7 @@ package docker
 
 import (
 	"context"
+	"fmt"
 	"net"
 
 	"github.com/docker/docker/api/types"
@@ -46,12 +47,12 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (str
 	defer docker.Close()
 
 	// (1) configure list filters
-	args := filters.NewArgs()
-	args.Add("name", name)
+	filter := filters.NewArgs()
+	filter.Add("name", fmt.Sprintf("^/?%s$", name)) // regex filtering for exact name match
 
 	// (2) get filtered list of networks
 	networkList, err := docker.NetworkList(ctx, types.NetworkListOptions{
-		Filters: args,
+		Filters: filter,
 	})
 	if err != nil {
 		log.Errorln("Failed to list docker networks")
