@@ -214,7 +214,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			buf := new(bytes.Buffer)
 			nRead, _ := buf.ReadFrom(logreader)
 			logreader.Close()
-			if nRead > 0 && strings.Contains(buf.String(), "Running kubelet") {
+			if nRead > 0 && strings.Contains(buf.String(), k3d.ReadyLogMessageByRole[k3d.ServerRole]) {
 				log.Debugln("Initializing server node is up... continuing")
 				break
 			}

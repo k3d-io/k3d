@@ -49,7 +49,7 @@ const DefaultObjectNamePrefix = "k3d"
 
 // ReadyLogMessageByRole defines the log messages we wait for until a server node is considered ready
 var ReadyLogMessageByRole = map[Role]string{
-	ServerRole:       "Wrote kubeconfig",
+	ServerRole:       "k3s is up and running",
 	AgentRole:        "Successfully registered node",
 	LoadBalancerRole: "start worker processes",
 }
