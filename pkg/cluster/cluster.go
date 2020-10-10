@@ -257,13 +257,10 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 
 		// asynchronously wait for this server node to be ready (by checking the logs for a specific log mesage)
 		if node.Role == k3d.ServerRole && cluster.CreateClusterOpts.WaitForServer {
-			serverNode := node
-			waitForServerWaitgroup.Go(func() error {
-				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
-				// ... by scanning for this line in logs and restarting the container in case it appears
-				log.Debugf("Starting to wait for server node '%s'", serverNode.Name)
-				return NodeWaitForLogMessage(clusterCreateCtx, runtime, serverNode, k3d.ReadyLogMessageByRole[k3d.ServerRole], time.Time{})
-			})
+			log.Debugf("Waiting for server node '%s' to get ready", node.Name)
+			if err := NodeWaitForLogMessage(clusterCreateCtx, runtime, node, k3d.ReadyLogMessageByRole[k3d.ServerRole], time.Time{}); err != nil {
+				return fmt.Errorf("Server node '%s' failed to get ready: %+v", node.Name, err)
+			}
 		}
 	}
 
