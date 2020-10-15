@@ -37,6 +37,14 @@ type FParseErrWhitelist flag.ParseErrorsWhitelist
 // definition to ensure usability.
 type Command struct {
 	// Use is the one-line usage message.
+	// Recommended syntax is as follow:
+	//   [ ] identifies an optional argument. Arguments that are not enclosed in brackets are required.
+	//   ... indicates that you can specify multiple values for the previous argument.
+	//   |   indicates mutually exclusive information. You can use the argument to the left of the separator or the
+	//       argument to the right of the separator. You cannot use both arguments in a single use of the command.
+	//   { } delimits a set of mutually exclusive arguments when one of the arguments is required. If the arguments are
+	//       optional, they are enclosed in brackets ([ ]).
+	// Example: add [-F file | -D dir]... [-f format] profile
 	Use string
 
 	// Aliases is an array of aliases that can be used instead of the first word in Use.
@@ -359,7 +367,7 @@ func (c *Command) UsageFunc() (f func(*Command) error) {
 		c.mergePersistentFlags()
 		err := tmpl(c.OutOrStderr(), c.UsageTemplate(), c)
 		if err != nil {
-			c.Println(err)
+			c.PrintErrln(err)
 		}
 		return err
 	}
@@ -387,7 +395,7 @@ func (c *Command) HelpFunc() func(*Command, []string) {
 		// See https://github.com/spf13/cobra/issues/1002
 		err := tmpl(c.OutOrStdout(), c.HelpTemplate(), c)
 		if err != nil {
-			c.Println(err)
+			c.PrintErrln(err)
 		}
 	}
 }
@@ -930,8 +938,8 @@ func (c *Command) ExecuteC() (cmd *Command, err error) {
 			c = cmd
 		}
 		if !c.SilenceErrors {
-			c.Println("Error:", err.Error())
-			c.Printf("Run '%v --help' for usage.\n", c.CommandPath())
+			c.PrintErrln("Error:", err.Error())
+			c.PrintErrf("Run '%v --help' for usage.\n", c.CommandPath())
 		}
 		return c, err
 	}
@@ -959,7 +967,7 @@ func (c *Command) ExecuteC() (cmd *Command, err error) {
 		// If root command has SilentErrors flagged,
 		// all subcommands should respect it
 		if !cmd.SilenceErrors && !c.SilenceErrors {
-			c.Println("Error:", err.Error())
+			c.PrintErrln("Error:", err.Error())
 		}
 
 		// If root command has SilentUsage flagged,
@@ -1201,12 +1209,12 @@ func (c *Command) PrintErr(i ...interface{}) {
 
 // PrintErrln is a convenience method to Println to the defined Err output, fallback to Stderr if not set.
 func (c *Command) PrintErrln(i ...interface{}) {
-	c.Print(fmt.Sprintln(i...))
+	c.PrintErr(fmt.Sprintln(i...))
 }
 
 // PrintErrf is a convenience method to Printf to the defined Err output, fallback to Stderr if not set.
 func (c *Command) PrintErrf(format string, i ...interface{}) {
-	c.Print(fmt.Sprintf(format, i...))
+	c.PrintErr(fmt.Sprintf(format, i...))
 }
 
 // CommandPath returns the full path to this command.
