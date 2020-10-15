@@ -78,6 +78,13 @@ func resolveHostnameFromInside(ctx context.Context, rtime rt.Runtime, node *k3d.
 
 	logreader, execErr := rtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", fmt.Sprintf("nslookup %s", hostname)})
 
+	if logreader == nil {
+		if execErr != nil {
+			return nil, execErr
+		}
+		return nil, fmt.Errorf("Failed to get logs from exec process")
+	}
+
 	submatches := map[string]string{}
 	scanner := bufio.NewScanner(logreader)
 	if scanner == nil {
