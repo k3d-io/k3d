@@ -356,38 +356,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 
 	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
 	if !cluster.CreateClusterOpts.PrepDisableHostIPInjection {
-		log.Infoln("(Optional) Trying to get IP of the docker host and inject it into the cluster as 'host.k3d.internal' for easy access")
-		hostIP, err := GetHostIP(clusterPrepCtx, runtime, cluster)
-		if err != nil {
-			log.Warnln("Failed to get HostIP: %+v", err)
-		}
-		if hostIP != nil {
-			hostRecordSuccessMessage := ""
-			etcHostsFailureCount := 0
-			hostsEntry := fmt.Sprintf("%s %s", hostIP, k3d.DefaultK3dInternalHostRecord)
-			log.Debugf("Adding extra host entry '%s'...", hostsEntry)
-			for _, node := range cluster.Nodes {
-				if err := runtime.ExecInNode(clusterPrepCtx, node, []string{"sh", "-c", fmt.Sprintf("echo '%s' >> /etc/hosts", hostsEntry)}); err != nil {
-					log.Warnf("Failed to add extra entry '%s' to /etc/hosts in node '%s'", hostsEntry, node.Name)
-					etcHostsFailureCount++
-				}
-			}
-			if etcHostsFailureCount < len(cluster.Nodes) {
-				hostRecordSuccessMessage += fmt.Sprintf("Successfully added host record to /etc/hosts in %d/%d nodes", (len(cluster.Nodes) - etcHostsFailureCount), len(cluster.Nodes))
-			}
-
-			patchCmd := `test=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s+host\.k3d\.internal$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$test"`
-			if err = runtime.ExecInNode(clusterPrepCtx, cluster.Nodes[0], []string{"sh", "-c", patchCmd}); err != nil {
-				log.Warnf("Failed to patch CoreDNS ConfigMap to include entry '%s': %+v", hostsEntry, err)
-			} else {
-				hostRecordSuccessMessage += " and to the CoreDNS ConfigMap"
-			}
-
-			if hostRecordSuccessMessage != "" {
-				log.Infoln(hostRecordSuccessMessage)
-			}
-
-		}
+		prepInjectHostIP(clusterPrepCtx, runtime, cluster)
 	}
 
 	return nil
@@ -674,4 +643,40 @@ func SortClusters(clusters []*k3d.Cluster) []*k3d.Cluster {
 		return clusters[i].Name < clusters[j].Name
 	})
 	return clusters
+}
+
+// prepInjectHostIP adds /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
+func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) {
+	log.Infoln("(Optional) Trying to get IP of the docker host and inject it into the cluster as 'host.k3d.internal' for easy access")
+	hostIP, err := GetHostIP(ctx, runtime, cluster)
+	if err != nil {
+		log.Warnf("Failed to get HostIP: %+v", err)
+	}
+	if hostIP != nil {
+		hostRecordSuccessMessage := ""
+		etcHostsFailureCount := 0
+		hostsEntry := fmt.Sprintf("%s %s", hostIP, k3d.DefaultK3dInternalHostRecord)
+		log.Debugf("Adding extra host entry '%s'...", hostsEntry)
+		for _, node := range cluster.Nodes {
+			if err := runtime.ExecInNode(ctx, node, []string{"sh", "-c", fmt.Sprintf("echo '%s' >> /etc/hosts", hostsEntry)}); err != nil {
+				log.Warnf("Failed to add extra entry '%s' to /etc/hosts in node '%s'", hostsEntry, node.Name)
+				etcHostsFailureCount++
+			}
+		}
+		if etcHostsFailureCount < len(cluster.Nodes) {
+			hostRecordSuccessMessage += fmt.Sprintf("Successfully added host record to /etc/hosts in %d/%d nodes", (len(cluster.Nodes) - etcHostsFailureCount), len(cluster.Nodes))
+		}
+
+		patchCmd := `test=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s+host\.k3d\.internal$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$test"`
+		if err = runtime.ExecInNode(ctx, cluster.Nodes[0], []string{"sh", "-c", patchCmd}); err != nil {
+			log.Warnf("Failed to patch CoreDNS ConfigMap to include entry '%s': %+v", hostsEntry, err)
+		} else {
+			hostRecordSuccessMessage += " and to the CoreDNS ConfigMap"
+		}
+
+		if hostRecordSuccessMessage != "" {
+			log.Infoln(hostRecordSuccessMessage)
+		}
+
+	}
 }
