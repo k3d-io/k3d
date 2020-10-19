@@ -667,7 +667,7 @@ func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.C
 			hostRecordSuccessMessage += fmt.Sprintf("Successfully added host record to /etc/hosts in %d/%d nodes", (len(cluster.Nodes) - etcHostsFailureCount), len(cluster.Nodes))
 		}
 
-		patchCmd := `test=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s+host\.k3d\.internal$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$test"`
+		patchCmd := `test=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s+host\.k3d\.internal$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | busybox xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$test"`
 		if err = runtime.ExecInNode(ctx, cluster.Nodes[0], []string{"sh", "-c", patchCmd}); err != nil {
 			log.Warnf("Failed to patch CoreDNS ConfigMap to include entry '%s': %+v", hostsEntry, err)
 		} else {
