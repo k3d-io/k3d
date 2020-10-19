@@ -24,6 +24,7 @@ package cluster
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -488,6 +489,8 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 	return nil
 }
 
+var ClusterGetNoNodesFoundError = errors.New("No nodes found for given cluster")
+
 // ClusterGet returns an existing cluster with all fields and node lists populated
 func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) (*k3d.Cluster, error) {
 	// get nodes that belong to the selected cluster
@@ -497,7 +500,7 @@ func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster
 	}
 
 	if len(nodes) == 0 {
-		return nil, fmt.Errorf("No nodes found for cluster '%s'", cluster.Name)
+		return nil, ClusterGetNoNodesFoundError
 	}
 
 	// append nodes
