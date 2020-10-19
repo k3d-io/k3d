@@ -318,7 +318,15 @@ func (d Docker) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []str
 
 // ExecInNode execs a command inside a node
 func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) error {
-	_, err := executeInNode(ctx, node, cmd)
+	execConnection, err := executeInNode(ctx, node, cmd)
+	if err != nil {
+		logs, err := ioutil.ReadAll(execConnection.Reader)
+		if err != nil {
+			log.Errorf("Failed to get logs from errored exec process in node '%s'", node.Name)
+			return err
+		}
+		err = fmt.Errorf("%w: Logs from failed access process:\n%s", err, string(logs))
+	}
 	return err
 }
 
@@ -384,22 +392,11 @@ func executeInNode(ctx context.Context, node *k3d.Node, cmd []string) (*types.Hi
 		// check exitcode
 		if execInfo.ExitCode == 0 { // success
 			log.Debugf("Exec process in node '%s' exited with '0'", node.Name)
-			break
-		}
-
-		if execInfo.ExitCode != 0 { // failed
-
-			logs, err := ioutil.ReadAll(execConnection.Reader)
-			if err != nil {
-				log.Errorf("Failed to get logs from node '%s'", node.Name)
-				return &execConnection, err
-			}
-
-			return &execConnection, fmt.Errorf("Logs from failed access process:\n%s", string(logs))
+			return &execConnection, nil
+		} else { // failed
+			return &execConnection, fmt.Errorf("Exec process in node '%s' failed with exit code '%d'", node.Name, execInfo.ExitCode)
 		}
 
 	}
-
-	return &execConnection, nil
 
 }

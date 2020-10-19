@@ -91,7 +91,7 @@ func resolveHostnameFromInside(ctx context.Context, rtime rt.Runtime, node *k3d.
 		if execErr != nil {
 			return nil, execErr
 		}
-		return nil, fmt.Errorf("Failed to scan logs for host IP")
+		return nil, fmt.Errorf("Failed to scan logs for host IP: Could not create scanner from logreader")
 	}
 	if scanner != nil && execErr != nil {
 		log.Debugln("Exec Process Failed, but we still got logs, so we're at least trying to get the IP from there...")
