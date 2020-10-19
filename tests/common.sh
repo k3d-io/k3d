@@ -23,7 +23,7 @@ bye() {
   exit 0
 }
 
-warn() { log "${RED}!!! WARNING !!! $1 ${END}"; }
+warn() { log "${RED}WARN: $1 ${END}"; }
 
 abort() {
   log "${RED}FATAL: $1${END}"
@@ -158,7 +158,7 @@ wait_for_pod_exec() {
   max_retries=$([[ -n "$3" ]] && echo "$3" || echo "10")
   for (( i=0; i<=max_retries; i++ )); do
     echo "Try #$i: 'kubectl exec $1 -- $2'"
-    kubectl exec "$1" -- $2 && return 0
+    kubectl exec "$1" -- $2 > /dev/null && return 0
     sleep 1
   done
   echo "Command '$2' in pod '$1' did NOT return successfully in $max_retries tries"

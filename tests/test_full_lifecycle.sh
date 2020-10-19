@@ -6,10 +6,22 @@ CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./common.sh
 source "$CURR_DIR/common.sh"
 
+
+: "${EXTRA_FLAG:=""}"
+: "${EXTRA_TITLE:=""}"
+
+if [[ -n "$K3S_IMAGE_TAG" ]]; then
+  EXTRA_FLAG="--image rancher/k3s:$K3S_IMAGE_TAG"
+  EXTRA_TITLE="(rancher/k3s:$K3S_IMAGE_TAG)"
+fi
+
+
 clustername="lifecycletest"
 
+highlight "[START] Lifecycletest $EXTRA_TITLE"
+
 info "Creating cluster $clustername..."
-$EXE cluster create "$clustername" --agents 1 --api-port 6443 --wait --timeout 360s || failed "could not create cluster $clustername"
+$EXE cluster create "$clustername" --agents 1 --api-port 6443 --wait --timeout 360s $EXTRA_FLAG || failed "could not create cluster $clustername $EXTRA_TITLE"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
 sleep 5
@@ -70,6 +82,8 @@ wait_for_pod_exec "testimage" "nslookup host.k3d.internal" 15 || failed "DNS Loo
 
 info "Deleting cluster $clustername..."
 $EXE cluster delete "$clustername" || failed "could not delete the cluster $clustername"
+
+highlight "[DONE] Lifecycletest $EXTRA_TITLE"
 
 exit 0
 
