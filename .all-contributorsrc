@@ -35,6 +35,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "lionelnicolas",
+      "name": "Lionel Nicolas",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/6538664?v=4",
+      "profile": "https://github.com/lionelnicolas",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
