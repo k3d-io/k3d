@@ -1,3 +1,4 @@
-kind: simple
+apiVersion: k3d.io/v1alpha1
+kind: Simple
 name: supertest
 agents: 8

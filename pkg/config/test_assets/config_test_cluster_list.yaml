@@ -1,4 +1,5 @@
 ---
+apiVersion: k3d.io/v1alpha1
 kind: ClusterList
 clusters:
   - name: foo

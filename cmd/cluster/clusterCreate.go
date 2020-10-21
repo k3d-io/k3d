@@ -33,6 +33,7 @@ import (
 	cliutil "github.com/rancher/k3d/v3/cmd/util"
 	k3dCluster "github.com/rancher/k3d/v3/pkg/cluster"
 	"github.com/rancher/k3d/v3/pkg/config"
+	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 	"github.com/rancher/k3d/v3/version"
@@ -51,7 +52,7 @@ Every cluster will consist of one or more containers:
 // NewCmdClusterCreate returns a new cobra command
 func NewCmdClusterCreate() *cobra.Command {
 
-	simpleConfig := &config.SimpleConfig{}
+	simpleConfig := &conf.SimpleConfig{}
 	var configFile string
 
 	// create new command
@@ -72,7 +73,7 @@ func NewCmdClusterCreate() *cobra.Command {
 				if err != nil {
 					log.Fatalln(err)
 				}
-				simpleConfig, err = config.MergeSimple(*simpleConfig, configFromFile.(config.SimpleConfig))
+				simpleConfig, err = config.MergeSimple(*simpleConfig, configFromFile.(conf.SimpleConfig))
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -188,7 +189,7 @@ func NewCmdClusterCreate() *cobra.Command {
 }
 
 // parseCreateClusterCmd parses the command input into variables required to create a cluster
-func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *config.SimpleConfig) *config.SimpleConfig {
+func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf.SimpleConfig) *conf.SimpleConfig {
 
 	/********************************
 	 * Parse and validate arguments *
@@ -260,7 +261,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 	}
 
 	for volume, nodeFilters := range volumeFilterMap {
-		simpleConfig.Volumes = append(simpleConfig.Volumes, config.VolumeWithNodeFilters{
+		simpleConfig.Volumes = append(simpleConfig.Volumes, conf.VolumeWithNodeFilters{
 			Volume:      volume,
 			NodeFilters: nodeFilters,
 		})
@@ -294,7 +295,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 	}
 
 	for port, nodeFilters := range portFilterMap {
-		simpleConfig.Ports = append(simpleConfig.Ports, config.PortWithNodeFilters{
+		simpleConfig.Ports = append(simpleConfig.Ports, conf.PortWithNodeFilters{
 			Port:        port,
 			NodeFilters: nodeFilters,
 		})

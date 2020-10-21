@@ -1,4 +1,5 @@
-kind: cluster
+apiVersion: k3d.io/v1alpha1
+kind: Cluster
 name: foo
 nodes:
   - name: foo-node-0

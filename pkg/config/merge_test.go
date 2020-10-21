@@ -25,6 +25,7 @@ package config
 import (
 	"testing"
 
+	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
 	"gotest.tools/assert"
 )
 
@@ -32,7 +33,7 @@ func TestMergeSimpleConfig(t *testing.T) {
 	srcConfig := "./test_assets/config_test_simple.yaml"
 	destConfig := "./test_assets/config_test_simple_2.yaml"
 
-	var src, dest Config
+	var src, dest conf.Config
 	var err error
 
 	if src, err = ReadConfig(srcConfig); err != nil {
@@ -43,16 +44,16 @@ func TestMergeSimpleConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	mergedConfig, err := MergeSimple(dest.(SimpleConfig), src.(SimpleConfig))
+	mergedConfig, err := MergeSimple(dest.(conf.SimpleConfig), src.(conf.SimpleConfig))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// ensure that we get the two filled fields of destConfig
-	assert.Equal(t, mergedConfig.Name, dest.(SimpleConfig).Name)
-	assert.Equal(t, mergedConfig.Agents, dest.(SimpleConfig).Agents)
+	assert.Equal(t, mergedConfig.Name, dest.(conf.SimpleConfig).Name)
+	assert.Equal(t, mergedConfig.Agents, dest.(conf.SimpleConfig).Agents)
 
 	// ensure that we get the other fields from the srcConfig (only checking two of them here)
-	assert.Equal(t, mergedConfig.Servers, src.(SimpleConfig).Servers)
-	assert.Equal(t, mergedConfig.Image, src.(SimpleConfig).Image)
+	assert.Equal(t, mergedConfig.Servers, src.(conf.SimpleConfig).Servers)
+	assert.Equal(t, mergedConfig.Image, src.(conf.SimpleConfig).Image)
 }

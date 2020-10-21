@@ -26,6 +26,7 @@ import (
 	"context"
 	"testing"
 
+	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 )
 
@@ -37,7 +38,7 @@ func TestValidateClusterConfig(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := ValidateClusterConfig(context.Background(), runtimes.Docker, cfg.(ClusterConfig)); err != nil {
+	if err := ValidateClusterConfig(context.Background(), runtimes.Docker, cfg.(conf.ClusterConfig)); err != nil {
 		t.Error(err)
 	}
 }

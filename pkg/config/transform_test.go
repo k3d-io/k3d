@@ -26,6 +26,7 @@ import (
 	"context"
 	"testing"
 
+	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 )
 
@@ -37,7 +38,7 @@ func TestTransformSimpleConfigToClusterConfig(t *testing.T) {
 		t.Error(err)
 	}
 
-	simpleCfg, ok := cfg.(SimpleConfig)
+	simpleCfg, ok := cfg.(conf.SimpleConfig)
 	if !ok {
 		t.Error("Config is not of type SimpleConfig")
 	}

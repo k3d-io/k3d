@@ -27,6 +27,7 @@ import (
 	"time"
 
 	k3dc "github.com/rancher/k3d/v3/pkg/cluster"
+	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 	"github.com/rancher/k3d/v3/pkg/util"
@@ -37,7 +38,7 @@ import (
 )
 
 // ValidateClusterConfig checks a given cluster config for basic errors
-func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config ClusterConfig) error {
+func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config conf.ClusterConfig) error {
 	// cluster name must be a valid host name
 	if err := k3dc.CheckName(config.Cluster.Name); err != nil {
 		log.Errorf("Provided cluster name '%s' does not match requirements", config.Cluster.Name)

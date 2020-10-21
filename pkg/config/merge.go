@@ -24,11 +24,12 @@ package config
 
 import (
 	"github.com/imdario/mergo"
+	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
 	log "github.com/sirupsen/logrus"
 )
 
 // MergeSimple merges two simple configuration files with the values of the destination one having priority
-func MergeSimple(dest, src SimpleConfig) (*SimpleConfig, error) {
+func MergeSimple(dest, src conf.SimpleConfig) (*conf.SimpleConfig, error) {
 	log.Debugf("Merging %+v into %+v", src, dest)
 
 	if err := mergo.Merge(&dest, src); err != nil {

@@ -27,12 +27,13 @@ import (
 	"fmt"
 
 	"github.com/rancher/k3d/v3/cmd/util"
+	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 )
 
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration
-func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtime, simpleConfig SimpleConfig) (*ClusterConfig, error) {
+func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtime, simpleConfig conf.SimpleConfig) (*conf.ClusterConfig, error) {
 
 	clusterNetwork := k3d.ClusterNetwork{}
 	if simpleConfig.Network != "" {
@@ -145,7 +146,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	 * Create Full Cluster Config *
 	 ******************************/
 
-	clusterConfig := &ClusterConfig{
+	clusterConfig := &conf.ClusterConfig{
 		Cluster:           newCluster,
 		ClusterCreateOpts: *newCluster.ClusterCreateOpts,
 	}

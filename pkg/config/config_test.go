@@ -26,13 +26,18 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
+	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
 
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 )
 
 func TestReadSimpleConfig(t *testing.T) {
 
-	expectedConfig := SimpleConfig{
+	expectedConfig := conf.SimpleConfig{
+		TypeMeta: conf.TypeMeta{
+			APIVersion: "k3d.io/v1alpha1",
+			Kind:       "Simple",
+		},
 		Name:    "test",
 		Servers: 1,
 		Agents:  2,
@@ -41,13 +46,13 @@ func TestReadSimpleConfig(t *testing.T) {
 			Port:   "6443",
 		},
 		Image: "rancher/k3s:latest",
-		Volumes: []VolumeWithNodeFilters{
+		Volumes: []conf.VolumeWithNodeFilters{
 			{
 				Volume:      "/my/path:/some/path",
 				NodeFilters: []string{"all"},
 			},
 		},
-		Ports: []PortWithNodeFilters{
+		Ports: []conf.PortWithNodeFilters{
 			{
 				Port:        "80:80",
 				NodeFilters: []string{"loadbalancer"},
@@ -56,18 +61,18 @@ func TestReadSimpleConfig(t *testing.T) {
 				NodeFilters: []string{"loadbalancer"},
 			},
 		},
-		Options: SimpleConfigOptions{
-			K3dOptions: SimpleConfigOptionsK3d{
+		Options: conf.SimpleConfigOptions{
+			K3dOptions: conf.SimpleConfigOptionsK3d{
 				Wait:                true,
 				Timeout:             60 * time.Second,
 				DisableLoadbalancer: false,
 				DisableImageVolume:  false,
 			},
-			K3sOptions: SimpleConfigOptionsK3s{
+			K3sOptions: conf.SimpleConfigOptionsK3s{
 				ExtraServerArgs: []string{"--tls-san=127.0.0.1"},
 				ExtraAgentArgs:  []string{},
 			},
-			KubeconfigOptions: SimpleConfigOptionsKubeconfig{
+			KubeconfigOptions: conf.SimpleConfigOptionsKubeconfig{
 				UpdateDefaultKubeconfig: true,
 				SwitchCurrentContext:    true,
 			},
@@ -81,7 +86,7 @@ func TestReadSimpleConfig(t *testing.T) {
 		t.Error(err)
 	}
 
-	simpleCfg, ok := cfg.(SimpleConfig)
+	simpleCfg, ok := cfg.(conf.SimpleConfig)
 	if !ok {
 		t.Error("Config is not of type SimpleConfig")
 	}
@@ -96,7 +101,11 @@ func TestReadSimpleConfig(t *testing.T) {
 
 func TestReadClusterConfig(t *testing.T) {
 
-	expectedConfig := ClusterConfig{
+	expectedConfig := conf.ClusterConfig{
+		TypeMeta: conf.TypeMeta{
+			APIVersion: "k3d.io/v1alpha1",
+			Kind:       "Cluster",
+		},
 		Cluster: k3d.Cluster{
 			Name: "foo",
 			Nodes: []*k3d.Node{
@@ -125,7 +134,11 @@ func TestReadClusterConfig(t *testing.T) {
 
 func TestReadClusterListConfig(t *testing.T) {
 
-	expectedConfig := ClusterListConfig{
+	expectedConfig := conf.ClusterListConfig{
+		TypeMeta: conf.TypeMeta{
+			APIVersion: "k3d.io/v1alpha1",
+			Kind:       "ClusterList",
+		},
 		Clusters: []k3d.Cluster{
 			{
 				Name: "foo",
