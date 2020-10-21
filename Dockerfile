@@ -9,3 +9,7 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s 
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 COPY --from=builder /app/bin/k3d /bin/k3d
+
+FROM scratch as binary-only
+COPY --from=builder /app/bin/k3d /bin/k3d
+ENTRYPOINT ["/bin/k3d"]
