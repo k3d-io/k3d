@@ -44,6 +44,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "toonsevrin",
+      "name": "Toon Sevrin",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/5507199?v=4",
+      "profile": "https://github.com/toonsevrin.keys",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
