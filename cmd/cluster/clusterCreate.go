@@ -219,11 +219,6 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 	 * Parse and validate flags *
 	 ****************************/
 
-	// -> IMAGE // TODO: move fetching latest version to pkg
-	// if simpleConfig.Image == "latest" {
-	// 	simpleConfig.Image = version.GetK3sVersion(true)
-	// }
-
 	// -> WAIT TIMEOUT // TODO: timeout to be validated in pkg/
 	if cmd.Flags().Changed("timeout") && simpleConfig.Options.K3dOptions.Timeout <= 0*time.Second {
 		log.Fatalln("--timeout DURATION must be >= 1s")

@@ -30,6 +30,7 @@ import (
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 	"github.com/rancher/k3d/v3/pkg/util"
+	"github.com/rancher/k3d/v3/version"
 )
 
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration
@@ -38,6 +39,11 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	// set default cluster name
 	if simpleConfig.Name == "" {
 		simpleConfig.Name = k3d.DefaultClusterName
+	}
+
+	// fetch latest image
+	if simpleConfig.Image == "latest" {
+		simpleConfig.Image = version.GetK3sVersion(true)
 	}
 
 	clusterNetwork := k3d.ClusterNetwork{}
