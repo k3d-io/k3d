@@ -356,7 +356,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	 */
 
 	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
-	if !cluster.CreateClusterOpts.PrepDisableHostIPInjection {
+	if !cluster.ClusterCreateOpts.PrepDisableHostIPInjection {
 		prepInjectHostIP(clusterPrepCtx, runtime, cluster)
 	}
 

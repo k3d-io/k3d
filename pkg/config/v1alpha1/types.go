@@ -62,10 +62,12 @@ type SimpleConfigOptions struct {
 }
 
 type SimpleConfigOptionsK3d struct {
-	Wait                bool          `mapstructure:"wait" yaml:"wait"`
-	Timeout             time.Duration `mapstructure:"timeout" yaml:"timeout"`
-	DisableLoadbalancer bool          `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer"`
-	DisableImageVolume  bool          `mapstructure:"disableImageVolume" yaml:"disableImageVolume"`
+	Wait                       bool          `mapstructure:"wait" yaml:"wait"`
+	Timeout                    time.Duration `mapstructure:"timeout" yaml:"timeout"`
+	DisableLoadbalancer        bool          `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer"`
+	DisableImageVolume         bool          `mapstructure:"disableImageVolume" yaml:"disableImageVolume"`
+	NoRollback                 bool          `mapstructure:"noRollback" yaml:"noRollback"`
+	PrepDisableHostIPInjection bool          `mapstructure:"prepDisableHostIPInjection" yaml:"prepDisableHostIPInjection"`
 }
 
 type SimpleConfigOptionsK3s struct {

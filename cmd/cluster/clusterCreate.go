@@ -107,7 +107,7 @@ func NewCmdClusterCreate() *cobra.Command {
 			if err := k3dCluster.ClusterCreate(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster); err != nil {
 				// rollback if creation failed
 				log.Errorln(err)
-				if noRollback {
+				if simpleConfig.Options.K3dOptions.NoRollback {
 					log.Fatalln("Cluster creation FAILED, rollback deactivated.")
 				}
 				// rollback if creation failed
@@ -159,8 +159,8 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().BoolVar(&simpleConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig, "update-default-kubeconfig", true, "Directly update the default kubeconfig with the new cluster's context")
 	cmd.Flags().BoolVar(&simpleConfig.Options.KubeconfigOptions.SwitchCurrentContext, "switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (requires --update-default-kubeconfig)")
 	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.DisableLoadbalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
-	cmd.Flags().BoolVar(&noRollback, "no-rollback", false, "Disable the automatic rollback actions, if anything goes wrong")
-	cmd.Flags().BoolVar(&createClusterOpts.PrepDisableHostIPInjection, "no-hostip", false, "Disable the automatic injection of the Host IP as 'host.k3d.internal' into the containers and CoreDNS")
+	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.NoRollback, "no-rollback", false, "Disable the automatic rollback actions, if anything goes wrong")
+	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.PrepDisableHostIPInjection, "no-hostip", false, "Disable the automatic injection of the Host IP as 'host.k3d.internal' into the containers and CoreDNS")
 
 	/* Image Importing */
 	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")

@@ -160,9 +160,6 @@ e2e: build-docker-dind
 
 ci-tests: fmt check e2e
 
-test:
-	$(GO) test ./...
-
 ##########################
 ########## Misc ##########
 ##########################
