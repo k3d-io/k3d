@@ -22,9 +22,11 @@ THE SOFTWARE.
 package runtimes
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"time"
 
 	"github.com/rancher/k3d/v3/pkg/runtimes/containerd"
@@ -63,9 +65,11 @@ type Runtime interface {
 	GetVolume(string) (string, error)
 	GetRuntimePath() string // returns e.g. '/var/run/docker.sock' for a default docker setup
 	ExecInNode(context.Context, *k3d.Node, []string) error
+	ExecInNodeGetLogs(context.Context, *k3d.Node, []string) (*bufio.Reader, error)
 	GetNodeLogs(context.Context, *k3d.Node, time.Time) (io.ReadCloser, error)
 	GetImages(context.Context) ([]string, error)
 	CopyToNode(context.Context, string, string, *k3d.Node) error
+	GetHostIP(context.Context, string) (net.IP, error)
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it

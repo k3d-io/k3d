@@ -42,6 +42,7 @@ REC_DIRS := cmd
 ########## Test Settings ##########
 E2E_LOG_LEVEL ?= WARN
 E2E_SKIP ?=
+E2E_EXTRA ?=
 E2E_RUNNER_START_TIMEOUT ?= 10
 
 ########## Go Build Options ##########
@@ -53,7 +54,7 @@ TARGET_OBJS ?= darwin-amd64.tar.gz darwin-amd64.tar.gz.sha256 linux-amd64.tar.gz
 GO        ?= go
 PKG       := $(shell go mod vendor)
 TAGS      :=
-TESTS     := .
+TESTS     := ./...
 TESTFLAGS :=
 LDFLAGS   := -w -s -X github.com/rancher/k3d/v3/version.Version=${GIT_TAG} -X github.com/rancher/k3d/v3/version.K3sVersion=${K3S_TAG}
 GCFLAGS   := 
@@ -150,9 +151,12 @@ check: check-fmt lint
 ########## Tests ##########
 ###########################
 
+test:
+	$(GO) test $(TESTS) $(TESTFLAGS)
+
 e2e: build-docker-dind
 	@echo "Running e2e tests in k3d:$(K3D_IMAGE_TAG)"
-	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_SKIP="$(E2E_SKIP)" E2E_RUNNER_START_TIMEOUT=$(E2E_RUNNER_START_TIMEOUT) tests/dind.sh "${K3D_IMAGE_TAG}-dind"
+	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_SKIP="$(E2E_SKIP)" E2E_EXTRA="$(E2E_EXTRA)" E2E_RUNNER_START_TIMEOUT=$(E2E_RUNNER_START_TIMEOUT) tests/dind.sh "${K3D_IMAGE_TAG}-dind"
 
 ci-tests: fmt check e2e
 
@@ -201,7 +205,7 @@ endif
 ci-setup:
 	@echo "Installing Go tools..."
 	curl -sfL $(PKG_GOLANGCI_LINT_SCRIPT) | sh -s -- -b ${GOPATH}/bin v$(PKG_GOLANGCI_LINT_VERSION)
-	go get $(PKG_GOX)
+	$(GO) get $(PKG_GOX)
 
 	@echo "Installing kubectl..."
 	curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl

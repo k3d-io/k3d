@@ -23,6 +23,7 @@ THE SOFTWARE.
 package docker
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -303,22 +304,47 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 	return logreader, nil
 }
 
+// ExecInNodeGetLogs executes a command inside a node and returns the logs to the caller, e.g. to parse them
+func (d Docker) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []string) (*bufio.Reader, error) {
+	resp, err := executeInNode(ctx, node, cmd)
+	if err != nil {
+		if resp != nil && resp.Reader != nil { // sometimes the exec process returns with a non-zero exit code, but we still have the logs we
+			return resp.Reader, err
+		}
+		return nil, err
+	}
+	return resp.Reader, nil
+}
+
 // ExecInNode execs a command inside a node
 func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) error {
+	execConnection, err := executeInNode(ctx, node, cmd)
+	if err != nil {
+		logs, err := ioutil.ReadAll(execConnection.Reader)
+		if err != nil {
+			log.Errorf("Failed to get logs from errored exec process in node '%s'", node.Name)
+			return err
+		}
+		err = fmt.Errorf("%w: Logs from failed access process:\n%s", err, string(logs))
+	}
+	return err
+}
+
+func executeInNode(ctx context.Context, node *k3d.Node, cmd []string) (*types.HijackedResponse, error) {
 
 	log.Debugf("Executing command '%+v' in node '%s'", cmd, node.Name)
 
 	// get the container for the given node
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// create docker client
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")
-		return err
+		return nil, err
 	}
 	defer docker.Close()
 
@@ -332,7 +358,7 @@ func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) er
 	})
 	if err != nil {
 		log.Errorf("Failed to create exec config for node '%s'", node.Name)
-		return err
+		return nil, err
 	}
 
 	execConnection, err := docker.ContainerExecAttach(ctx, exec.ID, types.ExecStartCheck{
@@ -340,13 +366,12 @@ func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) er
 	})
 	if err != nil {
 		log.Errorf("Failed to connect to exec process in node '%s'", node.Name)
-		return err
+		return nil, err
 	}
-	defer execConnection.Close()
 
 	if err := docker.ContainerExecStart(ctx, exec.ID, types.ExecStartCheck{Tty: true}); err != nil {
 		log.Errorf("Failed to start exec process in node '%s'", node.Name)
-		return err
+		return nil, err
 	}
 
 	for {
@@ -354,12 +379,12 @@ func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) er
 		execInfo, err := docker.ContainerExecInspect(ctx, exec.ID)
 		if err != nil {
 			log.Errorf("Failed to inspect exec process in node '%s'", node.Name)
-			return err
+			return &execConnection, err
 		}
 
 		// if still running, continue loop
 		if execInfo.Running {
-			log.Debugf("Exec process '%+v' still running in node '%s'.. sleeping for 1 second...", cmd, node.Name)
+			log.Tracef("Exec process '%+v' still running in node '%s'.. sleeping for 1 second...", cmd, node.Name)
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -367,21 +392,11 @@ func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) er
 		// check exitcode
 		if execInfo.ExitCode == 0 { // success
 			log.Debugf("Exec process in node '%s' exited with '0'", node.Name)
-			break
-		}
-
-		if execInfo.ExitCode != 0 { // failed
-
-			logs, err := ioutil.ReadAll(execConnection.Reader)
-			if err != nil {
-				log.Errorf("Failed to get logs from node '%s'", node.Name)
-				return err
-			}
-
-			return fmt.Errorf("Logs from failed access process:\n%s", string(logs))
+			return &execConnection, nil
+		} else { // failed
+			return &execConnection, fmt.Errorf("Exec process in node '%s' failed with exit code '%d'", node.Name, execInfo.ExitCode)
 		}
 
 	}
 
-	return nil
 }

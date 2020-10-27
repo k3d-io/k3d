@@ -24,6 +24,7 @@ package cluster
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -44,10 +45,15 @@ import (
 // - some containerized k3s nodes
 // - a docker network
 func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+	clusterCreateCtx := ctx
+	clusterPrepCtx := ctx
 	if cluster.ClusterCreateOpts.Timeout > 0*time.Second {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, cluster.ClusterCreateOpts.Timeout)
-		defer cancel()
+		var cancelClusterCreateCtx context.CancelFunc
+		var cancelClusterPrepCtx context.CancelFunc
+		clusterCreateCtx, cancelClusterCreateCtx = context.WithTimeout(ctx, cluster.ClusterCreateOpts.Timeout)
+		clusterPrepCtx, cancelClusterPrepCtx = context.WithTimeout(ctx, cluster.ClusterCreateOpts.Timeout)
+		defer cancelClusterCreateCtx()
+		defer cancelClusterPrepCtx()
 	}
 
 	/*
@@ -74,7 +80,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	}
 
 	// create cluster network or use an existing one
-	networkID, networkExists, err := runtime.CreateNetworkIfNotPresent(ctx, cluster.Network.Name)
+	networkID, networkExists, err := runtime.CreateNetworkIfNotPresent(clusterCreateCtx, cluster.Network.Name)
 	if err != nil {
 		log.Errorln("Failed to create cluster network")
 		return err
@@ -102,7 +108,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	 */
 	if !cluster.ClusterCreateOpts.DisableImageVolume {
 		imageVolumeName := fmt.Sprintf("%s-%s-images", k3d.DefaultObjectNamePrefix, cluster.Name)
-		if err := runtime.CreateVolume(ctx, imageVolumeName, map[string]string{k3d.LabelClusterName: cluster.Name}); err != nil {
+		if err := runtime.CreateVolume(clusterCreateCtx, imageVolumeName, map[string]string{k3d.LabelClusterName: cluster.Name}); err != nil {
 			log.Errorf("Failed to create image volume '%s' for cluster '%s'", imageVolumeName, cluster.Name)
 			return err
 		}
@@ -157,7 +163,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 
 		// create node
 		log.Infof("Creating node '%s'", node.Name)
-		if err := NodeCreate(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
+		if err := NodeCreate(clusterCreateCtx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
 			log.Errorln("Failed to create node")
 			return err
 		}
@@ -189,13 +195,13 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 		// wait for the initnode to come up before doing anything else
 		for {
 			select {
-			case <-ctx.Done():
+			case <-clusterCreateCtx.Done():
 				log.Errorln("Failed to bring up initializing server node in time")
-				return fmt.Errorf(">>> %w", ctx.Err())
+				return fmt.Errorf(">>> %w", clusterCreateCtx.Err())
 			default:
 			}
 			log.Debugln("Waiting for initializing server node...")
-			logreader, err := runtime.GetNodeLogs(ctx, cluster.InitNode, time.Time{})
+			logreader, err := runtime.GetNodeLogs(clusterCreateCtx, cluster.InitNode, time.Time{})
 			if err != nil {
 				if logreader != nil {
 					logreader.Close()
@@ -209,7 +215,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			buf := new(bytes.Buffer)
 			nRead, _ := buf.ReadFrom(logreader)
 			logreader.Close()
-			if nRead > 0 && strings.Contains(buf.String(), "Running kubelet") {
+			if nRead > 0 && strings.Contains(buf.String(), k3d.ReadyLogMessageByRole[k3d.ServerRole]) {
 				log.Debugln("Initializing server node is up... continuing")
 				break
 			}
@@ -219,7 +225,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	}
 
 	// vars to support waiting for server nodes to be ready
-	waitForServerWaitgroup, ctx := errgroup.WithContext(ctx)
+	waitForServerWaitgroup, clusterCreateCtx := errgroup.WithContext(clusterCreateCtx)
 
 	// create all other nodes, but skip the init node
 	for _, node := range cluster.Nodes {
@@ -252,13 +258,10 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 
 		// asynchronously wait for this server node to be ready (by checking the logs for a specific log mesage)
 		if node.Role == k3d.ServerRole && cluster.ClusterCreateOpts.WaitForServer {
-			serverNode := node
-			waitForServerWaitgroup.Go(func() error {
-				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
-				// ... by scanning for this line in logs and restarting the container in case it appears
-				log.Debugf("Starting to wait for server node '%s'", serverNode.Name)
-				return NodeWaitForLogMessage(ctx, runtime, serverNode, k3d.ReadyLogMessageByRole[k3d.ServerRole], time.Time{})
-			})
+			log.Debugf("Waiting for server node '%s' to get ready", node.Name)
+			if err := NodeWaitForLogMessage(clusterCreateCtx, runtime, node, k3d.ReadyLogMessageByRole[k3d.ServerRole], time.Time{}); err != nil {
+				return fmt.Errorf("Server node '%s' failed to get ready: %+v", node.Name, err)
+			}
 		}
 	}
 
@@ -272,7 +275,6 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			servers := ""
 			for _, node := range cluster.Nodes {
 				if node.Role == k3d.ServerRole {
-					log.Debugf("Node NAME: %s", node.Name)
 					if servers == "" {
 						servers = node.Name
 					} else {
@@ -322,7 +324,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			}
 			cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
 			log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
-			if err := NodeCreate(ctx, runtime, lbNode, k3d.NodeCreateOpts{}); err != nil {
+			if err := NodeCreate(clusterCreateCtx, runtime, lbNode, k3d.NodeCreateOpts{}); err != nil {
 				log.Errorln("Failed to create loadbalancer")
 				return err
 			}
@@ -331,7 +333,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 					// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 					// ... by scanning for this line in logs and restarting the container in case it appears
 					log.Debugf("Starting to wait for loadbalancer node '%s'", lbNode.Name)
-					return NodeWaitForLogMessage(ctx, runtime, lbNode, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], time.Time{})
+					return NodeWaitForLogMessage(clusterCreateCtx, runtime, lbNode, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], time.Time{})
 				})
 			}
 		} else {
@@ -343,6 +345,19 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 		log.Errorln("Failed to bring up all server nodes (and loadbalancer) in time. Check the logs:")
 		log.Errorf(">>> %+v", err)
 		return fmt.Errorf("Failed to bring up cluster")
+	}
+
+	/**********************************
+	 * Additional Cluster Preparation *
+	 **********************************/
+
+	/*
+	 * Networking Magic
+	 */
+
+	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
+	if !cluster.CreateClusterOpts.PrepDisableHostIPInjection {
+		prepInjectHostIP(clusterPrepCtx, runtime, cluster)
 	}
 
 	return nil
@@ -474,6 +489,8 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 	return nil
 }
 
+var ClusterGetNoNodesFoundError = errors.New("No nodes found for given cluster")
+
 // ClusterGet returns an existing cluster with all fields and node lists populated
 func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) (*k3d.Cluster, error) {
 	// get nodes that belong to the selected cluster
@@ -483,7 +500,7 @@ func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster
 	}
 
 	if len(nodes) == 0 {
-		return nil, fmt.Errorf("No nodes found for cluster '%s'", cluster.Name)
+		return nil, ClusterGetNoNodesFoundError
 	}
 
 	// append nodes
@@ -629,4 +646,40 @@ func SortClusters(clusters []*k3d.Cluster) []*k3d.Cluster {
 		return clusters[i].Name < clusters[j].Name
 	})
 	return clusters
+}
+
+// prepInjectHostIP adds /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
+func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) {
+	log.Infoln("(Optional) Trying to get IP of the docker host and inject it into the cluster as 'host.k3d.internal' for easy access")
+	hostIP, err := GetHostIP(ctx, runtime, cluster)
+	if err != nil {
+		log.Warnf("Failed to get HostIP: %+v", err)
+	}
+	if hostIP != nil {
+		hostRecordSuccessMessage := ""
+		etcHostsFailureCount := 0
+		hostsEntry := fmt.Sprintf("%s %s", hostIP, k3d.DefaultK3dInternalHostRecord)
+		log.Debugf("Adding extra host entry '%s'...", hostsEntry)
+		for _, node := range cluster.Nodes {
+			if err := runtime.ExecInNode(ctx, node, []string{"sh", "-c", fmt.Sprintf("echo '%s' >> /etc/hosts", hostsEntry)}); err != nil {
+				log.Warnf("Failed to add extra entry '%s' to /etc/hosts in node '%s'", hostsEntry, node.Name)
+				etcHostsFailureCount++
+			}
+		}
+		if etcHostsFailureCount < len(cluster.Nodes) {
+			hostRecordSuccessMessage += fmt.Sprintf("Successfully added host record to /etc/hosts in %d/%d nodes", (len(cluster.Nodes) - etcHostsFailureCount), len(cluster.Nodes))
+		}
+
+		patchCmd := `test=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s+host\.k3d\.internal$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | busybox xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$test"`
+		if err = runtime.ExecInNode(ctx, cluster.Nodes[0], []string{"sh", "-c", patchCmd}); err != nil {
+			log.Warnf("Failed to patch CoreDNS ConfigMap to include entry '%s': %+v", hostsEntry, err)
+		} else {
+			hostRecordSuccessMessage += " and to the CoreDNS ConfigMap"
+		}
+
+		if hostRecordSuccessMessage != "" {
+			log.Infoln(hostRecordSuccessMessage)
+		}
+
+	}
 }

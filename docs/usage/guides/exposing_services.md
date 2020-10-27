@@ -7,7 +7,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
 1. Create a cluster, mapping the ingress port 80 to localhost:8081
 
-    `#!bash k3d cluster create --api-port 6550 -p 8081:80@loadbalancer --agents 2`
+    `#!bash k3d cluster create --api-port 6550 -p "8081:80@loadbalancer" --agents 2`
 
     !!! info "Good to know"
         - `--api-port 6550` is not required for the example to work. It's used to have `k3s`'s API-Server listening on port 6550 with that port mapped to the host system.
@@ -56,11 +56,11 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
 1. Create a cluster, mapping the port 30080 from agent-0 to localhost:8082
 
-    `#!bash k3d cluster create mycluster -p 8082:30080@agent[0] --agents 2`
+    `#!bash k3d cluster create mycluster -p "8082:30080@agent[0]" --agents 2`
 
     - **Note**: Kubernetes' default NodePort range is [`30000-32767`](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
 
-    - **Note**: You may as well expose the whole NodePort range from the very beginning, e.g. via `k3d cluster create mycluster --agents 3 -p 30000-32767:30000-32767@server[0]` (See [this video from @portainer](https://www.youtube.com/watch?v=5HaU6338lAk))
+    - **Note**: You may as well expose the whole NodePort range from the very beginning, e.g. via `k3d cluster create mycluster --agents 3 -p "30000-32767:30000-32767@server[0]"` (See [this video from @portainer](https://www.youtube.com/watch?v=5HaU6338lAk))
 
 ... (Steps 2 and 3 like above) ...
 

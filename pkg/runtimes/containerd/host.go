@@ -19,39 +19,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
-package docker
+package containerd
 
 import (
 	"context"
-	"io"
-
-	"github.com/docker/docker/client"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-	log "github.com/sirupsen/logrus"
+	"net"
 )
 
-// GetKubeconfig grabs the kubeconfig from inside a k3d node
-func (d Docker) GetKubeconfig(ctx context.Context, node *k3d.Node) (io.ReadCloser, error) {
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		log.Errorln("Failed to create docker client")
-		return nil, err
-	}
-	defer docker.Close()
-
-	container, err := getNodeContainer(ctx, node)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Tracef("Container Details: %+v", container)
-
-	reader, _, err := docker.CopyFromContainer(ctx, container.ID, "/output/kubeconfig.yaml")
-	if err != nil {
-		log.Errorf("Failed to copy from container '%s'", container.ID)
-		return nil, err
-	}
-
-	return reader, nil
+// GetHostIP returns the IP of the containerd host
+func (d Containerd) GetHostIP(ctx context.Context, network string) (net.IP, error) {
+	return nil, nil
 }

@@ -107,6 +107,10 @@ func NewCmdClusterCreate() *cobra.Command {
 			if err := k3dCluster.ClusterCreate(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster); err != nil {
 				// rollback if creation failed
 				log.Errorln(err)
+				if noRollback {
+					log.Fatalln("Cluster creation FAILED, rollback deactivated.")
+				}
+				// rollback if creation failed
 				log.Errorln("Failed to create cluster >>> Rolling Back")
 				if err := k3dCluster.ClusterDelete(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster); err != nil {
 					log.Errorln(err)
@@ -149,11 +153,14 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().StringVar(&simpleConfig.ClusterToken, "token", "", "Specify a cluster token. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v /my/path@agent[0,1] -v /tmp/test:/tmp/other@server[0]`")
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent[0] -p 8081@agent[1]`")
+	cmd.Flags().StringArrayP("label", "l", nil, "Add label to node container (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -l \"my.label@agent[0,1]\" -v \"other.label=somevalue@server[0]\"`")
 	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.Wait, "wait", true, "Wait for the server(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
 	cmd.Flags().DurationVar(&simpleConfig.Options.K3dOptions.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
 	cmd.Flags().BoolVar(&simpleConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig, "update-default-kubeconfig", true, "Directly update the default kubeconfig with the new cluster's context")
 	cmd.Flags().BoolVar(&simpleConfig.Options.KubeconfigOptions.SwitchCurrentContext, "switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (requires --update-default-kubeconfig)")
 	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.DisableLoadbalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
+	cmd.Flags().BoolVar(&noRollback, "no-rollback", false, "Disable the automatic rollback actions, if anything goes wrong")
+	cmd.Flags().BoolVar(&createClusterOpts.PrepDisableHostIPInjection, "no-hostip", false, "Disable the automatic injection of the Host IP as 'host.k3d.internal' into the containers and CoreDNS")
 
 	/* Image Importing */
 	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
@@ -303,6 +310,41 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 	}
 
 	log.Debugf("PortFilterMap: %+v", portFilterMap)
+
+	// --label
+	labelFlags, err := cmd.Flags().GetStringArray("label")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// labelFilterMap will add container label to applied node filters
+	labelFilterMap := make(map[string][]string, 1)
+	for _, labelFlag := range labelFlags {
+
+		// split node filter from the specified label
+		label, filters, err := cliutil.SplitFiltersFromFlag(labelFlag)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// create new entry or append filter to existing entry
+		if _, exists := labelFilterMap[label]; exists {
+			labelFilterMap[label] = append(labelFilterMap[label], filters...)
+		} else {
+			labelFilterMap[label] = filters
+		}
+	}
+
+	// TODO: add labels to simpleConfig
+	// for label, nodeFilters := range labelFilterMap {
+	// 	simpleConfig.Ports = append(simpleConfig.Ports, conf.PortWithNodeFilters{
+	// 		Port:        port,
+	// 		NodeFilters: nodeFilters,
+	// 	})
+	// 	log.Debugf("Port: %s, Filters: %+v", port, nodeFilters)
+	// }
+
+	log.Tracef("LabelFilterMap: %+v", labelFilterMap)
 
 	return simpleConfig
 }

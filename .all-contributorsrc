@@ -1,0 +1,64 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "iwilltry42",
+      "name": "Thorsten Klein",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/25345277?v=4",
+      "profile": "https://twitter.com/iwilltry42",
+      "contributions": [
+        "code",
+        "doc",
+        "ideas",
+        "maintenance"
+      ]
+    },
+    {
+      "login": "zeerorg",
+      "name": "Rishabh Gupta",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/13547997?v=4",
+      "profile": "https://blog.zeerorg.site/",
+      "contributions": [
+        "ideas",
+        "code"
+      ]
+    },
+    {
+      "login": "louiznk",
+      "name": "Louis Tournayre",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/25585516?v=4",
+      "profile": "http://www.zenika.com",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "lionelnicolas",
+      "name": "Lionel Nicolas",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/6538664?v=4",
+      "profile": "https://github.com/lionelnicolas",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "toonsevrin",
+      "name": "Toon Sevrin",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/5507199?v=4",
+      "profile": "https://github.com/toonsevrin.keys",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "k3d",
+  "projectOwner": "rancher",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}

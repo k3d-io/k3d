@@ -48,6 +48,8 @@ func TestTranslateNodeToContainer(t *testing.T) {
 		Labels:  map[string]string{k3d.LabelRole: string(k3d.ServerRole), "test_key_1": "test_val_1"},
 	}
 
+	init := true
+
 	expectedRepresentation := &NodeInDocker{
 		ContainerConfig: container.Config{
 			Hostname: "test",
@@ -64,10 +66,10 @@ func TestTranslateNodeToContainer(t *testing.T) {
 			RestartPolicy: container.RestartPolicy{
 				Name: "unless-stopped",
 			},
-			Init:       &[]bool{true}[0],
+			Init:       &init,
 			Privileged: true,
 			Tmpfs:      map[string]string{"/run": "", "/var/run": ""},
-			PortBindings: map[nat.Port][]nat.PortBinding{
+			PortBindings: nat.PortMap{
 				"6443/tcp": {
 					{
 						HostIP:   "0.0.0.0",
@@ -78,7 +80,7 @@ func TestTranslateNodeToContainer(t *testing.T) {
 		},
 		NetworkingConfig: network.NetworkingConfig{
 			EndpointsConfig: map[string]*network.EndpointSettings{
-				"": &network.EndpointSettings{},
+				"": {},
 			},
 		},
 	}
