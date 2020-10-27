@@ -322,27 +322,26 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 	for _, labelFlag := range labelFlags {
 
 		// split node filter from the specified label
-		label, filters, err := cliutil.SplitFiltersFromFlag(labelFlag)
+		label, nodeFilters, err := cliutil.SplitFiltersFromFlag(labelFlag)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
 		// create new entry or append filter to existing entry
 		if _, exists := labelFilterMap[label]; exists {
-			labelFilterMap[label] = append(labelFilterMap[label], filters...)
+			labelFilterMap[label] = append(labelFilterMap[label], nodeFilters...)
 		} else {
-			labelFilterMap[label] = filters
+			labelFilterMap[label] = nodeFilters
 		}
 	}
 
-	// TODO: add labels to simpleConfig
-	// for label, nodeFilters := range labelFilterMap {
-	// 	simpleConfig.Ports = append(simpleConfig.Ports, conf.PortWithNodeFilters{
-	// 		Port:        port,
-	// 		NodeFilters: nodeFilters,
-	// 	})
-	// 	log.Debugf("Port: %s, Filters: %+v", port, nodeFilters)
-	// }
+	for label, nodeFilters := range labelFilterMap {
+		simpleConfig.Labels = append(simpleConfig.Labels, conf.LabelWithNodeFilters{
+			Label:       label,
+			NodeFilters: nodeFilters,
+		})
+		log.Tracef("Label: %s, Filters: %+v", label, nodeFilters)
+	}
 
 	log.Tracef("LabelFilterMap: %+v", labelFilterMap)
 
