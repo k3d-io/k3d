@@ -60,7 +60,7 @@ type preProcessedFlags struct {
 // NewCmdClusterCreate returns a new cobra command
 func NewCmdClusterCreate() *cobra.Command {
 
-	simpleConfig := &conf.SimpleConfig{}
+	cliConfig := &conf.SimpleConfig{}
 	var configFile string
 	ppFlags := &preProcessedFlags{}
 
@@ -73,23 +73,23 @@ func NewCmdClusterCreate() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			// parse args and flags
-			simpleConfig = parseCreateClusterCmd(cmd, args, simpleConfig, ppFlags)
+			cliConfig = parseCreateClusterCmd(cmd, args, cliConfig, ppFlags)
 
-			log.Debugf("========== Simple Config ==========\n%+v\n==========================\n", simpleConfig)
+			log.Debugf("========== Simple Config ==========\n%+v\n==========================\n", cliConfig)
 
 			if configFile != "" {
 				configFromFile, err := config.ReadConfig(configFile)
 				if err != nil {
 					log.Fatalln(err)
 				}
-				simpleConfig, err = config.MergeSimple(*simpleConfig, configFromFile.(conf.SimpleConfig))
+				cliConfig, err = config.MergeSimple(*cliConfig, configFromFile.(conf.SimpleConfig))
 				if err != nil {
 					log.Fatalln(err)
 				}
 			}
 
-			log.Debugf("========== Merged Simple Config ==========\n%+v\n==========================\n", simpleConfig)
-			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *simpleConfig)
+			log.Debugf("========== Merged Simple Config ==========\n%+v\n==========================\n", cliConfig)
+			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *cliConfig)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -103,20 +103,20 @@ func NewCmdClusterCreate() *cobra.Command {
 				log.Fatalf("Failed to create cluster '%s' because a cluster with that name already exists", clusterConfig.Cluster.Name)
 			}
 
-			if !simpleConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig && simpleConfig.Options.KubeconfigOptions.SwitchCurrentContext {
+			if !cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig && cliConfig.Options.KubeconfigOptions.SwitchCurrentContext {
 				log.Infoln("--update-default-kubeconfig=false --> sets --switch-context=false")
-				simpleConfig.Options.KubeconfigOptions.SwitchCurrentContext = false
+				cliConfig.Options.KubeconfigOptions.SwitchCurrentContext = false
 			}
 
 			// create cluster
-			if simpleConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig {
+			if cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig {
 				log.Debugln("'--update-default-kubeconfig set: enabling wait-for-server")
 				clusterConfig.Cluster.ClusterCreateOpts.WaitForServer = true
 			}
 			if err := k3dCluster.ClusterCreate(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster); err != nil {
 				// rollback if creation failed
 				log.Errorln(err)
-				if simpleConfig.Options.K3dOptions.NoRollback {
+				if cliConfig.Options.K3dOptions.NoRollback {
 					log.Fatalln("Cluster creation FAILED, rollback deactivated.")
 				}
 				// rollback if creation failed
@@ -129,18 +129,18 @@ func NewCmdClusterCreate() *cobra.Command {
 			}
 			log.Infof("Cluster '%s' created successfully!", clusterConfig.Cluster.Name)
 
-			if simpleConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig {
+			if cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig {
 				log.Debugf("Updating default kubeconfig with a new context for cluster %s", clusterConfig.Cluster.Name)
-				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: simpleConfig.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
+				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: cliConfig.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
 					log.Warningln(err)
 				}
 			}
 
 			// print information on how to use the cluster with kubectl
 			log.Infoln("You can now use it like this:")
-			if simpleConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig && !simpleConfig.Options.KubeconfigOptions.SwitchCurrentContext {
+			if cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig && !cliConfig.Options.KubeconfigOptions.SwitchCurrentContext {
 				fmt.Printf("kubectl config use-context %s\n", fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, clusterConfig.Cluster.Name))
-			} else if !simpleConfig.Options.KubeconfigOptions.SwitchCurrentContext {
+			} else if !cliConfig.Options.KubeconfigOptions.SwitchCurrentContext {
 				if runtime.GOOS == "windows" {
 					fmt.Printf("$env:KUBECONFIG=(%s kubeconfig write %s)\n", os.Args[0], clusterConfig.Cluster.Name)
 				} else {
@@ -155,24 +155,24 @@ func NewCmdClusterCreate() *cobra.Command {
 	 * Flags *
 	 *********/
 	cmd.Flags().StringVar(&ppFlags.APIPort, "api-port", "random", "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d cluster create --servers 3 --api-port 0.0.0.0:6550`")
-	cmd.Flags().IntVarP(&simpleConfig.Servers, "servers", "s", 1, "Specify how many servers you want to create")
-	cmd.Flags().IntVarP(&simpleConfig.Agents, "agents", "a", 0, "Specify how many agents you want to create")
-	cmd.Flags().StringVarP(&simpleConfig.Image, "image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
-	cmd.Flags().StringVar(&simpleConfig.Network, "network", "", "Join an existing network")
-	cmd.Flags().StringVar(&simpleConfig.ClusterToken, "token", "", "Specify a cluster token. By default, we generate one.")
+	cmd.Flags().IntVarP(&cliConfig.Servers, "servers", "s", 1, "Specify how many servers you want to create")
+	cmd.Flags().IntVarP(&cliConfig.Agents, "agents", "a", 0, "Specify how many agents you want to create")
+	cmd.Flags().StringVarP(&cliConfig.Image, "image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
+	cmd.Flags().StringVar(&cliConfig.Network, "network", "", "Join an existing network")
+	cmd.Flags().StringVar(&cliConfig.ClusterToken, "token", "", "Specify a cluster token. By default, we generate one.")
 	cmd.Flags().StringArrayVarP(&ppFlags.Volumes, "volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v /my/path@agent[0,1] -v /tmp/test:/tmp/other@server[0]`")
 	cmd.Flags().StringArrayVarP(&ppFlags.Ports, "port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent[0] -p 8081@agent[1]`")
 	cmd.Flags().StringArrayVarP(&ppFlags.Labels, "label", "l", nil, "Add label to node container (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -l \"my.label@agent[0,1]\" -v \"other.label=somevalue@server[0]\"`")
-	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.Wait, "wait", true, "Wait for the server(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
-	cmd.Flags().DurationVar(&simpleConfig.Options.K3dOptions.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
-	cmd.Flags().BoolVar(&simpleConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig, "update-default-kubeconfig", true, "Directly update the default kubeconfig with the new cluster's context")
-	cmd.Flags().BoolVar(&simpleConfig.Options.KubeconfigOptions.SwitchCurrentContext, "switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (requires --update-default-kubeconfig)")
-	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.DisableLoadbalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
-	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.NoRollback, "no-rollback", false, "Disable the automatic rollback actions, if anything goes wrong")
-	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.PrepDisableHostIPInjection, "no-hostip", false, "Disable the automatic injection of the Host IP as 'host.k3d.internal' into the containers and CoreDNS")
+	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.Wait, "wait", true, "Wait for the server(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
+	cmd.Flags().DurationVar(&cliConfig.Options.K3dOptions.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
+	cmd.Flags().BoolVar(&cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig, "update-default-kubeconfig", true, "Directly update the default kubeconfig with the new cluster's context")
+	cmd.Flags().BoolVar(&cliConfig.Options.KubeconfigOptions.SwitchCurrentContext, "switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (requires --update-default-kubeconfig)")
+	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.DisableLoadbalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
+	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.NoRollback, "no-rollback", false, "Disable the automatic rollback actions, if anything goes wrong")
+	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.PrepDisableHostIPInjection, "no-hostip", false, "Disable the automatic injection of the Host IP as 'host.k3d.internal' into the containers and CoreDNS")
 
 	/* Image Importing */
-	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
+	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
 
 	/* Config File */
 	cmd.Flags().StringVarP(&configFile, "config", "c", "", "Path of a config file to use")
@@ -195,8 +195,8 @@ func NewCmdClusterCreate() *cobra.Command {
 	*/
 
 	/* k3s */
-	cmd.Flags().StringArrayVar(&simpleConfig.Options.K3sOptions.ExtraServerArgs, "k3s-server-arg", nil, "Additional args passed to the `k3s server` command on server nodes (new flag per arg)")
-	cmd.Flags().StringArrayVar(&simpleConfig.Options.K3sOptions.ExtraAgentArgs, "k3s-agent-arg", nil, "Additional args passed to the `k3s agent` command on agent nodes (new flag per arg)")
+	cmd.Flags().StringArrayVar(&cliConfig.Options.K3sOptions.ExtraServerArgs, "k3s-server-arg", nil, "Additional args passed to the `k3s server` command on server nodes (new flag per arg)")
+	cmd.Flags().StringArrayVar(&cliConfig.Options.K3sOptions.ExtraAgentArgs, "k3s-agent-arg", nil, "Additional args passed to the `k3s agent` command on agent nodes (new flag per arg)")
 
 	/* Subcommands */
 
@@ -205,14 +205,14 @@ func NewCmdClusterCreate() *cobra.Command {
 }
 
 // parseCreateClusterCmd parses the command input into variables required to create a cluster
-func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf.SimpleConfig, ppFlags *preProcessedFlags) *conf.SimpleConfig {
+func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.SimpleConfig, ppFlags *preProcessedFlags) *conf.SimpleConfig {
 
 	/********************************
 	 * Parse and validate arguments *
 	 ********************************/
 
 	if len(args) != 0 {
-		simpleConfig.Name = args[0]
+		cliConfig.Name = args[0]
 	}
 
 	/****************************
@@ -220,7 +220,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 	 ****************************/
 
 	// -> WAIT TIMEOUT // TODO: timeout to be validated in pkg/
-	if cmd.Flags().Changed("timeout") && simpleConfig.Options.K3dOptions.Timeout <= 0*time.Second {
+	if cmd.Flags().Changed("timeout") && cliConfig.Options.K3dOptions.Timeout <= 0*time.Second {
 		log.Fatalln("--timeout DURATION must be >= 1s")
 	}
 
@@ -237,7 +237,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 		exposeAPI.HostIP = k3d.DefaultAPIHost
 	}
 
-	simpleConfig.ExposeAPI = exposeAPI
+	cliConfig.ExposeAPI = exposeAPI
 
 	// -> VOLUMES
 	// volumeFilterMap will map volume mounts to applied node filters
@@ -259,7 +259,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 	}
 
 	for volume, nodeFilters := range volumeFilterMap {
-		simpleConfig.Volumes = append(simpleConfig.Volumes, conf.VolumeWithNodeFilters{
+		cliConfig.Volumes = append(cliConfig.Volumes, conf.VolumeWithNodeFilters{
 			Volume:      volume,
 			NodeFilters: nodeFilters,
 		})
@@ -288,7 +288,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 	}
 
 	for port, nodeFilters := range portFilterMap {
-		simpleConfig.Ports = append(simpleConfig.Ports, conf.PortWithNodeFilters{
+		cliConfig.Ports = append(cliConfig.Ports, conf.PortWithNodeFilters{
 			Port:        port,
 			NodeFilters: nodeFilters,
 		})
@@ -317,7 +317,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 	}
 
 	for label, nodeFilters := range labelFilterMap {
-		simpleConfig.Labels = append(simpleConfig.Labels, conf.LabelWithNodeFilters{
+		cliConfig.Labels = append(cliConfig.Labels, conf.LabelWithNodeFilters{
 			Label:       label,
 			NodeFilters: nodeFilters,
 		})
@@ -326,5 +326,5 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 
 	log.Tracef("LabelFilterMap: %+v", labelFilterMap)
 
-	return simpleConfig
+	return cliConfig
 }
