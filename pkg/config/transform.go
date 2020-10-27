@@ -26,14 +26,19 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rancher/k3d/v3/cmd/util"
 	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
+	"github.com/rancher/k3d/v3/pkg/util"
 )
 
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration
 func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtime, simpleConfig conf.SimpleConfig) (*conf.ClusterConfig, error) {
+
+	// set default cluster name
+	if simpleConfig.Name == "" {
+		simpleConfig.Name = k3d.DefaultClusterName
+	}
 
 	clusterNetwork := k3d.ClusterNetwork{}
 	if simpleConfig.Network != "" {
@@ -139,6 +144,26 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 		for _, node := range nodes {
 			node.Ports = append(node.Ports, portWithNodeFilters.Port)
+		}
+	}
+
+	// -> LABELS
+	for _, labelWithNodeFilters := range simpleConfig.Labels {
+		if len(labelWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
+			return nil, fmt.Errorf("Labelmapping '%s' lacks a node filter, but there's more than one node", labelWithNodeFilters.Label)
+		}
+
+		nodes, err := util.FilterNodes(nodeList, labelWithNodeFilters.NodeFilters)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, node := range nodes {
+			if node.Labels == nil {
+				node.Labels = make(map[string]string) // ensure that the map is initialized
+			}
+			k, v := util.SplitLabelKeyValue(labelWithNodeFilters.Label)
+			node.Labels[k] = v
 		}
 	}
 

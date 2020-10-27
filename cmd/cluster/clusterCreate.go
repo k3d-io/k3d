@@ -49,11 +49,20 @@ Every cluster will consist of one or more containers:
 	- (optionally) 1 (or more) agent node containers (k3s)
 `
 
+// flags that go through some pre-processing before transforming them to config
+type preProcessedFlags struct {
+	APIPort string
+	Volumes []string
+	Ports   []string
+	Labels  []string
+}
+
 // NewCmdClusterCreate returns a new cobra command
 func NewCmdClusterCreate() *cobra.Command {
 
 	simpleConfig := &conf.SimpleConfig{}
 	var configFile string
+	ppFlags := &preProcessedFlags{}
 
 	// create new command
 	cmd := &cobra.Command{
@@ -64,7 +73,7 @@ func NewCmdClusterCreate() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			// parse args and flags
-			simpleConfig = parseCreateClusterCmd(cmd, args, simpleConfig)
+			simpleConfig = parseCreateClusterCmd(cmd, args, simpleConfig, ppFlags)
 
 			log.Debugf("========== Simple Config ==========\n%+v\n==========================\n", simpleConfig)
 
@@ -145,15 +154,15 @@ func NewCmdClusterCreate() *cobra.Command {
 	/*********
 	 * Flags *
 	 *********/
-	cmd.Flags().String("api-port", "random", "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d cluster create --servers 3 --api-port 0.0.0.0:6550`")
+	cmd.Flags().StringVar(&ppFlags.APIPort, "api-port", "random", "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d cluster create --servers 3 --api-port 0.0.0.0:6550`")
 	cmd.Flags().IntVarP(&simpleConfig.Servers, "servers", "s", 1, "Specify how many servers you want to create")
 	cmd.Flags().IntVarP(&simpleConfig.Agents, "agents", "a", 0, "Specify how many agents you want to create")
 	cmd.Flags().StringVarP(&simpleConfig.Image, "image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
 	cmd.Flags().StringVar(&simpleConfig.Network, "network", "", "Join an existing network")
 	cmd.Flags().StringVar(&simpleConfig.ClusterToken, "token", "", "Specify a cluster token. By default, we generate one.")
-	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v /my/path@agent[0,1] -v /tmp/test:/tmp/other@server[0]`")
-	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent[0] -p 8081@agent[1]`")
-	cmd.Flags().StringArrayP("label", "l", nil, "Add label to node container (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -l \"my.label@agent[0,1]\" -v \"other.label=somevalue@server[0]\"`")
+	cmd.Flags().StringArrayVarP(&ppFlags.Volumes, "volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v /my/path@agent[0,1] -v /tmp/test:/tmp/other@server[0]`")
+	cmd.Flags().StringArrayVarP(&ppFlags.Ports, "port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent[0] -p 8081@agent[1]`")
+	cmd.Flags().StringArrayVarP(&ppFlags.Labels, "label", "l", nil, "Add label to node container (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -l \"my.label@agent[0,1]\" -v \"other.label=somevalue@server[0]\"`")
 	cmd.Flags().BoolVar(&simpleConfig.Options.K3dOptions.Wait, "wait", true, "Wait for the server(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
 	cmd.Flags().DurationVar(&simpleConfig.Options.K3dOptions.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
 	cmd.Flags().BoolVar(&simpleConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig, "update-default-kubeconfig", true, "Directly update the default kubeconfig with the new cluster's context")
@@ -196,41 +205,33 @@ func NewCmdClusterCreate() *cobra.Command {
 }
 
 // parseCreateClusterCmd parses the command input into variables required to create a cluster
-func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf.SimpleConfig) *conf.SimpleConfig {
+func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf.SimpleConfig, ppFlags *preProcessedFlags) *conf.SimpleConfig {
 
 	/********************************
 	 * Parse and validate arguments *
 	 ********************************/
 
-	clustername := k3d.DefaultClusterName
 	if len(args) != 0 {
-		clustername = args[0]
+		simpleConfig.Name = args[0]
 	}
-
-	simpleConfig.Name = clustername
 
 	/****************************
 	 * Parse and validate flags *
 	 ****************************/
 
-	// -> IMAGE
-	if simpleConfig.Image == "latest" {
-		simpleConfig.Image = version.GetK3sVersion(true)
-	}
+	// -> IMAGE // TODO: move fetching latest version to pkg
+	// if simpleConfig.Image == "latest" {
+	// 	simpleConfig.Image = version.GetK3sVersion(true)
+	// }
 
-	// -> WAIT TIMEOUT
+	// -> WAIT TIMEOUT // TODO: timeout to be validated in pkg/
 	if cmd.Flags().Changed("timeout") && simpleConfig.Options.K3dOptions.Timeout <= 0*time.Second {
 		log.Fatalln("--timeout DURATION must be >= 1s")
 	}
 
 	// -> API-PORT
-	apiPort, err := cmd.Flags().GetString("api-port")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	// parse the port mapping
-	exposeAPI, err := cliutil.ParseAPIPort(apiPort)
+	exposeAPI, err := cliutil.ParseAPIPort(ppFlags.APIPort)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -244,14 +245,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 	simpleConfig.ExposeAPI = exposeAPI
 
 	// -> VOLUMES
-	volumeFlags, err := cmd.Flags().GetStringArray("volume")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	// volumeFilterMap will map volume mounts to applied node filters
 	volumeFilterMap := make(map[string][]string, 1)
-	for _, volumeFlag := range volumeFlags {
+	for _, volumeFlag := range ppFlags.Volumes {
 
 		// split node filter from the specified volume
 		volume, filters, err := cliutil.SplitFiltersFromFlag(volumeFlag)
@@ -276,13 +272,8 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 	}
 
 	// -> PORTS
-	portFlags, err := cmd.Flags().GetStringArray("port")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	portFilterMap := make(map[string][]string, 1)
-	for _, portFlag := range portFlags {
+	for _, portFlag := range ppFlags.Ports {
 		// split node filter from the specified volume
 		portmap, filters, err := cliutil.SplitFiltersFromFlag(portFlag)
 		if err != nil {
@@ -312,14 +303,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, simpleConfig *conf
 	log.Debugf("PortFilterMap: %+v", portFilterMap)
 
 	// --label
-	labelFlags, err := cmd.Flags().GetStringArray("label")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	// labelFilterMap will add container label to applied node filters
 	labelFilterMap := make(map[string][]string, 1)
-	for _, labelFlag := range labelFlags {
+	for _, labelFlag := range ppFlags.Labels {
 
 		// split node filter from the specified label
 		label, nodeFilters, err := cliutil.SplitFiltersFromFlag(labelFlag)
