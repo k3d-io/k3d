@@ -72,9 +72,14 @@ func NewCmdClusterCreate() *cobra.Command {
 		Args:  cobra.RangeArgs(0, 1), // exactly one cluster name can be set (default: k3d.DefaultClusterName)
 		Run: func(cmd *cobra.Command, args []string) {
 
-			// parse args and flags
-			cliConfig = parseCreateClusterCmd(cmd, args, cliConfig, ppFlags)
+			/*********************
+			 * CLI Configuration *
+			 *********************/
+			parseCreateClusterCmd(cmd, args, cliConfig, ppFlags)
 
+			/************************
+			 * Merge Configurations *
+			 ************************/
 			log.Debugf("========== Simple Config ==========\n%+v\n==========================\n", cliConfig)
 
 			if configFile != "" {
@@ -89,6 +94,10 @@ func NewCmdClusterCreate() *cobra.Command {
 			}
 
 			log.Debugf("========== Merged Simple Config ==========\n%+v\n==========================\n", cliConfig)
+
+			/**************************************
+			 * Transform & Validate Configuration *
+			 **************************************/
 			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *cliConfig)
 			if err != nil {
 				log.Fatalln(err)
@@ -98,14 +107,13 @@ func NewCmdClusterCreate() *cobra.Command {
 				log.Fatalln("Failed Cluster Configuration Validation: ", err)
 			}
 
+			/**************************************
+			 * Create cluster if it doesn't exist *
+			 **************************************/
+
 			// check if a cluster with that name exists already
 			if _, err := k3dCluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster); err == nil {
 				log.Fatalf("Failed to create cluster '%s' because a cluster with that name already exists", clusterConfig.Cluster.Name)
-			}
-
-			if !cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig && cliConfig.Options.KubeconfigOptions.SwitchCurrentContext {
-				log.Infoln("--update-default-kubeconfig=false --> sets --switch-context=false")
-				cliConfig.Options.KubeconfigOptions.SwitchCurrentContext = false
 			}
 
 			// create cluster
@@ -129,12 +137,25 @@ func NewCmdClusterCreate() *cobra.Command {
 			}
 			log.Infof("Cluster '%s' created successfully!", clusterConfig.Cluster.Name)
 
+			/**************
+			 * Kubeconfig *
+			 **************/
+
+			if !cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig && cliConfig.Options.KubeconfigOptions.SwitchCurrentContext {
+				log.Infoln("--update-default-kubeconfig=false --> sets --switch-context=false")
+				cliConfig.Options.KubeconfigOptions.SwitchCurrentContext = false
+			}
+
 			if cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig {
 				log.Debugf("Updating default kubeconfig with a new context for cluster %s", clusterConfig.Cluster.Name)
 				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: cliConfig.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
 					log.Warningln(err)
 				}
 			}
+
+			/*****************
+			 * User Feedback *
+			 *****************/
 
 			// print information on how to use the cluster with kubectl
 			log.Infoln("You can now use it like this:")
@@ -205,7 +226,7 @@ func NewCmdClusterCreate() *cobra.Command {
 }
 
 // parseCreateClusterCmd parses the command input into variables required to create a cluster
-func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.SimpleConfig, ppFlags *preProcessedFlags) *conf.SimpleConfig {
+func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.SimpleConfig, ppFlags *preProcessedFlags) {
 
 	/********************************
 	 * Parse and validate arguments *
@@ -230,13 +251,6 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if exposeAPI.Host == "" {
-		exposeAPI.Host = k3d.DefaultAPIHost
-	}
-	if exposeAPI.HostIP == "" {
-		exposeAPI.HostIP = k3d.DefaultAPIHost
-	}
-
 	cliConfig.ExposeAPI = exposeAPI
 
 	// -> VOLUMES
@@ -263,8 +277,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 			Volume:      volume,
 			NodeFilters: nodeFilters,
 		})
-		log.Debugf("%+v, %+v", nodeFilters, volume)
 	}
+
+	log.Tracef("VolumeFilterMap: %+v", volumeFilterMap)
 
 	// -> PORTS
 	portFilterMap := make(map[string][]string, 1)
@@ -292,10 +307,9 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 			Port:        port,
 			NodeFilters: nodeFilters,
 		})
-		log.Debugf("Port: %s, Filters: %+v", port, nodeFilters)
 	}
 
-	log.Debugf("PortFilterMap: %+v", portFilterMap)
+	log.Tracef("PortFilterMap: %+v", portFilterMap)
 
 	// --label
 	// labelFilterMap will add container label to applied node filters
@@ -321,10 +335,8 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 			Label:       label,
 			NodeFilters: nodeFilters,
 		})
-		log.Tracef("Label: %s, Filters: %+v", label, nodeFilters)
 	}
 
 	log.Tracef("LabelFilterMap: %+v", labelFilterMap)
 
-	return cliConfig
 }
