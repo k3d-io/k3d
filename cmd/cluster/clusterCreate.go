@@ -117,14 +117,14 @@ func NewCmdClusterCreate() *cobra.Command {
 			}
 
 			// create cluster
-			if cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig {
+			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig {
 				log.Debugln("'--update-default-kubeconfig set: enabling wait-for-server")
-				clusterConfig.Cluster.ClusterCreateOpts.WaitForServer = true
+				clusterConfig.ClusterCreateOpts.WaitForServer = true
 			}
-			if err := k3dCluster.ClusterCreate(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster); err != nil {
+			if err := k3dCluster.ClusterCreate(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, &clusterConfig.ClusterCreateOpts); err != nil {
 				// rollback if creation failed
 				log.Errorln(err)
-				if cliConfig.Options.K3dOptions.NoRollback {
+				if cliConfig.Options.K3dOptions.NoRollback { // TODO: move rollback mechanics to pkg/
 					log.Fatalln("Cluster creation FAILED, rollback deactivated.")
 				}
 				// rollback if creation failed
@@ -141,12 +141,12 @@ func NewCmdClusterCreate() *cobra.Command {
 			 * Kubeconfig *
 			 **************/
 
-			if !cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig && cliConfig.Options.KubeconfigOptions.SwitchCurrentContext {
+			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig && clusterConfig.KubeconfigOpts.SwitchCurrentContext {
 				log.Infoln("--update-default-kubeconfig=false --> sets --switch-context=false")
-				cliConfig.Options.KubeconfigOptions.SwitchCurrentContext = false
+				clusterConfig.KubeconfigOpts.SwitchCurrentContext = false
 			}
 
-			if cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig {
+			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig {
 				log.Debugf("Updating default kubeconfig with a new context for cluster %s", clusterConfig.Cluster.Name)
 				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: cliConfig.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
 					log.Warningln(err)
@@ -159,9 +159,9 @@ func NewCmdClusterCreate() *cobra.Command {
 
 			// print information on how to use the cluster with kubectl
 			log.Infoln("You can now use it like this:")
-			if cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig && !cliConfig.Options.KubeconfigOptions.SwitchCurrentContext {
+			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig && !clusterConfig.KubeconfigOpts.SwitchCurrentContext {
 				fmt.Printf("kubectl config use-context %s\n", fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, clusterConfig.Cluster.Name))
-			} else if !cliConfig.Options.KubeconfigOptions.SwitchCurrentContext {
+			} else if !clusterConfig.KubeconfigOpts.SwitchCurrentContext {
 				if runtime.GOOS == "windows" {
 					fmt.Printf("$env:KUBECONFIG=(%s kubeconfig write %s)\n", os.Args[0], clusterConfig.Cluster.Name)
 				} else {

@@ -104,8 +104,9 @@ func (c SimpleConfig) GetKind() string {
 // ClusterConfig describes a single cluster config
 type ClusterConfig struct {
 	TypeMeta          `mapstructure:",squash" yaml:",inline"`
-	Cluster           k3d.Cluster           `mapstructure:",squash" yaml:",inline"`
-	ClusterCreateOpts k3d.ClusterCreateOpts `mapstructure:"options" yaml:"options"`
+	Cluster           k3d.Cluster                   `mapstructure:",squash" yaml:",inline"`
+	ClusterCreateOpts k3d.ClusterCreateOpts         `mapstructure:"options" yaml:"options"`
+	KubeconfigOpts    SimpleConfigOptionsKubeconfig `mapstructure:"kubeconfig" yaml:"kubeconfig"`
 }
 
 // GetKind implements Config.GetKind

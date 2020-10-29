@@ -44,14 +44,34 @@ import (
 // ClusterCreate creates a new cluster consisting of
 // - some containerized k3s nodes
 // - a docker network
-func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, clusterCreateOpts *k3d.ClusterCreateOpts) error {
+
+	log.Tracef(`
+===== Creating Cluster =====
+
+Runtime:
+%+v
+
+Cluster:
+%+v
+
+ClusterCreatOpts:
+%+v
+
+============================
+	`, runtime, cluster, clusterCreateOpts)
+
+	/*
+	 * Set up contexts
+	 * Used for (early) termination (across API boundaries)
+	 */
 	clusterCreateCtx := ctx
 	clusterPrepCtx := ctx
-	if cluster.ClusterCreateOpts.Timeout > 0*time.Second {
+	if clusterCreateOpts.Timeout > 0*time.Second {
 		var cancelClusterCreateCtx context.CancelFunc
 		var cancelClusterPrepCtx context.CancelFunc
-		clusterCreateCtx, cancelClusterCreateCtx = context.WithTimeout(ctx, cluster.ClusterCreateOpts.Timeout)
-		clusterPrepCtx, cancelClusterPrepCtx = context.WithTimeout(ctx, cluster.ClusterCreateOpts.Timeout)
+		clusterCreateCtx, cancelClusterCreateCtx = context.WithTimeout(ctx, clusterCreateOpts.Timeout)
+		clusterPrepCtx, cancelClusterPrepCtx = context.WithTimeout(ctx, clusterCreateOpts.Timeout)
 		defer cancelClusterCreateCtx()
 		defer cancelClusterPrepCtx()
 	}
@@ -106,7 +126,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	 * Cluster-Wide volumes
 	 * - image volume (for importing images)
 	 */
-	if !cluster.ClusterCreateOpts.DisableImageVolume {
+	if !clusterCreateOpts.DisableImageVolume {
 		imageVolumeName := fmt.Sprintf("%s-%s-images", k3d.DefaultObjectNamePrefix, cluster.Name)
 		if err := runtime.CreateVolume(clusterCreateCtx, imageVolumeName, map[string]string{k3d.LabelClusterName: cluster.Name}); err != nil {
 			log.Errorf("Failed to create image volume '%s' for cluster '%s'", imageVolumeName, cluster.Name)
@@ -183,7 +203,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 		cluster.InitNode.Args = append(cluster.InitNode.Args, "--cluster-init")
 
 		// in case the LoadBalancer was disabled, expose the API Port on the initializing server node
-		if cluster.ClusterCreateOpts.DisableLoadBalancer {
+		if clusterCreateOpts.DisableLoadBalancer {
 			cluster.InitNode.Ports = append(cluster.InitNode.Ports, fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort))
 		}
 
@@ -234,7 +254,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			// skip the init node here
 			if node == cluster.InitNode {
 				continue
-			} else if serverCount == 0 && cluster.ClusterCreateOpts.DisableLoadBalancer {
+			} else if serverCount == 0 && clusterCreateOpts.DisableLoadBalancer {
 				// if this is the first server node and the server loadbalancer is disabled, expose the API Port on this server node
 				node.Ports = append(node.Ports, fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort))
 			}
@@ -257,7 +277,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 		}
 
 		// asynchronously wait for this server node to be ready (by checking the logs for a specific log mesage)
-		if node.Role == k3d.ServerRole && cluster.ClusterCreateOpts.WaitForServer {
+		if node.Role == k3d.ServerRole && clusterCreateOpts.WaitForServer {
 			log.Debugf("Waiting for server node '%s' to get ready", node.Name)
 			if err := NodeWaitForLogMessage(clusterCreateCtx, runtime, node, k3d.ReadyLogMessageByRole[k3d.ServerRole], time.Time{}); err != nil {
 				return fmt.Errorf("Server node '%s' failed to get ready: %+v", node.Name, err)
@@ -269,7 +289,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	 * Auxiliary Containers
 	 */
 	// *** ServerLoadBalancer ***
-	if !cluster.ClusterCreateOpts.DisableLoadBalancer {
+	if !clusterCreateOpts.DisableLoadBalancer {
 		if !useHostNet { // serverlb not supported in hostnetwork mode due to port collisions with server node
 			// Generate a comma-separated list of server/server names to pass to the LB container
 			servers := ""
@@ -328,7 +348,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 				log.Errorln("Failed to create loadbalancer")
 				return err
 			}
-			if cluster.ClusterCreateOpts.WaitForServer {
+			if clusterCreateOpts.WaitForServer {
 				waitForServerWaitgroup.Go(func() error {
 					// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 					// ... by scanning for this line in logs and restarting the container in case it appears
@@ -356,7 +376,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	 */
 
 	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
-	if !cluster.ClusterCreateOpts.PrepDisableHostIPInjection {
+	if !clusterCreateOpts.PrepDisableHostIPInjection {
 		prepInjectHostIP(clusterPrepCtx, runtime, cluster)
 	}
 

@@ -62,17 +62,9 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 	// FILL CLUSTER CONFIG
 	newCluster := k3d.Cluster{
-		Name:    simpleConfig.Name,
-		Network: clusterNetwork,
-		Token:   simpleConfig.ClusterToken,
-		ClusterCreateOpts: &k3d.ClusterCreateOpts{
-			DisableImageVolume:  simpleConfig.Options.K3dOptions.DisableImageVolume,
-			WaitForServer:       simpleConfig.Options.K3dOptions.Wait,
-			Timeout:             simpleConfig.Options.K3dOptions.Timeout,
-			DisableLoadBalancer: simpleConfig.Options.K3dOptions.DisableLoadbalancer,
-			K3sServerArgs:       simpleConfig.Options.K3sOptions.ExtraServerArgs,
-			K3sAgentArgs:        simpleConfig.Options.K3sOptions.ExtraAgentArgs,
-		},
+		Name:      simpleConfig.Name,
+		Network:   clusterNetwork,
+		Token:     simpleConfig.ClusterToken,
 		ExposeAPI: simpleConfig.ExposeAPI,
 	}
 
@@ -173,13 +165,33 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		}
 	}
 
+	/**************************
+	 * Cluster Create Options *
+	 **************************/
+
+	clusterCreateOpts := k3d.ClusterCreateOpts{
+		DisableImageVolume:  simpleConfig.Options.K3dOptions.DisableImageVolume,
+		WaitForServer:       simpleConfig.Options.K3dOptions.Wait,
+		Timeout:             simpleConfig.Options.K3dOptions.Timeout,
+		DisableLoadBalancer: simpleConfig.Options.K3dOptions.DisableLoadbalancer,
+		K3sServerArgs:       simpleConfig.Options.K3sOptions.ExtraServerArgs,
+		K3sAgentArgs:        simpleConfig.Options.K3sOptions.ExtraAgentArgs,
+	}
+
+	/**********************
+	 * Kubeconfig Options *
+	 **********************/
+
+	// Currently, the kubeconfig options for the cluster config are the same as for the simple config
+
 	/******************************
 	 * Create Full Cluster Config *
 	 ******************************/
 
 	clusterConfig := &conf.ClusterConfig{
 		Cluster:           newCluster,
-		ClusterCreateOpts: *newCluster.ClusterCreateOpts,
+		ClusterCreateOpts: clusterCreateOpts,
+		KubeconfigOpts:    simpleConfig.Options.KubeconfigOptions,
 	}
 
 	return clusterConfig, nil
