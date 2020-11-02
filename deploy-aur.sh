@@ -13,7 +13,7 @@ set -e
 # Configuration
 export HOME=/home/aur
 export REPO_URL="ssh://aur@aur.archlinux.org/$PACKAGE_NAME.git"
-export NEW_RELEASE="${GITHUB_REF##*/v}"
+export NEW_RELEASE="${COMMIT_REF##*/v}"
 export COMMIT_MESSAGE="$(echo $COMMIT_MESSAGE | envsubst)"
 echo "---------------- AUR Package version $PACKAGE_NAME/$NEW_RELEASE ----------------"
 

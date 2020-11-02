@@ -14,7 +14,7 @@ jobs:
       - name: Publish Pre-Release to AUR
         run: |
           # AUR Packages are not allowed to use - in the package version. its used to combine pkgver and pkgrel
-          export GITHUB_REF=${GITHUB_REF/-/_}
+          export COMMIT_REF=${GITHUB_REF/-/_}
           ./deploy-aur.sh
         env:
           PACKAGE_NAME: rancher-k3d-beta-bin
