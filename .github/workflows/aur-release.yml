@@ -1,8 +1,8 @@
-name: Staging CI/CD
+name: AUR Release
 
 on:
   release:
-    types: [prereleased]
+    types: [released]
 
 jobs:
   aur-release:
@@ -11,11 +11,11 @@ jobs:
     steps:
       - name: Checkout Project
         uses: actions/checkout@v1
-      - name: Publish Pre-Release to AUR
+      - name: Publish Release to AUR
         run: |
           ./deploy-aur.sh
         env:
-          PACKAGE_NAME: rancher-k3d-beta-bin
+          PACKAGE_NAME: rancher-k3d-bin
           COMMIT_USERNAME: Drone CI
           COMMIT_EMAIL: jonas@dellinger.dev
           COMMIT_MESSAGE: "[CI] Updated to $NEW_RELEASE"
