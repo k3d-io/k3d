@@ -7,9 +7,11 @@ on:
 jobs:
   aur-prerelease:
     runs-on: ubuntu-latest
+    container: archlinux:20200705
     steps:
+      - name: Checkout Project
+        uses: actions/checkout@v1
       - name: Publish Release to AUR
-        uses: archlinux:20200705
         run: |
           ./deploy-aur.sh
         env:
