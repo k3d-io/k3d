@@ -23,7 +23,7 @@ bye() {
   exit 0
 }
 
-warn() { log "${RED}!!! WARNING !!! $1 ${END}"; }
+warn() { log "${RED}WARN: $1 ${END}"; }
 
 abort() {
   log "${RED}FATAL: $1${END}"
@@ -49,6 +49,13 @@ passed() {
   else
     log "${GRN}$1${END}"
   fi
+}
+
+section() {
+  title_length=$((${#1}+4))
+  log "$(printf "${CYA}#%.0s${END}" $(eval "echo {1.."$(($title_length))"}"); printf "\n";)"
+  log "$(printf "${CYA}#${END} %s ${CYA}#${END}\n" "$1")"
+  log "$(printf "${CYA}#%.0s${END}" $(eval "echo {1.."$(($title_length))"}"); printf "\n";)"
 }
 
 # checks that a URL is available, with an optional error message
@@ -111,4 +118,49 @@ check_volume_exists() {
 check_cluster_token_exist() {
   [ -n "$EXE" ] || abort "EXE is not defined"
   $EXE cluster get "$1" --token | grep "TOKEN" >/dev/null 2>&1
+}
+
+wait_for_pod_running_by_label() {
+  podname=$(kubectl get pod -l "$1" $([[ -n "$2" ]] && echo "--namespace $2") -o jsonpath='{.items[0].metadata.name}')
+  wait_for_pod_running_by_name "$podname" "$2"
+}
+
+wait_for_pod_running_by_name() {
+  while : ; do
+    podstatus=$(kubectl get pod "$1" $([[ -n "$2" ]] && echo "--namespace $2") -o go-template='{{.status.phase}}')
+    case "$podstatus" in
+      "ErrImagePull" )
+        echo "Pod $1 is NOT running: ErrImagePull"
+        return 1
+        ;;
+      "ContainerCreating" )
+        continue
+        ;;
+      "Pending" )
+        continue
+        ;;
+      "Running" )
+        echo "Pod $1 is Running"
+        return 0
+        ;;
+      * )
+        echo "Pod $1 is NOT running: Unknown status '$podstatus'"
+        kubectl describe pod "$1" || kubectl get pods $([[ -n "$2" ]] && echo "--namespace $2")
+        return 1
+    esac
+  done
+}
+
+wait_for_pod_exec() {
+  # $1 = pod name
+  # $2 = command
+  # $3 = max. retries (default: 10)
+  max_retries=$([[ -n "$3" ]] && echo "$3" || echo "10")
+  for (( i=0; i<=max_retries; i++ )); do
+    echo "Try #$i: 'kubectl exec $1 -- $2'"
+    kubectl exec "$1" -- $2 > /dev/null && return 0
+    sleep 1
+  done
+  echo "Command '$2' in pod '$1' did NOT return successfully in $max_retries tries"
+  return 1
 }

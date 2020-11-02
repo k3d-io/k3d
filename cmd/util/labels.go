@@ -19,39 +19,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
-package docker
+package util
 
 import (
-	"context"
-	"io"
-
-	"github.com/docker/docker/client"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-	log "github.com/sirupsen/logrus"
+	"strings"
 )
 
-// GetKubeconfig grabs the kubeconfig from inside a k3d node
-func (d Docker) GetKubeconfig(ctx context.Context, node *k3d.Node) (io.ReadCloser, error) {
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		log.Errorln("Failed to create docker client")
-		return nil, err
-	}
-	defer docker.Close()
+// SplitLabelKeyValue separates the label key from the label value (if any)
+func SplitLabelKeyValue(label string) (string, string) {
+	// split only on first '=' sign (like `docker run` do)
+	labelSlice := strings.SplitN(label, "=", 2)
 
-	container, err := getNodeContainer(ctx, node)
-	if err != nil {
-		return nil, err
+	if len(labelSlice) > 1 {
+		return labelSlice[0], labelSlice[1]
 	}
 
-	log.Tracef("Container Details: %+v", container)
-
-	reader, _, err := docker.CopyFromContainer(ctx, container.ID, "/output/kubeconfig.yaml")
-	if err != nil {
-		log.Errorf("Failed to copy from container '%s'", container.ID)
-		return nil, err
-	}
-
-	return reader, nil
+	// defaults to label key with empty value (like `docker run` do)
+	return label, ""
 }

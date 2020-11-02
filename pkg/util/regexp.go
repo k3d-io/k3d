@@ -20,38 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package docker
+package util
 
-import (
-	"context"
-	"io"
-
-	"github.com/docker/docker/client"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-	log "github.com/sirupsen/logrus"
-)
-
-// GetKubeconfig grabs the kubeconfig from inside a k3d node
-func (d Docker) GetKubeconfig(ctx context.Context, node *k3d.Node) (io.ReadCloser, error) {
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		log.Errorln("Failed to create docker client")
-		return nil, err
+// MapSubexpNames maps regex capturing group names to corresponding matches
+func MapSubexpNames(names, matches []string) map[string]string {
+	//names, matches = names[1:], matches[1:]
+	nameMatchMap := make(map[string]string, len(matches))
+	for index := range names {
+		nameMatchMap[names[index]] = matches[index]
 	}
-	defer docker.Close()
-
-	container, err := getNodeContainer(ctx, node)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Tracef("Container Details: %+v", container)
-
-	reader, _, err := docker.CopyFromContainer(ctx, container.ID, "/output/kubeconfig.yaml")
-	if err != nil {
-		log.Errorf("Failed to copy from container '%s'", container.ID)
-		return nil, err
-	}
-
-	return reader, nil
+	return nameMatchMap
 }

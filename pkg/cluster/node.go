@@ -207,7 +207,7 @@ func NodeCreateMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d
 
 // NodeCreate creates a new containerized k3s node
 func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, createNodeOpts k3d.NodeCreateOpts) error {
-	log.Debugf("Creating node from spec\n%+v", node)
+	log.Tracef("Creating node from spec\n%+v", node)
 
 	/*
 	 * CONFIGURATION

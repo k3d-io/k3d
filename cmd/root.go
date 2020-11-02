@@ -22,6 +22,7 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -34,9 +35,9 @@ import (
 	"github.com/rancher/k3d/v3/cmd/image"
 	"github.com/rancher/k3d/v3/cmd/kubeconfig"
 	"github.com/rancher/k3d/v3/cmd/node"
+	cliutil "github.com/rancher/k3d/v3/cmd/util"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	"github.com/rancher/k3d/v3/version"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
 )
@@ -44,6 +45,7 @@ import (
 // RootFlags describes a struct that holds flags that can be set on root level of the command
 type RootFlags struct {
 	debugLogging bool
+	traceLogging bool
 	version      bool
 }
 
@@ -73,6 +75,19 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	if len(os.Args) > 1 {
+		parts := os.Args[1:]
+		// Check if it's a built-in command, else try to execute it as a plugin
+		if _, _, err := rootCmd.Find(parts); err != nil {
+			pluginFound, err := cliutil.HandlePlugin(context.Background(), parts)
+			if err != nil {
+				log.Errorf("Failed to execute plugin '%+v'", parts)
+				log.Fatalln(err)
+			} else if pluginFound {
+				os.Exit(0)
+			}
+		}
+	}
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalln(err)
 	}
@@ -84,6 +99,7 @@ func init() {
 	// add persistent flags (present to all subcommands)
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k3d/config.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
+	rootCmd.PersistentFlags().BoolVar(&flags.traceLogging, "trace", false, "Enable super verbose output (trace logging)")
 
 	// add local flags
 	rootCmd.Flags().BoolVar(&flags.version, "version", false, "Show k3d and default k3s version")
@@ -107,10 +123,14 @@ func init() {
 
 // initLogging initializes the logger
 func initLogging() {
-	if flags.debugLogging {
+	if flags.traceLogging {
+		log.SetLevel(log.TraceLevel)
+	} else if flags.debugLogging {
 		log.SetLevel(log.DebugLevel)
 	} else {
 		switch logLevel := strings.ToUpper(os.Getenv("LOG_LEVEL")); logLevel {
+		case "TRACE":
+			log.SetLevel(log.TraceLevel)
 		case "DEBUG":
 			log.SetLevel(log.DebugLevel)
 		case "WARN":
@@ -136,6 +156,7 @@ func initLogging() {
 		LogLevels: []log.Level{
 			log.InfoLevel,
 			log.DebugLevel,
+			log.TraceLevel,
 		},
 	})
 	log.SetFormatter(&log.TextFormatter{
@@ -157,12 +178,17 @@ func printVersion() {
 	fmt.Printf("k3s version %s (default)\n", version.K3sVersion)
 }
 
+func generateFishCompletion(writer io.Writer) error {
+	return rootCmd.GenFishCompletion(writer, true)
+}
+
 // Completion
 var completionFunctions = map[string]func(io.Writer) error{
 	"bash":       rootCmd.GenBashCompletion,
 	"zsh":        rootCmd.GenZshCompletion,
 	"psh":        rootCmd.GenPowerShellCompletion,
 	"powershell": rootCmd.GenPowerShellCompletion,
+	"fish":       generateFishCompletion,
 }
 
 // NewCmdCompletion creates a new completion command
@@ -170,8 +196,8 @@ func NewCmdCompletion() *cobra.Command {
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:   "completion SHELL",
-		Short: "Generate completion scripts for [bash, zsh, powershell | psh]",
-		Long:  `Generate completion scripts for [bash, zsh, powershell | psh]`,
+		Short: "Generate completion scripts for [bash, zsh, fish, powershell | psh]",
+		Long:  `Generate completion scripts for [bash, zsh, fish, powershell | psh]`,
 		Args:  cobra.ExactArgs(1), // TODO: NewCmdCompletion: add support for 0 args = auto detection
 		Run: func(cmd *cobra.Command, args []string) {
 			if f, ok := completionFunctions[args[0]]; ok {

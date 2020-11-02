@@ -40,7 +40,7 @@ import (
 // createContainer creates a new docker container from translated specs
 func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string) error {
 
-	log.Debugf("Creating docker container with translated config\n%+v\n", dockerNode) // TODO: remove?
+	log.Tracef("Creating docker container with translated config\n%+v\n", dockerNode)
 
 	// initialize docker client
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -65,7 +65,7 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 			log.Errorf("Failed to create container '%s'", name)
 			return err
 		}
-		log.Debugln("Created container", resp.ID)
+		log.Debugf("Created container %s (ID: %s)", name, resp.ID)
 		break
 	}
 
@@ -147,7 +147,7 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 	for k, v := range node.Labels {
 		filters.Add("label", fmt.Sprintf("%s=%s", k, v))
 	}
-        // See https://github.com/moby/moby/issues/29997 for explanation around initial /
+	// See https://github.com/moby/moby/issues/29997 for explanation around initial /
 	filters.Add("name", fmt.Sprintf("^/?%s$", node.Name)) // regex filtering for exact name match
 
 	containers, err := docker.ContainerList(ctx, types.ContainerListOptions{

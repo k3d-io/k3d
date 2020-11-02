@@ -23,6 +23,7 @@ THE SOFTWARE.
 package containerd
 
 import (
+	"bufio"
 	"context"
 	"io"
 	"time"
@@ -91,7 +92,7 @@ func (d Containerd) DeleteNode(ctx context.Context, node *k3d.Node) error {
 		return err
 	}
 	if err = container.Delete(ctx, []containerd.DeleteOpts{}...); err != nil {
-		log.Errorf("Failed to delete container '%s'", container.ID)
+		log.Errorf("Failed to delete container '%s'", container.ID())
 		return err
 	}
 
@@ -125,4 +126,9 @@ func (d Containerd) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.
 // ExecInNode execs a command inside a node
 func (d Containerd) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) error {
 	return nil
+}
+
+// ExecInNodeGetLogs execs a command inside a node and returns its logreader
+func (d Containerd) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []string) (*bufio.Reader, error) {
+	return nil, nil
 }

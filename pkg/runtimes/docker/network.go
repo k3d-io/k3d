@@ -23,6 +23,8 @@ package docker
 
 import (
 	"context"
+	"fmt"
+	"net"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -45,12 +47,12 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (str
 	defer docker.Close()
 
 	// (1) configure list filters
-	args := filters.NewArgs()
-	args.Add("name", name)
+	filter := filters.NewArgs()
+	filter.Add("name", fmt.Sprintf("^/?%s$", name)) // regex filtering for exact name match
 
 	// (2) get filtered list of networks
 	networkList, err := docker.NetworkList(ctx, types.NetworkListOptions{
-		Filters: args,
+		Filters: filter,
 	})
 	if err != nil {
 		log.Errorln("Failed to list docker networks")
@@ -103,4 +105,17 @@ func GetNetwork(ctx context.Context, ID string) (types.NetworkResource, error) {
 	}
 	defer docker.Close()
 	return docker.NetworkInspect(ctx, ID, types.NetworkInspectOptions{})
+}
+
+// GetGatewayIP returns the IP of the network gateway
+func GetGatewayIP(ctx context.Context, network string) (net.IP, error) {
+	bridgeNetwork, err := GetNetwork(ctx, network)
+	if err != nil {
+		log.Errorf("Failed to get bridge network with name '%s'", network)
+		return nil, err
+	}
+
+	gatewayIP := net.ParseIP(bridgeNetwork.IPAM.Config[0].Gateway)
+
+	return gatewayIP, nil
 }

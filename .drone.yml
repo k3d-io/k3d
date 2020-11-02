@@ -145,6 +145,49 @@ steps:
           - "refs/tags/*rc*"
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
+  - name: docker_build_push_dind
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d
+      tags:
+        - latest-dind
+        - "${DRONE_TAG}-dind"
+      dockerfile: Dockerfile
+      target: dind
+      context: .
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+    depends_on:
+      - lint
+      - test
+      - build
+    when:
+      event:
+        - tag
+
+  - name: docker_build_push_binary
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d
+      tags:
+        - latest
+        - "${DRONE_TAG}"
+      dockerfile: Dockerfile
+      target: dind
+      context: .
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+    depends_on:
+      - lint
+      - test
+      - build
+    when:
+      event:
+        - tag
 
 services:
   # Starting the docker service to be used by dind

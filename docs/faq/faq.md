@@ -8,6 +8,7 @@
 ## Issues with ZFS
 
 - k3s currently has [no support for ZFS](ttps://github.com/rancher/k3s/issues/66) and thus, creating multi-server setups (e.g. `k3d cluster create multiserver --servers 3`) fails, because the initializing server node (server flag `--cluster-init`) errors out with the following log:
+
   ```bash
   starting kubernetes: preparing server: start cluster and https: raft_init(): io: create I/O capabilities probe file: posix_allocate: operation not supported on socket
   ```
@@ -18,12 +19,12 @@
 ## Pods evicted due to lack of disk space
 
 - Pods go to evicted state after doing X
-    - Related issues: [#133 - Pods evicted due to `NodeHasDiskPressure`](https://github.com/rancher/k3d/issues/133) (collection of #119 and #130)
-    - Background: somehow docker runs out of space for the k3d node containers, which triggers a hard eviction in the kubelet
-    - Possible [fix/workaround by @zer0def](https://github.com/rancher/k3d/issues/133#issuecomment-549065666):
-        - use a docker storage driver which cleans up properly (e.g. overlay2)
-        - clean up or expand docker root filesystem
-        - change the kubelet's eviction thresholds upon cluster creation: `k3d cluster create --k3s-agent-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%' --k3s-agent-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%'`
+  - Related issues: [#133 - Pods evicted due to `NodeHasDiskPressure`](https://github.com/rancher/k3d/issues/133) (collection of #119 and #130)
+  - Background: somehow docker runs out of space for the k3d node containers, which triggers a hard eviction in the kubelet
+  - Possible [fix/workaround by @zer0def](https://github.com/rancher/k3d/issues/133#issuecomment-549065666):
+    - use a docker storage driver which cleans up properly (e.g. overlay2)
+    - clean up or expand docker root filesystem
+    - change the kubelet's eviction thresholds upon cluster creation: `k3d cluster create --k3s-agent-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%' --k3s-agent-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%'`
 
 ## Restarting a multi-server cluster or the initializing server node fails
 
@@ -38,9 +39,13 @@
 - The Problem: Passing a feature flag to the Kubernetes API Server running inside k3s.
 - Example: you want to enable the EphemeralContainers feature flag in Kubernetes
 - Solution: `#!bash k3d cluster create --k3s-server-arg '--kube-apiserver-arg=feature-gates=EphemeralContainers=true'`
-    - Note: Be aware of where the flags require dashes (`--`) and where not.
-        - the k3s flag (`--kube-apiserver-arg`) has the dashes
-        - the kube-apiserver flag `feature-gates` doesn't have them (k3s adds them internally)
+  - Note: Be aware of where the flags require dashes (`--`) and where not.
+    - the k3s flag (`--kube-apiserver-arg`) has the dashes
+    - the kube-apiserver flag `feature-gates` doesn't have them (k3s adds them internally)
 
 - Second example: `#!bash k3d cluster create k3d-one --k3s-server-arg --cluster-cidr="10.118.0.0/17" --k3s-server-arg --service-cidr="10.118.128.0/17" --k3s-server-arg --disable=servicelb --k3s-server-arg --disable=traefik --verbose`
-    - Note: There are many ways to use the `"` and `'` quotes, just be aware, that sometimes shells also try to interpret/interpolate parts of the commands
+  - Note: There are many ways to use the `"` and `'` quotes, just be aware, that sometimes shells also try to interpret/interpolate parts of the commands
+
+## How to access services (like a database) running on my Docker Host Machine
+
+- As of version v3.1.0, we're injecting the `host.k3d.internal` entry into the k3d containers (k3s nodes) and into the CoreDNS ConfigMap, enabling you to access your host system by referring to it as `host.k3d.internal`

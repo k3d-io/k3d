@@ -49,7 +49,7 @@ const DefaultObjectNamePrefix = "k3d"
 
 // ReadyLogMessageByRole defines the log messages we wait for until a server node is considered ready
 var ReadyLogMessageByRole = map[Role]string{
-	ServerRole:       "Wrote kubeconfig",
+	ServerRole:       "k3s is up and running",
 	AgentRole:        "Successfully registered node",
 	LoadBalancerRole: "start worker processes",
 }
@@ -108,6 +108,9 @@ var DefaultNodeEnv = []string{
 	"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml",
 }
 
+// DefaultK3dInternalHostRecord defines the default /etc/hosts entry for the k3d host
+const DefaultK3dInternalHostRecord = "host.k3d.internal"
+
 // DefaultImageVolumeMountPath defines the mount path inside k3d nodes where we will mount the shared image volume by default
 const DefaultImageVolumeMountPath = "/k3d/images"
 
@@ -130,12 +133,13 @@ var DoNotCopyServerFlags = []string{
 
 // ClusterCreateOpts describe a set of options one can set when creating a cluster
 type ClusterCreateOpts struct {
-	DisableImageVolume  bool
-	WaitForServer       bool
-	Timeout             time.Duration
-	DisableLoadBalancer bool
-	K3sServerArgs       []string
-	K3sAgentArgs        []string
+	PrepDisableHostIPInjection bool
+	DisableImageVolume         bool
+	WaitForServer              bool
+	Timeout                    time.Duration
+	DisableLoadBalancer        bool
+	K3sServerArgs              []string
+	K3sAgentArgs               []string
 }
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
@@ -234,6 +238,7 @@ type Node struct {
 	Restart    bool              `yaml:"restart" json:"restart,omitempty"`
 	Labels     map[string]string // filled automatically
 	Network    string            // filled automatically
+	ExtraHosts []string          // filled automatically
 	ServerOpts ServerOpts        `yaml:"server_opts" json:"serverOpts,omitempty"`
 	AgentOpts  AgentOpts         `yaml:"agent_opts" json:"agentOpts,omitempty"`
 	State      NodeState         // filled automatically

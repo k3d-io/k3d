@@ -194,7 +194,7 @@ func KubeconfigGet(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.C
 	// set current-context to new context name
 	kc.CurrentContext = newContextName
 
-	log.Debugf("Modified Kubeconfig: %+v", kc)
+	log.Tracef("Modified Kubeconfig: %+v", kc)
 
 	return kc, nil
 }
@@ -237,7 +237,7 @@ func KubeconfigWriteToPath(ctx context.Context, kubeconfig *clientcmdapi.Config,
 // KubeconfigMerge merges a new kubeconfig into an existing kubeconfig and returns the result
 func KubeconfigMerge(ctx context.Context, newKubeConfig *clientcmdapi.Config, existingKubeConfig *clientcmdapi.Config, outPath string, overwriteConflicting bool, updateCurrentContext bool) error {
 
-	log.Debugf("Merging new KubeConfig:\n%+v\n>>> into existing KubeConfig:\n%+v", newKubeConfig, existingKubeConfig)
+	log.Tracef("Merging new Kubeconfig:\n%+v\n>>> into existing Kubeconfig:\n%+v", newKubeConfig, existingKubeConfig)
 
 	// Overwrite values in existing kubeconfig
 	for k, v := range newKubeConfig.Clusters {
@@ -276,7 +276,12 @@ func KubeconfigMerge(ctx context.Context, newKubeConfig *clientcmdapi.Config, ex
 		existingKubeConfig.CurrentContext = newKubeConfig.CurrentContext
 	}
 
-	log.Debugf("Merged KubeConfig:\n%+v", existingKubeConfig)
+	kubeconfigYaml, err := clientcmd.Write(*existingKubeConfig)
+	if err != nil {
+		log.Debugf("Merged Kubeconfig:\n%+v", existingKubeConfig)
+	} else {
+		log.Tracef("Merged Kubeconfig:\n%s", kubeconfigYaml)
+	}
 
 	return KubeconfigWrite(ctx, existingKubeConfig, outPath)
 }

@@ -113,11 +113,14 @@ func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	}
 
 	for _, name := range clusternames {
-		cluster, err := cluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: name})
+		c, err := cluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: name})
 		if err != nil {
+			if err == cluster.ClusterGetNoNodesFoundError {
+				continue
+			}
 			log.Fatalln(err)
 		}
-		clusters = append(clusters, cluster)
+		clusters = append(clusters, c)
 	}
 
 	return clusters
