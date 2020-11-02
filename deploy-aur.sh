@@ -10,12 +10,9 @@ su -m aur <<'EOSU'
 
 # Configuration
 export HOME=/home/aur
-export PACKAGE_NAME="$PLUGIN_PACKAGE_NAME"
 export REPO_URL="ssh://aur@aur.archlinux.org/$PACKAGE_NAME.git"
-export NEW_RELEASE="${DRONE_COMMIT_REF##*/v}"
-export COMMIT_USERNAME="$PLUGIN_COMMIT_USERNAME"
-export COMMIT_EMAIL="$PLUGIN_COMMIT_EMAIL"
-export COMMIT_MESSAGE="$(echo $PLUGIN_COMMIT_MESSAGE | envsubst)"
+export NEW_RELEASE="${GITHUB_REF##*/v}"
+export COMMIT_MESSAGE="$(echo $COMMIT_MESSAGE | envsubst)"
 echo "---------------- AUR Package version $PACKAGE_NAME/$NEW_RELEASE ----------------"
 
 # SSH & GIT Setup

@@ -1,0 +1,20 @@
+name: Staging CI/CD
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  aur-prerelease:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish Release to AUR
+        uses: archlinux:20200705
+        run: |
+          ./deploy-aur.sh
+        env:
+          PACKAGE_NAME: rancher-k3d-bin
+          COMMIT_USERNAME: Drone CI
+          COMMIT_EMAIL: jonas@dellinger.dev
+          COMMIT_MESSAGE: "[CI] Updated to $NEW_RELEASE"
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
