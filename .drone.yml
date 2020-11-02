@@ -12,6 +12,7 @@ platform:
   arch: amd64
 
 steps:
+
   - name: lint
     image: golang:1.14
     commands:
@@ -30,7 +31,7 @@ steps:
         path: /var/run
     commands:
       - apk add git bash curl sudo jq make
-      - sleep 5 # give docker enough time to start
+      - sleep 5  # give docker enough time to start
       - make e2e
     when:
       event:
@@ -171,6 +172,7 @@ platform:
   arch: amd64
 
 steps:
+
   - name: build
     image: python:3.8
     commands:
@@ -241,6 +243,7 @@ depends_on:
   - main
 
 ---
+
 kind: pipeline
 type: docker
 name: proxy_linux_arm
@@ -277,6 +280,7 @@ depends_on:
   - main
 
 ---
+
 kind: pipeline
 type: docker
 name: proxy_linux_arm64
@@ -313,6 +317,7 @@ depends_on:
   - main
 
 ---
+
 kind: pipeline
 type: docker
 name: proxy_manifest
@@ -388,6 +393,7 @@ depends_on:
   - main
 
 ---
+
 kind: pipeline
 type: docker
 name: tools_linux_arm
@@ -421,6 +427,7 @@ trigger:
 depends_on:
   - main
 ---
+
 kind: pipeline
 type: docker
 name: tools_linux_arm64
@@ -454,6 +461,7 @@ trigger:
 depends_on:
   - main
 ---
+
 kind: pipeline
 type: docker
 name: tools_manifest
