@@ -53,6 +53,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "dhoppe",
+      "name": "Dennis Hoppe",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/1111056?v=4",
+      "profile": "http://debian-solutions.de",
+      "contributions": [
+        "doc",
+        "example"
+      ]
     }
   ],
   "contributorsPerLine": 7,
