@@ -1,0 +1,24 @@
+name: AUR Prerelease
+
+on:
+  release:
+    types: [prereleased]
+
+jobs:
+  aur-pre-release:
+    runs-on: ubuntu-latest
+    container: archlinux:20200705
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v1
+      - name: Publish Pre-Release to AUR
+        run: |
+          # AUR Packages are not allowed to use - in the package version. its used to combine pkgver and pkgrel
+          export COMMIT_REF=${GITHUB_REF/-/_}
+          ./deploy-aur.sh
+        env:
+          PACKAGE_NAME: rancher-k3d-beta-bin
+          COMMIT_USERNAME: Travis CI
+          COMMIT_EMAIL: iwilltry42+k3d@gmail.com
+          COMMIT_MESSAGE: "[CI] Updated to $NEW_RELEASE"
+          SSH_PRIVATE_KEY: ${{ secrets.AUR_PRIVATE_KEY }}
