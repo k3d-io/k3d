@@ -37,6 +37,7 @@ import (
 	prototypes "github.com/gogo/protobuf/types"
 	ver "github.com/opencontainers/image-spec/specs-go"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/opencontainers/selinux/go-selinux/label"
 	"github.com/pkg/errors"
 )
 
@@ -243,7 +244,17 @@ func (c *container) NewTask(ctx context.Context, ioCreate cio.Creator, opts ...N
 		if err != nil {
 			return nil, err
 		}
+		spec, err := c.Spec(ctx)
+		if err != nil {
+			return nil, err
+		}
 		for _, m := range mounts {
+			if spec.Linux != nil && spec.Linux.MountLabel != "" {
+				context := label.FormatMountLabel("", spec.Linux.MountLabel)
+				if context != "" {
+					m.Options = append(m.Options, context)
+				}
+			}
 			request.Rootfs = append(request.Rootfs, &types.Mount{
 				Type:    m.Type,
 				Source:  m.Source,
@@ -279,6 +290,7 @@ func (c *container) NewTask(ctx context.Context, ioCreate cio.Creator, opts ...N
 		client: c.client,
 		io:     i,
 		id:     c.id,
+		c:      c,
 	}
 	if info.Checkpoint != nil {
 		request.Checkpoint = info.Checkpoint
@@ -396,6 +408,7 @@ func (c *container) loadTask(ctx context.Context, ioAttach cio.Attach) (Task, er
 		io:     i,
 		id:     response.Process.ID,
 		pid:    response.Process.Pid,
+		c:      c,
 	}
 	return t, nil
 }
