@@ -32,7 +32,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
   *Note*: `k3s` deploys [`traefik`](https://github.com/containous/traefik) as the default ingress controller
 
     ```YAML
-    apiVersion: extensions/v1beta1
+    apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
       name: nginx
@@ -43,9 +43,12 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
       - http:
           paths:
           - path: /
+            pathType: Prefix
             backend:
-              serviceName: nginx
-              servicePort: 80
+              service:
+                name: nginx
+                port:
+                  number: 80
     ```
 
 6. Curl it via localhost
