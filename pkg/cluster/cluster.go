@@ -161,6 +161,8 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 		node.Name = generateNodeName(cluster.Name, node.Role, suffix)
 		node.Network = cluster.Network.Name
 
+		node.GPURequest = cluster.CreateClusterOpts.GPURequest
+
 		// create node
 		log.Infof("Creating node '%s'", node.Name)
 		if err := NodeCreate(clusterCreateCtx, runtime, node, k3d.NodeCreateOpts{}); err != nil {

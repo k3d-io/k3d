@@ -33,6 +33,8 @@ import (
 	"github.com/docker/go-connections/nat"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 	log "github.com/sirupsen/logrus"
+
+	dockercliopts "github.com/docker/cli/opts"
 )
 
 // TranslateNodeToContainer translates a k3d node specification to a docker container representation
@@ -73,6 +75,14 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	hostConfig.Tmpfs = make(map[string]string)
 	for _, mnt := range k3d.DefaultTmpfsMounts {
 		hostConfig.Tmpfs[mnt] = ""
+	}
+
+	if node.GPURequest != "" {
+		gpuopts := dockercliopts.GpuOpts{}
+		if err := gpuopts.Set(node.GPURequest); err != nil {
+			return nil, fmt.Errorf("Failed to set GPU Request: %+v", err)
+		}
+		hostConfig.DeviceRequests = gpuopts.Value()
 	}
 
 	/* They have to run in privileged mode */

@@ -136,6 +136,7 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().BoolVar(&createClusterOpts.DisableLoadBalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
 	cmd.Flags().BoolVar(&noRollback, "no-rollback", false, "Disable the automatic rollback actions, if anything goes wrong")
 	cmd.Flags().BoolVar(&createClusterOpts.PrepDisableHostIPInjection, "no-hostip", false, "Disable the automatic injection of the Host IP as 'host.k3d.internal' into the containers and CoreDNS")
+	cmd.Flags().StringVar(&createClusterOpts.GPURequest, "gpus", "", "GPU devices to add to the cluster node containers ('all' to pass all GPUs) [From docker]")
 
 	/* Image Importing */
 	cmd.Flags().BoolVar(&createClusterOpts.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")

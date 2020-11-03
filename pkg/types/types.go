@@ -140,6 +140,7 @@ type ClusterCreateOpts struct {
 	DisableLoadBalancer        bool
 	K3sServerArgs              []string
 	K3sAgentArgs               []string
+	GPURequest                 string
 }
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
@@ -241,6 +242,7 @@ type Node struct {
 	ExtraHosts []string          // filled automatically
 	ServerOpts ServerOpts        `yaml:"server_opts" json:"serverOpts,omitempty"`
 	AgentOpts  AgentOpts         `yaml:"agent_opts" json:"agentOpts,omitempty"`
+	GPURequest string            // filled automatically
 	State      NodeState         // filled automatically
 }
 
