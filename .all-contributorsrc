@@ -53,6 +53,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "JohnnyCrazy",
+      "name": "Jonas Dellinger",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/3109892?v=4",
+      "profile": "https://dellinger.dev",
+      "contributions": [
+        "infra"
+      ]
     }
   ],
   "contributorsPerLine": 7,
