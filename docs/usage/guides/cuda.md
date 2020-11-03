@@ -4,7 +4,7 @@ CUDA workloads require the NVIDIA Container Runtime, so containerd needs to be c
 The K3S container itself also needs to run with this runtime. If you are using Docker you can install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html).
 
 ## Building a customized K3S image
-To get the NVIDIA container runtime in the K3S image you need to build your own K3S image. The native K3S image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet. To get around this we to build the image with a supported base image.
+To get the NVIDIA container runtime in the K3S image you need to build your own K3S image. The native K3S image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet. To get around this we have to build the image with a supported base image.
 
 ### Adapt the Dockerfile
 

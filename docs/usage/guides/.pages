@@ -3,3 +3,4 @@ arrange:
   - exposing_services.md
   - registries.md
   - calico.md
+  - cuda.md
