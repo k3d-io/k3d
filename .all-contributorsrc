@@ -62,6 +62,15 @@
       "contributions": [
         "infra"
       ]
+    },
+    {
+      "login": "markrexwinkel",
+      "name": "markrexwinkel",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/10704814?v=4",
+      "profile": "https://github.com/markrexwinkel",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
