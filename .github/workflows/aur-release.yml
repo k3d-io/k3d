@@ -17,7 +17,7 @@ jobs:
           ./deploy-aur.sh
         env:
           PACKAGE_NAME: rancher-k3d-bin
-          COMMIT_USERNAME: Drone CI
-          COMMIT_EMAIL: jonas@dellinger.dev
+          COMMIT_USERNAME: Travis CI
+          COMMIT_EMAIL: iwilltry42+k3d@gmail.com
           COMMIT_MESSAGE: "[CI] Updated to $NEW_RELEASE"
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PRIVATE_KEY: ${{ secrets.AUR_PRIVATE_KEY }}
