@@ -4,7 +4,7 @@ CUDA workloads require the NVIDIA Container Runtime, so containerd needs to be c
 The K3S container itself also needs to run with this runtime. If you are using Docker you can install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html).
 
 ## Building a customized K3S image
-To get the NVIDIA container runtime in the K3S image you need to build your own K3S image. The native K3S image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet. To get around this we to build the image with a supported base image.
+To get the NVIDIA container runtime in the K3S image you need to build your own K3S image. The native K3S image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet. To get around this we need to build the image with a supported base image.
 
 ### Adapt the Dockerfile
 
@@ -214,11 +214,10 @@ docker exec k3s-gpu kubectl logs cuda-vector-add
 ## Known issues
 * This approach does not work on WSL2 yet. The NVIDIA driver plugin and container runtime rely on the NVIDIA Management Library (NVML) which is not yet supported. See the [CUDA on WSL User Guide](https://docs.nvidia.com/cuda/wsl-user-guide/index.html#known-limitations).
 
-## Acknoledgements:
+## Acknowledgements:
 Most of the information in this article was obtained from various sources:
 * [Add NVIDIA GPU support to k3s with containerd](https://dev.to/mweibel/add-nvidia-gpu-support-to-k3s-with-containerd-4j17)
 * [microk8s](https://github.com/ubuntu/microk8s)
 * [K3S](https://github.com/rancher/k3s)
-
 
 
