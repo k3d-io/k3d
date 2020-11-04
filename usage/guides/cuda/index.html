@@ -1,0 +1,964 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Little helper to run Rancher Lab's k3s in Docker">
+      
+      
+        <link rel="canonical" href="https://k3d.io/usage/guides/cuda/">
+      
+      
+      <link rel="shortcut icon" href="../../../static/img/favicons_black_blue/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.1.2">
+    
+    
+      
+        <title>Running CUDA workloads - k3d</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.19190aaf.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.24b84193.min.css">
+        
+          
+          
+          <meta name="theme-color" content="#000000">
+        
+      
+    
+    
+    
+      
+        
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="../../../static/css/asciinema-player.css">
+    
+      <link rel="stylesheet" href="../../../static/css/extra.css">
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="black" data-md-color-accent="grey">
+      
+  
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#running-cuda-workloads" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="https://k3d.io/" title="k3d" class="md-header-nav__button md-logo" aria-label="k3d">
+      
+  <img src="../../../static/img/k3d_logo_black_green.svg" alt="logo">
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      
+        <div class="md-header-nav__ellipsis">
+          <span class="md-header-nav__topic md-ellipsis">
+            k3d
+          </span>
+          <span class="md-header-nav__topic md-ellipsis">
+            
+              Running CUDA workloads
+            
+          </span>
+        </div>
+      
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header-nav__source">
+        
+<a href="https://github.com/rancher/k3d/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rancher/k3d
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://k3d.io/" title="k3d" class="md-nav__button md-logo" aria-label="k3d">
+      
+  <img src="../../../static/img/k3d_logo_black_green.svg" alt="logo">
+
+    </a>
+    k3d
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/rancher/k3d/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rancher/k3d
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../.." class="md-nav__link">
+      Overview
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" checked>
+    
+    <label class="md-nav__link" for="nav-2">
+      Usage
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Usage" data-md-level="1">
+      <label class="md-nav__title" for="nav-2">
+        <span class="md-nav__icon md-icon"></span>
+        Usage
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../commands/" class="md-nav__link">
+      Command Tree
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../kubeconfig/" class="md-nav__link">
+      Handling Kubeconfigs
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../multiserver/" class="md-nav__link">
+      Creating multi-server clusters
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-4" type="checkbox" id="nav-2-4" checked>
+    
+    <label class="md-nav__link" for="nav-2-4">
+      Guides
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Guides" data-md-level="2">
+      <label class="md-nav__title" for="nav-2-4">
+        <span class="md-nav__icon md-icon"></span>
+        Guides
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../exposing_services/" class="md-nav__link">
+      Exposing Services
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../registries/" class="md-nav__link">
+      Registries
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../calico/" class="md-nav__link">
+      Use Calico instead of Flannel
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Running CUDA workloads
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
+    <a href="./" class="md-nav__link md-nav__link--active">
+      Running CUDA workloads
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#building-a-customized-k3s-image" class="md-nav__link">
+    Building a customized K3S image
+  </a>
+  
+    <nav class="md-nav" aria-label="Building a customized K3S image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adapt-the-dockerfile" class="md-nav__link">
+    Adapt the Dockerfile
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configure-containerd" class="md-nav__link">
+    Configure containerd
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-nvidia-device-plugin" class="md-nav__link">
+    The NVIDIA device plugin
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-the-k3s-image" class="md-nav__link">
+    Build the K3S image
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-and-test-the-custom-image-with-docker" class="md-nav__link">
+    Run and test the custom image with Docker
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-and-test-the-custom-image-with-k3d" class="md-nav__link">
+    Run and test the custom image with k3d
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#known-issues" class="md-nav__link">
+    Known issues
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acknowledgements" class="md-nav__link">
+    Acknowledgements:
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
+    
+    <label class="md-nav__link" for="nav-3">
+      Internals
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Internals" data-md-level="1">
+      <label class="md-nav__title" for="nav-3">
+        <span class="md-nav__icon md-icon"></span>
+        Internals
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../../internals/defaults/" class="md-nav__link">
+      Defaults
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../../internals/networking/" class="md-nav__link">
+      Networking
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
+    
+    <label class="md-nav__link" for="nav-4">
+      FAQ
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="FAQ" data-md-level="1">
+      <label class="md-nav__title" for="nav-4">
+        <span class="md-nav__icon md-icon"></span>
+        FAQ
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../../faq/faq/" class="md-nav__link">
+      FAQ / Nice to know
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../../faq/v1vsv3-comparison/" class="md-nav__link">
+      Feature Comparison: v1 vs. v3
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#building-a-customized-k3s-image" class="md-nav__link">
+    Building a customized K3S image
+  </a>
+  
+    <nav class="md-nav" aria-label="Building a customized K3S image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adapt-the-dockerfile" class="md-nav__link">
+    Adapt the Dockerfile
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configure-containerd" class="md-nav__link">
+    Configure containerd
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-nvidia-device-plugin" class="md-nav__link">
+    The NVIDIA device plugin
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-the-k3s-image" class="md-nav__link">
+    Build the K3S image
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-and-test-the-custom-image-with-docker" class="md-nav__link">
+    Run and test the custom image with Docker
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-and-test-the-custom-image-with-k3d" class="md-nav__link">
+    Run and test the custom image with k3d
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#known-issues" class="md-nav__link">
+    Known issues
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acknowledgements" class="md-nav__link">
+    Acknowledgements:
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/rancher/k3d/edit/master/docs/usage/guides/cuda.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="running-cuda-workloads">Running CUDA workloads<a class="headerlink" href="#running-cuda-workloads" title="Permanent link">&para;</a></h1>
+<p>If you want to run CUDA workloads on the K3S container you need to customize the container.
+CUDA workloads require the NVIDIA Container Runtime, so containerd needs to be configured to use this runtime.
+The K3S container itself also needs to run with this runtime. If you are using Docker you can install the <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html">NVIDIA Container Toolkit</a>.</p>
+<h2 id="building-a-customized-k3s-image">Building a customized K3S image<a class="headerlink" href="#building-a-customized-k3s-image" title="Permanent link">&para;</a></h2>
+<p>To get the NVIDIA container runtime in the K3S image you need to build your own K3S image. The native K3S image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet. To get around this we need to build the image with a supported base image.</p>
+<h3 id="adapt-the-dockerfile">Adapt the Dockerfile<a class="headerlink" href="#adapt-the-dockerfile" title="Permanent link">&para;</a></h3>
+<p><div class="highlight"><pre><span></span><code><span class="k">FROM</span> <span class="s">ubuntu:18.04</span> <span class="k">as</span> <span class="s">base</span>
+<span class="k">RUN</span> apt-get update -y <span class="o">&amp;&amp;</span> apt-get install -y ca-certificates
+<span class="k">ADD</span> k3s/build/out/data.tar.gz /image
+<span class="k">RUN</span> mkdir -p /image/etc/ssl/certs /image/run /image/var/run /image/tmp /image/lib/modules /image/lib/firmware <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    cp /etc/ssl/certs/ca-certificates.crt /image/etc/ssl/certs/ca-certificates.crt
+<span class="k">RUN</span> <span class="nb">cd</span> image/bin <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    rm -f k3s <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    ln -s k3s-server k3s
+
+<span class="k">FROM</span> <span class="s">ubuntu:18.04</span>
+<span class="k">RUN</span> <span class="nb">echo</span> <span class="s1">&#39;debconf debconf/frontend select Noninteractive&#39;</span> <span class="p">|</span> debconf-set-selections
+<span class="k">RUN</span> apt-get update -y <span class="o">&amp;&amp;</span> apt-get -y install gnupg2 curl
+
+<span class="c"># Install the NVIDIA Container Runtime</span>
+<span class="k">RUN</span> curl -s -L https://nvidia.github.io/nvidia-container-runtime/gpgkey <span class="p">|</span> apt-key add -
+<span class="k">RUN</span> curl -s -L https://nvidia.github.io/nvidia-container-runtime/ubuntu18.04/nvidia-container-runtime.list <span class="p">|</span> tee /etc/apt/sources.list.d/nvidia-container-runtime.list
+<span class="k">RUN</span> apt-get update -y
+<span class="k">RUN</span> apt-get -y install nvidia-container-runtime
+
+<span class="k">COPY</span> --from<span class="o">=</span>base /image /
+<span class="k">RUN</span> mkdir -p /etc <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    <span class="nb">echo</span> <span class="s1">&#39;hosts: files dns&#39;</span> &gt; /etc/nsswitch.conf
+<span class="k">RUN</span> chmod <span class="m">1777</span> /tmp
+<span class="c"># Provide custom containerd configuration to configure the nvidia-container-runtime</span>
+<span class="k">RUN</span> mkdir -p /var/lib/rancher/k3s/agent/etc/containerd/
+<span class="k">COPY</span> config.toml.tmpl /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+<span class="c"># Deploy the nvidia driver plugin on startup</span>
+<span class="k">RUN</span> mkdir -p /var/lib/rancher/k3s/server/manifests
+<span class="k">COPY</span> gpu.yaml /var/lib/rancher/k3s/server/manifests/gpu.yaml
+<span class="k">VOLUME</span><span class="s"> /var/lib/kubelet</span>
+<span class="k">VOLUME</span><span class="s"> /var/lib/rancher/k3s</span>
+<span class="k">VOLUME</span><span class="s"> /var/lib/cni</span>
+<span class="k">VOLUME</span><span class="s"> /var/log</span>
+<span class="k">ENV</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$PATH</span><span class="s2">:/bin/aux&quot;</span>
+<span class="k">ENTRYPOINT</span> <span class="p">[</span><span class="s2">&quot;/bin/k3s&quot;</span><span class="p">]</span>
+<span class="k">CMD</span> <span class="p">[</span><span class="s2">&quot;agent&quot;</span><span class="p">]</span>
+</code></pre></div>
+This <a href="cuda/Dockerfile">Dockerfile</a> is based on the <a href="https://github.com/rancher/k3s/blob/master/package/Dockerfile">K3S Dockerfile</a>.
+The following changes are applied:
+1. Change the base images to Ubuntu 18.04 so the NVIDIA Container Runtime can be installed
+2. Add a custom containerd <code>config.toml</code> template to add the NVIDIA Container Runtime. This replaces the default <code>runc</code> runtime
+3. Add a manifest for the NVIDIA driver plugin for Kubernetes</p>
+<h3 id="configure-containerd">Configure containerd<a class="headerlink" href="#configure-containerd" title="Permanent link">&para;</a></h3>
+<p>We need to configure containerd to use the NVIDIA Container Runtime. We need to customize the config.toml that is used at startup. K3S provides a way to do this using a <a href="config.toml.tmpl">config.toml.tmpl</a> file. More information can be found on the <a href="https://rancher.com/docs/k3s/latest/en/advanced/#configuring-containerd">K3S site</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">opt</span><span class="p">]</span>
+  <span class="nx">path</span> <span class="p">=</span> <span class="s">&quot;{{ .NodeConfig.Containerd.Opt }}&quot;</span>
+
+<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">]</span>
+  <span class="nx">stream_server_address</span> <span class="p">=</span> <span class="s">&quot;127.0.0.1&quot;</span>
+  <span class="nx">stream_server_port</span> <span class="p">=</span> <span class="s">&quot;10010&quot;</span>
+
+<span class="p">{{</span><span class="o">-</span> <span class="k">if</span> <span class="p">.</span><span class="nx">IsRunningInUserNS</span> <span class="p">}}</span>
+  <span class="nx">disable_cgroup</span> <span class="p">=</span> <span class="kc">true</span>
+  <span class="nx">disable_apparmor</span> <span class="p">=</span> <span class="kc">true</span>
+  <span class="nx">restrict_oom_score_adj</span> <span class="p">=</span> <span class="kc">true</span>
+<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+
+<span class="p">{{</span><span class="o">-</span> <span class="k">if</span> <span class="p">.</span><span class="nx">NodeConfig</span><span class="p">.</span><span class="nx">AgentConfig</span><span class="p">.</span><span class="nx">PauseImage</span> <span class="p">}}</span>
+  <span class="nx">sandbox_image</span> <span class="p">=</span> <span class="s">&quot;{{ .NodeConfig.AgentConfig.PauseImage }}&quot;</span>
+<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+
+<span class="p">{{</span><span class="o">-</span> <span class="k">if</span> <span class="nx">not</span> <span class="p">.</span><span class="nx">NodeConfig</span><span class="p">.</span><span class="nx">NoFlannel</span> <span class="p">}}</span>
+<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">.</span><span class="nx">cni</span><span class="p">]</span>
+  <span class="nx">bin_dir</span> <span class="p">=</span> <span class="s">&quot;{{ .NodeConfig.AgentConfig.CNIBinDir }}&quot;</span>
+  <span class="nx">conf_dir</span> <span class="p">=</span> <span class="s">&quot;{{ .NodeConfig.AgentConfig.CNIConfDir }}&quot;</span>
+<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+
+<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">.</span><span class="nx">containerd</span><span class="p">.</span><span class="nx">runtimes</span><span class="p">.</span><span class="nx">runc</span><span class="p">]</span>
+  <span class="err">#</span> <span class="o">----</span> <span class="nx">changed</span> <span class="nx">from</span> <span class="err">&#39;</span><span class="nx">io</span><span class="p">.</span><span class="nx">containerd</span><span class="p">.</span><span class="nx">runc</span><span class="p">.</span><span class="nx">v2</span><span class="err">&#39;</span> <span class="k">for</span> <span class="nx">GPU</span> <span class="nx">support</span>
+  <span class="nx">runtime_type</span> <span class="p">=</span> <span class="s">&quot;io.containerd.runtime.v1.linux&quot;</span>
+
+<span class="err">#</span> <span class="o">----</span> <span class="nx">added</span> <span class="k">for</span> <span class="nx">GPU</span> <span class="nx">support</span>
+<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">linux</span><span class="p">]</span>
+  <span class="nx">runtime</span> <span class="p">=</span> <span class="s">&quot;nvidia-container-runtime&quot;</span>
+
+<span class="p">{{</span> <span class="k">if</span> <span class="p">.</span><span class="nx">PrivateRegistryConfig</span> <span class="p">}}</span>
+<span class="p">{{</span> <span class="k">if</span> <span class="p">.</span><span class="nx">PrivateRegistryConfig</span><span class="p">.</span><span class="nx">Mirrors</span> <span class="p">}}</span>
+<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">.</span><span class="nx">registry</span><span class="p">.</span><span class="nx">mirrors</span><span class="p">]{{</span><span class="nx">end</span><span class="p">}}</span>
+<span class="p">{{</span><span class="k">range</span> <span class="err">$</span><span class="nx">k</span><span class="p">,</span> <span class="err">$</span><span class="nx">v</span> <span class="o">:=</span> <span class="p">.</span><span class="nx">PrivateRegistryConfig</span><span class="p">.</span><span class="nx">Mirrors</span> <span class="p">}}</span>
+<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">.</span><span class="nx">registry</span><span class="p">.</span><span class="nx">mirrors</span><span class="p">.</span><span class="s">&quot;{{$k}}&quot;</span><span class="p">]</span>
+  <span class="nx">endpoint</span> <span class="p">=</span> <span class="p">[{{</span><span class="k">range</span> <span class="err">$</span><span class="nx">i</span><span class="p">,</span> <span class="err">$</span><span class="nx">j</span> <span class="o">:=</span> <span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">Endpoints</span><span class="p">}}{{</span><span class="k">if</span> <span class="err">$</span><span class="nx">i</span><span class="p">}},</span> <span class="p">{{</span><span class="nx">end</span><span class="p">}}{{</span><span class="nx">printf</span> <span class="s">&quot;%q&quot;</span> <span class="p">.}}{{</span><span class="nx">end</span><span class="p">}}]</span>
+<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+
+<span class="p">{{</span><span class="k">range</span> <span class="err">$</span><span class="nx">k</span><span class="p">,</span> <span class="err">$</span><span class="nx">v</span> <span class="o">:=</span> <span class="p">.</span><span class="nx">PrivateRegistryConfig</span><span class="p">.</span><span class="nx">Configs</span> <span class="p">}}</span>
+<span class="p">{{</span> <span class="k">if</span> <span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">Auth</span> <span class="p">}}</span>
+<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">.</span><span class="nx">registry</span><span class="p">.</span><span class="nx">configs</span><span class="p">.</span><span class="s">&quot;{{$k}}&quot;</span><span class="p">.</span><span class="nx">auth</span><span class="p">]</span>
+  <span class="p">{{</span> <span class="k">if</span> <span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">Auth</span><span class="p">.</span><span class="nx">Username</span> <span class="p">}}</span><span class="nx">username</span> <span class="p">=</span> <span class="s">&quot;{{ $v.Auth.Username }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+  <span class="p">{{</span> <span class="k">if</span> <span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">Auth</span><span class="p">.</span><span class="nx">Password</span> <span class="p">}}</span><span class="nx">password</span> <span class="p">=</span> <span class="s">&quot;{{ $v.Auth.Password }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+  <span class="p">{{</span> <span class="k">if</span> <span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">Auth</span><span class="p">.</span><span class="nx">Auth</span> <span class="p">}}</span><span class="nx">auth</span> <span class="p">=</span> <span class="s">&quot;{{ $v.Auth.Auth }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+  <span class="p">{{</span> <span class="k">if</span> <span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">Auth</span><span class="p">.</span><span class="nx">IdentityToken</span> <span class="p">}}</span><span class="nx">identitytoken</span> <span class="p">=</span> <span class="s">&quot;{{ $v.Auth.IdentityToken }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+<span class="p">{{</span> <span class="k">if</span> <span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">TLS</span> <span class="p">}}</span>
+<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">.</span><span class="nx">registry</span><span class="p">.</span><span class="nx">configs</span><span class="p">.</span><span class="s">&quot;{{$k}}&quot;</span><span class="p">.</span><span class="nx">tls</span><span class="p">]</span>
+  <span class="p">{{</span> <span class="k">if</span> <span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">TLS</span><span class="p">.</span><span class="nx">CAFile</span> <span class="p">}}</span><span class="nx">ca_file</span> <span class="p">=</span> <span class="s">&quot;{{ $v.TLS.CAFile }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+  <span class="p">{{</span> <span class="k">if</span> <span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">TLS</span><span class="p">.</span><span class="nx">CertFile</span> <span class="p">}}</span><span class="nx">cert_file</span> <span class="p">=</span> <span class="s">&quot;{{ $v.TLS.CertFile }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+  <span class="p">{{</span> <span class="k">if</span> <span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">TLS</span><span class="p">.</span><span class="nx">KeyFile</span> <span class="p">}}</span><span class="nx">key_file</span> <span class="p">=</span> <span class="s">&quot;{{ $v.TLS.KeyFile }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
+</code></pre></div>
+<h3 id="the-nvidia-device-plugin">The NVIDIA device plugin<a class="headerlink" href="#the-nvidia-device-plugin" title="Permanent link">&para;</a></h3>
+<p>To enable NVIDIA GPU support on Kubernetes you also need to install the <a href="https://github.com/NVIDIA/k8s-device-plugin">NVIDIA device plugin</a>. The device plugin is a deamonset and allows you to automatically:
+* Expose the number of GPUs on each nodes of your cluster
+* Keep track of the health of your GPUs
+* Run GPU enabled containers in your Kubernetes cluster.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">apps/v1</span>
+<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">DaemonSet</span>
+<span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nvidia-device-plugin-daemonset</span>
+  <span class="nt">namespace</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">kube-system</span>
+<span class="nt">spec</span><span class="p">:</span>
+  <span class="nt">selector</span><span class="p">:</span>
+    <span class="nt">matchLabels</span><span class="p">:</span>
+      <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nvidia-device-plugin-ds</span>
+  <span class="nt">template</span><span class="p">:</span>
+    <span class="nt">metadata</span><span class="p">:</span>
+      <span class="c1"># Mark this pod as a critical add-on; when enabled, the critical add-on scheduler</span>
+      <span class="c1"># reserves resources for critical add-on pods so that they can be rescheduled after</span>
+      <span class="c1"># a failure.  This annotation works in tandem with the toleration below.</span>
+      <span class="nt">annotations</span><span class="p">:</span>
+        <span class="nt">scheduler.alpha.kubernetes.io/critical-pod</span><span class="p">:</span> <span class="s">&quot;&quot;</span>
+      <span class="nt">labels</span><span class="p">:</span>
+        <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nvidia-device-plugin-ds</span>
+    <span class="nt">spec</span><span class="p">:</span>
+      <span class="nt">tolerations</span><span class="p">:</span>
+      <span class="c1"># Allow this pod to be rescheduled while the node is in &quot;critical add-ons only&quot; mode.</span>
+      <span class="c1"># This, along with the annotation above marks this pod as a critical add-on.</span>
+      <span class="p p-Indicator">-</span> <span class="nt">key</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">CriticalAddonsOnly</span>
+        <span class="nt">operator</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Exists</span>
+      <span class="nt">containers</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="nt">env</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">DP_DISABLE_HEALTHCHECKS</span>
+          <span class="nt">value</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">xids</span>
+        <span class="nt">image</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nvidia/k8s-device-plugin:1.11</span>
+        <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nvidia-device-plugin-ctr</span>
+        <span class="nt">securityContext</span><span class="p">:</span>
+          <span class="nt">allowPrivilegeEscalation</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+          <span class="nt">capabilities</span><span class="p">:</span>
+            <span class="nt">drop</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&quot;ALL&quot;</span><span class="p p-Indicator">]</span>
+        <span class="nt">volumeMounts</span><span class="p">:</span>
+          <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">device-plugin</span>
+            <span class="nt">mountPath</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/var/lib/kubelet/device-plugins</span>
+      <span class="nt">volumes</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">device-plugin</span>
+          <span class="nt">hostPath</span><span class="p">:</span>
+            <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/var/lib/kubelet/device-plugins</span>
+</code></pre></div>
+<h3 id="build-the-k3s-image">Build the K3S image<a class="headerlink" href="#build-the-k3s-image" title="Permanent link">&para;</a></h3>
+<p>To build the custom image we need to build K3S because we need the generated output.</p>
+<p>Put the following files in a directory:
+* <a href="cuda/Dockerfile">Dockerfile</a>
+* <a href="config.toml.tmpl">config.toml.tmpl</a>
+* <a href="gpu.yaml">gpu.yaml</a>
+* <a href="build.sh">build.sh</a>
+* <a href="cuda-vector-add.yaml">cuda-vector-add.yaml</a></p>
+<p>The <code>build.sh</code> files takes the K3S git tag as argument, it defaults to <code>v1.18.10+k3s1</code>. The script performs the following steps: 
+* pulls K3S 
+* builds K3S
+* build the custom K3S Docker image</p>
+<p>The resulting image is tagged as k3s-gpu:&lt;version tag&gt;. The version tag is the git tag but the &lsquo;+&rsquo; sign is replaced with a &lsquo;-&lsquo;.</p>
+<p><a href="build.sh">build.sh</a>:
+<div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
+<span class="nb">set</span> -e
+<span class="nb">cd</span> <span class="k">$(</span>dirname <span class="nv">$0</span><span class="k">)</span>
+
+<span class="nv">K3S_TAG</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">1</span><span class="k">:-</span><span class="nv">v1</span><span class="p">.18.10+k3s1</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nv">IMAGE_TAG</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">K3S_TAG</span><span class="p">/+/-</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="k">if</span> <span class="o">[</span> -d k3s <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+    rm -rf k3s
+<span class="k">fi</span>
+git clone --depth <span class="m">1</span> https://github.com/rancher/k3s.git -b <span class="nv">$K3S_TAG</span>
+<span class="nb">cd</span> k3s
+make
+<span class="nb">cd</span> ..
+docker build -t k3s-gpu:<span class="nv">$IMAGE_TAG</span> .
+</code></pre></div></p>
+<h2 id="run-and-test-the-custom-image-with-docker">Run and test the custom image with Docker<a class="headerlink" href="#run-and-test-the-custom-image-with-docker" title="Permanent link">&para;</a></h2>
+<p>You can run a container based on the new image with Docker:
+<div class="highlight"><pre><span></span><code>docker run --name k3s-gpu -d --privileged --gpus all k3s-gpu:v1.18.10-k3s1
+</code></pre></div>
+Deploy a <a href="cuda-vector-add.yaml">test pod</a>:
+<div class="highlight"><pre><span></span><code>docker cp cuda-vector-add.yaml k3s-gpu:/cuda-vector-add.yaml
+docker exec k3s-gpu kubectl apply -f /cuda-vector-add.yaml
+docker exec k3s-gpu kubectl logs cuda-vector-add
+</code></pre></div></p>
+<h2 id="run-and-test-the-custom-image-with-k3d">Run and test the custom image with k3d<a class="headerlink" href="#run-and-test-the-custom-image-with-k3d" title="Permanent link">&para;</a></h2>
+<p>Tou can use the image with k3d:
+<div class="highlight"><pre><span></span><code>k3d cluster create --no-lb --image k3s-gpu:v1.18.10-k3s1 --gpus all
+</code></pre></div>
+Deploy a <a href="cuda-vector-add.yaml">test pod</a>:
+<div class="highlight"><pre><span></span><code>kubectl apply -f cuda-vector-add.yaml
+kubectl logs cuda-vector-add
+</code></pre></div></p>
+<h2 id="known-issues">Known issues<a class="headerlink" href="#known-issues" title="Permanent link">&para;</a></h2>
+<ul>
+<li>This approach does not work on WSL2 yet. The NVIDIA driver plugin and container runtime rely on the NVIDIA Management Library (NVML) which is not yet supported. See the <a href="https://docs.nvidia.com/cuda/wsl-user-guide/index.html#known-limitations">CUDA on WSL User Guide</a>.</li>
+</ul>
+<h2 id="acknowledgements">Acknowledgements:<a class="headerlink" href="#acknowledgements" title="Permanent link">&para;</a></h2>
+<p>Most of the information in this article was obtained from various sources:
+* <a href="https://dev.to/mweibel/add-nvidia-gpu-support-to-k3s-with-containerd-4j17">Add NVIDIA GPU support to k3s with containerd</a>
+* <a href="https://github.com/ubuntu/microk8s">microk8s</a>
+* <a href="https://github.com/rancher/k3s">K3S</a></p>
+                
+                  
+                    
+
+<hr>
+<div class="md-source-date">
+  <small>
+    
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 4, 2020</span>
+    
+  </small>
+</div>
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+        
+          <a href="../calico/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+            </div>
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Use Calico instead of Flannel
+              </div>
+            </div>
+          </a>
+        
+        
+          <a href="../../../internals/defaults/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Defaults
+              </div>
+            </div>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+          <div class="md-footer-copyright__highlight">
+            Copyright &copy; 2020 k3d Authors
+          </div>
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../../assets/javascripts/vendor.7e0ee788.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.c1ccee15.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
+      
+      <script>
+        app = initialize({
+          base: "../../..",
+          features: ['tabs'],
+          search: Object.assign({
+            worker: "../../../assets/javascripts/worker/search.4ac00218.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
+      
+        <script src="../../../static/js/asciinema-player.js"></script>
+      
+    
+  </body>
+</html>
