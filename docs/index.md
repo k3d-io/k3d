@@ -45,7 +45,7 @@ You have several options there:
 - grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
 - install via go: `#!bash go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
 - use [arkade](https://github.com/alexellis/arkade): `arkade get k3d`
-- use [asdf](https://asdf-vm.com): `asdf plugin-add k3d`, then `asdf install k3d <tag>` with `<tag> = latest` or `3.x.x` for a specific version
+- use [asdf](https://asdf-vm.com): `asdf plugin-add k3d`, then `asdf install k3d <tag>` with `<tag> = latest` or `3.x.x` for a specific version (maintained by [spencergilbert/asdf-k3d](https://github.com/spencergilbert/asdf-k3d))
 
 ## Quick Start
 
