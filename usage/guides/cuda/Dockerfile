@@ -10,10 +10,13 @@ RUN cd image/bin && \
 FROM ubuntu:18.04
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 RUN apt-get update -y && apt-get -y install gnupg2 curl
+# Install the NVIDIA CUDA drivers and Container Runtime
+RUN apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
+RUN sh -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
 RUN curl -s -L https://nvidia.github.io/nvidia-container-runtime/gpgkey | apt-key add -
 RUN curl -s -L https://nvidia.github.io/nvidia-container-runtime/ubuntu18.04/nvidia-container-runtime.list | tee /etc/apt/sources.list.d/nvidia-container-runtime.list
 RUN apt-get update -y
-RUN apt-get -y install nvidia-container-runtime
+RUN apt-get -y install cuda-drivers nvidia-container-runtime
 COPY --from=base /image /
 RUN mkdir -p /etc && \
     echo 'hosts: files dns' > /etc/nsswitch.conf

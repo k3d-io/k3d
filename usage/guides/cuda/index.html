@@ -9,11 +9,12 @@
         <meta name="description" content="Little helper to run Rancher Lab's k3s in Docker">
       
       
+      
         <link rel="canonical" href="https://k3d.io/usage/guides/cuda/">
       
       
       <link rel="shortcut icon" href="../../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.1.2">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.1.3">
     
     
       
@@ -21,10 +22,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.19190aaf.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.2cb7adb3.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.24b84193.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.f0267088.min.css">
         
           
           
@@ -671,11 +672,13 @@ The K3S container itself also needs to run with this runtime. If you are using D
 <span class="k">RUN</span> <span class="nb">echo</span> <span class="s1">&#39;debconf debconf/frontend select Noninteractive&#39;</span> <span class="p">|</span> debconf-set-selections
 <span class="k">RUN</span> apt-get update -y <span class="o">&amp;&amp;</span> apt-get -y install gnupg2 curl
 
-<span class="c"># Install the NVIDIA Container Runtime</span>
+<span class="c"># Install the NVIDIA CUDA drivers and Container Runtime</span>
+<span class="k">RUN</span> apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
+<span class="k">RUN</span> sh -c <span class="s1">&#39;echo &quot;deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64 /&quot; &gt; /etc/apt/sources.list.d/cuda.list&#39;</span>
 <span class="k">RUN</span> curl -s -L https://nvidia.github.io/nvidia-container-runtime/gpgkey <span class="p">|</span> apt-key add -
 <span class="k">RUN</span> curl -s -L https://nvidia.github.io/nvidia-container-runtime/ubuntu18.04/nvidia-container-runtime.list <span class="p">|</span> tee /etc/apt/sources.list.d/nvidia-container-runtime.list
 <span class="k">RUN</span> apt-get update -y
-<span class="k">RUN</span> apt-get -y install nvidia-container-runtime
+<span class="k">RUN</span> apt-get -y install cuda-drivers nvidia-container-runtime
 
 <span class="k">COPY</span> --from<span class="o">=</span>base /image /
 <span class="k">RUN</span> mkdir -p /etc <span class="o">&amp;&amp;</span> <span class="se">\</span>
@@ -869,7 +872,7 @@ kubectl logs cuda-vector-add
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 4, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 6, 2020</span>
     
   </small>
 </div>
