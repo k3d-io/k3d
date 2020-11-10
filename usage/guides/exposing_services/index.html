@@ -14,7 +14,7 @@
       
       
       <link rel="shortcut icon" href="../../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.1.3">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.1.4">
     
     
       
@@ -22,7 +22,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.2cb7adb3.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.358818c7.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.f0267088.min.css">
@@ -580,7 +580,8 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <li>
 <p>Create an ingress object for it with <code class="highlight">kubectl apply -f</code>
   <em>Note</em>: <code>k3s</code> deploys <a href="https://github.com/containous/traefik"><code>traefik</code></a> as the default ingress controller</p>
-<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># networking.k8s.io/v1beta1 # for k3s &lt; v1.19</span>
+<span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
 <span class="nt">metadata</span><span class="p">:</span>
   <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx</span>
@@ -654,7 +655,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 4, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 10, 2020</span>
     
   </small>
 </div>
@@ -730,7 +731,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
     </div>
     
       <script src="../../../assets/javascripts/vendor.7e0ee788.min.js"></script>
-      <script src="../../../assets/javascripts/bundle.c1ccee15.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
+      <script src="../../../assets/javascripts/bundle.b3a72adc.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
       
       <script>
         app = initialize({
