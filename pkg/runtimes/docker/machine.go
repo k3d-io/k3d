@@ -23,8 +23,6 @@ THE SOFTWARE.
 package docker
 
 import (
-	"fmt"
-	"net"
 	"os"
 	"os/exec"
 	"strings"
@@ -34,41 +32,33 @@ import (
 
 func (d Docker) GetDockerMachineIP() (string, error) {
 	machine := os.ExpandEnv("$DOCKER_MACHINE_NAME")
-	dockerHostName := "host.docker.internal"
-
-	// Option 1: use the docker-machine executable
 	if machine != "" {
-		dockerMachinePath, err := exec.LookPath("docker-machine")
-		if err != nil {
-			return "", err
-		}
-
-		out, err := exec.Command(dockerMachinePath, "ip", machine).Output()
-		if err != nil {
-			log.Printf("Error executing 'docker-machine ip'")
-
-			if exitError, ok := err.(*exec.ExitError); ok {
-				log.Printf("%s", string(exitError.Stderr))
-			}
-			return "", err
-		}
-		ipStr := strings.TrimSuffix(string(out), "\n")
-		ipStr = strings.TrimSuffix(ipStr, "\r")
-
-		return ipStr, nil
+		log.Debugf("Docker Machine found: %s", machine)
 	}
 
-	// Option 2: Try to lookup "host.docker.internal"
-	log.Debugf("Docker Machine not found, trying to lookup '%s' instead...", dockerHostName)
-	addrs, err := net.LookupHost(dockerHostName)
+	dockerMachinePath, err := exec.LookPath("docker-machine")
 	if err != nil {
-		log.Debugf("Lookup of Host %s failed: %+v", dockerHostName, err)
-		return "", fmt.Errorf("Failed to get IP of Docker VM")
+		if err == exec.ErrNotFound {
+			if machine != "" {
+				log.Debugf("DOCKER_MACHINE_NAME env var present, but executable docker-machine not found: %w", err)
+			} else {
+				log.Tracef("docker-machine executable not found: %w", err)
+			}
+		}
+		return "", nil
 	}
-	if len(addrs) == 0 {
-		log.Debugf("Lookup of Host %s didn't return any addresses", dockerHostName)
-		return "", fmt.Errorf("Failed to get IP of Docker VM")
+
+	out, err := exec.Command(dockerMachinePath, "ip", machine).Output()
+	if err != nil {
+		log.Printf("Error executing 'docker-machine ip'")
+
+		if exitError, ok := err.(*exec.ExitError); ok {
+			log.Printf("%s", string(exitError.Stderr))
+		}
+		return "", err
 	}
-	log.Debugf("Addresses returned for %s: %+v", dockerHostName, addrs)
-	return addrs[0], nil
+	ipStr := strings.TrimSuffix(string(out), "\n")
+	ipStr = strings.TrimSuffix(ipStr, "\r")
+
+	return ipStr, nil
 }
