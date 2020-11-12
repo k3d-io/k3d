@@ -88,3 +88,23 @@ func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k
 
 	return docker.CopyToContainer(ctx, container.ID, destDir, preparedArchive, types.CopyToContainerOptions{AllowOverwriteDirWithFile: false})
 }
+
+func IsDockerDesktop(ctx context.Context) (bool, error) {
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return false, err
+	}
+	defer docker.Close()
+	info, err := docker.Info(ctx)
+	if err != nil {
+		log.Errorln("Failed to get Docker client/server info")
+		return false, err
+	}
+
+	// https://pkg.go.dev/github.com/docker/docker/api/types#Info
+	if info.OperatingSystem == "Docker Desktop" {
+		return true, nil
+	}
+	return false, nil
+}
