@@ -23,6 +23,7 @@ THE SOFTWARE.
 package docker
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -32,28 +33,24 @@ import (
 
 func (d Docker) GetDockerMachineIP() (string, error) {
 	machine := os.ExpandEnv("$DOCKER_MACHINE_NAME")
-	if machine != "" {
-		log.Debugf("Docker Machine found: %s", machine)
+	if machine == "" {
+		log.Tracef("Docker Machine not specified via DOCKER_MACHINE_NAME env var")
+		return "", nil
 	}
 
+	log.Debugf("Docker Machine found: %s", machine)
 	dockerMachinePath, err := exec.LookPath("docker-machine")
 	if err != nil {
 		if err == exec.ErrNotFound {
-			if machine != "" {
-				log.Debugf("DOCKER_MACHINE_NAME env var present, but executable docker-machine not found: %w", err)
-			} else {
-				log.Tracef("docker-machine executable not found: %w", err)
-			}
+			log.Debugf("DOCKER_MACHINE_NAME env var present, but executable docker-machine not found: %+v", err)
 		}
 		return "", nil
 	}
 
 	out, err := exec.Command(dockerMachinePath, "ip", machine).Output()
 	if err != nil {
-		log.Printf("Error executing 'docker-machine ip'")
-
 		if exitError, ok := err.(*exec.ExitError); ok {
-			log.Printf("%s", string(exitError.Stderr))
+			return "", fmt.Errorf(string(exitError.Stderr))
 		}
 		return "", err
 	}
