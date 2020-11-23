@@ -20,3 +20,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 package util
+
+import "strings"
+
+// SplitKV splits an '='-delimited string into a key-value-pair (if any)
+func SplitKV(kvstring string) (string, string) {
+	// split only on first '=' sign (like `docker run` do)
+	kvSlice := strings.SplitN(kvstring, "=", 2)
+
+	if len(kvSlice) > 1 {
+		return kvSlice[0], kvSlice[1]
+	}
+
+	// defaults to key with empty value (like `docker run` do)
+	return kvstring, ""
+}
