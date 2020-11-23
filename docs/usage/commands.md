@@ -28,6 +28,7 @@ k3d
       -v, --volume  # specify additional bind-mounts
       --wait  # enable waiting for all server nodes to be ready before returning
       -a, --agents  # specify how many agent nodes you want to create
+      -e, --env  # add environment variables to the node containers
     start CLUSTERNAME  # start a (stopped) cluster
       -a, --all  # start all clusters
       --wait  # wait for all servers and server-loadbalancer to be up before returning
