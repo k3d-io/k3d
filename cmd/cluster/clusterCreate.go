@@ -128,7 +128,7 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().String("token", "", "Specify a cluster token. By default, we generate one.")
 	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v \"/my/path@agent[0,1]\" -v \"/tmp/test:/tmp/other@server[0]\"`")
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p \"8080:80@agent[0]\" -p \"8081@agent[1]\"`")
-	cmd.Flags().StringArrayP("label", "l", nil, "Add label to node container (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -l \"my.label@agent[0,1]\" -v \"other.label=somevalue@server[0]\"`")
+	cmd.Flags().StringArrayP("label", "l", nil, "Add label to node container (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -l \"my.label@agent[0,1]\" -l \"other.label=somevalue@server[0]\"`")
 	cmd.Flags().BoolVar(&createClusterOpts.WaitForServer, "wait", true, "Wait for the server(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
 	cmd.Flags().DurationVar(&createClusterOpts.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
 	cmd.Flags().BoolVar(&updateDefaultKubeconfig, "update-default-kubeconfig", true, "Directly update the default kubeconfig with the new cluster's context")
@@ -137,6 +137,7 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().BoolVar(&noRollback, "no-rollback", false, "Disable the automatic rollback actions, if anything goes wrong")
 	cmd.Flags().BoolVar(&createClusterOpts.PrepDisableHostIPInjection, "no-hostip", false, "Disable the automatic injection of the Host IP as 'host.k3d.internal' into the containers and CoreDNS")
 	cmd.Flags().StringVar(&createClusterOpts.GPURequest, "gpus", "", "GPU devices to add to the cluster node containers ('all' to pass all GPUs) [From docker]")
+	cmd.Flags().StringArrayP("env", "e", nil, "Add environment variables to nodes (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -e \"HTTP_PROXY=my.proxy.com\" -e \"SOME_KEY=SOME_VAL@server[0]\"`")
 
 	/* Image Importing */
 	cmd.Flags().BoolVar(&createClusterOpts.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
@@ -345,6 +346,32 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 
 	log.Tracef("LabelFilterMap: %+v", labelFilterMap)
 
+	// --env
+	envFlags, err := cmd.Flags().GetStringArray("env")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// envFilterMap will add container env vars to applied node filters
+	envFilterMap := make(map[string][]string, 1)
+	for _, envFlag := range envFlags {
+
+		// split node filter from the specified env var
+		env, filters, err := cliutil.SplitFiltersFromFlag(envFlag)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// create new entry or append filter to existing entry
+		if _, exists := envFilterMap[env]; exists {
+			envFilterMap[env] = append(envFilterMap[env], filters...)
+		} else {
+			envFilterMap[env] = filters
+		}
+	}
+
+	log.Tracef("EnvFilterMap: %+v", envFilterMap)
+
 	/********************
 	 *									*
 	 * generate cluster *
@@ -451,8 +478,19 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, createClusterOpts 
 				node.Labels = make(map[string]string)
 			}
 
-			labelKey, labelValue := cliutil.SplitLabelKeyValue(label)
+			labelKey, labelValue := cliutil.SplitKV(label)
 			node.Labels[labelKey] = labelValue
+		}
+	}
+
+	// append env vars
+	for env, filters := range envFilterMap {
+		nodes, err := cliutil.FilterNodes(cluster.Nodes, filters)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		for _, node := range nodes {
+			node.Env = append(node.Env, env)
 		}
 	}
 
