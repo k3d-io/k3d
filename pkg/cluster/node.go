@@ -362,7 +362,7 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 		}
 
 		time.Sleep(500 * time.Millisecond) // wait for half a second to avoid overloading docker (error `socket: too many open files`)
-		log.Debugf("Finished waiting for log message '%s' from node '%s'", message, node.Name)
 	}
+	log.Debugf("Finished waiting for log message '%s' from node '%s'", message, node.Name)
 	return nil
 }
