@@ -122,6 +122,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 			Labels: map[string]string{
 				k3d.LabelRole: roleStr,
 			},
+			Restart: true,
 		}
 		nodes = append(nodes, node)
 	}
