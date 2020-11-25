@@ -358,7 +358,7 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 		// check if the container is restarting
 		running, status, _ := runtime.GetNodeStatus(ctx, node)
 		if running && status == k3d.ContainerRestartingStatus {
-			return errors.New(node.Name + " container is restarting, early exit to avoid crash loop")
+			return fmt.Errorf("Node %s is restarting, early exit to avoid crash loop", node.Name)
 		}
 
 		time.Sleep(500 * time.Millisecond) // wait for half a second to avoid overloading docker (error `socket: too many open files`)
