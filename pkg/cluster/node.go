@@ -25,7 +25,6 @@ package cluster
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -357,7 +356,7 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 
 		// check if the container is restarting
 		running, status, _ := runtime.GetNodeStatus(ctx, node)
-		if running && status == k3d.ContainerRestartingStatus {
+		if running && status == k3d.NodeStatusRestarting {
 			return fmt.Errorf("Node %s is restarting, early exit to avoid crash loop", node.Name)
 		}
 
