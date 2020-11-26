@@ -118,6 +118,11 @@ func (d Containerd) GetNode(ctx context.Context, node *k3d.Node) (*k3d.Node, err
 	return nil, nil
 }
 
+// GetNodeStatus returns the status of a node (Running, Started, etc.)
+func (d Containerd) GetNodeStatus(ctx context.Context, node *k3d.Node) (bool, string, error) {
+	return true, "", nil
+}
+
 // GetNodeLogs returns the logs from a given node
 func (d Containerd) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time) (io.ReadCloser, error) {
 	return nil, nil

@@ -180,7 +180,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 
 		node.Name = generateNodeName(cluster.Name, node.Role, suffix)
 		node.Network = cluster.Network.Name
-
+		node.Restart = true
 		node.GPURequest = cluster.CreateClusterOpts.GPURequest
 
 		// create node
@@ -343,6 +343,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 				Role:    k3d.LoadBalancerRole,
 				Labels:  k3d.DefaultObjectLabels, // TODO: createLoadBalancer: add more expressive labels
 				Network: cluster.Network.Name,
+				Restart: true,
 			}
 			cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
 			log.Infof("Creating LoadBalancer '%s'", lbNode.Name)

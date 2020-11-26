@@ -54,6 +54,9 @@ var ReadyLogMessageByRole = map[Role]string{
 	LoadBalancerRole: "start worker processes",
 }
 
+// NodeStatusRestarting defines the status string that signals the node container is restarting
+const NodeStatusRestarting = "restarting"
+
 // Role defines a k3d node role
 type Role string
 

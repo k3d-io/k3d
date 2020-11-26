@@ -324,7 +324,7 @@ func NodeGet(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3
 	return node, nil
 }
 
-// NodeWaitForLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
+//NodeWaitForLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
 func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string, since time.Time) error {
 	for {
 		select {
@@ -353,8 +353,15 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 		if nRead > 0 && strings.Contains(output, message) {
 			break
 		}
+
+		// check if the container is restarting
+		running, status, _ := runtime.GetNodeStatus(ctx, node)
+		if running && status == k3d.NodeStatusRestarting {
+			return fmt.Errorf("Node %s is restarting, early exit to avoid crash loop", node.Name)
+		}
+
+		time.Sleep(500 * time.Millisecond) // wait for half a second to avoid overloading docker (error `socket: too many open files`)
 	}
-	time.Sleep(500 * time.Millisecond) // wait for half a second to avoid overloading docker (error `socket: too many open files`)
 	log.Debugf("Finished waiting for log message '%s' from node '%s'", message, node.Name)
 	return nil
 }
