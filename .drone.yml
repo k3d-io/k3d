@@ -176,7 +176,7 @@ platform:
 steps:
 
   - name: build
-    image: python:3.8
+    image: python:3.9
     commands:
       - python3 -m pip install -r docs/requirements.txt
       - mkdocs build --verbose --clean --strict
