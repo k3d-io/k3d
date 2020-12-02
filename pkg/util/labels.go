@@ -19,43 +19,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
-package docker
+package util
 
 import (
-	"fmt"
-	"os"
-	"os/exec"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
-func (d Docker) GetDockerMachineIP() (string, error) {
-	machine := os.ExpandEnv("$DOCKER_MACHINE_NAME")
-	if machine == "" {
-		log.Tracef("Docker Machine not specified via DOCKER_MACHINE_NAME env var")
-		return "", nil
+// SplitLabelKeyValue separates the label key from the label value (if any)
+func SplitLabelKeyValue(label string) (string, string) {
+	// split only on first '=' sign (like `docker run` do)
+	labelSlice := strings.SplitN(label, "=", 2)
+
+	if len(labelSlice) > 1 {
+		return labelSlice[0], labelSlice[1]
 	}
 
-	log.Debugf("Docker Machine found: %s", machine)
-	dockerMachinePath, err := exec.LookPath("docker-machine")
-	if err != nil {
-		if err == exec.ErrNotFound {
-			log.Debugf("DOCKER_MACHINE_NAME env var present, but executable docker-machine not found: %+v", err)
-		}
-		return "", nil
-	}
-
-	out, err := exec.Command(dockerMachinePath, "ip", machine).Output()
-	if err != nil {
-		if exitError, ok := err.(*exec.ExitError); ok {
-			return "", fmt.Errorf(string(exitError.Stderr))
-		}
-		return "", err
-	}
-	ipStr := strings.TrimSuffix(string(out), "\n")
-	ipStr = strings.TrimSuffix(ipStr, "\r")
-
-	return ipStr, nil
+	// defaults to label key with empty value (like `docker run` do)
+	return label, ""
 }
