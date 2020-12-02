@@ -164,3 +164,9 @@ wait_for_pod_exec() {
   echo "Command '$2' in pod '$1' did NOT return successfully in $max_retries tries"
   return 1
 }
+
+exec_in_node() {
+  # $1 = container/node name
+  # $2 = command
+  docker exec "$1" "$2"
+}

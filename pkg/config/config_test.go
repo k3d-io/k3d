@@ -61,6 +61,18 @@ func TestReadSimpleConfig(t *testing.T) {
 				NodeFilters: []string{"loadbalancer"},
 			},
 		},
+		Labels: []conf.LabelWithNodeFilters{
+			{
+				Label:       "foo=bar",
+				NodeFilters: []string{"server[0]", "loadbalancer"},
+			},
+		},
+		Env: []conf.EnvVarWithNodeFilters{
+			{
+				EnvVar:      "bar=baz",
+				NodeFilters: []string{"all"},
+			},
+		},
 		Options: conf.SimpleConfigOptions{
 			K3dOptions: conf.SimpleConfigOptionsK3d{
 				Wait:                true,

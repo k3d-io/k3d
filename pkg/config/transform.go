@@ -165,6 +165,22 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		}
 	}
 
+	// -> ENV
+	for _, envVarWithNodeFilters := range simpleConfig.Env {
+		if len(envVarWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
+			return nil, fmt.Errorf("EnvVarMapping '%s' lacks a node filter, but there's more than one node", envVarWithNodeFilters.EnvVar)
+		}
+
+		nodes, err := util.FilterNodes(nodeList, envVarWithNodeFilters.NodeFilters)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, node := range nodes {
+			node.Env = append(node.Env, envVarWithNodeFilters.EnvVar)
+		}
+	}
+
 	/**************************
 	 * Cluster Create Options *
 	 **************************/

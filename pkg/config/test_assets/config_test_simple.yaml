@@ -18,6 +18,15 @@ ports:
   - port: 0.0.0.0:443:443
     nodeFilters:
       - loadbalancer
+env:
+  - envVar: bar=baz
+    nodeFilters:
+      - all
+labels:
+  - label: foo=bar
+    nodeFilters:
+      - server[0]
+      - loadbalancer
 
 options:
   k3d:

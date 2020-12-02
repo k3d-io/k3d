@@ -35,6 +35,7 @@ check_multi_node "$clustername" 3 || failed "failed to verify number of nodes"
 
 # 2. TODO: check some config settings
 
+exec_in_node "k3d-$clustername-server-0" "env" | grep "bar=baz" || failed "Expected env var 'bar=baz' is not present in node k3d-$clustername-server-0"
 
 # Cleanup
 
