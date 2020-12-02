@@ -201,7 +201,7 @@ ClusterCreatOpts:
 		node.Name = generateNodeName(cluster.Name, node.Role, suffix)
 		node.Network = cluster.Network.Name
 		node.Restart = true
-		node.GPURequest = cluster.CreateClusterOpts.GPURequest
+		node.GPURequest = clusterCreateOpts.GPURequest
 
 		// create node
 		log.Infof("Creating node '%s'", node.Name)
