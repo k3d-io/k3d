@@ -170,3 +170,9 @@ exec_in_node() {
   # $2 = command
   docker exec "$1" "$2"
 }
+
+docker_assert_container_label() {
+  # $1 = container/node name
+  # $2 = label to assert
+  docker inspect --format '{{ range $k, $v := .Config.Labels }}{{ printf "%s=%s\n" $k $v }}{{ end }}' "$1" | grep -E '^$2$'  
+}

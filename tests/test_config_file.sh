@@ -33,9 +33,15 @@ check_clusters "$clustername" || failed "error checking cluster"
 info "Checking that we have 3 nodes online..."
 check_multi_node "$clustername" 3 || failed "failed to verify number of nodes"
 
-# 2. TODO: check some config settings
+# 2. check some config settings
 
+## Environment Variables
+info "Ensuring that environment variables are present in the node containers as set in the config"
 exec_in_node "k3d-$clustername-server-0" "env" | grep "bar=baz" || failed "Expected env var 'bar=baz' is not present in node k3d-$clustername-server-0"
+
+## Container Labels
+info "Ensuring that container labels have ben set as stated in the config"
+docker_assert_container_label "k3d-$clustername-server-0" "foo=bar" || failed "Expected label 'foo=bar' not present on container/node k3d-$clustername-server-0"
 
 # Cleanup
 
