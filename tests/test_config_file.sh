@@ -40,7 +40,7 @@ info "Ensuring that environment variables are present in the node containers as 
 exec_in_node "k3d-$clustername-server-0" "env" | grep "bar=baz" || failed "Expected env var 'bar=baz' is not present in node k3d-$clustername-server-0"
 
 ## Container Labels
-info "Ensuring that container labels have ben set as stated in the config"
+info "Ensuring that container labels have been set as stated in the config"
 docker_assert_container_label "k3d-$clustername-server-0" "foo=bar" || failed "Expected label 'foo=bar' not present on container/node k3d-$clustername-server-0"
 
 # Cleanup
