@@ -55,6 +55,7 @@ type preProcessedFlags struct {
 	Volumes []string
 	Ports   []string
 	Labels  []string
+	Env     []string
 }
 
 // NewCmdClusterCreate returns a new cobra command
@@ -191,6 +192,8 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.DisableLoadbalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
 	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.NoRollback, "no-rollback", false, "Disable the automatic rollback actions, if anything goes wrong")
 	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.PrepDisableHostIPInjection, "no-hostip", false, "Disable the automatic injection of the Host IP as 'host.k3d.internal' into the containers and CoreDNS")
+	cmd.Flags().StringVar(&cliConfig.Options.Runtime.GPURequest, "gpus", "", "GPU devices to add to the cluster node containers ('all' to pass all GPUs) [From docker]")
+	cmd.Flags().StringArrayVarP(&ppFlags.Env, "env", "e", nil, "Add environment variables to nodes (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -e \"HTTP_PROXY=my.proxy.com\" -e \"SOME_KEY=SOME_VAL@server[0]\"`")
 
 	/* Image Importing */
 	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
@@ -338,5 +341,33 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 	}
 
 	log.Tracef("LabelFilterMap: %+v", labelFilterMap)
+
+	// --env
+	// envFilterMap will add container env vars to applied node filters
+	envFilterMap := make(map[string][]string, 1)
+	for _, envFlag := range ppFlags.Env {
+
+		// split node filter from the specified env var
+		env, filters, err := cliutil.SplitFiltersFromFlag(envFlag)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// create new entry or append filter to existing entry
+		if _, exists := envFilterMap[env]; exists {
+			envFilterMap[env] = append(envFilterMap[env], filters...)
+		} else {
+			envFilterMap[env] = filters
+		}
+	}
+
+	for envVar, nodeFilters := range envFilterMap {
+		cliConfig.Env = append(cliConfig.Env, conf.EnvVarWithNodeFilters{
+			EnvVar:      envVar,
+			NodeFilters: nodeFilters,
+		})
+	}
+
+	log.Tracef("EnvFilterMap: %+v", envFilterMap)
 
 }

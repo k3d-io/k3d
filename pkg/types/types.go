@@ -54,6 +54,9 @@ var ReadyLogMessageByRole = map[Role]string{
 	LoadBalancerRole: "start worker processes",
 }
 
+// NodeStatusRestarting defines the status string that signals the node container is restarting
+const NodeStatusRestarting = "restarting"
+
 // Role defines a k3d node role
 type Role string
 
@@ -140,6 +143,7 @@ type ClusterCreateOpts struct {
 	DisableLoadBalancer        bool          `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
 	K3sServerArgs              []string      `yaml:"k3sServerArgs" json:"k3sServerArgs,omitempty"`
 	K3sAgentArgs               []string      `yaml:"k3sAgentArgs" json:"k3sAgentArgs,omitempty"`
+	GPURequest                 string        `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
 }
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
@@ -240,6 +244,7 @@ type Node struct {
 	ExtraHosts []string          // filled automatically
 	ServerOpts ServerOpts        `yaml:"serverOpts" json:"serverOpts,omitempty"`
 	AgentOpts  AgentOpts         `yaml:"agentOpts" json:"agentOpts,omitempty"`
+	GPURequest string            // filled automatically
 	State      NodeState         // filled automatically
 }
 

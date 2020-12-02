@@ -54,6 +54,11 @@ type LabelWithNodeFilters struct {
 	NodeFilters []string `mapstructure:"nodeFilters" yaml:"nodeFilters" json:"nodeFilters,omitempty"`
 }
 
+type EnvVarWithNodeFilters struct {
+	EnvVar      string   `mapstructure:"envVar" yaml:"envVar" json:"envVar,omitempty"`
+	NodeFilters []string `mapstructure:"nodeFilters" yaml:"nodeFilters" json:"nodeFilters,omitempty"`
+}
+
 // SimpleConfigOptionsKubeconfig describes the set of options referring to the kubeconfig during cluster creation.
 type SimpleConfigOptionsKubeconfig struct {
 	UpdateDefaultKubeconfig bool `mapstructure:"updateDefaultKubeconfig" yaml:"updateDefaultKubeconfig" json:"updateDefaultKubeconfig,omitempty"` // default: true
@@ -64,6 +69,11 @@ type SimpleConfigOptions struct {
 	K3dOptions        SimpleConfigOptionsK3d        `mapstructure:"k3d" yaml:"k3d"`
 	K3sOptions        SimpleConfigOptionsK3s        `mapstructure:"k3s" yaml:"k3s"`
 	KubeconfigOptions SimpleConfigOptionsKubeconfig `mapstructure:"kubeconfig" yaml:"kubeconfig"`
+	Runtime           SimpleConfigOptionsRuntime    `mapstructure:"runtime" yaml:"runtime"`
+}
+
+type SimpleConfigOptionsRuntime struct {
+	GPURequest string `mapstructure:"gpuRequest" yaml:"gpuRequest"`
 }
 
 type SimpleConfigOptionsK3d struct {
@@ -94,6 +104,7 @@ type SimpleConfig struct {
 	Ports        []PortWithNodeFilters   `mapstructure:"ports" yaml:"ports" json:"ports,omitempty"`
 	Labels       []LabelWithNodeFilters  `mapstructure:"labels" yaml:"labels" json:"labels,omitempty"`
 	Options      SimpleConfigOptions     `mapstructure:"options" yaml:"options" json:"options,omitempty"`
+	Env          []EnvVarWithNodeFilters `mapstructure:"env" yaml:"env" json:"env,omitempty"`
 }
 
 // GetKind implements Config.GetKind

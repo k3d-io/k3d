@@ -49,6 +49,7 @@ E2E_RUNNER_START_TIMEOUT ?= 10
 # Build targets
 TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 windows/amd64
 TARGET_OBJS ?= darwin-amd64.tar.gz darwin-amd64.tar.gz.sha256 linux-amd64.tar.gz linux-amd64.tar.gz.sha256 linux-386.tar.gz linux-386.tar.gz.sha256 linux-arm.tar.gz linux-arm.tar.gz.sha256 linux-arm64.tar.gz linux-arm64.tar.gz.sha256 windows-amd64.zip windows-amd64.zip.sha256
+K3D_HELPER_VERSION ?=
 
 # Go options
 GO        ?= go
@@ -61,6 +62,12 @@ GCFLAGS   :=
 GOFLAGS   :=
 BINDIR    := $(CURDIR)/bin
 BINARIES  := k3d
+
+# Set version of the k3d helper images for build
+ifneq ($(K3D_HELPER_VERSION),)
+$(info [INFO] Helper Image version set to ${K3D_HELPER_VERSION})
+LDFLAGS += -X github.com/rancher/k3d/v3/version.HelperVersionOverride=${K3D_HELPER_VERSION}
+endif
 
 # Rules for finding all go source files using 'DIRS' and 'REC_DIRS'
 GO_SRC := $(foreach dir,$(DIRS),$(wildcard $(dir)/*.go))

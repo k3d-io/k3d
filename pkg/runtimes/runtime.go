@@ -55,6 +55,7 @@ type Runtime interface {
 	DeleteNode(context.Context, *k3d.Node) error
 	GetNodesByLabel(context.Context, map[string]string) ([]*k3d.Node, error)
 	GetNode(context.Context, *k3d.Node) (*k3d.Node, error)
+	GetNodeStatus(context.Context, *k3d.Node) (bool, string, error)
 	CreateNetworkIfNotPresent(context.Context, string) (string, bool, error) // @return NETWORK_NAME, EXISTS, ERROR
 	GetKubeconfig(context.Context, *k3d.Node) (io.ReadCloser, error)
 	DeleteNetwork(context.Context, string) error

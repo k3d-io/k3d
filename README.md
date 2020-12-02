@@ -9,7 +9,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d?style=flat-square)](https://goreportcard.com/report/github.com/rancher/k3d)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
@@ -119,6 +119,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://www.zenika.com"><img src="https://avatars3.githubusercontent.com/u/25585516?v=4" width="100px;" alt=""/><br /><sub><b>Louis Tournayre</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=louiznk" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/lionelnicolas"><img src="https://avatars3.githubusercontent.com/u/6538664?v=4" width="100px;" alt=""/><br /><sub><b>Lionel Nicolas</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=lionelnicolas" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/toonsevrin.keys"><img src="https://avatars1.githubusercontent.com/u/5507199?v=4" width="100px;" alt=""/><br /><sub><b>Toon Sevrin</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=toonsevrin" title="Code">💻</a></td>
+    <td align="center"><a href="http://debian-solutions.de"><img src="https://avatars3.githubusercontent.com/u/1111056?v=4" width="100px;" alt=""/><br /><sub><b>Dennis Hoppe</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=dhoppe" title="Documentation">📖</a> <a href="#example-dhoppe" title="Examples">💡</a></td>
+    <td align="center"><a href="https://dellinger.dev"><img src="https://avatars0.githubusercontent.com/u/3109892?v=4" width="100px;" alt=""/><br /><sub><b>Jonas Dellinger</b></sub></a><br /><a href="#infra-JohnnyCrazy" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+    <td align="center"><a href="https://github.com/markrexwinkel"><img src="https://avatars2.githubusercontent.com/u/10704814?v=4" width="100px;" alt=""/><br /><sub><b>markrexwinkel</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=markrexwinkel" title="Documentation">📖</a></td>
   </tr>
 </table>
 

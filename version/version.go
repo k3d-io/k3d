@@ -35,8 +35,7 @@ var Version string
 var HelperVersionOverride string
 
 // K3sVersion should contain the latest version tag of k3s (hardcoded at build time)
-// we're setting a default version for edge cases, because the 'latest' tag is not actively maintained
-var K3sVersion = "v1.18.4+k3s1" // TODO: can we try to dynamically fetch the latest version at runtime and only fallback to this if it fails?
+var K3sVersion = "v1.19.4-k3s1"
 
 // GetVersion returns the version for cli, it gets it from "git describe --tags" or returns "dev" when doing simple go build
 func GetVersion() string {

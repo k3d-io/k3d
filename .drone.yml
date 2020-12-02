@@ -78,6 +78,7 @@ steps:
           - "refs/tags/*rc*"
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
+          - "refs/tags/*test*"
 
   - name: release
     image: plugins/github-release
@@ -100,6 +101,7 @@ steps:
           - "refs/tags/*rc*"
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
+          - "refs/tags/*test*"
 
   - name: docker_build_push_dind
     image: plugins/docker
@@ -174,7 +176,7 @@ platform:
 steps:
 
   - name: build
-    image: python:3.8
+    image: python:3.9
     commands:
       - python3 -m pip install -r docs/requirements.txt
       - mkdocs build --verbose --clean --strict
