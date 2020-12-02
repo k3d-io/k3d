@@ -39,6 +39,7 @@ require (
 	google.golang.org/grpc v1.33.1 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	gopkg.in/yaml.v2 v2.3.0
 	gotest.tools/v3 v3.0.2 // indirect
 	k8s.io/client-go v0.17.0
 	k8s.io/utils v0.0.0-20200109141947-94aeca20bf09 // indirect

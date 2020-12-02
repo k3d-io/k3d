@@ -182,10 +182,10 @@ type Cluster struct {
 	Token              string             `yaml:"cluster_token" json:"clusterToken,omitempty"`
 	Nodes              []*Node            `yaml:"nodes" json:"nodes,omitempty"`
 	InitNode           *Node              // init server node
-	ExternalDatastore  ExternalDatastore  `yaml:"external_datastore" json:"externalDatastore,omitempty"`
-	CreateClusterOpts  *ClusterCreateOpts `yaml:"options" json:"options,omitempty"`
+	ExternalDatastore  *ExternalDatastore `yaml:"external_datastore,omitempty" json:"externalDatastore,omitempty"`
+	CreateClusterOpts  *ClusterCreateOpts `yaml:"options,omitempty" json:"options,omitempty"`
 	ExposeAPI          ExposeAPI          `yaml:"expose_api" json:"exposeAPI,omitempty"`
-	ServerLoadBalancer *Node              `yaml:"server_loadbalancer" json:"serverLoadBalancer,omitempty"`
+	ServerLoadBalancer *Node              `yaml:"server_loadbalancer,omitempty" json:"serverLoadBalancer,omitempty"`
 	ImageVolume        string             `yaml:"image_volume" json:"imageVolume,omitempty"`
 }
 
