@@ -81,6 +81,17 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "inercia",
+      "name": "Alvaro",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/1841612?v=4",
+      "profile": "http://inerciatech.com/",
+      "contributions": [
+        "code",
+        "ideas",
+        "plugin"
+      ]
     }
   ],
   "contributorsPerLine": 7,
