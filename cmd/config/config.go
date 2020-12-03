@@ -29,13 +29,18 @@ import (
 // NewCmdConfig returns a new cobra command
 func NewCmdConfig() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "config",
+		Use:   "config",
+		Short: "Work with config file(s)",
+		Long:  `Work with config file(s)`,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Infoln("Print config")
+			if err := cmd.Help(); err != nil {
+				log.Errorln("Couldn't get help text")
+				log.Fatalln(err)
+			}
 		},
 	}
 
-	cmd.AddCommand(NewCmdConfigView())
+	cmd.AddCommand(NewCmdConfigInit())
 
 	return cmd
 }

@@ -22,22 +22,17 @@ THE SOFTWARE.
 package config
 
 import (
-	"fmt"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // NewCmdConfig returns a new cobra command
-func NewCmdConfigView() *cobra.Command {
+func NewCmdConfigInit() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "view",
-		Aliases: []string{"show"},
+		Use:     "init",
+		Aliases: []string{"create"},
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("print config")
-			fmt.Printf("%+v", viper.AllSettings())
-			log.Debugln("printed config")
+			log.Infoln("COMING SOON: print a basic k3d config with default pre-filled.")
 		},
 	}
 	return cmd
