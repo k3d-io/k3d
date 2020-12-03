@@ -250,7 +250,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 
 	// -> API-PORT
 	// parse the port mapping
-	exposeAPI, err := cliutil.ParseAPIPort(ppFlags.APIPort)
+	exposeAPI, err := cliutil.ParseExposePort(ppFlags.APIPort)
 	if err != nil {
 		log.Fatalln(err)
 	}

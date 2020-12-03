@@ -41,7 +41,7 @@ func TestReadSimpleConfig(t *testing.T) {
 		Name:    "test",
 		Servers: 1,
 		Agents:  2,
-		ExposeAPI: k3d.ExposeAPI{
+		ExposeAPI: k3d.ExposePort{
 			HostIP: "0.0.0.0",
 			Port:   "6443",
 		},

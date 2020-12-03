@@ -206,7 +206,7 @@ type Cluster struct {
 	Nodes              []*Node           `yaml:"nodes" json:"nodes,omitempty"`
 	InitNode           *Node             // init server node
 	ExternalDatastore  ExternalDatastore `yaml:"externalDatastore" json:"externalDatastore,omitempty"`
-	ExposeAPI          ExposeAPI         `yaml:"exposeAPI" json:"exposeAPI,omitempty"`
+	ExposeAPI          ExposePort        `yaml:"exposeAPI" json:"exposeAPI,omitempty"`
 	ServerLoadBalancer *Node             `yaml:"serverLoadbalancer" json:"serverLoadBalancer,omitempty"`
 	ImageVolume        string            `yaml:"imageVolume" json:"imageVolume,omitempty"`
 }
@@ -273,8 +273,8 @@ type Node struct {
 
 // ServerOpts describes some additional server role specific opts
 type ServerOpts struct {
-	IsInit    bool      `yaml:"isInitializingServer" json:"isInitializingServer,omitempty"`
-	ExposeAPI ExposeAPI // filled automatically
+	IsInit    bool       `yaml:"isInitializingServer" json:"isInitializingServer,omitempty"`
+	ExposeAPI ExposePort // filled automatically
 }
 
 // ExternalDatastore describes an external datastore used for HA/multi-server clusters
