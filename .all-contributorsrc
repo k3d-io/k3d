@@ -92,6 +92,17 @@
         "ideas",
         "plugin"
       ]
+    },
+    {
+      "login": "nunix",
+      "name": "Nuno do Carmo",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/905874?v=4",
+      "profile": "http://wsl.dev",
+      "contributions": [
+        "content",
+        "tutorial",
+        "question"
+      ]
     }
   ],
   "contributorsPerLine": 7,
