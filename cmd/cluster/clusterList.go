@@ -23,6 +23,7 @@ package cluster
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -32,6 +33,7 @@ import (
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 
 	log "github.com/sirupsen/logrus"
 
@@ -42,11 +44,11 @@ import (
 type clusterFlags struct {
 	noHeader bool
 	token    bool
+	output   string
 }
 
 // NewCmdClusterList returns a new cobra command
 func NewCmdClusterList() *cobra.Command {
-
 	clusterFlags := clusterFlags{}
 
 	// create new command
@@ -65,6 +67,7 @@ func NewCmdClusterList() *cobra.Command {
 	// add flags
 	cmd.Flags().BoolVar(&clusterFlags.noHeader, "no-headers", false, "Disable headers")
 	cmd.Flags().BoolVar(&clusterFlags.token, "token", false, "Print k3s cluster token")
+	cmd.Flags().StringVarP(&clusterFlags.output, "output", "o", "", "Output format. One of: json|yaml")
 
 	// add subcommands
 
@@ -98,18 +101,33 @@ func buildClusterList(ctx context.Context, args []string) []*k3d.Cluster {
 
 // PrintPrintClusters : display list of cluster
 func PrintClusters(clusters []*k3d.Cluster, flags clusterFlags) {
+	// the output details printed when we dump JSON/YAML
+	type jsonOutput struct {
+		k3d.Cluster
+		ServersRunning int  `yaml:"servers_running" json:"serversRunning"`
+		ServersCount   int  `yaml:"servers_count" json:"serversCount"`
+		AgentsRunning  int  `yaml:"agents_running" json:"agentsRunning"`
+		AgentsCount    int  `yaml:"agents_count" json:"agentsCount"`
+		LoadBalancer   bool `yaml:"has_lb,omitempty" json:"hasLoadbalancer,omitempty"`
+	}
+
+	jsonOutputEntries := []jsonOutput{}
+
+	outputFormat := strings.ToLower(flags.output)
 
 	tabwriter := tabwriter.NewWriter(os.Stdout, 6, 4, 3, ' ', tabwriter.RememberWidths)
 	defer tabwriter.Flush()
 
-	if !flags.noHeader {
-		headers := []string{"NAME", "SERVERS", "AGENTS", "LOADBALANCER"} // TODO: getCluster: add status column
-		if flags.token {
-			headers = append(headers, "TOKEN")
-		}
-		_, err := fmt.Fprintf(tabwriter, "%s\n", strings.Join(headers, "\t"))
-		if err != nil {
-			log.Fatalln("Failed to print headers")
+	if outputFormat != "json" && outputFormat != "yaml" {
+		if !flags.noHeader {
+			headers := []string{"NAME", "SERVERS", "AGENTS", "LOADBALANCER"} // TODO: getCluster: add status column
+			if flags.token {
+				headers = append(headers, "TOKEN")
+			}
+			_, err := fmt.Fprintf(tabwriter, "%s\n", strings.Join(headers, "\t"))
+			if err != nil {
+				log.Fatalln("Failed to print headers")
+			}
 		}
 	}
 
@@ -120,10 +138,46 @@ func PrintClusters(clusters []*k3d.Cluster, flags clusterFlags) {
 		agentCount, agentsRunning := cluster.AgentCountRunning()
 		hasLB := cluster.HasLoadBalancer()
 
-		if flags.token {
-			fmt.Fprintf(tabwriter, "%s\t%d/%d\t%d/%d\t%t\t%s\n", cluster.Name, serversRunning, serverCount, agentsRunning, agentCount, hasLB, cluster.Token)
+		if outputFormat == "json" || outputFormat == "yaml" {
+			entry := jsonOutput{
+				Cluster:        *cluster,
+				ServersRunning: serversRunning,
+				ServersCount:   serverCount,
+				AgentsRunning:  agentsRunning,
+				AgentsCount:    agentCount,
+				LoadBalancer:   hasLB,
+			}
+
+			if !flags.token {
+				entry.Token = ""
+			}
+
+			// clear some things
+			entry.ExternalDatastore = nil
+
+			jsonOutputEntries = append(jsonOutputEntries, entry)
 		} else {
-			fmt.Fprintf(tabwriter, "%s\t%d/%d\t%d/%d\t%t\n", cluster.Name, serversRunning, serverCount, agentsRunning, agentCount, hasLB)
+			if flags.token {
+				fmt.Fprintf(tabwriter, "%s\t%d/%d\t%d/%d\t%t\t%s\n", cluster.Name, serversRunning, serverCount, agentsRunning, agentCount, hasLB, cluster.Token)
+			} else {
+				fmt.Fprintf(tabwriter, "%s\t%d/%d\t%d/%d\t%t\n", cluster.Name, serversRunning, serverCount, agentsRunning, agentCount, hasLB)
+			}
 		}
+	}
+
+	if outputFormat == "json" {
+		b, err := json.Marshal(jsonOutputEntries)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(string(b))
+	} else if outputFormat == "yaml" {
+		b, err := yaml.Marshal(jsonOutputEntries)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(string(b))
 	}
 }
