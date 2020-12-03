@@ -374,7 +374,7 @@ func NodeFilterByRoles(nodes []*k3d.Node, includeRoles, excludeRoles []k3d.Role)
 	for _, includeRole := range includeRoles {
 		for _, excludeRole := range excludeRoles {
 			if includeRole == excludeRole {
-				log.Warnf("You've specified the same role ('%s') for inclusion and exclusion. Exclusion precedes inclusion.")
+				log.Warnf("You've specified the same role ('%s') for inclusion and exclusion. Exclusion precedes inclusion.", includeRole)
 			}
 		}
 	}
