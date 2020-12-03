@@ -414,6 +414,7 @@ gopkg.in/inf.v0
 ## explicit
 gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.3.0
+## explicit
 gopkg.in/yaml.v2
 # gotest.tools v2.2.0+incompatible
 ## explicit

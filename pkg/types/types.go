@@ -177,15 +177,15 @@ type ClusterNetwork struct {
 
 // Cluster describes a k3d cluster
 type Cluster struct {
-	Name               string            `yaml:"name" json:"name,omitempty"`
-	Network            ClusterNetwork    `yaml:"network" json:"network,omitempty"`
-	Token              string            `yaml:"clusterToken" json:"clusterToken,omitempty"`
-	Nodes              []*Node           `yaml:"nodes" json:"nodes,omitempty"`
-	InitNode           *Node             // init server node
-	ExternalDatastore  ExternalDatastore `yaml:"externalDatastore" json:"externalDatastore,omitempty"`
-	ExposeAPI          ExposeAPI         `yaml:"exposeAPI" json:"exposeAPI,omitempty"`
-	ServerLoadBalancer *Node             `yaml:"serverLoadbalancer" json:"serverLoadBalancer,omitempty"`
-	ImageVolume        string            `yaml:"imageVolume" json:"imageVolume,omitempty"`
+	Name               string             `yaml:"name" json:"name,omitempty"`
+	Network            ClusterNetwork     `yaml:"network" json:"network,omitempty"`
+	Token              string             `yaml:"clusterToken" json:"clusterToken,omitempty"`
+	Nodes              []*Node            `yaml:"nodes" json:"nodes,omitempty"`
+	InitNode           *Node              // init server node
+	ExternalDatastore  *ExternalDatastore `yaml:"externalDatastore,omitempty" json:"externalDatastore,omitempty"`
+	ExposeAPI          ExposeAPI          `yaml:"exposeAPI" json:"exposeAPI,omitempty"`
+	ServerLoadBalancer *Node              `yaml:"serverLoadbalancer,omitempty" json:"serverLoadBalancer,omitempty"`
+	ImageVolume        string             `yaml:"imageVolume" json:"imageVolume,omitempty"`
 }
 
 // ServerCountRunning returns the number of server nodes running in the cluster and the total number
