@@ -119,6 +119,8 @@ func GetGatewayIP(ctx context.Context, network string) (net.IP, error) {
 	gatewayIP := net.ParseIP(bridgeNetwork.IPAM.Config[0].Gateway)
 
 	return gatewayIP, nil
+}
+
 // ConnectNodeToNetwork connects a node to a network
 func (d Docker) ConnectNodeToNetwork(ctx context.Context, node *k3d.Node, networkName string) error {
 	// get container
