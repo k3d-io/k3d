@@ -22,18 +22,53 @@ THE SOFTWARE.
 package config
 
 import (
+	"fmt"
+	"os"
+
+	config "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-// NewCmdConfig returns a new cobra command
+// NewCmdConfigInit returns a new cobra command
 func NewCmdConfigInit() *cobra.Command {
+	var output string
+	var force bool
+
 	cmd := &cobra.Command{
 		Use:     "init",
 		Aliases: []string{"create"},
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Infoln("COMING SOON: print a basic k3d config with default pre-filled.")
+			if output == "-" {
+				fmt.Println(config.DefaultConfig)
+			} else {
+				// check if file exists
+				var file *os.File
+				var err error
+				_, err = os.Stat(output)
+				if os.IsNotExist(err) || force {
+					// create/overwrite file
+					file, err = os.Create(output)
+					if err != nil {
+						log.Fatalf("Failed to create/overwrite output file: %s", err)
+					}
+					// write content
+					if _, err = file.WriteString(config.DefaultConfig); err != nil {
+						log.Fatalf("Failed to write to output file: %+v", err)
+					}
+				} else if err != nil {
+					log.Fatalf("Failed to stat output file: %+v", err)
+				} else {
+					log.Errorln("Output file exists and --force was not set")
+					os.Exit(1)
+				}
+			}
 		},
 	}
+
+	cmd.Flags().StringVarP(&output, "output", "o", "k3d-default.yaml", "Write a default k3d config")
+	cmd.Flags().BoolVarP(&force, "force", "f", false, "Force overwrite of target file")
+
 	return cmd
 }
