@@ -31,7 +31,7 @@ import (
 	docker "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 
 	dockercliopts "github.com/docker/cli/opts"

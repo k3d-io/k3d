@@ -29,8 +29,8 @@ import (
 
 	"github.com/spf13/viper"
 
-	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
 
 func ReadConfig(file string) (conf.Config, error) {

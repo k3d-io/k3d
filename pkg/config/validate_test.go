@@ -26,8 +26,8 @@ import (
 	"context"
 	"testing"
 
-	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
-	"github.com/rancher/k3d/v3/pkg/runtimes"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
 )
 
 func TestValidateClusterConfig(t *testing.T) {

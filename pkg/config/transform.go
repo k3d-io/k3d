@@ -26,11 +26,11 @@ import (
 	"context"
 	"fmt"
 
-	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
-	"github.com/rancher/k3d/v3/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-	"github.com/rancher/k3d/v3/pkg/util"
-	"github.com/rancher/k3d/v3/version"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/util"
+	"github.com/rancher/k3d/v4/version"
 )
 
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration

@@ -26,9 +26,9 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
-	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
 
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
 
 func TestReadSimpleConfig(t *testing.T) {

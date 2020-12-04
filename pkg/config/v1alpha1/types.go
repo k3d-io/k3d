@@ -26,8 +26,8 @@ import (
 	"fmt"
 	"time"
 
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-	"github.com/rancher/k3d/v3/version"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/version"
 )
 
 // DefaultConfigTpl for printing
