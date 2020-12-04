@@ -136,14 +136,14 @@ var DoNotCopyServerFlags = []string{
 
 // ClusterCreateOpts describe a set of options one can set when creating a cluster
 type ClusterCreateOpts struct {
-	PrepDisableHostIPInjection bool
-	DisableImageVolume         bool
-	WaitForServer              bool
-	Timeout                    time.Duration
-	DisableLoadBalancer        bool
-	K3sServerArgs              []string
-	K3sAgentArgs               []string
-	GPURequest                 string
+	PrepDisableHostIPInjection bool          `yaml:"prepDisableHostIPInjection" json:"prepDisableHostIPInjection,omitempty"`
+	DisableImageVolume         bool          `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
+	WaitForServer              bool          `yaml:"waitForServer" json:"waitForServer,omitempty"`
+	Timeout                    time.Duration `yaml:"timeout" json:"timeout,omitempty"`
+	DisableLoadBalancer        bool          `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
+	K3sServerArgs              []string      `yaml:"k3sServerArgs" json:"k3sServerArgs,omitempty"`
+	K3sAgentArgs               []string      `yaml:"k3sAgentArgs" json:"k3sAgentArgs,omitempty"`
+	GPURequest                 string        `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
 }
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
@@ -179,14 +179,13 @@ type ClusterNetwork struct {
 type Cluster struct {
 	Name               string             `yaml:"name" json:"name,omitempty"`
 	Network            ClusterNetwork     `yaml:"network" json:"network,omitempty"`
-	Token              string             `yaml:"cluster_token" json:"clusterToken,omitempty"`
+	Token              string             `yaml:"clusterToken" json:"clusterToken,omitempty"`
 	Nodes              []*Node            `yaml:"nodes" json:"nodes,omitempty"`
 	InitNode           *Node              // init server node
-	ExternalDatastore  *ExternalDatastore `yaml:"external_datastore,omitempty" json:"externalDatastore,omitempty"`
-	CreateClusterOpts  *ClusterCreateOpts `yaml:"options,omitempty" json:"options,omitempty"`
-	ExposeAPI          ExposeAPI          `yaml:"expose_api" json:"exposeAPI,omitempty"`
-	ServerLoadBalancer *Node              `yaml:"server_loadbalancer,omitempty" json:"serverLoadBalancer,omitempty"`
-	ImageVolume        string             `yaml:"image_volume" json:"imageVolume,omitempty"`
+	ExternalDatastore  *ExternalDatastore `yaml:"externalDatastore,omitempty" json:"externalDatastore,omitempty"`
+	ExposeAPI          ExposeAPI          `yaml:"exposeAPI" json:"exposeAPI,omitempty"`
+	ServerLoadBalancer *Node              `yaml:"serverLoadbalancer,omitempty" json:"serverLoadBalancer,omitempty"`
+	ImageVolume        string             `yaml:"imageVolume" json:"imageVolume,omitempty"`
 }
 
 // ServerCountRunning returns the number of server nodes running in the cluster and the total number
@@ -237,37 +236,37 @@ type Node struct {
 	Volumes    []string          `yaml:"volumes" json:"volumes,omitempty"`
 	Env        []string          `yaml:"env" json:"env,omitempty"`
 	Cmd        []string          // filled automatically based on role
-	Args       []string          `yaml:"extra_args" json:"extraArgs,omitempty"`
-	Ports      []string          `yaml:"port_mappings" json:"portMappings,omitempty"`
+	Args       []string          `yaml:"extraArgs" json:"extraArgs,omitempty"`
+	Ports      []string          `yaml:"portMappings" json:"portMappings,omitempty"`
 	Restart    bool              `yaml:"restart" json:"restart,omitempty"`
 	Labels     map[string]string // filled automatically
 	Network    string            // filled automatically
 	ExtraHosts []string          // filled automatically
-	ServerOpts ServerOpts        `yaml:"server_opts" json:"serverOpts,omitempty"`
-	AgentOpts  AgentOpts         `yaml:"agent_opts" json:"agentOpts,omitempty"`
+	ServerOpts ServerOpts        `yaml:"serverOpts" json:"serverOpts,omitempty"`
+	AgentOpts  AgentOpts         `yaml:"agentOpts" json:"agentOpts,omitempty"`
 	GPURequest string            // filled automatically
 	State      NodeState         // filled automatically
 }
 
 // ServerOpts describes some additional server role specific opts
 type ServerOpts struct {
-	IsInit    bool      `yaml:"is_initializing_server" json:"isInitializingServer,omitempty"`
+	IsInit    bool      `yaml:"isInitializingServer" json:"isInitializingServer,omitempty"`
 	ExposeAPI ExposeAPI // filled automatically
 }
 
 // ExternalDatastore describes an external datastore used for HA/multi-server clusters
 type ExternalDatastore struct {
 	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty"`
-	CAFile   string `yaml:"ca_file" json:"caFile,omitempty"`
-	CertFile string `yaml:"cert_file" json:"certFile,omitempty"`
-	KeyFile  string `yaml:"key_file" json:"keyFile,omitempty"`
+	CAFile   string `yaml:"caFile" json:"caFile,omitempty"`
+	CertFile string `yaml:"certFile" json:"certFile,omitempty"`
+	KeyFile  string `yaml:"keyFile" json:"keyFile,omitempty"`
 	Network  string `yaml:"network" json:"network,omitempty"`
 }
 
 // ExposeAPI describes specs needed to expose the API-Server
 type ExposeAPI struct {
 	Host   string `yaml:"host" json:"host,omitempty"`
-	HostIP string `yaml:"host_ip" json:"hostIP,omitempty"`
+	HostIP string `yaml:"hostIP" json:"hostIP,omitempty"`
 	Port   string `yaml:"port" json:"port"`
 }
 

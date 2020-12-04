@@ -58,7 +58,7 @@ func TestTranslateNodeToContainer(t *testing.T) {
 			Cmd:      []string{"server", "--https-listen-port=6443", "--some-boolflag"},
 			Labels:   map[string]string{k3d.LabelRole: string(k3d.ServerRole), "test_key_1": "test_val_1"},
 			ExposedPorts: nat.PortSet{
-				"6443/tcp": {},
+				"6443/tcp": struct{}{},
 			},
 		},
 		HostConfig: container.HostConfig{

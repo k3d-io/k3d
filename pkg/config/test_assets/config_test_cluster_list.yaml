@@ -1,0 +1,12 @@
+---
+apiVersion: k3d.io/v1alpha1
+kind: ClusterList
+clusters:
+  - name: foo
+    nodes:
+      - name: foo-node-0
+        role: server
+  - name: bar
+    nodes:
+      - name: bar-node-0
+        role: server

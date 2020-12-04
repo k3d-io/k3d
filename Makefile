@@ -76,7 +76,7 @@ GO_SRC += $(foreach dir,$(REC_DIRS),$(shell find $(dir) -name "*.go"))
 ########## Required Tools ##########
 # Go Package required
 PKG_GOX := github.com/mitchellh/gox@v1.0.1
-PKG_GOLANGCI_LINT_VERSION := 1.28.3
+PKG_GOLANGCI_LINT_VERSION := 1.31.0
 PKG_GOLANGCI_LINT_SCRIPT := https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
 PKG_GOLANGCI_LINT := github.com/golangci/golangci-lint/cmd/golangci-lint@v${PKG_GOLANGCI_LINT_VERSION}
 
@@ -95,7 +95,7 @@ LINT_DIRS := $(DIRS) $(foreach dir,$(REC_DIRS),$(dir)/...)
 
 .PHONY: all build build-cross clean fmt check-fmt lint check extra-clean install-tools
 
-all: clean fmt check build
+all: clean fmt check test build
 
 ############################
 ########## Builds ##########

@@ -75,6 +75,7 @@ func GetK3sVersion(latest bool) string {
 
 // fetchLatestK3sVersion tries to fetch the latest version of k3s from DockerHub
 func fetchLatestK3sVersion() (string, error) {
+	// TODO: actually fetch the latest image from the k3s channel server
 
 	url := "https://registry-1.docker.io/"
 	username := "" // anonymous
