@@ -34,12 +34,12 @@ import (
 	gort "runtime"
 
 	"github.com/imdario/mergo"
-	k3drt "github.com/rancher/k3d/v3/pkg/runtimes"
-	"github.com/rancher/k3d/v3/pkg/runtimes/docker"
-	"github.com/rancher/k3d/v3/pkg/types"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-	"github.com/rancher/k3d/v3/pkg/util"
-	"github.com/rancher/k3d/v3/version"
+	k3drt "github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
+	"github.com/rancher/k3d/v4/pkg/types"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/util"
+	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )

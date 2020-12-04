@@ -28,9 +28,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 
-	"github.com/rancher/k3d/v3/pkg/util"
+	"github.com/rancher/k3d/v4/pkg/util"
 
 	"regexp"
 )

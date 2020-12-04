@@ -1,4 +1,4 @@
-module github.com/rancher/k3d/v3
+module github.com/rancher/k3d/v4
 
 go 1.14
 

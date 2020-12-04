@@ -31,13 +31,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/rancher/k3d/v3/cmd/cluster"
-	"github.com/rancher/k3d/v3/cmd/image"
-	"github.com/rancher/k3d/v3/cmd/kubeconfig"
-	"github.com/rancher/k3d/v3/cmd/node"
-	cliutil "github.com/rancher/k3d/v3/cmd/util"
-	"github.com/rancher/k3d/v3/pkg/runtimes"
-	"github.com/rancher/k3d/v3/version"
+	"github.com/rancher/k3d/v4/cmd/cluster"
+	"github.com/rancher/k3d/v4/cmd/image"
+	"github.com/rancher/k3d/v4/cmd/kubeconfig"
+	"github.com/rancher/k3d/v4/cmd/node"
+	cliutil "github.com/rancher/k3d/v4/cmd/util"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
 )

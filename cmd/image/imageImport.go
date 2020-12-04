@@ -26,10 +26,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/rancher/k3d/v3/cmd/util"
-	"github.com/rancher/k3d/v3/pkg/runtimes"
-	"github.com/rancher/k3d/v3/pkg/tools"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	"github.com/rancher/k3d/v4/cmd/util"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v4/pkg/tools"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 
 	log "github.com/sirupsen/logrus"
 )
