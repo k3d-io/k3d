@@ -50,18 +50,41 @@ func SplitFiltersFromFlag(flag string) (string, []string, error) {
 	/* Case 2) filter indicated using '@' in flag */
 
 	split := strings.Split(flag, "@")
+	newsplit := []string{}
+	buffer := ""
+
+	for i, it := range split {
+
+		// Case 1: There's a '\' just before the '@' sign -> Should it be escaped (aka be a literal '@')?
+		if strings.HasSuffix(it, "\\") && i != len(split)-1 {
+			// Case 1.1: Escaped backslash
+			if strings.HasSuffix(it, "\\\\") {
+				it = strings.TrimSuffix(it, "\\")
+				log.Warnf("The part '%s' of the flag input '%s' ends with a double backslash, so we assume you want to escape the backslash before the '@'. That's the only time we do this.", it, flag)
+			} else {
+				// Case 1.2: Unescaped backslash -> Escaping the '@' -> remove suffix and append it to buffer, followed by the escaped @ sign
+				log.Tracef("Item '%s' just before an '@' ends with '\\', so we assume it's escaping a literal '@'", it)
+				buffer += strings.TrimSuffix(it, "\\") + "@"
+				continue
+			}
+		}
+		// Case 2: There's no '\': append item to buffer, save it to new slice, empty buffer and continue
+		newsplit = append(newsplit, buffer+it)
+		buffer = ""
+		continue
+	}
 
 	// max number of pieces after split = 2 (only one @ allowed in flag)
-	if len(split) > 2 {
-		return "", nil, fmt.Errorf("Invalid flag '%s': only one '@' for node filter allowed", flag)
+	if len(newsplit) > 2 {
+		return "", nil, fmt.Errorf("Invalid flag '%s': only one unescaped '@' allowed for node filter(s) (Escape literal '@' with '\\')", flag)
 	}
 
 	// trailing or leading '@'
-	if len(split) < 2 {
-		return "", nil, fmt.Errorf("Invalid flag '%s' includes '@' but is missing either an object or a filter", flag)
+	if len(newsplit) < 2 {
+		return "", nil, fmt.Errorf("Invalid flag '%s' includes unescaped '@' but is missing a node filter (Escape literal '@' with '\\')", flag)
 	}
 
-	return split[0], strings.Split(split[1], ";"), nil
+	return newsplit[0], strings.Split(newsplit[1], ";"), nil
 
 }
 
