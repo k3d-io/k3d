@@ -30,7 +30,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// RegistryCreate creates a registry node and attaches it to the selected clusters
+// RegistryCreate creates a registry node and attaches it to the selected clusters // TODO: connecting to clusters does not work right now
 func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, name string, image string, exposedPort k3d.ExposePort, clusters []*k3d.Cluster) error {
 
 	// registry name
@@ -77,6 +77,7 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, name string, 
 		return err
 	}
 
+	// TODO: Connect to clusters requires containerd config reload capabilities
 	if len(clusters) > 0 {
 		// connect registry to cluster networks
 		return RegistryConnect(ctx, runtime, registryNode, clusters) // TODO: registry: update the registries.yaml file
