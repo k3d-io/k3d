@@ -29,9 +29,9 @@ import (
 	"regexp"
 	"runtime"
 
-	rt "github.com/rancher/k3d/v3/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-	"github.com/rancher/k3d/v3/pkg/util"
+	rt "github.com/rancher/k3d/v4/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/util"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -29,7 +29,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/rancher/k3d/v3/pkg/runtimes"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
 )
 
 // ValidateVolumeMount checks, if the source of volume mounts exists and if the destination is an absolute path

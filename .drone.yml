@@ -14,7 +14,7 @@ platform:
 steps:
 
   - name: lint
-    image: golang:1.14
+    image: golang:1.15
     commands:
       - make ci-setup
       - make check-fmt lint
@@ -40,7 +40,7 @@ steps:
         - tag
 
   - name: build
-    image: golang:1.14
+    image: golang:1.15
     environment:
       GIT_TAG: "${DRONE_TAG}"
     commands:
@@ -52,6 +52,8 @@ steps:
     when:
       branch:
         - main
+        - main-v* # major version branches
+        - release-*
       event:
         - push
         - tag

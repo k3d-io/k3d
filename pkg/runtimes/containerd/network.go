@@ -24,7 +24,7 @@ package containerd
 import (
 	"context"
 
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
 
 // CreateNetworkIfNotPresent creates a new docker network

@@ -30,10 +30,10 @@ import (
 	"sync"
 	"time"
 
-	k3dc "github.com/rancher/k3d/v3/pkg/cluster"
-	"github.com/rancher/k3d/v3/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-	"github.com/rancher/k3d/v3/version"
+	k3dc "github.com/rancher/k3d/v4/pkg/cluster"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
 )
 

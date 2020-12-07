@@ -25,7 +25,7 @@ package config
 import (
 	"testing"
 
-	conf "github.com/rancher/k3d/v3/pkg/config/v1alpha1"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
 	"gotest.tools/assert"
 )
 

@@ -23,9 +23,28 @@ THE SOFTWARE.
 package v1alpha1
 
 import (
+	"fmt"
 	"time"
 
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/version"
+)
+
+// DefaultConfigTpl for printing
+const DefaultConfigTpl = `---
+apiVersion: k3d.io/v1alpha1
+kind: Simple
+name: %s
+servers: 1
+agents: 0
+image: %s
+`
+
+// DefaultConfig templated DefaultConfigTpl
+var DefaultConfig = fmt.Sprintf(
+	DefaultConfigTpl,
+	k3d.DefaultClusterName,
+	fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)),
 )
 
 // TypeMeta, basically copied from https://github.com/kubernetes/apimachinery/blob/a3b564b22db316a41e94fdcffcf9995424fe924c/pkg/apis/meta/v1/types.go#L36-L56

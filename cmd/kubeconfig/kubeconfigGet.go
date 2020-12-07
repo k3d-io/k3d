@@ -25,10 +25,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rancher/k3d/v3/cmd/util"
-	"github.com/rancher/k3d/v3/pkg/cluster"
-	"github.com/rancher/k3d/v3/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	"github.com/rancher/k3d/v4/cmd/util"
+	"github.com/rancher/k3d/v4/pkg/cluster"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/spf13/cobra"
 
 	log "github.com/sirupsen/logrus"

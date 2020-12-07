@@ -4,12 +4,12 @@
 [![License](https://img.shields.io/github/license/rancher/k3d?style=flat-square)](./LICENSE.md)
 ![Downloads](https://img.shields.io/github/downloads/rancher/k3d/total.svg?style=flat-square)
 
-[![Go Module](https://img.shields.io/badge/Go%20Module-github.com%2Francher%2Fk3d%2Fv3-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/rancher/k3d/v3)
+[![Go Module](https://img.shields.io/badge/Go%20Module-github.com%2Francher%2Fk3d%2Fv3-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/rancher/k3d/v4)
 [![Go version](https://img.shields.io/github/go-mod/go-version/rancher/k3d?logo=go&logoColor=white&style=flat-square)](./go.mod)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d?style=flat-square)](https://goreportcard.com/report/github.com/rancher/k3d)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-10-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
@@ -64,7 +64,7 @@ or...
 
 ## Build
 
-1. Clone this repo, e.g. via `git clone git@github.com:rancher/k3d.git` or `go get github.com/rancher/k3d/v3@main`
+1. Clone this repo, e.g. via `git clone git@github.com:rancher/k3d.git` or `go get github.com/rancher/k3d/v4@main`
 2. Inside the repo run
    - 'make install-tools' to make sure required go packages are installed
 3. Inside the repo run one of the following commands
@@ -121,7 +121,11 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/toonsevrin.keys"><img src="https://avatars1.githubusercontent.com/u/5507199?v=4" width="100px;" alt=""/><br /><sub><b>Toon Sevrin</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=toonsevrin" title="Code">💻</a></td>
     <td align="center"><a href="http://debian-solutions.de"><img src="https://avatars3.githubusercontent.com/u/1111056?v=4" width="100px;" alt=""/><br /><sub><b>Dennis Hoppe</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=dhoppe" title="Documentation">📖</a> <a href="#example-dhoppe" title="Examples">💡</a></td>
     <td align="center"><a href="https://dellinger.dev"><img src="https://avatars0.githubusercontent.com/u/3109892?v=4" width="100px;" alt=""/><br /><sub><b>Jonas Dellinger</b></sub></a><br /><a href="#infra-JohnnyCrazy" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+  </tr>
+  <tr>
     <td align="center"><a href="https://github.com/markrexwinkel"><img src="https://avatars2.githubusercontent.com/u/10704814?v=4" width="100px;" alt=""/><br /><sub><b>markrexwinkel</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=markrexwinkel" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://inerciatech.com/"><img src="https://avatars2.githubusercontent.com/u/1841612?v=4" width="100px;" alt=""/><br /><sub><b>Alvaro</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=inercia" title="Code">💻</a> <a href="#ideas-inercia" title="Ideas, Planning, & Feedback">🤔</a> <a href="#plugin-inercia" title="Plugin/utility libraries">🔌</a></td>
+    <td align="center"><a href="http://wsl.dev"><img src="https://avatars2.githubusercontent.com/u/905874?v=4" width="100px;" alt=""/><br /><sub><b>Nuno do Carmo</b></sub></a><br /><a href="#content-nunix" title="Content">🖋</a> <a href="#tutorial-nunix" title="Tutorials">✅</a> <a href="#question-nunix" title="Answering Questions">💬</a></td>
   </tr>
 </table>
 
