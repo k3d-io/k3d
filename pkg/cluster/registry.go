@@ -31,20 +31,20 @@ import (
 )
 
 // RegistryCreate creates a registry node and attaches it to the selected clusters // TODO: connecting to clusters does not work right now
-func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, name string, image string, exposedPort k3d.ExposePort, clusters []*k3d.Cluster) error {
+func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registry, clusters []*k3d.Cluster) error {
 
 	// registry name
-	if len(name) == 0 {
-		name = k3d.DefaultRegistryName
+	if len(reg.Name) == 0 {
+		reg.Name = k3d.DefaultRegistryName
 	}
-	if err := ValidateHostname(name); err != nil {
+	if err := ValidateHostname(reg.Name); err != nil {
 		log.Errorln("Invalid name for registry")
 		log.Fatalln(err)
 	}
 
 	registryNode := &k3d.Node{
-		Name:    name,
-		Image:   image,
+		Name:    reg.Name,
+		Image:   reg.Image,
 		Role:    k3d.RegistryRole,
 		Network: "bridge", // Default network: TODO: change to const from types
 	}
@@ -58,9 +58,9 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, name string, 
 	// setup the node labels
 	registryNode.Labels = map[string]string{
 		k3d.LabelRole:           string(k3d.RegistryRole),
-		k3d.LabelRegistryHost:   exposedPort.Host, // TODO: docker machine host?
-		k3d.LabelRegistryHostIP: exposedPort.HostIP,
-		k3d.LabelRegistryPort:   exposedPort.Port,
+		k3d.LabelRegistryHost:   reg.Port.Host, // TODO: docker machine host?
+		k3d.LabelRegistryHostIP: reg.Port.HostIP,
+		k3d.LabelRegistryPort:   reg.Port.Port,
 	}
 	for k, v := range k3d.DefaultObjectLabels {
 		registryNode.Labels[k] = v
@@ -68,7 +68,7 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, name string, 
 
 	// port
 	registryNode.Ports = []string{
-		fmt.Sprintf("%s:%s:%s/tcp", exposedPort.HostIP, exposedPort.Port, k3d.DefaultRegistryPort),
+		fmt.Sprintf("%s:%s:%s/tcp", reg.Port.HostIP, reg.Port.Port, k3d.DefaultRegistryPort),
 	}
 
 	// create the registry node

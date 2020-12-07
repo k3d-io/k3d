@@ -45,14 +45,16 @@ func NewCmdRegistryCreate() *cobra.Command {
 		Long:  `Create a new registry.`,
 		Args:  cobra.MaximumNArgs(1), // maximum one name accepted
 		Run: func(cmd *cobra.Command, args []string) {
-			name, image, port, clusters := parseCreateRegistryCmd(cmd, args)
-			if err := k3dcluster.RegistryCreate(cmd.Context(), runtimes.SelectedRuntime, name, image, port, clusters); err != nil {
+			reg, clusters := parseCreateRegistryCmd(cmd, args)
+			if err := k3dcluster.RegistryCreate(cmd.Context(), runtimes.SelectedRuntime, reg, clusters); err != nil {
 				log.Fatalln(err)
 			}
 		},
 	}
 
 	// add flags
+
+	// TODO: connecting to clusters requires non-existing config reload functionality in containerd
 	// cmd.Flags().StringSliceP("cluster", "c", []string{}, "Select the cluster(s) that the registry shall connect to.")
 	// if err := cmd.RegisterFlagCompletionFunc("cluster", cliutil.ValidArgsAvailableClusters); err != nil {
 	// 	log.Fatalln("Failed to register flag completion for '--cluster'", err)
@@ -67,7 +69,7 @@ func NewCmdRegistryCreate() *cobra.Command {
 }
 
 // parseCreateRegistryCmd parses the command input into variables required to create a registry
-func parseCreateRegistryCmd(cmd *cobra.Command, args []string) (string, string, k3d.ExposePort, []*k3d.Cluster) {
+func parseCreateRegistryCmd(cmd *cobra.Command, args []string) (*k3d.Registry, []*k3d.Cluster) {
 
 	// --image
 	image, err := cmd.Flags().GetString("image")
@@ -108,5 +110,5 @@ func parseCreateRegistryCmd(cmd *cobra.Command, args []string) (string, string, 
 		registryName = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, args[0])
 	}
 
-	return registryName, image, exposePort, clusters
+	return &k3d.Registry{Name: registryName, Image: image, Port: exposePort}, clusters
 }

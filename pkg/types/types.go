@@ -319,3 +319,18 @@ const (
 	DefaultRegistryMountPath  = "/var/lib/registry"
 	DefaultDockerHubAddress   = "registry-1.docker.io"
 )
+
+// Registry describes a k3d-managed registry
+type Registry struct {
+	Name    string
+	Image   string
+	Port    ExposePort
+	Options struct {
+		ConfigFile string
+		Proxy      struct {
+			RemoteURL string
+			Username  string
+			Password  string
+		}
+	}
+}
