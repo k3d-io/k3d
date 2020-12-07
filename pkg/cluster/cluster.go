@@ -211,7 +211,8 @@ ClusterCreatOpts:
 		}
 		log.Debugf("Created node '%s'", node.Name)
 
-		return err
+		// start node
+		return NodeStart(clusterCreateCtx, runtime, node, k3d.NodeStartOpts{})
 	}
 
 	// used for node suffices
@@ -371,6 +372,12 @@ ClusterCreatOpts:
 				log.Errorln("Failed to create loadbalancer")
 				return err
 			}
+			// start loadbalancer
+			if err := NodeStart(clusterCreateCtx, runtime, lbNode, k3d.NodeStartOpts{}); err != nil {
+				log.Errorf("Failed to start loadbalancer '%s'", lbNode.Name)
+				return err
+			}
+			log.Debugf("Started loadbalancer '%s'", lbNode.Name)
 			if clusterCreateOpts.WaitForServer {
 				waitForServerWaitgroup.Go(func() error {
 					// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`

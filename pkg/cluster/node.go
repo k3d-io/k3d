@@ -205,6 +205,16 @@ func NodeCreateMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d
 
 }
 
+// NodeStart starts an existing node
+func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeStartOpts k3d.NodeStartOpts) error {
+	log.Tracef("Starting node '%s'", node.Name)
+	if err := runtime.StartNode(ctx, node); err != nil {
+		log.Errorf("Failed to start node *'%s'", node.Name)
+		return err
+	}
+	return nil
+}
+
 // NodeCreate creates a new containerized k3s node
 func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, createNodeOpts k3d.NodeCreateOpts) error {
 	log.Tracef("Creating node from spec\n%+v", node)

@@ -88,3 +88,8 @@ func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k
 
 	return docker.CopyToContainer(ctx, container.ID, destDir, preparedArchive, types.CopyToContainerOptions{AllowOverwriteDirWithFile: false})
 }
+
+// WriteToNode writes a byte array to the selected node
+func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, node *k3d.Node) error {
+	return nil
+}
