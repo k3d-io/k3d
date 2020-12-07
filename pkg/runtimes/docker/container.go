@@ -38,7 +38,7 @@ import (
 )
 
 // createContainer creates a new docker container from translated specs
-func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string) error {
+func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string) (string, error) {
 
 	log.Tracef("Creating docker container with translated config\n%+v\n", dockerNode)
 
@@ -46,7 +46,7 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Errorln("Failed to create docker client")
-		return err
+		return "", err
 	}
 	defer docker.Close()
 
@@ -58,24 +58,30 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 			if client.IsErrNotFound(err) {
 				if err := pullImage(ctx, docker, dockerNode.ContainerConfig.Image); err != nil {
 					log.Errorf("Failed to create container '%s'", name)
-					return err
+					return "", err
 				}
 				continue
 			}
 			log.Errorf("Failed to create container '%s'", name)
-			return err
+			return "", err
 		}
 		log.Debugf("Created container %s (ID: %s)", name, resp.ID)
 		break
 	}
 
-	// start container
-	if err := docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		log.Errorln("Failed to start container")
+	return resp.ID, nil
+}
+
+func startContainer(ctx context.Context, ID string) error {
+	// initialize docker client
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
 		return err
 	}
+	defer docker.Close()
 
-	return nil
+	return docker.ContainerStart(ctx, ID, types.ContainerStartOptions{})
 }
 
 // removeContainer deletes a running container (like docker rm -f)
