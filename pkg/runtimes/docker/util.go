@@ -22,6 +22,8 @@ THE SOFTWARE.
 package docker
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
 	"fmt"
 
@@ -91,5 +93,45 @@ func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k
 
 // WriteToNode writes a byte array to the selected node
 func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, node *k3d.Node) error {
+
+	nodeContainer, err := getNodeContainer(ctx, node)
+	if err != nil {
+		return fmt.Errorf("Failed to find container for node '%s': %+v", node.Name, err)
+	}
+
+	// create docker client
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return err
+	}
+	defer docker.Close()
+
+	buf := new(bytes.Buffer)
+	tarWriter := tar.NewWriter(buf)
+	defer tarWriter.Close()
+	tarHeader := &tar.Header{
+		Name: dest,
+		Mode: 0644,
+		Size: int64(len(content)),
+	}
+
+	if err := tarWriter.WriteHeader(tarHeader); err != nil {
+		return fmt.Errorf("Failed to write tar header: %+v", err)
+	}
+
+	if _, err := tarWriter.Write(content); err != nil {
+		return fmt.Errorf("Failed to write tar content: %+v", err)
+	}
+
+	if err := tarWriter.Close(); err != nil {
+		log.Debugf("Failed to close tar writer: %+v", err)
+	}
+
+	tarBytes := bytes.NewReader(buf.Bytes())
+	if err := docker.CopyToContainer(ctx, nodeContainer.ID, "/", tarBytes, types.CopyToContainerOptions{AllowOverwriteDirWithFile: true}); err != nil {
+		return fmt.Errorf("Failed to copy content to container '%s': %+v", nodeContainer.ID, err)
+	}
+
 	return nil
 }

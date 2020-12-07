@@ -210,7 +210,6 @@ ClusterCreatOpts:
 			return err
 		}
 		log.Debugf("Created node '%s'", node.Name)
-
 		// start node
 		return NodeStart(clusterCreateCtx, runtime, node, k3d.NodeStartOpts{})
 	}
