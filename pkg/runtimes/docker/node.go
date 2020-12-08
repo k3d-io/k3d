@@ -284,7 +284,7 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 
 	containerInspectResponse, err := docker.ContainerInspect(ctx, container.ID)
 	if err != nil {
-		log.Errorf("Failed to inspect container '%s'", container.ID)
+		log.Errorf("Failed to inspect node '%s'(ID %s)", node.Name, container.ID)
 		return nil, err
 	}
 

@@ -61,6 +61,9 @@ var ReadyLogMessageByRole = map[Role]string{
 	LoadBalancerRole: "start worker processes",
 }
 
+// WaitForLogMessageBackOffLimit defines the number of times after which we should abort waiting for a log message, if the container is restarting
+const WaitForLogMessageBackOffLimit = 10
+
 // NodeStatusRestarting defines the status string that signals the node container is restarting
 const NodeStatusRestarting = "restarting"
 

@@ -630,6 +630,9 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	 */
 	for _, n := range cluster.Nodes {
 		if n.Role == k3d.ServerRole && n.ServerOpts.IsInit {
+			if err := NodeStart(ctx, runtime, n, k3d.NodeStartOpts{}); err != nil {
+				return fmt.Errorf("Failed to start initializing server node: %+v", err)
+			}
 			// wait for the initnode to come up before doing anything else
 			for {
 				select {
@@ -659,6 +662,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 				}
 				time.Sleep(time.Second)
 			}
+			break
 		}
 	}
 
