@@ -160,15 +160,17 @@ var DoNotCopyServerFlags = []string{
 
 // ClusterCreateOpts describe a set of options one can set when creating a cluster
 type ClusterCreateOpts struct {
-	PrepDisableHostIPInjection bool             `yaml:"prepDisableHostIPInjection" json:"prepDisableHostIPInjection,omitempty"`
-	DisableImageVolume         bool             `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
-	WaitForServer              bool             `yaml:"waitForServer" json:"waitForServer,omitempty"`
-	Timeout                    time.Duration    `yaml:"timeout" json:"timeout,omitempty"`
-	DisableLoadBalancer        bool             `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
-	K3sServerArgs              []string         `yaml:"k3sServerArgs" json:"k3sServerArgs,omitempty"`
-	K3sAgentArgs               []string         `yaml:"k3sAgentArgs" json:"k3sAgentArgs,omitempty"`
-	GPURequest                 string           `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
-	NodeHookActions            []NodeHookAction `yaml:"nodeHookAction,omitempty" json:"nodeHookAction,omitempty"`
+	PrepDisableHostIPInjection bool              `yaml:"prepDisableHostIPInjection" json:"prepDisableHostIPInjection,omitempty"`
+	DisableImageVolume         bool              `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
+	WaitForServer              bool              `yaml:"waitForServer" json:"waitForServer,omitempty"`
+	Timeout                    time.Duration     `yaml:"timeout" json:"timeout,omitempty"`
+	DisableLoadBalancer        bool              `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
+	K3sServerArgs              []string          `yaml:"k3sServerArgs" json:"k3sServerArgs,omitempty"`
+	K3sAgentArgs               []string          `yaml:"k3sAgentArgs" json:"k3sAgentArgs,omitempty"`
+	GPURequest                 string            `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
+	NodeHookActions            []NodeHookAction  `yaml:"nodeHookAction,omitempty" json:"nodeHookAction,omitempty"`
+	GlobalLabels               map[string]string `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
+	GlobalEnv                  []string          `yaml:"globalEnv,omitempty" json:"globalEnv,omitempty"`
 }
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
@@ -216,7 +218,6 @@ type Cluster struct {
 	ExposeAPI          ExposePort         `yaml:"exposeAPI" json:"exposeAPI,omitempty"`
 	ServerLoadBalancer *Node              `yaml:"serverLoadbalancer,omitempty" json:"serverLoadBalancer,omitempty"`
 	ImageVolume        string             `yaml:"imageVolume" json:"imageVolume,omitempty"`
-	GlobalLabels       map[string]string  `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
 }
 
 // ServerCountRunning returns the number of server nodes running in the cluster and the total number

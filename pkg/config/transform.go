@@ -165,11 +165,6 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		}
 	}
 
-	// ---> Init global labels, if needed
-	if newCluster.GlobalLabels == nil {
-		newCluster.GlobalLabels = map[string]string{}
-	}
-
 	// -> ENV
 	for _, envVarWithNodeFilters := range simpleConfig.Env {
 		if len(envVarWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
@@ -197,6 +192,8 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		DisableLoadBalancer: simpleConfig.Options.K3dOptions.DisableLoadbalancer,
 		K3sServerArgs:       simpleConfig.Options.K3sOptions.ExtraServerArgs,
 		K3sAgentArgs:        simpleConfig.Options.K3sOptions.ExtraAgentArgs,
+		GlobalLabels:        map[string]string{}, // empty init
+		GlobalEnv:           []string{},          // empty init
 	}
 
 	/**********************

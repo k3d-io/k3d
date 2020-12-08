@@ -89,9 +89,14 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 	}
 
 	/*
+	 * Step 0: Pre-Pull Images
+	 */
+	// TODO: ClusterPrep: add image pre-pulling step
+
+	/*
 	 * Step 1: Network
 	 */
-	if err := ClusterPrepNetwork(clusterPrepCtx, runtime, &clusterConfig.Cluster); err != nil {
+	if err := ClusterPrepNetwork(clusterPrepCtx, runtime, &clusterConfig.Cluster, &clusterConfig.ClusterCreateOpts); err != nil {
 		return fmt.Errorf("Failed Network Preparation: %+v", err)
 	}
 
@@ -99,7 +104,7 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 	 * Step 2: Volume(s)
 	 */
 	if !clusterConfig.ClusterCreateOpts.DisableImageVolume {
-		if err := ClusterPrepImageVolume(ctx, runtime, &clusterConfig.Cluster); err != nil {
+		if err := ClusterPrepImageVolume(ctx, runtime, &clusterConfig.Cluster, &clusterConfig.ClusterCreateOpts); err != nil {
 			return fmt.Errorf("Failed Image Volume Preparation: %+v", err)
 		}
 	}
@@ -109,7 +114,7 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 }
 
 // ClusterPrepNetwork creates a new cluster network, if needed or sets everything up to re-use an existing network
-func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, clusterCreateOpts *k3d.ClusterCreateOpts) error {
 	log.Infoln("Prep: Network")
 
 	// error out if external cluster network should be used but no name was set
@@ -136,16 +141,16 @@ func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d
 		return err
 	}
 	cluster.Network.Name = networkID
-	cluster.GlobalLabels[k3d.LabelNetwork] = networkID
-	cluster.GlobalLabels[k3d.LabelNetworkExternal] = strconv.FormatBool(cluster.Network.External)
+	clusterCreateOpts.GlobalLabels[k3d.LabelNetwork] = networkID
+	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkExternal] = strconv.FormatBool(cluster.Network.External)
 	if networkExists {
-		cluster.GlobalLabels[k3d.LabelNetworkExternal] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)
+		clusterCreateOpts.GlobalLabels[k3d.LabelNetworkExternal] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)
 	}
 
 	return nil
 }
 
-func ClusterPrepImageVolume(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+func ClusterPrepImageVolume(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, clusterCreateOpts *k3d.ClusterCreateOpts) error {
 	/*
 	 * Cluster-Wide volumes
 	 * - image volume (for importing images)
@@ -157,7 +162,7 @@ func ClusterPrepImageVolume(ctx context.Context, runtime k3drt.Runtime, cluster 
 		return err
 	}
 
-	cluster.GlobalLabels[k3d.LabelImageVolume] = imageVolumeName
+	clusterCreateOpts.GlobalLabels[k3d.LabelImageVolume] = imageVolumeName
 
 	// attach volume to nodes
 	for _, node := range cluster.Nodes {
@@ -227,29 +232,33 @@ ClusterCreatOpts:
 	if cluster.Token == "" {
 		cluster.Token = GenerateClusterToken()
 	}
+	clusterCreateOpts.GlobalLabels[k3d.LabelClusterToken] = cluster.Token
 
 	/*
 	 * Nodes
 	 */
 
+	clusterCreateOpts.GlobalLabels[k3d.LabelClusterName] = cluster.Name
+
 	// agent defaults (per cluster)
 	// connection url is always the name of the first server node (index 0)
 	connectionURL := fmt.Sprintf("https://%s:%s", generateNodeName(cluster.Name, k3d.ServerRole, 0), k3d.DefaultAPIPort)
+	clusterCreateOpts.GlobalLabels[k3d.LabelClusterURL] = connectionURL
+	clusterCreateOpts.GlobalEnv = append(clusterCreateOpts.GlobalEnv, fmt.Sprintf("K3S_TOKEN=%s", cluster.Token))
 
 	nodeSetup := func(node *k3d.Node, suffix int) error {
 		// cluster specific settings
 		if node.Labels == nil {
 			node.Labels = make(map[string]string) // TODO: maybe create an init function?
 		}
-		node.Labels[k3d.LabelClusterName] = cluster.Name
-		node.Env = append(node.Env, fmt.Sprintf("K3S_TOKEN=%s", cluster.Token))
-		node.Labels[k3d.LabelClusterToken] = cluster.Token
-		node.Labels[k3d.LabelClusterURL] = connectionURL
 
-		// append extra labels
-		for k, v := range cluster.GlobalLabels {
+		// ensure global labels
+		for k, v := range clusterCreateOpts.GlobalLabels {
 			node.Labels[k] = v
 		}
+
+		// ensure global env
+		node.Env = append(node.Env, clusterCreateOpts.GlobalEnv...)
 
 		// node role specific settings
 		if node.Role == k3d.ServerRole {
