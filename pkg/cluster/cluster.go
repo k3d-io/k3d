@@ -42,7 +42,6 @@ import (
 	"github.com/rancher/k3d/v4/pkg/util"
 	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
 )
 
 // ClusterRun orchestrates the steps of cluster creation, configuration and starting
@@ -669,9 +668,6 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	/*
 	 * Other Nodes
 	 */
-	// vars to support waiting for server nodes to be ready
-	waitForServerWaitgroup, ctx := errgroup.WithContext(ctx)
-
 	failed := 0
 	var serverlb *k3d.Node
 	for _, node := range cluster.Nodes {
@@ -692,16 +688,14 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 				continue
 			}
 
-			// asynchronously wait for this server node to be ready (by checking the logs for a specific log mesage)
+			// wait for this server node to be ready (by checking the logs for a specific log message)
 			if node.Role == k3d.ServerRole && startClusterOpts.WaitForServer {
-				serverNode := node
-				waitForServerWaitgroup.Go(func() error {
-					// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
-					// ... by scanning for this line in logs and restarting the container in case it appears
-					log.Debugf("Starting to wait for server node '%s'", serverNode.Name)
-					return NodeWaitForLogMessage(ctx, runtime, serverNode, k3d.ReadyLogMessageByRole[k3d.ServerRole], start)
-				})
+				log.Debugf("Waiting for server node '%s' to get ready", node.Name)
+				if err := NodeWaitForLogMessage(ctx, runtime, node, k3d.ReadyLogMessageByRole[k3d.ServerRole], start); err != nil {
+					return fmt.Errorf("Server node '%s' failed to get ready: %+v", node.Name, err)
+				}
 			}
+
 		} else {
 			log.Infof("Node '%s' already running", node.Name)
 		}
@@ -715,21 +709,15 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 				log.Warningf("Failed to start serverlb '%s': Try to start it manually", serverlb.Name)
 				failed++
 			}
-			waitForServerWaitgroup.Go(func() error {
-				// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
-				// ... by scanning for this line in logs and restarting the container in case it appears
-				log.Debugf("Starting to wait for loadbalancer node '%s'", serverlb.Name)
-				return NodeWaitForLogMessage(ctx, runtime, serverlb, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], start)
-			})
+			// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
+			// ... by scanning for this line in logs and restarting the container in case it appears
+			log.Debugf("Starting to wait for loadbalancer node '%s'", serverlb.Name)
+			if err := NodeWaitForLogMessage(ctx, runtime, serverlb, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], start); err != nil {
+				return fmt.Errorf("Loadbalancer '%s' failed to get ready: %+v", serverlb.Name, err)
+			}
 		} else {
 			log.Infof("Serverlb '%s' already running", serverlb.Name)
 		}
-	}
-
-	if err := waitForServerWaitgroup.Wait(); err != nil {
-		log.Errorln("Failed to bring up all nodes in time. Check the logs:")
-		log.Errorln(">>> ", err)
-		return fmt.Errorf("Failed to bring up cluster")
 	}
 
 	if failed > 0 {
