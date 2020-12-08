@@ -216,6 +216,7 @@ type Cluster struct {
 	ExposeAPI          ExposePort         `yaml:"exposeAPI" json:"exposeAPI,omitempty"`
 	ServerLoadBalancer *Node              `yaml:"serverLoadbalancer,omitempty" json:"serverLoadBalancer,omitempty"`
 	ImageVolume        string             `yaml:"imageVolume" json:"imageVolume,omitempty"`
+	GlobalLabels       map[string]string  `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
 }
 
 // ServerCountRunning returns the number of server nodes running in the cluster and the total number

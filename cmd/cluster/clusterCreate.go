@@ -129,7 +129,8 @@ func NewCmdClusterCreate() *cobra.Command {
 				log.Debugln("'--update-default-kubeconfig set: enabling wait-for-server")
 				clusterConfig.ClusterCreateOpts.WaitForServer = true
 			}
-			if err := k3dCluster.ClusterCreate(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, &clusterConfig.ClusterCreateOpts); err != nil {
+			//if err := k3dCluster.ClusterCreate(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, &clusterConfig.ClusterCreateOpts); err != nil {
+			if err := k3dCluster.ClusterRun(cmd.Context(), runtimes.SelectedRuntime, clusterConfig); err != nil {
 				// rollback if creation failed
 				log.Errorln(err)
 				if cliConfig.Options.K3dOptions.NoRollback { // TODO: move rollback mechanics to pkg/

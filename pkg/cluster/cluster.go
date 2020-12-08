@@ -34,6 +34,7 @@ import (
 	gort "runtime"
 
 	"github.com/imdario/mergo"
+	config "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
 	k3drt "github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
 	"github.com/rancher/k3d/v4/pkg/types"
@@ -43,6 +44,97 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
+
+// ClusterRun orchestrates the steps of cluster creation, configuration and starting
+func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *config.ClusterConfig) error {
+	/*
+	 * Step 0: (Infrastructure) Preparation
+	 */
+	if err := ClusterPrep(ctx, runtime, clusterConfig); err != nil {
+		return fmt.Errorf("Failed Cluster Preparation: %+v", err)
+	}
+
+	/*
+	 * Step 1: Create Containers
+	 */
+	if err := ClusterCreate(ctx, runtime, &clusterConfig.Cluster, &clusterConfig.ClusterCreateOpts); err != nil {
+		return fmt.Errorf("Failed Cluster Creation: %+v", err)
+	}
+
+	/*
+	 * Step 2: (Offline) Configuration
+	 */
+	// TODO: ClusterRun: add cluster configuration step here
+
+	/*
+	 * Step 3: Start Containers
+	 */
+	// TODO: ClusterRun add cluster start step here
+
+	return nil
+}
+
+// ClusterPrep takes care of the steps required before creating/starting the cluster containers
+func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *config.ClusterConfig) error {
+
+	/*
+	 * Set up contexts
+	 * Used for (early) termination (across API boundaries)
+	 */
+	clusterPrepCtx := ctx
+	if clusterConfig.ClusterCreateOpts.Timeout > 0*time.Second {
+		var cancelClusterPrepCtx context.CancelFunc
+		clusterPrepCtx, cancelClusterPrepCtx = context.WithTimeout(ctx, clusterConfig.ClusterCreateOpts.Timeout)
+		defer cancelClusterPrepCtx()
+	}
+
+	/*
+	 * Step 1: Network
+	 */
+	if err := ClusterPrepNetwork(clusterPrepCtx, runtime, &clusterConfig.Cluster); err != nil {
+		return fmt.Errorf("Failed Network Preparation: %+v", err)
+	}
+
+	return nil
+
+}
+
+// ClusterPrepNetwork creates a new cluster network, if needed or sets everything up to re-use an existing network
+func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+	log.Infoln("Prep: Network")
+
+	// error out if external cluster network should be used but no name was set
+	if cluster.Network.Name == "" && cluster.Network.External {
+		return fmt.Errorf("Failed to use external network because no name was specified")
+	}
+
+	// generate cluster network name, if not set
+	if cluster.Network.Name == "" && !cluster.Network.External {
+		cluster.Network.Name = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
+	}
+
+	// handle hostnetwork
+	if cluster.Network.Name == "host" {
+		if len(cluster.Nodes) > 1 {
+			return fmt.Errorf("Only one server node supported when using host network")
+		}
+	}
+
+	// create cluster network or use an existing one
+	networkID, networkExists, err := runtime.CreateNetworkIfNotPresent(ctx, cluster.Network.Name)
+	if err != nil {
+		log.Errorln("Failed to create cluster network")
+		return err
+	}
+	cluster.Network.Name = networkID
+	cluster.GlobalLabels[k3d.LabelNetwork] = networkID
+	cluster.GlobalLabels[k3d.LabelNetworkExternal] = strconv.FormatBool(cluster.Network.External)
+	if networkExists {
+		cluster.GlobalLabels[k3d.LabelNetworkExternal] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)
+	}
+
+	return nil
+}
 
 // ClusterCreate creates a new cluster consisting of
 // - some containerized k3s nodes
@@ -80,9 +172,8 @@ ClusterCreatOpts:
 	}
 
 	/*
-	 * Network
+	 * Docker Machine Special Configuration
 	 */
-
 	if cluster.ExposeAPI.Host == k3d.DefaultAPIHost && runtime == k3drt.Docker {
 		if gort.GOOS == "windows" || gort.GOOS == "darwin" {
 			log.Tracef("Running on %s: checking if it's using docker-machine", gort.GOOS)
@@ -97,41 +188,6 @@ ClusterCreatOpts:
 				log.Traceln("Not using docker-machine")
 			}
 		}
-
-	}
-
-	// error out if external cluster network should be used but no name was set
-	if cluster.Network.Name == "" && cluster.Network.External {
-		return fmt.Errorf("Failed to use external network because no name was specified")
-	}
-
-	// generate cluster network name, if not set
-	if cluster.Network.Name == "" && !cluster.Network.External {
-		cluster.Network.Name = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
-	}
-
-	// handle hostnetwork
-	useHostNet := false
-	if cluster.Network.Name == "host" {
-		useHostNet = true
-		if len(cluster.Nodes) > 1 {
-			return fmt.Errorf("Only one server node supported when using host network")
-		}
-	}
-
-	// create cluster network or use an existing one
-	networkID, networkExists, err := runtime.CreateNetworkIfNotPresent(clusterCreateCtx, cluster.Network.Name)
-	if err != nil {
-		log.Errorln("Failed to create cluster network")
-		return err
-	}
-	cluster.Network.Name = networkID
-	extraLabels := map[string]string{
-		k3d.LabelNetwork:         networkID,
-		k3d.LabelNetworkExternal: strconv.FormatBool(cluster.Network.External),
-	}
-	if networkExists {
-		extraLabels[k3d.LabelNetworkExternal] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)
 	}
 
 	/*
@@ -153,7 +209,7 @@ ClusterCreatOpts:
 			return err
 		}
 
-		extraLabels[k3d.LabelImageVolume] = imageVolumeName
+		cluster.GlobalLabels[k3d.LabelImageVolume] = imageVolumeName
 
 		// attach volume to nodes
 		for _, node := range cluster.Nodes {
@@ -180,7 +236,7 @@ ClusterCreatOpts:
 		node.Labels[k3d.LabelClusterURL] = connectionURL
 
 		// append extra labels
-		for k, v := range extraLabels {
+		for k, v := range cluster.GlobalLabels {
 			node.Labels[k] = v
 		}
 
@@ -314,7 +370,7 @@ ClusterCreatOpts:
 	 */
 	// *** ServerLoadBalancer ***
 	if !clusterCreateOpts.DisableLoadBalancer {
-		if !useHostNet { // serverlb not supported in hostnetwork mode due to port collisions with server node
+		if cluster.Network.Name != "host" { // serverlb not supported in hostnetwork mode due to port collisions with server node
 			// Generate a comma-separated list of server/server names to pass to the LB container
 			servers := ""
 			for _, node := range cluster.Nodes {

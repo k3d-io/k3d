@@ -165,6 +165,11 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		}
 	}
 
+	// ---> Init global labels, if needed
+	if newCluster.GlobalLabels == nil {
+		newCluster.GlobalLabels = map[string]string{}
+	}
+
 	// -> ENV
 	for _, envVarWithNodeFilters := range simpleConfig.Env {
 		if len(envVarWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
