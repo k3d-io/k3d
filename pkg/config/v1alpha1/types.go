@@ -96,12 +96,13 @@ type SimpleConfigOptionsRuntime struct {
 }
 
 type SimpleConfigOptionsK3d struct {
-	Wait                       bool          `mapstructure:"wait" yaml:"wait"`
-	Timeout                    time.Duration `mapstructure:"timeout" yaml:"timeout"`
-	DisableLoadbalancer        bool          `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer"`
-	DisableImageVolume         bool          `mapstructure:"disableImageVolume" yaml:"disableImageVolume"`
-	NoRollback                 bool          `mapstructure:"noRollback" yaml:"noRollback"`
-	PrepDisableHostIPInjection bool          `mapstructure:"prepDisableHostIPInjection" yaml:"prepDisableHostIPInjection"`
+	Wait                       bool                 `mapstructure:"wait" yaml:"wait"`
+	Timeout                    time.Duration        `mapstructure:"timeout" yaml:"timeout"`
+	DisableLoadbalancer        bool                 `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer"`
+	DisableImageVolume         bool                 `mapstructure:"disableImageVolume" yaml:"disableImageVolume"`
+	NoRollback                 bool                 `mapstructure:"noRollback" yaml:"noRollback"`
+	PrepDisableHostIPInjection bool                 `mapstructure:"prepDisableHostIPInjection" yaml:"prepDisableHostIPInjection"`
+	NodeHookActions            []k3d.NodeHookAction `mapstructure:"nodeHookActions" yaml:"nodeHookActions,omitempty"`
 }
 
 type SimpleConfigOptionsK3s struct {

@@ -210,8 +210,10 @@ ClusterCreatOpts:
 			return err
 		}
 		log.Debugf("Created node '%s'", node.Name)
+
 		// start node
-		return NodeStart(clusterCreateCtx, runtime, node, k3d.NodeStartOpts{})
+		return NodeStart(clusterCreateCtx, runtime, node, k3d.NodeStartOpts{PreStartActions: clusterCreateOpts.NodeHookActions})
+
 	}
 
 	// used for node suffices

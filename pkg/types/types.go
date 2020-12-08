@@ -22,6 +22,7 @@ THE SOFTWARE.
 package types
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
@@ -159,14 +160,15 @@ var DoNotCopyServerFlags = []string{
 
 // ClusterCreateOpts describe a set of options one can set when creating a cluster
 type ClusterCreateOpts struct {
-	PrepDisableHostIPInjection bool          `yaml:"prepDisableHostIPInjection" json:"prepDisableHostIPInjection,omitempty"`
-	DisableImageVolume         bool          `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
-	WaitForServer              bool          `yaml:"waitForServer" json:"waitForServer,omitempty"`
-	Timeout                    time.Duration `yaml:"timeout" json:"timeout,omitempty"`
-	DisableLoadBalancer        bool          `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
-	K3sServerArgs              []string      `yaml:"k3sServerArgs" json:"k3sServerArgs,omitempty"`
-	K3sAgentArgs               []string      `yaml:"k3sAgentArgs" json:"k3sAgentArgs,omitempty"`
-	GPURequest                 string        `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
+	PrepDisableHostIPInjection bool             `yaml:"prepDisableHostIPInjection" json:"prepDisableHostIPInjection,omitempty"`
+	DisableImageVolume         bool             `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
+	WaitForServer              bool             `yaml:"waitForServer" json:"waitForServer,omitempty"`
+	Timeout                    time.Duration    `yaml:"timeout" json:"timeout,omitempty"`
+	DisableLoadBalancer        bool             `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
+	K3sServerArgs              []string         `yaml:"k3sServerArgs" json:"k3sServerArgs,omitempty"`
+	K3sAgentArgs               []string         `yaml:"k3sAgentArgs" json:"k3sAgentArgs,omitempty"`
+	GPURequest                 string           `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
+	NodeHookActions            []NodeHookAction `yaml:"nodeHookAction,omitempty" json:"nodeHookAction,omitempty"`
 }
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
@@ -183,8 +185,13 @@ type NodeCreateOpts struct {
 
 // NodeStartOpts describes a set of options one can set when (re-)starting a node
 type NodeStartOpts struct {
-	Wait    bool
-	Timeout time.Duration
+	Wait            bool
+	Timeout         time.Duration
+	PreStartActions []NodeHookAction
+}
+
+type NodeHookAction interface {
+	Run(ctx context.Context, node *Node) error
 }
 
 // ImageImportOpts describes a set of options one can set for loading image(s) into cluster(s)
