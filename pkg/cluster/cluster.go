@@ -95,6 +95,15 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 		return fmt.Errorf("Failed Network Preparation: %+v", err)
 	}
 
+	/*
+	 * Step 2: Volume(s)
+	 */
+	if !clusterConfig.ClusterCreateOpts.DisableImageVolume {
+		if err := ClusterPrepImageVolume(ctx, runtime, &clusterConfig.Cluster); err != nil {
+			return fmt.Errorf("Failed Image Volume Preparation: %+v", err)
+		}
+	}
+
 	return nil
 
 }
@@ -133,6 +142,27 @@ func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d
 		cluster.GlobalLabels[k3d.LabelNetworkExternal] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)
 	}
 
+	return nil
+}
+
+func ClusterPrepImageVolume(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+	/*
+	 * Cluster-Wide volumes
+	 * - image volume (for importing images)
+	 */
+
+	imageVolumeName := fmt.Sprintf("%s-%s-images", k3d.DefaultObjectNamePrefix, cluster.Name)
+	if err := runtime.CreateVolume(ctx, imageVolumeName, map[string]string{k3d.LabelClusterName: cluster.Name}); err != nil {
+		log.Errorf("Failed to create image volume '%s' for cluster '%s'", imageVolumeName, cluster.Name)
+		return err
+	}
+
+	cluster.GlobalLabels[k3d.LabelImageVolume] = imageVolumeName
+
+	// attach volume to nodes
+	for _, node := range cluster.Nodes {
+		node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s", imageVolumeName, k3d.DefaultImageVolumeMountPath))
+	}
 	return nil
 }
 
@@ -196,25 +226,6 @@ ClusterCreatOpts:
 
 	if cluster.Token == "" {
 		cluster.Token = GenerateClusterToken()
-	}
-
-	/*
-	 * Cluster-Wide volumes
-	 * - image volume (for importing images)
-	 */
-	if !clusterCreateOpts.DisableImageVolume {
-		imageVolumeName := fmt.Sprintf("%s-%s-images", k3d.DefaultObjectNamePrefix, cluster.Name)
-		if err := runtime.CreateVolume(clusterCreateCtx, imageVolumeName, map[string]string{k3d.LabelClusterName: cluster.Name}); err != nil {
-			log.Errorf("Failed to create image volume '%s' for cluster '%s'", imageVolumeName, cluster.Name)
-			return err
-		}
-
-		cluster.GlobalLabels[k3d.LabelImageVolume] = imageVolumeName
-
-		// attach volume to nodes
-		for _, node := range cluster.Nodes {
-			node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s", imageVolumeName, k3d.DefaultImageVolumeMountPath))
-		}
 	}
 
 	/*
