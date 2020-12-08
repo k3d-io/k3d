@@ -5,7 +5,7 @@ ARG OS=linux
 ARG ARCH=amd64
 RUN echo "Building for '${OS}/${ARCH}'..." \
     && mkdir -p /etc/confd \
-    && wget -q "https://github.com/${CONFD_REPO}/releases/download/v${CONFD_VERSION}/confd-${CONFD_VERSION}-${OS}-${ARCH}" -O /usr/bin/confd \
+    && wget "https://github.com/${CONFD_REPO}/releases/download/v${CONFD_VERSION}/confd-${CONFD_VERSION}-${OS}-${ARCH}" -O /usr/bin/confd \
     && chmod +x /usr/bin/confd
 
 COPY templates /etc/confd/templates/

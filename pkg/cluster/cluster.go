@@ -62,14 +62,35 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 	}
 
 	/*
-	 * Step 2: (Offline) Configuration
+	 * Step 2: Pre-Start Configuration
 	 */
 	// TODO: ClusterRun: add cluster configuration step here
 
 	/*
 	 * Step 3: Start Containers
 	 */
-	// TODO: ClusterRun add cluster start step here
+	if err := ClusterStart(ctx, runtime, &clusterConfig.Cluster, k3d.ClusterStartOpts{
+		WaitForServer: clusterConfig.ClusterCreateOpts.WaitForServer,
+		Timeout:       clusterConfig.ClusterCreateOpts.Timeout, // TODO: here we should consider the time used so far
+	}); err != nil {
+		return fmt.Errorf("Failed Cluster Start: %+v", err)
+	}
+
+	/*
+	 * Post-Start Configuration
+	 */
+	/**********************************
+	 * Additional Cluster Preparation *
+	 **********************************/
+
+	/*
+	 * Networking Magic
+	 */
+
+	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
+	if !clusterConfig.ClusterCreateOpts.PrepDisableHostIPInjection {
+		prepInjectHostIP(ctx, runtime, &clusterConfig.Cluster)
+	}
 
 	return nil
 }
@@ -196,14 +217,10 @@ ClusterCreatOpts:
 	 * Used for (early) termination (across API boundaries)
 	 */
 	clusterCreateCtx := ctx
-	clusterPrepCtx := ctx
 	if clusterCreateOpts.Timeout > 0*time.Second {
 		var cancelClusterCreateCtx context.CancelFunc
-		var cancelClusterPrepCtx context.CancelFunc
 		clusterCreateCtx, cancelClusterCreateCtx = context.WithTimeout(ctx, clusterCreateOpts.Timeout)
-		clusterPrepCtx, cancelClusterPrepCtx = context.WithTimeout(ctx, clusterCreateOpts.Timeout)
 		defer cancelClusterCreateCtx()
-		defer cancelClusterPrepCtx()
 	}
 
 	/*
@@ -288,8 +305,8 @@ ClusterCreatOpts:
 		log.Debugf("Created node '%s'", node.Name)
 
 		// start node
-		return NodeStart(clusterCreateCtx, runtime, node, k3d.NodeStartOpts{PreStartActions: clusterCreateOpts.NodeHookActions})
-
+		//return NodeStart(clusterCreateCtx, runtime, node, k3d.NodeStartOpts{PreStartActions: clusterCreateOpts.NodeHookActions})
+		return nil
 	}
 
 	// used for node suffices
@@ -312,40 +329,7 @@ ClusterCreatOpts:
 		}
 		serverCount++
 
-		// wait for the initnode to come up before doing anything else
-		for {
-			select {
-			case <-clusterCreateCtx.Done():
-				log.Errorln("Failed to bring up initializing server node in time")
-				return fmt.Errorf(">>> %w", clusterCreateCtx.Err())
-			default:
-			}
-			log.Debugln("Waiting for initializing server node...")
-			logreader, err := runtime.GetNodeLogs(clusterCreateCtx, cluster.InitNode, time.Time{})
-			if err != nil {
-				if logreader != nil {
-					logreader.Close()
-				}
-				log.Errorln(err)
-				log.Errorln("Failed to get logs from the initializig server node.. waiting for 3 seconds instead")
-				time.Sleep(3 * time.Second)
-				break
-			}
-			defer logreader.Close()
-			buf := new(bytes.Buffer)
-			nRead, _ := buf.ReadFrom(logreader)
-			logreader.Close()
-			if nRead > 0 && strings.Contains(buf.String(), k3d.ReadyLogMessageByRole[k3d.ServerRole]) {
-				log.Debugln("Initializing server node is up... continuing")
-				break
-			}
-			time.Sleep(time.Second)
-		}
-
 	}
-
-	// vars to support waiting for server nodes to be ready
-	waitForServerWaitgroup, clusterCreateCtx := errgroup.WithContext(clusterCreateCtx)
 
 	// create all other nodes, but skip the init node
 	for _, node := range cluster.Nodes {
@@ -373,14 +357,6 @@ ClusterCreatOpts:
 		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
 			if err := nodeSetup(node, suffix); err != nil {
 				return err
-			}
-		}
-
-		// asynchronously wait for this server node to be ready (by checking the logs for a specific log mesage)
-		if node.Role == k3d.ServerRole && clusterCreateOpts.WaitForServer {
-			log.Debugf("Waiting for server node '%s' to get ready", node.Name)
-			if err := NodeWaitForLogMessage(clusterCreateCtx, runtime, node, k3d.ReadyLogMessageByRole[k3d.ServerRole], time.Time{}); err != nil {
-				return fmt.Errorf("Server node '%s' failed to get ready: %+v", node.Name, err)
 			}
 		}
 	}
@@ -449,42 +425,10 @@ ClusterCreatOpts:
 				log.Errorln("Failed to create loadbalancer")
 				return err
 			}
-			// start loadbalancer
-			if err := NodeStart(clusterCreateCtx, runtime, lbNode, k3d.NodeStartOpts{}); err != nil {
-				log.Errorf("Failed to start loadbalancer '%s'", lbNode.Name)
-				return err
-			}
-			log.Debugf("Started loadbalancer '%s'", lbNode.Name)
-			if clusterCreateOpts.WaitForServer {
-				waitForServerWaitgroup.Go(func() error {
-					// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
-					// ... by scanning for this line in logs and restarting the container in case it appears
-					log.Debugf("Starting to wait for loadbalancer node '%s'", lbNode.Name)
-					return NodeWaitForLogMessage(clusterCreateCtx, runtime, lbNode, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], time.Time{})
-				})
-			}
+			log.Debugf("Created loadbalancer '%s'", lbNode.Name)
 		} else {
 			log.Infoln("Hostnetwork selected -> Skipping creation of server LoadBalancer")
 		}
-	}
-
-	if err := waitForServerWaitgroup.Wait(); err != nil {
-		log.Errorln("Failed to bring up all server nodes (and loadbalancer) in time. Check the logs:")
-		log.Errorf(">>> %+v", err)
-		return fmt.Errorf("Failed to bring up cluster")
-	}
-
-	/**********************************
-	 * Additional Cluster Preparation *
-	 **********************************/
-
-	/*
-	 * Networking Magic
-	 */
-
-	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
-	if !clusterCreateOpts.PrepDisableHostIPInjection {
-		prepInjectHostIP(clusterPrepCtx, runtime, cluster)
 	}
 
 	return nil
@@ -681,6 +625,46 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		defer cancel()
 	}
 
+	/*
+	 * Init Node
+	 */
+	for _, n := range cluster.Nodes {
+		if n.Role == k3d.ServerRole && n.ServerOpts.IsInit {
+			// wait for the initnode to come up before doing anything else
+			for {
+				select {
+				case <-ctx.Done():
+					log.Errorln("Failed to bring up initializing server node in time")
+					return fmt.Errorf(">>> %w", ctx.Err())
+				default:
+				}
+				log.Debugln("Waiting for initializing server node...")
+				logreader, err := runtime.GetNodeLogs(ctx, cluster.InitNode, time.Time{})
+				if err != nil {
+					if logreader != nil {
+						logreader.Close()
+					}
+					log.Errorln(err)
+					log.Errorln("Failed to get logs from the initializig server node.. waiting for 3 seconds instead")
+					time.Sleep(3 * time.Second)
+					break
+				}
+				defer logreader.Close()
+				buf := new(bytes.Buffer)
+				nRead, _ := buf.ReadFrom(logreader)
+				logreader.Close()
+				if nRead > 0 && strings.Contains(buf.String(), k3d.ReadyLogMessageByRole[k3d.ServerRole]) {
+					log.Debugln("Initializing server node is up... continuing")
+					break
+				}
+				time.Sleep(time.Second)
+			}
+		}
+	}
+
+	/*
+	 * Other Nodes
+	 */
 	// vars to support waiting for server nodes to be ready
 	waitForServerWaitgroup, ctx := errgroup.WithContext(ctx)
 

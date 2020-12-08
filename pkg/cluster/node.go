@@ -129,7 +129,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		}
 	}
 
-	if err := NodeCreate(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
+	if err := NodeRun(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
 		return err
 	}
 
@@ -204,6 +204,22 @@ func NodeCreateMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d
 
 	return nil
 
+}
+
+// NodeRun creates and starts a node
+func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeCreateOpts k3d.NodeCreateOpts) error {
+	if err := NodeCreate(ctx, runtime, node, nodeCreateOpts); err != nil {
+		return err
+	}
+
+	if err := NodeStart(ctx, runtime, node, k3d.NodeStartOpts{
+		Wait:    nodeCreateOpts.Wait,
+		Timeout: nodeCreateOpts.Timeout,
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // NodeStart starts an existing node
@@ -344,6 +360,7 @@ func NodeGet(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3
 
 //NodeWaitForLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
 func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string, since time.Time) error {
+	log.Tracef("NodeWaitForLogMessage: Node '%s' waiting for log message '%s' since '%+v'", node.Name, message, since)
 	for {
 		select {
 		case <-ctx.Done():
