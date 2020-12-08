@@ -212,7 +212,7 @@ func startToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 		Labels:  k3d.DefaultObjectLabels,
 	}
 	node.Labels[k3d.LabelClusterName] = cluster.Name
-	if err := runtime.CreateNode(ctx, node); err != nil {
+	if err := k3dc.NodeRun(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
 		log.Errorf("Failed to create tools container for cluster '%s'", cluster.Name)
 		return node, err
 	}
