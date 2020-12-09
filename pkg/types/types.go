@@ -171,32 +171,43 @@ type ClusterCreateOpts struct {
 	K3sServerArgs              []string          `yaml:"k3sServerArgs" json:"k3sServerArgs,omitempty"`
 	K3sAgentArgs               []string          `yaml:"k3sAgentArgs" json:"k3sAgentArgs,omitempty"`
 	GPURequest                 string            `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
-	NodeHookActions            []NodeHookAction  `yaml:"nodeHookAction,omitempty" json:"nodeHookAction,omitempty"`
+	NodeHooks                  []NodeHook        `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 	GlobalLabels               map[string]string `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
 	GlobalEnv                  []string          `yaml:"globalEnv,omitempty" json:"globalEnv,omitempty"`
 	Registries                 struct {
-		Create Registry           `yaml:"create,omitempty" json:"create,omitempty"`
-		Use    []ExternalRegistry `yaml:"use,omitempty" json:"use,omitempty"`
+		Create *Registry           `yaml:"create,omitempty" json:"create,omitempty"`
+		Use    []*ExternalRegistry `yaml:"use,omitempty" json:"use,omitempty"`
 	} `yaml:"registries,omitempty" json:"registries,omitempty"`
 }
+
+type NodeHook struct {
+	Stage  LifecycleStage `yaml:"stage,omitempty" json:"stage,omitempty"`
+	Action NodeHookAction `yaml:"action,omitempty" json:"action,omitempty"`
+}
+
+type LifecycleStage string
+
+const LifecycleStagePreStart LifecycleStage = "preStart"
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
 type ClusterStartOpts struct {
 	WaitForServer bool
 	Timeout       time.Duration
+	NodeHooks     []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 }
 
 // NodeCreateOpts describes a set of options one can set when creating a new node
 type NodeCreateOpts struct {
-	Wait    bool
-	Timeout time.Duration
+	Wait      bool
+	Timeout   time.Duration
+	NodeHooks []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 }
 
 // NodeStartOpts describes a set of options one can set when (re-)starting a node
 type NodeStartOpts struct {
-	Wait            bool
-	Timeout         time.Duration
-	PreStartActions []NodeHookAction
+	Wait      bool
+	Timeout   time.Duration
+	NodeHooks []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 }
 
 type NodeHookAction interface {
@@ -353,8 +364,9 @@ type Registry struct {
 
 // ExternalRegistry describes a registry that is not managed together with the current cluster -> we only update the registries.yaml
 type ExternalRegistry struct {
-	Name  string
-	Port  string
-	URL   string
-	Proxy string // to use the external registry as a proxy for e.g. docker.io
+	Name         string
+	Port         string
+	ExternalPort string
+	URL          string
+	Proxy        string // to use the external registry as a proxy for e.g. docker.io
 }

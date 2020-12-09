@@ -224,10 +224,12 @@ func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, node
 
 // NodeStart starts an existing node
 func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeStartOpts k3d.NodeStartOpts) error {
-	for _, action := range nodeStartOpts.PreStartActions {
-		log.Tracef("Executing preStartAction '%s'", reflect.TypeOf(action))
-		if err := action.Run(ctx, node); err != nil {
-			log.Errorf("Failed executing preStartAction '%+v': %+v", action, err)
+	for _, hook := range nodeStartOpts.NodeHooks {
+		if hook.Stage == k3d.LifecycleStagePreStart {
+			log.Tracef("Executing preStartAction '%s'", reflect.TypeOf(hook))
+			if err := hook.Action.Run(ctx, node); err != nil {
+				log.Errorf("Failed executing preStartAction '%+v': %+v", hook, err)
+			}
 		}
 	}
 	log.Tracef("Starting node '%s'", node.Name)

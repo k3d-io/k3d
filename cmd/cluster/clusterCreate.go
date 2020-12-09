@@ -146,43 +146,6 @@ func NewCmdClusterCreate() *cobra.Command {
 			}
 			log.Infof("Cluster '%s' created successfully!", clusterConfig.Cluster.Name)
 
-			/************
-			 * Registry *
-			 ************/
-
-			if regFlags.Create {
-				reg := &k3d.Registry{
-					Name:  fmt.Sprintf("%s-%s-registry", k3d.DefaultObjectNamePrefix, clusterConfig.Cluster.Name),
-					Image: fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag),
-				}
-				log.Infof("Creating registry '%s'...", reg.Name)
-				regPort, err := cliutil.ParseExposePort("random")
-				if err != nil {
-					log.Errorf("Failed to create registry (cluster left running): Failed to get random free port to use for registry: %+v", err)
-				} else {
-					reg.Port = regPort
-					if err := k3dCluster.RegistryCreate(cmd.Context(), runtimes.SelectedRuntime, reg, []*k3d.Cluster{&clusterConfig.Cluster}); err != nil {
-						log.Errorf("Failed to create registry '%s' (cluster left running): %+v", reg.Name, err)
-					}
-				}
-				log.Infof("Created registry '%s'", reg.Name)
-			}
-
-			for _, reg := range regFlags.Use {
-				log.Infof("Connecting registry '%s' to cluster...", reg)
-				regNode, err := runtimes.SelectedRuntime.GetNode(cmd.Context(), &k3d.Node{Name: reg, Role: k3d.RegistryRole})
-				if err != nil || regNode == nil {
-					log.Errorf("Registry Node '%s' does not exist, skipping..", reg)
-					log.Tracef("Error for registry: %+v", err)
-					continue
-				}
-				if err := k3dCluster.RegistryConnect(cmd.Context(), runtimes.SelectedRuntime, regNode, []*k3d.Cluster{&clusterConfig.Cluster}); err != nil {
-					log.Errorf("Failed to connect registry '%s' to cluster '%s': %+v", reg, clusterConfig.Cluster.Name, err)
-					continue
-				}
-				log.Infof("Connected registry '%s'", reg)
-			}
-
 			/**************
 			 * Kubeconfig *
 			 **************/
@@ -251,7 +214,7 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	/* Registry */
 	cmd.Flags().StringArrayVar(&regFlags.Use, "registry-use", nil, "Connect to one or more registries running locally")
-	cmd.Flags().BoolVar(&regFlags.Create, "registry-create", false, "Create a registry and connect it to the cluster")
+	cmd.Flags().BoolVar(&cliConfig.Registries.Create, "registry-create", false, "Create a registry and connect it to the cluster")
 
 	/* Multi Server Configuration */
 

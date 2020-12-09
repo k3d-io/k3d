@@ -125,6 +125,10 @@ type SimpleConfig struct {
 	Labels       []LabelWithNodeFilters  `mapstructure:"labels" yaml:"labels" json:"labels,omitempty"`
 	Options      SimpleConfigOptions     `mapstructure:"options" yaml:"options" json:"options,omitempty"`
 	Env          []EnvVarWithNodeFilters `mapstructure:"env" yaml:"env" json:"env,omitempty"`
+	Registries   struct {
+		Use    []*k3d.ExternalRegistry
+		Create bool
+	}
 }
 
 // GetKind implements Config.GetKind

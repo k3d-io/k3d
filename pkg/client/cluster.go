@@ -34,6 +34,7 @@ import (
 	gort "runtime"
 
 	"github.com/imdario/mergo"
+	"github.com/rancher/k3d/v4/pkg/actions"
 	config "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
 	k3drt "github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
@@ -42,6 +43,7 @@ import (
 	"github.com/rancher/k3d/v4/pkg/util"
 	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
+	"sigs.k8s.io/yaml"
 )
 
 // ClusterRun orchestrates the steps of cluster creation, configuration and starting
@@ -71,6 +73,7 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 	if err := ClusterStart(ctx, runtime, &clusterConfig.Cluster, k3d.ClusterStartOpts{
 		WaitForServer: clusterConfig.ClusterCreateOpts.WaitForServer,
 		Timeout:       clusterConfig.ClusterCreateOpts.Timeout, // TODO: here we should consider the time used so far
+		NodeHooks:     clusterConfig.ClusterCreateOpts.NodeHooks,
 	}); err != nil {
 		return fmt.Errorf("Failed Cluster Start: %+v", err)
 	}
@@ -132,6 +135,23 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 	/*
 	 * Step 3: Registries
 	 */
+
+	if clusterConfig.ClusterCreateOpts.Registries.Create != nil {
+		regNode, err := RegistryCreate(ctx, runtime, clusterConfig.ClusterCreateOpts.Registries.Create)
+		if err != nil {
+			return fmt.Errorf("Failed to create registry: %+v", err)
+		}
+
+		clusterConfig.ClusterCreateOpts.Registries.Use = append(clusterConfig.ClusterCreateOpts.Registries.Use, &k3d.ExternalRegistry{
+			Name:         regNode.Name,
+			Port:         k3d.DefaultRegistryPort,
+			ExternalPort: clusterConfig.ClusterCreateOpts.Registries.Create.Port.Port,
+			URL:          fmt.Sprintf("http://%s:%s", regNode.Name, k3d.DefaultRegistryPort),
+		})
+	}
+
+	log.Debugf("External Registries: %+v", clusterConfig.ClusterCreateOpts.Registries.Use)
+
 	if len(clusterConfig.ClusterCreateOpts.Registries.Use) > 0 {
 		// ensure that all selected registries exist and connect them to the cluster network
 		for _, externalReg := range clusterConfig.ClusterCreateOpts.Registries.Use {
@@ -145,6 +165,22 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 		}
 
 		// generate the registries.yaml
+		regConf, err := RegistryGenerateK3sConfig(ctx, clusterConfig.ClusterCreateOpts.Registries.Create, clusterConfig.ClusterCreateOpts.Registries.Use)
+		if err != nil {
+			return fmt.Errorf("Failed to generate registry config file for k3s: %+v", err)
+		}
+		regConfBytes, err := yaml.Marshal(&regConf)
+		if err != nil {
+			return fmt.Errorf("Failed to marshal registry configuration: %+v", err)
+		}
+		clusterConfig.ClusterCreateOpts.NodeHooks = append(clusterConfig.ClusterCreateOpts.NodeHooks, k3d.NodeHook{
+			Stage: k3d.LifecycleStagePreStart,
+			Action: actions.WriteFileAction{
+				Runtime: runtime,
+				Content: regConfBytes,
+				Dest:    k3d.DefaultRegistriesFilePath,
+			},
+		})
 
 	}
 
@@ -648,7 +684,9 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	 */
 	for _, n := range cluster.Nodes {
 		if n.Role == k3d.ServerRole && n.ServerOpts.IsInit {
-			if err := NodeStart(ctx, runtime, n, k3d.NodeStartOpts{}); err != nil {
+			if err := NodeStart(ctx, runtime, n, k3d.NodeStartOpts{
+				NodeHooks: startClusterOpts.NodeHooks,
+			}); err != nil {
 				return fmt.Errorf("Failed to start initializing server node: %+v", err)
 			}
 			// wait for the initnode to come up before doing anything else
@@ -701,7 +739,9 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		if !node.State.Running {
 
 			// start node
-			if err := runtime.StartNode(ctx, node); err != nil {
+			if err := NodeStart(ctx, runtime, node, k3d.NodeStartOpts{
+				NodeHooks: startClusterOpts.NodeHooks,
+			}); err != nil {
 				log.Warningf("Failed to start node '%s': Try to start it manually", node.Name)
 				failed++
 				continue

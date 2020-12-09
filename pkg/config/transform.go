@@ -26,6 +26,7 @@ import (
 	"context"
 	"fmt"
 
+	cliutil "github.com/rancher/k3d/v4/cmd/util" // TODO: move parseapiport to pkg
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
@@ -194,6 +195,21 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		K3sAgentArgs:        simpleConfig.Options.K3sOptions.ExtraAgentArgs,
 		GlobalLabels:        map[string]string{}, // empty init
 		GlobalEnv:           []string{},          // empty init
+	}
+
+	/*
+	 * Registries
+	 */
+	regPort, err := cliutil.ParseExposePort("random")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get port for registry: %+v", err)
+	}
+	if simpleConfig.Registries.Create {
+		clusterCreateOpts.Registries.Create = &k3d.Registry{
+			Name:  fmt.Sprintf("%s-%s-registry", k3d.DefaultObjectNamePrefix, newCluster.Name),
+			Image: fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag),
+			Port:  regPort,
+		}
 	}
 
 	/**********************

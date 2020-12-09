@@ -27,11 +27,12 @@ import (
 
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/types/k3s"
 	log "github.com/sirupsen/logrus"
 )
 
-// RegistryCreate creates a registry node and attaches it to the selected clusters // TODO: connecting to clusters does not work right now
-func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registry, clusters []*k3d.Cluster) error {
+// RegistryCreate creates a registry node
+func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registry) (*k3d.Node, error) {
 
 	// registry name
 	if len(reg.Name) == 0 {
@@ -52,7 +53,7 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 	// error out if that registry exists already
 	existingNode, err := runtime.GetNode(ctx, registryNode)
 	if err == nil && existingNode != nil {
-		return fmt.Errorf("A registry node with that name already exists")
+		return nil, fmt.Errorf("A registry node with that name already exists")
 	}
 
 	// setup the node labels
@@ -75,23 +76,12 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 	log.Infof("Creating node '%s'", registryNode.Name)
 	if err := NodeCreate(ctx, runtime, registryNode, k3d.NodeCreateOpts{}); err != nil {
 		log.Errorln("Failed to create registry node")
-		return err
+		return nil, err
 	}
 
-	// TODO: Connect to clusters requires containerd config reload capabilities
-	if len(clusters) > 0 {
-		// connect registry to cluster networks
-		return RegistryConnect(ctx, runtime, registryNode, clusters) // TODO: registry: update the registries.yaml file
-	}
+	log.Infof("Successfully created registry '%s'", registryNode.Name)
 
-	endtext := fmt.Sprintf("Successfully created registry '%s'", registryNode.Name)
-	if len(clusters) > 0 {
-		endtext += fmt.Sprintf(" and connected it to %d clusters", len(clusters))
-	}
-
-	log.Infoln(endtext)
-
-	return nil
+	return registryNode, nil
 
 }
 
@@ -129,6 +119,30 @@ func RegistryConnect(ctx context.Context, runtime runtimes.Runtime, registryNode
 }
 
 // RegistryGenerateK3sConfig generates the k3s specific registries.yaml configuration for multiple registries
-func RegistryGenerateK3sConfig(ctx context.Context, internalRegistries []*k3d.Registry, externalRegistries []*k3d.ExternalRegistry) error {
-	return nil
+func RegistryGenerateK3sConfig(ctx context.Context, internalRegistries *k3d.Registry, externalRegistries []*k3d.ExternalRegistry) (*k3s.Registry, error) {
+	regConf := &k3s.Registry{}
+
+	for _, reg := range externalRegistries {
+		internalAddress := fmt.Sprintf("%s:%s", reg.Name, reg.Port)
+		externalAddress := fmt.Sprintf("%s:%s", reg.Name, reg.ExternalPort)
+
+		// init mirrors if nil
+		if regConf.Mirrors == nil {
+			regConf.Mirrors = make(map[string]k3s.Mirror)
+		}
+
+		regConf.Mirrors[externalAddress] = k3s.Mirror{
+			Endpoints: []string{
+				fmt.Sprintf("http://%s", internalAddress),
+			},
+		}
+
+		if reg.Proxy != "" {
+			regConf.Mirrors[k3d.DefaultDockerHubAddress] = k3s.Mirror{
+				Endpoints: []string{fmt.Sprintf("http://%s", internalAddress)},
+			}
+		}
+	}
+
+	return regConf, nil
 }
