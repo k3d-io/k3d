@@ -46,5 +46,4 @@ require (
 	gotest.tools v2.2.0+incompatible
 	gotest.tools/v3 v3.0.3 // indirect
 	k8s.io/client-go v0.17.0
-	sigs.k8s.io/yaml v1.1.0 // indirect
 )

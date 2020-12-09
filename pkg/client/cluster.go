@@ -146,7 +146,6 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 			Name:         regNode.Name,
 			Port:         k3d.DefaultRegistryPort,
 			ExternalPort: clusterConfig.ClusterCreateOpts.Registries.Create.Port.Port,
-			URL:          fmt.Sprintf("http://%s:%s", regNode.Name, k3d.DefaultRegistryPort),
 		})
 	}
 

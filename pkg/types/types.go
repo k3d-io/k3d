@@ -367,6 +367,5 @@ type ExternalRegistry struct {
 	Name         string
 	Port         string
 	ExternalPort string
-	URL          string
 	Proxy        string // to use the external registry as a proxy for e.g. docker.io
 }
