@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-test-registry
+  labels:
+    app: nginx-test-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-test-registry
+  template:
+    metadata:
+      labels:
+        app: nginx-test-registry
+    spec:
+      containers:
+      - name: nginx-test-registry
+        image: k3d-newreg/alpine:test
+        ports:
+        - containerPort: 80
