@@ -68,7 +68,7 @@ check_url() {
 check_clusters() {
   [ -n "$EXE" ] || abort "EXE is not defined"
   for c in "$@" ; do
-    $EXE kubeconfig merge "$c" --switch-context
+    $EXE kubeconfig merge "$c" --kubeconfig-switch-context
     if kubectl cluster-info ; then
       passed "cluster $c is reachable"
     else
@@ -94,7 +94,7 @@ check_cluster_count() {
 check_multi_node() {
   cluster=$1
   expectedNodeCount=$2
-  $EXE kubeconfig merge "$cluster" --switch-context
+  $EXE kubeconfig merge "$cluster" --kubeconfig-switch-context
   nodeCount=$(kubectl get nodes -o=custom-columns=NAME:.metadata.name --no-headers | wc -l)
   if [[ $nodeCount == $expectedNodeCount ]]; then
     passed "cluster $cluster has $expectedNodeCount nodes, as expected"

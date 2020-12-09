@@ -58,7 +58,7 @@ k3d cluster create mycluster
 Get the new cluster's connection details merged into your default kubeconfig (usually specified using the `KUBECONFIG` environment variable or the default path `#!bash $HOME/.kube/config`) and directly switch to the new context:
 
 ```bash
-k3d kubeconfig merge mycluster --switch-context
+k3d kubeconfig merge mycluster --kubeconfig-switch-context
 ```
 
 Use the new cluster with [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/), e.g.:

@@ -67,7 +67,7 @@ func NewCmdRegistryCreate() *cobra.Command {
 	// add flags
 
 	// TODO: connecting to clusters requires non-existing config reload functionality in containerd
-	cmd.Flags().StringArrayVarP(&ppFlags.Clusters, "cluster", "c", nil, "Select the cluster(s) that the registry shall connect to.")
+	cmd.Flags().StringArrayVarP(&ppFlags.Clusters, "cluster", "c", nil, "[NotReady] Select the cluster(s) that the registry shall connect to.")
 	if err := cmd.RegisterFlagCompletionFunc("cluster", cliutil.ValidArgsAvailableClusters); err != nil {
 		log.Fatalln("Failed to register flag completion for '--cluster'", err)
 	}
