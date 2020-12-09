@@ -48,7 +48,8 @@ func (d Docker) CreateNode(ctx context.Context, node *k3d.Node) error {
 	}
 
 	// create node
-	if err := createContainer(ctx, dockerNode, node.Name); err != nil {
+	_, err = createContainer(ctx, dockerNode, node.Name)
+	if err != nil {
 		log.Errorf("Failed to create node '%s'", node.Name)
 		return err
 	}
@@ -283,7 +284,7 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 
 	containerInspectResponse, err := docker.ContainerInspect(ctx, container.ID)
 	if err != nil {
-		log.Errorf("Failed to inspect container '%s'", container.ID)
+		log.Errorf("Failed to inspect node '%s'(ID %s)", node.Name, container.ID)
 		return nil, err
 	}
 

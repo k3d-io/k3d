@@ -31,3 +31,8 @@ import (
 func (d Containerd) CopyToNode(ctx context.Context, src string, dest string, node *k3d.Node) error {
 	return nil
 }
+
+// WriteToNode writes a byte array to the selected node
+func (d Containerd) WriteToNode(ctx context.Context, content []byte, dest string, node *k3d.Node) error {
+	return nil
+}

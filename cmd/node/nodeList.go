@@ -29,7 +29,7 @@ import (
 
 	"github.com/liggitt/tabwriter"
 	"github.com/rancher/k3d/v4/cmd/util"
-	"github.com/rancher/k3d/v4/pkg/cluster"
+	"github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/spf13/cobra"
@@ -52,14 +52,14 @@ func NewCmdNodeList() *cobra.Command {
 			nodes, headersOff := parseGetNodeCmd(cmd, args)
 			var existingNodes []*k3d.Node
 			if len(nodes) == 0 { // Option a)  no name specified -> get all nodes
-				found, err := cluster.NodeList(cmd.Context(), runtimes.SelectedRuntime)
+				found, err := client.NodeList(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
 					log.Fatalln(err)
 				}
 				existingNodes = append(existingNodes, found...)
 			} else { // Option b) cluster name specified -> get specific cluster
 				for _, node := range nodes {
-					found, err := cluster.NodeGet(cmd.Context(), runtimes.SelectedRuntime, node)
+					found, err := client.NodeGet(cmd.Context(), runtimes.SelectedRuntime, node)
 					if err != nil {
 						log.Fatalln(err)
 					}

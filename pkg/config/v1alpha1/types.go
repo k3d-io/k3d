@@ -96,12 +96,13 @@ type SimpleConfigOptionsRuntime struct {
 }
 
 type SimpleConfigOptionsK3d struct {
-	Wait                       bool          `mapstructure:"wait" yaml:"wait"`
-	Timeout                    time.Duration `mapstructure:"timeout" yaml:"timeout"`
-	DisableLoadbalancer        bool          `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer"`
-	DisableImageVolume         bool          `mapstructure:"disableImageVolume" yaml:"disableImageVolume"`
-	NoRollback                 bool          `mapstructure:"noRollback" yaml:"noRollback"`
-	PrepDisableHostIPInjection bool          `mapstructure:"prepDisableHostIPInjection" yaml:"prepDisableHostIPInjection"`
+	Wait                       bool                 `mapstructure:"wait" yaml:"wait"`
+	Timeout                    time.Duration        `mapstructure:"timeout" yaml:"timeout"`
+	DisableLoadbalancer        bool                 `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer"`
+	DisableImageVolume         bool                 `mapstructure:"disableImageVolume" yaml:"disableImageVolume"`
+	NoRollback                 bool                 `mapstructure:"noRollback" yaml:"noRollback"`
+	PrepDisableHostIPInjection bool                 `mapstructure:"prepDisableHostIPInjection" yaml:"prepDisableHostIPInjection"`
+	NodeHookActions            []k3d.NodeHookAction `mapstructure:"nodeHookActions" yaml:"nodeHookActions,omitempty"`
 }
 
 type SimpleConfigOptionsK3s struct {
@@ -115,7 +116,7 @@ type SimpleConfig struct {
 	Name         string                  `mapstructure:"name" yaml:"name" json:"name,omitempty"`
 	Servers      int                     `mapstructure:"servers" yaml:"servers" json:"servers,omitempty"` //nolint:lll    // default 1
 	Agents       int                     `mapstructure:"agents" yaml:"agents" json:"agents,omitempty"`    //nolint:lll    // default 0
-	ExposeAPI    k3d.ExposeAPI           `mapstructure:"exposeAPI" yaml:"exposeAPI" json:"exposeAPI,omitempty"`
+	ExposeAPI    k3d.ExposePort          `mapstructure:"exposeAPI" yaml:"exposeAPI" json:"exposeAPI,omitempty"`
 	Image        string                  `mapstructure:"image" yaml:"image" json:"image,omitempty"`
 	Network      string                  `mapstructure:"network" yaml:"network" json:"network,omitempty"`
 	ClusterToken string                  `mapstructure:"clusterToken" yaml:"clusterToken" json:"clusterToken,omitempty"` // default: auto-generated
@@ -124,6 +125,10 @@ type SimpleConfig struct {
 	Labels       []LabelWithNodeFilters  `mapstructure:"labels" yaml:"labels" json:"labels,omitempty"`
 	Options      SimpleConfigOptions     `mapstructure:"options" yaml:"options" json:"options,omitempty"`
 	Env          []EnvVarWithNodeFilters `mapstructure:"env" yaml:"env" json:"env,omitempty"`
+	Registries   struct {
+		Use    []*k3d.ExternalRegistry
+		Create bool
+	}
 }
 
 // GetKind implements Config.GetKind

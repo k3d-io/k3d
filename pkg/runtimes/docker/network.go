@@ -28,6 +28,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 
 	k3d "github.com/rancher/k3d/v4/pkg/types"
@@ -118,4 +119,31 @@ func GetGatewayIP(ctx context.Context, network string) (net.IP, error) {
 	gatewayIP := net.ParseIP(bridgeNetwork.IPAM.Config[0].Gateway)
 
 	return gatewayIP, nil
+}
+
+// ConnectNodeToNetwork connects a node to a network
+func (d Docker) ConnectNodeToNetwork(ctx context.Context, node *k3d.Node, networkName string) error {
+	// get container
+	container, err := getNodeContainer(ctx, node)
+	if err != nil {
+		return err
+	}
+
+	// get docker client
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return err
+	}
+	defer docker.Close()
+
+	// get network
+	networkResource, err := GetNetwork(ctx, networkName)
+	if err != nil {
+		log.Errorf("Failed to get network '%s'", networkName)
+		return err
+	}
+
+	// connect container to network
+	return docker.NetworkConnect(ctx, networkResource.ID, container.ID, &network.EndpointSettings{})
 }

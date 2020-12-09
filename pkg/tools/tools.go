@@ -30,7 +30,7 @@ import (
 	"sync"
 	"time"
 
-	k3dc "github.com/rancher/k3d/v4/pkg/cluster"
+	k3dc "github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/version"
@@ -212,7 +212,7 @@ func startToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 		Labels:  k3d.DefaultObjectLabels,
 	}
 	node.Labels[k3d.LabelClusterName] = cluster.Name
-	if err := runtime.CreateNode(ctx, node); err != nil {
+	if err := k3dc.NodeRun(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
 		log.Errorf("Failed to create tools container for cluster '%s'", cluster.Name)
 		return node, err
 	}

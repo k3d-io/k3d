@@ -27,7 +27,7 @@ import (
 	"path"
 
 	"github.com/rancher/k3d/v4/cmd/util"
-	"github.com/rancher/k3d/v4/pkg/cluster"
+	"github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	k3dutil "github.com/rancher/k3d/v4/pkg/util"
@@ -54,11 +54,11 @@ func NewCmdClusterDelete() *cobra.Command {
 				log.Infoln("No clusters found")
 			} else {
 				for _, c := range clusters {
-					if err := cluster.ClusterDelete(cmd.Context(), runtimes.SelectedRuntime, c); err != nil {
+					if err := client.ClusterDelete(cmd.Context(), runtimes.SelectedRuntime, c); err != nil {
 						log.Fatalln(err)
 					}
 					log.Infoln("Removing cluster details from default kubeconfig...")
-					if err := cluster.KubeconfigRemoveClusterFromDefaultConfig(cmd.Context(), c); err != nil {
+					if err := client.KubeconfigRemoveClusterFromDefaultConfig(cmd.Context(), c); err != nil {
 						log.Warnln("Failed to remove cluster details from default kubeconfig")
 						log.Warnln(err)
 					}
@@ -100,7 +100,7 @@ func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	if all, err := cmd.Flags().GetBool("all"); err != nil {
 		log.Fatalln(err)
 	} else if all {
-		clusters, err = cluster.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
+		clusters, err = client.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -113,9 +113,9 @@ func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	}
 
 	for _, name := range clusternames {
-		c, err := cluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: name})
+		c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: name})
 		if err != nil {
-			if err == cluster.ClusterGetNoNodesFoundError {
+			if err == client.ClusterGetNoNodesFoundError {
 				continue
 			}
 			log.Fatalln(err)

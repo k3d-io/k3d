@@ -22,6 +22,7 @@ THE SOFTWARE.
 package types
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
@@ -44,6 +45,12 @@ const DefaultLBImageRepo = "docker.io/rancher/k3d-proxy"
 // DefaultToolsImageRepo defines the default image used for the tools container
 const DefaultToolsImageRepo = "docker.io/rancher/k3d-tools"
 
+// DefaultRegistryImageRepo defines the default image used for the k3d-managed registry
+const DefaultRegistryImageRepo = "docker.io/library/registry"
+
+// DefaultRegistryImageTag defines the default image tag used for the k3d-managed registry
+const DefaultRegistryImageTag = "2"
+
 // DefaultObjectNamePrefix defines the name prefix for every object created by k3d
 const DefaultObjectNamePrefix = "k3d"
 
@@ -53,6 +60,9 @@ var ReadyLogMessageByRole = map[Role]string{
 	AgentRole:        "Successfully registered node",
 	LoadBalancerRole: "start worker processes",
 }
+
+// NodeWaitForLogMessageRestartWarnTime is the time after which to warn about a restarting container
+const NodeWaitForLogMessageRestartWarnTime = 2 * time.Minute
 
 // NodeStatusRestarting defines the status string that signals the node container is restarting
 const NodeStatusRestarting = "restarting"
@@ -66,6 +76,7 @@ const (
 	AgentRole        Role = "agent"
 	NoRole           Role = "noRole"
 	LoadBalancerRole Role = "loadbalancer"
+	RegistryRole     Role = "registry"
 )
 
 // NodeRoles defines the roles available for nodes
@@ -73,6 +84,19 @@ var NodeRoles = map[string]Role{
 	string(ServerRole):       ServerRole,
 	string(AgentRole):        AgentRole,
 	string(LoadBalancerRole): LoadBalancerRole,
+	string(RegistryRole):     RegistryRole,
+}
+
+// ClusterInternalNodeRoles is a list of roles for nodes that belong to a cluster
+var ClusterInternalNodeRoles = []Role{
+	ServerRole,
+	AgentRole,
+	LoadBalancerRole,
+}
+
+// ClusterExternalNodeRoles is a list of roles for nodes that do not belong to a specific cluster
+var ClusterExternalNodeRoles = []Role{
+	RegistryRole,
 }
 
 // DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
@@ -92,6 +116,9 @@ const (
 	LabelServerAPIPort   string = "k3d.server.api.port"
 	LabelServerAPIHost   string = "k3d.server.api.host"
 	LabelServerAPIHostIP string = "k3d.server.api.hostIP"
+	LabelRegistryHost    string = "k3d.registry.host"
+	LabelRegistryHostIP  string = "k3d.registry.hostIP"
+	LabelRegistryPort    string = "k3s.registry.port"
 )
 
 // DefaultRoleCmds maps the node roles to their respective default commands
@@ -136,32 +163,62 @@ var DoNotCopyServerFlags = []string{
 
 // ClusterCreateOpts describe a set of options one can set when creating a cluster
 type ClusterCreateOpts struct {
-	PrepDisableHostIPInjection bool          `yaml:"prepDisableHostIPInjection" json:"prepDisableHostIPInjection,omitempty"`
-	DisableImageVolume         bool          `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
-	WaitForServer              bool          `yaml:"waitForServer" json:"waitForServer,omitempty"`
-	Timeout                    time.Duration `yaml:"timeout" json:"timeout,omitempty"`
-	DisableLoadBalancer        bool          `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
-	K3sServerArgs              []string      `yaml:"k3sServerArgs" json:"k3sServerArgs,omitempty"`
-	K3sAgentArgs               []string      `yaml:"k3sAgentArgs" json:"k3sAgentArgs,omitempty"`
-	GPURequest                 string        `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
+	PrepDisableHostIPInjection bool              `yaml:"prepDisableHostIPInjection" json:"prepDisableHostIPInjection,omitempty"`
+	DisableImageVolume         bool              `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
+	WaitForServer              bool              `yaml:"waitForServer" json:"waitForServer,omitempty"`
+	Timeout                    time.Duration     `yaml:"timeout" json:"timeout,omitempty"`
+	DisableLoadBalancer        bool              `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
+	K3sServerArgs              []string          `yaml:"k3sServerArgs" json:"k3sServerArgs,omitempty"`
+	K3sAgentArgs               []string          `yaml:"k3sAgentArgs" json:"k3sAgentArgs,omitempty"`
+	GPURequest                 string            `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
+	NodeHooks                  []NodeHook        `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	GlobalLabels               map[string]string `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
+	GlobalEnv                  []string          `yaml:"globalEnv,omitempty" json:"globalEnv,omitempty"`
+	Registries                 struct {
+		Create *Registry           `yaml:"create,omitempty" json:"create,omitempty"`
+		Use    []*ExternalRegistry `yaml:"use,omitempty" json:"use,omitempty"`
+	} `yaml:"registries,omitempty" json:"registries,omitempty"`
 }
+
+// NodeHook is an action that is bound to a specifc stage of a node lifecycle
+type NodeHook struct {
+	Stage  LifecycleStage `yaml:"stage,omitempty" json:"stage,omitempty"`
+	Action NodeHookAction `yaml:"action,omitempty" json:"action,omitempty"`
+}
+
+// LifecycleStage defines descriptors for specific stages in the lifecycle of a node or cluster object
+type LifecycleStage string
+
+// all defined lifecyclestages
+const (
+	LifecycleStagePreStart  LifecycleStage = "preStart"
+	LifecycleStagePostStart LifecycleStage = "postStart"
+)
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
 type ClusterStartOpts struct {
 	WaitForServer bool
 	Timeout       time.Duration
+	NodeHooks     []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 }
 
 // NodeCreateOpts describes a set of options one can set when creating a new node
 type NodeCreateOpts struct {
-	Wait    bool
-	Timeout time.Duration
+	Wait      bool
+	Timeout   time.Duration
+	NodeHooks []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 }
 
 // NodeStartOpts describes a set of options one can set when (re-)starting a node
 type NodeStartOpts struct {
-	Wait    bool
-	Timeout time.Duration
+	Wait      bool
+	Timeout   time.Duration
+	NodeHooks []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+}
+
+// NodeHookAction is an interface to implement actions that should trigger at specific points of the node lifecycle
+type NodeHookAction interface {
+	Run(ctx context.Context, node *Node) error
 }
 
 // ImageImportOpts describes a set of options one can set for loading image(s) into cluster(s)
@@ -183,7 +240,7 @@ type Cluster struct {
 	Nodes              []*Node            `yaml:"nodes" json:"nodes,omitempty"`
 	InitNode           *Node              // init server node
 	ExternalDatastore  *ExternalDatastore `yaml:"externalDatastore,omitempty" json:"externalDatastore,omitempty"`
-	ExposeAPI          ExposeAPI          `yaml:"exposeAPI" json:"exposeAPI,omitempty"`
+	ExposeAPI          ExposePort         `yaml:"exposeAPI" json:"exposeAPI,omitempty"`
 	ServerLoadBalancer *Node              `yaml:"serverLoadbalancer,omitempty" json:"serverLoadBalancer,omitempty"`
 	ImageVolume        string             `yaml:"imageVolume" json:"imageVolume,omitempty"`
 }
@@ -250,8 +307,8 @@ type Node struct {
 
 // ServerOpts describes some additional server role specific opts
 type ServerOpts struct {
-	IsInit    bool      `yaml:"isInitializingServer" json:"isInitializingServer,omitempty"`
-	ExposeAPI ExposeAPI // filled automatically
+	IsInit    bool       `yaml:"isInitializingServer" json:"isInitializingServer,omitempty"`
+	ExposeAPI ExposePort // filled automatically
 }
 
 // ExternalDatastore describes an external datastore used for HA/multi-server clusters
@@ -263,8 +320,8 @@ type ExternalDatastore struct {
 	Network  string `yaml:"network" json:"network,omitempty"`
 }
 
-// ExposeAPI describes specs needed to expose the API-Server
-type ExposeAPI struct {
+// ExposePort describes specs needed to expose the API-Server
+type ExposePort struct {
 	Host   string `yaml:"host" json:"host,omitempty"`
 	HostIP string `yaml:"hostIP" json:"hostIP,omitempty"`
 	Port   string `yaml:"port" json:"port"`
@@ -282,4 +339,40 @@ func GetDefaultObjectName(name string) string {
 type NodeState struct {
 	Running bool
 	Status  string
+}
+
+/*
+ * Registry
+ */
+
+// Registry Defaults
+const (
+	DefaultRegistryPort       = "5000"
+	DefaultRegistryName       = DefaultObjectNamePrefix + "-registry"
+	DefaultRegistriesFilePath = "/etc/rancher/k3s/registries.yaml"
+	DefaultRegistryMountPath  = "/var/lib/registry"
+	DefaultDockerHubAddress   = "registry-1.docker.io"
+)
+
+// Registry describes a k3d-managed registry
+type Registry struct {
+	Name    string     `yaml:"name" json:"name"`
+	Image   string     `yaml:"image,omitempty" json:"image,omitempty"`
+	Port    ExposePort `yaml:"port" json:"port"`
+	Options struct {
+		ConfigFile string `yaml:"configFile,omitempty" json:"configFile,omitempty"`
+		Proxy      struct {
+			RemoteURL string `yaml:"remoteURL" json:"remoteURL"`
+			Username  string `yaml:"username,omitempty" json:"username,omitempty"`
+			Password  string `yaml:"password,omitempty" json:"password,omitempty"`
+		} `yaml:"proxy,omitempty" json:"proxy,omitempty"`
+	} `yaml:"options,omitempty" json:"options,omitempty"`
+}
+
+// ExternalRegistry describes a registry that is not managed together with the current cluster -> we only update the registries.yaml
+type ExternalRegistry struct {
+	Name         string `yaml:"name" json:"name"`
+	Port         string `yaml:"port" json:"port"`
+	ExternalPort string `yaml:"externalPort" json:"externalPort"`
+	Proxy        string `yaml:"proxy,omitempty" json:"proxy,omitempty"` // to use the external registry as a proxy for e.g. docker.io
 }

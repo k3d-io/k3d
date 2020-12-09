@@ -23,8 +23,8 @@ k3d
       -p, --port  # add some more port mappings
       --token  # specify a cluster token (default: auto-generated)
       --timeout  # specify a timeout, after which the cluster creation will be interrupted and changes rolled back
-      --update-default-kubeconfig  # enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets '--wait=true')
-      --switch-context  # (implies --update-default-kubeconfig) automatically sets the current-context of your default kubeconfig to the new cluster's context
+      --kubeconfig-update-default  # enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets '--wait=true')
+      --kubeconfig-switch-context  # (implies --kubeconfig-update-default) automatically sets the current-context of your default kubeconfig to the new cluster's context
       -v, --volume  # specify additional bind-mounts
       --wait  # enable waiting for all server nodes to be ready before returning
       -a, --agents  # specify how many agent nodes you want to create
@@ -61,7 +61,7 @@ k3d
       -a, --all  # get kubeconfigs from all clusters
           --output  # specify the output file where the kubeconfig should be written to
           --overwrite  # [Careful!] forcefully overwrite the output file, ignoring existing contents
-      -s, --switch-context  # switch current-context in kubeconfig to the new context
+      -s, --kubeconfig-switch-context  # switch current-context in kubeconfig to the new context
       -u, --update  # update conflicting fields in existing kubeconfig (default: true)
       -d, --merge-default-kubeconfig  # update the default kubeconfig (usually $KUBECONFIG or $HOME/.kube/config)
   image
