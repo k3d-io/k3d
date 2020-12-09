@@ -16,6 +16,11 @@ export GO111MODULE=on
 ########## Tags ##########
 
 # get git tag
+ifneq ($(GIT_TAG_OVERRIDE),)
+$(info GIT_TAG set from env override!)
+GIT_TAG := $(GIT_TAG_OVERRIDE)
+endif
+
 GIT_TAG   ?= $(shell git describe --tags)
 ifeq ($(GIT_TAG),)
 GIT_TAG   := $(shell git describe --always)

@@ -119,6 +119,8 @@ steps:
         from_secret: docker_username
       password:
         from_secret: docker_password
+      build_args:
+        - GIT_TAG_OVERRIDE=${DRONE_TAG}
     depends_on:
       - lint
       - test
@@ -135,12 +137,14 @@ steps:
         - latest
         - "${DRONE_TAG}"
       dockerfile: Dockerfile
-      target: dind
+      target: binary-only
       context: .
       username:
         from_secret: docker_username
       password:
         from_secret: docker_password
+      build_args:
+        - GIT_TAG_OVERRIDE=${DRONE_TAG}
     depends_on:
       - lint
       - test
