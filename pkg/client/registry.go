@@ -72,6 +72,7 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 	}
 
 	// create the registry node
+	log.Infof("Creating node '%s'", registryNode.Name)
 	if err := NodeCreate(ctx, runtime, registryNode, k3d.NodeCreateOpts{}); err != nil {
 		log.Errorln("Failed to create registry node")
 		return err
@@ -82,6 +83,13 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 		// connect registry to cluster networks
 		return RegistryConnect(ctx, runtime, registryNode, clusters) // TODO: registry: update the registries.yaml file
 	}
+
+	endtext := fmt.Sprintf("Successfully created registry '%s'", registryNode.Name)
+	if len(clusters) > 0 {
+		endtext += fmt.Sprintf(" and connected it to %d clusters", len(clusters))
+	}
+
+	log.Infoln(endtext)
 
 	return nil
 

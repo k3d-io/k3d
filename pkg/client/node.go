@@ -291,17 +291,19 @@ func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) e
 		log.Error(err)
 	}
 
-	cluster, err := ClusterGet(ctx, runtime, &k3d.Cluster{Name: node.Labels[k3d.LabelClusterName]})
-	if err != nil {
-		log.Errorf("Failed to update loadbalancer: Failed to find cluster for node '%s'", node.Name)
-		return err
-	}
-
-	// if it's a server node, then update the loadbalancer configuration
-	if node.Role == k3d.ServerRole {
-		if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
-			log.Errorln("Failed to update cluster loadbalancer")
+	if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
+		cluster, err := ClusterGet(ctx, runtime, &k3d.Cluster{Name: node.Labels[k3d.LabelClusterName]})
+		if err != nil {
+			log.Errorf("Failed to find cluster for node '%s'", node.Name)
 			return err
+		}
+
+		// if it's a server node, then update the loadbalancer configuration
+		if node.Role == k3d.ServerRole {
+			if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
+				log.Errorln("Failed to update cluster loadbalancer")
+				return err
+			}
 		}
 	}
 
