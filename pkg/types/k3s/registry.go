@@ -21,6 +21,11 @@ THE SOFTWARE.
 */
 package k3s
 
+/*
+ * Copied from https://github.com/k3s-io/k3s/blob/cf8c101b705c7af20e2ed11df43beb4951e6d9dc/pkg/agent/templates/registry.go
+ * .. to avoid pulling in k3s as a dependency
+ */
+
 // Mirror contains the config related to the registry mirror
 type Mirror struct {
 	// Endpoints are endpoints for a namespace. CRI plugin will try the endpoints
