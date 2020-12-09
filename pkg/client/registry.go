@@ -31,6 +31,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func RegistryRun(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registry) (*k3d.Node, error) {
+	regNode, err := RegistryCreate(ctx, runtime, reg)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create registry: %+v", err)
+	}
+
+	if err := NodeStart(ctx, runtime, regNode, k3d.NodeStartOpts{}); err != nil {
+		return nil, fmt.Errorf("Failed to start registry: %+v", err)
+	}
+
+	return regNode, err
+}
+
 // RegistryCreate creates a registry node
 func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registry) (*k3d.Node, error) {
 

@@ -43,7 +43,7 @@ import (
 	"github.com/rancher/k3d/v4/pkg/util"
 	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
-	"sigs.k8s.io/yaml"
+	"gopkg.in/yaml.v2"
 )
 
 // ClusterRun orchestrates the steps of cluster creation, configuration and starting

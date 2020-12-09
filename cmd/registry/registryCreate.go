@@ -58,7 +58,7 @@ func NewCmdRegistryCreate() *cobra.Command {
 		Args:  cobra.MaximumNArgs(1), // maximum one name accepted
 		Run: func(cmd *cobra.Command, args []string) {
 			reg, clusters := parseCreateRegistryCmd(cmd, args, flags, ppFlags)
-			regNode, err := client.RegistryCreate(cmd.Context(), runtimes.SelectedRuntime, reg)
+			regNode, err := client.RegistryRun(cmd.Context(), runtimes.SelectedRuntime, reg)
 			if err != nil {
 				log.Fatalln(err)
 			}
