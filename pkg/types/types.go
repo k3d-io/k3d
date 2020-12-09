@@ -174,6 +174,10 @@ type ClusterCreateOpts struct {
 	NodeHookActions            []NodeHookAction  `yaml:"nodeHookAction,omitempty" json:"nodeHookAction,omitempty"`
 	GlobalLabels               map[string]string `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
 	GlobalEnv                  []string          `yaml:"globalEnv,omitempty" json:"globalEnv,omitempty"`
+	Registries                 struct {
+		Create Registry           `yaml:"create,omitempty" json:"create,omitempty"`
+		Use    []ExternalRegistry `yaml:"use,omitempty" json:"use,omitempty"`
+	} `yaml:"registries,omitempty" json:"registries,omitempty"`
 }
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
@@ -345,4 +349,12 @@ type Registry struct {
 			Password  string
 		}
 	}
+}
+
+// ExternalRegistry describes a registry that is not managed together with the current cluster -> we only update the registries.yaml
+type ExternalRegistry struct {
+	Name  string
+	Port  string
+	URL   string
+	Proxy string // to use the external registry as a proxy for e.g. docker.io
 }

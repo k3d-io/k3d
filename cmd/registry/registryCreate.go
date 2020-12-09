@@ -71,6 +71,9 @@ func NewCmdRegistryCreate() *cobra.Command {
 	if err := cmd.RegisterFlagCompletionFunc("cluster", cliutil.ValidArgsAvailableClusters); err != nil {
 		log.Fatalln("Failed to register flag completion for '--cluster'", err)
 	}
+	if err := cmd.Flags().MarkHidden("cluster"); err != nil {
+		log.Fatalln("Failed to hide --cluster flag on registry create command")
+	}
 
 	cmd.Flags().StringVarP(&flags.Image, "image", "i", fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag), "Specify image used for the registry")
 

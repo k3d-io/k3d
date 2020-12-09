@@ -127,3 +127,8 @@ func RegistryConnect(ctx context.Context, runtime runtimes.Runtime, registryNode
 
 	return nil
 }
+
+// RegistryGenerateK3sConfig generates the k3s specific registries.yaml configuration for multiple registries
+func RegistryGenerateK3sConfig(ctx context.Context, internalRegistries []*k3d.Registry, externalRegistries []*k3d.ExternalRegistry) error {
+	return nil
+}
