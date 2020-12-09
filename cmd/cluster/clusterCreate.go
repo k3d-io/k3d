@@ -214,6 +214,9 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	/* Registry */
 	cmd.Flags().StringArrayVar(&regFlags.Use, "registry-use", nil, "Connect to one or more registries running locally")
+	if err := cmd.Flags().MarkHidden("registry-use"); err != nil {
+		log.Fatalln("Failed to mark flag `cluster create --registry-use` as hidden")
+	}
 	cmd.Flags().BoolVar(&cliConfig.Registries.Create, "registry-create", false, "Create a registry and connect it to the cluster")
 
 	/* Multi Server Configuration */
