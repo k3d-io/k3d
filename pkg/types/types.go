@@ -180,14 +180,20 @@ type ClusterCreateOpts struct {
 	} `yaml:"registries,omitempty" json:"registries,omitempty"`
 }
 
+// NodeHook is an action that is bound to a specifc stage of a node lifecycle
 type NodeHook struct {
 	Stage  LifecycleStage `yaml:"stage,omitempty" json:"stage,omitempty"`
 	Action NodeHookAction `yaml:"action,omitempty" json:"action,omitempty"`
 }
 
+// LifecycleStage defines descriptors for specific stages in the lifecycle of a node or cluster object
 type LifecycleStage string
 
-const LifecycleStagePreStart LifecycleStage = "preStart"
+// all defined lifecyclestages
+const (
+	LifecycleStagePreStart  LifecycleStage = "preStart"
+	LifecycleStagePostStart LifecycleStage = "postStart"
+)
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
 type ClusterStartOpts struct {
@@ -210,6 +216,7 @@ type NodeStartOpts struct {
 	NodeHooks []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 }
 
+// NodeHookAction is an interface to implement actions that should trigger at specific points of the node lifecycle
 type NodeHookAction interface {
 	Run(ctx context.Context, node *Node) error
 }
@@ -349,23 +356,23 @@ const (
 
 // Registry describes a k3d-managed registry
 type Registry struct {
-	Name    string
-	Image   string
-	Port    ExposePort
+	Name    string     `yaml:"name" json:"name"`
+	Image   string     `yaml:"image,omitempty" json:"image,omitempty"`
+	Port    ExposePort `yaml:"port" json:"port"`
 	Options struct {
-		ConfigFile string
+		ConfigFile string `yaml:"configFile,omitempty" json:"configFile,omitempty"`
 		Proxy      struct {
-			RemoteURL string
-			Username  string
-			Password  string
-		}
-	}
+			RemoteURL string `yaml:"remoteURL" json:"remoteURL"`
+			Username  string `yaml:"username,omitempty" json:"username,omitempty"`
+			Password  string `yaml:"password,omitempty" json:"password,omitempty"`
+		} `yaml:"proxy,omitempty" json:"proxy,omitempty"`
+	} `yaml:"options,omitempty" json:"options,omitempty"`
 }
 
 // ExternalRegistry describes a registry that is not managed together with the current cluster -> we only update the registries.yaml
 type ExternalRegistry struct {
-	Name         string
-	Port         string
-	ExternalPort string
-	Proxy        string // to use the external registry as a proxy for e.g. docker.io
+	Name         string `yaml:"name" json:"name"`
+	Port         string `yaml:"port" json:"port"`
+	ExternalPort string `yaml:"externalPort" json:"externalPort"`
+	Proxy        string `yaml:"proxy,omitempty" json:"proxy,omitempty"` // to use the external registry as a proxy for e.g. docker.io
 }
