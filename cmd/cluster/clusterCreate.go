@@ -31,7 +31,7 @@ import (
 	"github.com/spf13/cobra"
 
 	cliutil "github.com/rancher/k3d/v4/cmd/util"
-	k3dCluster "github.com/rancher/k3d/v4/pkg/cluster"
+	k3dCluster "github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/config"
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
 	"github.com/rancher/k3d/v4/pkg/runtimes"

@@ -29,7 +29,7 @@ import (
 
 	"github.com/liggitt/tabwriter"
 	"github.com/rancher/k3d/v4/cmd/util"
-	"github.com/rancher/k3d/v4/pkg/cluster"
+	"github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
@@ -50,22 +50,22 @@ func NewCmdRegistryList() *cobra.Command {
 			nodes, headersOff := parseRegistryListCmd(cmd, args)
 			var existingNodes []*k3d.Node
 			if len(nodes) == 0 { // Option a)  no name specified -> get all registries
-				found, err := cluster.NodeList(cmd.Context(), runtimes.SelectedRuntime)
+				found, err := client.NodeList(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
 					log.Fatalln(err)
 				}
 				existingNodes = append(existingNodes, found...)
 			} else { // Option b) registry name(s) specified -> get specific registries
 				for _, node := range nodes {
-					log.Debugf("Bla %s", node.Name)
-					found, err := cluster.NodeGet(cmd.Context(), runtimes.SelectedRuntime, node)
+					log.Tracef("Node %s", node.Name)
+					found, err := client.NodeGet(cmd.Context(), runtimes.SelectedRuntime, node)
 					if err != nil {
 						log.Fatalln(err)
 					}
 					existingNodes = append(existingNodes, found)
 				}
 			}
-			existingNodes = cluster.NodeFilterByRoles(existingNodes, []k3d.Role{k3d.RegistryRole}, []k3d.Role{})
+			existingNodes = client.NodeFilterByRoles(existingNodes, []k3d.Role{k3d.RegistryRole}, []k3d.Role{})
 			// print existing registries
 			if len(existingNodes) > 0 {
 				printNodes(existingNodes, headersOff)

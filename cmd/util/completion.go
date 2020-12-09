@@ -25,7 +25,7 @@ import (
 	"context"
 	"strings"
 
-	k3dcluster "github.com/rancher/k3d/v4/pkg/cluster"
+	k3dcluster "github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"

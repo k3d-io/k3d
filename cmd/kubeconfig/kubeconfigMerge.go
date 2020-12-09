@@ -28,7 +28,7 @@ import (
 	"strings"
 
 	"github.com/rancher/k3d/v4/cmd/util"
-	"github.com/rancher/k3d/v4/pkg/cluster"
+	"github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	k3dutil "github.com/rancher/k3d/v4/pkg/util"
@@ -47,7 +47,7 @@ type mergeKubeconfigFlags struct {
 // NewCmdKubeconfigMerge returns a new cobra command
 func NewCmdKubeconfigMerge() *cobra.Command {
 
-	writeKubeConfigOptions := cluster.WriteKubeConfigOptions{}
+	writeKubeConfigOptions := client.WriteKubeConfigOptions{}
 
 	mergeKubeconfigFlags := mergeKubeconfigFlags{}
 
@@ -69,7 +69,7 @@ func NewCmdKubeconfigMerge() *cobra.Command {
 
 			// generate list of clusters
 			if mergeKubeconfigFlags.all {
-				clusters, err = cluster.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
+				clusters, err = client.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -81,7 +81,7 @@ func NewCmdKubeconfigMerge() *cobra.Command {
 				}
 
 				for _, clusterName := range clusternames {
-					retrievedCluster, err := cluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
+					retrievedCluster, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
 					if err != nil {
 						log.Fatalln(err)
 					}
@@ -103,7 +103,7 @@ func NewCmdKubeconfigMerge() *cobra.Command {
 				if output == "" && !mergeKubeconfigFlags.targetDefault {
 					output = path.Join(outputDir, fmt.Sprintf("kubeconfig-%s.yaml", c.Name))
 				}
-				output, err = cluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, c, output, &writeKubeConfigOptions)
+				output, err = client.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, c, output, &writeKubeConfigOptions)
 				if err != nil {
 					log.Errorln(err)
 					errorGettingKubeconfig = true
