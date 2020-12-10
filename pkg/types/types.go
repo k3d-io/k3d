@@ -356,7 +356,7 @@ const (
 
 // Registry describes a k3d-managed registry
 type Registry struct {
-	Name    string     `yaml:"name" json:"name"`
+	Host    string     `yaml:"host" json:"host"`
 	Image   string     `yaml:"image,omitempty" json:"image,omitempty"`
 	Port    ExposePort `yaml:"port" json:"port"`
 	Options struct {

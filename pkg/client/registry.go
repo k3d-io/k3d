@@ -48,16 +48,16 @@ func RegistryRun(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registr
 func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registry) (*k3d.Node, error) {
 
 	// registry name
-	if len(reg.Name) == 0 {
-		reg.Name = k3d.DefaultRegistryName
+	if len(reg.Host) == 0 {
+		reg.Host = k3d.DefaultRegistryName
 	}
-	if err := ValidateHostname(reg.Name); err != nil {
+	if err := ValidateHostname(reg.Host); err != nil {
 		log.Errorln("Invalid name for registry")
 		log.Fatalln(err)
 	}
 
 	registryNode := &k3d.Node{
-		Name:    reg.Name,
+		Name:    reg.Host,
 		Image:   reg.Image,
 		Role:    k3d.RegistryRole,
 		Network: "bridge", // Default network: TODO: change to const from types
