@@ -240,7 +240,7 @@ type Cluster struct {
 	Nodes              []*Node            `yaml:"nodes" json:"nodes,omitempty"`
 	InitNode           *Node              // init server node
 	ExternalDatastore  *ExternalDatastore `yaml:"externalDatastore,omitempty" json:"externalDatastore,omitempty"`
-	ExposeAPI          ExposePort         `yaml:"exposeAPI" json:"exposeAPI,omitempty"`
+	ExposeAPI          ExposedPort        `yaml:"exposeAPI" json:"exposeAPI,omitempty"`
 	ServerLoadBalancer *Node              `yaml:"serverLoadbalancer,omitempty" json:"serverLoadBalancer,omitempty"`
 	ImageVolume        string             `yaml:"imageVolume" json:"imageVolume,omitempty"`
 }
@@ -307,8 +307,8 @@ type Node struct {
 
 // ServerOpts describes some additional server role specific opts
 type ServerOpts struct {
-	IsInit    bool       `yaml:"isInitializingServer" json:"isInitializingServer,omitempty"`
-	ExposeAPI ExposePort // filled automatically
+	IsInit    bool        `yaml:"isInitializingServer" json:"isInitializingServer,omitempty"`
+	ExposeAPI ExposedPort // filled automatically
 }
 
 // ExternalDatastore describes an external datastore used for HA/multi-server clusters
@@ -320,8 +320,8 @@ type ExternalDatastore struct {
 	Network  string `yaml:"network" json:"network,omitempty"`
 }
 
-// ExposePort describes specs needed to expose the API-Server
-type ExposePort struct {
+// ExposedPort describes specs needed to expose the API-Server
+type ExposedPort struct {
 	Host   string `yaml:"host" json:"host,omitempty"`
 	HostIP string `yaml:"hostIP" json:"hostIP,omitempty"`
 	Port   string `yaml:"port" json:"port"`
@@ -356,10 +356,11 @@ const (
 
 // Registry describes a k3d-managed registry
 type Registry struct {
-	Host    string     `yaml:"host" json:"host"`
-	Image   string     `yaml:"image,omitempty" json:"image,omitempty"`
-	Port    ExposePort `yaml:"port" json:"port"`
-	Options struct {
+	ClusterRef string      // filled automatically -> if created with a cluster
+	Host       string      `yaml:"host" json:"host"`
+	Image      string      `yaml:"image,omitempty" json:"image,omitempty"`
+	Port       ExposedPort `yaml:"port" json:"port"`
+	Options    struct {
 		ConfigFile string `yaml:"configFile,omitempty" json:"configFile,omitempty"`
 		Proxy      struct {
 			RemoteURL string `yaml:"remoteURL" json:"remoteURL"`

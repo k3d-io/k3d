@@ -32,9 +32,9 @@ import (
 )
 
 // ParseExposePort parses/validates a string to create an exposePort struct from it
-func ParseExposePort(portString string) (k3d.ExposePort, error) {
+func ParseExposePort(portString string) (k3d.ExposedPort, error) {
 
-	var exposePort k3d.ExposePort
+	var exposePort k3d.ExposedPort
 
 	split := strings.Split(portString, ":")
 	if len(split) > 2 {
@@ -43,14 +43,14 @@ func ParseExposePort(portString string) (k3d.ExposePort, error) {
 	}
 
 	if len(split) == 1 {
-		exposePort = k3d.ExposePort{Port: split[0]}
+		exposePort = k3d.ExposedPort{Port: split[0]}
 	} else {
 		// Make sure 'host' can be resolved to an IP address
 		addrs, err := net.LookupHost(split[0])
 		if err != nil {
 			return exposePort, err
 		}
-		exposePort = k3d.ExposePort{Host: split[0], HostIP: addrs[0], Port: split[1]}
+		exposePort = k3d.ExposedPort{Host: split[0], HostIP: addrs[0], Port: split[1]}
 	}
 
 	// Verify 'port' is an integer and within port ranges
