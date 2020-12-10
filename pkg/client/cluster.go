@@ -143,7 +143,7 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 		}
 
 		clusterConfig.ClusterCreateOpts.Registries.Use = append(clusterConfig.ClusterCreateOpts.Registries.Use, &k3d.ExternalRegistry{
-			Name:         regNode.Name,
+			Host:         regNode.Name,
 			Port:         k3d.DefaultRegistryPort,
 			ExternalPort: clusterConfig.ClusterCreateOpts.Registries.Create.Port.Port,
 		})
@@ -154,9 +154,9 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 	if len(clusterConfig.ClusterCreateOpts.Registries.Use) > 0 {
 		// ensure that all selected registries exist and connect them to the cluster network
 		for _, externalReg := range clusterConfig.ClusterCreateOpts.Registries.Use {
-			regNode, err := runtime.GetNode(ctx, &k3d.Node{Name: externalReg.Name})
+			regNode, err := runtime.GetNode(ctx, &k3d.Node{Name: externalReg.Host})
 			if err != nil {
-				return fmt.Errorf("Failed to find registry node '%s': %+v", externalReg.Name, err)
+				return fmt.Errorf("Failed to find registry node '%s': %+v", externalReg.Host, err)
 			}
 			if err := RegistryConnect(ctx, runtime, regNode, []*k3d.Cluster{&clusterConfig.Cluster}); err != nil {
 				return fmt.Errorf("Failed to connect registry node '%s' to cluster network: %+v", regNode.Name, err)

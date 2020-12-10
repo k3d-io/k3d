@@ -136,8 +136,8 @@ func RegistryGenerateK3sConfig(ctx context.Context, internalRegistries *k3d.Regi
 	regConf := &k3s.Registry{}
 
 	for _, reg := range externalRegistries {
-		internalAddress := fmt.Sprintf("%s:%s", reg.Name, reg.Port)
-		externalAddress := fmt.Sprintf("%s:%s", reg.Name, reg.ExternalPort)
+		internalAddress := fmt.Sprintf("%s:%s", reg.Host, reg.Port)
+		externalAddress := fmt.Sprintf("%s:%s", reg.Host, reg.ExternalPort)
 
 		// init mirrors if nil
 		if regConf.Mirrors == nil {

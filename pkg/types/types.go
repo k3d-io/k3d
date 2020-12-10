@@ -371,7 +371,7 @@ type Registry struct {
 
 // ExternalRegistry describes a registry that is not managed together with the current cluster -> we only update the registries.yaml
 type ExternalRegistry struct {
-	Name         string `yaml:"name" json:"name"`
+	Host         string `yaml:"host" json:"host"`
 	Port         string `yaml:"port" json:"port"`
 	ExternalPort string `yaml:"externalPort" json:"externalPort"`
 	Proxy        string `yaml:"proxy,omitempty" json:"proxy,omitempty"` // to use the external registry as a proxy for e.g. docker.io
