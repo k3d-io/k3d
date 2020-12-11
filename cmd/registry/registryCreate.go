@@ -101,7 +101,7 @@ func parseCreateRegistryCmd(cmd *cobra.Command, args []string, flags *regCreateF
 	}
 
 	// --port
-	exposePort, err := cliutil.ParseExposePort(ppFlags.Port)
+	exposePort, err := cliutil.ParsePortExposureSpec(ppFlags.Port, k3d.DefaultRegistryPort)
 	if err != nil {
 		log.Errorln("Failed to parse registry port")
 		log.Fatalln(err)
@@ -113,5 +113,5 @@ func parseCreateRegistryCmd(cmd *cobra.Command, args []string, flags *regCreateF
 		registryName = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, args[0])
 	}
 
-	return &k3d.Registry{Host: registryName, Image: flags.Image, Port: k3d.MappedPort{InternalPort: k3d.DefaultRegistryPort, ExternalPort: exposePort}}, clusters
+	return &k3d.Registry{Host: registryName, Image: flags.Image, ExposureOpts: *exposePort}, clusters
 }
