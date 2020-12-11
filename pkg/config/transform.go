@@ -26,6 +26,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/docker/go-connections/nat"
 	cliutil "github.com/rancher/k3d/v4/cmd/util" // TODO: move parseapiport to pkg
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
@@ -61,12 +62,21 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		simpleConfig.ExposeAPI.HostIP = k3d.DefaultAPIHost
 	}
 
+	kubeAPIExposureOpts := &k3d.ExposureOpts{
+		Host: simpleConfig.ExposeAPI.Host,
+	}
+	kubeAPIExposureOpts.Port = k3d.DefaultAPIPort
+	kubeAPIExposureOpts.Binding = nat.PortBinding{
+		HostIP:   simpleConfig.ExposeAPI.HostIP,
+		HostPort: simpleConfig.ExposeAPI.HostPort,
+	}
+
 	// FILL CLUSTER CONFIG
 	newCluster := k3d.Cluster{
-		Name:      simpleConfig.Name,
-		Network:   clusterNetwork,
-		Token:     simpleConfig.ClusterToken,
-		ExposeAPI: simpleConfig.ExposeAPI,
+		Name:    simpleConfig.Name,
+		Network: clusterNetwork,
+		Token:   simpleConfig.ClusterToken,
+		KubeAPI: kubeAPIExposureOpts,
 	}
 
 	// -> NODES
@@ -142,7 +152,20 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		}
 
 		for _, node := range nodes {
-			node.Ports = append(node.Ports, portWithNodeFilters.Port)
+			portmappings, err := nat.ParsePortSpec(portWithNodeFilters.Port)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to parse port spec '%s': %+v", portWithNodeFilters.Port, err)
+			}
+			if node.Ports == nil {
+				node.Ports = nat.PortMap{}
+			}
+			for _, pm := range portmappings {
+				if _, exists := node.Ports[pm.Port]; exists {
+					node.Ports[pm.Port] = append(node.Ports[pm.Port], pm.Binding)
+				} else {
+					node.Ports[pm.Port] = []nat.PortBinding{pm.Binding}
+				}
+			}
 		}
 	}
 
@@ -200,18 +223,15 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	/*
 	 * Registries
 	 */
-	regPort, err := cliutil.ParseExposePort("random")
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get port for registry: %+v", err)
-	}
 	if simpleConfig.Registries.Create {
+		regPort, err := cliutil.ParsePortExposureSpec("random", k3d.DefaultRegistryPort)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to get port for registry: %+v", err)
+		}
 		clusterCreateOpts.Registries.Create = &k3d.Registry{
-			Host:  fmt.Sprintf("%s-%s-registry", k3d.DefaultObjectNamePrefix, newCluster.Name),
-			Image: fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag),
-			Port: k3d.MappedPort{
-				InternalPort: k3d.DefaultRegistryPort,
-				ExternalPort: regPort,
-			},
+			Host:         fmt.Sprintf("%s-%s-registry", k3d.DefaultObjectNamePrefix, newCluster.Name),
+			Image:        fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag),
+			ExposureOpts: *regPort,
 		}
 	}
 

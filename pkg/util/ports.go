@@ -28,11 +28,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ValidatePortMap validates a port mapping
-func ValidatePortMap(portmap string) error {
-	return nil // TODO: ValidatePortMap: add validation of port mapping
-}
-
 // GetFreePort tries to fetch an open port from the OS-Kernel
 func GetFreePort() (int, error) {
 	tcpAddress, err := net.ResolveTCPAddr("tcp", "localhost:0")

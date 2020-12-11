@@ -3,9 +3,9 @@ kind: Simple
 name: test
 servers: 1
 agents: 2
-exposeAPI:
+kubeAPI:
   hostIP: "0.0.0.0"
-  port: "6443"
+  hostPort: "6443"
 image: rancher/k3s:latest
 volumes:
   - volume: /my/path:/some/path

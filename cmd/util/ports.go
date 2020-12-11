@@ -24,60 +24,83 @@ package util
 import (
 	"fmt"
 	"net"
+	"regexp"
 	"strconv"
-	"strings"
 
+	"github.com/docker/go-connections/nat"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/util"
 	log "github.com/sirupsen/logrus"
 )
 
-// ParseExposePort parses/validates a string to create an exposePort struct from it
-func ParseExposePort(portString string) (k3d.ExposedPort, error) {
+var apiPortRegexp = regexp.MustCompile(`^(?P<hostref>(?P<hostip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|(?P<hostname>\S+):)?(?P<port>(\d{1,5}|random))$`)
 
-	var exposePort k3d.ExposedPort
+// ParsePortExposureSpec parses/validates a string to create an exposePort struct from it
+func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureOpts, error) {
 
-	split := strings.Split(portString, ":")
-	if len(split) > 2 {
-		log.Errorln("Failed to parse API Port specification")
-		return exposePort, fmt.Errorf("api-port format error")
+	match := apiPortRegexp.FindStringSubmatch(exposedPortSpec)
+
+	if len(match) == 0 {
+		log.Errorln("Failed to parse Port Exposure specification")
+		return nil, fmt.Errorf("Port Exposure Spec format error: Must be [(HostIP|HostName):]HostPort")
 	}
 
-	if len(split) == 1 {
-		exposePort = k3d.ExposedPort{Port: split[0]}
-	} else {
-		// Make sure 'host' can be resolved to an IP address
-		addrs, err := net.LookupHost(split[0])
+	submatches := util.MapSubexpNames(apiPortRegexp.SubexpNames(), match)
+
+	// no port specified (or not matched via regex)
+	if submatches["port"] == "" {
+		return nil, fmt.Errorf("Failed to find port in Port Exposure spec '%s'", exposedPortSpec)
+	}
+
+	api := &k3d.ExposureOpts{}
+
+	// check if there's a host reference
+	if submatches["hostname"] != "" {
+		log.Tracef("Port Exposure: found hostname: %s", submatches["hostname"])
+		addrs, err := net.LookupHost(submatches["hostname"])
 		if err != nil {
-			return exposePort, err
+			return nil, fmt.Errorf("Failed to lookup host '%s' specified for Port Exposure: %+v", submatches["hostname"], err)
 		}
-		exposePort = k3d.ExposedPort{Host: split[0], HostIP: addrs[0], Port: split[1]}
+		api.Host = submatches["hostname"]
+		submatches["hostip"] = addrs[0] // set hostip to the resolved address
 	}
 
-	// Verify 'port' is an integer and within port ranges
-	if exposePort.Port == "" || exposePort.Port == "random" {
-		log.Debugf("API-Port Mapping didn't specify hostPort, choosing one randomly...")
+	realPortString := ""
+
+	if submatches["hostip"] == "" {
+		submatches["hostip"] = k3d.DefaultAPIHost
+	}
+
+	// start with the IP, if there is any
+	if submatches["hostip"] != "" {
+		realPortString += submatches["hostip"] + ":"
+	}
+
+	// port: get a free one if there's none defined or set to random
+	if submatches["port"] == "" || submatches["port"] == "random" {
+		log.Debugf("Port Exposure Mapping didn't specify hostPort, choosing one randomly...")
 		freePort, err := GetFreePort()
 		if err != nil || freePort == 0 {
-			log.Warnf("Failed to get random free port:\n%+v", err)
-			log.Warnf("Falling back to default port %s (may be blocked though)...", k3d.DefaultAPIPort)
-			exposePort.Port = k3d.DefaultAPIPort
+			log.Warnf("Failed to get random free port: %+v", err)
+			log.Warnf("Falling back to internal port %s (may be blocked though)...", internalPort)
+			submatches["port"] = internalPort
 		} else {
-			exposePort.Port = strconv.Itoa(freePort)
-			log.Debugf("Got free port for API: '%d'", freePort)
+			submatches["port"] = strconv.Itoa(freePort)
+			log.Debugf("Got free port for Port Exposure: '%d'", freePort)
 		}
 	}
-	p, err := strconv.Atoi(exposePort.Port)
+
+	realPortString += fmt.Sprintf("%s:%s/tcp", submatches["port"], internalPort)
+
+	portMapping, err := nat.ParsePortSpec(realPortString)
 	if err != nil {
-		log.Errorln("Failed to parse port mapping")
-		return exposePort, err
+		return nil, fmt.Errorf("Failed to parse port spec for Port Exposure '%s': %+v", realPortString, err)
 	}
 
-	if p < 0 || p > 65535 {
-		log.Errorln("Failed to parse API Port specification")
-		return exposePort, fmt.Errorf("Port value '%d' out of range", p)
-	}
+	api.Port = portMapping[0].Port // there can be only one due to our regexp
+	api.Binding = portMapping[0].Binding
 
-	return exposePort, nil
+	return api, nil
 
 }
 

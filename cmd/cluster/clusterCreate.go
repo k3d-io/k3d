@@ -51,17 +51,12 @@ Every cluster will consist of one or more containers:
 
 // flags that go through some pre-processing before transforming them to config
 type preProcessedFlags struct {
-	APIPort string
-	Volumes []string
-	Ports   []string
-	Labels  []string
-	Env     []string
-}
-
-// registry
-type registryFlags struct {
-	Use    []string
-	Create bool
+	APIPort     string
+	Volumes     []string
+	Ports       []string
+	Labels      []string
+	Env         []string
+	RegistryUse []string
 }
 
 // NewCmdClusterCreate returns a new cobra command
@@ -70,7 +65,6 @@ func NewCmdClusterCreate() *cobra.Command {
 	cliConfig := &conf.SimpleConfig{}
 	var configFile string
 	ppFlags := &preProcessedFlags{}
-	regFlags := &registryFlags{}
 
 	// create new command
 	cmd := &cobra.Command{
@@ -213,11 +207,8 @@ func NewCmdClusterCreate() *cobra.Command {
 	}
 
 	/* Registry */
-	cmd.Flags().StringArrayVar(&regFlags.Use, "registry-use", nil, "Connect to one or more registries running locally")
-	if err := cmd.Flags().MarkHidden("registry-use"); err != nil {
-		log.Fatalln("Failed to mark flag `cluster create --registry-use` as hidden")
-	}
-	cmd.Flags().BoolVar(&cliConfig.Registries.Create, "registry-create", false, "Create a registry and connect it to the cluster")
+	cmd.Flags().StringArrayVar(&cliConfig.Registries.Use, "registry-use", nil, "Connect to one or more k3d-managed registries running locally")
+	cmd.Flags().BoolVar(&cliConfig.Registries.Create, "registry-create", false, "Create a k3d-managed registry and connect it to the cluster")
 
 	/* Multi Server Configuration */
 
@@ -265,11 +256,15 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 
 	// -> API-PORT
 	// parse the port mapping
-	exposeAPI, err := cliutil.ParseExposePort(ppFlags.APIPort)
+	exposeAPI, err := cliutil.ParsePortExposureSpec(ppFlags.APIPort, k3d.DefaultAPIPort)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	cliConfig.ExposeAPI = exposeAPI
+	cliConfig.ExposeAPI = conf.SimpleExposureOpts{
+		Host:     exposeAPI.Host,
+		HostIP:   exposeAPI.Binding.HostIP,
+		HostPort: exposeAPI.Binding.HostPort,
+	}
 
 	// -> VOLUMES
 	// volumeFilterMap will map volume mounts to applied node filters
@@ -384,5 +379,4 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 	}
 
 	log.Tracef("EnvFilterMap: %+v", envFilterMap)
-
 }

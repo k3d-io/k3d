@@ -33,6 +33,7 @@ import (
 
 	gort "runtime"
 
+	"github.com/docker/go-connections/nat"
 	"github.com/imdario/mergo"
 	"github.com/rancher/k3d/v4/pkg/actions"
 	config "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
@@ -276,7 +277,7 @@ ClusterCreatOpts:
 	/*
 	 * Docker Machine Special Configuration
 	 */
-	if cluster.ExposeAPI.Host == k3d.DefaultAPIHost && runtime == k3drt.Docker {
+	if cluster.KubeAPI.Host == k3d.DefaultAPIHost && runtime == k3drt.Docker {
 		if gort.GOOS == "windows" || gort.GOOS == "darwin" {
 			log.Tracef("Running on %s: checking if it's using docker-machine", gort.GOOS)
 			machineIP, err := runtime.(docker.Docker).GetDockerMachineIP()
@@ -284,8 +285,8 @@ ClusterCreatOpts:
 				log.Warnf("Using docker-machine, but failed to get it's IP: %+v", err)
 			} else if machineIP != "" {
 				log.Infof("Using the docker-machine IP %s to connect to the Kubernetes API", machineIP)
-				cluster.ExposeAPI.Host = machineIP
-				cluster.ExposeAPI.HostIP = machineIP
+				cluster.KubeAPI.Host = machineIP
+				cluster.KubeAPI.Binding.HostIP = machineIP
 			} else {
 				log.Traceln("Not using docker-machine")
 			}
@@ -330,7 +331,7 @@ ClusterCreatOpts:
 		// node role specific settings
 		if node.Role == k3d.ServerRole {
 
-			node.ServerOpts.ExposeAPI = cluster.ExposeAPI
+			node.ServerOpts.KubeAPI = cluster.KubeAPI
 
 			// the cluster has an init server node, but its not this one, so connect it to the init node
 			if cluster.InitNode != nil && !node.ServerOpts.IsInit {
@@ -371,7 +372,7 @@ ClusterCreatOpts:
 
 		// in case the LoadBalancer was disabled, expose the API Port on the initializing server node
 		if clusterCreateOpts.DisableLoadBalancer {
-			cluster.InitNode.Ports = append(cluster.InitNode.Ports, fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort))
+			cluster.InitNode.Ports[k3d.DefaultAPIPort] = []nat.PortBinding{cluster.KubeAPI.Binding}
 		}
 
 		if err := nodeSetup(cluster.InitNode, serverCount); err != nil {
@@ -390,7 +391,7 @@ ClusterCreatOpts:
 				continue
 			} else if serverCount == 0 && clusterCreateOpts.DisableLoadBalancer {
 				// if this is the first server node and the server loadbalancer is disabled, expose the API Port on this server node
-				node.Ports = append(node.Ports, fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort))
+				node.Ports[k3d.DefaultAPIPort] = []nat.PortBinding{cluster.KubeAPI.Binding}
 			}
 
 			time.Sleep(1 * time.Second) // FIXME: arbitrary wait for one second to avoid race conditions of servers registering
@@ -431,34 +432,20 @@ ClusterCreatOpts:
 
 			// generate comma-separated list of extra ports to forward
 			ports := k3d.DefaultAPIPort
-			for _, portString := range cluster.ServerLoadBalancer.Ports {
-				split := strings.Split(portString, ":")
-				port := split[len(split)-1]
-				if strings.Contains(port, "-") {
-					split := strings.Split(port, "-")
-					start, err := strconv.Atoi(split[0])
-					if err != nil {
-						log.Errorf("Failed to parse port mapping for loadbalancer '%s'", port)
-						return err
-					}
-					end, err := strconv.Atoi(split[1])
-					if err != nil {
-						log.Errorf("Failed to parse port mapping for loadbalancer '%s'", port)
-						return err
-					}
-					for i := start; i <= end; i++ {
-						ports += "," + strconv.Itoa(i)
-					}
-				} else {
-					ports += "," + port
-				}
+			for exposedPort := range cluster.ServerLoadBalancer.Ports {
+				ports += "," + exposedPort.Port()
 			}
+
+			if cluster.ServerLoadBalancer.Ports == nil {
+				cluster.ServerLoadBalancer.Ports = nat.PortMap{}
+			}
+			cluster.ServerLoadBalancer.Ports[k3d.DefaultAPIPort] = []nat.PortBinding{cluster.KubeAPI.Binding}
 
 			// Create LB as a modified node with loadbalancerRole
 			lbNode := &k3d.Node{
 				Name:  fmt.Sprintf("%s-%s-serverlb", k3d.DefaultObjectNamePrefix, cluster.Name),
 				Image: fmt.Sprintf("%s:%s", k3d.DefaultLBImageRepo, version.GetHelperImageVersion()),
-				Ports: append(cluster.ServerLoadBalancer.Ports, fmt.Sprintf("%s:%s:%s/tcp", cluster.ExposeAPI.Host, cluster.ExposeAPI.Port, k3d.DefaultAPIPort)),
+				Ports: cluster.ServerLoadBalancer.Ports,
 				Env: []string{
 					fmt.Sprintf("SERVERS=%s", servers),
 					fmt.Sprintf("PORTS=%s", ports),

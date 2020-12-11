@@ -57,7 +57,7 @@ func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config
 	}
 
 	// API-Port cannot be changed when using network=host
-	if config.Cluster.Network.Name == "host" && config.Cluster.ExposeAPI.Port != k3d.DefaultAPIPort {
+	if config.Cluster.Network.Name == "host" && config.Cluster.KubeAPI.Port.Port() != k3d.DefaultAPIPort {
 		// in hostNetwork mode, we're not going to map a hostport. Here it should always use 6443.
 		// Note that hostNetwork mode is super inflexible and since we don't change the backend port (on the container), it will only be one hostmode cluster allowed.
 		return fmt.Errorf("The API Port can not be changed when using 'host' network")
@@ -75,13 +75,6 @@ func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config
 		for _, volume := range node.Volumes {
 
 			if err := util.ValidateVolumeMount(runtime, volume); err != nil {
-				return err
-			}
-		}
-
-		// ports
-		for _, port := range node.Ports {
-			if err := util.ValidatePortMap(port); err != nil {
 				return err
 			}
 		}

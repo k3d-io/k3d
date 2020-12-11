@@ -25,6 +25,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/docker/go-connections/nat"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/pkg/types/k3s"
@@ -71,19 +72,19 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 
 	// setup the node labels
 	registryNode.Labels = map[string]string{
-		k3d.LabelRole:           string(k3d.RegistryRole),
-		k3d.LabelRegistryHost:   reg.Port.ExternalPort.Host, // TODO: docker machine host?
-		k3d.LabelRegistryHostIP: reg.Port.ExternalPort.HostIP,
-		k3d.LabelRegistryPort:   reg.Port.ExternalPort.Port,
+		k3d.LabelRole:                 string(k3d.RegistryRole),
+		k3d.LabelRegistryHost:         reg.ExposureOpts.Host, // TODO: docker machine host?
+		k3d.LabelRegistryHostIP:       reg.ExposureOpts.Binding.HostIP,
+		k3d.LabelRegistryPortExternal: reg.ExposureOpts.Binding.HostPort,
+		k3d.LabelRegistryPortInternal: reg.ExposureOpts.Port.Port(),
 	}
 	for k, v := range k3d.DefaultObjectLabels {
 		registryNode.Labels[k] = v
 	}
 
 	// port
-	registryNode.Ports = []string{
-		fmt.Sprintf("%s:%s:%s/tcp", reg.Port.ExternalPort.HostIP, reg.Port.ExternalPort.Port, k3d.DefaultRegistryPort),
-	}
+	registryNode.Ports = nat.PortMap{}
+	registryNode.Ports[reg.ExposureOpts.Port] = []nat.PortBinding{reg.ExposureOpts.Binding}
 
 	// create the registry node
 	log.Infof("Creating node '%s'", registryNode.Name)
@@ -136,8 +137,8 @@ func RegistryGenerateK3sConfig(ctx context.Context, registries []*k3d.Registry) 
 	regConf := &k3s.Registry{}
 
 	for _, reg := range registries {
-		internalAddress := fmt.Sprintf("%s:%s", reg.Host, reg.Port.InternalPort)
-		externalAddress := fmt.Sprintf("%s:%s", reg.Host, reg.Port.ExternalPort.Port)
+		internalAddress := fmt.Sprintf("%s:%s", reg.Host, reg.ExposureOpts.Port.Port())
+		externalAddress := fmt.Sprintf("%s:%s", reg.Host, reg.ExposureOpts.Binding.HostPort)
 
 		// init mirrors if nil
 		if regConf.Mirrors == nil {
@@ -158,4 +159,22 @@ func RegistryGenerateK3sConfig(ctx context.Context, registries []*k3d.Registry) 
 	}
 
 	return regConf, nil
+}
+
+// RegistryGet gets a registry node by name and returns it as a registry object
+func RegistryGet(ctx context.Context, runtime runtimes.Runtime, name string) (*k3d.Registry, error) {
+	regNode, err := runtime.GetNode(ctx, &k3d.Node{
+		Name: name,
+		Role: k3d.RegistryRole,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Failed to find registry '%s': %+v", name, err)
+	}
+
+	registry := &k3d.Registry{
+		Host: regNode.Name,
+	}
+	// TODO: finish RegistryGet
+	return registry, nil
+
 }
