@@ -126,9 +126,9 @@ type SimpleConfig struct {
 	Options      SimpleConfigOptions     `mapstructure:"options" yaml:"options" json:"options,omitempty"`
 	Env          []EnvVarWithNodeFilters `mapstructure:"env" yaml:"env" json:"env,omitempty"`
 	Registries   struct {
-		Use    []*k3d.ExternalRegistry
-		Create bool
-	}
+		Use    []*k3d.Registry `mapstructure:"use" yaml:"use,omitempty" json:"use,omitempty"`
+		Create bool            `mapstructure:"create" yaml:"create,omitempty" json:"create,omitempty"`
+	} `mapstructure:"registries" yaml:"registries,omitempty" json:"registries,omitempty"`
 }
 
 // GetKind implements Config.GetKind

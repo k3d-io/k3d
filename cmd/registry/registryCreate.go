@@ -113,5 +113,5 @@ func parseCreateRegistryCmd(cmd *cobra.Command, args []string, flags *regCreateF
 		registryName = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, args[0])
 	}
 
-	return &k3d.Registry{Host: registryName, Image: flags.Image, Port: exposePort}, clusters
+	return &k3d.Registry{Host: registryName, Image: flags.Image, Port: k3d.MappedPort{InternalPort: k3d.DefaultRegistryPort, ExternalPort: exposePort}}, clusters
 }

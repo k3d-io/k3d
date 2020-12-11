@@ -175,8 +175,8 @@ type ClusterCreateOpts struct {
 	GlobalLabels               map[string]string `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
 	GlobalEnv                  []string          `yaml:"globalEnv,omitempty" json:"globalEnv,omitempty"`
 	Registries                 struct {
-		Create *Registry           `yaml:"create,omitempty" json:"create,omitempty"`
-		Use    []*ExternalRegistry `yaml:"use,omitempty" json:"use,omitempty"`
+		Create *Registry   `yaml:"create,omitempty" json:"create,omitempty"`
+		Use    []*Registry `yaml:"use,omitempty" json:"use,omitempty"`
 	} `yaml:"registries,omitempty" json:"registries,omitempty"`
 }
 
@@ -320,7 +320,13 @@ type ExternalDatastore struct {
 	Network  string `yaml:"network" json:"network,omitempty"`
 }
 
-// ExposedPort describes specs needed to expose the API-Server
+// MappedPort combines an internal port mapped to an exposed port
+type MappedPort struct {
+	InternalPort string      `yaml:"internal,omitempty" json:"internal,omitempty"`
+	ExternalPort ExposedPort `yaml:"expose,omitempty" json:"expose,omitempty"`
+}
+
+// ExposedPort describes a port exposed on the host system
 type ExposedPort struct {
 	Host   string `yaml:"host" json:"host,omitempty"`
 	HostIP string `yaml:"hostIP" json:"hostIP,omitempty"`
@@ -356,10 +362,10 @@ const (
 
 // Registry describes a k3d-managed registry
 type Registry struct {
-	ClusterRef string      // filled automatically -> if created with a cluster
-	Host       string      `yaml:"host" json:"host"`
-	Image      string      `yaml:"image,omitempty" json:"image,omitempty"`
-	Port       ExposedPort `yaml:"port" json:"port"`
+	ClusterRef string     // filled automatically -> if created with a cluster
+	Host       string     `yaml:"host" json:"host"`
+	Image      string     `yaml:"image,omitempty" json:"image,omitempty"`
+	Port       MappedPort `yaml:"port" json:"port"`
 	Options    struct {
 		ConfigFile string `yaml:"configFile,omitempty" json:"configFile,omitempty"`
 		Proxy      struct {
@@ -368,12 +374,4 @@ type Registry struct {
 			Password  string `yaml:"password,omitempty" json:"password,omitempty"`
 		} `yaml:"proxy,omitempty" json:"proxy,omitempty"`
 	} `yaml:"options,omitempty" json:"options,omitempty"`
-}
-
-// ExternalRegistry describes a registry that is not managed together with the current cluster -> we only update the registries.yaml
-type ExternalRegistry struct {
-	Host         string `yaml:"host" json:"host"`
-	Port         string `yaml:"port" json:"port"`
-	ExternalPort string `yaml:"externalPort" json:"externalPort"`
-	Proxy        string `yaml:"proxy,omitempty" json:"proxy,omitempty"` // to use the external registry as a proxy for e.g. docker.io
 }

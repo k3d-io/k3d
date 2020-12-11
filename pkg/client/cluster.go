@@ -136,20 +136,17 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 	 * Step 3: Registries
 	 */
 
+	// Create managed registry bound to this cluster
 	if clusterConfig.ClusterCreateOpts.Registries.Create != nil {
-		regNode, err := RegistryCreate(ctx, runtime, clusterConfig.ClusterCreateOpts.Registries.Create)
-		if err != nil {
+		if _, err := RegistryCreate(ctx, runtime, clusterConfig.ClusterCreateOpts.Registries.Create); err != nil {
 			return fmt.Errorf("Failed to create registry: %+v", err)
 		}
 
-		clusterConfig.ClusterCreateOpts.Registries.Use = append(clusterConfig.ClusterCreateOpts.Registries.Use, &k3d.ExternalRegistry{
-			Host:         regNode.Name,
-			Port:         k3d.DefaultRegistryPort,
-			ExternalPort: clusterConfig.ClusterCreateOpts.Registries.Create.Port.Port,
-		})
+		clusterConfig.ClusterCreateOpts.Registries.Use = append(clusterConfig.ClusterCreateOpts.Registries.Use, clusterConfig.ClusterCreateOpts.Registries.Create)
 	}
 
-	log.Debugf("External Registries: %+v", clusterConfig.ClusterCreateOpts.Registries.Use)
+	// Use existing registries (including the new one, if created)
+	log.Debugf("Using Registries: %+v", clusterConfig.ClusterCreateOpts.Registries.Use)
 
 	if len(clusterConfig.ClusterCreateOpts.Registries.Use) > 0 {
 		// ensure that all selected registries exist and connect them to the cluster network
@@ -164,7 +161,7 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 		}
 
 		// generate the registries.yaml
-		regConf, err := RegistryGenerateK3sConfig(ctx, clusterConfig.ClusterCreateOpts.Registries.Create, clusterConfig.ClusterCreateOpts.Registries.Use)
+		regConf, err := RegistryGenerateK3sConfig(ctx, clusterConfig.ClusterCreateOpts.Registries.Use)
 		if err != nil {
 			return fmt.Errorf("Failed to generate registry config file for k3s: %+v", err)
 		}

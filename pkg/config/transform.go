@@ -208,7 +208,10 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		clusterCreateOpts.Registries.Create = &k3d.Registry{
 			Host:  fmt.Sprintf("%s-%s-registry", k3d.DefaultObjectNamePrefix, newCluster.Name),
 			Image: fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag),
-			Port:  regPort,
+			Port: k3d.MappedPort{
+				InternalPort: k3d.DefaultRegistryPort,
+				ExternalPort: regPort,
+			},
 		}
 	}
 

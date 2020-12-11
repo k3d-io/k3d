@@ -72,9 +72,9 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 	// setup the node labels
 	registryNode.Labels = map[string]string{
 		k3d.LabelRole:           string(k3d.RegistryRole),
-		k3d.LabelRegistryHost:   reg.Port.Host, // TODO: docker machine host?
-		k3d.LabelRegistryHostIP: reg.Port.HostIP,
-		k3d.LabelRegistryPort:   reg.Port.Port,
+		k3d.LabelRegistryHost:   reg.Port.ExternalPort.Host, // TODO: docker machine host?
+		k3d.LabelRegistryHostIP: reg.Port.ExternalPort.HostIP,
+		k3d.LabelRegistryPort:   reg.Port.ExternalPort.Port,
 	}
 	for k, v := range k3d.DefaultObjectLabels {
 		registryNode.Labels[k] = v
@@ -82,7 +82,7 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 
 	// port
 	registryNode.Ports = []string{
-		fmt.Sprintf("%s:%s:%s/tcp", reg.Port.HostIP, reg.Port.Port, k3d.DefaultRegistryPort),
+		fmt.Sprintf("%s:%s:%s/tcp", reg.Port.ExternalPort.HostIP, reg.Port.ExternalPort.Port, k3d.DefaultRegistryPort),
 	}
 
 	// create the registry node
@@ -132,12 +132,12 @@ func RegistryConnect(ctx context.Context, runtime runtimes.Runtime, registryNode
 }
 
 // RegistryGenerateK3sConfig generates the k3s specific registries.yaml configuration for multiple registries
-func RegistryGenerateK3sConfig(ctx context.Context, internalRegistries *k3d.Registry, externalRegistries []*k3d.ExternalRegistry) (*k3s.Registry, error) {
+func RegistryGenerateK3sConfig(ctx context.Context, registries []*k3d.Registry) (*k3s.Registry, error) {
 	regConf := &k3s.Registry{}
 
-	for _, reg := range externalRegistries {
-		internalAddress := fmt.Sprintf("%s:%s", reg.Host, reg.Port)
-		externalAddress := fmt.Sprintf("%s:%s", reg.Host, reg.ExternalPort)
+	for _, reg := range registries {
+		internalAddress := fmt.Sprintf("%s:%s", reg.Host, reg.Port.InternalPort)
+		externalAddress := fmt.Sprintf("%s:%s", reg.Host, reg.Port.ExternalPort.Port)
 
 		// init mirrors if nil
 		if regConf.Mirrors == nil {
@@ -150,8 +150,8 @@ func RegistryGenerateK3sConfig(ctx context.Context, internalRegistries *k3d.Regi
 			},
 		}
 
-		if reg.Proxy != "" {
-			regConf.Mirrors[k3d.DefaultDockerHubAddress] = k3s.Mirror{
+		if reg.Options.Proxy.RemoteURL != "" {
+			regConf.Mirrors[reg.Options.Proxy.RemoteURL] = k3s.Mirror{
 				Endpoints: []string{fmt.Sprintf("http://%s", internalAddress)},
 			}
 		}
