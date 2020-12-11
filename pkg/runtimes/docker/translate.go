@@ -94,13 +94,14 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	// containerConfig.Volumes = map[string]struct{}{} // TODO: do we need this? We only used binds before
 
 	/* Ports */
-	exposedPorts, portBindings, err := nat.ParsePortSpecs(node.Ports)
-	if err != nil {
-		log.Errorf("Failed to parse port specs '%v'", node.Ports)
-		return nil, err
+	exposedPorts := nat.PortSet{}
+	for ep := range node.Ports {
+		if _, exists := exposedPorts[ep]; !exists {
+			exposedPorts[ep] = struct{}{}
+		}
 	}
 	containerConfig.ExposedPorts = exposedPorts
-	hostConfig.PortBindings = portBindings
+	hostConfig.PortBindings = node.Ports
 	/* Network */
 	networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
 		node.Network: {},
@@ -135,14 +136,6 @@ func TranslateContainerToNode(cont *types.Container) (*k3d.Node, error) {
 // TranslateContainerDetailsToNode translates a docker containerJSON object into a k3d node representation
 func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d.Node, error) {
 
-	// translate portMap to string representation
-	ports := []string{}
-	for containerPort, portBindingList := range containerDetails.HostConfig.PortBindings {
-		for _, hostInfo := range portBindingList {
-			ports = append(ports, fmt.Sprintf("%s:%s:%s", hostInfo.HostIP, hostInfo.HostPort, containerPort))
-		}
-	}
-
 	// restart -> we only set 'unless-stopped' upon cluster creation
 	restart := false
 	if containerDetails.HostConfig.RestartPolicy.IsAlways() || containerDetails.HostConfig.RestartPolicy.IsUnlessStopped() {
@@ -159,13 +152,14 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 
 	// serverOpts
 	serverOpts := k3d.ServerOpts{IsInit: false}
+	serverOpts.KubeAPI = &k3d.ExposureOpts{}
 	for k, v := range containerDetails.Config.Labels {
 		if k == k3d.LabelServerAPIHostIP {
-			serverOpts.ExposeAPI.HostIP = v
+			serverOpts.KubeAPI.Binding.HostIP = v
 		} else if k == k3d.LabelServerAPIHost {
-			serverOpts.ExposeAPI.Host = v
+			serverOpts.KubeAPI.Host = v
 		} else if k == k3d.LabelServerAPIPort {
-			serverOpts.ExposeAPI.Port = v
+			serverOpts.KubeAPI.Binding.HostPort = v
 		}
 	}
 
@@ -199,7 +193,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		Env:        env,
 		Cmd:        containerDetails.Config.Cmd,
 		Args:       []string{}, // empty, since Cmd already contains flags
-		Ports:      ports,
+		Ports:      containerDetails.HostConfig.PortBindings,
 		Restart:    restart,
 		Labels:     labels,
 		Network:    clusterNetwork,

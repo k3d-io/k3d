@@ -25,6 +25,8 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/docker/go-connections/nat"
 )
 
 // DefaultClusterName specifies the default name used for newly created clusters
@@ -106,19 +108,20 @@ var DefaultObjectLabels = map[string]string{
 
 // List of k3d technical label name
 const (
-	LabelClusterName     string = "k3d.cluster"
-	LabelClusterURL      string = "k3d.cluster.url"
-	LabelClusterToken    string = "k3d.cluster.token"
-	LabelImageVolume     string = "k3d.cluster.imageVolume"
-	LabelNetworkExternal string = "k3d.cluster.network.external"
-	LabelNetwork         string = "k3d.cluster.network"
-	LabelRole            string = "k3d.role"
-	LabelServerAPIPort   string = "k3d.server.api.port"
-	LabelServerAPIHost   string = "k3d.server.api.host"
-	LabelServerAPIHostIP string = "k3d.server.api.hostIP"
-	LabelRegistryHost    string = "k3d.registry.host"
-	LabelRegistryHostIP  string = "k3d.registry.hostIP"
-	LabelRegistryPort    string = "k3s.registry.port"
+	LabelClusterName          string = "k3d.cluster"
+	LabelClusterURL           string = "k3d.cluster.url"
+	LabelClusterToken         string = "k3d.cluster.token"
+	LabelImageVolume          string = "k3d.cluster.imageVolume"
+	LabelNetworkExternal      string = "k3d.cluster.network.external"
+	LabelNetwork              string = "k3d.cluster.network"
+	LabelRole                 string = "k3d.role"
+	LabelServerAPIPort        string = "k3d.server.api.port"
+	LabelServerAPIHost        string = "k3d.server.api.host"
+	LabelServerAPIHostIP      string = "k3d.server.api.hostIP"
+	LabelRegistryHost         string = "k3d.registry.host"
+	LabelRegistryHostIP       string = "k3d.registry.hostIP"
+	LabelRegistryPortExternal string = "k3s.registry.port.external"
+	LabelRegistryPortInternal string = "k3s.registry.port.internal"
 )
 
 // DefaultRoleCmds maps the node roles to their respective default commands
@@ -240,7 +243,7 @@ type Cluster struct {
 	Nodes              []*Node            `yaml:"nodes" json:"nodes,omitempty"`
 	InitNode           *Node              // init server node
 	ExternalDatastore  *ExternalDatastore `yaml:"externalDatastore,omitempty" json:"externalDatastore,omitempty"`
-	ExposeAPI          ExposedPort        `yaml:"exposeAPI" json:"exposeAPI,omitempty"`
+	KubeAPI            *ExposureOpts      `yaml:"kubeAPI" json:"kubeAPI,omitempty"`
 	ServerLoadBalancer *Node              `yaml:"serverLoadbalancer,omitempty" json:"serverLoadBalancer,omitempty"`
 	ImageVolume        string             `yaml:"imageVolume" json:"imageVolume,omitempty"`
 }
@@ -294,7 +297,7 @@ type Node struct {
 	Env        []string          `yaml:"env" json:"env,omitempty"`
 	Cmd        []string          // filled automatically based on role
 	Args       []string          `yaml:"extraArgs" json:"extraArgs,omitempty"`
-	Ports      []string          `yaml:"portMappings" json:"portMappings,omitempty"`
+	Ports      nat.PortMap       `yaml:"portMappings" json:"portMappings,omitempty"`
 	Restart    bool              `yaml:"restart" json:"restart,omitempty"`
 	Labels     map[string]string // filled automatically
 	Network    string            // filled automatically
@@ -307,8 +310,14 @@ type Node struct {
 
 // ServerOpts describes some additional server role specific opts
 type ServerOpts struct {
-	IsInit    bool        `yaml:"isInitializingServer" json:"isInitializingServer,omitempty"`
-	ExposeAPI ExposedPort // filled automatically
+	IsInit  bool          `yaml:"isInitializingServer" json:"isInitializingServer,omitempty"`
+	KubeAPI *ExposureOpts `yaml:"kubeAPI" json:"kubeAPI"`
+}
+
+// ExposureOpts describes settings that the user can set for accessing the Kubernetes API
+type ExposureOpts struct {
+	nat.PortMapping        // filled automatically (reference to normal portmapping)
+	Host            string `yaml:"host,omitempty" json:"host,omitempty"`
 }
 
 // ExternalDatastore describes an external datastore used for HA/multi-server clusters
@@ -318,19 +327,6 @@ type ExternalDatastore struct {
 	CertFile string `yaml:"certFile" json:"certFile,omitempty"`
 	KeyFile  string `yaml:"keyFile" json:"keyFile,omitempty"`
 	Network  string `yaml:"network" json:"network,omitempty"`
-}
-
-// MappedPort combines an internal port mapped to an exposed port
-type MappedPort struct {
-	InternalPort string      `yaml:"internal,omitempty" json:"internal,omitempty"`
-	ExternalPort ExposedPort `yaml:"expose,omitempty" json:"expose,omitempty"`
-}
-
-// ExposedPort describes a port exposed on the host system
-type ExposedPort struct {
-	Host   string `yaml:"host" json:"host,omitempty"`
-	HostIP string `yaml:"hostIP" json:"hostIP,omitempty"`
-	Port   string `yaml:"port" json:"port"`
 }
 
 // AgentOpts describes some additional agent role specific opts
@@ -362,11 +358,12 @@ const (
 
 // Registry describes a k3d-managed registry
 type Registry struct {
-	ClusterRef string     // filled automatically -> if created with a cluster
-	Host       string     `yaml:"host" json:"host"`
-	Image      string     `yaml:"image,omitempty" json:"image,omitempty"`
-	Port       MappedPort `yaml:"port" json:"port"`
-	Options    struct {
+	ClusterRef   string       // filled automatically -> if created with a cluster
+	Protocol     string       `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
+	Host         string       `yaml:"host" json:"host"`
+	Image        string       `yaml:"image,omitempty" json:"image,omitempty"`
+	ExposureOpts ExposureOpts `yaml:"expose" json:"expose"`
+	Options      struct {
 		ConfigFile string `yaml:"configFile,omitempty" json:"configFile,omitempty"`
 		Proxy      struct {
 			RemoteURL string `yaml:"remoteURL" json:"remoteURL"`

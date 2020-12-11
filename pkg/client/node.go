@@ -330,11 +330,11 @@ func patchServerSpec(node *k3d.Node) error {
 
 	// Add labels and TLS SAN for the exposed API
 	// FIXME: For now, the labels concerning the API on the server nodes are only being used for configuring the kubeconfig
-	node.Labels[k3d.LabelServerAPIHostIP] = node.ServerOpts.ExposeAPI.HostIP // TODO: maybe get docker machine IP here
-	node.Labels[k3d.LabelServerAPIHost] = node.ServerOpts.ExposeAPI.Host
-	node.Labels[k3d.LabelServerAPIPort] = node.ServerOpts.ExposeAPI.Port
+	node.Labels[k3d.LabelServerAPIHostIP] = node.ServerOpts.KubeAPI.Binding.HostIP // TODO: maybe get docker machine IP here
+	node.Labels[k3d.LabelServerAPIHost] = node.ServerOpts.KubeAPI.Host
+	node.Labels[k3d.LabelServerAPIPort] = node.ServerOpts.KubeAPI.Binding.HostPort
 
-	node.Args = append(node.Args, "--tls-san", node.ServerOpts.ExposeAPI.Host) // add TLS SAN for non default host name
+	node.Args = append(node.Args, "--tls-san", node.ServerOpts.KubeAPI.Host) // add TLS SAN for non default host name
 
 	return nil
 }

@@ -33,19 +33,20 @@ import (
 
 func TestReadSimpleConfig(t *testing.T) {
 
+	exposedAPI := conf.SimpleExposureOpts{}
+	exposedAPI.HostIP = "0.0.0.0"
+	exposedAPI.HostPort = "6443"
+
 	expectedConfig := conf.SimpleConfig{
 		TypeMeta: conf.TypeMeta{
 			APIVersion: "k3d.io/v1alpha1",
 			Kind:       "Simple",
 		},
-		Name:    "test",
-		Servers: 1,
-		Agents:  2,
-		ExposeAPI: k3d.ExposedPort{
-			HostIP: "0.0.0.0",
-			Port:   "6443",
-		},
-		Image: "rancher/k3s:latest",
+		Name:      "test",
+		Servers:   1,
+		Agents:    2,
+		ExposeAPI: exposedAPI,
+		Image:     "rancher/k3s:latest",
 		Volumes: []conf.VolumeWithNodeFilters{
 			{
 				Volume:      "/my/path:/some/path",

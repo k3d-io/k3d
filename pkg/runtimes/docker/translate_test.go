@@ -43,7 +43,14 @@ func TestTranslateNodeToContainer(t *testing.T) {
 		Env:     []string{"TEST_KEY_1=TEST_VAL_1"},
 		Cmd:     []string{"server", "--https-listen-port=6443"},
 		Args:    []string{"--some-boolflag"},
-		Ports:   []string{"0.0.0.0:6443:6443/tcp"},
+		Ports: nat.PortMap{
+			"6443/tcp": []nat.PortBinding{
+				{
+					HostIP:   "0.0.0.0",
+					HostPort: "6443",
+				},
+			},
+		},
 		Restart: true,
 		Labels:  map[string]string{k3d.LabelRole: string(k3d.ServerRole), "test_key_1": "test_val_1"},
 	}

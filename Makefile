@@ -49,6 +49,7 @@ E2E_LOG_LEVEL ?= WARN
 E2E_SKIP ?=
 E2E_EXTRA ?=
 E2E_RUNNER_START_TIMEOUT ?= 10
+E2E_HELPER_IMAGE_TAG ?=
 
 ########## Go Build Options ##########
 # Build targets
@@ -168,7 +169,7 @@ test:
 
 e2e: build-docker-dind
 	@echo "Running e2e tests in k3d:$(K3D_IMAGE_TAG)"
-	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_SKIP="$(E2E_SKIP)" E2E_EXTRA="$(E2E_EXTRA)" E2E_RUNNER_START_TIMEOUT=$(E2E_RUNNER_START_TIMEOUT) tests/dind.sh "${K3D_IMAGE_TAG}-dind"
+	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_SKIP="$(E2E_SKIP)" E2E_EXTRA="$(E2E_EXTRA)" E2E_RUNNER_START_TIMEOUT=$(E2E_RUNNER_START_TIMEOUT) E2E_HELPER_IMAGE_TAG="$(E2E_HELPER_IMAGE_TAG)" tests/dind.sh "${K3D_IMAGE_TAG}-dind"
 
 ci-tests: fmt check e2e
 
