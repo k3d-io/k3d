@@ -46,7 +46,13 @@ until docker inspect "$k3de2e" | jq ".[0].State.Running" && docker logs "$k3de2e
 done
 
 # build helper container images
-docker exec --workdir /src "$k3de2e" make build-helper-images
+if [ -z "$E2E_HELPER_IMAGE_TAG" ]; then
+  docker exec --workdir /src "$k3de2e" make build-helper-images
+  # execute tests
+  docker exec "$k3de2e" /src/tests/runner.sh
+else
+  # execute tests
+  docker exec -e "K3D_HELPER_IMAGE_TAG=$E2E_HELPER_IMAGE_TAG" "$k3de2e" /src/tests/runner.sh
+fi
 
-# execute tests
-docker exec "$k3de2e" /src/tests/runner.sh
+
