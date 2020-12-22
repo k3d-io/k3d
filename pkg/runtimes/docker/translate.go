@@ -39,7 +39,6 @@ import (
 
 // TranslateNodeToContainer translates a k3d node specification to a docker container representation
 func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
-
 	/* initialize everything that we need */
 	containerConfig := docker.Config{}
 	hostConfig := docker.HostConfig{
@@ -134,7 +133,6 @@ func TranslateContainerToNode(cont *types.Container) (*k3d.Node, error) {
 
 // TranslateContainerDetailsToNode translates a docker containerJSON object into a k3d node representation
 func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d.Node, error) {
-
 	// translate portMap to string representation
 	ports := []string{}
 	for containerPort, portBindingList := range containerDetails.HostConfig.PortBindings {
@@ -201,6 +199,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		Args:       []string{}, // empty, since Cmd already contains flags
 		Ports:      ports,
 		Restart:    restart,
+		Created:    containerDetails.Created,
 		Labels:     labels,
 		Network:    clusterNetwork,
 		ServerOpts: serverOpts,

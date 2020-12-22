@@ -240,6 +240,7 @@ type Node struct {
 	Args       []string          `yaml:"extra_args" json:"extraArgs,omitempty"`
 	Ports      []string          `yaml:"port_mappings" json:"portMappings,omitempty"`
 	Restart    bool              `yaml:"restart" json:"restart,omitempty"`
+	Created    string            `yaml:"created" json:"created,omitempty"`
 	Labels     map[string]string // filled automatically
 	Network    string            // filled automatically
 	ExtraHosts []string          // filled automatically
