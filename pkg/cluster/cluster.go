@@ -229,7 +229,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 					logreader.Close()
 				}
 				log.Errorln(err)
-				log.Errorln("Failed to get logs from the initializig server node.. waiting for 3 seconds instead")
+				log.Errorln("Failed to get logs from the initializing server node.. waiting for 3 seconds instead")
 				time.Sleep(3 * time.Second)
 				break
 			}
