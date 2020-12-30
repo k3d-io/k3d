@@ -46,7 +46,7 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 	runtimeImages, err := runtime.GetImages(ctx)
 	if err != nil {
-		log.Errorln("Failed to fetch list of exsiting images from runtime")
+		log.Errorln("Failed to fetch list of existing images from runtime")
 		return err
 	}
 
