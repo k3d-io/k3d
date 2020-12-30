@@ -278,7 +278,7 @@ func ClusterCreate(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 			}
 		}
 
-		// asynchronously wait for this server node to be ready (by checking the logs for a specific log mesage)
+		// asynchronously wait for this server node to be ready (by checking the logs for a specific log message)
 		if node.Role == k3d.ServerRole && cluster.CreateClusterOpts.WaitForServer {
 			log.Debugf("Waiting for server node '%s' to get ready", node.Name)
 			if err := NodeWaitForLogMessage(clusterCreateCtx, runtime, node, k3d.ReadyLogMessageByRole[k3d.ServerRole], time.Time{}); err != nil {
@@ -598,7 +598,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 				continue
 			}
 
-			// asynchronously wait for this server node to be ready (by checking the logs for a specific log mesage)
+			// asynchronously wait for this server node to be ready (by checking the logs for a specific log message)
 			if node.Role == k3d.ServerRole && startClusterOpts.WaitForServer {
 				serverNode := node
 				waitForServerWaitgroup.Go(func() error {
