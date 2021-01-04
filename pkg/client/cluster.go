@@ -137,17 +137,33 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 	 * Step 3: Registries
 	 */
 
+	// Ensure referenced registries
+	for _, reg := range clusterConfig.ClusterCreateOpts.Registries.Use {
+		regNode, err := runtime.GetNode(ctx, &k3d.Node{Name: reg.Host})
+		if err != nil {
+			return fmt.Errorf("Failed to find registry node '%s': %+v", reg.Host, err)
+		}
+		regFromNode, err := RegistryFromNode(regNode)
+		if err != nil {
+			return err
+		}
+		*reg = *regFromNode
+	}
+
 	// Create managed registry bound to this cluster
 	if clusterConfig.ClusterCreateOpts.Registries.Create != nil {
-		if _, err := RegistryCreate(ctx, runtime, clusterConfig.ClusterCreateOpts.Registries.Create); err != nil {
+		registryNode, err := RegistryCreate(ctx, runtime, clusterConfig.ClusterCreateOpts.Registries.Create)
+		if err != nil {
 			return fmt.Errorf("Failed to create registry: %+v", err)
 		}
+
+		clusterConfig.Cluster.Nodes = append(clusterConfig.Cluster.Nodes, registryNode)
 
 		clusterConfig.ClusterCreateOpts.Registries.Use = append(clusterConfig.ClusterCreateOpts.Registries.Use, clusterConfig.ClusterCreateOpts.Registries.Create)
 	}
 
 	// Use existing registries (including the new one, if created)
-	log.Debugf("Using Registries: %+v", clusterConfig.ClusterCreateOpts.Registries.Use)
+	log.Tracef("Using Registries: %+v", clusterConfig.ClusterCreateOpts.Registries.Use)
 
 	if len(clusterConfig.ClusterCreateOpts.Registries.Use) > 0 {
 		// ensure that all selected registries exist and connect them to the cluster network
@@ -156,7 +172,7 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 			if err != nil {
 				return fmt.Errorf("Failed to find registry node '%s': %+v", externalReg.Host, err)
 			}
-			if err := RegistryConnect(ctx, runtime, regNode, []*k3d.Cluster{&clusterConfig.Cluster}); err != nil {
+			if err := RegistryConnectNetworks(ctx, runtime, regNode, []string{clusterConfig.Cluster.Network.Name}); err != nil {
 				return fmt.Errorf("Failed to connect registry node '%s' to cluster network: %+v", regNode.Name, err)
 			}
 		}

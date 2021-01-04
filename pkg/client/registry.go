@@ -99,8 +99,8 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 
 }
 
-// RegistryConnect connects an existing registry to one or more clusters
-func RegistryConnect(ctx context.Context, runtime runtimes.Runtime, registryNode *k3d.Node, clusters []*k3d.Cluster) error {
+// RegistryConnectClusters connects an existing registry to one or more clusters
+func RegistryConnectClusters(ctx context.Context, runtime runtimes.Runtime, registryNode *k3d.Node, clusters []*k3d.Cluster) error {
 
 	// find registry node
 	registryNode, err := NodeGet(ctx, runtime, registryNode)
@@ -114,7 +114,7 @@ func RegistryConnect(ctx context.Context, runtime runtimes.Runtime, registryNode
 	for _, c := range clusters {
 		cluster, err := ClusterGet(ctx, runtime, c)
 		if err != nil {
-			log.Warnf("Failed to connect to cluster '%s': Cluster not found", cluster.Name)
+			log.Warnf("Failed to connect to cluster '%s': Cluster not found", c.Name)
 			failed++
 			continue
 		}
@@ -127,6 +127,33 @@ func RegistryConnect(ctx context.Context, runtime runtimes.Runtime, registryNode
 
 	if failed > 0 {
 		return fmt.Errorf("Failed to connect to one or more clusters")
+	}
+
+	return nil
+}
+
+// RegistryConnectNetworks connects an existing registry to one or more networks
+func RegistryConnectNetworks(ctx context.Context, runtime runtimes.Runtime, registryNode *k3d.Node, networks []string) error {
+
+	// find registry node
+	registryNode, err := NodeGet(ctx, runtime, registryNode)
+	if err != nil {
+		log.Errorf("Failed to find registry node '%s'", registryNode.Name)
+		return err
+	}
+
+	// get cluster details and connect
+	failed := 0
+	for _, net := range networks {
+		if err := runtime.ConnectNodeToNetwork(ctx, registryNode, net); err != nil {
+			log.Warnf("Failed to connect to network '%s': Connection failed", net)
+			log.Warnln(err)
+			failed++
+		}
+	}
+
+	if failed > 0 {
+		return fmt.Errorf("Failed to connect to one or more networks")
 	}
 
 	return nil
@@ -175,6 +202,37 @@ func RegistryGet(ctx context.Context, runtime runtimes.Runtime, name string) (*k
 		Host: regNode.Name,
 	}
 	// TODO: finish RegistryGet
+	return registry, nil
+
+}
+
+// RegistryFromNode transforms a node spec to a registry spec
+func RegistryFromNode(node *k3d.Node) (*k3d.Registry, error) {
+	registry := &k3d.Registry{
+		Host:  node.Name,
+		Image: node.Image,
+	}
+
+	// we expect exactly one portmap
+	if len(node.Ports) != 1 {
+		return nil, fmt.Errorf("Failed to parse registry spec from node %+v: 0 or multiple ports defined, where one is expected", node)
+	}
+
+	for port, bindings := range node.Ports {
+		registry.ExposureOpts.Port = port
+
+		// we expect 0 or 1 binding for that port
+		if len(bindings) > 1 {
+			return nil, fmt.Errorf("Failed to parse registry spec from node %+v: Multiple bindings '%+v' specified for port '%s' where one is expected", node, bindings, port)
+		}
+
+		for _, binding := range bindings {
+			registry.ExposureOpts.Binding = binding
+		}
+	}
+
+	log.Tracef("Got registry %+v from node %+v", registry, node)
+
 	return registry, nil
 
 }

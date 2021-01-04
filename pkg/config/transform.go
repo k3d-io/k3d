@@ -33,6 +33,8 @@ import (
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/pkg/util"
 	"github.com/rancher/k3d/v4/version"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration
@@ -233,6 +235,15 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			Image:        fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag),
 			ExposureOpts: *regPort,
 		}
+	}
+
+	for _, usereg := range simpleConfig.Registries.Use {
+		reg, err := util.ParseRegistryRef(usereg)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to parse use-registry string  '%s': %+v", usereg, err)
+		}
+		log.Tracef("Parsed registry reference: %+v", reg)
+		clusterCreateOpts.Registries.Use = append(clusterCreateOpts.Registries.Use, reg)
 	}
 
 	/**********************

@@ -61,6 +61,7 @@ var ReadyLogMessageByRole = map[Role]string{
 	ServerRole:       "k3s is up and running",
 	AgentRole:        "Successfully registered node",
 	LoadBalancerRole: "start worker processes",
+	RegistryRole:     "listening on",
 }
 
 // NodeWaitForLogMessageRestartWarnTime is the time after which to warn about a restarting container
@@ -371,4 +372,13 @@ type Registry struct {
 			Password  string `yaml:"password,omitempty" json:"password,omitempty"`
 		} `yaml:"proxy,omitempty" json:"proxy,omitempty"`
 	} `yaml:"options,omitempty" json:"options,omitempty"`
+}
+
+// RegistryExternal describes a minimal spec for an "external" registry
+// "external" meaning, that it's unrelated to the current cluster
+// e.g. used for the --registry-use flag registry reference
+type RegistryExternal struct {
+	Protocol string `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
+	Host     string `yaml:"host" json:"host"`
+	Port     string `yaml:"port" json:"port"`
 }

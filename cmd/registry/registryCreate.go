@@ -62,7 +62,7 @@ func NewCmdRegistryCreate() *cobra.Command {
 			if err != nil {
 				log.Fatalln(err)
 			}
-			if err := client.RegistryConnect(cmd.Context(), runtimes.SelectedRuntime, regNode, clusters); err != nil {
+			if err := client.RegistryConnectClusters(cmd.Context(), runtimes.SelectedRuntime, regNode, clusters); err != nil {
 				log.Errorln(err)
 			}
 		},
