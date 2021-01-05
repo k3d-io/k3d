@@ -64,7 +64,7 @@ func NewCmdKubeconfigMerge() *cobra.Command {
 			var err error
 
 			if mergeKubeconfigFlags.targetDefault && mergeKubeconfigFlags.output != "" {
-				log.Fatalln("Cannot use both '--output' and '--merge-default-kubeconfig' at the same time")
+				log.Fatalln("Cannot use both '--output' and '--kubeconfig-merge-default' at the same time")
 			}
 
 			// generate list of clusters
@@ -129,7 +129,7 @@ func NewCmdKubeconfigMerge() *cobra.Command {
 	if err := cmd.MarkFlagFilename("output"); err != nil {
 		log.Fatalln("Failed to mark flag --output as filename")
 	}
-	cmd.Flags().BoolVarP(&mergeKubeconfigFlags.targetDefault, "merge-default-kubeconfig", "d", false, fmt.Sprintf("Merge into the default kubeconfig ($KUBECONFIG or %s)", clientcmd.RecommendedHomeFile))
+	cmd.Flags().BoolVarP(&mergeKubeconfigFlags.targetDefault, "kubeconfig-merge-default", "d", false, fmt.Sprintf("Merge into the default kubeconfig ($KUBECONFIG or %s)", clientcmd.RecommendedHomeFile))
 	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateExisting, "update", "u", true, "Update conflicting fields in existing kubeconfig")
 	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateCurrentContext, "kubeconfig-switch-context", "s", true, "Switch to new context")
 	cmd.Flags().BoolVar(&writeKubeConfigOptions.OverwriteExisting, "overwrite", false, "[Careful!] Overwrite existing file, ignoring its contents")
