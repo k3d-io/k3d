@@ -52,6 +52,8 @@
           - loadbalancer
     ```
 
+  - Check out our test cases in [pkg/config/test_assets/](./pkg/config/test_assets/) for more config file examples
+
 - [WIP] Support for Lifecycle Hooks
   - Run any executable at specific stages during the cluster and node lifecycles
     - e.g. we modify the `registries.yaml` in the `preStart` stage of nodes

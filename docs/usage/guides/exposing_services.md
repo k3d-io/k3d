@@ -1,6 +1,6 @@
 # Exposing Services
 
-## 1. via Ingress
+## 1. via Ingress (recommended)
 
 In this example, we will deploy a simple nginx webserver deployment and make it accessible via ingress.
 Therefore, we have to create the cluster in a way, that the internal port 80 (where the `traefik` ingress controller is listening on) is exposed on the host system.
@@ -16,7 +16,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
         - the `loadbalancer` nodefilter matches only the `serverlb` that's deployed in front of a cluster's server nodes
             - all ports exposed on the `serverlb` will be proxied to the same ports on all server nodes in the cluster
 
-2. Get the kubeconfig file
+2. Get the kubeconfig file (redundant, as `k3d cluster create` already merges it into your default kubeconfig file)
 
     `#!bash export KUBECONFIG="$(k3d kubeconfig write k3s-default)"`
 
@@ -65,6 +65,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
     - **Note**: Kubernetes' default NodePort range is [`30000-32767`](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
 
     - **Note**: You may as well expose the whole NodePort range from the very beginning, e.g. via `k3d cluster create mycluster --agents 3 -p "30000-32767:30000-32767@server[0]"` (See [this video from @portainer](https://www.youtube.com/watch?v=5HaU6338lAk))
+      - **Warning**: Docker creates iptable entries and a new proxy process per port-mapping, so this may take a very long time or even freeze your system!
 
 ... (Steps 2 and 3 like above) ...
 
