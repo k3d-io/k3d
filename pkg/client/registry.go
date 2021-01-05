@@ -52,10 +52,10 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 	if len(reg.Host) == 0 {
 		reg.Host = k3d.DefaultRegistryName
 	}
-	if err := ValidateHostname(reg.Host); err != nil {
-		log.Errorln("Invalid name for registry")
-		log.Fatalln(err)
-	}
+	// if err := ValidateHostname(reg.Host); err != nil {
+	// 	log.Errorln("Invalid name for registry")
+	// 	log.Fatalln(err)
+	// }
 
 	registryNode := &k3d.Node{
 		Name:    reg.Host,
