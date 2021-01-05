@@ -116,7 +116,7 @@ We need to configure containerd to use the NVIDIA Container Runtime. We need to 
 ```
 
 ### The NVIDIA device plugin
-To enable NVIDIA GPU support on Kubernetes you also need to install the [NVIDIA device plugin](https://github.com/NVIDIA/k8s-device-plugin). The device plugin is a deamonset and allows you to automatically:
+To enable NVIDIA GPU support on Kubernetes you also need to install the [NVIDIA device plugin](https://github.com/NVIDIA/k8s-device-plugin). The device plugin is a daemonset and allows you to automatically:
 * Expose the number of GPUs on each nodes of your cluster
 * Keep track of the health of your GPUs
 * Run GPU enabled containers in your Kubernetes cluster.

@@ -34,7 +34,7 @@ For watching for the pod(s) deployment
     watch "kubectl get pods -n kube-system"    
 ```
 
-You will have something like this at begining (with the command line `kubectl get pods -n kube-system`)
+You will have something like this at beginning (with the command line `kubectl get pods -n kube-system`)
 ```
 NAME                                       READY   STATUS     RESTARTS   AGE
 helm-install-traefik-pn84f                 0/1     Pending    0          3s
