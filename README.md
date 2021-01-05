@@ -79,7 +79,7 @@ Check out what you can do via `k3d help` or check the docs @ [k3d.io](https://k3
 Example Workflow: Create a new cluster and use it with `kubectl`
 
 1. `k3d cluster create CLUSTER_NAME` to create a new single-node cluster (= 1 container running k3s + 1 loadbalancer container)
-2. `k3d kubeconfig merge CLUSTER_NAME --kubeconfig-switch-context` to update your default kubeconfig and switch the current-context to the new one
+2. [Optional, included in cluster create] `k3d kubeconfig merge CLUSTER_NAME --kubeconfig-switch-context` to update your default kubeconfig and switch the current-context to the new one
 3. execute some commands like `kubectl get pods --all-namespaces`
 4. `k3d cluster delete CLUSTER_NAME` to delete the default cluster
 
@@ -95,7 +95,8 @@ This repository is based on [@zeerorg](https://github.com/zeerorg/)'s [zeerorg/k
 
 ## Related Projects
 
-- [k3x](https://github.com/inercia/k3x): a graphics interface (for Linux) to k3d.
+- [k3x](https://github.com/inercia/k3x): GUI (Linux) to k3d
+- [vscode-k3d](https://github.com/inercia/vscode-k3d): vscode plugin for k3d
 
 ## Contributing
 
