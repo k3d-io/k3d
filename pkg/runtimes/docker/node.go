@@ -321,12 +321,14 @@ func (d Docker) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []str
 func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) error {
 	execConnection, err := executeInNode(ctx, node, cmd)
 	if err != nil {
-		logs, err := ioutil.ReadAll(execConnection.Reader)
-		if err != nil {
-			log.Errorf("Failed to get logs from errored exec process in node '%s'", node.Name)
-			return err
+		if execConnection != nil && execConnection.Reader != nil {
+			logs, err := ioutil.ReadAll(execConnection.Reader)
+			if err != nil {
+				log.Errorf("Failed to get logs from errored exec process in node '%s'", node.Name)
+				return err
+			}
+			err = fmt.Errorf("%w: Logs from failed access process:\n%s", err, string(logs))
 		}
-		err = fmt.Errorf("%w: Logs from failed access process:\n%s", err, string(logs))
 	}
 	return err
 }
