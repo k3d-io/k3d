@@ -222,6 +222,11 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		GlobalEnv:           []string{},          // empty init
 	}
 
+	// ensure, that we have the default object labels
+	for k, v := range k3d.DefaultObjectLabels {
+		clusterCreateOpts.GlobalLabels[k] = v
+	}
+
 	/*
 	 * Registries
 	 */

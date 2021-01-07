@@ -19,30 +19,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package containerd
+package runtimes
 
-import (
-	"context"
+import "errors"
 
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-)
+// ErrRuntimeNetworkNotEmpty describes an error that occurs because a network still has containers connected to it (e.g. cannot be deleted)
+var ErrRuntimeNetworkNotEmpty = errors.New("network not empty")
 
-// CreateNetworkIfNotPresent creates a new docker network
-func (d Containerd) CreateNetworkIfNotPresent(ctx context.Context, name string) (string, bool, error) {
-	return "", false, nil
-}
-
-// DeleteNetwork deletes a network
-func (d Containerd) DeleteNetwork(ctx context.Context, ID string) error {
-	return nil
-}
-
-// ConnectNodeToNetwork connects a node to a network
-func (d Containerd) ConnectNodeToNetwork(ctx context.Context, node *k3d.Node, network string) error {
-	return nil
-}
-
-// DisconnectNodeFromNetwork disconnects a node from a network (u don't say :O)
-func (d Containerd) DisconnectNodeFromNetwork(ctx context.Context, node *k3d.Node, network string) error {
-	return nil
-}
+// ErrRuntimeContainerUnknown describes the situation, where we're inspecting a container that's not obviously managed by k3d
+var ErrRuntimeContainerUnknown = errors.New("container not managed by k3d: missing default label(s)")

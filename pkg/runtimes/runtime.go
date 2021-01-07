@@ -56,6 +56,7 @@ type Runtime interface {
 	GetNodesByLabel(context.Context, map[string]string) ([]*k3d.Node, error)
 	GetNode(context.Context, *k3d.Node) (*k3d.Node, error)
 	GetNodeStatus(context.Context, *k3d.Node) (bool, string, error)
+	GetNodesInNetwork(context.Context, string) ([]*k3d.Node, error)
 	CreateNetworkIfNotPresent(context.Context, string) (string, bool, error) // @return NETWORK_NAME, EXISTS, ERROR
 	GetKubeconfig(context.Context, *k3d.Node) (io.ReadCloser, error)
 	DeleteNetwork(context.Context, string) error
@@ -72,7 +73,8 @@ type Runtime interface {
 	CopyToNode(context.Context, string, string, *k3d.Node) error  // @param context, source, destination, node
 	WriteToNode(context.Context, []byte, string, *k3d.Node) error // @param context, content, destination, node
 	GetHostIP(context.Context, string) (net.IP, error)
-	ConnectNodeToNetwork(context.Context, *k3d.Node, string) error // @param context, node, network name
+	ConnectNodeToNetwork(context.Context, *k3d.Node, string) error      // @param context, node, network name
+	DisconnectNodeFromNetwork(context.Context, *k3d.Node, string) error // @param context, node, network name
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it

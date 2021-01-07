@@ -100,6 +100,7 @@ func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	if all, err := cmd.Flags().GetBool("all"); err != nil {
 		log.Fatalln(err)
 	} else if all {
+		log.Infoln("Deleting all clusters...")
 		clusters, err = client.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
 		if err != nil {
 			log.Fatalln(err)
