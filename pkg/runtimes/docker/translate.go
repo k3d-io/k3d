@@ -31,6 +31,7 @@ import (
 	docker "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
+	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 
@@ -134,6 +135,22 @@ func TranslateContainerToNode(cont *types.Container) (*k3d.Node, error) {
 
 // TranslateContainerDetailsToNode translates a docker containerJSON object into a k3d node representation
 func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d.Node, error) {
+
+	// first, make sure, that it's actually a k3d managed container by checking if it has all the default labels
+	for k, v := range k3d.DefaultObjectLabels {
+		log.Tracef("TranslateContainerDetailsToNode: Checking for default object label %s=%s", k, v)
+		found := false
+		for lk, lv := range containerDetails.Config.Labels {
+			if lk == k && lv == v {
+				found = true
+				break
+			}
+		}
+		if !found {
+			log.Debugf("Container %s is missing default label %s=%s in label set %+v", containerDetails.Name, k, v, containerDetails.Config.Labels)
+			return nil, runtimeErr.ErrRuntimeContainerUnknown
+		}
+	}
 
 	// restart -> we only set 'unless-stopped' upon cluster creation
 	restart := false

@@ -67,7 +67,7 @@ Finally, we can create the cluster, mounting the CA file in the path we specifie
 
 ### Using k3d-managed registries
 
-!!! info "Not ported yet"
+!!! info "Just ported!"
       The k3d-managed registry is available again as of k3d v4.0.0 (January 2021)
 
 #### Create a dedicated registry together with your cluster

@@ -39,6 +39,7 @@ import (
 	config "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
 	k3drt "github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
+	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	"github.com/rancher/k3d/v4/pkg/types"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/pkg/util"
@@ -100,7 +101,6 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 
 // ClusterPrep takes care of the steps required before creating/starting the cluster containers
 func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *config.ClusterConfig) error {
-
 	/*
 	 * Set up contexts
 	 * Used for (early) termination (across API boundaries)
@@ -139,6 +139,7 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 
 	// Ensure referenced registries
 	for _, reg := range clusterConfig.ClusterCreateOpts.Registries.Use {
+		log.Debugf("Trying to find registry %s", reg.Host)
 		regNode, err := runtime.GetNode(ctx, &k3d.Node{Name: reg.Host})
 		if err != nil {
 			return fmt.Errorf("Failed to find registry node '%s': %+v", reg.Host, err)
@@ -243,7 +244,6 @@ func ClusterPrepImageVolume(ctx context.Context, runtime k3drt.Runtime, cluster 
 	 * Cluster-Wide volumes
 	 * - image volume (for importing images)
 	 */
-
 	imageVolumeName := fmt.Sprintf("%s-%s-images", k3d.DefaultObjectNamePrefix, cluster.Name)
 	if err := runtime.CreateVolume(ctx, imageVolumeName, map[string]string{k3d.LabelClusterName: cluster.Name}); err != nil {
 		log.Errorf("Failed to create image volume '%s' for cluster '%s'", imageVolumeName, cluster.Name)
@@ -468,7 +468,7 @@ ClusterCreatOpts:
 					fmt.Sprintf("WORKER_PROCESSES=%d", len(strings.Split(ports, ","))),
 				},
 				Role:    k3d.LoadBalancerRole,
-				Labels:  k3d.DefaultObjectLabels, // TODO: createLoadBalancer: add more expressive labels
+				Labels:  clusterCreateOpts.GlobalLabels, // TODO: createLoadBalancer: add more expressive labels
 				Network: cluster.Network.Name,
 				Restart: true,
 			}
@@ -491,6 +491,10 @@ ClusterCreatOpts:
 func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
 
 	log.Infof("Deleting cluster '%s'", cluster.Name)
+	cluster, err := ClusterGet(ctx, runtime, cluster)
+	if err != nil {
+		return err
+	}
 	log.Debugf("Cluster Details: %+v", cluster)
 
 	failed := 0
@@ -507,8 +511,32 @@ func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 		if !cluster.Network.External {
 			log.Infof("Deleting cluster network '%s'", cluster.Network.Name)
 			if err := runtime.DeleteNetwork(ctx, cluster.Network.Name); err != nil {
-				if strings.HasSuffix(err.Error(), "active endpoints") {
-					log.Warningf("Failed to delete cluster network '%s' because it's still in use: is there another cluster using it?", cluster.Network.Name)
+				if errors.Is(err, runtimeErr.ErrRuntimeNetworkNotEmpty) { // there are still containers connected to that network
+
+					connectedNodes, err := runtime.GetNodesInNetwork(ctx, cluster.Network.Name) // check, if there are any k3d nodes connected to the cluster
+					if err != nil {
+						log.Warningf("Failed to check cluster network for connected nodes: %+v", err)
+					}
+
+					if len(connectedNodes) > 0 { // there are still k3d-managed containers (aka nodes) connected to the network
+						connectedRegistryNodes := util.FilterNodesByRole(connectedNodes, k3d.RegistryRole)
+						if len(connectedRegistryNodes) == len(connectedNodes) { // only registry node(s) left in the network
+							for _, node := range connectedRegistryNodes {
+								log.Debugf("Disconnecting registry node %s from the network...", node.Name)
+								if err := runtime.DisconnectNodeFromNetwork(ctx, node, cluster.Network.Name); err != nil {
+									log.Warnf("Failed to disconnect registry %s from network %s", node.Name, cluster.Network.Name)
+								} else {
+									if err := runtime.DeleteNetwork(ctx, cluster.Network.Name); err != nil {
+										log.Warningf("Failed to delete cluster network, even after disconnecting registry node(s): %+v", err)
+									}
+								}
+							}
+						} else { // besides the registry node(s), there are still other nodes... maybe they still need a registry
+							log.Debugf("There are some non-registry nodes left in the network")
+						}
+					} else {
+						log.Warningf("Failed to delete cluster network '%s' because it's still in use: is there another cluster using it?", cluster.Network.Name)
+					}
 				} else {
 					log.Warningf("Failed to delete cluster network '%s': '%+v'", cluster.Network.Name, err)
 				}
@@ -535,13 +563,28 @@ func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 
 // ClusterList returns a list of all existing clusters
 func ClusterList(ctx context.Context, runtime k3drt.Runtime) ([]*k3d.Cluster, error) {
+	log.Traceln("Listing Clusters...")
 	nodes, err := runtime.GetNodesByLabel(ctx, k3d.DefaultObjectLabels)
 	if err != nil {
 		log.Errorln("Failed to get clusters")
 		return nil, err
 	}
 
+	log.Debugf("Found %d nodes", len(nodes))
+	if log.GetLevel() == log.TraceLevel {
+		for _, node := range nodes {
+			log.Tracef("Found node %s of role %s", node.Name, node.Role)
+		}
+	}
+
 	nodes = NodeFilterByRoles(nodes, k3d.ClusterInternalNodeRoles, k3d.ClusterExternalNodeRoles)
+
+	log.Tracef("Found %d cluster-internal nodes", len(nodes))
+	if log.GetLevel() == log.TraceLevel {
+		for _, node := range nodes {
+			log.Tracef("Found cluster-internal node %s of role %s belonging to cluster %s", node.Name, node.Role, node.Labels[k3d.LabelClusterName])
+		}
+	}
 
 	clusters := []*k3d.Cluster{}
 	// for each node, check, if we can add it to a cluster or add the cluster if it doesn't exist yet
@@ -570,6 +613,7 @@ func ClusterList(ctx context.Context, runtime k3drt.Runtime) ([]*k3d.Cluster, er
 			log.Warnln(err)
 		}
 	}
+	log.Debugf("Found %d clusters", len(clusters))
 	return clusters, nil
 }
 

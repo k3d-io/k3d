@@ -137,3 +137,8 @@ func (d Containerd) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string
 func (d Containerd) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []string) (*bufio.Reader, error) {
 	return nil, nil
 }
+
+// GetNodesInNetwork returns all the nodes connected to a given network
+func (d Containerd) GetNodesInNetwork(ctx context.Context, network string) ([]*k3d.Node, error) {
+	return nil, nil
+}

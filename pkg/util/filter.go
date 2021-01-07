@@ -174,3 +174,14 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 
 	return filteredNodes, nil
 }
+
+// FilterNodesByRole returns a stripped list of nodes which do match the given role
+func FilterNodesByRole(nodes []*k3d.Node, role k3d.Role) []*k3d.Node {
+	filteredNodes := []*k3d.Node{}
+	for _, node := range nodes {
+		if node.Role == role {
+			filteredNodes = append(filteredNodes, node)
+		}
+	}
+	return filteredNodes
+}

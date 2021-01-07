@@ -25,12 +25,14 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 
+	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
@@ -94,7 +96,13 @@ func (d Docker) DeleteNetwork(ctx context.Context, ID string) error {
 	defer docker.Close()
 
 	// (3) delete network
-	return docker.NetworkRemove(ctx, ID)
+	if err := docker.NetworkRemove(ctx, ID); err != nil {
+		if strings.HasSuffix(err.Error(), "active endpoints") {
+			return runtimeErr.ErrRuntimeNetworkNotEmpty
+		}
+		return err
+	}
+	return nil
 }
 
 // GetNetwork gets information about a network by its ID
@@ -146,4 +154,30 @@ func (d Docker) ConnectNodeToNetwork(ctx context.Context, node *k3d.Node, networ
 
 	// connect container to network
 	return docker.NetworkConnect(ctx, networkResource.ID, container.ID, &network.EndpointSettings{})
+}
+
+// DisconnectNodeFromNetwork disconnects a node from a network (u don't say :O)
+func (d Docker) DisconnectNodeFromNetwork(ctx context.Context, node *k3d.Node, networkName string) error {
+	// get container
+	container, err := getNodeContainer(ctx, node)
+	if err != nil {
+		return err
+	}
+
+	// get docker client
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return err
+	}
+	defer docker.Close()
+
+	// get network
+	networkResource, err := GetNetwork(ctx, networkName)
+	if err != nil {
+		log.Errorf("Failed to get network '%s'", networkName)
+		return err
+	}
+
+	return docker.NetworkDisconnect(ctx, networkResource.ID, container.ID, true)
 }
