@@ -23,8 +23,6 @@ package registry
 
 import (
 	"fmt"
-	"os"
-	"sort"
 	"strings"
 
 	"github.com/liggitt/tabwriter"
@@ -36,8 +34,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type registryListFlags struct {
+	noHeader bool
+	output   string
+}
+
 // NewCmdRegistryList creates a new cobra command
 func NewCmdRegistryList() *cobra.Command {
+	registryListFlags := registryListFlags{}
+
 	// create new command
 	cmd := &cobra.Command{
 		Use:               "list [NAME [NAME...]]",
@@ -47,8 +52,15 @@ func NewCmdRegistryList() *cobra.Command {
 		Args:              cobra.MinimumNArgs(0), // 0 or more; 0 = all
 		ValidArgsFunction: util.ValidArgsAvailableRegistries,
 		Run: func(cmd *cobra.Command, args []string) {
-			nodes, headersOff := parseRegistryListCmd(cmd, args)
 			var existingNodes []*k3d.Node
+
+			nodes := []*k3d.Node{}
+			for _, name := range args {
+				nodes = append(nodes, &k3d.Node{
+					Name: name,
+				})
+			}
+
 			if len(nodes) == 0 { // Option a)  no name specified -> get all registries
 				found, err := client.NodeList(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
@@ -66,62 +78,29 @@ func NewCmdRegistryList() *cobra.Command {
 				}
 			}
 			existingNodes = client.NodeFilterByRoles(existingNodes, []k3d.Role{k3d.RegistryRole}, []k3d.Role{})
+
 			// print existing registries
-			if len(existingNodes) > 0 {
-				printNodes(existingNodes, headersOff)
+			headers := &[]string{}
+			if !registryListFlags.noHeader {
+				headers = &[]string{"NAME", "PORT", "ROLE", "CLUSTER"} // TODO: add status
 			}
+
+			util.PrintNodes(existingNodes, registryListFlags.output,
+				headers, util.NodePrinterFunc(func(tabwriter *tabwriter.Writer, node *k3d.Node) {
+					fmt.Fprintf(tabwriter, "%s\t%s\t%s\n",
+						strings.TrimPrefix(node.Name, "/"),
+						string(node.Role),
+						node.Labels[k3d.LabelClusterName])
+				}))
 		},
 	}
 
 	// add flags
-	cmd.Flags().Bool("no-headers", false, "Disable headers")
+	cmd.Flags().BoolVar(&registryListFlags.noHeader, "no-headers", false, "Disable headers")
+	cmd.Flags().StringVarP(&registryListFlags.output, "output", "o", "", "Output format. One of: json|yaml")
 
 	// add subcommands
 
 	// done
 	return cmd
-}
-
-func parseRegistryListCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, bool) {
-	// --no-headers
-	headersOff, err := cmd.Flags().GetBool("no-headers")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Args = node name
-	if len(args) == 0 {
-		return nil, headersOff
-	}
-
-	nodes := []*k3d.Node{}
-	for _, name := range args {
-		nodes = append(nodes, &k3d.Node{
-			Name: name,
-		})
-	}
-
-	return nodes, headersOff
-}
-
-func printNodes(nodes []*k3d.Node, headersOff bool) {
-
-	tabwriter := tabwriter.NewWriter(os.Stdout, 6, 4, 3, ' ', tabwriter.RememberWidths)
-	defer tabwriter.Flush()
-
-	if !headersOff {
-		headers := []string{"NAME", "ROLE", "CLUSTER"} // TODO: add status
-		_, err := fmt.Fprintf(tabwriter, "%s\n", strings.Join(headers, "\t"))
-		if err != nil {
-			log.Fatalln("Failed to print headers")
-		}
-	}
-
-	sort.Slice(nodes, func(i, j int) bool {
-		return nodes[i].Name < nodes[j].Name
-	})
-
-	for _, node := range nodes {
-		fmt.Fprintf(tabwriter, "%s\t%s\t%s\n", strings.TrimPrefix(node.Name, "/"), string(node.Role), node.Labels[k3d.LabelClusterName])
-	}
 }
