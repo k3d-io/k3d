@@ -33,15 +33,19 @@ check_clusters "$clustername" || failed "error checking cluster"
 info "Checking that we have 2 nodes online..."
 check_multi_node "$clustername" 2 || failed "failed to verify number of nodes"
 
-# 4. load an image into the cluster
-info "Importing an image into the cluster..."
+# 2. Check that we can discover the LocalRegistryHosting Configmap that points to our registry
+info "Checking that we can discover the LocalRegistryHosting Configmap..."
+kubectl get configmap -n kube-public local-registry-hosting -o go-template='{{index .data "localRegistryHosting.v1"}}' | grep -q 'host' || failed "failed to discover LocalRegistryHosting Configmap"
+
+# 3. load an image into the registry
+info "Pushing an image to the registry..."
 registryPort=$(docker inspect k3d-$clustername-registry | jq '.[0].NetworkSettings.Ports["5000/tcp"][0].HostPort' | sed -E 's/"//g')
 docker pull alpine:latest > /dev/null
 docker tag alpine:latest k3d-$clustername-registry:$registryPort/alpine:local > /dev/null
 docker push k3d-$clustername-registry:$registryPort/alpine:local || fail "Failed to push image to managed registry"
 
-# 5. use imported image
-info "Spawning a pod using the imported image..."
+# 4. use imported image
+info "Spawning a pod using the pushed image..."
 kubectl run --image k3d-$clustername-registry:$registryPort/alpine:local testimage --command -- tail -f /dev/null
 info "Waiting for a bit for the pod to start..."
 sleep 5

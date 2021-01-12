@@ -42,7 +42,6 @@ import (
 	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	"github.com/rancher/k3d/v4/pkg/types"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	"github.com/rancher/k3d/v4/pkg/types/k8s"
 	"github.com/rancher/k3d/v4/pkg/util"
 	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
@@ -913,10 +912,9 @@ func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.C
 }
 
 func prepCreateLocalRegistryHostingConfigMap(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
-	cmd := fmt.Sprintf("kubectl create configmap --namespace %s %s --from-file=%s=/tmp/reg.yaml", k8s.LocalRegistryHostingNamespace, k8s.LocalRegistryHostingName, k8s.LocalRegistryHostingData)
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.AgentRole || node.Role == k3d.ServerRole {
-			if err := runtime.ExecInNode(ctx, node, []string{"sh", "-c", cmd}); err != nil {
+			if err := runtime.ExecInNode(ctx, node, []string{"sh", "-c", "kubectl apply -f /tmp/reg.yaml"}); err != nil {
 				log.Warnf("Failed to create cm in node '%s'", node.Name)
 			}
 		}
