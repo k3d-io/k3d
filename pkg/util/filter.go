@@ -86,6 +86,9 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 		} else if submatches["group"] == string(k3d.AgentRole) {
 			groupNodes = agentNodes
 		} else if submatches["group"] == string(k3d.LoadBalancerRole) {
+			if serverlb == nil {
+				return nil, fmt.Errorf("Node filter '%s' targets a node that does not exist (disabled?)", filter)
+			}
 			filteredNodes = append(filteredNodes, serverlb)
 			return filteredNodes, nil // early exit if filtered group is the loadbalancer
 		}
