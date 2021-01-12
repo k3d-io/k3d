@@ -34,6 +34,8 @@
   - Option 2: customized, managed stand-alone
     - `k3d registry [create/start/stop/delete]`
     - Check the documentation, help text and tutorials for more details
+  - Communicate managed registry using the LocalRegistryHostingV1 spec from [KEP-1755](https://github.com/kubernetes/enhancements/blob/0d69f7cea6fbe73a7d70fab569c6898f5ccb7be0/keps/sig-cluster-lifecycle/generic/1755-communicating-a-local-registry/README.md)
+    - interesting especially for tools that reload images, like Tilt or Skaffold
 
 - Config File Support
   - Put all your CLI-Arguments/Flags into a more readable config file and re-use it everywhere (keep it in your repo)
