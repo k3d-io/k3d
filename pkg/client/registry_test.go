@@ -39,7 +39,7 @@ metadata:
   name: local-registry-hosting
   namespace: kube-public
 data:
-  localRegistryHosting.v1:
+  localRegistryHosting.v1: |
     host: test-host:5432
     hostFromContainerRuntime: test-host:1234
     help: https://k3d.io/usage/guides/registries/#using-a-local-registry

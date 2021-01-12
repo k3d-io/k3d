@@ -248,7 +248,7 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, regi
 	}
 
 	type cmData struct {
-		RegHostV1 k8s.LocalRegistryHostingV1 `yaml:"localRegistryHosting.v1"`
+		RegHostV1 string `yaml:"localRegistryHosting.v1"`
 	}
 
 	type configmap struct {
@@ -272,6 +272,17 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, regi
 		host = registries[0].ExposureOpts.Binding.HostIP
 	}
 
+	dat, err := yaml.Marshal(
+		k8s.LocalRegistryHostingV1{
+			Host:                     fmt.Sprintf("%s:%s", host, registries[0].ExposureOpts.Binding.HostPort),
+			HostFromContainerRuntime: fmt.Sprintf("%s:%s", registries[0].Host, registries[0].ExposureOpts.Port.Port()),
+			Help:                     "https://k3d.io/usage/guides/registries/#using-a-local-registry",
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	cm := configmap{
 		APIVersion: "v1",
 		Kind:       "ConfigMap",
@@ -280,11 +291,7 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, regi
 			Namespace: "kube-public",
 		},
 		Data: cmData{
-			k8s.LocalRegistryHostingV1{
-				Host:                     fmt.Sprintf("%s:%s", host, registries[0].ExposureOpts.Binding.HostPort),
-				HostFromContainerRuntime: fmt.Sprintf("%s:%s", registries[0].Host, registries[0].ExposureOpts.Port.Port()),
-				Help:                     "https://k3d.io/usage/guides/registries/#using-a-local-registry",
-			},
+			RegHostV1: string(dat),
 		},
 	}
 
