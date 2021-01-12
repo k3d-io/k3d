@@ -29,7 +29,9 @@ import (
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/pkg/types/k3s"
+	"github.com/rancher/k3d/v4/pkg/types/k8s"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
 func RegistryRun(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registry) (*k3d.Node, error) {
@@ -235,4 +237,63 @@ func RegistryFromNode(node *k3d.Node) (*k3d.Registry, error) {
 
 	return registry, nil
 
+}
+
+// RegistryGenerateLocalRegistryHostingConfigMapYAML generates a ConfigMap used to advertise the registries in the cluster
+func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, registries []*k3d.Registry) ([]byte, error) {
+
+	type cmMetadata struct {
+		Name      string `yaml:"name"`
+		Namespace string `yaml:"namespace"`
+	}
+
+	type cmData struct {
+		RegHostV1 k8s.LocalRegistryHostingV1 `yaml:"localRegistryHosting.v1"`
+	}
+
+	type configmap struct {
+		APIVersion string     `yaml:"apiVersion"`
+		Kind       string     `yaml:"kind"`
+		Metadata   cmMetadata `yaml:"metadata"`
+		Data       cmData     `yaml:"data"`
+	}
+
+	if len(registries) > 1 {
+		log.Warnf("More than one registry specified, but the LocalRegistryHostingV1 spec only supports one -> Selecting the first one: %s", registries[0].Host)
+	}
+
+	if len(registries) < 1 {
+		log.Debugln("No registry specified, not generating local registry hosting configmap")
+		return nil, nil
+	}
+
+	host := registries[0].ExposureOpts.Host
+	if host == "" {
+		host = registries[0].ExposureOpts.Binding.HostIP
+	}
+
+	cm := configmap{
+		APIVersion: "v1",
+		Kind:       "ConfigMap",
+		Metadata: cmMetadata{
+			Name:      "local-registry-hosting",
+			Namespace: "kube-public",
+		},
+		Data: cmData{
+			k8s.LocalRegistryHostingV1{
+				Host:                     fmt.Sprintf("%s:%s", host, registries[0].ExposureOpts.Binding.HostPort),
+				HostFromContainerRuntime: fmt.Sprintf("%s:%s", registries[0].Host, registries[0].ExposureOpts.Port.Port()),
+				Help:                     "https://k3d.io/usage/guides/registries/#using-a-local-registry",
+			},
+		},
+	}
+
+	cmYaml, err := yaml.Marshal(cm)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Tracef("LocalRegistryHostingConfigMapYaml: %s", string(cmYaml))
+
+	return cmYaml, nil
 }

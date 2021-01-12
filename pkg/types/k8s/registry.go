@@ -25,6 +25,20 @@ package k8s
 /*
  * Source: https://github.com/kubernetes/enhancements/blob/0d69f7cea6fbe73a7d70fab569c6898f5ccb7be0/keps/sig-cluster-lifecycle/generic/1755-communicating-a-local-registry/README.md#specification-for-localregistryhosting-v1
  * Copied over: 07.01.2020
+ * Original License
+ *  > Copyright 2020 The Kubernetes Authors
+ *  >
+ *  > Licensed under the Apache License, Version 2.0 (the "License");
+ *  > you may not use this file except in compliance with the License.
+ *  > You may obtain a copy of the License at
+ *  >
+ *  >     http://www.apache.org/licenses/LICENSE-2.0
+ *  >
+ *  > Unless required by applicable law or agreed to in writing, software
+ *  > distributed under the License is distributed on an "AS IS" BASIS,
+ *  > WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  > See the License for the specific language governing permissions and
+ *  > limitations under the License.
  */
 
 // LocalRegistryHostingV1 describes a local registry that developer tools can
@@ -36,7 +50,7 @@ type LocalRegistryHostingV1 struct {
 	//
 	// This is the registry host that tools outside the cluster should push images
 	// to.
-	Host string `yaml:"host,omitempty"`
+	Host string `yaml:"host,omitempty" json:"host,omitempty"`
 
 	// HostFromClusterNetwork documents the host (hostname and port) of the
 	// registry, as seen from networking inside the container pods.
@@ -44,7 +58,7 @@ type LocalRegistryHostingV1 struct {
 	// This is the registry host that tools running on pods inside the cluster
 	// should push images to. If not set, then tools inside the cluster should
 	// assume the local registry is not available to them.
-	HostFromClusterNetwork string `yaml:"hostFromClusterNetwork,omitempty"`
+	HostFromClusterNetwork string `yaml:"hostFromClusterNetwork,omitempty" json:"hostFromClusterNetwork,omitempty"`
 
 	// HostFromContainerRuntime documents the host (hostname and port) of the
 	// registry, as seen from the cluster's container runtime.
@@ -56,7 +70,7 @@ type LocalRegistryHostingV1 struct {
 	// Note that it doesn't make sense semantically to define this field, but not
 	// define Host or HostFromClusterNetwork. That would imply a way to pull
 	// images without a way to push images.
-	HostFromContainerRuntime string `yaml:"hostFromContainerRuntime,omitempty"`
+	HostFromContainerRuntime string `yaml:"hostFromContainerRuntime,omitempty" json:"hostFromContainerRuntime,omitempty"`
 
 	// Help contains a URL pointing to documentation for users on how to set
 	// up and configure a local registry.
@@ -69,5 +83,12 @@ type LocalRegistryHostingV1 struct {
 	// fail, the tool should display this help URL to the user. The help URL
 	// should contain instructions on how to diagnose broken or misconfigured
 	// registries.
-	Help string `yaml:"help,omitempty"`
+	Help string `yaml:"help,omitempty" json:"help,omitempty"`
 }
+
+// LocalRegistryHosting defaults
+const (
+	LocalRegistryHostingNamespace = "kube-public"
+	LocalRegistryHostingName      = "local-registry-hosting"
+	LocalRegistryHostingData      = "localRegistryHosting.v1"
+)

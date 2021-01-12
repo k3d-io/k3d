@@ -42,6 +42,7 @@ import (
 	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	"github.com/rancher/k3d/v4/pkg/types"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/types/k8s"
 	"github.com/rancher/k3d/v4/pkg/util"
 	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
@@ -94,6 +95,11 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
 	if !clusterConfig.ClusterCreateOpts.PrepDisableHostIPInjection {
 		prepInjectHostIP(ctx, runtime, &clusterConfig.Cluster)
+	}
+
+	// create the registry hosting configmap
+	if err := prepCreateLocalRegistryHostingConfigMap(ctx, runtime, &clusterConfig.Cluster); err != nil {
+		log.Warnf("Failed to create LocalRegistryHosting ConfigMap: %+v", err)
 	}
 
 	return nil
@@ -193,6 +199,21 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 				Runtime: runtime,
 				Content: regConfBytes,
 				Dest:    k3d.DefaultRegistriesFilePath,
+			},
+		})
+
+		// generate the LocalRegistryHosting configmap
+		regCm, err := RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx, clusterConfig.ClusterCreateOpts.Registries.Use)
+		if err != nil {
+			return fmt.Errorf("Failed to generate LocalRegistryHosting configmap: %+v", err)
+		}
+		log.Errorf("Writing YAML: %s", string(regCm))
+		clusterConfig.ClusterCreateOpts.NodeHooks = append(clusterConfig.ClusterCreateOpts.NodeHooks, k3d.NodeHook{
+			Stage: k3d.LifecycleStagePreStart,
+			Action: actions.WriteFileAction{
+				Runtime: runtime,
+				Content: regCm,
+				Dest:    "/tmp/reg.yaml",
 			},
 		})
 
@@ -889,4 +910,16 @@ func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.C
 		}
 
 	}
+}
+
+func prepCreateLocalRegistryHostingConfigMap(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+	cmd := fmt.Sprintf("kubectl create configmap --namespace %s %s --from-file=%s=/tmp/reg.yaml", k8s.LocalRegistryHostingNamespace, k8s.LocalRegistryHostingName, k8s.LocalRegistryHostingData)
+	for _, node := range cluster.Nodes {
+		if node.Role == k3d.AgentRole || node.Role == k3d.ServerRole {
+			if err := runtime.ExecInNode(ctx, node, []string{"sh", "-c", cmd}); err != nil {
+				log.Warnf("Failed to create cm in node '%s'", node.Name)
+			}
+		}
+	}
+	return nil
 }
