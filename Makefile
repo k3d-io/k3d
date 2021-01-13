@@ -189,7 +189,7 @@ ifndef HAS_GOX
 	($(GO) get $(PKG_GOX))
 endif
 ifndef HAS_GOLANGCI
-	(curl -sfL $(PKG_GOLANGCI_LINT_SCRIPT) | sh -s -- -b ${GOPATH}/bin v${PKG_GOLANGCI_LINT_VERSION})
+	(curl -sfL $(PKG_GOLANGCI_LINT_SCRIPT) | sh -s -- -b $$(go env GOPATH)/bin v${PKG_GOLANGCI_LINT_VERSION})
 endif
 ifdef HAS_GOLANGCI
 ifeq ($(HAS_GOLANGCI_VERSION),)
