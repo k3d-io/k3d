@@ -340,8 +340,8 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-via-ingress" class="md-nav__link">
-    1. via Ingress
+  <a href="#1-via-ingress-recommended" class="md-nav__link">
+    1. via Ingress (recommended)
   </a>
   
 </li>
@@ -544,8 +544,8 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-via-ingress" class="md-nav__link">
-    1. via Ingress
+  <a href="#1-via-ingress-recommended" class="md-nav__link">
+    1. via Ingress (recommended)
   </a>
   
 </li>
@@ -575,7 +575,7 @@
                 
                 
                 <h1 id="exposing-services">Exposing Services<a class="headerlink" href="#exposing-services" title="Permanent link">&para;</a></h1>
-<h2 id="1-via-ingress">1. via Ingress<a class="headerlink" href="#1-via-ingress" title="Permanent link">&para;</a></h2>
+<h2 id="1-via-ingress-recommended">1. via Ingress (recommended)<a class="headerlink" href="#1-via-ingress-recommended" title="Permanent link">&para;</a></h2>
 <p>In this example, we will deploy a simple nginx webserver deployment and make it accessible via ingress.
 Therefore, we have to create the cluster in a way, that the internal port 80 (where the <code>traefik</code> ingress controller is listening on) is exposed on the host system.</p>
 <ol>
@@ -598,7 +598,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 </div>
 </li>
 <li>
-<p>Get the kubeconfig file</p>
+<p>Get the kubeconfig file (redundant, as <code>k3d cluster create</code> already merges it into your default kubeconfig file)</p>
 <p><code class="highlight"><span class="nb">export</span> <span class="nv">KUBECONFIG</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>k3d kubeconfig write k3s-default<span class="k">)</span><span class="s2">&quot;</span></code></p>
 </li>
 <li>
@@ -649,6 +649,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <li>
 <p><strong>Note</strong>: You may as well expose the whole NodePort range from the very beginning, e.g. via <code>k3d cluster create mycluster --agents 3 -p "30000-32767:30000-32767@server[0]"</code> (See <a href="https://www.youtube.com/watch?v=5HaU6338lAk">this video from @portainer</a>)</p>
 </li>
+<li><strong>Warning</strong>: Docker creates iptable entries and a new proxy process per port-mapping, so this may take a very long time or even freeze your system!</li>
 </ul>
 </li>
 </ol>
@@ -687,7 +688,7 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 10, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 5, 2021</span>
     
   </small>
 </div>

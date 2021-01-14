@@ -442,7 +442,7 @@
       
         <li class="md-nav__item">
   <a href="#acknowledgements" class="md-nav__link">
-    Acknowledgements:
+    Acknowledgements
   </a>
   
 </li>
@@ -662,7 +662,7 @@
       
         <li class="md-nav__item">
   <a href="#acknowledgements" class="md-nav__link">
-    Acknowledgements:
+    Acknowledgements
   </a>
   
 </li>
@@ -691,7 +691,7 @@ The K3S container itself also needs to run with this runtime. If you are using D
 <h2 id="building-a-customized-k3s-image">Building a customized K3S image<a class="headerlink" href="#building-a-customized-k3s-image" title="Permanent link">&para;</a></h2>
 <p>To get the NVIDIA container runtime in the K3S image you need to build your own K3S image. The native K3S image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet. To get around this we need to build the image with a supported base image.</p>
 <h3 id="adapt-the-dockerfile">Adapt the Dockerfile<a class="headerlink" href="#adapt-the-dockerfile" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><span class="k">FROM</span> <span class="s">ubuntu:18.04</span> <span class="k">as</span> <span class="s">base</span>
+<div class="highlight"><pre><span></span><code><span class="k">FROM</span> <span class="s">ubuntu:18.04</span> <span class="k">as</span> <span class="s">base</span>
 <span class="k">RUN</span> apt-get update -y <span class="o">&amp;&amp;</span> apt-get install -y ca-certificates
 <span class="k">ADD</span> k3s/build/out/data.tar.gz /image
 <span class="k">RUN</span> mkdir -p /image/etc/ssl/certs /image/run /image/var/run /image/tmp /image/lib/modules /image/lib/firmware <span class="o">&amp;&amp;</span> <span class="se">\</span>
@@ -730,11 +730,13 @@ The K3S container itself also needs to run with this runtime. If you are using D
 <span class="k">ENTRYPOINT</span> <span class="p">[</span><span class="s2">&quot;/bin/k3s&quot;</span><span class="p">]</span>
 <span class="k">CMD</span> <span class="p">[</span><span class="s2">&quot;agent&quot;</span><span class="p">]</span>
 </code></pre></div>
-This <a href="cuda/Dockerfile">Dockerfile</a> is based on the <a href="https://github.com/rancher/k3s/blob/master/package/Dockerfile">K3S Dockerfile</a>.
-The following changes are applied:
-1. Change the base images to Ubuntu 18.04 so the NVIDIA Container Runtime can be installed
-2. Add a custom containerd <code>config.toml</code> template to add the NVIDIA Container Runtime. This replaces the default <code>runc</code> runtime
-3. Add a manifest for the NVIDIA driver plugin for Kubernetes</p>
+<p>This <a href="cuda/Dockerfile">Dockerfile</a> is based on the <a href="https://github.com/rancher/k3s/blob/master/package/Dockerfile">K3S Dockerfile</a>.
+The following changes are applied:</p>
+<ol>
+<li>Change the base images to Ubuntu 18.04 so the NVIDIA Container Runtime can be installed</li>
+<li>Add a custom containerd <code>config.toml</code> template to add the NVIDIA Container Runtime. This replaces the default <code>runc</code> runtime</li>
+<li>Add a manifest for the NVIDIA driver plugin for Kubernetes</li>
+</ol>
 <h3 id="configure-containerd">Configure containerd<a class="headerlink" href="#configure-containerd" title="Permanent link">&para;</a></h3>
 <p>We need to configure containerd to use the NVIDIA Container Runtime. We need to customize the config.toml that is used at startup. K3S provides a way to do this using a <a href="config.toml.tmpl">config.toml.tmpl</a> file. More information can be found on the <a href="https://rancher.com/docs/k3s/latest/en/advanced/#configuring-containerd">K3S site</a>.</p>
 <div class="highlight"><pre><span></span><code><span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">opt</span><span class="p">]</span>
@@ -794,10 +796,12 @@ The following changes are applied:
 <span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
 </code></pre></div>
 <h3 id="the-nvidia-device-plugin">The NVIDIA device plugin<a class="headerlink" href="#the-nvidia-device-plugin" title="Permanent link">&para;</a></h3>
-<p>To enable NVIDIA GPU support on Kubernetes you also need to install the <a href="https://github.com/NVIDIA/k8s-device-plugin">NVIDIA device plugin</a>. The device plugin is a daemonset and allows you to automatically:
-* Expose the number of GPUs on each nodes of your cluster
-* Keep track of the health of your GPUs
-* Run GPU enabled containers in your Kubernetes cluster.</p>
+<p>To enable NVIDIA GPU support on Kubernetes you also need to install the <a href="https://github.com/NVIDIA/k8s-device-plugin">NVIDIA device plugin</a>. The device plugin is a deamonset and allows you to automatically:</p>
+<ul>
+<li>Expose the number of GPUs on each nodes of your cluster</li>
+<li>Keep track of the health of your GPUs</li>
+<li>Run GPU enabled containers in your Kubernetes cluster.</li>
+</ul>
 <div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">apps/v1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">DaemonSet</span>
 <span class="nt">metadata</span><span class="p">:</span>
@@ -842,18 +846,22 @@ The following changes are applied:
 </code></pre></div>
 <h3 id="build-the-k3s-image">Build the K3S image<a class="headerlink" href="#build-the-k3s-image" title="Permanent link">&para;</a></h3>
 <p>To build the custom image we need to build K3S because we need the generated output.</p>
-<p>Put the following files in a directory:
-* <a href="cuda/Dockerfile">Dockerfile</a>
-* <a href="config.toml.tmpl">config.toml.tmpl</a>
-* <a href="gpu.yaml">gpu.yaml</a>
-* <a href="build.sh">build.sh</a>
-* <a href="cuda-vector-add.yaml">cuda-vector-add.yaml</a></p>
-<p>The <code>build.sh</code> files takes the K3S git tag as argument, it defaults to <code>v1.18.10+k3s1</code>. The script performs the following steps: 
-* pulls K3S 
-* builds K3S
-* build the custom K3S Docker image</p>
+<p>Put the following files in a directory:</p>
+<ul>
+<li><a href="cuda/Dockerfile">Dockerfile</a></li>
+<li><a href="config.toml.tmpl">config.toml.tmpl</a></li>
+<li><a href="gpu.yaml">gpu.yaml</a></li>
+<li><a href="build.sh">build.sh</a></li>
+<li><a href="cuda-vector-add.yaml">cuda-vector-add.yaml</a></li>
+</ul>
+<p>The <code>build.sh</code> files takes the K3S git tag as argument, it defaults to <code>v1.18.10+k3s1</code>. The script performs the following steps:</p>
+<ul>
+<li>pulls K3S</li>
+<li>builds K3S</li>
+<li>build the custom K3S Docker image</li>
+</ul>
 <p>The resulting image is tagged as k3s-gpu:&lt;version tag&gt;. The version tag is the git tag but the &lsquo;+&rsquo; sign is replaced with a &lsquo;-&lsquo;.</p>
-<p><a href="build.sh">build.sh</a>:
+<p><a href="build.sh">build.sh</a>:</p>
 <div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
 <span class="nb">set</span> -e
 <span class="nb">cd</span> <span class="k">$(</span>dirname <span class="nv">$0</span><span class="k">)</span>
@@ -869,33 +877,35 @@ git clone --depth <span class="m">1</span> https://github.com/rancher/k3s.git -b
 make
 <span class="nb">cd</span> ..
 docker build -t k3s-gpu:<span class="nv">$IMAGE_TAG</span> .
-</code></pre></div></p>
+</code></pre></div>
 <h2 id="run-and-test-the-custom-image-with-docker">Run and test the custom image with Docker<a class="headerlink" href="#run-and-test-the-custom-image-with-docker" title="Permanent link">&para;</a></h2>
-<p>You can run a container based on the new image with Docker:
+<p>You can run a container based on the new image with Docker:</p>
 <div class="highlight"><pre><span></span><code>docker run --name k3s-gpu -d --privileged --gpus all k3s-gpu:v1.18.10-k3s1
 </code></pre></div>
-Deploy a <a href="cuda-vector-add.yaml">test pod</a>:
+<p>Deploy a <a href="cuda-vector-add.yaml">test pod</a>:</p>
 <div class="highlight"><pre><span></span><code>docker cp cuda-vector-add.yaml k3s-gpu:/cuda-vector-add.yaml
-docker exec k3s-gpu kubectl apply -f /cuda-vector-add.yaml
-docker exec k3s-gpu kubectl logs cuda-vector-add
-</code></pre></div></p>
+docker <span class="nb">exec</span> k3s-gpu kubectl apply -f /cuda-vector-add.yaml
+docker <span class="nb">exec</span> k3s-gpu kubectl logs cuda-vector-add
+</code></pre></div>
 <h2 id="run-and-test-the-custom-image-with-k3d">Run and test the custom image with k3d<a class="headerlink" href="#run-and-test-the-custom-image-with-k3d" title="Permanent link">&para;</a></h2>
-<p>Tou can use the image with k3d:
+<p>Tou can use the image with k3d:</p>
 <div class="highlight"><pre><span></span><code>k3d cluster create --no-lb --image k3s-gpu:v1.18.10-k3s1 --gpus all
 </code></pre></div>
-Deploy a <a href="cuda-vector-add.yaml">test pod</a>:
+<p>Deploy a <a href="cuda-vector-add.yaml">test pod</a>:</p>
 <div class="highlight"><pre><span></span><code>kubectl apply -f cuda-vector-add.yaml
 kubectl logs cuda-vector-add
-</code></pre></div></p>
+</code></pre></div>
 <h2 id="known-issues">Known issues<a class="headerlink" href="#known-issues" title="Permanent link">&para;</a></h2>
 <ul>
 <li>This approach does not work on WSL2 yet. The NVIDIA driver plugin and container runtime rely on the NVIDIA Management Library (NVML) which is not yet supported. See the <a href="https://docs.nvidia.com/cuda/wsl-user-guide/index.html#known-limitations">CUDA on WSL User Guide</a>.</li>
 </ul>
-<h2 id="acknowledgements">Acknowledgements:<a class="headerlink" href="#acknowledgements" title="Permanent link">&para;</a></h2>
-<p>Most of the information in this article was obtained from various sources:
-* <a href="https://dev.to/mweibel/add-nvidia-gpu-support-to-k3s-with-containerd-4j17">Add NVIDIA GPU support to k3s with containerd</a>
-* <a href="https://github.com/ubuntu/microk8s">microk8s</a>
-* <a href="https://github.com/rancher/k3s">K3S</a></p>
+<h2 id="acknowledgements">Acknowledgements<a class="headerlink" href="#acknowledgements" title="Permanent link">&para;</a></h2>
+<p>Most of the information in this article was obtained from various sources:</p>
+<ul>
+<li><a href="https://dev.to/mweibel/add-nvidia-gpu-support-to-k3s-with-containerd-4j17">Add NVIDIA GPU support to k3s with containerd</a></li>
+<li><a href="https://github.com/ubuntu/microk8s">microk8s</a></li>
+<li><a href="https://github.com/rancher/k3s">K3S</a></li>
+</ul>
                 
                   
                     

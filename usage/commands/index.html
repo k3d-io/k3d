@@ -516,72 +516,92 @@
                 
                 <h1 id="command-tree">Command Tree<a class="headerlink" href="#command-tree" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code>k3d
-  --verbose  <span class="c1"># enable verbose (debug) logging (default: false)</span>
+  --verbose  <span class="c1"># GLOBAL: enable verbose (debug) logging (default: false)</span>
+  --trace  <span class="c1"># GLOBAL: enable super verbose logging (trace logging) (default: false)</span>
   --version  <span class="c1"># show k3d and k3s version</span>
-  -h, --help  <span class="c1"># show help text</span>
-  version  <span class="c1"># show k3d and k3s version</span>
-  <span class="nb">help</span> <span class="o">[</span>COMMAND<span class="o">]</span>  <span class="c1"># show help text for any command</span>
-  completion <span class="o">[</span>bash <span class="p">|</span> zsh <span class="p">|</span> <span class="o">(</span>psh <span class="p">|</span> powershell<span class="o">)]</span>  <span class="c1"># generate completion scripts for common shells</span>
+  -h, --help  <span class="c1"># GLOBAL: show help text</span>
+
   cluster <span class="o">[</span>CLUSTERNAME<span class="o">]</span>  <span class="c1"># default cluster name is &#39;k3s-default&#39;</span>
     create
-      --api-port  <span class="c1"># specify the port on which the cluster will be accessible (e.g. via kubectl)</span>
-      -i, --image  <span class="c1"># specify which k3s image should be used for the nodes</span>
-      --k3s-agent-arg  <span class="c1"># add additional arguments to the k3s agent (see https://rancher.com/docs/k3s/latest/en/installation/install-options/agent-config/#k3s-agent-cli-help)</span>
-      --k3s-server-arg  <span class="c1"># add additional arguments to the k3s server (see https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/#k3s-server-cli-help)</span>
-      -s, --servers  <span class="c1"># specify how many server nodes you want to create</span>
-      --network  <span class="c1"># specify a network you want to connect to</span>
-      --no-hostip <span class="c1"># disable the automatic injection of the Host IP as &#39;host.k3d.internal&#39; into the containers and CoreDN</span>
-      --no-image-volume  <span class="c1"># disable the creation of a volume for storing images (used for the &#39;k3d load image&#39; command)</span>
-      --no-lb <span class="c1"># disable the creation of a LoadBalancer in front of the server nodes</span>
-      --no-rollback <span class="c1"># disable the automatic rollback actions, if anything goes wrong</span>
-      -p, --port  <span class="c1"># add some more port mappings</span>
-      --token  <span class="c1"># specify a cluster token (default: auto-generated)</span>
-      --timeout  <span class="c1"># specify a timeout, after which the cluster creation will be interrupted and changes rolled back</span>
-      --update-default-kubeconfig  <span class="c1"># enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets &#39;--wait=true&#39;)</span>
-      --switch-context  <span class="c1"># (implies --update-default-kubeconfig) automatically sets the current-context of your default kubeconfig to the new cluster&#39;s context</span>
-      -v, --volume  <span class="c1"># specify additional bind-mounts</span>
-      --wait  <span class="c1"># enable waiting for all server nodes to be ready before returning</span>
-      -a, --agents  <span class="c1"># specify how many agent nodes you want to create</span>
-      -e, --env  <span class="c1"># add environment variables to the node containers</span>
+      -a, --agents  <span class="c1"># specify how many agent nodes you want to create (integer, default: 0)</span>
+      --api-port  <span class="c1"># specify the port on which the cluster will be accessible (format &#39;[HOST:]HOSTPORT&#39;, default: random)</span>
+      -c, --config  <span class="c1"># use a config file (format &#39;PATH&#39;)</span>
+      -e, --env  <span class="c1"># add environment variables to the nodes (quoted string, format: &#39;KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]&#39;, use flag multiple times)</span>
+      --gpus  <span class="c1"># [from docker CLI] add GPU devices to the node containers (string, e.g. &#39;all&#39;)</span>
+      -i, --image  <span class="c1"># specify which k3s image should be used for the nodes (string, default: &#39;docker.io/rancher/k3s:v1.20.0-k3s2&#39;, tag changes per build)</span>
+      --k3s-agent-arg  <span class="c1"># add additional arguments to the k3s agent (quoted string, use flag multiple times) (see https://rancher.com/docs/k3s/latest/en/installation/install-options/agent-config/#k3s-agent-cli-help)</span>
+      --k3s-server-arg  <span class="c1"># add additional arguments to the k3s server (quoted string, use flag multiple times) (see https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/#k3s-server-cli-help)</span>
+      --kubeconfig-switch-context  <span class="c1"># (implies --kubeconfig-update-default) automatically sets the current-context of your default kubeconfig to the new cluster&#39;s context (default: true)</span>
+      --kubeconfig-update-default  <span class="c1"># enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets &#39;--wait=true&#39;) (default: true)</span>
+      -l, --label  <span class="c1"># add (docker) labels to the node containers (format: &#39;KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]&#39;, use flag multiple times)</span>
+      --network  <span class="c1"># specify an existing (docker) network you want to connect to (string)</span>
+      --no-hostip  <span class="c1"># disable the automatic injection of the Host IP as &#39;host.k3d.internal&#39; into the containers and CoreDNS (default: false)</span>
+      --no-image-volume  <span class="c1"># disable the creation of a volume for storing images (used for the &#39;k3d image import&#39; command) (default: false)</span>
+      --no-lb  <span class="c1"># disable the creation of a load balancer in front of the server nodes (default: false)</span>
+      --no-rollback  <span class="c1"># disable the automatic rollback actions, if anything goes wrong (default: false)</span>
+      -p, --port  <span class="c1"># add some more port mappings (format: &#39;[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]&#39;, use flag multiple times)</span>
+      --registry-create  <span class="c1"># create a new (docker) registry dedicated for this cluster (default: false)</span>
+      --registry-use  <span class="c1"># use an existing local (docker) registry with this cluster (string, use multiple times)</span>
+      -s, --servers  <span class="c1"># specify how many server nodes you want to create (integer, default: 1)</span>
+      --token  <span class="c1"># specify a cluster token (string, default: auto-generated)</span>
+      --timeout  <span class="c1"># specify a timeout, after which the cluster creation will be interrupted and changes rolled back (duration, e.g. &#39;10s&#39;)</span>
+      -v, --volume  <span class="c1"># specify additional bind-mounts (format: &#39;[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]&#39;, use flag multiple times)</span>
+      --wait  <span class="c1"># enable waiting for all server nodes to be ready before returning (default: true)</span>
     start CLUSTERNAME  <span class="c1"># start a (stopped) cluster</span>
-      -a, --all  <span class="c1"># start all clusters</span>
-      --wait  <span class="c1"># wait for all servers and server-loadbalancer to be up before returning</span>
-      --timeout  <span class="c1"># maximum waiting time for &#39;--wait&#39; before canceling/returning</span>
+      -a, --all  <span class="c1"># start all clusters (default: false)</span>
+      --wait  <span class="c1"># wait for all servers and server-loadbalancer to be up before returning (default: true)</span>
+      --timeout  <span class="c1"># maximum waiting time for &#39;--wait&#39; before canceling/returning (duration, e.g. &#39;10s&#39;)</span>
     stop CLUSTERNAME  <span class="c1"># stop a cluster</span>
-      -a, --all  <span class="c1"># stop all clusters</span>
+      -a, --all  <span class="c1"># stop all clusters (default: false)</span>
     delete CLUSTERNAME  <span class="c1"># delete an existing cluster</span>
-      -a, --all  <span class="c1"># delete all existing clusters</span>
+      -a, --all  <span class="c1"># delete all existing clusters (default: false)</span>
     list <span class="o">[</span>CLUSTERNAME <span class="o">[</span>CLUSTERNAME ...<span class="o">]]</span>
-      --no-headers  <span class="c1"># do not print headers</span>
-      --token  <span class="c1"># show column with cluster tokens</span>
+      --no-headers  <span class="c1"># do not print headers (default: false)</span>
+      --token  <span class="c1"># show column with cluster tokens (default: false)</span>
+      -o, --output  <span class="c1"># format the output (format: &#39;json|yaml&#39;)</span>
+  completion <span class="o">[</span>bash <span class="p">|</span> zsh <span class="p">|</span> fish <span class="p">|</span> <span class="o">(</span>psh <span class="p">|</span> powershell<span class="o">)]</span>  <span class="c1"># generate completion scripts for common shells</span>
+  config
+    init  <span class="c1"># write a default k3d config (as a starting point)</span>
+      -f, --force  <span class="c1"># force overwrite target file (default: false)</span>
+      -o, --output  <span class="c1"># file to write to (string, default &quot;k3d-default.yaml&quot;)</span>
+  <span class="nb">help</span> <span class="o">[</span>COMMAND<span class="o">]</span>  <span class="c1"># show help text for any command</span>
+  image
+    import <span class="o">[</span>IMAGE <span class="p">|</span> ARCHIVE <span class="o">[</span>IMAGE <span class="p">|</span> ARCHIVE ...<span class="o">]]</span>  <span class="c1"># Load one or more images from the local runtime environment or tar-archives into k3d clusters</span>
+      -c, --cluster  <span class="c1"># clusters to load the image into (string, use flag multiple times, default: k3s-default)</span>
+      -k, --keep-tarball  <span class="c1"># do not delete the image tarball from the shared volume after completion (default: false)</span>
+  kubeconfig
+    get <span class="o">(</span>CLUSTERNAME <span class="o">[</span>CLUSTERNAME ...<span class="o">]</span> <span class="p">|</span> --all<span class="o">)</span> <span class="c1"># get kubeconfig from cluster(s) and write it to stdout</span>
+      -a, --all  <span class="c1"># get kubeconfigs from all clusters (default: false)</span>
+    merge <span class="p">|</span> write <span class="o">(</span>CLUSTERNAME <span class="o">[</span>CLUSTERNAME ...<span class="o">]</span> <span class="p">|</span> --all<span class="o">)</span>  <span class="c1"># get kubeconfig from cluster(s) and merge it/them into a (kubeconfig-)file</span>
+      -a, --all  <span class="c1"># get kubeconfigs from all clusters (default: false)</span>
+      -s, --kubeconfig-switch-context  <span class="c1"># switch current-context in kubeconfig to the new context (default: true)</span>
+      -d, --kubeconfig-merge-default  <span class="c1"># update the default kubeconfig (usually $KUBECONFIG or $HOME/.kube/config)</span>
+      -o, --output  <span class="c1"># specify the output file where the kubeconfig should be written to (string)</span>
+      --overwrite  <span class="c1"># [Careful!] forcefully overwrite the output file, ignoring existing contents (default: false)</span>
+      -u, --update  <span class="c1"># update conflicting fields in existing kubeconfig (default: true)</span>
   node
     create NODENAME  <span class="c1"># Create new nodes (and add them to existing clusters)</span>
-      -c, --cluster  <span class="c1"># specify the cluster that the node shall connect to</span>
-      -i, --image  <span class="c1"># specify which k3s image should be used for the node(s)</span>
-          --replicas  <span class="c1"># specify how many replicas you want to create with this spec</span>
-          --role  <span class="c1"># specify the node role</span>
-      --wait  <span class="c1"># wait for the node to be up and running before returning</span>
-      --timeout <span class="c1"># specify a timeout duration, after which the node creation will be interrupted, if not done yet</span>
+      -c, --cluster  <span class="c1"># specify the cluster that the node shall connect to (string, default: k3s-default)</span>
+      -i, --image  <span class="c1"># specify which k3s image should be used for the node(s) (string, default: &#39;docker.io/rancher/k3s:v1.20.0-k3s2&#39;, tag changes per build)</span>
+      --replicas  <span class="c1"># specify how many replicas you want to create with this spec (integer, default: 1)</span>
+      --role  <span class="c1"># specify the node role (string, format: &#39;agent|server&#39;, default: agent)</span>
+      --timeout <span class="c1"># specify a timeout duration, after which the node creation will be interrupted, if not done yet (duration, e.g. &#39;10s&#39;)</span>
+      --wait  <span class="c1"># wait for the node to be up and running before returning (default: true)</span>
     start NODENAME  <span class="c1"># start a (stopped) node</span>
     stop NODENAME <span class="c1"># stop a node</span>
     delete NODENAME  <span class="c1"># delete an existing node</span>
-      -a, --all  <span class="c1"># delete all existing nodes</span>
+      -a, --all  <span class="c1"># delete all existing nodes (default: false)</span>
     list NODENAME
-      --no-headers  <span class="c1"># do not print headers</span>
-  kubeconfig
-    get <span class="o">(</span>CLUSTERNAME <span class="o">[</span>CLUSTERNAME ...<span class="o">]</span> <span class="p">|</span> --all<span class="o">)</span> <span class="c1"># get kubeconfig from cluster(s) and write it to stdout</span>
-      -a, --all  <span class="c1"># get kubeconfigs from all clusters</span>
-    merge <span class="p">|</span> write <span class="o">(</span>CLUSTERNAME <span class="o">[</span>CLUSTERNAME ...<span class="o">]</span> <span class="p">|</span> --all<span class="o">)</span>  <span class="c1"># get kubeconfig from cluster(s) and merge it/them into into a file in $HOME/.k3d (or whatever you specify via the flags)</span>
-      -a, --all  <span class="c1"># get kubeconfigs from all clusters</span>
-          --output  <span class="c1"># specify the output file where the kubeconfig should be written to</span>
-          --overwrite  <span class="c1"># [Careful!] forcefully overwrite the output file, ignoring existing contents</span>
-      -s, --switch-context  <span class="c1"># switch current-context in kubeconfig to the new context</span>
-      -u, --update  <span class="c1"># update conflicting fields in existing kubeconfig (default: true)</span>
-      -d, --merge-default-kubeconfig  <span class="c1"># update the default kubeconfig (usually $KUBECONFIG or $HOME/.kube/config)</span>
-  image
-    import <span class="o">[</span>IMAGE <span class="p">|</span> ARCHIVE <span class="o">[</span>IMAGE <span class="p">|</span> ARCHIVE ...<span class="o">]]</span>  <span class="c1"># Load one or more images from the local runtime environment or tar-archives into k3d clusters</span>
-      -c, --cluster  <span class="c1"># clusters to load the image into</span>
-      -k, --keep-tarball  <span class="c1"># do not delete the image tarball from the shared volume after completion</span>
+      --no-headers  <span class="c1"># do not print headers (default: false)</span>
+  registry
+    create REGISTRYNAME
+      -i, --image  <span class="c1"># specify image used for the registry (string, default: &quot;docker.io/library/registry:2&quot;)</span>
+      -p, --port  <span class="c1"># select host port to map to (format: &#39;[HOST:]HOSTPORT&#39;, default: &#39;random&#39;)</span>
+    delete REGISTRYNAME
+      -a, --all  <span class="c1"># delete all existing registries (default: false)</span>
+    list <span class="o">[</span>NAME <span class="o">[</span>NAME...<span class="o">]]</span>
+      --no-headers  <span class="c1"># disable table headers (default: false)</span>
+  version  <span class="c1"># show k3d and k3s version</span>
 </code></pre></div>
                 
                   
@@ -591,7 +611,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 23, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 5, 2021</span>
     
   </small>
 </div>

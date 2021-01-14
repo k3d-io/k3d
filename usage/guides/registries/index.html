@@ -388,15 +388,35 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#using-the-k3d-registry" class="md-nav__link">
-    Using the k3d registry
+  <a href="#using-k3d-managed-registries" class="md-nav__link">
+    Using k3d-managed registries
+  </a>
+  
+    <nav class="md-nav" aria-label="Using k3d-managed registries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-dedicated-registry-together-with-your-cluster" class="md-nav__link">
+    Create a dedicated registry together with your cluster
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#using-your-own-local-registry" class="md-nav__link">
-    Using your own local registry
+  <a href="#create-a-customized-k3d-managed-registry" class="md-nav__link">
+    Create a customized k3d-managed registry
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-your-own-not-k3d-managed-local-registry" class="md-nav__link">
+    Using your own (not k3d-managed) local registry
   </a>
   
 </li>
@@ -640,15 +660,35 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#using-the-k3d-registry" class="md-nav__link">
-    Using the k3d registry
+  <a href="#using-k3d-managed-registries" class="md-nav__link">
+    Using k3d-managed registries
+  </a>
+  
+    <nav class="md-nav" aria-label="Using k3d-managed registries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-dedicated-registry-together-with-your-cluster" class="md-nav__link">
+    Create a dedicated registry together with your cluster
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#using-your-own-local-registry" class="md-nav__link">
-    Using your own local registry
+  <a href="#create-a-customized-k3d-managed-registry" class="md-nav__link">
+    Create a customized k3d-managed registry
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-your-own-not-k3d-managed-local-registry" class="md-nav__link">
+    Using your own (not k3d-managed) local registry
   </a>
   
 </li>
@@ -742,12 +782,29 @@ For example, if we mount the CA file in <code>/etc/ssl/certs/my-company-root.pem
 <p>Finally, we can create the cluster, mounting the CA file in the path we specified in <code>ca_file</code>:</p>
 <p><code class="highlight">k3d cluster create --volume <span class="s2">&quot;</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.k3d/my-registries.yaml:/etc/rancher/k3s/registries.yaml&quot;</span> --volume <span class="s2">&quot;</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.k3d/my-company-root.pem:/etc/ssl/certs/my-company-root.pem&quot;</span></code></p>
 <h2 id="using-a-local-registry">Using a local registry<a class="headerlink" href="#using-a-local-registry" title="Permanent link">&para;</a></h2>
-<h3 id="using-the-k3d-registry">Using the k3d registry<a class="headerlink" href="#using-the-k3d-registry" title="Permanent link">&para;</a></h3>
+<h3 id="using-k3d-managed-registries">Using k3d-managed registries<a class="headerlink" href="#using-k3d-managed-registries" title="Permanent link">&para;</a></h3>
 <div class="admonition info">
-<p class="admonition-title">Not ported yet</p>
-<p>The k3d-managed registry has not yet been ported from v1.x to v3.x</p>
+<p class="admonition-title">Just ported!</p>
+<p>The k3d-managed registry is available again as of k3d v4.0.0 (January 2021)</p>
 </div>
-<h3 id="using-your-own-local-registry">Using your own local registry<a class="headerlink" href="#using-your-own-local-registry" title="Permanent link">&para;</a></h3>
+<h4 id="create-a-dedicated-registry-together-with-your-cluster">Create a dedicated registry together with your cluster<a class="headerlink" href="#create-a-dedicated-registry-together-with-your-cluster" title="Permanent link">&para;</a></h4>
+<ol>
+<li><code class="highlight">k3d cluster create mycluster --registry-create</code>: This creates your cluster <code>mycluster</code> together with a registry container called <code>k3d-mycluster-registry</code><ul>
+<li>k3d sets everything up in the cluster for containerd to be able to pull images from that registry (using the <code>registries.yaml</code> file)</li>
+<li>the port, which the registry is listening on will be mapped to a random port on your host system</li>
+</ul>
+</li>
+<li>Check the k3d command output or <code class="highlight">docker ps -f <span class="nv">name</span><span class="o">=</span>k3d-mycluster-registry</code> to find the exposed port (let&rsquo;s use <code>12345</code> here)</li>
+<li>Pull some image (optional) <code class="highlight">docker pull alpine:latest</code>, re-tag it to reference your newly created registry <code class="highlight">docker tag alpine:latest k3d-mycluster-registry:12345/testimage:local</code> and push it <code class="highlight">docker push k3d-mycluster-registry:12345/testimage:local</code></li>
+<li>Use kubectl to create a new pod in your cluster using that image to see, if the cluster can pull from the new registry: <code class="highlight">kubectl run --image k3d-mycluster-registry:12345/testimage:local testimage --command -- tail -f /dev/null</code> (creates a container that will not do anything but keep on running)</li>
+</ol>
+<h4 id="create-a-customized-k3d-managed-registry">Create a customized k3d-managed registry<a class="headerlink" href="#create-a-customized-k3d-managed-registry" title="Permanent link">&para;</a></h4>
+<ol>
+<li><code class="highlight">k3d registry create myregistry.localhost --port <span class="m">5111</span></code> creates a new registry called <code>myregistry.localhost</code> (could be used with automatic resolution of <code>*.localhost</code>, see next section)</li>
+<li><code class="highlight">k3d cluster create newcluster --registry-use k3d-myregistry.localhost:5111</code> (make sure you use the <code>k3d-</code> prefix here) creates a new cluster set up to us that registry</li>
+<li>continue with step 3 and 4 from the last section for testing</li>
+</ol>
+<h3 id="using-your-own-not-k3d-managed-local-registry">Using your own (not k3d-managed) local registry<a class="headerlink" href="#using-your-own-not-k3d-managed-local-registry" title="Permanent link">&para;</a></h3>
 <p>You can start your own local registry it with some <code>docker</code> commands, like:</p>
 <div class="highlight"><pre><span></span><code>docker volume create local_registry
 docker container run -d --name registry.localhost -v local_registry:/var/lib/registry --restart always -p <span class="m">5000</span>:5000 registry:2
@@ -772,37 +829,35 @@ Otherwise, it&rsquo;s installable using <code>sudo apt install libnss-myhostname
 </ul>
 <p>We will verify these two things for a local registry (located at <code>registry.localhost:5000</code>) running in your development machine. Things would be basically the same for checking an external registry, but some additional configuration could be necessary in your local machine when using an authenticated or secure registry (please refer to Docker&rsquo;s documentation for this).</p>
 <p>First, we can download some image (like <code>nginx</code>) and push it to our local registry with:</p>
-<p>```shell script
-docker pull nginx:latest
+<div class="highlight"><pre><span></span><code>docker pull nginx:latest
 docker tag nginx:latest registry.localhost:5000/nginx:latest
 docker push registry.localhost:5000/nginx:latest
-<div class="highlight"><pre><span></span><code>Then we can deploy a pod referencing this image to your cluster:
-
-```shell script
-cat &lt;&lt;EOF | kubectl apply -f -
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-test-registry
-  labels:
-    app: nginx-test-registry
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: nginx-test-registry
-  template:
-    metadata:
-      labels:
-        app: nginx-test-registry
-    spec:
-      containers:
-      - name: nginx-test-registry
-        image: registry.localhost:5000/nginx:latest
-        ports:
-        - containerPort: 80
-EOF
-</code></pre></div></p>
+</code></pre></div>
+<p>Then we can deploy a pod referencing this image to your cluster:</p>
+<div class="highlight"><pre><span></span><code>cat <span class="s">&lt;&lt;EOF | kubectl apply -f -</span>
+<span class="s">apiVersion: apps/v1</span>
+<span class="s">kind: Deployment</span>
+<span class="s">metadata:</span>
+<span class="s">  name: nginx-test-registry</span>
+<span class="s">  labels:</span>
+<span class="s">    app: nginx-test-registry</span>
+<span class="s">spec:</span>
+<span class="s">  replicas: 1</span>
+<span class="s">  selector:</span>
+<span class="s">    matchLabels:</span>
+<span class="s">      app: nginx-test-registry</span>
+<span class="s">  template:</span>
+<span class="s">    metadata:</span>
+<span class="s">      labels:</span>
+<span class="s">        app: nginx-test-registry</span>
+<span class="s">    spec:</span>
+<span class="s">      containers:</span>
+<span class="s">      - name: nginx-test-registry</span>
+<span class="s">        image: registry.localhost:5000/nginx:latest</span>
+<span class="s">        ports:</span>
+<span class="s">        - containerPort: 80</span>
+<span class="s">EOF</span>
+</code></pre></div>
 <p>Then you should check that the pod is running with <code>kubectl get pods -l "app=nginx-test-registry"</code>.</p>
 <h2 id="configuring-registries-for-k3s-v091">Configuring registries for k3s &lt;= v0.9.1<a class="headerlink" href="#configuring-registries-for-k3s-v091" title="Permanent link">&para;</a></h2>
 <p>k3s servers below v0.9.1 do not recognize the <code>registries.yaml</code> file as described in
@@ -847,7 +902,7 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 2, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 7, 2021</span>
     
   </small>
 </div>

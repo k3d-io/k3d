@@ -587,8 +587,8 @@
                 
                 
                 <h1 id="handling-kubeconfigs">Handling Kubeconfigs<a class="headerlink" href="#handling-kubeconfigs" title="Permanent link">&para;</a></h1>
-<p>By default, k3d won&rsquo;t touch your kubeconfig without you telling it to do so.
-To get a kubeconfig set up for you to connect to a k3d cluster, you can go different ways.</p>
+<p>By default, k3d will update your default kubeconfig with your new cluster&rsquo;s details and set the current-context to it (can be disabled).
+To get a kubeconfig set up for you to connect to a k3d cluster without this automatism, you can go different ways.</p>
 <details class="question"><summary>What is the default kubeconfig?</summary><p>We determine the path of the used or default kubeconfig in two ways:</p>
 <ol>
 <li>Using the <code>KUBECONFIG</code> environment variable, if it specifies <em>exactly one</em> file</li>
@@ -604,16 +604,16 @@ To get a kubeconfig set up for you to connect to a k3d cluster, you can go diffe
 <li><em>Note 2</em>: alternatively you can use <code class="highlight">k3d kubeconfig get mycluster &gt; some-file.yaml</code></li>
 </ul>
 </li>
-<li>Update your default kubeconfig <strong>upon</strong> cluster creation<ul>
-<li><code class="highlight">k3d cluster create mycluster --update-kubeconfig</code><ul>
-<li><em>Note:</em> this won&rsquo;t switch the current-context (append <code>--switch-context</code> to do so)</li>
+<li>Update your default kubeconfig <strong>upon</strong> cluster creation (DEFAULT)<ul>
+<li><code class="highlight">k3d cluster create mycluster --kubeconfig-update-default</code><ul>
+<li><em>Note:</em> this won&rsquo;t switch the current-context (append <code>--kubeconfig-switch-context</code> to do so)</li>
 </ul>
 </li>
 </ul>
 </li>
 <li>Update your default kubeconfig <strong>after</strong> cluster creation<ul>
-<li><code class="highlight">k3d kubeconfig merge mycluster --merge-default-kubeconfig</code><ul>
-<li><em>Note:</em> this won&rsquo;t switch the current-context (append <code>--switch-context</code> to do so)</li>
+<li><code class="highlight">k3d kubeconfig merge mycluster --kubeconfig-merge-default</code><ul>
+<li><em>Note:</em> this won&rsquo;t switch the current-context (append <code>--kubeconfig-switch-context</code> to do so)</li>
 </ul>
 </li>
 </ul>
@@ -631,16 +631,16 @@ To get a kubeconfig set up for you to connect to a k3d cluster, you can go diffe
 <p class="admonition-title">Switching the current context</p>
 <p>None of the above options switch the current-context by default.
 This is intended to be least intrusive, since the current-context has a global effect.
-You can switch the current-context directly with the <code>kubeconfig merge</code> command by adding the <code>--switch-context</code> flag.</p>
+You can switch the current-context directly with the <code>kubeconfig merge</code> command by adding the <code>--kubeconfig-switch-context</code> flag.</p>
 </div>
 <h2 id="removing-cluster-details-from-the-kubeconfig">Removing cluster details from the kubeconfig<a class="headerlink" href="#removing-cluster-details-from-the-kubeconfig" title="Permanent link">&para;</a></h2>
 <p><code class="highlight">k3d cluster delete mycluster</code> will always remove the details for <code>mycluster</code> from the default kubeconfig.
 It will also delete the respective kubeconfig file in <code>$HOME/.k3d/</code> if it exists.</p>
 <h2 id="handling-multiple-clusters">Handling multiple clusters<a class="headerlink" href="#handling-multiple-clusters" title="Permanent link">&para;</a></h2>
 <p><code>k3d kubeconfig merge</code> let&rsquo;s you specify one or more clusters via arguments <em>or</em> all via <code>--all</code>.
-All kubeconfigs will then be merged into a single file if <code>--merge-default-kubeconfig</code> or <code>--output</code> is specified.
+All kubeconfigs will then be merged into a single file if <code>--kubeconfig-merge-default</code> or <code>--output</code> is specified.
 If none of those two flags was specified, a new file will be created per cluster and the merged path (e.g. <code>$HOME/.k3d/kubeconfig-cluster1.yaml:$HOME/.k3d/cluster2.yaml</code>) will be returned.
-Note, that with multiple cluster specified, the <code>--switch-context</code> flag will change the current context to the cluster which was last in the list.</p>
+Note, that with multiple cluster specified, the <code>--kubeconfig-switch-context</code> flag will change the current context to the cluster which was last in the list.</p>
                 
                   
                     
@@ -649,7 +649,7 @@ Note, that with multiple cluster specified, the <code>--switch-context</code> fl
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">August 5, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 5, 2021</span>
     
   </small>
 </div>

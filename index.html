@@ -628,7 +628,7 @@
                 
                 <h1 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h1>
 <p><img alt="k3d" src="static/img/k3d_logo_black_blue.svg" /></p>
-<p><strong>This page is targeting k3d v3.0.0 and newer!</strong></p>
+<p><strong>This page is targeting k3d v4.0.0 and newer!</strong></p>
 <p>k3d is a lightweight wrapper to run <a href="https://github.com/rancher/k3s">k3s</a> (Rancher Lab&rsquo;s minimal Kubernetes distribution) in docker.</p>
 <p>k3d makes it very easy to create single- and multi-node <a href="https://github.com/rancher/k3s">k3s</a> clusters in docker, e.g. for local development on Kubernetes.</p>
 <details class="tip"><summary>View a quick demo</summary><p><asciinema-player src="/static/asciicast/20200715_k3d.01.cast" cols=200 rows=32></asciinema-player></p>
@@ -687,24 +687,18 @@
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <p>You have several options there:</p>
 <ul>
-<li>use the install script to grab the latest release:<ul>
+<li>use the install script to grab the latest release:</li>
 <li>wget: <code class="highlight">wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> bash</code></li>
 <li>curl: <code class="highlight">curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> bash</code></li>
-</ul>
-</li>
+<li>use the install script to grab a specific release (via <code>TAG</code> environment variable):</li>
+<li>wget: <code class="highlight">wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v4.0.0 bash</code></li>
 <li>
-<p>use the install script to grab a specific release (via <code>TAG</code> environment variable):</p>
-<ul>
-<li>wget: <code class="highlight">wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v3.0.0 bash</code></li>
-<li>curl: <code class="highlight">curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v3.0.0 bash</code></li>
-</ul>
+<p>curl: <code class="highlight">curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v4.0.0 bash</code></p>
 </li>
 <li>
 <p>use <a href="https://brew.sh">Homebrew</a>: <code class="highlight">brew install k3d</code> (Homebrew is available for MacOS and Linux)</p>
-<ul>
-<li>Formula can be found in <a href="https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb">homebrew/homebrew-core</a> and is mirrored to <a href="https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb">homebrew/linuxbrew-core</a></li>
-</ul>
 </li>
+<li>Formula can be found in <a href="https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb">homebrew/homebrew-core</a> and is mirrored to <a href="https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb">homebrew/linuxbrew-core</a></li>
 <li>install via <a href="https://aur.archlinux.org/">AUR</a> package <a href="https://aur.archlinux.org/packages/rancher-k3d-bin/">rancher-k3d-bin</a>: <code>yay -S rancher-k3d-bin</code></li>
 <li>grab a release from the <a href="https://github.com/rancher/k3d/releases">release tab</a> and install it yourself.</li>
 <li>install via go: <code class="highlight">go install github.com/rancher/k3d</code> (<strong>Note</strong>: this will give you unreleased/bleeding-edge changes)</li>
@@ -718,7 +712,7 @@
 <div class="highlight"><pre><span></span><code>k3d cluster create mycluster
 </code></pre></div>
 <p>Get the new cluster&rsquo;s connection details merged into your default kubeconfig (usually specified using the <code>KUBECONFIG</code> environment variable or the default path <code class="highlight"><span class="nv">$HOME</span>/.kube/config</code>) and directly switch to the new context:</p>
-<div class="highlight"><pre><span></span><code>k3d kubeconfig merge mycluster --switch-context
+<div class="highlight"><pre><span></span><code>k3d kubeconfig merge mycluster --kubeconfig-switch-context
 </code></pre></div>
 <p>Use the new cluster with <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl/"><code>kubectl</code></a>, e.g.:</p>
 <div class="highlight"><pre><span></span><code>kubectl get nodes
@@ -735,7 +729,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 13, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 14, 2021</span>
     
   </small>
 </div>
