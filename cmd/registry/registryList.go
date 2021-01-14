@@ -82,20 +82,22 @@ func NewCmdRegistryList() *cobra.Command {
 			// print existing registries
 			headers := &[]string{}
 			if !registryListFlags.noHeader {
-				headers = &[]string{"NAME", "PORT", "ROLE", "CLUSTER"} // TODO: add status
+				headers = &[]string{"NAME", "ROLE", "CLUSTER"} // TODO: add status
 			}
 
 			util.PrintNodes(existingNodes, registryListFlags.output,
 				headers, util.NodePrinterFunc(func(tabwriter *tabwriter.Writer, node *k3d.Node) {
 					cluster := "*"
-					if _, ok := node.Labels[k3d.LabelClusterName]); ok {
-						cluster = node.Labels[k3d.LabelClusterName])
+					if _, ok := node.Labels[k3d.LabelClusterName]; ok {
+						cluster = node.Labels[k3d.LabelClusterName]
 					}
 					fmt.Fprintf(tabwriter, "%s\t%s\t%s\n",
 						strings.TrimPrefix(node.Name, "/"),
 						string(node.Role),
-						cluster
-				}))
+						cluster,
+					)
+				}),
+			)
 		},
 	}
 
