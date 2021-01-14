@@ -77,7 +77,7 @@ func NewCmdNodeList() *cobra.Command {
 				}
 			}
 
-			// print existing registries
+			// print existing nodes
 			headers := &[]string{}
 			if !nodeListFlags.noHeader {
 				headers = &[]string{"NAME", "ROLE", "CLUSTER", "STATUS"}
