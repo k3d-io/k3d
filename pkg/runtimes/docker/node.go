@@ -25,6 +25,7 @@ package docker
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -33,7 +34,8 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -48,7 +50,8 @@ func (d Docker) CreateNode(ctx context.Context, node *k3d.Node) error {
 	}
 
 	// create node
-	if err := createContainer(ctx, dockerNode, node.Name); err != nil {
+	_, err = createContainer(ctx, dockerNode, node.Name)
+	if err != nil {
 		log.Errorf("Failed to create node '%s'", node.Name)
 		return err
 	}
@@ -58,6 +61,7 @@ func (d Docker) CreateNode(ctx context.Context, node *k3d.Node) error {
 
 // DeleteNode deletes a node
 func (d Docker) DeleteNode(ctx context.Context, nodeSpec *k3d.Node) error {
+	log.Debugf("Deleting node %s ...", nodeSpec.Name)
 	return removeContainer(ctx, nodeSpec.Name)
 }
 
@@ -217,7 +221,7 @@ func (d Docker) GetNode(ctx context.Context, node *k3d.Node) (*k3d.Node, error) 
 
 	node, err = TranslateContainerDetailsToNode(containerDetails)
 	if err != nil {
-		log.Errorf("Failed to translate container details for node '%s' to node object", node.Name)
+		log.Errorf("Failed to translate container '%s' to node object", containerDetails.Name)
 		return node, err
 	}
 
@@ -283,7 +287,7 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 
 	containerInspectResponse, err := docker.ContainerInspect(ctx, container.ID)
 	if err != nil {
-		log.Errorf("Failed to inspect container '%s'", container.ID)
+		log.Errorf("Failed to inspect node '%s'(ID %s)", node.Name, container.ID)
 		return nil, err
 	}
 
@@ -320,12 +324,14 @@ func (d Docker) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []str
 func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) error {
 	execConnection, err := executeInNode(ctx, node, cmd)
 	if err != nil {
-		logs, err := ioutil.ReadAll(execConnection.Reader)
-		if err != nil {
-			log.Errorf("Failed to get logs from errored exec process in node '%s'", node.Name)
-			return err
+		if execConnection != nil && execConnection.Reader != nil {
+			logs, err := ioutil.ReadAll(execConnection.Reader)
+			if err != nil {
+				log.Errorf("Failed to get logs from errored exec process in node '%s'", node.Name)
+				return err
+			}
+			err = fmt.Errorf("%w: Logs from failed access process:\n%s", err, string(logs))
 		}
-		err = fmt.Errorf("%w: Logs from failed access process:\n%s", err, string(logs))
 	}
 	return err
 }
@@ -393,10 +399,44 @@ func executeInNode(ctx context.Context, node *k3d.Node, cmd []string) (*types.Hi
 		if execInfo.ExitCode == 0 { // success
 			log.Debugf("Exec process in node '%s' exited with '0'", node.Name)
 			return &execConnection, nil
-		} else { // failed
-			return &execConnection, fmt.Errorf("Exec process in node '%s' failed with exit code '%d'", node.Name, execInfo.ExitCode)
 		}
+		return &execConnection, fmt.Errorf("Exec process in node '%s' failed with exit code '%d'", node.Name, execInfo.ExitCode)
+	}
+}
 
+// GetNodesInNetwork returns all the nodes connected to a given network
+func (d Docker) GetNodesInNetwork(ctx context.Context, network string) ([]*k3d.Node, error) {
+	// create docker client
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return nil, err
+	}
+	defer docker.Close()
+
+	net, err := GetNetwork(ctx, network)
+	if err != nil {
+		return nil, err
 	}
 
+	connectedNodes := []*k3d.Node{}
+
+	// loop over list of containers connected to this cluster and transform them into nodes internally
+	for cID := range net.Containers {
+		containerDetails, err := getContainerDetails(ctx, cID)
+		if err != nil {
+			return nil, err
+		}
+		node, err := TranslateContainerDetailsToNode(containerDetails)
+		if err != nil {
+			if errors.Is(err, runtimeErr.ErrRuntimeContainerUnknown) {
+				log.Tracef("GetNodesInNetwork: inspected non-k3d-managed container %s", containerDetails.Name)
+				continue
+			}
+			return nil, err
+		}
+		connectedNodes = append(connectedNodes, node)
+	}
+
+	return connectedNodes, nil
 }

@@ -65,12 +65,27 @@ Finally, we can create the cluster, mounting the CA file in the path we specifie
 
 ## Using a local registry
 
-### Using the k3d registry
+### Using k3d-managed registries
 
-!!! info "Not ported yet"
-      The k3d-managed registry has not yet been ported from v1.x to v3.x
+!!! info "Just ported!"
+      The k3d-managed registry is available again as of k3d v4.0.0 (January 2021)
 
-### Using your own local registry
+#### Create a dedicated registry together with your cluster
+
+1. `#!bash k3d cluster create mycluster --registry-create`: This creates your cluster `mycluster` together with a registry container called `k3d-mycluster-registry`
+    - k3d sets everything up in the cluster for containerd to be able to pull images from that registry (using the `registries.yaml` file)
+    - the port, which the registry is listening on will be mapped to a random port on your host system
+2. Check the k3d command output or `#!bash docker ps -f name=k3d-mycluster-registry` to find the exposed port (let's use `12345` here)
+3. Pull some image (optional) `#!bash docker pull alpine:latest`, re-tag it to reference your newly created registry `#!bash docker tag alpine:latest k3d-mycluster-registry:12345/testimage:local` and push it `#!bash docker push k3d-mycluster-registry:12345/testimage:local`
+4. Use kubectl to create a new pod in your cluster using that image to see, if the cluster can pull from the new registry: `#!bash kubectl run --image k3d-mycluster-registry:12345/testimage:local testimage --command -- tail -f /dev/null` (creates a container that will not do anything but keep on running)
+
+#### Create a customized k3d-managed registry
+
+1. `#!bash k3d registry create myregistry.localhost --port 5111` creates a new registry called `myregistry.localhost` (could be used with automatic resolution of `*.localhost`, see next section)
+2. `#!bash k3d cluster create newcluster --registry-use k3d-myregistry.localhost:5111` (make sure you use the `k3d-` prefix here) creates a new cluster set up to us that registry
+3. continue with step 3 and 4 from the last section for testing
+
+### Using your own (not k3d-managed) local registry
 
 You can start your own local registry it with some `docker` commands, like:
 
@@ -103,14 +118,14 @@ Once again, this will only work with k3s >= v0.10.0 (see the some sections below
 
 You should test that you can
 
-* push to your registry from your local development machine.
-* use images from that registry in `Deployments` in your k3d cluster.
+- push to your registry from your local development machine.
+- use images from that registry in `Deployments` in your k3d cluster.
 
 We will verify these two things for a local registry (located at `registry.localhost:5000`) running in your development machine. Things would be basically the same for checking an external registry, but some additional configuration could be necessary in your local machine when using an authenticated or secure registry (please refer to Docker's documentation for this).
 
 First, we can download some image (like `nginx`) and push it to our local registry with:
 
-```shell script
+```bash
 docker pull nginx:latest
 docker tag nginx:latest registry.localhost:5000/nginx:latest
 docker push registry.localhost:5000/nginx:latest
@@ -118,7 +133,7 @@ docker push registry.localhost:5000/nginx:latest
 
 Then we can deploy a pod referencing this image to your cluster:
 
-```shell script
+```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment

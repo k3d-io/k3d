@@ -24,10 +24,15 @@ package containerd
 import (
 	"context"
 
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
 
 // CopyToNode copies a file from the local FS to the selected node
 func (d Containerd) CopyToNode(ctx context.Context, src string, dest string, node *k3d.Node) error {
+	return nil
+}
+
+// WriteToNode writes a byte array to the selected node
+func (d Containerd) WriteToNode(ctx context.Context, content []byte, dest string, node *k3d.Node) error {
 	return nil
 }

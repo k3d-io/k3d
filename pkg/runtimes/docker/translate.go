@@ -31,7 +31,8 @@ import (
 	docker "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 
 	dockercliopts "github.com/docker/cli/opts"
@@ -93,13 +94,14 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	// containerConfig.Volumes = map[string]struct{}{} // TODO: do we need this? We only used binds before
 
 	/* Ports */
-	exposedPorts, portBindings, err := nat.ParsePortSpecs(node.Ports)
-	if err != nil {
-		log.Errorf("Failed to parse port specs '%v'", node.Ports)
-		return nil, err
+	exposedPorts := nat.PortSet{}
+	for ep := range node.Ports {
+		if _, exists := exposedPorts[ep]; !exists {
+			exposedPorts[ep] = struct{}{}
+		}
 	}
 	containerConfig.ExposedPorts = exposedPorts
-	hostConfig.PortBindings = portBindings
+	hostConfig.PortBindings = node.Ports
 	/* Network */
 	networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
 		node.Network: {},
@@ -133,11 +135,20 @@ func TranslateContainerToNode(cont *types.Container) (*k3d.Node, error) {
 
 // TranslateContainerDetailsToNode translates a docker containerJSON object into a k3d node representation
 func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d.Node, error) {
-	// translate portMap to string representation
-	ports := []string{}
-	for containerPort, portBindingList := range containerDetails.HostConfig.PortBindings {
-		for _, hostInfo := range portBindingList {
-			ports = append(ports, fmt.Sprintf("%s:%s:%s", hostInfo.HostIP, hostInfo.HostPort, containerPort))
+
+	// first, make sure, that it's actually a k3d managed container by checking if it has all the default labels
+	for k, v := range k3d.DefaultObjectLabels {
+		log.Tracef("TranslateContainerDetailsToNode: Checking for default object label %s=%s", k, v)
+		found := false
+		for lk, lv := range containerDetails.Config.Labels {
+			if lk == k && lv == v {
+				found = true
+				break
+			}
+		}
+		if !found {
+			log.Debugf("Container %s is missing default label %s=%s in label set %+v", containerDetails.Name, k, v, containerDetails.Config.Labels)
+			return nil, runtimeErr.ErrRuntimeContainerUnknown
 		}
 	}
 
@@ -157,13 +168,14 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 
 	// serverOpts
 	serverOpts := k3d.ServerOpts{IsInit: false}
+	serverOpts.KubeAPI = &k3d.ExposureOpts{}
 	for k, v := range containerDetails.Config.Labels {
 		if k == k3d.LabelServerAPIHostIP {
-			serverOpts.ExposeAPI.HostIP = v
+			serverOpts.KubeAPI.Binding.HostIP = v
 		} else if k == k3d.LabelServerAPIHost {
-			serverOpts.ExposeAPI.Host = v
+			serverOpts.KubeAPI.Host = v
 		} else if k == k3d.LabelServerAPIPort {
-			serverOpts.ExposeAPI.Port = v
+			serverOpts.KubeAPI.Binding.HostPort = v
 		}
 	}
 
@@ -197,7 +209,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		Env:        env,
 		Cmd:        containerDetails.Config.Cmd,
 		Args:       []string{}, // empty, since Cmd already contains flags
-		Ports:      ports,
+		Ports:      containerDetails.HostConfig.PortBindings,
 		Restart:    restart,
 		Created:    containerDetails.Created,
 		Labels:     labels,

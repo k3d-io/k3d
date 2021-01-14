@@ -31,13 +31,15 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/rancher/k3d/v3/cmd/cluster"
-	"github.com/rancher/k3d/v3/cmd/image"
-	"github.com/rancher/k3d/v3/cmd/kubeconfig"
-	"github.com/rancher/k3d/v3/cmd/node"
-	cliutil "github.com/rancher/k3d/v3/cmd/util"
-	"github.com/rancher/k3d/v3/pkg/runtimes"
-	"github.com/rancher/k3d/v3/version"
+	"github.com/rancher/k3d/v4/cmd/cluster"
+	cfg "github.com/rancher/k3d/v4/cmd/config"
+	"github.com/rancher/k3d/v4/cmd/image"
+	"github.com/rancher/k3d/v4/cmd/kubeconfig"
+	"github.com/rancher/k3d/v4/cmd/node"
+	"github.com/rancher/k3d/v4/cmd/registry"
+	cliutil "github.com/rancher/k3d/v4/cmd/util"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
 )
@@ -50,8 +52,6 @@ type RootFlags struct {
 }
 
 var flags = RootFlags{}
-
-// var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -96,8 +96,6 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initLogging, initRuntime)
 
-	// add persistent flags (present to all subcommands)
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k3d/config.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
 	rootCmd.PersistentFlags().BoolVar(&flags.traceLogging, "trace", false, "Enable super verbose output (trace logging)")
 
@@ -110,6 +108,8 @@ func init() {
 	rootCmd.AddCommand(kubeconfig.NewCmdKubeconfig())
 	rootCmd.AddCommand(node.NewCmdNode())
 	rootCmd.AddCommand(image.NewCmdImage())
+	rootCmd.AddCommand(cfg.NewCmdConfig())
+	rootCmd.AddCommand(registry.NewCmdRegistry())
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",

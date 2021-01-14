@@ -25,10 +25,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rancher/k3d/v3/cmd/util"
-	"github.com/rancher/k3d/v3/pkg/cluster"
-	"github.com/rancher/k3d/v3/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	"github.com/rancher/k3d/v4/cmd/util"
+	"github.com/rancher/k3d/v4/pkg/client"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/spf13/cobra"
 
 	log "github.com/sirupsen/logrus"
@@ -41,7 +41,7 @@ type getKubeconfigFlags struct {
 // NewCmdKubeconfigGet returns a new cobra command
 func NewCmdKubeconfigGet() *cobra.Command {
 
-	writeKubeConfigOptions := cluster.WriteKubeConfigOptions{
+	writeKubeConfigOptions := client.WriteKubeConfigOptions{
 		UpdateExisting:       true,
 		UpdateCurrentContext: true,
 		OverwriteExisting:    true,
@@ -68,13 +68,13 @@ func NewCmdKubeconfigGet() *cobra.Command {
 
 			// generate list of clusters
 			if getKubeconfigFlags.all {
-				clusters, err = cluster.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
+				clusters, err = client.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
 					log.Fatalln(err)
 				}
 			} else {
 				for _, clusterName := range args {
-					retrievedCluster, err := cluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
+					retrievedCluster, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
 					if err != nil {
 						log.Fatalln(err)
 					}
@@ -87,7 +87,7 @@ func NewCmdKubeconfigGet() *cobra.Command {
 			for _, c := range clusters {
 				log.Debugf("Getting kubeconfig for cluster '%s'", c.Name)
 				fmt.Println("---") // YAML document separator
-				if _, err := cluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, c, "-", &writeKubeConfigOptions); err != nil {
+				if _, err := client.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, c, "-", &writeKubeConfigOptions); err != nil {
 					log.Errorln(err)
 					errorGettingKubeconfig = true
 				}

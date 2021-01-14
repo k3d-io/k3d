@@ -21,7 +21,11 @@ THE SOFTWARE.
 */
 package containerd
 
-import "context"
+import (
+	"context"
+
+	k3d "github.com/rancher/k3d/v4/pkg/types"
+)
 
 // CreateNetworkIfNotPresent creates a new docker network
 func (d Containerd) CreateNetworkIfNotPresent(ctx context.Context, name string) (string, bool, error) {
@@ -30,5 +34,15 @@ func (d Containerd) CreateNetworkIfNotPresent(ctx context.Context, name string) 
 
 // DeleteNetwork deletes a network
 func (d Containerd) DeleteNetwork(ctx context.Context, ID string) error {
+	return nil
+}
+
+// ConnectNodeToNetwork connects a node to a network
+func (d Containerd) ConnectNodeToNetwork(ctx context.Context, node *k3d.Node, network string) error {
+	return nil
+}
+
+// DisconnectNodeFromNetwork disconnects a node from a network (u don't say :O)
+func (d Containerd) DisconnectNodeFromNetwork(ctx context.Context, node *k3d.Node, network string) error {
 	return nil
 }

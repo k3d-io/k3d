@@ -30,7 +30,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
 
 func TestTranslateNodeToContainer(t *testing.T) {
@@ -43,7 +43,14 @@ func TestTranslateNodeToContainer(t *testing.T) {
 		Env:     []string{"TEST_KEY_1=TEST_VAL_1"},
 		Cmd:     []string{"server", "--https-listen-port=6443"},
 		Args:    []string{"--some-boolflag"},
-		Ports:   []string{"0.0.0.0:6443:6443/tcp"},
+		Ports: nat.PortMap{
+			"6443/tcp": []nat.PortBinding{
+				{
+					HostIP:   "0.0.0.0",
+					HostPort: "6443",
+				},
+			},
+		},
 		Restart: true,
 		Labels:  map[string]string{k3d.LabelRole: string(k3d.ServerRole), "test_key_1": "test_val_1"},
 	}
@@ -58,7 +65,7 @@ func TestTranslateNodeToContainer(t *testing.T) {
 			Cmd:      []string{"server", "--https-listen-port=6443", "--some-boolflag"},
 			Labels:   map[string]string{k3d.LabelRole: string(k3d.ServerRole), "test_key_1": "test_val_1"},
 			ExposedPorts: nat.PortSet{
-				"6443/tcp": {},
+				"6443/tcp": struct{}{},
 			},
 		},
 		HostConfig: container.HostConfig{

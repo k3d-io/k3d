@@ -1,0 +1,43 @@
+apiVersion: k3d.io/v1alpha1
+kind: Simple
+name: test
+servers: 1
+agents: 2
+kubeAPI:
+  hostIP: "0.0.0.0"
+  hostPort: "6443"
+image: rancher/k3s:latest
+volumes:
+  - volume: /my/path:/some/path
+    nodeFilters:
+      - all
+ports:
+  - port: 80:80
+    nodeFilters:
+      - loadbalancer
+  - port: 0.0.0.0:443:443
+    nodeFilters:
+      - loadbalancer
+env:
+  - envVar: bar=baz
+    nodeFilters:
+      - all
+labels:
+  - label: foo=bar
+    nodeFilters:
+      - server[0]
+      - loadbalancer
+
+options:
+  k3d:
+    wait: true
+    timeout: "60s"
+    disableLoadbalancer: false
+    disableImageVolume: false
+  k3s:
+    extraServerArgs:
+      - --tls-san=127.0.0.1
+    extraAgentArgs: []
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: true
