@@ -66,3 +66,4 @@
 - Now building with Go 1.15
   - same for the k3d-tools code
 - updated dependencies (including Docker v20.10)
+- tests/e2e: add E2E_INCLUDE and rename E2E_SKIP to E2E_EXCLUDE

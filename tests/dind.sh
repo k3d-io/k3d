@@ -19,7 +19,8 @@ k3de2e=$(docker run -d \
           -e EXE="$K3D_EXE" \
           -e CI="true" \
           -e LOG_LEVEL="$LOG_LEVEL" \
-          -e E2E_SKIP="$E2E_SKIP" \
+          -e E2E_INCLUDE="$E2E_INCLUDE" \
+          -e E2E_EXCLUDE="$E2E_EXCLUDE" \
           -e E2E_EXTRA="$E2E_EXTRA" \
           --add-host "k3d-registrytest-registry:127.0.0.1" \
           --name "k3d-e2e-runner-$TIMESTAMP" \

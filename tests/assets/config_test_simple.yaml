@@ -27,6 +27,9 @@ labels:
     nodeFilters:
       - server[0]
       - loadbalancer
+registries:
+  create: true
+  use: []
 
 options:
   k3d:
