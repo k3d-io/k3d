@@ -9,7 +9,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d?style=flat-square)](https://goreportcard.com/report/github.com/rancher/k3d)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-10-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-11-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
@@ -43,6 +43,7 @@ k3d creates containerized k3s clusters. This means, that you can spin up a multi
 | [**GitHub Releases**](https://github.com/rancher/k3d/releases) | stable | [![GitHub release (latest by date)](https://img.shields.io/github/v/release/rancher/k3d?label=%20&style=for-the-badge&logo=github)](https://github.com/rancher/k3d/releases/latest) | [![GitHub Release Date](https://img.shields.io/github/release-date/rancher/k3d?label=%20&style=for-the-badge)](https://github.com/rancher/k3d/releases/latest) |  |
 | [**GitHub Releases**](https://github.com/rancher/k3d/releases) | latest | [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/rancher/k3d?include_prereleases&label=%20&style=for-the-badge&logo=github)](https://github.com/rancher/k3d/releases) | [![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/rancher/k3d?label=%20&style=for-the-badge)](https://github.com/rancher/k3d/releases) |  |
 | [**Homebrew**](https://formulae.brew.sh/formula/k3d) | - | [![homebrew](https://img.shields.io/homebrew/v/k3d?label=%20&style=for-the-badge)](https://formulae.brew.sh/formula/k3d) | - |  |
+| [**Chocolatey**](https://chocolatey.org/packages/k3d/)| stable | [![chocolatey](https://img.shields.io/chocolatey/v/k3d?label=%20&style=for-the-badge)](https://chocolatey.org/packages/k3d/) | - |  |
 
 ## Get
 
@@ -60,6 +61,8 @@ You have several options there:
 - install via [AUR](https://aur.archlinux.org/) package [rancher-k3d-bin](https://aur.archlinux.org/packages/rancher-k3d-bin/): `yay -S rancher-k3d-bin`
 - grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
 - install via go: `go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
+- use [Chocolatey](https://chocolatey.org/): `choco install k3d` (Chocolatey package manager is available for Windows)
+  - package source can be found in [erwinkersten/chocolatey-packages](https://github.com/erwinkersten/chocolatey-packages/tree/master/automatic/k3d)
 
 or...
 
@@ -116,23 +119,25 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="https://twitter.com/iwilltry42"><img src="https://avatars3.githubusercontent.com/u/25345277?v=4" width="100px;" alt=""/><br /><sub><b>Thorsten Klein</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=iwilltry42" title="Code">💻</a> <a href="https://github.com/rancher/k3d/commits?author=iwilltry42" title="Documentation">📖</a> <a href="#ideas-iwilltry42" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-iwilltry42" title="Maintenance">🚧</a></td>
-    <td align="center"><a href="https://blog.zeerorg.site/"><img src="https://avatars0.githubusercontent.com/u/13547997?v=4" width="100px;" alt=""/><br /><sub><b>Rishabh Gupta</b></sub></a><br /><a href="#ideas-zeerorg" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/rancher/k3d/commits?author=zeerorg" title="Code">💻</a></td>
-    <td align="center"><a href="http://www.zenika.com"><img src="https://avatars3.githubusercontent.com/u/25585516?v=4" width="100px;" alt=""/><br /><sub><b>Louis Tournayre</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=louiznk" title="Documentation">📖</a></td>
-    <td align="center"><a href="https://github.com/lionelnicolas"><img src="https://avatars3.githubusercontent.com/u/6538664?v=4" width="100px;" alt=""/><br /><sub><b>Lionel Nicolas</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=lionelnicolas" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/toonsevrin.keys"><img src="https://avatars1.githubusercontent.com/u/5507199?v=4" width="100px;" alt=""/><br /><sub><b>Toon Sevrin</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=toonsevrin" title="Code">💻</a></td>
-    <td align="center"><a href="http://debian-solutions.de"><img src="https://avatars3.githubusercontent.com/u/1111056?v=4" width="100px;" alt=""/><br /><sub><b>Dennis Hoppe</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=dhoppe" title="Documentation">📖</a> <a href="#example-dhoppe" title="Examples">💡</a></td>
-    <td align="center"><a href="https://dellinger.dev"><img src="https://avatars0.githubusercontent.com/u/3109892?v=4" width="100px;" alt=""/><br /><sub><b>Jonas Dellinger</b></sub></a><br /><a href="#infra-JohnnyCrazy" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+    <td align="center"><a href="https://twitter.com/iwilltry42"><img src="https://avatars3.githubusercontent.com/u/25345277?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Thorsten Klein</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=iwilltry42" title="Code">💻</a> <a href="https://github.com/rancher/k3d/commits?author=iwilltry42" title="Documentation">📖</a> <a href="#ideas-iwilltry42" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-iwilltry42" title="Maintenance">🚧</a></td>
+    <td align="center"><a href="https://blog.zeerorg.site/"><img src="https://avatars0.githubusercontent.com/u/13547997?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Rishabh Gupta</b></sub></a><br /><a href="#ideas-zeerorg" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/rancher/k3d/commits?author=zeerorg" title="Code">💻</a></td>
+    <td align="center"><a href="http://www.zenika.com"><img src="https://avatars3.githubusercontent.com/u/25585516?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Louis Tournayre</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=louiznk" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/lionelnicolas"><img src="https://avatars3.githubusercontent.com/u/6538664?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Lionel Nicolas</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=lionelnicolas" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/toonsevrin.keys"><img src="https://avatars1.githubusercontent.com/u/5507199?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Toon Sevrin</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=toonsevrin" title="Code">💻</a></td>
+    <td align="center"><a href="http://debian-solutions.de"><img src="https://avatars3.githubusercontent.com/u/1111056?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Dennis Hoppe</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=dhoppe" title="Documentation">📖</a> <a href="#example-dhoppe" title="Examples">💡</a></td>
+    <td align="center"><a href="https://dellinger.dev"><img src="https://avatars0.githubusercontent.com/u/3109892?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Jonas Dellinger</b></sub></a><br /><a href="#infra-JohnnyCrazy" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
   </tr>
   <tr>
-    <td align="center"><a href="https://github.com/markrexwinkel"><img src="https://avatars2.githubusercontent.com/u/10704814?v=4" width="100px;" alt=""/><br /><sub><b>markrexwinkel</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=markrexwinkel" title="Documentation">📖</a></td>
-    <td align="center"><a href="http://inerciatech.com/"><img src="https://avatars2.githubusercontent.com/u/1841612?v=4" width="100px;" alt=""/><br /><sub><b>Alvaro</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=inercia" title="Code">💻</a> <a href="#ideas-inercia" title="Ideas, Planning, & Feedback">🤔</a> <a href="#plugin-inercia" title="Plugin/utility libraries">🔌</a></td>
-    <td align="center"><a href="http://wsl.dev"><img src="https://avatars2.githubusercontent.com/u/905874?v=4" width="100px;" alt=""/><br /><sub><b>Nuno do Carmo</b></sub></a><br /><a href="#content-nunix" title="Content">🖋</a> <a href="#tutorial-nunix" title="Tutorials">✅</a> <a href="#question-nunix" title="Answering Questions">💬</a></td>
+    <td align="center"><a href="https://github.com/markrexwinkel"><img src="https://avatars2.githubusercontent.com/u/10704814?v=4?s=100" width="100px;" alt=""/><br /><sub><b>markrexwinkel</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=markrexwinkel" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://inerciatech.com/"><img src="https://avatars2.githubusercontent.com/u/1841612?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alvaro</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=inercia" title="Code">💻</a> <a href="#ideas-inercia" title="Ideas, Planning, & Feedback">🤔</a> <a href="#plugin-inercia" title="Plugin/utility libraries">🔌</a></td>
+    <td align="center"><a href="http://wsl.dev"><img src="https://avatars2.githubusercontent.com/u/905874?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Nuno do Carmo</b></sub></a><br /><a href="#content-nunix" title="Content">🖋</a> <a href="#tutorial-nunix" title="Tutorials">✅</a> <a href="#question-nunix" title="Answering Questions">💬</a></td>
+    <td align="center"><a href="https://github.com/erwinkersten"><img src="https://avatars0.githubusercontent.com/u/4391121?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Erwin Kersten</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=erwinkersten" title="Documentation">📖</a></td>
   </tr>
 </table>
 
-<!-- markdownlint-enable -->
+<!-- markdownlint-restore -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
