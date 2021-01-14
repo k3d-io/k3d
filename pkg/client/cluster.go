@@ -206,7 +206,7 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 		if err != nil {
 			return fmt.Errorf("Failed to generate LocalRegistryHosting configmap: %+v", err)
 		}
-		log.Errorf("Writing YAML: %s", string(regCm))
+		log.Tracef("Writing LocalRegistryHosting YAML:\n%s", string(regCm))
 		clusterConfig.ClusterCreateOpts.NodeHooks = append(clusterConfig.ClusterCreateOpts.NodeHooks, k3d.NodeHook{
 			Stage: k3d.LifecycleStagePreStart,
 			Action: actions.WriteFileAction{
@@ -912,12 +912,20 @@ func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.C
 }
 
 func prepCreateLocalRegistryHostingConfigMap(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+	success := false
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.AgentRole || node.Role == k3d.ServerRole {
-			if err := runtime.ExecInNode(ctx, node, []string{"sh", "-c", "kubectl apply -f /tmp/reg.yaml"}); err != nil {
-				log.Warnf("Failed to create cm in node '%s'", node.Name)
+			err := runtime.ExecInNode(ctx, node, []string{"sh", "-c", "kubectl apply -f /tmp/reg.yaml"})
+			if err == nil {
+				success = true
+				break
+			} else {
+				log.Debugf("Failed to create LocalRegistryHosting ConfigMap in node %s: %+v", node.Name, err)
 			}
 		}
+	}
+	if success == false {
+		log.Warnf("Failed to create LocalRegistryHosting ConfigMap")
 	}
 	return nil
 }

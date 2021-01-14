@@ -43,6 +43,10 @@ exec_in_node "k3d-$clustername-server-0" "env" | grep "bar=baz" || failed "Expec
 info "Ensuring that container labels have been set as stated in the config"
 docker_assert_container_label "k3d-$clustername-server-0" "foo=bar" || failed "Expected label 'foo=bar' not present on container/node k3d-$clustername-server-0"
 
+## Registry Node
+info "Ensuring, that we have a registry node present"
+$EXE node list "k3d-$clustername-registry" || failed "Expected k3d-$clustername-registry to be present"
+
 # Cleanup
 
 info "Deleting cluster $clustername..."
