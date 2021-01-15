@@ -64,6 +64,7 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 		Image:   reg.Image,
 		Role:    k3d.RegistryRole,
 		Network: "bridge", // Default network: TODO: change to const from types
+		Restart: true,
 	}
 
 	// error out if that registry exists already
