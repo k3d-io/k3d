@@ -74,8 +74,9 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 
 		// if one of the filters is 'all', we only return this and drop all others
 		if submatches["group"] == "all" {
-			// TODO: filterNodes: only log if really more than one is specified
-			log.Warnf("Node filter 'all' set, but more were specified in '%+v'", filters)
+			if len(filters) > 1 {
+				log.Warnf("Node filter 'all' set, but more were specified in '%+v'", filters)
+			}
 			return nodes, nil
 		}
 

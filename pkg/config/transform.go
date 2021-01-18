@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/docker/go-connections/nat"
 	cliutil "github.com/rancher/k3d/v4/cmd/util" // TODO: move parseapiport to pkg
@@ -257,18 +258,27 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 	if simpleConfig.Registries.Config != "" {
 		var k3sRegistry *k3s.Registry
-		registryConfigFile, err := os.Open(simpleConfig.Registries.Config)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to open registry config file at %s: %+v", simpleConfig.Registries.Config, err)
-		}
-		configBytes, err := ioutil.ReadAll(registryConfigFile)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to read registry config file at %s: %+v", registryConfigFile.Name(), err)
+
+		if strings.Contains(simpleConfig.Registries.Config, "\n") { // CASE 1: embedded registries.yaml (multiline string)
+			log.Debugf("Found multiline registries config embedded in SimpleConfig:\n%s", simpleConfig.Registries.Config)
+			if err := yaml.Unmarshal([]byte(simpleConfig.Registries.Config), &k3sRegistry); err != nil {
+				return nil, fmt.Errorf("Failed to read embedded registries config: %+v", err)
+			}
+		} else { // CASE 2: registries.yaml file referenced by path (single line)
+			registryConfigFile, err := os.Open(simpleConfig.Registries.Config)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to open registry config file at %s: %+v", simpleConfig.Registries.Config, err)
+			}
+			configBytes, err := ioutil.ReadAll(registryConfigFile)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to read registry config file at %s: %+v", registryConfigFile.Name(), err)
+			}
+
+			if err := yaml.Unmarshal(configBytes, &k3sRegistry); err != nil {
+				return nil, fmt.Errorf("Failed to read registry configuration: %+v", err)
+			}
 		}
 
-		if err := yaml.Unmarshal(configBytes, &k3sRegistry); err != nil {
-			return nil, fmt.Errorf("Failed to read registry configuration: %+v", err)
-		}
 		log.Tracef("Registry: read config from input:\n%+v", k3sRegistry)
 		clusterCreateOpts.Registries.Config = k3sRegistry
 	}

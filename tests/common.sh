@@ -168,7 +168,7 @@ wait_for_pod_exec() {
 exec_in_node() {
   # $1 = container/node name
   # $2 = command
-  docker exec "$1" "$2"
+  docker exec "$1" sh -c "$2"
 }
 
 docker_assert_container_label() {

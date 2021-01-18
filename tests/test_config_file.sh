@@ -47,6 +47,11 @@ docker_assert_container_label "k3d-$clustername-server-0" "foo=bar" || failed "E
 info "Ensuring, that we have a registry node present"
 $EXE node list "k3d-$clustername-registry" || failed "Expected k3d-$clustername-registry to be present"
 
+## merged registries.yaml
+info "Ensuring, that the registries.yaml file contains both registries"
+exec_in_node "k3d-$clustername-server-0" "cat /etc/rancher/k3s/registries.yaml" | grep -i "my.company.registry"  || failed "Expected 'my.company.registry' to be in the /etc/rancher/k3s/registries.yaml"
+exec_in_node "k3d-$clustername-server-0" "cat /etc/rancher/k3s/registries.yaml" | grep -i "k3d-$clustername-registry" || failed "Expected 'k3d-$clustername-registry' to be in the /etc/rancher/k3s/registries.yaml"
+
 # Cleanup
 
 info "Deleting cluster $clustername..."
