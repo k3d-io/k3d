@@ -188,8 +188,14 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 		if err != nil {
 			return fmt.Errorf("Failed to generate registry config file for k3s: %+v", err)
 		}
-		RegistryMergeConfig(ctx, regConf, clusterConfig.ClusterCreateOpts.Registries.Config)
-		log.Tracef("Merged registry config: %+v", regConf)
+
+		// merge with pre-existing, referenced registries.yaml
+		if clusterConfig.ClusterCreateOpts.Registries.Config != nil {
+			if err := RegistryMergeConfig(ctx, regConf, clusterConfig.ClusterCreateOpts.Registries.Config); err != nil {
+				return err
+			}
+			log.Tracef("Merged registry config: %+v", regConf)
+		}
 		regConfBytes, err := yaml.Marshal(&regConf)
 		if err != nil {
 			return fmt.Errorf("Failed to marshal registry configuration: %+v", err)
