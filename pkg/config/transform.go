@@ -31,8 +31,10 @@ import (
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/types/k3s"
 	"github.com/rancher/k3d/v4/pkg/util"
 	"github.com/rancher/k3d/v4/version"
+	"gopkg.in/yaml.v2"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -250,6 +252,11 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		log.Tracef("Parsed registry reference: %+v", reg)
 		clusterCreateOpts.Registries.Use = append(clusterCreateOpts.Registries.Use, reg)
 	}
+	var k3sRegistry *k3s.Registry
+	if err := yaml.Unmarshal([]byte(simpleConfig.Registries.Config), k3sRegistry); err != nil {
+		return nil, fmt.Errorf("Failed to read registry configuration: %+v", err)
+	}
+	log.Tracef("Registry: read config from input:\n%+v", k3sRegistry)
 
 	/**********************
 	 * Kubeconfig Options *
