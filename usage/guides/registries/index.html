@@ -358,6 +358,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#registries-configuration-file-embedded-in-k3ds-simpleconfig" class="md-nav__link">
+    Registries Configuration File embedded in k3d's SimpleConfig
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#authenticated-registries" class="md-nav__link">
     Authenticated registries
   </a>
@@ -633,6 +640,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#registries-configuration-file-embedded-in-k3ds-simpleconfig" class="md-nav__link">
+    Registries Configuration File embedded in k3d's SimpleConfig
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#authenticated-registries" class="md-nav__link">
     Authenticated registries
   </a>
@@ -738,8 +752,10 @@
                 
                 <h1 id="registries">Registries<a class="headerlink" href="#registries" title="Permanent link">&para;</a></h1>
 <h2 id="registries-configuration-file">Registries configuration file<a class="headerlink" href="#registries-configuration-file" title="Permanent link">&para;</a></h2>
-<p>You can add registries by specifying them in a <code>registries.yaml</code> and mounting them at creation time:
-<code class="highlight">k3d cluster create mycluster --volume <span class="s2">&quot;/home/YOU/my-registries.yaml:/etc/rancher/k3s/registries.yaml&quot;</span></code>.</p>
+<p>You can add registries by specifying them in a <code>registries.yaml</code> and referencing it at creation time:
+<code class="highlight">k3d cluster create mycluster --registry-config <span class="s2">&quot;/home/YOU/my-registries.yaml&quot;</span></code>.</p>
+<details class="tip"><summary>Pre v4.0.0 solution</summary><p>Before we added the <code>--registry-config</code> flag in k3d v4.0.0, you had to bind-mount the file to the correct location: <code>--volume "/home/YOU/my-registries.yaml:/etc/rancher/k3s/registries.yaml"</code></p>
+</details>
 <p>This file is a regular <a href="https://rancher.com/docs/k3s/latest/en/installation/private-registry/">k3s registries configuration file</a>, and looks like this:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">mirrors</span><span class="p">:</span>
   <span class="s">&quot;my.company.registry:5000&quot;</span><span class="p p-Indicator">:</span>
@@ -750,6 +766,22 @@
 <em>pulled</em> from the registry running at <code>http://my.company.registry:5000</code>.</p>
 <p>Note well there is an important limitation: <strong>this configuration file will only work with k3s &gt;= v0.10.0</strong>. It will fail silently with previous versions of k3s, but you find in the <a href="#k3s-old">section below</a> an alternative solution.</p>
 <p>This file can also be used for providing additional information necessary for accessing some registries, like <a href="#authenticated-registries">authentication</a> and <a href="#secure-registries">certificates</a>.</p>
+<h3 id="registries-configuration-file-embedded-in-k3ds-simpleconfig">Registries Configuration File embedded in k3d&rsquo;s SimpleConfig<a class="headerlink" href="#registries-configuration-file-embedded-in-k3ds-simpleconfig" title="Permanent link">&para;</a></h3>
+<p>If you&rsquo;re using a <code>SimpleConfig</code> file to configure your k3d cluster, you may as well embed the registries.yaml in there directly:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">k3d.io/v1alpha1</span>
+<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Simple</span>
+<span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+<span class="nt">servers</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="nt">agents</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="nt">registries</span><span class="p">:</span>
+  <span class="nt">create</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+  <span class="nt">config</span><span class="p">:</span> <span class="p p-Indicator">|</span>
+    <span class="no">mirrors:</span>
+      <span class="no">&quot;my.company.registry&quot;:</span>
+        <span class="no">endpoint:</span>
+          <span class="no">- http://my.company.registry:5000</span>
+</code></pre></div>
+<p>Here, the config for the k3d-managed registry, created by the <code>create: true</code> flag will be merged with the config specified under <code>config: |</code>.</p>
 <h3 id="authenticated-registries">Authenticated registries<a class="headerlink" href="#authenticated-registries" title="Permanent link">&para;</a></h3>
 <p>When using authenticated registries, we can add the <em>username</em> and <em>password</em> in a
 <code>configs</code> section in the <code>registries.yaml</code>, like this:</p>
@@ -902,7 +934,7 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 7, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 18, 2021</span>
     
   </small>
 </div>
