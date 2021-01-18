@@ -184,8 +184,16 @@ func generateFishCompletion(writer io.Writer) error {
 
 // Completion
 var completionFunctions = map[string]func(io.Writer) error{
-	"bash":       rootCmd.GenBashCompletion,
-	"zsh":        rootCmd.GenZshCompletion,
+	"bash": rootCmd.GenBashCompletion,
+	"zsh": func(writer io.Writer) error {
+		if err := rootCmd.GenZshCompletion(writer); err != nil {
+			return err
+		}
+
+		fmt.Fprintf(writer, "\n# source completion file\ncompdef _k3d k3d\n")
+
+		return nil
+	},
 	"psh":        rootCmd.GenPowerShellCompletion,
 	"powershell": rootCmd.GenPowerShellCompletion,
 	"fish":       generateFishCompletion,
@@ -200,8 +208,8 @@ func NewCmdCompletion() *cobra.Command {
 		Long:  `Generate completion scripts for [bash, zsh, fish, powershell | psh]`,
 		Args:  cobra.ExactArgs(1), // TODO: NewCmdCompletion: add support for 0 args = auto detection
 		Run: func(cmd *cobra.Command, args []string) {
-			if f, ok := completionFunctions[args[0]]; ok {
-				if err := f(os.Stdout); err != nil {
+			if completionFunc, ok := completionFunctions[args[0]]; ok {
+				if err := completionFunc(os.Stdout); err != nil {
 					log.Fatalf("Failed to generate completion script for shell '%s'", args[0])
 				}
 				return
