@@ -82,7 +82,7 @@ check_clusters() {
 
 check_cluster_count() {
   expectedClusterCount=$1
-  actualClusterCount=$($EXE cluster list --no-headers | wc -l)
+  actualClusterCount=$(LOG_LEVEL=warn $EXE cluster list --no-headers | wc -l) # this must always have a loglevel of <= warn or it will fail
   if [[ $actualClusterCount != $expectedClusterCount ]]; then
     failed "incorrect number of clusters available: $actualClusterCount != $expectedClusterCount"
     return 1
@@ -168,7 +168,7 @@ wait_for_pod_exec() {
 exec_in_node() {
   # $1 = container/node name
   # $2 = command
-  docker exec "$1" "$2"
+  docker exec "$1" sh -c "$2"
 }
 
 docker_assert_container_label() {

@@ -30,6 +30,11 @@ labels:
 registries:
   create: true
   use: []
+  config: |
+    mirrors:
+      "my.company.registry":
+        endpoint:
+          - http://my.company.registry:5000
 
 options:
   k3d:

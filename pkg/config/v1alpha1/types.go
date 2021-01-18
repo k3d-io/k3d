@@ -128,6 +128,7 @@ type SimpleConfig struct {
 	Registries   struct {
 		Use    []string `mapstructure:"use" yaml:"use,omitempty" json:"use,omitempty"`
 		Create bool     `mapstructure:"create" yaml:"create,omitempty" json:"create,omitempty"`
+		Config string   `mapstructure:"config" yaml:"config,omitempty" json:"config,omitempty"` // registries.yaml (k3s config for containerd registry override)
 	} `mapstructure:"registries" yaml:"registries,omitempty" json:"registries,omitempty"`
 }
 

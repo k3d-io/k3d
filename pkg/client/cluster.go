@@ -42,6 +42,7 @@ import (
 	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	"github.com/rancher/k3d/v4/pkg/types"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/types/k3s"
 	"github.com/rancher/k3d/v4/pkg/util"
 	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
@@ -97,8 +98,10 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 	}
 
 	// create the registry hosting configmap
-	if err := prepCreateLocalRegistryHostingConfigMap(ctx, runtime, &clusterConfig.Cluster); err != nil {
-		log.Warnf("Failed to create LocalRegistryHosting ConfigMap: %+v", err)
+	if len(clusterConfig.ClusterCreateOpts.Registries.Use) > 0 {
+		if err := prepCreateLocalRegistryHostingConfigMap(ctx, runtime, &clusterConfig.Cluster); err != nil {
+			log.Warnf("Failed to create LocalRegistryHosting ConfigMap: %+v", err)
+		}
 	}
 
 	return nil
@@ -171,6 +174,8 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 	// Use existing registries (including the new one, if created)
 	log.Tracef("Using Registries: %+v", clusterConfig.ClusterCreateOpts.Registries.Use)
 
+	var registryConfig *k3s.Registry
+
 	if len(clusterConfig.ClusterCreateOpts.Registries.Use) > 0 {
 		// ensure that all selected registries exist and connect them to the cluster network
 		for _, externalReg := range clusterConfig.ClusterCreateOpts.Registries.Use {
@@ -188,18 +193,6 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 		if err != nil {
 			return fmt.Errorf("Failed to generate registry config file for k3s: %+v", err)
 		}
-		regConfBytes, err := yaml.Marshal(&regConf)
-		if err != nil {
-			return fmt.Errorf("Failed to marshal registry configuration: %+v", err)
-		}
-		clusterConfig.ClusterCreateOpts.NodeHooks = append(clusterConfig.ClusterCreateOpts.NodeHooks, k3d.NodeHook{
-			Stage: k3d.LifecycleStagePreStart,
-			Action: actions.WriteFileAction{
-				Runtime: runtime,
-				Content: regConfBytes,
-				Dest:    k3d.DefaultRegistriesFilePath,
-			},
-		})
 
 		// generate the LocalRegistryHosting configmap
 		regCm, err := RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx, clusterConfig.ClusterCreateOpts.Registries.Use)
@@ -216,6 +209,33 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 			},
 		})
 
+		registryConfig = regConf
+
+	}
+	// merge with pre-existing, referenced registries.yaml
+	if clusterConfig.ClusterCreateOpts.Registries.Config != nil {
+		if registryConfig != nil {
+			if err := RegistryMergeConfig(ctx, registryConfig, clusterConfig.ClusterCreateOpts.Registries.Config); err != nil {
+				return err
+			}
+			log.Tracef("Merged registry config: %+v", registryConfig)
+		} else {
+			registryConfig = clusterConfig.ClusterCreateOpts.Registries.Config
+		}
+	}
+	if registryConfig != nil {
+		regConfBytes, err := yaml.Marshal(&registryConfig)
+		if err != nil {
+			return fmt.Errorf("Failed to marshal registry configuration: %+v", err)
+		}
+		clusterConfig.ClusterCreateOpts.NodeHooks = append(clusterConfig.ClusterCreateOpts.NodeHooks, k3d.NodeHook{
+			Stage: k3d.LifecycleStagePreStart,
+			Action: actions.WriteFileAction{
+				Runtime: runtime,
+				Content: regConfBytes,
+				Dest:    k3d.DefaultRegistriesFilePath,
+			},
+		})
 	}
 
 	return nil

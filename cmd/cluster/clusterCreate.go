@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -209,6 +210,7 @@ func NewCmdClusterCreate() *cobra.Command {
 	/* Registry */
 	cmd.Flags().StringArrayVar(&cliConfig.Registries.Use, "registry-use", nil, "Connect to one or more k3d-managed registries running locally")
 	cmd.Flags().BoolVar(&cliConfig.Registries.Create, "registry-create", false, "Create a k3d-managed registry and connect it to the cluster")
+	cmd.Flags().StringVar(&cliConfig.Registries.Config, "registry-config", "", "Specify path to an extra registries.yaml file")
 
 	/* Multi Server Configuration */
 
@@ -275,6 +277,10 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 		volume, filters, err := cliutil.SplitFiltersFromFlag(volumeFlag)
 		if err != nil {
 			log.Fatalln(err)
+		}
+
+		if strings.Contains(volume, k3d.DefaultRegistriesFilePath) && (cliConfig.Registries.Create || cliConfig.Registries.Config != "" || len(cliConfig.Registries.Use) != 0) {
+			log.Warnf("Seems like you're mounting a file at '%s' while also using a referenced registries config or k3d-managed registries: Your mounted file will probably be overwritten!", k3d.DefaultRegistriesFilePath)
 		}
 
 		// create new entry or append filter to existing entry

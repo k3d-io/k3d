@@ -26,6 +26,7 @@ import (
 	"fmt"
 
 	"github.com/docker/go-connections/nat"
+	"github.com/imdario/mergo"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/pkg/types/k3s"
@@ -304,4 +305,12 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, regi
 	log.Tracef("LocalRegistryHostingConfigMapYaml: %s", string(cmYaml))
 
 	return cmYaml, nil
+}
+
+// RegistryMergeConfig merges a source registry config into an existing dest registry cofnig
+func RegistryMergeConfig(ctx context.Context, dest, src *k3s.Registry) error {
+	if err := mergo.MergeWithOverwrite(dest, src); err != nil {
+		return fmt.Errorf("Failed to merge registry configs: %+v", err)
+	}
+	return nil
 }

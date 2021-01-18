@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/docker/go-connections/nat"
+	"github.com/rancher/k3d/v4/pkg/types/k3s"
 )
 
 // DefaultClusterName specifies the default name used for newly created clusters
@@ -179,8 +180,9 @@ type ClusterCreateOpts struct {
 	GlobalLabels               map[string]string `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
 	GlobalEnv                  []string          `yaml:"globalEnv,omitempty" json:"globalEnv,omitempty"`
 	Registries                 struct {
-		Create *Registry   `yaml:"create,omitempty" json:"create,omitempty"`
-		Use    []*Registry `yaml:"use,omitempty" json:"use,omitempty"`
+		Create *Registry     `yaml:"create,omitempty" json:"create,omitempty"`
+		Use    []*Registry   `yaml:"use,omitempty" json:"use,omitempty"`
+		Config *k3s.Registry `yaml:"config,omitempty" json:"config,omitempty"` // registries.yaml (k3s config for containerd registry override)
 	} `yaml:"registries,omitempty" json:"registries,omitempty"`
 }
 
