@@ -2,8 +2,11 @@
 
 ## Registries configuration file
 
-You can add registries by specifying them in a `registries.yaml` and mounting them at creation time:
-`#!bash k3d cluster create mycluster --volume "/home/YOU/my-registries.yaml:/etc/rancher/k3s/registries.yaml"`.
+You can add registries by specifying them in a `registries.yaml` and referencing it at creation time:
+`#!bash k3d cluster create mycluster --registry-config "/home/YOU/my-registries.yaml"`.
+
+??? Tip "Pre v4.0.0 solution"
+    Before we added the `--registry-config` flag in k3d v4.0.0, you had to bind-mount the file to the correct location: `--volume "/home/YOU/my-registries.yaml:/etc/rancher/k3s/registries.yaml"`
 
 This file is a regular [k3s registries configuration file](https://rancher.com/docs/k3s/latest/en/installation/private-registry/), and looks like this:
 
@@ -20,6 +23,27 @@ _pulled_ from the registry running at `http://my.company.registry:5000`.
 Note well there is an important limitation: **this configuration file will only work with k3s >= v0.10.0**. It will fail silently with previous versions of k3s, but you find in the [section below](#k3s-old) an alternative solution.
 
 This file can also be used for providing additional information necessary for accessing some registries, like [authentication](#authenticated-registries) and [certificates](#secure-registries).
+
+### Registries Configuration File embedded in k3d's SimpleConfig
+
+If you're using a `SimpleConfig` file to configure your k3d cluster, you may as well embed the registries.yaml in there directly:
+
+```yaml
+apiVersion: k3d.io/v1alpha1
+kind: Simple
+name: test
+servers: 1
+agents: 2
+registries:
+  create: true
+  config: |
+    mirrors:
+      "my.company.registry":
+        endpoint:
+          - http://my.company.registry:5000
+```
+
+Here, the config for the k3d-managed registry, created by the `create: true` flag will be merged with the config specified under `config: |`.
 
 ### Authenticated registries
 
