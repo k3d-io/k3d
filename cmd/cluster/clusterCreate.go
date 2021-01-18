@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -276,6 +277,10 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 		volume, filters, err := cliutil.SplitFiltersFromFlag(volumeFlag)
 		if err != nil {
 			log.Fatalln(err)
+		}
+
+		if strings.Contains(volume, k3d.DefaultRegistriesFilePath) && (cliConfig.Registries.Create || cliConfig.Registries.Config != "" || len(cliConfig.Registries.Use) != 0) {
+			log.Warnf("Seems like you're mounting a file at '%s' while also using a referenced registries config or k3d-managed registries: Your mounted file will probably be overwritten!", k3d.DefaultRegistriesFilePath)
 		}
 
 		// create new entry or append filter to existing entry
