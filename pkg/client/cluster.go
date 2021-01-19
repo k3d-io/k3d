@@ -539,7 +539,7 @@ func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 
 	failed := 0
 	for _, node := range cluster.Nodes {
-		if err := runtime.DeleteNode(ctx, node); err != nil {
+		if err := NodeDelete(ctx, runtime, node, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
 			log.Warningf("Failed to delete node '%s': Try to delete it manually", node.Name)
 			failed++
 			continue

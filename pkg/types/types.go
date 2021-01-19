@@ -222,6 +222,12 @@ type NodeStartOpts struct {
 	NodeHooks []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 }
 
+// NodeDeleteOpts describes a set of options one can set when deleting a node
+type NodeDeleteOpts struct {
+	SkipLBUpdate      bool // skip updating the loadbalancer
+	SkipRegistryCheck bool // skip checking if this is a registry (and act accordingly)
+}
+
 // NodeHookAction is an interface to implement actions that should trigger at specific points of the node lifecycle
 type NodeHookAction interface {
 	Run(ctx context.Context, node *Node) error

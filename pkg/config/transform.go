@@ -241,6 +241,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			return nil, fmt.Errorf("Failed to get port for registry: %+v", err)
 		}
 		clusterCreateOpts.Registries.Create = &k3d.Registry{
+			ClusterRef:   newCluster.Name,
 			Host:         fmt.Sprintf("%s-%s-registry", k3d.DefaultObjectNamePrefix, newCluster.Name),
 			Image:        fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag),
 			ExposureOpts: *regPort,

@@ -78,6 +78,7 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 
 	// setup the node labels
 	registryNode.Labels = map[string]string{
+		k3d.LabelClusterName:          reg.ClusterRef,
 		k3d.LabelRole:                 string(k3d.RegistryRole),
 		k3d.LabelRegistryHost:         reg.ExposureOpts.Host, // TODO: docker machine host?
 		k3d.LabelRegistryHostIP:       reg.ExposureOpts.Binding.HostIP,
