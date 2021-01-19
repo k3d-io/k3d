@@ -170,6 +170,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 	for networkName := range containerDetails.NetworkSettings.Networks {
 		if strings.HasPrefix(networkName, fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, containerDetails.Config.Labels[k3d.LabelClusterName])) { // FIXME: catch error if label 'k3d.cluster' does not exist, but this should also never be the case
 			orderedNetworks = append(orderedNetworks, networkName)
+			continue
 		}
 		otherNetworks = append(otherNetworks, networkName)
 	}
