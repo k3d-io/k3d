@@ -77,6 +77,7 @@ k3d
     stop NODENAME # stop a node
     delete NODENAME  # delete an existing node
       -a, --all  # delete all existing nodes (default: false)
+      -r, --registries  # also delete registries, as a special type of node (default: false)
     list NODENAME
       --no-headers  # do not print headers (default: false)
   registry

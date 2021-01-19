@@ -442,5 +442,8 @@ nodeLoop:
 			}
 		}
 	}
+
+	log.Tracef("Filteres %d nodes by roles (in: %+v | ex: %+v), got %d left", len(nodes), includeRoles, excludeRoles, len(resultList))
+
 	return resultList
 }

@@ -30,25 +30,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type registryDeleteFlags struct {
+	All bool
+}
+
 // NewCmdRegistryDelete returns a new cobra command
 func NewCmdRegistryDelete() *cobra.Command {
+
+	flags := registryDeleteFlags{}
 
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:               "delete (NAME | --all)",
 		Short:             "Delete registry/registries.",
 		Long:              `Delete registry/registries.`,
-		Args:              cobra.MinimumNArgs(1), // at least one node has to be specified
 		ValidArgsFunction: util.ValidArgsAvailableRegistries,
 		Run: func(cmd *cobra.Command, args []string) {
 
-			nodes := parseRegistryDeleteCmd(cmd, args)
+			nodes := parseRegistryDeleteCmd(cmd, args, &flags)
 
 			if len(nodes) == 0 {
-				log.Infoln("No nodes found")
+				log.Infoln("No registries found")
 			} else {
 				for _, node := range nodes {
-					if err := client.NodeDelete(cmd.Context(), runtimes.SelectedRuntime, node, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
+					if err := client.NodeDelete(cmd.Context(), runtimes.SelectedRuntime, node, k3d.NodeDeleteOpts{SkipLBUpdate: true, SkipRegistryCheck: true}); err != nil {
 						log.Fatalln(err)
 					}
 				}
@@ -59,29 +64,26 @@ func NewCmdRegistryDelete() *cobra.Command {
 	// add subcommands
 
 	// add flags
-	cmd.Flags().BoolP("all", "a", false, "Delete all existing registries")
+	cmd.Flags().BoolVarP(&flags.All, "all", "a", false, "Delete all existing registries")
 
 	// done
 	return cmd
 }
 
 // parseRegistryDeleteCmd parses the command input into variables required to delete nodes
-func parseRegistryDeleteCmd(cmd *cobra.Command, args []string) []*k3d.Node {
+func parseRegistryDeleteCmd(cmd *cobra.Command, args []string, flags *registryDeleteFlags) []*k3d.Node {
 
-	// --all
 	var nodes []*k3d.Node
+	var err error
 
-	if all, err := cmd.Flags().GetBool("all"); err != nil {
-		log.Fatalln(err)
-	} else if all {
+	if flags.All {
 		nodes, err = client.NodeList(cmd.Context(), runtimes.SelectedRuntime)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		return nodes
 	}
 
-	if len(args) < 1 {
+	if !flags.All && len(args) < 1 {
 		log.Fatalln("Expecting at least one registry name if `--all` is not set")
 	}
 
@@ -92,6 +94,8 @@ func parseRegistryDeleteCmd(cmd *cobra.Command, args []string) []*k3d.Node {
 		}
 		nodes = append(nodes, node)
 	}
+
+	nodes = client.NodeFilterByRoles(nodes, []k3d.Role{k3d.RegistryRole}, []k3d.Role{})
 
 	return nodes
 }
