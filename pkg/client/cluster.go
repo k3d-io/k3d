@@ -269,8 +269,8 @@ func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d
 		log.Errorln("Failed to create cluster network")
 		return err
 	}
-	cluster.Network.Name = networkID
-	clusterCreateOpts.GlobalLabels[k3d.LabelNetwork] = networkID
+	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkID] = networkID
+	clusterCreateOpts.GlobalLabels[k3d.LabelNetwork] = cluster.Network.Name
 	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkExternal] = strconv.FormatBool(cluster.Network.External)
 	if networkExists {
 		clusterCreateOpts.GlobalLabels[k3d.LabelNetworkExternal] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)
@@ -528,7 +528,7 @@ ClusterCreatOpts:
 }
 
 // ClusterDelete deletes an existing cluster
-func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, opts k3d.ClusterDeleteOpts) error {
 
 	log.Infof("Deleting cluster '%s'", cluster.Name)
 	cluster, err := ClusterGet(ctx, runtime, cluster)
@@ -539,6 +539,35 @@ func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 
 	failed := 0
 	for _, node := range cluster.Nodes {
+		// registry: only delete, if not connected to other networks
+		if node.Role == k3d.RegistryRole && !opts.SkipRegistryCheck {
+			log.Tracef("Registry Node has %d networks: %+v", len(node.Networks), node)
+
+			// check if node is connected to other networks, that are not
+			// - the cluster network
+			// - default docker networks
+			// -> if so, disconnect it from the cluster network and continue
+			connectedToOtherNet := false
+			for _, net := range node.Networks {
+				if net == cluster.Network.Name {
+					continue
+				}
+				if net == "bridge" || net == "host" {
+					continue
+				}
+				log.Tracef("net: %s", net)
+				connectedToOtherNet = true
+				break
+			}
+			if connectedToOtherNet {
+				log.Infof("Registry %s is also connected to other (non-default) networks (%+v), not deleting it...", node.Name, node.Networks)
+				if err := runtime.DisconnectNodeFromNetwork(ctx, node, cluster.Network.Name); err != nil {
+					log.Warnf("Failed to disconnect registry %s from cluster network %s", node.Name, cluster.Network.Name)
+				}
+				continue
+			}
+		}
+
 		if err := NodeDelete(ctx, runtime, node, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
 			log.Warningf("Failed to delete node '%s': Try to delete it manually", node.Name)
 			failed++

@@ -53,7 +53,7 @@ func NewCmdRegistryDelete() *cobra.Command {
 				log.Infoln("No registries found")
 			} else {
 				for _, node := range nodes {
-					if err := client.NodeDelete(cmd.Context(), runtimes.SelectedRuntime, node, k3d.NodeDeleteOpts{SkipLBUpdate: true, SkipRegistryCheck: true}); err != nil {
+					if err := client.NodeDelete(cmd.Context(), runtimes.SelectedRuntime, node, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
 						log.Fatalln(err)
 					}
 				}

@@ -116,6 +116,7 @@ const (
 	LabelImageVolume          string = "k3d.cluster.imageVolume"
 	LabelNetworkExternal      string = "k3d.cluster.network.external"
 	LabelNetwork              string = "k3d.cluster.network"
+	LabelNetworkID            string = "k3d.cluster.network.id"
 	LabelRole                 string = "k3d.role"
 	LabelServerAPIPort        string = "k3d.server.api.port"
 	LabelServerAPIHost        string = "k3d.server.api.host"
@@ -208,6 +209,11 @@ type ClusterStartOpts struct {
 	NodeHooks     []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 }
 
+// ClusterDeleteOpts describe a set of options one can set when deleting a cluster
+type ClusterDeleteOpts struct {
+	SkipRegistryCheck bool // skip checking if this is a registry (and act accordingly)
+}
+
 // NodeCreateOpts describes a set of options one can set when creating a new node
 type NodeCreateOpts struct {
 	Wait      bool
@@ -224,8 +230,7 @@ type NodeStartOpts struct {
 
 // NodeDeleteOpts describes a set of options one can set when deleting a node
 type NodeDeleteOpts struct {
-	SkipLBUpdate      bool // skip updating the loadbalancer
-	SkipRegistryCheck bool // skip checking if this is a registry (and act accordingly)
+	SkipLBUpdate bool // skip updating the loadbalancer
 }
 
 // NodeHookAction is an interface to implement actions that should trigger at specific points of the node lifecycle

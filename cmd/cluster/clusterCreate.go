@@ -133,7 +133,7 @@ func NewCmdClusterCreate() *cobra.Command {
 				}
 				// rollback if creation failed
 				log.Errorln("Failed to create cluster >>> Rolling Back")
-				if err := k3dCluster.ClusterDelete(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster); err != nil {
+				if err := k3dCluster.ClusterDelete(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, k3d.ClusterDeleteOpts{SkipRegistryCheck: true}); err != nil {
 					log.Errorln(err)
 					log.Fatalln("Cluster creation FAILED, also FAILED to rollback changes!")
 				}

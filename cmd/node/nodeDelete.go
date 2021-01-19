@@ -49,12 +49,7 @@ func NewCmdNodeDelete() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			nodes := parseDeleteNodeCmd(cmd, args, &flags)
-			nodeDeleteOpts := k3d.NodeDeleteOpts{
-				SkipRegistryCheck: true,
-			}
-			if flags.All {
-				nodeDeleteOpts.SkipLBUpdate = true
-			}
+			nodeDeleteOpts := k3d.NodeDeleteOpts{SkipLBUpdate: flags.All} // do not update LB, if we're deleting all nodes anyway
 
 			if len(nodes) == 0 {
 				log.Infoln("No nodes found")

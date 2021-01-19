@@ -54,7 +54,7 @@ func NewCmdClusterDelete() *cobra.Command {
 				log.Infoln("No clusters found")
 			} else {
 				for _, c := range clusters {
-					if err := client.ClusterDelete(cmd.Context(), runtimes.SelectedRuntime, c); err != nil {
+					if err := client.ClusterDelete(cmd.Context(), runtimes.SelectedRuntime, c, k3d.ClusterDeleteOpts{SkipRegistryCheck: false}); err != nil {
 						log.Fatalln(err)
 					}
 					log.Infoln("Removing cluster details from default kubeconfig...")

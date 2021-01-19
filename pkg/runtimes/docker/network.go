@@ -158,6 +158,7 @@ func (d Docker) ConnectNodeToNetwork(ctx context.Context, node *k3d.Node, networ
 
 // DisconnectNodeFromNetwork disconnects a node from a network (u don't say :O)
 func (d Docker) DisconnectNodeFromNetwork(ctx context.Context, node *k3d.Node, networkName string) error {
+	log.Debugf("Disconnecting node %s from network %s...", node.Name, networkName)
 	// get container
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {

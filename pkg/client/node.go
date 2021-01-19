@@ -289,11 +289,6 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 // NodeDelete deletes an existing node
 func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, opts k3d.NodeDeleteOpts) error {
 
-	// registry: only delete, if not connected to other networks
-	if !opts.SkipRegistryCheck && node.Role == k3d.RegistryRole {
-		log.Debugln("NodeDelete special case: registry -> not yet implemented")
-	}
-
 	// delete node
 	if err := runtime.DeleteNode(ctx, node); err != nil {
 		log.Error(err)
