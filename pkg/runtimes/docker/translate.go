@@ -103,15 +103,21 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	containerConfig.ExposedPorts = exposedPorts
 	hostConfig.PortBindings = node.Ports
 	/* Network */
-	networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
-		node.Network: {},
+	endpointsConfig := map[string]*network.EndpointSettings{}
+	for _, net := range node.Networks {
+		endpointsConfig[net] = &network.EndpointSettings{}
 	}
-	netInfo, err := GetNetwork(context.Background(), node.Network)
-	if err != nil {
-		log.Warnln("Failed to get network information")
-		log.Warnln(err)
-	} else if netInfo.Driver == "host" {
-		hostConfig.NetworkMode = "host"
+
+	networkingConfig.EndpointsConfig = endpointsConfig
+
+	if len(node.Networks) > 0 {
+		netInfo, err := GetNetwork(context.Background(), node.Networks[0]) // FIXME: only considering first network here, as that's the one k3d creates for a cluster
+		if err != nil {
+			log.Warnln("Failed to get network information")
+			log.Warnln(err)
+		} else if netInfo.Driver == "host" {
+			hostConfig.NetworkMode = "host"
+		}
 	}
 
 	return &NodeInDocker{
@@ -158,13 +164,16 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		restart = true
 	}
 
-	// get the clusterNetwork
-	clusterNetwork := ""
+	// get networks and ensure that the cluster network is first in list
+	orderedNetworks := []string{}
+	otherNetworks := []string{}
 	for networkName := range containerDetails.NetworkSettings.Networks {
 		if strings.HasPrefix(networkName, fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, containerDetails.Config.Labels[k3d.LabelClusterName])) { // FIXME: catch error if label 'k3d.cluster' does not exist, but this should also never be the case
-			clusterNetwork = networkName
+			orderedNetworks = append(orderedNetworks, networkName)
 		}
+		otherNetworks = append(otherNetworks, networkName)
 	}
+	orderedNetworks = append(orderedNetworks, otherNetworks...)
 
 	// serverOpts
 	serverOpts := k3d.ServerOpts{IsInit: false}
@@ -213,7 +222,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		Restart:    restart,
 		Created:    containerDetails.Created,
 		Labels:     labels,
-		Network:    clusterNetwork,
+		Networks:   orderedNetworks,
 		ServerOpts: serverOpts,
 		AgentOpts:  k3d.AgentOpts{},
 		State:      nodeState,

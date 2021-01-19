@@ -47,7 +47,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	}
 
 	// network
-	node.Network = cluster.Network.Name
+	node.Networks = []string{cluster.Network.Name}
 
 	// skeleton
 	if node.Labels == nil {

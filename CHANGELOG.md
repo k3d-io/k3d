@@ -15,6 +15,7 @@
 - `ClusterCreate` and `NodeCreate` don't start the entities (containers) anymore
   - `ClusterRun` and `NodeRun` orchestrate the new Create and Start functionality
 - `NodeDelete` now takes an additional `NodeDeleteOpts` struct to toggle specific steps
+- NodeSpec now features a list of networks (required for registries)
 - New config flow: CLIConfig (SimpleConfig) -> ClusterConfig -> Cluster + Opts
 
 #### CLI

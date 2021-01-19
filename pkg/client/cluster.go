@@ -399,7 +399,7 @@ ClusterCreatOpts:
 		}
 
 		node.Name = generateNodeName(cluster.Name, node.Role, suffix)
-		node.Network = cluster.Network.Name
+		node.Networks = []string{cluster.Network.Name}
 		node.Restart = true
 		node.GPURequest = clusterCreateOpts.GPURequest
 
@@ -507,10 +507,10 @@ ClusterCreatOpts:
 					fmt.Sprintf("PORTS=%s", ports),
 					fmt.Sprintf("WORKER_PROCESSES=%d", len(strings.Split(ports, ","))),
 				},
-				Role:    k3d.LoadBalancerRole,
-				Labels:  clusterCreateOpts.GlobalLabels, // TODO: createLoadBalancer: add more expressive labels
-				Network: cluster.Network.Name,
-				Restart: true,
+				Role:     k3d.LoadBalancerRole,
+				Labels:   clusterCreateOpts.GlobalLabels, // TODO: createLoadBalancer: add more expressive labels
+				Networks: []string{cluster.Network.Name},
+				Restart:  true,
 			}
 			cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
 			log.Infof("Creating LoadBalancer '%s'", lbNode.Name)

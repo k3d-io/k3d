@@ -310,7 +310,7 @@ type Node struct {
 	Restart    bool              `yaml:"restart" json:"restart,omitempty"`
 	Created    string            `yaml:"created" json:"created,omitempty"`
 	Labels     map[string]string // filled automatically
-	Network    string            // filled automatically
+	Networks   []string          // filled automatically
 	ExtraHosts []string          // filled automatically
 	ServerOpts ServerOpts        `yaml:"serverOpts" json:"serverOpts,omitempty"`
 	AgentOpts  AgentOpts         `yaml:"agentOpts" json:"agentOpts,omitempty"`

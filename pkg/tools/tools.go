@@ -202,14 +202,14 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 // startToolsNode will start a new k3d tools container and connect it to the network of the chosen cluster
 func startToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, network string, volumes []string) (*k3d.Node, error) {
 	node := &k3d.Node{
-		Name:    fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name),
-		Image:   fmt.Sprintf("%s:%s", k3d.DefaultToolsImageRepo, version.GetHelperImageVersion()),
-		Role:    k3d.NoRole,
-		Volumes: volumes,
-		Network: network,
-		Cmd:     []string{},
-		Args:    []string{"noop"},
-		Labels:  k3d.DefaultObjectLabels,
+		Name:     fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name),
+		Image:    fmt.Sprintf("%s:%s", k3d.DefaultToolsImageRepo, version.GetHelperImageVersion()),
+		Role:     k3d.NoRole,
+		Volumes:  volumes,
+		Networks: []string{network},
+		Cmd:      []string{},
+		Args:     []string{"noop"},
+		Labels:   k3d.DefaultObjectLabels,
 	}
 	node.Labels[k3d.LabelClusterName] = cluster.Name
 	if err := k3dc.NodeRun(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
