@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/docker/go-connections/nat"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
 
@@ -54,7 +55,7 @@ data:
 
 	regs := []*k3d.Registry{reg}
 
-	cm, err := RegistryGenerateLocalRegistryHostingConfigMapYAML(context.Background(), regs)
+	cm, err := RegistryGenerateLocalRegistryHostingConfigMapYAML(context.Background(), runtimes.Docker, regs)
 	if err != nil {
 		t.Error(err)
 	}

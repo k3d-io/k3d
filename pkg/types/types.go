@@ -358,6 +358,8 @@ const (
 	DefaultRegistriesFilePath = "/etc/rancher/k3s/registries.yaml"
 	DefaultRegistryMountPath  = "/var/lib/registry"
 	DefaultDockerHubAddress   = "registry-1.docker.io"
+	// Default temporary path for the LocalRegistryHosting configmap, from where it will be applied via kubectl
+	DefaultLocalRegistryHostingConfigmapTempPath = "/tmp/localRegistryHostingCM.yaml"
 )
 
 // Registry describes a k3d-managed registry

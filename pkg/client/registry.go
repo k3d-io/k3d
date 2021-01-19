@@ -24,10 +24,12 @@ package client
 import (
 	"context"
 	"fmt"
+	gort "runtime"
 
 	"github.com/docker/go-connections/nat"
 	"github.com/imdario/mergo"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/pkg/types/k3s"
 	"github.com/rancher/k3d/v4/pkg/types/k8s"
@@ -182,6 +184,12 @@ func RegistryGenerateK3sConfig(ctx context.Context, registries []*k3d.Registry) 
 			},
 		}
 
+		regConf.Mirrors[internalAddress] = k3s.Mirror{
+			Endpoints: []string{
+				fmt.Sprintf("http://%s", internalAddress),
+			},
+		}
+
 		if reg.Options.Proxy.RemoteURL != "" {
 			regConf.Mirrors[reg.Options.Proxy.RemoteURL] = k3s.Mirror{
 				Endpoints: []string{fmt.Sprintf("http://%s", internalAddress)},
@@ -242,7 +250,7 @@ func RegistryFromNode(node *k3d.Node) (*k3d.Registry, error) {
 }
 
 // RegistryGenerateLocalRegistryHostingConfigMapYAML generates a ConfigMap used to advertise the registries in the cluster
-func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, registries []*k3d.Registry) ([]byte, error) {
+func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runtime runtimes.Runtime, registries []*k3d.Registry) ([]byte, error) {
 
 	type cmMetadata struct {
 		Name      string `yaml:"name"`
@@ -269,11 +277,34 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, regi
 		return nil, nil
 	}
 
+	// if no host is set, fallback onto the HostIP used to bind the port
 	host := registries[0].ExposureOpts.Host
 	if host == "" {
 		host = registries[0].ExposureOpts.Binding.HostIP
 	}
 
+	// if the host is now 0.0.0.0, check if we can set it to the IP of the docker-machine, if it's used
+	if host == k3d.DefaultAPIHost && runtime == runtimes.Docker {
+		if gort.GOOS == "windows" || gort.GOOS == "darwin" {
+			log.Tracef("Running on %s: checking if it's using docker-machine", gort.GOOS)
+			machineIP, err := runtime.(docker.Docker).GetDockerMachineIP()
+			if err != nil {
+				log.Warnf("Using docker-machine, but failed to get it's IP for usage in LocalRegistryHosting Config Map: %+v", err)
+			} else if machineIP != "" {
+				log.Infof("Using the docker-machine IP %s in the LocalRegistryHosting Config Map", machineIP)
+				host = machineIP
+			} else {
+				log.Traceln("Not using docker-machine")
+			}
+		}
+	}
+
+	// if host is still 0.0.0.0, use localhost instead
+	if host == k3d.DefaultAPIHost {
+		host = "localhost" // we prefer localhost over 0.0.0.0
+	}
+
+	// transform configmap data to YAML
 	dat, err := yaml.Marshal(
 		k8s.LocalRegistryHostingV1{
 			Host:                     fmt.Sprintf("%s:%s", host, registries[0].ExposureOpts.Binding.HostPort),
