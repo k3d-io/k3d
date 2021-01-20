@@ -28,7 +28,7 @@
 
 #### Features
 
-- Registry Support
+- **Registry Support**
   - k3d-managed registry like we had it in k3d v1.x
   - Option 1: default settings, paired with cluster creation
     - `k3d cluster create --registry-create` -> New registry for that cluster
@@ -39,7 +39,7 @@
   - Communicate managed registry using the LocalRegistryHostingV1 spec from [KEP-1755](https://github.com/kubernetes/enhancements/blob/0d69f7cea6fbe73a7d70fab569c6898f5ccb7be0/keps/sig-cluster-lifecycle/generic/1755-communicating-a-local-registry/README.md)
     - interesting especially for tools that reload images, like Tilt or Skaffold
 
-- Config File Support
+- **Config File Support**
   - Put all your CLI-Arguments/Flags into a more readable config file and re-use it everywhere (keep it in your repo)
     - Note: this is not always a 1:1 matching in naming/syntax/semantics
   - `k3d cluster create --config myconfig.yaml`
@@ -57,15 +57,29 @@
     ```
 
   - Check out our test cases in [pkg/config/test_assets/](./pkg/config/test_assets/) for more config file examples
+  - **Note**: The config file format (& feature) might still be a little rough around the edges and it's prone to change quickly until we hit a stable release of the config
 
 - [WIP] Support for Lifecycle Hooks
   - Run any executable at specific stages during the cluster and node lifecycles
     - e.g. we modify the `registries.yaml` in the `preStart` stage of nodes
     - Guides will follow
 
+- Print container creation time (#431, @inercia)
+- add output formats for `cluster ls` and `node ls` (#439, @inercia)
+
+#### Fixes
+
+- import image: avoid nil pointer exception in specific cases
+- cluster delete: properly handle node and network (#437)
+- --port: fix bnil-pointer exception when exposing port on non-existent loadbalancer
+- completion/zsh: source completion file
+
 #### Misc
 
 - Now building with Go 1.15
   - same for the k3d-tools code
 - updated dependencies (including Docker v20.10)
-- tests/e2e: add E2E_INCLUDE and rename E2E_SKIP to E2E_EXCLUDE
+- tests/e2e: add `E2E_INCLUDE` and rename `E2E_SKIP` to `E2E_EXCLUDE`
+- tests/e2e: allow overriding the Helper Image Tag via `E2E_HELPER_IMAGE_TAG`
+- docs: spell checking (#434, @jsoref)
+- docs: add Chocolatey install option (#443, @erwinkersten)
