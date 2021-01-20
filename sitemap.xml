@@ -1,51 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
      <loc>https://k3d.io/</loc>
-     <lastmod>2021-01-19</lastmod>
+     <lastmod>2021-01-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/</loc>
-     <lastmod>2021-01-19</lastmod>
+     <lastmod>2021-01-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/kubeconfig/</loc>
-     <lastmod>2021-01-19</lastmod>
+     <lastmod>2021-01-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/multiserver/</loc>
-     <lastmod>2021-01-19</lastmod>
+     <lastmod>2021-01-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/guides/exposing_services/</loc>
-     <lastmod>2021-01-19</lastmod>
+     <lastmod>2021-01-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/guides/registries/</loc>
-     <lastmod>2021-01-19</lastmod>
+     <lastmod>2021-01-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/guides/calico/</loc>
-     <lastmod>2021-01-19</lastmod>
+     <lastmod>2021-01-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/guides/cuda/</loc>
-     <lastmod>2021-01-19</lastmod>
+     <lastmod>2021-01-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/internals/defaults/</loc>
-     <lastmod>2021-01-19</lastmod>
+     <lastmod>2021-01-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/internals/networking/</loc>
-     <lastmod>2021-01-19</lastmod>
+     <lastmod>2021-01-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/faq/faq/</loc>
-     <lastmod>2021-01-19</lastmod>
+     <lastmod>2021-01-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/faq/v1vsv3-comparison/</loc>
-     <lastmod>2021-01-19</lastmod>
+     <lastmod>2021-01-20</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>
