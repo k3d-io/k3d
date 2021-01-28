@@ -22,7 +22,6 @@ THE SOFTWARE.
 package client
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -392,6 +391,7 @@ ClusterCreatOpts:
 			// the cluster has an init server node, but its not this one, so connect it to the init node
 			if cluster.InitNode != nil && !node.ServerOpts.IsInit {
 				node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", connectionURL))
+				node.Labels[k3d.LabelServerIsInit] = "false" // set label, that this server node is not the init server
 			}
 
 		} else if node.Role == k3d.AgentRole {
@@ -425,6 +425,10 @@ ClusterCreatOpts:
 	if cluster.InitNode != nil {
 		log.Infoln("Creating initializing server node")
 		cluster.InitNode.Args = append(cluster.InitNode.Args, "--cluster-init")
+		if cluster.InitNode.Labels == nil {
+			cluster.InitNode.Labels = map[string]string{}
+		}
+		cluster.InitNode.Labels[k3d.LabelServerIsInit] = "true" // set label, that this server node is the init server
 
 		// in case the LoadBalancer was disabled, expose the API Port on the initializing server node
 		if clusterCreateOpts.DisableLoadBalancer {
@@ -797,38 +801,10 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	for _, n := range cluster.Nodes {
 		if n.Role == k3d.ServerRole && n.ServerOpts.IsInit {
 			if err := NodeStart(ctx, runtime, n, k3d.NodeStartOpts{
+				Wait:      true, // always wait for the init node
 				NodeHooks: startClusterOpts.NodeHooks,
 			}); err != nil {
 				return fmt.Errorf("Failed to start initializing server node: %+v", err)
-			}
-			// wait for the initnode to come up before doing anything else
-			for {
-				select {
-				case <-ctx.Done():
-					log.Errorln("Failed to bring up initializing server node in time")
-					return fmt.Errorf(">>> %w", ctx.Err())
-				default:
-				}
-				log.Debugln("Waiting for initializing server node...")
-				logreader, err := runtime.GetNodeLogs(ctx, cluster.InitNode, time.Time{})
-				if err != nil {
-					if logreader != nil {
-						logreader.Close()
-					}
-					log.Errorln(err)
-					log.Errorln("Failed to get logs from the initializig server node.. waiting for 3 seconds instead")
-					time.Sleep(3 * time.Second)
-					break
-				}
-				defer logreader.Close()
-				buf := new(bytes.Buffer)
-				nRead, _ := buf.ReadFrom(logreader)
-				logreader.Close()
-				if nRead > 0 && strings.Contains(buf.String(), k3d.ReadyLogMessageByRole[k3d.ServerRole]) {
-					log.Debugln("Initializing server node is up... continuing")
-					break
-				}
-				time.Sleep(time.Second)
 			}
 			break
 		}
@@ -847,24 +823,27 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 			continue
 		}
 
+		// skip init node here, as it should be running already
+		if node == cluster.InitNode || node.ServerOpts.IsInit {
+			continue
+		}
+
 		// check if node is running already to avoid waiting forever when checking for the node log message
 		if !node.State.Running {
 
-			// start node
-			if err := NodeStart(ctx, runtime, node, k3d.NodeStartOpts{
+			nodeStartOpts := k3d.NodeStartOpts{
 				NodeHooks: startClusterOpts.NodeHooks,
-			}); err != nil {
+			}
+
+			if node.Role == k3d.ServerRole && startClusterOpts.WaitForServer {
+				nodeStartOpts.Wait = true
+			}
+
+			// start node
+			if err := NodeStart(ctx, runtime, node, nodeStartOpts); err != nil {
 				log.Warningf("Failed to start node '%s': Try to start it manually", node.Name)
 				failed++
 				continue
-			}
-
-			// wait for this server node to be ready (by checking the logs for a specific log message)
-			if node.Role == k3d.ServerRole && startClusterOpts.WaitForServer {
-				log.Debugf("Waiting for server node '%s' to get ready", node.Name)
-				if err := NodeWaitForLogMessage(ctx, runtime, node, k3d.ReadyLogMessageByRole[k3d.ServerRole], start); err != nil {
-					return fmt.Errorf("Server node '%s' failed to get ready: %+v", node.Name, err)
-				}
 			}
 
 		} else {
@@ -883,8 +862,13 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 			// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
 			// ... by scanning for this line in logs and restarting the container in case it appears
 			log.Debugf("Starting to wait for loadbalancer node '%s'", serverlb.Name)
-			if err := NodeWaitForLogMessage(ctx, runtime, serverlb, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], start); err != nil {
-				return fmt.Errorf("Loadbalancer '%s' failed to get ready: %+v", serverlb.Name, err)
+			readyLogMessage := k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole]
+			if readyLogMessage != "" {
+				if err := NodeWaitForLogMessage(ctx, runtime, serverlb, readyLogMessage, start); err != nil {
+					return fmt.Errorf("Loadbalancer '%s' failed to get ready: %+v", serverlb.Name, err)
+				}
+			} else {
+				log.Warnf("ClusterStart: Set to wait for node %s to be ready, but there's no target log message defined", serverlb.Name)
 			}
 		} else {
 			log.Infof("Serverlb '%s' already running", serverlb.Name)

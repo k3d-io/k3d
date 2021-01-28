@@ -161,7 +161,12 @@ func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes 
 			currentNode := node
 			nodeWaitGroup.Go(func() error {
 				log.Debugf("Starting to wait for node '%s'", currentNode.Name)
-				return NodeWaitForLogMessage(ctx, runtime, currentNode, k3d.ReadyLogMessageByRole[currentNode.Role], time.Time{})
+				readyLogMessage := k3d.ReadyLogMessageByRole[currentNode.Role]
+				if readyLogMessage != "" {
+					return NodeWaitForLogMessage(ctx, runtime, currentNode, readyLogMessage, time.Time{})
+				}
+				log.Warnf("NodeAddToClusterMulti: Set to wait for node %s to get ready, but there's no target log message defined", currentNode.Name)
+				return nil
 			})
 		}
 	}
@@ -191,7 +196,12 @@ func NodeCreateMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d
 			currentNode := node
 			nodeWaitGroup.Go(func() error {
 				log.Debugf("Starting to wait for node '%s'", currentNode.Name)
-				return NodeWaitForLogMessage(ctx, runtime, currentNode, k3d.ReadyLogMessageByRole[currentNode.Role], time.Time{})
+				readyLogMessage := k3d.ReadyLogMessageByRole[currentNode.Role]
+				if readyLogMessage != "" {
+					return NodeWaitForLogMessage(ctx, runtime, currentNode, readyLogMessage, time.Time{})
+				}
+				log.Warnf("NodeCreateMulti: Set to wait for node %s to get ready, but there's no target log message defined", currentNode.Name)
+				return nil
 			})
 		}
 	}
@@ -226,17 +236,32 @@ func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, node
 func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeStartOpts k3d.NodeStartOpts) error {
 	for _, hook := range nodeStartOpts.NodeHooks {
 		if hook.Stage == k3d.LifecycleStagePreStart {
-			log.Tracef("Executing preStartAction '%s'", reflect.TypeOf(hook))
+			log.Tracef("Node %s: Executing preStartAction '%s'", node.Name, reflect.TypeOf(hook))
 			if err := hook.Action.Run(ctx, node); err != nil {
-				log.Errorf("Failed executing preStartAction '%+v': %+v", hook, err)
+				log.Errorf("Node %s: Failed executing preStartAction '%+v': %+v", node.Name, hook, err)
 			}
 		}
 	}
 	log.Tracef("Starting node '%s'", node.Name)
+
+	startTime := time.Now()
 	if err := runtime.StartNode(ctx, node); err != nil {
-		log.Errorf("Failed to start node *'%s'", node.Name)
+		log.Errorf("Failed to start node '%s'", node.Name)
 		return err
 	}
+
+	if nodeStartOpts.Wait {
+		log.Debugf("Waiting for node %s to get ready", node.Name)
+		readyLogMessage := k3d.ReadyLogMessageByRole[node.Role]
+		if readyLogMessage != "" {
+			if err := NodeWaitForLogMessage(ctx, runtime, node, readyLogMessage, startTime); err != nil {
+				return fmt.Errorf("Node %s failed to get ready: %+v", node.Name, err)
+			}
+		} else {
+			log.Warnf("NodeStart: Set to wait for node %s to be ready, but there's no target log message defined", node.Name)
+		}
+	}
+
 	return nil
 }
 

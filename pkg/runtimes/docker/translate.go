@@ -144,7 +144,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 
 	// first, make sure, that it's actually a k3d managed container by checking if it has all the default labels
 	for k, v := range k3d.DefaultObjectLabels {
-		log.Tracef("TranslateContainerDetailsToNode: Checking for default object label %s=%s", k, v)
+		log.Tracef("TranslateContainerDetailsToNode: Checking for default object label %s=%s on container %s", k, v, containerDetails.Name)
 		found := false
 		for lk, lv := range containerDetails.Config.Labels {
 			if lk == k && lv == v {
@@ -176,8 +176,30 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 	}
 	orderedNetworks = append(orderedNetworks, otherNetworks...)
 
-	// serverOpts
+	/**
+	 * ServerOpts
+	 */
+
+	// IsInit
 	serverOpts := k3d.ServerOpts{IsInit: false}
+	clusterInitFlagSet := false
+	for _, arg := range containerDetails.Args {
+		if strings.Contains(arg, "--cluster-init") {
+			clusterInitFlagSet = true
+			break
+		}
+	}
+	if serverIsInitLabel, ok := containerDetails.Config.Labels[k3d.LabelServerIsInit]; ok {
+		if serverIsInitLabel == "true" {
+			if !clusterInitFlagSet {
+				log.Errorf("Container %s has label %s=true, but the args do not contain the --cluster-init flag", containerDetails.Name, k3d.LabelServerIsInit)
+			} else {
+				serverOpts.IsInit = true
+			}
+		}
+	}
+
+	// Kube API
 	serverOpts.KubeAPI = &k3d.ExposureOpts{}
 	for k, v := range containerDetails.Config.Labels {
 		if k == k3d.LabelServerAPIHostIP {
