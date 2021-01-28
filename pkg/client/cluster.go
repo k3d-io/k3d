@@ -482,6 +482,11 @@ ClusterCreatOpts:
 		}
 	}
 
+	// WARN, if there are exactly two server nodes: that means we're using etcd, but don't have fault tolerance
+	if serverCount == 2 {
+		log.Warnln("You're creating 2 server nodes: Please consider creating at least 3 to achieve quorum & fault tolerance")
+	}
+
 	/*
 	 * Auxiliary Containers
 	 */
