@@ -802,97 +802,106 @@ func generateNodeName(cluster string, role k3d.Role, suffix int) string {
 func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, startClusterOpts types.ClusterStartOpts) error {
 	log.Infof("Starting cluster '%s'", cluster.Name)
 
-	start := time.Now()
-
 	if startClusterOpts.Timeout > 0*time.Second {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, startClusterOpts.Timeout)
 		defer cancel()
 	}
 
+	// sort the nodes into categories
+	var initNode *k3d.Node
+	var servers []*k3d.Node
+	var agents []*k3d.Node
+	var aux []*k3d.Node
+	for _, n := range cluster.Nodes {
+		if n.Role == k3d.ServerRole {
+			if n.ServerOpts.IsInit {
+				initNode = n
+				continue
+			}
+			servers = append(servers, n)
+		} else if n.Role == k3d.AgentRole {
+			agents = append(agents, n)
+		} else {
+			aux = append(aux, n)
+		}
+	}
+
+	log.Infoln("Servers before sort:")
+	for i, n := range servers {
+		log.Infof("Server %d - %s", i, n.Name)
+	}
+	sort.Slice(servers, func(i, j int) bool {
+		return servers[i].Name < servers[j].Name
+	})
+	log.Infoln("Servers after sort:")
+	for i, n := range servers {
+		log.Infof("Server %d - %s", i, n.Name)
+	}
+
 	/*
 	 * Init Node
 	 */
-	for _, n := range cluster.Nodes {
-		if n.Role == k3d.ServerRole && n.ServerOpts.IsInit {
-			if err := NodeStart(ctx, runtime, n, k3d.NodeStartOpts{
-				Wait:      true, // always wait for the init node
-				NodeHooks: startClusterOpts.NodeHooks,
-			}); err != nil {
-				return fmt.Errorf("Failed to start initializing server node: %+v", err)
-			}
-			break
+	if initNode != nil {
+		log.Infoln("Starting the initializing server...")
+		if err := NodeStart(ctx, runtime, initNode, k3d.NodeStartOpts{
+			Wait:            true, // always wait for the init node
+			NodeHooks:       startClusterOpts.NodeHooks,
+			ReadyLogMessage: "Running kube-apiserver", // initNode means, that we're using etcd -> this will need quorum, so "k3s is up and running" won't happen right now
+		}); err != nil {
+			return fmt.Errorf("Failed to start initializing server node: %+v", err)
 		}
 	}
 
 	/*
-	 * Other Nodes
+	 * Server Nodes
 	 */
-	failed := 0
-	var serverlb *k3d.Node
-	for _, node := range cluster.Nodes {
-
-		// skip the LB, because we want to start it last
-		if node.Role == k3d.LoadBalancerRole {
-			serverlb = node
-			continue
-		}
-
-		// skip init node here, as it should be running already
-		if node == cluster.InitNode || node.ServerOpts.IsInit {
-			continue
-		}
-
-		// check if node is running already to avoid waiting forever when checking for the node log message
-		if !node.State.Running {
-
-			nodeStartOpts := k3d.NodeStartOpts{
-				NodeHooks: startClusterOpts.NodeHooks,
-			}
-
-			if node.Role == k3d.ServerRole && startClusterOpts.WaitForServer {
-				nodeStartOpts.Wait = true
-			}
-
-			// start node
-			if err := NodeStart(ctx, runtime, node, nodeStartOpts); err != nil {
-				log.Warningf("Failed to start node '%s': Try to start it manually", node.Name)
-				failed++
-				continue
-			}
-
-		} else {
-			log.Infof("Node '%s' already running", node.Name)
+	log.Infoln("Starting servers...")
+	nodeStartOpts := k3d.NodeStartOpts{
+		Wait:      true,
+		NodeHooks: startClusterOpts.NodeHooks,
+	}
+	for _, serverNode := range servers {
+		if err := NodeStart(ctx, runtime, serverNode, nodeStartOpts); err != nil {
+			return fmt.Errorf("Failed to start server %s: %+v", serverNode.Name, err)
 		}
 	}
 
-	// start serverlb
-	if serverlb != nil {
-		if !serverlb.State.Running {
-			log.Debugln("Starting serverlb...")
-			if err := runtime.StartNode(ctx, serverlb); err != nil { // FIXME: we could run into a nullpointer exception here
-				log.Warningf("Failed to start serverlb '%s' (try to start it manually): %+v", serverlb.Name, err)
-				failed++
-			}
-			// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`
-			// ... by scanning for this line in logs and restarting the container in case it appears
-			log.Debugf("Starting to wait for loadbalancer node '%s'", serverlb.Name)
-			readyLogMessage := k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole]
-			if readyLogMessage != "" {
-				if err := NodeWaitForLogMessage(ctx, runtime, serverlb, readyLogMessage, start); err != nil {
-					return fmt.Errorf("Loadbalancer '%s' failed to get ready: %+v", serverlb.Name, err)
-				}
-			} else {
-				log.Warnf("ClusterStart: Set to wait for node %s to be ready, but there's no target log message defined", serverlb.Name)
-			}
-		} else {
-			log.Infof("Serverlb '%s' already running", serverlb.Name)
+	/*
+	 * Agent Nodes
+	 */
+
+	failedAgents := 0
+
+	log.Infoln("Starting agents...")
+	for _, agentNode := range agents {
+		if err := NodeStart(ctx, runtime, agentNode, nodeStartOpts); err != nil {
+			log.Warnf("Failed to start agent %s: %+v", agentNode.Name, err)
+			failedAgents++
 		}
 	}
 
-	if failed > 0 {
-		return fmt.Errorf("Failed to start %d nodes: Try to start them manually", failed)
+	/*
+	 * Auxiliary/Helper Nodes
+	 */
+
+	log.Infoln("Starting helpers...")
+	failedHelpers := 0
+	for _, helperNode := range aux {
+		nodeStartOpts := k3d.NodeStartOpts{}
+		if helperNode.Role == k3d.LoadBalancerRole {
+			nodeStartOpts.Wait = true
+		}
+		if err := NodeStart(ctx, runtime, helperNode, nodeStartOpts); err != nil {
+			log.Warnf("Failed to start helper %s: %+v", helperNode.Name, err)
+			failedHelpers++
+		}
 	}
+
+	if failedAgents+failedHelpers > 0 {
+		log.Warnf("%d non-critical (agent or helper) nodes failed to start. You may want to start them manually.", failedAgents+failedHelpers)
+	}
+
 	return nil
 }
 

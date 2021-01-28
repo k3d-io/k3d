@@ -129,6 +129,10 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		}
 	}
 
+	// clear status fields
+	node.State.Running = false
+	node.State.Status = ""
+
 	if err := NodeRun(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
 		return err
 	}
@@ -233,6 +237,14 @@ func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, node
 
 // NodeStart starts an existing node
 func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeStartOpts k3d.NodeStartOpts) error {
+
+	// return early, if the node is already running
+	if node.State.Running {
+		log.Infof("Node %s is already running", node.Name)
+		return nil
+	}
+
+	// execute lifecycle hook actions
 	for _, hook := range nodeStartOpts.NodeHooks {
 		if hook.Stage == k3d.LifecycleStagePreStart {
 			log.Tracef("Node %s: Executing preStartAction '%s'", node.Name, reflect.TypeOf(hook))
@@ -241,6 +253,8 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 			}
 		}
 	}
+
+	// start the node
 	log.Tracef("Starting node '%s'", node.Name)
 
 	startTime := time.Now()
@@ -250,10 +264,12 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 	}
 
 	if nodeStartOpts.Wait {
-		log.Debugf("Waiting for node %s to get ready", node.Name)
-		readyLogMessage := k3d.ReadyLogMessageByRole[node.Role]
-		if readyLogMessage != "" {
-			if err := NodeWaitForLogMessage(ctx, runtime, node, readyLogMessage, startTime); err != nil {
+		if nodeStartOpts.ReadyLogMessage == "" {
+			nodeStartOpts.ReadyLogMessage = k3d.ReadyLogMessageByRole[node.Role]
+		}
+		if nodeStartOpts.ReadyLogMessage != "" {
+			log.Debugf("Waiting for node %s to get ready (Log: '%s')", node.Name, nodeStartOpts.ReadyLogMessage)
+			if err := NodeWaitForLogMessage(ctx, runtime, node, nodeStartOpts.ReadyLogMessage, startTime); err != nil {
 				return fmt.Errorf("Node %s failed to get ready: %+v", node.Name, err)
 			}
 		} else {
