@@ -265,6 +265,14 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 		return err
 	}
 
+	if node.State.Started != "" {
+		ts, err := time.Parse("2006-01-02T15:04:05.999999999Z", node.State.Started)
+		if err != nil {
+			log.Debugf("Failed to parse '%s.State.Started' timestamp '%s', falling back to calulated time", node.Name, node.State.Started)
+		}
+		startTime = ts
+	}
+
 	if nodeStartOpts.Wait {
 		if nodeStartOpts.ReadyLogMessage == "" {
 			nodeStartOpts.ReadyLogMessage = k3d.ReadyLogMessageByRole[node.Role]

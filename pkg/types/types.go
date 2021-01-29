@@ -358,6 +358,7 @@ func GetDefaultObjectName(name string) string {
 type NodeState struct {
 	Running bool
 	Status  string
+	Started string
 }
 
 /*

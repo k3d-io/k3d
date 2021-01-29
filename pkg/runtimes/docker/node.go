@@ -127,6 +127,16 @@ func (d Docker) StartNode(ctx context.Context, node *k3d.Node) error {
 		return err
 	}
 
+	// get container which represents the node
+	nodeContainerJSON, err := docker.ContainerInspect(ctx, nodeContainer.ID)
+	if err != nil {
+		return fmt.Errorf("Failed to inspect container %s for node %s: %+v", node.Name, nodeContainer.ID, err)
+	}
+
+	node.Created = nodeContainerJSON.Created
+	node.State.Running = nodeContainerJSON.State.Running
+	node.State.Started = nodeContainerJSON.State.StartedAt
+
 	return nil
 }
 
@@ -297,7 +307,7 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 
 	sinceStr := ""
 	if !since.IsZero() {
-		sinceStr = since.Format("2006-01-02T15:04:05")
+		sinceStr = since.Format("2006-01-02T15:04:05.999999999Z")
 	}
 	logreader, err := docker.ContainerLogs(ctx, container.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Since: sinceStr})
 	if err != nil {
