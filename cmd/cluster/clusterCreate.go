@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	cliutil "github.com/rancher/k3d/v4/cmd/util"
 	k3dCluster "github.com/rancher/k3d/v4/pkg/client"
@@ -74,6 +75,17 @@ func NewCmdClusterCreate() *cobra.Command {
 		Long:  clusterCreateDescription,
 		Args:  cobra.RangeArgs(0, 1), // exactly one cluster name can be set (default: k3d.DefaultClusterName)
 		Run: func(cmd *cobra.Command, args []string) {
+
+			cfgPath := viper.GetString("config")
+			viper.SetConfigFile(cfgPath)
+
+			if _, err := os.Stat(cfgPath); err == nil {
+				if err := viper.ReadInConfig(); err != nil {
+					log.Fatalf("Failed to read Config: %+v", err)
+				}
+			}
+
+			log.Infof("VIPER: %s", viper.AllSettings())
 
 			/*********************
 			 * CLI Configuration *
@@ -179,9 +191,18 @@ func NewCmdClusterCreate() *cobra.Command {
 	/*********
 	 * Flags *
 	 *********/
-	cmd.Flags().StringVar(&ppFlags.APIPort, "api-port", "random", "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d cluster create --servers 3 --api-port 0.0.0.0:6550`")
-	cmd.Flags().IntVarP(&cliConfig.Servers, "servers", "s", 1, "Specify how many servers you want to create")
+	cmd.Flags().StringVar(&ppFlags.APIPort, "api-port", "", "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d cluster create --servers 3 --api-port 0.0.0.0:6550`")
+	_ = viper.BindPFlag("api-port", cmd.Flags().Lookup("api-port"))
+	viper.SetDefault("api-port", "random")
+
+	cmd.Flags().IntVarP(&cliConfig.Servers, "servers", "s", 0, "Specify how many servers you want to create")
+	_ = viper.BindPFlag("servers", cmd.Flags().Lookup("servers"))
+	viper.SetDefault("servers", 1)
+
 	cmd.Flags().IntVarP(&cliConfig.Agents, "agents", "a", 0, "Specify how many agents you want to create")
+	_ = viper.BindPFlag("agents", cmd.Flags().Lookup("agents"))
+	viper.SetDefault("agents", 0)
+
 	cmd.Flags().StringVarP(&cliConfig.Image, "image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
 	cmd.Flags().StringVar(&cliConfig.Network, "network", "", "Join an existing network")
 	cmd.Flags().StringVar(&cliConfig.ClusterToken, "token", "", "Specify a cluster token. By default, we generate one.")
@@ -206,25 +227,12 @@ func NewCmdClusterCreate() *cobra.Command {
 	if err := cobra.MarkFlagFilename(cmd.Flags(), "config", "yaml", "yml"); err != nil {
 		log.Fatalln("Failed to mark flag 'config' as filename flag")
 	}
+	_ = viper.BindPFlag("config", cmd.Flags().Lookup("config"))
 
 	/* Registry */
 	cmd.Flags().StringArrayVar(&cliConfig.Registries.Use, "registry-use", nil, "Connect to one or more k3d-managed registries running locally")
 	cmd.Flags().BoolVar(&cliConfig.Registries.Create, "registry-create", false, "Create a k3d-managed registry and connect it to the cluster")
 	cmd.Flags().StringVar(&cliConfig.Registries.Config, "registry-config", "", "Specify path to an extra registries.yaml file")
-
-	/* Multi Server Configuration */
-
-	// multi-server - datastore
-	// TODO: implement multi-server setups with external data store
-	// cmd.Flags().String("datastore-endpoint", "", "[WIP] Specify external datastore endpoint (e.g. for multi server clusters)")
-	/*
-		cmd.Flags().String("datastore-network", "", "Specify container network where we can find the datastore-endpoint (add a connection)")
-
-		// TODO: set default paths and hint, that one should simply mount the files using --volume flag
-		cmd.Flags().String("datastore-cafile", "", "Specify external datastore's TLS Certificate Authority (CA) file")
-		cmd.Flags().String("datastore-certfile", "", "Specify external datastore's TLS certificate file'")
-		cmd.Flags().String("datastore-keyfile", "", "Specify external datastore's TLS key file'")
-	*/
 
 	/* k3s */
 	cmd.Flags().StringArrayVar(&cliConfig.Options.K3sOptions.ExtraServerArgs, "k3s-server-arg", nil, "Additional args passed to the `k3s server` command on server nodes (new flag per arg)")

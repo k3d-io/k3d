@@ -1,7 +1,7 @@
 apiVersion: k3d.io/v1alpha1
 kind: Simple
 name: test
-servers: 1
+#servers: 3
 agents: 2
 exposeAPI:
   hostIP: "0.0.0.0"
