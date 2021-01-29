@@ -25,7 +25,7 @@ steps:
         - tag
 
   - name: test
-    image: docker:19.03
+    image: docker:20.10
     volumes:
       - name: dockersock
         path: /var/run
@@ -156,7 +156,7 @@ steps:
 services:
   # Starting the docker service to be used by dind
   - name: docker
-    image: docker:19.03-dind
+    image: docker:20.10-dind
     privileged: true
     volumes:
       - name: dockersock
