@@ -32,7 +32,7 @@ steps:
     commands:
       - apk add git bash curl sudo jq make
       - sleep 5  # give docker enough time to start
-      - make e2e
+      - make e2e -e E2E_EXTRA=true # E2E_EXTRA=true enables tests with multiple k3s versions
     when:
       event:
         - push

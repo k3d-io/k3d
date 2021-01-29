@@ -244,6 +244,9 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 		return nil
 	}
 
+	startTime := time.Now()
+	log.Debugf("Node %s Start Time: %+v", node.Name, startTime)
+
 	// execute lifecycle hook actions
 	for _, hook := range nodeStartOpts.NodeHooks {
 		if hook.Stage == k3d.LifecycleStagePreStart {
@@ -257,7 +260,6 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 	// start the node
 	log.Tracef("Starting node '%s'", node.Name)
 
-	startTime := time.Now()
 	if err := runtime.StartNode(ctx, node); err != nil {
 		log.Errorf("Failed to start node '%s'", node.Name)
 		return err

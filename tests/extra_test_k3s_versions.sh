@@ -3,7 +3,7 @@
 CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 [ -d "$CURR_DIR" ] || { echo "FATAL: no current dir (maybe running in zsh?)";  exit 1; }
 
-K3S_VERSIONS=("v1.17.14-k3s2" "v1.18.12-k3s1" "v1.19.2-k3s1" "v1.19.4-k3s1")
+K3S_VERSIONS=("v1.17.17-k3s1" "v1.18.15-k3s1" "v1.19.7-k3s1" "v1.20.2-k3s1")
 FAILED_TESTS=()
 
 # shellcheck source=./common.sh
@@ -25,10 +25,21 @@ for version in "${K3S_VERSIONS[@]}"; do
     FAILED_TESTS+=("full_lifecycle: $version")
   fi
 
+  $EXE cluster rm -a || failed "failed to delete clusters"
+
   K3S_IMAGE_TAG="$version" $CURR_DIR/test_multi_master.sh
   if [[ $? -eq 1 ]]; then
     FAILED_TESTS+=("multi_master: $version")
   fi
+
+  $EXE cluster rm -a || failed "failed to delete clusters"
+
+  K3S_IMAGE_TAG="$version" $CURR_DIR/test_multi_master_start_stop.sh
+  if [[ $? -eq 1 ]]; then
+    FAILED_TESTS+=("multi_master_start_stop: $version")
+  fi
+
+  $EXE cluster rm -a || failed "failed to delete clusters"
 
 done
 

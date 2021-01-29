@@ -50,6 +50,7 @@ done
 if [ -z "$E2E_HELPER_IMAGE_TAG" ]; then
   docker exec --workdir /src "$k3de2e" make build-helper-images
   # execute tests
+  echo "Start time outside runner: $(date)"
   docker exec "$k3de2e" /src/tests/runner.sh
 else
   # execute tests

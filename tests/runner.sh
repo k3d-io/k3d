@@ -18,6 +18,8 @@ info "Preparing filesystem and environment..."
 
 mkdir -p $HOME/.kube
 
+echo "Start time inside runner: $(date)"
+
 section "BASIC TESTS"
 
 for i in $CURR_DIR/test_*.sh ; do
