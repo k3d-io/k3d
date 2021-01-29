@@ -14,6 +14,8 @@ if [[ -n "$K3S_IMAGE_TAG" ]]; then
   EXTRA_TITLE="(rancher/k3s:$K3S_IMAGE_TAG)"
 fi
 
+export CURRENT_STAGE="Test | multi-server | $K3S_IMAGE_TAG"
+
 info "Creating cluster multiserver $EXTRA_TITLE ..."
 $EXE cluster create "multiserver" --servers 3 --api-port 6443 --wait --timeout 360s $EXTRA_FLAG || failed "could not create cluster multiserver $EXTRA_TITLE"
 info "Checking that we have access to the cluster..."

@@ -13,7 +13,7 @@ BLOCK='\033[1;37m'
 PATH=/usr/local/bin:$PATH
 export PATH
 
-log() { >&2 printf "${BLOCK}>>>${END} $1\n"; }
+log() { >&2 printf "$(date -u +"%Y-%m-%d %H:%M:%S %Z") [${CURRENT_STAGE:-undefined}] ${BLOCK}>>>${END} $1\n"; }
 
 info() { log "${BLU}$1${END}"; }
 highlight() { log "${MGT}$1${END}"; }

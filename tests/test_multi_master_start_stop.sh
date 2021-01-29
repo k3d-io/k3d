@@ -14,6 +14,8 @@ if [[ -n "$K3S_IMAGE_TAG" ]]; then
   EXTRA_TITLE="(rancher/k3s:$K3S_IMAGE_TAG)"
 fi
 
+export CURRENT_STAGE="Test | multi-server-start-stop | $K3S_IMAGE_TAG"
+
 info "Creating cluster multiserver $EXTRA_TITLE ..."
 $EXE cluster create "multiserver" --servers 3 --api-port 6443 --wait --timeout 360s $EXTRA_FLAG || failed "could not create cluster multiserver $EXTRA_TITLE"
 info "Checking that we have access to the cluster..."
@@ -31,8 +33,8 @@ $EXE cluster stop "multiserver" || failed "failed to stop cluster"
 info "Waiting for a bit..."
 sleep 5
 
-info "Restarting cluster..."
-$EXE cluster start multiserver || failed "failed to restart cluster"
+info "Restarting cluster (time: $(date -u +"%Y-%m-%d %H:%M:%S %Z"))..."
+$EXE cluster start multiserver --timeout 180s || failed "failed to restart cluster (timeout 180s)"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
 sleep 5

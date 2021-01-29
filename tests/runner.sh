@@ -7,7 +7,9 @@ CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 : "${E2E_EXCLUDE:=""}"
 : "${E2E_EXTRA:=""}"
 
-# shellcheck source=./common.sh
+export CURRENT_STAGE="Runner"
+
+# shellcheck disable=SC1091
 source "$CURR_DIR/common.sh"
 
 #########################################################################################
@@ -16,13 +18,13 @@ source "$CURR_DIR/common.sh"
 
 info "Preparing filesystem and environment..."
 
-mkdir -p $HOME/.kube
+mkdir -p "$HOME"/.kube
 
 echo "Start time inside runner: $(date)"
 
 section "BASIC TESTS"
 
-for i in $CURR_DIR/test_*.sh ; do
+for i in "$CURR_DIR"/test_*.sh ; do
   base=$(basename "$i" .sh)
   skip=false
   included=false
@@ -64,7 +66,7 @@ done
 # Additional (extra) tests
 if [[ -n "$E2E_EXTRA" ]]; then
   section "EXTRA TESTS"
-  for i in $CURR_DIR/extra_test_*.sh ; do
+  for i in "$CURR_DIR"/extra_test_*.sh ; do
     base=$(basename "$i" .sh)
     if [[ $E2E_EXCLUDE =~ (^| )$base($| ) ]]; then
       highlight "***** Skipping $base *****"

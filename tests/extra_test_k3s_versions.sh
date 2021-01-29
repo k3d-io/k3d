@@ -11,6 +11,8 @@ source "$CURR_DIR/common.sh"
 
 for version in "${K3S_VERSIONS[@]}"; do
 
+  export CURRENT_STAGE="Suite | k3s-versions | $version"
+
   info "Creating a cluster with k3s version $version ..."
   $EXE cluster create c1 --wait --timeout 60s --image "rancher/k3s:$version" || failed "could not create cluster with k3s version $version"
 
