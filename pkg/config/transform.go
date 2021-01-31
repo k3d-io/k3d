@@ -217,14 +217,15 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	 **************************/
 
 	clusterCreateOpts := k3d.ClusterCreateOpts{
-		DisableImageVolume:  simpleConfig.Options.K3dOptions.DisableImageVolume,
-		WaitForServer:       simpleConfig.Options.K3dOptions.Wait,
-		Timeout:             simpleConfig.Options.K3dOptions.Timeout,
-		DisableLoadBalancer: simpleConfig.Options.K3dOptions.DisableLoadbalancer,
-		K3sServerArgs:       simpleConfig.Options.K3sOptions.ExtraServerArgs,
-		K3sAgentArgs:        simpleConfig.Options.K3sOptions.ExtraAgentArgs,
-		GlobalLabels:        map[string]string{}, // empty init
-		GlobalEnv:           []string{},          // empty init
+		PrepDisableHostIPInjection: simpleConfig.Options.K3dOptions.PrepDisableHostIPInjection,
+		DisableImageVolume:         simpleConfig.Options.K3dOptions.DisableImageVolume,
+		WaitForServer:              simpleConfig.Options.K3dOptions.Wait,
+		Timeout:                    simpleConfig.Options.K3dOptions.Timeout,
+		DisableLoadBalancer:        simpleConfig.Options.K3dOptions.DisableLoadbalancer,
+		K3sServerArgs:              simpleConfig.Options.K3sOptions.ExtraServerArgs,
+		K3sAgentArgs:               simpleConfig.Options.K3sOptions.ExtraAgentArgs,
+		GlobalLabels:               map[string]string{}, // empty init
+		GlobalEnv:                  []string{},          // empty init
 	}
 
 	// ensure, that we have the default object labels
