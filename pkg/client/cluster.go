@@ -93,7 +93,11 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 
 	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
 	if !clusterConfig.ClusterCreateOpts.PrepDisableHostIPInjection {
-		prepInjectHostIP(ctx, runtime, &clusterConfig.Cluster)
+		if clusterConfig.Cluster.Network.Name != "host" {
+			prepInjectHostIP(ctx, runtime, &clusterConfig.Cluster)
+		} else {
+			log.Infoln("Hostnetwork selected -> Skipping injection of docker host into the cluster")
+		}
 	}
 
 	// create the registry hosting configmap
