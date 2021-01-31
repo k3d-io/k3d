@@ -203,24 +203,51 @@ func NewCmdClusterCreate() *cobra.Command {
 	_ = viper.BindPFlag("agents", cmd.Flags().Lookup("agents"))
 	viper.SetDefault("agents", 0)
 
-	cmd.Flags().StringVarP(&cliConfig.Image, "image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image that you want to use for the nodes")
+	cmd.Flags().StringVarP(&cliConfig.Image, "image", "i", "", "Specify k3s image that you want to use for the nodes")
+	_ = viper.BindPFlag("image", cmd.Flags().Lookup("image"))
+	viper.SetDefault("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)))
+
 	cmd.Flags().StringVar(&cliConfig.Network, "network", "", "Join an existing network")
+	_ = viper.BindPFlag("network", cmd.Flags().Lookup("network"))
+
 	cmd.Flags().StringVar(&cliConfig.ClusterToken, "token", "", "Specify a cluster token. By default, we generate one.")
+	_ = viper.BindPFlag("token", cmd.Flags().Lookup("token"))
+
 	cmd.Flags().StringArrayVarP(&ppFlags.Volumes, "volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v /my/path@agent[0,1] -v /tmp/test:/tmp/other@server[0]`")
+
 	cmd.Flags().StringArrayVarP(&ppFlags.Ports, "port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent[0] -p 8081@agent[1]`")
+
 	cmd.Flags().StringArrayVarP(&ppFlags.Labels, "label", "l", nil, "Add label to node container (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -l \"my.label@agent[0,1]\" -v \"other.label=somevalue@server[0]\"`")
+
 	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.Wait, "wait", true, "Wait for the server(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
+	_ = viper.BindPFlag("wait", cmd.Flags().Lookup("wait"))
+
 	cmd.Flags().DurationVar(&cliConfig.Options.K3dOptions.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
+	_ = viper.BindPFlag("timeout", cmd.Flags().Lookup("timeout"))
+
 	cmd.Flags().BoolVar(&cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig, "kubeconfig-update-default", true, "Directly update the default kubeconfig with the new cluster's context")
+	_ = viper.BindPFlag("kubeconfig-update-default", cmd.Flags().Lookup("kubeconfig-update-default"))
+
 	cmd.Flags().BoolVar(&cliConfig.Options.KubeconfigOptions.SwitchCurrentContext, "kubeconfig-switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (requires --kubeconfig-update-default)")
+	_ = viper.BindPFlag("kubeconfig-switch-context", cmd.Flags().Lookup("kubeconfig-switch-context"))
+
 	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.DisableLoadbalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
+	_ = viper.BindPFlag("no-lb", cmd.Flags().Lookup("no-lb"))
+
 	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.NoRollback, "no-rollback", false, "Disable the automatic rollback actions, if anything goes wrong")
+	_ = viper.BindPFlag("no-rollback", cmd.Flags().Lookup("no-rollback"))
+
 	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.PrepDisableHostIPInjection, "no-hostip", false, "Disable the automatic injection of the Host IP as 'host.k3d.internal' into the containers and CoreDNS")
+	_ = viper.BindPFlag("no-hostip", cmd.Flags().Lookup("no-hostip"))
+
 	cmd.Flags().StringVar(&cliConfig.Options.Runtime.GPURequest, "gpus", "", "GPU devices to add to the cluster node containers ('all' to pass all GPUs) [From docker]")
+	_ = viper.BindPFlag("gpus", cmd.Flags().Lookup("gpus"))
+
 	cmd.Flags().StringArrayVarP(&ppFlags.Env, "env", "e", nil, "Add environment variables to nodes (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -e \"HTTP_PROXY=my.proxy.com\" -e \"SOME_KEY=SOME_VAL@server[0]\"`")
 
 	/* Image Importing */
 	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
+	_ = viper.BindPFlag("no-image-volume", cmd.Flags().Lookup("no-image-volume"))
 
 	/* Config File */
 	cmd.Flags().StringVarP(&configFile, "config", "c", "", "Path of a config file to use")
@@ -231,12 +258,20 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	/* Registry */
 	cmd.Flags().StringArrayVar(&cliConfig.Registries.Use, "registry-use", nil, "Connect to one or more k3d-managed registries running locally")
+	_ = viper.BindPFlag("registry-use", cmd.Flags().Lookup("registry-use"))
+
 	cmd.Flags().BoolVar(&cliConfig.Registries.Create, "registry-create", false, "Create a k3d-managed registry and connect it to the cluster")
+	_ = viper.BindPFlag("registry-create", cmd.Flags().Lookup("registry-create"))
+
 	cmd.Flags().StringVar(&cliConfig.Registries.Config, "registry-config", "", "Specify path to an extra registries.yaml file")
+	_ = viper.BindPFlag("registry-config", cmd.Flags().Lookup("registry-config"))
 
 	/* k3s */
 	cmd.Flags().StringArrayVar(&cliConfig.Options.K3sOptions.ExtraServerArgs, "k3s-server-arg", nil, "Additional args passed to the `k3s server` command on server nodes (new flag per arg)")
+	_ = viper.BindPFlag("k3s-server-arg", cmd.Flags().Lookup("k3s-server-arg"))
+
 	cmd.Flags().StringArrayVar(&cliConfig.Options.K3sOptions.ExtraAgentArgs, "k3s-agent-arg", nil, "Additional args passed to the `k3s agent` command on agent nodes (new flag per arg)")
+	_ = viper.BindPFlag("k3s-server-arg", cmd.Flags().Lookup("k3s-server-arg"))
 
 	/* Subcommands */
 
