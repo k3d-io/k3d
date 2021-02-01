@@ -100,8 +100,8 @@ type SimpleConfigOptionsK3d struct {
 	Timeout                    time.Duration        `mapstructure:"timeout" yaml:"timeout"`
 	DisableLoadbalancer        bool                 `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer"`
 	DisableImageVolume         bool                 `mapstructure:"disableImageVolume" yaml:"disableImageVolume"`
-	NoRollback                 bool                 `mapstructure:"noRollback" yaml:"noRollback"`
-	PrepDisableHostIPInjection bool                 `mapstructure:"prepDisableHostIPInjection" yaml:"prepDisableHostIPInjection"`
+	NoRollback                 bool                 `mapstructure:"noRollback" yaml:"disableRollback"`
+	PrepDisableHostIPInjection bool                 `mapstructure:"prepDisableHostIPInjection" yaml:"disableHostIPInjection"`
 	NodeHookActions            []k3d.NodeHookAction `mapstructure:"nodeHookActions" yaml:"nodeHookActions,omitempty"`
 }
 
