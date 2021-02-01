@@ -195,28 +195,33 @@ func NewCmdClusterCreate() *cobra.Command {
 		},
 	}
 
-	/*********
-	 * Flags *
-	 *********/
+	/***************
+	 * Config File *
+	 ***************/
+
+	cmd.Flags().StringVarP(&configFile, "config", "c", "", "Path of a config file to use")
+	if err := cobra.MarkFlagFilename(cmd.Flags(), "config", "yaml", "yml"); err != nil {
+		log.Fatalln("Failed to mark flag 'config' as filename flag")
+	}
+
+	/***********************
+	 * Pre-Processed Flags *
+	 ***********************
+	 *
+	 * Flags that have a different style in the CLI than their internal representation.
+	 * Also, we cannot set (viper) default values just here for those.
+	 * Example:
+	 *   CLI: `--api-port 0.0.0.0:6443`
+	 *   Config File:
+	 *	   exposeAPI:
+	 *			 hostIP: 0.0.0.0
+	 *       port: 6443
+	 *
+	 */
+
 	cmd.Flags().StringVar(&ppFlags.APIPort, "api-port", "", "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d cluster create --servers 3 --api-port 0.0.0.0:6550`")
 
-	cmd.Flags().IntVarP(&cliConfig.Servers, "servers", "s", 0, "Specify how many servers you want to create")
-	_ = viper.BindPFlag("servers", cmd.Flags().Lookup("servers"))
-	viper.SetDefault("servers", 1)
-
-	cmd.Flags().IntVarP(&cliConfig.Agents, "agents", "a", 0, "Specify how many agents you want to create")
-	_ = viper.BindPFlag("agents", cmd.Flags().Lookup("agents"))
-	viper.SetDefault("agents", 0)
-
-	cmd.Flags().StringVarP(&cliConfig.Image, "image", "i", "", "Specify k3s image that you want to use for the nodes")
-	_ = viper.BindPFlag("image", cmd.Flags().Lookup("image"))
-	viper.SetDefault("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)))
-
-	cmd.Flags().StringVar(&cliConfig.Network, "network", "", "Join an existing network")
-	_ = viper.BindPFlag("network", cmd.Flags().Lookup("network"))
-
-	cmd.Flags().StringVar(&cliConfig.ClusterToken, "token", "", "Specify a cluster token. By default, we generate one.")
-	_ = viper.BindPFlag("token", cmd.Flags().Lookup("token"))
+	cmd.Flags().StringArrayVarP(&ppFlags.Env, "env", "e", nil, "Add environment variables to nodes (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -e \"HTTP_PROXY=my.proxy.com\" -e \"SOME_KEY=SOME_VAL@server[0]\"`")
 
 	cmd.Flags().StringArrayVarP(&ppFlags.Volumes, "volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v /my/path@agent[0,1] -v /tmp/test:/tmp/other@server[0]`")
 
@@ -224,41 +229,60 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	cmd.Flags().StringArrayVarP(&ppFlags.Labels, "label", "l", nil, "Add label to node container (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -l \"my.label@agent[0,1]\" -v \"other.label=somevalue@server[0]\"`")
 
-	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.Wait, "wait", true, "Wait for the server(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
+	/******************
+	 * "Normal" Flags *
+	 ******************
+	 *
+	 * No pre-processing needed on CLI level.
+	 * Bound to Viper config value.
+	 * Default Values set via Viper.
+	 */
+
+	cmd.Flags().IntP("servers", "s", 0, "Specify how many servers you want to create")
+	_ = viper.BindPFlag("servers", cmd.Flags().Lookup("servers"))
+	viper.SetDefault("servers", 1)
+
+	cmd.Flags().IntP("agents", "a", 0, "Specify how many agents you want to create")
+	_ = viper.BindPFlag("agents", cmd.Flags().Lookup("agents"))
+	viper.SetDefault("agents", 0)
+
+	cmd.Flags().StringP("image", "i", "", "Specify k3s image that you want to use for the nodes")
+	_ = viper.BindPFlag("image", cmd.Flags().Lookup("image"))
+	viper.SetDefault("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)))
+
+	cmd.Flags().String("network", "", "Join an existing network")
+	_ = viper.BindPFlag("network", cmd.Flags().Lookup("network"))
+
+	cmd.Flags().String("token", "", "Specify a cluster token. By default, we generate one.")
+	_ = viper.BindPFlag("token", cmd.Flags().Lookup("token"))
+
+	cmd.Flags().Bool("wait", true, "Wait for the server(s) to be ready before returning. Use '--timeout DURATION' to not wait forever.")
 	_ = viper.BindPFlag("options.k3d.wait", cmd.Flags().Lookup("wait"))
 
-	cmd.Flags().DurationVar(&cliConfig.Options.K3dOptions.Timeout, "timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
+	cmd.Flags().Duration("timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
 	_ = viper.BindPFlag("options.k3d.timeout", cmd.Flags().Lookup("timeout"))
 
-	cmd.Flags().BoolVar(&cliConfig.Options.KubeconfigOptions.UpdateDefaultKubeconfig, "kubeconfig-update-default", true, "Directly update the default kubeconfig with the new cluster's context")
+	cmd.Flags().Bool("kubeconfig-update-default", true, "Directly update the default kubeconfig with the new cluster's context")
 	_ = viper.BindPFlag("kubeconfig-update-default", cmd.Flags().Lookup("kubeconfig-update-default"))
 
-	cmd.Flags().BoolVar(&cliConfig.Options.KubeconfigOptions.SwitchCurrentContext, "kubeconfig-switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (requires --kubeconfig-update-default)")
+	cmd.Flags().Bool("kubeconfig-switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (requires --kubeconfig-update-default)")
 	_ = viper.BindPFlag("kubeconfig-switch-context", cmd.Flags().Lookup("kubeconfig-switch-context"))
 
-	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.DisableLoadbalancer, "no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
+	cmd.Flags().Bool("no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
 	_ = viper.BindPFlag("options.k3d.disableloadbalancer", cmd.Flags().Lookup("no-lb"))
 
-	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.NoRollback, "no-rollback", false, "Disable the automatic rollback actions, if anything goes wrong")
+	cmd.Flags().Bool("no-rollback", false, "Disable the automatic rollback actions, if anything goes wrong")
 	_ = viper.BindPFlag("options.k3d.disablerollback", cmd.Flags().Lookup("no-rollback"))
 
-	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.PrepDisableHostIPInjection, "no-hostip", false, "Disable the automatic injection of the Host IP as 'host.k3d.internal' into the containers and CoreDNS")
+	cmd.Flags().Bool("no-hostip", false, "Disable the automatic injection of the Host IP as 'host.k3d.internal' into the containers and CoreDNS")
 	_ = viper.BindPFlag("options.k3d.disablehostipinjection", cmd.Flags().Lookup("no-hostip"))
 
-	cmd.Flags().StringVar(&cliConfig.Options.Runtime.GPURequest, "gpus", "", "GPU devices to add to the cluster node containers ('all' to pass all GPUs) [From docker]")
+	cmd.Flags().String("gpus", "", "GPU devices to add to the cluster node containers ('all' to pass all GPUs) [From docker]")
 	_ = viper.BindPFlag("options.runtime.gpurequest", cmd.Flags().Lookup("gpus"))
-
-	cmd.Flags().StringArrayVarP(&ppFlags.Env, "env", "e", nil, "Add environment variables to nodes (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -e \"HTTP_PROXY=my.proxy.com\" -e \"SOME_KEY=SOME_VAL@server[0]\"`")
 
 	/* Image Importing */
 	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
 	_ = viper.BindPFlag("options.k3d.disableimagevolume", cmd.Flags().Lookup("no-image-volume"))
-
-	/* Config File */
-	cmd.Flags().StringVarP(&configFile, "config", "c", "", "Path of a config file to use")
-	if err := cobra.MarkFlagFilename(cmd.Flags(), "config", "yaml", "yml"); err != nil {
-		log.Fatalln("Failed to mark flag 'config' as filename flag")
-	}
 
 	/* Registry */
 	cmd.Flags().StringArrayVar(&cliConfig.Registries.Use, "registry-use", nil, "Connect to one or more k3d-managed registries running locally")
