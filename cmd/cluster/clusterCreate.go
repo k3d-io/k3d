@@ -44,6 +44,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var configFile string
+
 const clusterCreateDescription = `
 Create a new k3s cluster with containerized nodes (k3s in docker).
 Every cluster will consist of one or more containers:
@@ -62,11 +64,36 @@ type preProcessedFlags struct {
 	RegistryUse []string
 }
 
+func initConfig() {
+
+	viper.SetConfigType("yaml")
+	viper.SetEnvPrefix("K3D")
+	viper.AutomaticEnv()
+
+	// Set config file, if specified
+	if configFile != "" {
+		viper.SetConfigFile(configFile)
+
+		if _, err := os.Stat(configFile); err == nil {
+			if err := viper.ReadInConfig(); err != nil {
+				log.Fatalf("Failed to read Config: %+v", err)
+			}
+		}
+
+		log.Infof("Using config file %s with version %s", viper.ConfigFileUsed(), viper.GetString("apiversion"))
+		if log.GetLevel() >= log.DebugLevel {
+			c, _ := yaml.Marshal(viper.AllSettings())
+			log.Debugf("Configuration:\n%s", c)
+		}
+
+	}
+}
+
 // NewCmdClusterCreate returns a new cobra command
 func NewCmdClusterCreate() *cobra.Command {
 
 	cliConfig := &conf.SimpleConfig{}
-	var configFile string
+
 	ppFlags := &preProcessedFlags{}
 
 	// create new command
@@ -75,24 +102,11 @@ func NewCmdClusterCreate() *cobra.Command {
 		Short: "Create a new cluster",
 		Long:  clusterCreateDescription,
 		Args:  cobra.RangeArgs(0, 1), // exactly one cluster name can be set (default: k3d.DefaultClusterName)
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			initConfig()
+			return nil
+		},
 		Run: func(cmd *cobra.Command, args []string) {
-
-			if configFile != "" {
-				viper.SetConfigFile(configFile)
-
-				if _, err := os.Stat(configFile); err == nil {
-					if err := viper.ReadInConfig(); err != nil {
-						log.Fatalf("Failed to read Config: %+v", err)
-					}
-				}
-
-				log.Infof("Using config file %s with version %s", viper.ConfigFileUsed(), viper.GetString("apiversion"))
-				if log.GetLevel() >= log.DebugLevel {
-					c, _ := yaml.Marshal(viper.AllSettings())
-					log.Debugf("Configuration:\n%s", c)
-				}
-
-			}
 
 			/*********************
 			 * CLI Configuration *
