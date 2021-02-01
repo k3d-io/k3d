@@ -28,12 +28,17 @@ import (
 
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/spf13/viper"
 )
 
 func TestValidateClusterConfig(t *testing.T) {
 	cfgFile := "./test_assets/config_test_cluster.yaml"
 
-	cfg, err := ReadConfig(cfgFile)
+	vip := viper.New()
+	vip.SetConfigFile(cfgFile)
+	_ = vip.ReadInConfig()
+
+	cfg, err := FromViper(vip)
 	if err != nil {
 		t.Error(err)
 	}

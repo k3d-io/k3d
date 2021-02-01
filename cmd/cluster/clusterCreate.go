@@ -74,25 +74,29 @@ func initConfig() {
 	if configFile != "" {
 		viper.SetConfigFile(configFile)
 
-		if _, err := os.Stat(configFile); err == nil {
-			if err := viper.ReadInConfig(); err != nil {
-				log.Fatalf("Failed to read Config: %+v", err)
+		// try to read config into memory (viper map structure)
+		if err := viper.ReadInConfig(); err != nil {
+			if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+				log.Errorln("No config file found!")
+
+				log.Fatalf("Config file %s not found: %+v", configFile, err)
 			}
+			// config file found but some other error happened
+			log.Fatalf("Failed to read config file %s: %+v", configFile, err)
 		}
 
-		log.Infof("Using config file %s with version %s", viper.ConfigFileUsed(), viper.GetString("apiversion"))
+		log.Infof("Using config file %s", viper.ConfigFileUsed())
 		if log.GetLevel() >= log.DebugLevel {
 			c, _ := yaml.Marshal(viper.AllSettings())
 			log.Debugf("Configuration:\n%s", c)
 		}
-
 	}
 }
 
 // NewCmdClusterCreate returns a new cobra command
 func NewCmdClusterCreate() *cobra.Command {
 
-	cliConfig := &conf.SimpleConfig{}
+	totalConfig := &conf.SimpleConfig{}
 
 	ppFlags := &preProcessedFlags{}
 
@@ -111,30 +115,30 @@ func NewCmdClusterCreate() *cobra.Command {
 			/*********************
 			 * CLI Configuration *
 			 *********************/
-			parseCreateClusterCmd(cmd, args, cliConfig, ppFlags)
+			parseCreateClusterCmd(cmd, args, totalConfig, ppFlags)
 
 			/************************
 			 * Merge Configurations *
 			 ************************/
-			log.Debugf("========== Simple Config ==========\n%+v\n==========================\n", cliConfig)
+			log.Debugf("========== Simple Config ==========\n%+v\n==========================\n", totalConfig)
 
 			if configFile != "" {
-				configFromFile, err := config.ReadConfig(configFile)
+				configFromFile, err := config.FromViper(viper.GetViper())
 				if err != nil {
 					log.Fatalln(err)
 				}
-				cliConfig, err = config.MergeSimple(*cliConfig, configFromFile.(conf.SimpleConfig))
+				totalConfig, err = config.MergeSimple(*totalConfig, configFromFile.(conf.SimpleConfig))
 				if err != nil {
 					log.Fatalln(err)
 				}
 			}
 
-			log.Debugf("========== Merged Simple Config ==========\n%+v\n==========================\n", cliConfig)
+			log.Debugf("========== Merged Simple Config ==========\n%+v\n==========================\n", totalConfig)
 
 			/**************************************
 			 * Transform & Validate Configuration *
 			 **************************************/
-			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *cliConfig)
+			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *totalConfig)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -161,7 +165,7 @@ func NewCmdClusterCreate() *cobra.Command {
 			if err := k3dCluster.ClusterRun(cmd.Context(), runtimes.SelectedRuntime, clusterConfig); err != nil {
 				// rollback if creation failed
 				log.Errorln(err)
-				if cliConfig.Options.K3dOptions.NoRollback { // TODO: move rollback mechanics to pkg/
+				if totalConfig.Options.K3dOptions.NoRollback { // TODO: move rollback mechanics to pkg/
 					log.Fatalln("Cluster creation FAILED, rollback deactivated.")
 				}
 				// rollback if creation failed
@@ -185,7 +189,7 @@ func NewCmdClusterCreate() *cobra.Command {
 
 			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig {
 				log.Debugf("Updating default kubeconfig with a new context for cluster %s", clusterConfig.Cluster.Name)
-				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: cliConfig.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
+				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: totalConfig.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
 					log.Warningln(err)
 				}
 			}
@@ -295,24 +299,24 @@ func NewCmdClusterCreate() *cobra.Command {
 	_ = viper.BindPFlag("options.runtime.gpurequest", cmd.Flags().Lookup("gpus"))
 
 	/* Image Importing */
-	cmd.Flags().BoolVar(&cliConfig.Options.K3dOptions.DisableImageVolume, "no-image-volume", false, "Disable the creation of a volume for importing images")
+	cmd.Flags().Bool("no-image-volume", false, "Disable the creation of a volume for importing images")
 	_ = viper.BindPFlag("options.k3d.disableimagevolume", cmd.Flags().Lookup("no-image-volume"))
 
 	/* Registry */
-	cmd.Flags().StringArrayVar(&cliConfig.Registries.Use, "registry-use", nil, "Connect to one or more k3d-managed registries running locally")
+	cmd.Flags().StringArray("registry-use", nil, "Connect to one or more k3d-managed registries running locally")
 	_ = viper.BindPFlag("registries.use", cmd.Flags().Lookup("registry-use"))
 
-	cmd.Flags().BoolVar(&cliConfig.Registries.Create, "registry-create", false, "Create a k3d-managed registry and connect it to the cluster")
+	cmd.Flags().Bool("registry-create", false, "Create a k3d-managed registry and connect it to the cluster")
 	_ = viper.BindPFlag("registries.create", cmd.Flags().Lookup("registry-create"))
 
-	cmd.Flags().StringVar(&cliConfig.Registries.Config, "registry-config", "", "Specify path to an extra registries.yaml file")
+	cmd.Flags().String("registry-config", "", "Specify path to an extra registries.yaml file")
 	_ = viper.BindPFlag("registries.config", cmd.Flags().Lookup("registry-config"))
 
 	/* k3s */
-	cmd.Flags().StringArrayVar(&cliConfig.Options.K3sOptions.ExtraServerArgs, "k3s-server-arg", nil, "Additional args passed to the `k3s server` command on server nodes (new flag per arg)")
+	cmd.Flags().StringArray("k3s-server-arg", nil, "Additional args passed to the `k3s server` command on server nodes (new flag per arg)")
 	_ = viper.BindPFlag("options.k3s.extraserverargs", cmd.Flags().Lookup("k3s-server-arg"))
 
-	cmd.Flags().StringArrayVar(&cliConfig.Options.K3sOptions.ExtraAgentArgs, "k3s-agent-arg", nil, "Additional args passed to the `k3s agent` command on agent nodes (new flag per arg)")
+	cmd.Flags().StringArray("k3s-agent-arg", nil, "Additional args passed to the `k3s agent` command on agent nodes (new flag per arg)")
 	_ = viper.BindPFlag("options.k3s.extraagentargs", cmd.Flags().Lookup("k3s-agent-arg"))
 
 	/* Subcommands */

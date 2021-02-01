@@ -27,6 +27,7 @@ import (
 
 	"github.com/go-test/deep"
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
+	"github.com/spf13/viper"
 
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
@@ -94,7 +95,19 @@ func TestReadSimpleConfig(t *testing.T) {
 
 	cfgFile := "./test_assets/config_test_simple.yaml"
 
-	cfg, err := ReadConfig(cfgFile)
+	config := viper.New()
+	config.SetConfigFile(cfgFile)
+
+	// try to read config into memory (viper map structure)
+	if err := config.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			t.Error(err)
+		}
+		// config file found but some other error happened
+		t.Error(err)
+	}
+
+	cfg, err := FromViper(config)
 	if err != nil {
 		t.Error(err)
 	}
@@ -132,9 +145,21 @@ func TestReadClusterConfig(t *testing.T) {
 
 	cfgFile := "./test_assets/config_test_cluster.yaml"
 
-	readConfig, err := ReadConfig(cfgFile)
+	config := viper.New()
+	config.SetConfigFile(cfgFile)
+
+	// try to read config into memory (viper map structure)
+	if err := config.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			t.Error(err)
+		}
+		// config file found but some other error happened
+		t.Error(err)
+	}
+
+	readConfig, err := FromViper(config)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", readConfig)
@@ -176,9 +201,21 @@ func TestReadClusterListConfig(t *testing.T) {
 
 	cfgFile := "./test_assets/config_test_cluster_list.yaml"
 
-	readConfig, err := ReadConfig(cfgFile)
+	config := viper.New()
+	config.SetConfigFile(cfgFile)
+
+	// try to read config into memory (viper map structure)
+	if err := config.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			t.Error(err)
+		}
+		// config file found but some other error happened
+		t.Error(err)
+	}
+
+	readConfig, err := FromViper(config)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", readConfig)
@@ -193,7 +230,19 @@ func TestReadUnknownConfig(t *testing.T) {
 
 	cfgFile := "./test_assets/config_test_unknown.yaml"
 
-	_, err := ReadConfig(cfgFile)
+	config := viper.New()
+	config.SetConfigFile(cfgFile)
+
+	// try to read config into memory (viper map structure)
+	if err := config.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			t.Error(err)
+		}
+		// config file found but some other error happened
+		t.Error(err)
+	}
+
+	_, err := FromViper(config)
 	if err == nil {
 		t.Fail()
 	}
