@@ -110,17 +110,13 @@ func NewCmdClusterCreate() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 
-			var cfg conf.SimpleConfig
-
 			/*************************
 			 * Compute Configuration *
 			 *************************/
-			cfgFromViper, err := config.FromViper(cfgViper)
+			cfg, err := config.FromViperSimple(cfgViper)
 			if err != nil {
 				log.Fatalln(err)
 			}
-
-			cfg = cfgFromViper.(conf.SimpleConfig)
 
 			log.Debugf("========== Simple Config ==========\n%+v\n==========================\n", cfg)
 
@@ -311,7 +307,7 @@ func NewCmdClusterCreate() *cobra.Command {
 	_ = cfgViper.BindPFlag("options.k3d.disableimagevolume", cmd.Flags().Lookup("no-image-volume"))
 
 	/* Registry */
-	cmd.Flags().StringArray("registry-use", nil, "Connect to one or more k3d-managed registries running locally")
+	cmd.Flags().StringSlice("registry-use", nil, "Connect to one or more k3d-managed registries running locally")
 	_ = cfgViper.BindPFlag("registries.use", cmd.Flags().Lookup("registry-use"))
 
 	cmd.Flags().Bool("registry-create", false, "Create a k3d-managed registry and connect it to the cluster")
@@ -359,7 +355,6 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	// -> VOLUMES
 	// volumeFilterMap will map volume mounts to applied node filters
 	volumeFilterMap := make(map[string][]string, 1)
-	log.Infof("String Slice VOlumes: %+v", ppViper.GetStringSlice("cli.volumes"))
 	for _, volumeFlag := range ppViper.GetStringSlice("cli.volumes") {
 
 		// split node filter from the specified volume

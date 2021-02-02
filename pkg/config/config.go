@@ -32,6 +32,24 @@ import (
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
 )
 
+func FromViperSimple(config *viper.Viper) (conf.SimpleConfig, error) {
+
+	var cfg conf.SimpleConfig
+
+	// determine config kind
+	if config.GetString("kind") != "" && strings.ToLower(config.GetString("kind")) != "simple" {
+		return cfg, fmt.Errorf("Wrong `kind` '%s' != 'simple' in config file", config.GetString("kind"))
+	}
+
+	if err := config.Unmarshal(&cfg); err != nil {
+		log.Errorln("Failed to unmarshal File config")
+
+		return cfg, err
+	}
+
+	return cfg, nil
+}
+
 func FromViper(config *viper.Viper) (conf.Config, error) {
 
 	var cfg conf.Config

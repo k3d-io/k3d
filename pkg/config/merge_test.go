@@ -45,11 +45,11 @@ func TestMergeSimpleConfig(t *testing.T) {
 	cfg2.SetConfigFile(destConfig)
 	_ = cfg2.ReadInConfig()
 
-	if src, err = FromViper(cfg1); err != nil {
+	if src, err = FromViperSimple(cfg1); err != nil {
 		t.Fatal(err)
 	}
 
-	if dest, err = FromViper(cfg2); err != nil {
+	if dest, err = FromViperSimple(cfg2); err != nil {
 		t.Fatal(err)
 	}
 
