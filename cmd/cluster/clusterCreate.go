@@ -337,19 +337,29 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 
 	// -> API-PORT
 	// parse the port mapping
+	var exposeAPI *k3d.ExposureOpts
 	if ppViper.IsSet("cli.api-port") {
 		if cfg.ExposeAPI.HostPort != "" {
 			log.Debugf("Overriding pre-defined kubeAPI Exposure Spec %+v with CLI argument %s", cfg.ExposeAPI, ppViper.GetString("cli.api-port"))
 		}
-		exposeAPI, err := cliutil.ParsePortExposureSpec(ppViper.GetString("cli.api-port"), k3d.DefaultAPIPort)
+		var err error
+		exposeAPI, err = cliutil.ParsePortExposureSpec(ppViper.GetString("cli.api-port"), k3d.DefaultAPIPort)
 		if err != nil {
-			log.Fatalln(err)
+			return cfg, err
 		}
-		cfg.ExposeAPI = conf.SimpleExposureOpts{
-			Host:     exposeAPI.Host,
-			HostIP:   exposeAPI.Binding.HostIP,
-			HostPort: exposeAPI.Binding.HostPort,
+	}
+
+	if exposeAPI == nil {
+		var err error
+		exposeAPI, err = cliutil.ParsePortExposureSpec("random", k3d.DefaultAPIPort)
+		if err != nil {
+			return cfg, err
 		}
+	}
+	cfg.ExposeAPI = conf.SimpleExposureOpts{
+		Host:     exposeAPI.Host,
+		HostIP:   exposeAPI.Binding.HostIP,
+		HostPort: exposeAPI.Binding.HostPort,
 	}
 
 	// -> VOLUMES
