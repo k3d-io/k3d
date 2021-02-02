@@ -84,14 +84,13 @@ func initConfig() {
 		}
 
 		log.Infof("Using config file %s", cfgViper.ConfigFileUsed())
-		if log.GetLevel() >= log.DebugLevel {
-			c, _ := yaml.Marshal(cfgViper.AllSettings())
-			log.Debugf("Configuration:\n%s", c)
+	}
+	if log.GetLevel() >= log.DebugLevel {
+		c, _ := yaml.Marshal(cfgViper.AllSettings())
+		log.Debugf("Configuration:\n%s", c)
 
-			c, _ = yaml.Marshal(ppViper.AllSettings())
-			log.Debugf("Additional CLI Configuration:\n%s", c)
-		}
-
+		c, _ = yaml.Marshal(ppViper.AllSettings())
+		log.Debugf("Additional CLI Configuration:\n%s", c)
 	}
 }
 
