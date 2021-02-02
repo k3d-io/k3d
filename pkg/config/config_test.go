@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
 	"github.com/spf13/viper"
 
 	k3d "github.com/rancher/k3d/v4/pkg/types"
@@ -40,7 +40,7 @@ func TestReadSimpleConfig(t *testing.T) {
 
 	expectedConfig := conf.SimpleConfig{
 		TypeMeta: conf.TypeMeta{
-			APIVersion: "k3d.io/v1alpha1",
+			APIVersion: "k3d.io/v1alpha2",
 			Kind:       "Simple",
 		},
 		Name:      "test",
@@ -107,20 +107,15 @@ func TestReadSimpleConfig(t *testing.T) {
 		t.Error(err)
 	}
 
-	cfg, err := FromViper(config)
+	cfg, err := FromViperSimple(config)
 	if err != nil {
 		t.Error(err)
 	}
 
-	simpleCfg, ok := cfg.(conf.SimpleConfig)
-	if !ok {
-		t.Error("Config is not of type SimpleConfig")
-	}
+	t.Logf("\n========== Read Config %s ==========\n%+v\n=================================\n", config.ConfigFileUsed(), cfg)
 
-	t.Logf("\n========== Read Config %s ==========\n%+v\n=================================\n", config.ConfigFileUsed(), simpleCfg)
-
-	if diff := deep.Equal(simpleCfg, expectedConfig); diff != nil {
-		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", simpleCfg, expectedConfig, diff)
+	if diff := deep.Equal(cfg, expectedConfig); diff != nil {
+		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", cfg, expectedConfig, diff)
 	}
 
 }
@@ -129,7 +124,7 @@ func TestReadClusterConfig(t *testing.T) {
 
 	expectedConfig := conf.ClusterConfig{
 		TypeMeta: conf.TypeMeta{
-			APIVersion: "k3d.io/v1alpha1",
+			APIVersion: "k3d.io/v1alpha2",
 			Kind:       "Cluster",
 		},
 		Cluster: k3d.Cluster{
@@ -174,7 +169,7 @@ func TestReadClusterListConfig(t *testing.T) {
 
 	expectedConfig := conf.ClusterListConfig{
 		TypeMeta: conf.TypeMeta{
-			APIVersion: "k3d.io/v1alpha1",
+			APIVersion: "k3d.io/v1alpha2",
 			Kind:       "ClusterList",
 		},
 		Clusters: []k3d.Cluster{
@@ -242,7 +237,7 @@ func TestReadUnknownConfig(t *testing.T) {
 		t.Error(err)
 	}
 
-	_, err := FromViper(config)
+	_, err := FromViperSimple(config)
 	if err == nil {
 		t.Fail()
 	}

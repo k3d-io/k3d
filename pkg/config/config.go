@@ -29,7 +29,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
 )
 
 func FromViperSimple(config *viper.Viper) (conf.SimpleConfig, error) {

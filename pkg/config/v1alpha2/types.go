@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package v1alpha1
+package v1alpha2
 
 import (
 	"fmt"
@@ -32,7 +32,7 @@ import (
 
 // DefaultConfigTpl for printing
 const DefaultConfigTpl = `---
-apiVersion: k3d.io/v1alpha1
+apiVersion: k3d.io/v1alpha2
 kind: Simple
 name: %s
 servers: 1
