@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SimpleConfig",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind"
+  ],
+  "properties": {
+    "apiVersion": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "name": {
+      "description": "Name of the cluster (will be prefixed with 'k3d-')",
+      "type": "string"
+    },
+    "servers": {
+      "type": "number",
+      "minimum": 1
+    },
+    "agents": {
+      "type": "number",
+      "minimum": 0
+    },
+    "kubeAPI": {
+      "type": "object"
+    },
+    "image": {
+      "type": "string"
+    },
+    "network": {
+      "type": "string"
+    },
+    "token": {
+      "type": "string"
+    },
+    "volumes": {
+      "type":"array"
+    },
+    "ports": {
+      "type": "array"
+    },
+    "labels": {
+      "type": "array"
+    },
+    "options": {
+      "type": "object"
+    },
+    "env": {
+      "type": "array"
+    },
+    "registries": {
+      "type": "object"
+    }
+  }
+}
