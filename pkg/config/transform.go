@@ -93,6 +93,8 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		newCluster.ServerLoadBalancer = &k3d.Node{
 			Role: k3d.LoadBalancerRole,
 		}
+	} else {
+		log.Debugln("Disabling the load balancer")
 	}
 
 	/*************
@@ -137,7 +139,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		nodeList = append(nodeList, newCluster.ServerLoadBalancer)
 	}
 	for _, volumeWithNodeFilters := range simpleConfig.Volumes {
-		nodes, err := util.FilterNodes(newCluster.Nodes, volumeWithNodeFilters.NodeFilters)
+		nodes, err := util.FilterNodes(nodeList, volumeWithNodeFilters.NodeFilters)
 		if err != nil {
 			return nil, err
 		}

@@ -54,16 +54,6 @@ Every cluster will consist of one or more containers:
 	- (optionally) 1 (or more) agent node containers (k3s)
 `
 
-// flags that go through some pre-processing before transforming them to config
-type preProcessedFlags struct {
-	APIPort     string
-	Volumes     []string
-	Ports       []string
-	Labels      []string
-	Env         []string
-	RegistryUse []string
-}
-
 var cfgViper = viper.New()
 var ppViper = viper.New()
 
@@ -108,10 +98,6 @@ func initConfig() {
 // NewCmdClusterCreate returns a new cobra command
 func NewCmdClusterCreate() *cobra.Command {
 
-	totalConfig := &conf.SimpleConfig{}
-
-	ppFlags := &preProcessedFlags{}
-
 	// create new command
 	cmd := &cobra.Command{
 		Use:   "create NAME",
@@ -124,33 +110,37 @@ func NewCmdClusterCreate() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 
-			/*********************
-			 * CLI Configuration *
-			 *********************/
-			parseCreateClusterCmd(cmd, args, totalConfig, ppFlags)
+			var cfg conf.SimpleConfig
 
-			/************************
-			 * Merge Configurations *
-			 ************************/
-			log.Debugf("========== Simple Config ==========\n%+v\n==========================\n", totalConfig)
-
-			if configFile != "" {
-				configFromFile, err := config.FromViper(cfgViper)
-				if err != nil {
-					log.Fatalln(err)
-				}
-				totalConfig, err = config.MergeSimple(*totalConfig, configFromFile.(conf.SimpleConfig))
-				if err != nil {
-					log.Fatalln(err)
-				}
+			/*************************
+			 * Compute Configuration *
+			 *************************/
+			cfgFromViper, err := config.FromViper(cfgViper)
+			if err != nil {
+				log.Fatalln(err)
 			}
 
-			log.Debugf("========== Merged Simple Config ==========\n%+v\n==========================\n", totalConfig)
+			cfg = cfgFromViper.(conf.SimpleConfig)
+
+			log.Debugf("========== Simple Config ==========\n%+v\n==========================\n", cfg)
+
+			cfg, err = applyCLIOverrides(cfg)
+			if err != nil {
+				log.Fatalf("Failed to apply CLI overrides: %+v", err)
+			}
+
+			log.Debugf("========== Merged Simple Config ==========\n%+v\n==========================\n", cfg)
 
 			/**************************************
 			 * Transform & Validate Configuration *
 			 **************************************/
-			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *totalConfig)
+
+			// Set the name
+			if len(args) != 0 {
+				cfg.Name = args[0]
+			}
+
+			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, cfg)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -177,7 +167,7 @@ func NewCmdClusterCreate() *cobra.Command {
 			if err := k3dCluster.ClusterRun(cmd.Context(), runtimes.SelectedRuntime, clusterConfig); err != nil {
 				// rollback if creation failed
 				log.Errorln(err)
-				if totalConfig.Options.K3dOptions.NoRollback { // TODO: move rollback mechanics to pkg/
+				if cfg.Options.K3dOptions.NoRollback { // TODO: move rollback mechanics to pkg/
 					log.Fatalln("Cluster creation FAILED, rollback deactivated.")
 				}
 				// rollback if creation failed
@@ -201,7 +191,7 @@ func NewCmdClusterCreate() *cobra.Command {
 
 			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig {
 				log.Debugf("Updating default kubeconfig with a new context for cluster %s", clusterConfig.Cluster.Name)
-				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: totalConfig.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
+				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: cfg.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
 					log.Warningln(err)
 				}
 			}
@@ -247,22 +237,22 @@ func NewCmdClusterCreate() *cobra.Command {
 	 *			 hostIP: 0.0.0.0
 	 *       port: 6443
 	 *
+	 * Note: here we also use Slice-type flags instead of Array because of https://github.com/spf13/viper/issues/380
 	 */
 
 	cmd.Flags().String("api-port", "", "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d cluster create --servers 3 --api-port 0.0.0.0:6550`")
 	_ = ppViper.BindPFlag("cli.api-port", cmd.Flags().Lookup("api-port"))
-	ppViper.SetDefault("cli.api-port", "random")
 
-	cmd.Flags().StringArrayP("env", "e", nil, "Add environment variables to nodes (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -e \"HTTP_PROXY=my.proxy.com\" -e \"SOME_KEY=SOME_VAL@server[0]\"`")
+	cmd.Flags().StringSliceP("env", "e", nil, "Add environment variables to nodes (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -e \"HTTP_PROXY=my.proxy.com\" -e \"SOME_KEY=SOME_VAL@server[0]\"`")
 	_ = ppViper.BindPFlag("cli.env", cmd.Flags().Lookup("env"))
 
-	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v /my/path@agent[0,1] -v /tmp/test:/tmp/other@server[0]`")
+	cmd.Flags().StringSliceP("volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v /my/path@agent[0,1] -v /tmp/test:/tmp/other@server[0]`")
 	_ = ppViper.BindPFlag("cli.volumes", cmd.Flags().Lookup("volume"))
 
-	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent[0] -p 8081@agent[1]`")
+	cmd.Flags().StringSliceP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent[0] -p 8081@agent[1]`")
 	_ = ppViper.BindPFlag("cli.ports", cmd.Flags().Lookup("port"))
 
-	cmd.Flags().StringArrayP("label", "l", nil, "Add label to node container (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -l \"my.label@agent[0,1]\" -v \"other.label=somevalue@server[0]\"`")
+	cmd.Flags().StringSliceP("label", "l", nil, "Add label to node container (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -l \"my.label@agent[0,1]\" -v \"other.label=somevalue@server[0]\"`")
 	_ = ppViper.BindPFlag("cli.labels", cmd.Flags().Lookup("label"))
 
 	/******************
@@ -299,10 +289,10 @@ func NewCmdClusterCreate() *cobra.Command {
 	_ = cfgViper.BindPFlag("options.k3d.timeout", cmd.Flags().Lookup("timeout"))
 
 	cmd.Flags().Bool("kubeconfig-update-default", true, "Directly update the default kubeconfig with the new cluster's context")
-	_ = cfgViper.BindPFlag("kubeconfig-update-default", cmd.Flags().Lookup("kubeconfig-update-default"))
+	_ = cfgViper.BindPFlag("options.kubeconfig.updatedefaultkubeconfig", cmd.Flags().Lookup("kubeconfig-update-default"))
 
 	cmd.Flags().Bool("kubeconfig-switch-context", true, "Directly switch the default kubeconfig's current-context to the new cluster's context (requires --kubeconfig-update-default)")
-	_ = cfgViper.BindPFlag("kubeconfig-switch-context", cmd.Flags().Lookup("kubeconfig-switch-context"))
+	_ = cfgViper.BindPFlag("options.kubeconfig.switchcurrentcontext", cmd.Flags().Lookup("kubeconfig-switch-context"))
 
 	cmd.Flags().Bool("no-lb", false, "Disable the creation of a LoadBalancer in front of the server nodes")
 	_ = cfgViper.BindPFlag("options.k3d.disableloadbalancer", cmd.Flags().Lookup("no-lb"))
@@ -343,42 +333,34 @@ func NewCmdClusterCreate() *cobra.Command {
 	return cmd
 }
 
-// parseCreateClusterCmd parses the command input into variables required to create a cluster
-func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.SimpleConfig, ppFlags *preProcessedFlags) {
-
-	/********************************
-	 * Parse and validate arguments *
-	 ********************************/
-
-	if len(args) != 0 {
-		cliConfig.Name = args[0]
-	}
+func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 
 	/****************************
 	 * Parse and validate flags *
 	 ****************************/
 
-	// -> WAIT TIMEOUT // TODO: timeout to be validated in pkg/
-	if cmd.Flags().Changed("timeout") && cliConfig.Options.K3dOptions.Timeout <= 0*time.Second {
-		log.Fatalln("--timeout DURATION must be >= 1s")
-	}
-
 	// -> API-PORT
 	// parse the port mapping
-	exposeAPI, err := cliutil.ParsePortExposureSpec(ppFlags.APIPort, k3d.DefaultAPIPort)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	cliConfig.ExposeAPI = conf.SimpleExposureOpts{
-		Host:     exposeAPI.Host,
-		HostIP:   exposeAPI.Binding.HostIP,
-		HostPort: exposeAPI.Binding.HostPort,
+	if ppViper.IsSet("cli.api-port") {
+		if cfg.ExposeAPI.HostPort != "" {
+			log.Debugf("Overriding pre-defined kubeAPI Exposure Spec %+v with CLI argument %s", cfg.ExposeAPI, ppViper.GetString("cli.api-port"))
+		}
+		exposeAPI, err := cliutil.ParsePortExposureSpec(ppViper.GetString("cli.api-port"), k3d.DefaultAPIPort)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		cfg.ExposeAPI = conf.SimpleExposureOpts{
+			Host:     exposeAPI.Host,
+			HostIP:   exposeAPI.Binding.HostIP,
+			HostPort: exposeAPI.Binding.HostPort,
+		}
 	}
 
 	// -> VOLUMES
 	// volumeFilterMap will map volume mounts to applied node filters
 	volumeFilterMap := make(map[string][]string, 1)
-	for _, volumeFlag := range ppFlags.Volumes {
+	log.Infof("String Slice VOlumes: %+v", ppViper.GetStringSlice("cli.volumes"))
+	for _, volumeFlag := range ppViper.GetStringSlice("cli.volumes") {
 
 		// split node filter from the specified volume
 		volume, filters, err := cliutil.SplitFiltersFromFlag(volumeFlag)
@@ -386,7 +368,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 			log.Fatalln(err)
 		}
 
-		if strings.Contains(volume, k3d.DefaultRegistriesFilePath) && (cliConfig.Registries.Create || cliConfig.Registries.Config != "" || len(cliConfig.Registries.Use) != 0) {
+		if strings.Contains(volume, k3d.DefaultRegistriesFilePath) && (cfg.Registries.Create || cfg.Registries.Config != "" || len(cfg.Registries.Use) != 0) {
 			log.Warnf("Seems like you're mounting a file at '%s' while also using a referenced registries config or k3d-managed registries: Your mounted file will probably be overwritten!", k3d.DefaultRegistriesFilePath)
 		}
 
@@ -399,7 +381,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 	}
 
 	for volume, nodeFilters := range volumeFilterMap {
-		cliConfig.Volumes = append(cliConfig.Volumes, conf.VolumeWithNodeFilters{
+		cfg.Volumes = append(cfg.Volumes, conf.VolumeWithNodeFilters{
 			Volume:      volume,
 			NodeFilters: nodeFilters,
 		})
@@ -409,7 +391,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 
 	// -> PORTS
 	portFilterMap := make(map[string][]string, 1)
-	for _, portFlag := range ppFlags.Ports {
+	for _, portFlag := range ppViper.GetStringSlice("cli.ports") {
 		// split node filter from the specified volume
 		portmap, filters, err := cliutil.SplitFiltersFromFlag(portFlag)
 		if err != nil {
@@ -429,7 +411,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 	}
 
 	for port, nodeFilters := range portFilterMap {
-		cliConfig.Ports = append(cliConfig.Ports, conf.PortWithNodeFilters{
+		cfg.Ports = append(cfg.Ports, conf.PortWithNodeFilters{
 			Port:        port,
 			NodeFilters: nodeFilters,
 		})
@@ -440,7 +422,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 	// --label
 	// labelFilterMap will add container label to applied node filters
 	labelFilterMap := make(map[string][]string, 1)
-	for _, labelFlag := range ppFlags.Labels {
+	for _, labelFlag := range ppViper.GetStringSlice("cli.labels") {
 
 		// split node filter from the specified label
 		label, nodeFilters, err := cliutil.SplitFiltersFromFlag(labelFlag)
@@ -457,7 +439,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 	}
 
 	for label, nodeFilters := range labelFilterMap {
-		cliConfig.Labels = append(cliConfig.Labels, conf.LabelWithNodeFilters{
+		cfg.Labels = append(cfg.Labels, conf.LabelWithNodeFilters{
 			Label:       label,
 			NodeFilters: nodeFilters,
 		})
@@ -468,7 +450,7 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 	// --env
 	// envFilterMap will add container env vars to applied node filters
 	envFilterMap := make(map[string][]string, 1)
-	for _, envFlag := range ppFlags.Env {
+	for _, envFlag := range ppViper.GetStringSlice("cli.env") {
 
 		// split node filter from the specified env var
 		env, filters, err := cliutil.SplitFiltersFromFlag(envFlag)
@@ -485,11 +467,13 @@ func parseCreateClusterCmd(cmd *cobra.Command, args []string, cliConfig *conf.Si
 	}
 
 	for envVar, nodeFilters := range envFilterMap {
-		cliConfig.Env = append(cliConfig.Env, conf.EnvVarWithNodeFilters{
+		cfg.Env = append(cfg.Env, conf.EnvVarWithNodeFilters{
 			EnvVar:      envVar,
 			NodeFilters: nodeFilters,
 		})
 	}
 
 	log.Tracef("EnvFilterMap: %+v", envFilterMap)
+
+	return cfg, nil
 }

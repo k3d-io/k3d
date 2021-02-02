@@ -117,7 +117,7 @@ func TestReadSimpleConfig(t *testing.T) {
 		t.Error("Config is not of type SimpleConfig")
 	}
 
-	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", simpleCfg)
+	t.Logf("\n========== Read Config %s ==========\n%+v\n=================================\n", config.ConfigFileUsed(), simpleCfg)
 
 	if diff := deep.Equal(simpleCfg, expectedConfig); diff != nil {
 		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", simpleCfg, expectedConfig, diff)
