@@ -25,6 +25,10 @@
   - `options.k3d.noRollback` -> `options.k3d.disableRollback`
   - `options.k3d.prepDisableHostIPInjection` -> `options.k3d.disableHostIPInjection`
 
+### Fixes
+
+- do not ignore `--no-hostip` flag and don't inject hostip if `--network=host` (#471, @konradmalik)
+
 ### Misc
 
 - tests/e2e: add config override test
