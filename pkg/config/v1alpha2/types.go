@@ -50,8 +50,9 @@ var JSONSchema = `{
       "type": "string"
     },
     "name": {
-      "description": "Name of the cluster (will be prefixed with 'k3d-')",
-      "type": "string"
+      "description": "Name of the cluster (must be a valid hostname and will be prefixed with 'k3d-'). Example: 'mycluster'.",
+			"type": "string",
+			"format": "hostname"
     },
     "servers": {
       "type": "number",
@@ -91,7 +92,8 @@ var JSONSchema = `{
     "registries": {
       "type": "object"
     }
-  }
+  },
+  "additionalProperties": false
 }`
 
 // DefaultConfigTpl for printing

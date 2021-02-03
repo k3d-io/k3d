@@ -77,6 +77,10 @@ func initConfig() {
 		}
 		log.Tracef("Schema: %+v", conf.JSONSchema)
 
+		if err := config.ValidateSchemaFile(configFile, []byte(conf.JSONSchema)); err != nil {
+			log.Fatalf("Schema Validation failed for config file %s: %+v", configFile, err)
+		}
+
 		// try to read config into memory (viper map structure)
 		if err := cfgViper.ReadInConfig(); err != nil {
 			if _, ok := err.(viper.ConfigFileNotFoundError); ok {

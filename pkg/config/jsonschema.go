@@ -37,6 +37,8 @@ import (
 
 // ValidateSchemaFile takes a filepath, reads the file and validates it against a JSON schema
 func ValidateSchemaFile(filepath string, schema []byte) error {
+	log.Debugf("Validating file %s against default JSONSchema...", filepath)
+
 	fileContents, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return fmt.Errorf("Failed to read file %s: %+v", filepath, err)
