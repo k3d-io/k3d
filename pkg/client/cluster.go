@@ -458,6 +458,9 @@ ClusterCreatOpts:
 				continue
 			} else if serverCount == 0 && clusterCreateOpts.DisableLoadBalancer {
 				// if this is the first server node and the server loadbalancer is disabled, expose the API Port on this server node
+				if node.Ports == nil {
+					node.Ports = nat.PortMap{}
+				}
 				node.Ports[k3d.DefaultAPIPort] = []nat.PortBinding{cluster.KubeAPI.Binding}
 			}
 
