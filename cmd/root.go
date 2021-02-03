@@ -94,7 +94,6 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initLogging, initRuntime)
 
 	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
 	rootCmd.PersistentFlags().BoolVar(&flags.traceLogging, "trace", false, "Enable super verbose output (trace logging)")
@@ -119,6 +118,9 @@ func init() {
 			printVersion()
 		},
 	})
+
+	// Init
+	cobra.OnInitialize(initLogging, initRuntime)
 }
 
 // initLogging initializes the logger

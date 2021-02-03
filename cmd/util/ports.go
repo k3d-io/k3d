@@ -41,8 +41,7 @@ func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureO
 	match := apiPortRegexp.FindStringSubmatch(exposedPortSpec)
 
 	if len(match) == 0 {
-		log.Errorln("Failed to parse Port Exposure specification")
-		return nil, fmt.Errorf("Port Exposure Spec format error: Must be [(HostIP|HostName):]HostPort")
+		return nil, fmt.Errorf("Failed to parse Port Exposure specification '%s': Format must be [(HostIP|HostName):]HostPort", exposedPortSpec)
 	}
 
 	submatches := util.MapSubexpNames(apiPortRegexp.SubexpNames(), match)

@@ -47,6 +47,7 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 	agentNodes := []*k3d.Node{}
 	var serverlb *k3d.Node
 	for _, node := range nodes {
+		log.Tracef("FilterNodes (%+v): Checking node role %s", filters, node.Role)
 		if node.Role == k3d.ServerRole {
 			serverNodes = append(serverNodes, node)
 		} else if node.Role == k3d.AgentRole {

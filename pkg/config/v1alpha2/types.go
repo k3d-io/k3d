@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package v1alpha1
+package v1alpha2
 
 import (
 	"fmt"
@@ -32,7 +32,7 @@ import (
 
 // DefaultConfigTpl for printing
 const DefaultConfigTpl = `---
-apiVersion: k3d.io/v1alpha1
+apiVersion: k3d.io/v1alpha2
 kind: Simple
 name: %s
 servers: 1
@@ -100,8 +100,8 @@ type SimpleConfigOptionsK3d struct {
 	Timeout                    time.Duration        `mapstructure:"timeout" yaml:"timeout"`
 	DisableLoadbalancer        bool                 `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer"`
 	DisableImageVolume         bool                 `mapstructure:"disableImageVolume" yaml:"disableImageVolume"`
-	NoRollback                 bool                 `mapstructure:"noRollback" yaml:"noRollback"`
-	PrepDisableHostIPInjection bool                 `mapstructure:"prepDisableHostIPInjection" yaml:"prepDisableHostIPInjection"`
+	NoRollback                 bool                 `mapstructure:"disableRollback" yaml:"disableRollback"`
+	PrepDisableHostIPInjection bool                 `mapstructure:"disableHostIPInjection" yaml:"disableHostIPInjection"`
 	NodeHookActions            []k3d.NodeHookAction `mapstructure:"nodeHookActions" yaml:"nodeHookActions,omitempty"`
 }
 
@@ -119,7 +119,7 @@ type SimpleConfig struct {
 	ExposeAPI    SimpleExposureOpts      `mapstructure:"kubeAPI" yaml:"kubeAPI" json:"kubeAPI,omitempty"`
 	Image        string                  `mapstructure:"image" yaml:"image" json:"image,omitempty"`
 	Network      string                  `mapstructure:"network" yaml:"network" json:"network,omitempty"`
-	ClusterToken string                  `mapstructure:"clusterToken" yaml:"clusterToken" json:"clusterToken,omitempty"` // default: auto-generated
+	ClusterToken string                  `mapstructure:"token" yaml:"clusterToken" json:"clusterToken,omitempty"` // default: auto-generated
 	Volumes      []VolumeWithNodeFilters `mapstructure:"volumes" yaml:"volumes" json:"volumes,omitempty"`
 	Ports        []PortWithNodeFilters   `mapstructure:"ports" yaml:"ports" json:"ports,omitempty"`
 	Labels       []LabelWithNodeFilters  `mapstructure:"labels" yaml:"labels" json:"labels,omitempty"`
