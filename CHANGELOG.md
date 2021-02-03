@@ -1,5 +1,34 @@
 # Changelog
 
+## v4.1.0
+
+### Important
+
+- Using Viper brings us lots of nice features, but also one problem:
+  - We had to switch StringArray flags to StringSlice flags, which
+    - allow to use multiple flag values comma-separated in a single flag, but also
+    - split flag values that contain a comma into separate parts (and we cannot handle issues that arise due to this)
+      - so if you rely on commas in your flag values (e.g. for `--env X=a,b,c`), please consider filing an issue or supporting <https://github.com/spf13/viper/issues/246> and <https://github.com/spf13/viper/pull/398>
+      - `--env X=a,b,c` would be treated the same as `--env X=a`, `--env b`, `--env c`
+
+### Features & Enhancements
+
+- use [viper](https://github.com/spf13/viper) for configuration management
+  - takes over the job of properly fetching and merging config options from
+    - CLI arguments/flags
+    - environment variables
+    - config file
+  - this also fixes some issues with using the config file (like cobra defaults overriding config file values)
+- add JSON-Schema validation for the `Simple` config file schema
+- new config version `k3d.io/v1alpha2` (some naming changes)
+  - `exposeAPI` -> `kubeAPI`
+  - `options.k3d.noRollback` -> `options.k3d.disableRollback`
+  - `options.k3d.prepDisableHostIPInjection` -> `options.k3d.disableHostIPInjection`
+
+### Misc
+
+- tests/e2e: add config override test
+
 ## v4.0.0
 
 ### Breaking Changes

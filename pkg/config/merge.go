@@ -24,7 +24,7 @@ package config
 
 import (
 	"github.com/imdario/mergo"
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
 	log "github.com/sirupsen/logrus"
 )
 

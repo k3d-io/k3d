@@ -26,26 +26,25 @@ import (
 	"context"
 	"testing"
 
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/spf13/viper"
 )
 
 func TestTransformSimpleConfigToClusterConfig(t *testing.T) {
 	cfgFile := "./test_assets/config_test_simple.yaml"
 
-	cfg, err := ReadConfig(cfgFile)
+	vip := viper.New()
+	vip.SetConfigFile(cfgFile)
+	_ = vip.ReadInConfig()
+
+	cfg, err := FromViperSimple(vip)
 	if err != nil {
 		t.Error(err)
 	}
 
-	simpleCfg, ok := cfg.(conf.SimpleConfig)
-	if !ok {
-		t.Error("Config is not of type SimpleConfig")
-	}
+	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", cfg)
 
-	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", simpleCfg)
-
-	clusterCfg, err := TransformSimpleToClusterConfig(context.Background(), runtimes.Docker, simpleCfg)
+	clusterCfg, err := TransformSimpleToClusterConfig(context.Background(), runtimes.Docker, cfg)
 	if err != nil {
 		t.Error(err)
 	}

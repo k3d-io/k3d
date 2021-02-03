@@ -30,8 +30,8 @@ sleep 5
 info "Checking that we have access to the cluster..."
 check_clusters "$clustername" || failed "error checking cluster"
 
-info "Checking that we have 3 nodes online..."
-check_multi_node "$clustername" 3 || failed "failed to verify number of nodes"
+info "Checking that we have 5 nodes online..."
+check_multi_node "$clustername" 5 || failed "failed to verify number of nodes"
 
 # 2. check some config settings
 
