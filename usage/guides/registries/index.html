@@ -764,7 +764,7 @@
 <p>This file can also be used for providing additional information necessary for accessing some registries, like <a href="#authenticated-registries">authentication</a> and <a href="#secure-registries">certificates</a>.</p>
 <h3 id="registries-configuration-file-embedded-in-k3ds-simpleconfig">Registries Configuration File embedded in k3d&rsquo;s SimpleConfig<a class="headerlink" href="#registries-configuration-file-embedded-in-k3ds-simpleconfig" title="Permanent link">&para;</a></h3>
 <p>If you&rsquo;re using a <code>SimpleConfig</code> file to configure your k3d cluster, you may as well embed the registries.yaml in there directly:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">k3d.io/v1alpha1</span>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">k3d.io/v1alpha2</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Simple</span>
 <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
 <span class="nt">servers</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
@@ -930,7 +930,7 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 18, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">February 3, 2021</span>
     
   </small>
 </div>
