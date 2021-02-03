@@ -1,5 +1,25 @@
 # Changelog
 
+## v4.1.0
+
+### Features & Enhancements
+
+- use [viper](https://github.com/spf13/viper) for configuration management
+  - takes over the job of properly fetching and merging config options from
+    - CLI arguments/flags
+    - environment variables
+    - config file
+  - this also fixes some issues with using the config file (like cobra defaults overriding config file values)
+- add JSON-Schema validation for the `Simple` config file schema
+- new config version `k3d.io/v1alpha2` (some naming changes)
+  - `exposeAPI` -> `kubeAPI`
+  - `options.k3d.noRollback` -> `options.k3d.disableRollback`
+  - `options.k3d.prepDisableHostIPInjection` -> `options.k3d.disableHostIPInjection`
+
+### Misc
+
+- tests/e2e: add config override test
+
 ## v4.0.0
 
 ### Breaking Changes
