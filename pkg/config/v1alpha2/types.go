@@ -44,10 +44,16 @@ var JSONSchema = `{
   ],
   "properties": {
     "apiVersion": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "k3d.io/v1alpha2"
+      ]
     },
     "kind": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "Simple"
+      ]
     },
     "name": {
       "description": "Name of the cluster (must be a valid hostname and will be prefixed with 'k3d-'). Example: 'mycluster'.",
