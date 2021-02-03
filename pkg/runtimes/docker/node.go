@@ -373,8 +373,7 @@ func executeInNode(ctx context.Context, node *k3d.Node, cmd []string) (*types.Hi
 		Cmd:          cmd,
 	})
 	if err != nil {
-		log.Errorf("Failed to create exec config for node '%s'", node.Name)
-		return nil, err
+		return nil, fmt.Errorf("Failed to create exec config for node '%s': %+v", node.Name, err)
 	}
 
 	execConnection, err := docker.ContainerExecAttach(ctx, exec.ID, types.ExecStartCheck{

@@ -827,16 +827,17 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		}
 	}
 
-	log.Infoln("Servers before sort:")
+	// TODO: remove trace logs below
+	log.Traceln("Servers before sort:")
 	for i, n := range servers {
-		log.Infof("Server %d - %s", i, n.Name)
+		log.Tracef("Server %d - %s", i, n.Name)
 	}
 	sort.Slice(servers, func(i, j int) bool {
 		return servers[i].Name < servers[j].Name
 	})
-	log.Infoln("Servers after sort:")
+	log.Traceln("Servers after sort:")
 	for i, n := range servers {
-		log.Infof("Server %d - %s", i, n.Name)
+		log.Tracef("Server %d - %s", i, n.Name)
 	}
 
 	/*
