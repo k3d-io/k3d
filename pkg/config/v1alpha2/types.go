@@ -30,6 +30,70 @@ import (
 	"github.com/rancher/k3d/v4/version"
 )
 
+// JSONSchema describes the schema used to validate config files
+/* TODO: JSONSchema should be an embedded file. We're moving to the //go:embed tag as of Go 1.16
+ * ... and only hardcode it here to avoid using 3rd party tools like go-bindata or packr right now for the time being
+ */
+var JSONSchema = `{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SimpleConfig",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind"
+  ],
+  "properties": {
+    "apiVersion": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "name": {
+      "description": "Name of the cluster (will be prefixed with 'k3d-')",
+      "type": "string"
+    },
+    "servers": {
+      "type": "number",
+      "minimum": 1
+    },
+    "agents": {
+      "type": "number",
+      "minimum": 0
+    },
+    "kubeAPI": {
+      "type": "object"
+    },
+    "image": {
+      "type": "string"
+    },
+    "network": {
+      "type": "string"
+    },
+    "token": {
+      "type": "string"
+    },
+    "volumes": {
+      "type":"array"
+    },
+    "ports": {
+      "type": "array"
+    },
+    "labels": {
+      "type": "array"
+    },
+    "options": {
+      "type": "object"
+    },
+    "env": {
+      "type": "array"
+    },
+    "registries": {
+      "type": "object"
+    }
+  }
+}`
+
 // DefaultConfigTpl for printing
 const DefaultConfigTpl = `---
 apiVersion: k3d.io/v1alpha2

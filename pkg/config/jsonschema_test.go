@@ -22,16 +22,36 @@ THE SOFTWARE.
 package config
 
 import (
+	"bytes"
+	"io/ioutil"
 	"testing"
+
+	"github.com/rancher/k3d/v4/pkg/config/v1alpha2"
 )
+
+// TestEnsureHardcodedSchemaMatchesFile ensures that the JSONSchema hardcoded in the config package matches the corresponding file
+/*
+ * TODO: as soon as we move to Go 1.16, the file will be embedded using //go:embed and we can drop this test
+ */
+func TestEnsureHardcodedSchemaMatchesFile(t *testing.T) {
+	schemaFilePath := "./v1alpha2/schema.json"
+	schemaContents, err := ioutil.ReadFile(schemaFilePath)
+	if err != nil {
+		t.Fatalf("Failed to read schema file %s: %+v", schemaFilePath, err)
+	}
+
+	if bytes.Compare([]byte(v1alpha2.JSONSchema), schemaContents) != 0 {
+		t.Errorf("Schema file %s does not match hardcoded schema!", schemaFilePath)
+	}
+
+}
 
 func TestValidateSchema(t *testing.T) {
 
 	cfgPath := "./test_assets/config_test_simple.yaml"
-	schemaPath := "./v1alpha2/schema.json"
 
-	if err := ValidateSchemaFiles(cfgPath, schemaPath); err != nil {
-		t.Errorf("Validation of config file %s against schema %s failed: %+v", cfgPath, schemaPath, err)
+	if err := ValidateSchemaFile(cfgPath, []byte(v1alpha2.JSONSchema)); err != nil {
+		t.Errorf("Validation of config file %s against the default schema failed: %+v", cfgPath, err)
 	}
 
 }
@@ -39,15 +59,13 @@ func TestValidateSchema(t *testing.T) {
 func TestValidateSchemaFail(t *testing.T) {
 
 	cfgPath := "./test_assets/config_test_simple_invalid_servers.yaml"
-	schemaPath := "./v1alpha2/schema.json"
 
 	var err error
-	if err = ValidateSchemaFiles(cfgPath, schemaPath); err == nil {
-		t.Errorf("Validation of config file %s against schema %s passed where we expected a failure", cfgPath, schemaPath)
+	if err = ValidateSchemaFile(cfgPath, []byte(v1alpha2.JSONSchema)); err == nil {
+		t.Errorf("Validation of config file %s against the default schema passed where we expected a failure", cfgPath)
 	}
 
-	expectedErrorText := `- servers: Must be greater than or equal to 1
-- name: Invalid type. Expected: string, given: integer
+	expectedErrorText := `- name: Invalid type. Expected: string, given: integer
 `
 
 	if err.Error() != expectedErrorText {

@@ -1,7 +1,7 @@
 apiVersion: k3d.io/v1alpha2
 kind: Simple
 name: 1234
-servers: -1
+servers: 1
 agents: 2
 kubeAPI:
   hostIP: "0.0.0.0"

@@ -35,8 +35,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ValidateSchemaFiles takes a filepath, reads the file and validates it against a JSON schema file
-func ValidateSchemaFiles(filepath string, schemaFile string) error {
+// ValidateSchemaFile takes a filepath, reads the file and validates it against a JSON schema
+func ValidateSchemaFile(filepath string, schema []byte) error {
 	fileContents, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return fmt.Errorf("Failed to read file %s: %+v", filepath, err)
@@ -45,11 +45,6 @@ func ValidateSchemaFiles(filepath string, schemaFile string) error {
 	var content map[string]interface{}
 	if err := yaml.Unmarshal(fileContents, &content); err != nil {
 		return fmt.Errorf("Failed to unmarshal the content of %s to a map: %+v", filepath, err)
-	}
-
-	schema, err := ioutil.ReadFile(schemaFile)
-	if err != nil {
-		return fmt.Errorf("Failed to read schema file %s: %+v", schemaFile, err)
 	}
 
 	return ValidateSchema(content, schema)

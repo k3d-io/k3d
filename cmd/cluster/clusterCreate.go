@@ -72,11 +72,14 @@ func initConfig() {
 	if configFile != "" {
 		cfgViper.SetConfigFile(configFile)
 
+		if _, err := os.Stat(configFile); err != nil {
+			log.Fatalf("Failed to stat config file %s: %+v", configFile, err)
+		}
+		log.Tracef("Schema: %+v", conf.JSONSchema)
+
 		// try to read config into memory (viper map structure)
 		if err := cfgViper.ReadInConfig(); err != nil {
 			if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-				log.Errorln("No config file found!")
-
 				log.Fatalf("Config file %s not found: %+v", configFile, err)
 			}
 			// config file found but some other error happened
