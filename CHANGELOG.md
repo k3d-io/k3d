@@ -2,6 +2,15 @@
 
 ## v4.1.0
 
+### Important
+
+- Using Viper brings us lots of nice features, but also one problem:
+  - We had to switch StringArray flags to StringSlice flags, which
+    - allow to use multiple flag values comma-separated in a single flag, but also
+    - split flag values that contain a comma into separate parts (and we cannot handle issues that arise due to this)
+      - so if you rely on commas in your flag values (e.g. for `--env X=a,b,c`), please consider filing an issue or supporting <https://github.com/spf13/viper/issues/246> and <https://github.com/spf13/viper/pull/398>
+      - `--env X=a,b,c` would be treated the same as `--env X=a`, `--env b`, `--env c`
+
 ### Features & Enhancements
 
 - use [viper](https://github.com/spf13/viper) for configuration management
