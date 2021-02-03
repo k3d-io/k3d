@@ -863,7 +863,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		if !serverlb.State.Running {
 			log.Debugln("Starting serverlb...")
 			if err := runtime.StartNode(ctx, serverlb); err != nil { // FIXME: we could run into a nullpointer exception here
-				log.Warningf("Failed to start serverlb '%s': Try to start it manually", serverlb.Name)
+				log.Warningf("Failed to start serverlb '%s' (try to start it manually): %+v", serverlb.Name, err)
 				failed++
 			}
 			// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`

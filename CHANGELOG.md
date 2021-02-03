@@ -28,6 +28,8 @@
 ### Fixes
 
 - do not ignore `--no-hostip` flag and don't inject hostip if `--network=host` (#471, @konradmalik)
+- fix: `--no-lb` ignored
+- fix: print error cause when serverlb fails to start
 
 ### Misc
 
