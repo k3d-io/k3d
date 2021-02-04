@@ -101,6 +101,7 @@ This repository is based on [@zeerorg](https://github.com/zeerorg/)'s [zeerorg/k
 
 - [k3x](https://github.com/inercia/k3x): GUI (Linux) to k3d
 - [vscode-k3d](https://github.com/inercia/vscode-k3d): vscode plugin for k3d
+- [AbsaOSS/k3d-action](https://github.com/AbsaOSS/k3d-action): fully customizable GitHub Action to run lightweight Kubernetes clusters.
 
 ## Contributing
 
