@@ -213,7 +213,6 @@ func NodeCreateMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d
 	}
 
 	return nil
-
 }
 
 // NodeRun creates and starts a node
@@ -313,7 +312,6 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 
 // NodeDelete deletes an existing node
 func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, opts k3d.NodeDeleteOpts) error {
-
 	// delete node
 	if err := runtime.DeleteNode(ctx, node); err != nil {
 		log.Error(err)
@@ -349,7 +347,6 @@ func patchAgentSpec(node *k3d.Node) error {
 
 // patchServerSpec adds agent node specific settings to a node
 func patchServerSpec(node *k3d.Node, runtime runtimes.Runtime) error {
-
 	// command / arguments
 	if node.Cmd == nil {
 		node.Cmd = []string{"server"}
@@ -362,9 +359,12 @@ func patchServerSpec(node *k3d.Node, runtime runtimes.Runtime) error {
 	node.Labels[k3d.LabelServerAPIPort] = node.ServerOpts.KubeAPI.Binding.HostPort
 
 	// If the runtime is docker, attempt to use the docker host
-	if runtime.ID() == "docker" && runtime.GetHost() != "" {
-		node.Labels[k3d.LabelServerAPIHostIP] = runtime.GetHost()
-		node.Labels[k3d.LabelServerAPIHost] = runtime.GetHost()
+	if runtime.ID() == "docker" {
+		dockerHost := runtime.GetHost()
+		if dockerHost != "" {
+			node.Labels[k3d.LabelServerAPIHostIP] = runtime.GetHost()
+			node.Labels[k3d.LabelServerAPIHost] = runtime.GetHost()
+		}
 	}
 
 	node.Args = append(node.Args, "--tls-san", node.Labels[k3d.LabelServerAPIHost]) // add TLS SAN for non default host name
@@ -395,7 +395,7 @@ func NodeGet(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3
 	return node, nil
 }
 
-//NodeWaitForLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
+// NodeWaitForLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
 func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string, since time.Time) error {
 	log.Tracef("NodeWaitForLogMessage: Node '%s' waiting for log message '%s' since '%+v'", node.Name, message, since)
 	for {
@@ -440,7 +440,6 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 
 // NodeFilterByRoles filters a list of nodes by their roles
 func NodeFilterByRoles(nodes []*k3d.Node, includeRoles, excludeRoles []k3d.Role) []*k3d.Node {
-
 	// check for conflicting filters
 	for _, includeRole := range includeRoles {
 		for _, excludeRole := range excludeRoles {
