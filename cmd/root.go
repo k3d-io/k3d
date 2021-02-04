@@ -46,9 +46,10 @@ import (
 
 // RootFlags describes a struct that holds flags that can be set on root level of the command
 type RootFlags struct {
-	debugLogging bool
-	traceLogging bool
-	version      bool
+	debugLogging       bool
+	traceLogging       bool
+	timestampedLogging bool
+	version            bool
 }
 
 var flags = RootFlags{}
@@ -97,6 +98,7 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
 	rootCmd.PersistentFlags().BoolVar(&flags.traceLogging, "trace", false, "Enable super verbose output (trace logging)")
+	rootCmd.PersistentFlags().BoolVar(&flags.timestampedLogging, "timestamps", false, "Enable Log timestamps")
 
 	// add local flags
 	rootCmd.Flags().BoolVar(&flags.version, "version", false, "Show k3d and default k3s version")
@@ -161,9 +163,17 @@ func initLogging() {
 			log.TraceLevel,
 		},
 	})
-	log.SetFormatter(&log.TextFormatter{
+
+	formatter := &log.TextFormatter{
 		ForceColors: true,
-	})
+	}
+
+	if flags.timestampedLogging || os.Getenv("LOG_TIMESTAMPS") != "" {
+		formatter.FullTimestamp = true
+	}
+
+	log.SetFormatter(formatter)
+
 }
 
 func initRuntime() {

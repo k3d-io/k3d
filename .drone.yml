@@ -107,6 +107,8 @@ steps:
 
   - name: docker_build_push_dind
     image: plugins/docker
+    environment:
+      DOCKER_BUILDKIT: "1"
     settings:
       repo: rancher/k3d
       tags:
@@ -130,6 +132,8 @@ steps:
         - tag
 
   - name: docker_build_push_binary
+    environment:
+      DOCKER_BUILDKIT: "1"
     image: plugins/docker
     settings:
       repo: rancher/k3d
