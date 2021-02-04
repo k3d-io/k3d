@@ -73,3 +73,4 @@ kubectl get nodes
 ## Related Projects
 
 - [k3x](https://github.com/inercia/k3x): a graphics interface (for Linux) to k3d.
+- [AbsaOSS/k3d-action](https://github.com/AbsaOSS/k3d-action): fully customizable GitHub Action to run lightweight Kubernetes clusters.
