@@ -24,6 +24,7 @@
   - `exposeAPI` -> `kubeAPI`
   - `options.k3d.noRollback` -> `options.k3d.disableRollback`
   - `options.k3d.prepDisableHostIPInjection` -> `options.k3d.disableHostIPInjection`
+- Support docker over SSH (#324, @ekristen & @inercia)
 
 ### Fixes
 
@@ -34,6 +35,7 @@
 ### Misc
 
 - tests/e2e: add config override test
+- add <https://github.com/AbsaOSS/k3d-action> (GitHub Action) as a related project (#476, @kuritka)
 
 ## v4.0.0
 
