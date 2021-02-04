@@ -25,7 +25,8 @@ package config
 import (
 	"testing"
 
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
+	"github.com/spf13/viper"
 	"gotest.tools/assert"
 )
 
@@ -36,11 +37,19 @@ func TestMergeSimpleConfig(t *testing.T) {
 	var src, dest conf.Config
 	var err error
 
-	if src, err = ReadConfig(srcConfig); err != nil {
+	cfg1 := viper.New()
+	cfg1.SetConfigFile(srcConfig)
+	_ = cfg1.ReadInConfig()
+
+	cfg2 := viper.New()
+	cfg2.SetConfigFile(destConfig)
+	_ = cfg2.ReadInConfig()
+
+	if src, err = FromViperSimple(cfg1); err != nil {
 		t.Fatal(err)
 	}
 
-	if dest, err = ReadConfig(destConfig); err != nil {
+	if dest, err = FromViperSimple(cfg2); err != nil {
 		t.Fatal(err)
 	}
 

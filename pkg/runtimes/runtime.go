@@ -51,7 +51,9 @@ var Runtimes = map[string]Runtime{
 
 // Runtime defines an interface that can be implemented for various container runtime environments (docker, containerd, etc.)
 type Runtime interface {
-	CreateNode(context.Context, *k3d.Node) error // Creates a node container, but does not start it
+	ID() string
+	GetHost() string
+	CreateNode(context.Context, *k3d.Node) error
 	DeleteNode(context.Context, *k3d.Node) error
 	GetNodesByLabel(context.Context, map[string]string) ([]*k3d.Node, error)
 	GetNode(context.Context, *k3d.Node) (*k3d.Node, error)

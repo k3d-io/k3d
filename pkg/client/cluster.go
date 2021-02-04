@@ -35,7 +35,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/imdario/mergo"
 	"github.com/rancher/k3d/v4/pkg/actions"
-	config "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
+	config "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
 	k3drt "github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
 	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
@@ -93,7 +93,11 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 
 	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
 	if !clusterConfig.ClusterCreateOpts.PrepDisableHostIPInjection {
-		prepInjectHostIP(ctx, runtime, &clusterConfig.Cluster)
+		if clusterConfig.Cluster.Network.Name != "host" {
+			prepInjectHostIP(ctx, runtime, &clusterConfig.Cluster)
+		} else {
+			log.Infoln("Hostnetwork selected -> Skipping injection of docker host into the cluster")
+		}
 	}
 
 	// create the registry hosting configmap
@@ -432,6 +436,9 @@ ClusterCreatOpts:
 
 		// in case the LoadBalancer was disabled, expose the API Port on the initializing server node
 		if clusterCreateOpts.DisableLoadBalancer {
+			if cluster.InitNode.Ports == nil {
+				cluster.InitNode.Ports = nat.PortMap{}
+			}
 			cluster.InitNode.Ports[k3d.DefaultAPIPort] = []nat.PortBinding{cluster.KubeAPI.Binding}
 		}
 
@@ -451,6 +458,9 @@ ClusterCreatOpts:
 				continue
 			} else if serverCount == 0 && clusterCreateOpts.DisableLoadBalancer {
 				// if this is the first server node and the server loadbalancer is disabled, expose the API Port on this server node
+				if node.Ports == nil {
+					node.Ports = nat.PortMap{}
+				}
 				node.Ports[k3d.DefaultAPIPort] = []nat.PortBinding{cluster.KubeAPI.Binding}
 			}
 
@@ -856,7 +866,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		if !serverlb.State.Running {
 			log.Debugln("Starting serverlb...")
 			if err := runtime.StartNode(ctx, serverlb); err != nil { // FIXME: we could run into a nullpointer exception here
-				log.Warningf("Failed to start serverlb '%s': Try to start it manually", serverlb.Name)
+				log.Warningf("Failed to start serverlb '%s' (try to start it manually): %+v", serverlb.Name, err)
 				failed++
 			}
 			// TODO: avoid `level=fatal msg="starting kubernetes: preparing server: post join: a configuration change is already in progress (5)"`

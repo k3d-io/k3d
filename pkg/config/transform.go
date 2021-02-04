@@ -31,7 +31,7 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	cliutil "github.com/rancher/k3d/v4/cmd/util" // TODO: move parseapiport to pkg
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/pkg/types/k3s"
@@ -93,6 +93,8 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		newCluster.ServerLoadBalancer = &k3d.Node{
 			Role: k3d.LoadBalancerRole,
 		}
+	} else {
+		log.Debugln("Disabling the load balancer")
 	}
 
 	/*************
@@ -137,7 +139,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		nodeList = append(nodeList, newCluster.ServerLoadBalancer)
 	}
 	for _, volumeWithNodeFilters := range simpleConfig.Volumes {
-		nodes, err := util.FilterNodes(newCluster.Nodes, volumeWithNodeFilters.NodeFilters)
+		nodes, err := util.FilterNodes(nodeList, volumeWithNodeFilters.NodeFilters)
 		if err != nil {
 			return nil, err
 		}
@@ -217,14 +219,15 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	 **************************/
 
 	clusterCreateOpts := k3d.ClusterCreateOpts{
-		DisableImageVolume:  simpleConfig.Options.K3dOptions.DisableImageVolume,
-		WaitForServer:       simpleConfig.Options.K3dOptions.Wait,
-		Timeout:             simpleConfig.Options.K3dOptions.Timeout,
-		DisableLoadBalancer: simpleConfig.Options.K3dOptions.DisableLoadbalancer,
-		K3sServerArgs:       simpleConfig.Options.K3sOptions.ExtraServerArgs,
-		K3sAgentArgs:        simpleConfig.Options.K3sOptions.ExtraAgentArgs,
-		GlobalLabels:        map[string]string{}, // empty init
-		GlobalEnv:           []string{},          // empty init
+		PrepDisableHostIPInjection: simpleConfig.Options.K3dOptions.PrepDisableHostIPInjection,
+		DisableImageVolume:         simpleConfig.Options.K3dOptions.DisableImageVolume,
+		WaitForServer:              simpleConfig.Options.K3dOptions.Wait,
+		Timeout:                    simpleConfig.Options.K3dOptions.Timeout,
+		DisableLoadBalancer:        simpleConfig.Options.K3dOptions.DisableLoadbalancer,
+		K3sServerArgs:              simpleConfig.Options.K3sOptions.ExtraServerArgs,
+		K3sAgentArgs:               simpleConfig.Options.K3sOptions.ExtraAgentArgs,
+		GlobalLabels:               map[string]string{}, // empty init
+		GlobalEnv:                  []string{},          // empty init
 	}
 
 	// ensure, that we have the default object labels

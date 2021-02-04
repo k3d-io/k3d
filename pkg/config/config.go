@@ -29,36 +29,33 @@ import (
 
 	"github.com/spf13/viper"
 
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha1"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
 )
 
-func ReadConfig(file string) (conf.Config, error) {
-	cfgViper := viper.New()
+func FromViperSimple(config *viper.Viper) (conf.SimpleConfig, error) {
 
-	cfgViper.SetConfigFile(file)
+	var cfg conf.SimpleConfig
 
-	cfgViper.SetConfigType("yaml")
-	cfgViper.SetEnvPrefix(k3d.DefaultObjectNamePrefix)
-	cfgViper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	cfgViper.AutomaticEnv()
-
-	// try to read config into memory (viper map structure)
-	if err := cfgViper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			log.Errorln("No config file found!")
-
-			return nil, err
-		}
-		// config file found but some other error happened
-		log.Debugf("Failed to read config file: %+v", cfgViper.ConfigFileUsed())
-		return nil, err
+	// determine config kind
+	if config.GetString("kind") != "" && strings.ToLower(config.GetString("kind")) != "simple" {
+		return cfg, fmt.Errorf("Wrong `kind` '%s' != 'simple' in config file", config.GetString("kind"))
 	}
+
+	if err := config.Unmarshal(&cfg); err != nil {
+		log.Errorln("Failed to unmarshal File config")
+
+		return cfg, err
+	}
+
+	return cfg, nil
+}
+
+func FromViper(config *viper.Viper) (conf.Config, error) {
 
 	var cfg conf.Config
 
 	// determine config kind
-	switch strings.ToLower(cfgViper.GetString("kind")) {
+	switch strings.ToLower(config.GetString("kind")) {
 	case "simple":
 		cfg = conf.SimpleConfig{}
 	case "cluster":
@@ -68,16 +65,14 @@ func ReadConfig(file string) (conf.Config, error) {
 	case "":
 		return nil, fmt.Errorf("Missing `kind` in config file")
 	default:
-		return nil, fmt.Errorf("Unknown `kind` '%s' in config file", cfgViper.GetString("kind"))
+		return nil, fmt.Errorf("Unknown `kind` '%s' in config file", config.GetString("kind"))
 	}
 
-	if err := cfgViper.Unmarshal(&cfg); err != nil {
+	if err := config.Unmarshal(&cfg); err != nil {
 		log.Errorln("Failed to unmarshal File config")
 
 		return nil, err
 	}
-
-	log.Infof("Using Config: %s", cfgViper.ConfigFileUsed())
 
 	return cfg, nil
 }
