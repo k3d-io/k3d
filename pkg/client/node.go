@@ -359,11 +359,11 @@ func patchServerSpec(node *k3d.Node, runtime runtimes.Runtime) error {
 	node.Labels[k3d.LabelServerAPIPort] = node.ServerOpts.KubeAPI.Binding.HostPort
 
 	// If the runtime is docker, attempt to use the docker host
-	if runtime.ID() == "docker" {
+	if runtime == runtimes.Docker {
 		dockerHost := runtime.GetHost()
 		if dockerHost != "" {
-			node.Labels[k3d.LabelServerAPIHostIP] = runtime.GetHost()
-			node.Labels[k3d.LabelServerAPIHost] = runtime.GetHost()
+			node.Labels[k3d.LabelServerAPIHostIP] = dockerHost
+			node.Labels[k3d.LabelServerAPIHost] = dockerHost
 		}
 	}
 
