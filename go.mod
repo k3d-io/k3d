@@ -13,7 +13,7 @@ require (
 	github.com/containerd/go-runc v0.0.0-20201020171139-16b287bc67d0 // indirect
 	github.com/containerd/ttrpc v1.0.2 // indirect
 	github.com/containerd/typeurl v1.0.1 // indirect
-	github.com/docker/cli v20.10.0-beta1.0.20201103165149-c20be83d6b34+incompatible
+	github.com/docker/cli v20.10.0+incompatible
 	github.com/docker/docker v20.10.0+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
@@ -31,6 +31,7 @@ require (
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
+	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/afero v1.3.4 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
@@ -42,6 +43,7 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
+	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 	google.golang.org/grpc v1.34.0 // indirect
 	gopkg.in/ini.v1 v1.58.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0

@@ -43,7 +43,7 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 	log.Tracef("Creating docker container with translated config\n%+v\n", dockerNode)
 
 	// initialize docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return "", err
@@ -88,7 +88,7 @@ func startContainer(ctx context.Context, ID string) error {
 func removeContainer(ctx context.Context, ID string) error {
 
 	// (0) create docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return err
@@ -141,7 +141,7 @@ func pullImage(ctx context.Context, docker *client.Client, image string) error {
 
 func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, error) {
 	// (0) create docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return nil, err

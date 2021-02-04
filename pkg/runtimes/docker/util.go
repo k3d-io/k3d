@@ -26,12 +26,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"strings"
 
+	"github.com/docker/cli/cli/connhelper"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -48,7 +52,7 @@ func GetDefaultObjectLabelsFilter(clusterName string) filters.Args {
 // CopyToNode copies a file from the local FS to the selected node
 func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k3d.Node) error {
 	// create docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return err
@@ -134,4 +138,33 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, no
 	}
 
 	return nil
+}
+
+// GetDockerClient returns a docker client
+func GetDockerClient() (*client.Client, error) {
+	var err error
+	var cli *client.Client
+
+	dockerHost := os.Getenv("DOCKER_HOST")
+
+	if strings.HasPrefix(dockerHost, "ssh://") {
+		var helper *connhelper.ConnectionHelper
+
+		helper, err = connhelper.GetConnectionHelper(dockerHost)
+		if err != nil {
+			return nil, err
+		}
+		cli, err = client.NewClientWithOpts(
+			client.WithHost(helper.Host),
+			client.WithDialContext(helper.Dialer),
+			client.WithAPIVersionNegotiation(),
+		)
+	} else {
+		cli, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	}
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return cli, err
 }

@@ -27,7 +27,6 @@ import (
 
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/volume"
-	"github.com/docker/docker/client"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
@@ -35,7 +34,7 @@ import (
 // CreateVolume creates a new named volume
 func (d Docker) CreateVolume(ctx context.Context, name string, labels map[string]string) error {
 	// (0) create new docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return err
@@ -66,7 +65,7 @@ func (d Docker) CreateVolume(ctx context.Context, name string, labels map[string
 // DeleteVolume creates a new named volume
 func (d Docker) DeleteVolume(ctx context.Context, name string) error {
 	// (0) create new docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return err
@@ -101,7 +100,7 @@ func (d Docker) DeleteVolume(ctx context.Context, name string) error {
 func (d Docker) GetVolume(name string) (string, error) {
 	// (0) create new docker client
 	ctx := context.Background()
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return "", err

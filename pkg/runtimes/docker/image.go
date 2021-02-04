@@ -25,14 +25,13 @@ import (
 	"context"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
 )
 
 // GetImages returns a list of images present in the runtime
 func (d Docker) GetImages(ctx context.Context) ([]string, error) {
 	// create docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return nil, err

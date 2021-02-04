@@ -42,7 +42,7 @@ import (
 func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (string, bool, error) {
 
 	// (0) create new docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return "", false, err
@@ -88,7 +88,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (str
 // DeleteNetwork deletes a network
 func (d Docker) DeleteNetwork(ctx context.Context, ID string) error {
 	// (0) create new docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return err
@@ -107,7 +107,7 @@ func (d Docker) DeleteNetwork(ctx context.Context, ID string) error {
 
 // GetNetwork gets information about a network by its ID
 func GetNetwork(ctx context.Context, ID string) (types.NetworkResource, error) {
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return types.NetworkResource{}, err
