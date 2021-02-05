@@ -34,7 +34,7 @@ info "Waiting for a bit..."
 sleep 5
 
 info "Restarting cluster (time: $(date -u +"%Y-%m-%d %H:%M:%S %Z"))..."
-$EXE cluster start multiserver --timeout 180s || failed "failed to restart cluster (timeout 180s)"
+$EXE cluster start multiserver --timeout 360s || failed "failed to restart cluster (timeout 360s)"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
 sleep 5

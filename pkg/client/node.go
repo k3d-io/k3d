@@ -427,6 +427,13 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 	for {
 		select {
 		case <-ctx.Done():
+			if ctx.Err() == context.DeadlineExceeded {
+				d, ok := ctx.Deadline()
+				if ok {
+					log.Debugf("NodeWaitForLogMessage: Context Deadline (%s) > Current Time (%s)", d, time.Now())
+				}
+				return fmt.Errorf("Context deadline exceeded while waiting for log message '%s' of node %s", message, node.Name)
+			}
 			return ctx.Err()
 		default:
 		}
