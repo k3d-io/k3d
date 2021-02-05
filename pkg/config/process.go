@@ -27,28 +27,23 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ProcessClusterConfig apply processing to the config sanitizing if and doing
-// some platform specific modifications
+// ProcessClusterConfig applies processing to the config sanitizing it and doing
+// some final modifications
 func ProcessClusterConfig(clusterConfig conf.ClusterConfig) (*conf.ClusterConfig, error) {
 	cluster := clusterConfig.Cluster
 	if cluster.Network.Name == "host" {
+		log.Infoln("Hostnetwork selected - disabling injection of docker host into the cluster, server load balancer and setting the api port to the k3s default")
 		// if network is set to host, exposed api port must be the one imposed by k3s
 		k3sPort := cluster.KubeAPI.Port.Port()
-		log.Debugf("Host network was chosen, changing provided/random api port to k3s default:\n%s", k3sPort)
+		log.Debugf("Host network was chosen, changing provided/random api port to k3s:\n%s", k3sPort)
 		cluster.KubeAPI.PortMapping.Binding.HostPort = k3sPort
 
 		// if network is host, dont inject docker host into the cluster
-		if !clusterConfig.ClusterCreateOpts.PrepDisableHostIPInjection {
-			log.Infoln("Hostnetwork selected -> Disabling injection of docker host into the cluster")
-			clusterConfig.ClusterCreateOpts.PrepDisableHostIPInjection = true
-		}
+		clusterConfig.ClusterCreateOpts.PrepDisableHostIPInjection = true
 
 		// if network is host, disable load balancer
 		// serverlb not supported in hostnetwork mode due to port collisions with server node
-		if !clusterConfig.ClusterCreateOpts.DisableLoadBalancer {
-			log.Infoln("Hostnetwork selected -> Disabling creation of server LoadBalancer")
-			clusterConfig.ClusterCreateOpts.DisableLoadBalancer = true
-		}
+		clusterConfig.ClusterCreateOpts.DisableLoadBalancer = true
 	}
 
 	return &clusterConfig, nil
