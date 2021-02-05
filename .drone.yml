@@ -25,14 +25,14 @@ steps:
         - tag
 
   - name: test
-    image: docker:19.03
+    image: docker:20.10
     volumes:
       - name: dockersock
         path: /var/run
     commands:
       - apk add git bash curl sudo jq make
       - sleep 5  # give docker enough time to start
-      - make e2e
+      - make e2e -e E2E_EXTRA=true # E2E_EXTRA=true enables tests with multiple k3s versions
     when:
       event:
         - push
@@ -107,6 +107,8 @@ steps:
 
   - name: docker_build_push_dind
     image: plugins/docker
+    environment:
+      DOCKER_BUILDKIT: "1"
     settings:
       repo: rancher/k3d
       tags:
@@ -130,6 +132,8 @@ steps:
         - tag
 
   - name: docker_build_push_binary
+    environment:
+      DOCKER_BUILDKIT: "1"
     image: plugins/docker
     settings:
       repo: rancher/k3d
@@ -156,7 +160,7 @@ steps:
 services:
   # Starting the docker service to be used by dind
   - name: docker
-    image: docker:19.03-dind
+    image: docker:20.10-dind
     privileged: true
     volumes:
       - name: dockersock

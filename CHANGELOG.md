@@ -25,6 +25,12 @@
   - `options.k3d.noRollback` -> `options.k3d.disableRollback`
   - `options.k3d.prepDisableHostIPInjection` -> `options.k3d.disableHostIPInjection`
 - Support docker over SSH (#324, @ekristen & @inercia)
+- add root flag `--timestamps` to enable timestamped logs
+- improved multi-server cluster support (#467)
+  - log a warning, if one tries to create a cluster with only 2 nodes (no majority possible, no fault tolerance)
+  - revamped cluster start procedure: init-node, sorted servers, agents, helpers
+  - different log messages per role and start-place (that we wait for to consider a node to be ready)
+  - module: `NodeStartOpts` now accept a `ReadyLogMessage` and `NodeState` now takes a `Started` timestamp string
 
 ### Fixes
 
@@ -35,7 +41,23 @@
 ### Misc
 
 - tests/e2e: add config override test
-- add <https://github.com/AbsaOSS/k3d-action> (GitHub Action) as a related project (#476, @kuritka)
+- tests/e2e: add multi server start-stop cycle test
+- tests/e2e: improved logs with stage and test details.
+- ci/drone+tests/e2e: use E2E_EXTRA=true to always test multiple k3s versions in CI
+- builds&tests: use Docker 20.10 and BuildKit everywhere
+- docs: add <https://github.com/AbsaOSS/k3d-action> (GitHub Action) as a related project (#476, @kuritka)
+
+### Tested with
+
+- E2E Tests ran with k3s versions
+  - v1.17.17-k3s1 (see Known Issues below)
+  - v1.18.15-k3s1 (see Known Issues below)
+  - v1.19.7-k3s1
+  - v1.20.2-k3s1
+
+### Known Issues
+
+- automatic multi-server cluster restarts tend to fail with k3s versions v1.17.x & v1.18.x and probably earlier versions (using dqlite)
 
 ## v4.0.0
 

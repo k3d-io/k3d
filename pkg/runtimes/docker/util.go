@@ -34,8 +34,8 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/pkg/errors"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 

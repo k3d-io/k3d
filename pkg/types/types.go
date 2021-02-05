@@ -224,9 +224,10 @@ type NodeCreateOpts struct {
 
 // NodeStartOpts describes a set of options one can set when (re-)starting a node
 type NodeStartOpts struct {
-	Wait      bool
-	Timeout   time.Duration
-	NodeHooks []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	Wait            bool
+	Timeout         time.Duration
+	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	ReadyLogMessage string
 }
 
 // NodeDeleteOpts describes a set of options one can set when deleting a node
@@ -357,6 +358,7 @@ func GetDefaultObjectName(name string) string {
 type NodeState struct {
 	Running bool
 	Status  string
+	Started string
 }
 
 /*
