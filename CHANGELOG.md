@@ -42,7 +42,6 @@
 - tests/e2e: add config override test
 - tests/e2e: add multi server start-stop cycle test
 - tests/e2e: improved logs with stage and test details.
-- ci/drone+tests/e2e: use E2E_EXTRA=true to always test multiple k3s versions in CI
 - builds&tests: use Docker 20.10 and BuildKit everywhere
 - :memo: docs: add <https://github.com/AbsaOSS/k3d-action> (GitHub Action) as a related project (#476, @kuritka)
 
