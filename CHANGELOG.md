@@ -1,5 +1,11 @@
 # Changelog
 
+## v4.1.1
+
+### Fixes
+
+- fix: `--k3s-server-arg` and `--k3s-agent-arg` didn't work (Viper StringArray incompatibility) (#482)
+
 ## v4.1.0
 
 ### Highlights
