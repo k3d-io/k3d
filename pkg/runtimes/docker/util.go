@@ -140,6 +140,7 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, no
 	return nil
 }
 
+
 // GetDockerClient returns a docker client
 func GetDockerClient() (*client.Client, error) {
 	var err error
@@ -167,4 +168,14 @@ func GetDockerClient() (*client.Client, error) {
 	}
 
 	return cli, err
+}
+
+// isAttachedToNetwork return true if node is attached to network
+func isAttachedToNetwork(node *k3d.Node, network string) bool {
+	for _, nw := range node.Networks {
+		if nw == network {
+			return true
+		}
+	}
+	return false
 }
