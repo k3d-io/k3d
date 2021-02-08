@@ -28,6 +28,7 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/rancher/k3d/v4/pkg/types/k3s"
+	"github.com/rancher/k3d/v4/version"
 )
 
 // DefaultClusterName specifies the default name used for newly created clusters
@@ -105,7 +106,8 @@ var ClusterExternalNodeRoles = []Role{
 
 // DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
 var DefaultObjectLabels = map[string]string{
-	"app": "k3d",
+	"app":         "k3d",
+	"k3d.version": version.Version,
 }
 
 // List of k3d technical label name
