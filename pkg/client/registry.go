@@ -88,6 +88,9 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 	for k, v := range k3d.DefaultObjectLabels {
 		registryNode.Labels[k] = v
 	}
+	for k, v := range k3d.DefaultObjectLabelsVar {
+		registryNode.Labels[k] = v
+	}
 
 	// port
 	registryNode.Ports = nat.PortMap{}

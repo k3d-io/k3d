@@ -305,6 +305,9 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 	for k, v := range k3d.DefaultObjectLabels {
 		labels[k] = v
 	}
+	for k, v := range k3d.DefaultObjectLabelsVar {
+		labels[k] = v
+	}
 	for k, v := range node.Labels {
 		labels[k] = v
 	}

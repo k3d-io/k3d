@@ -52,6 +52,9 @@ func (d Docker) CreateVolume(ctx context.Context, name string, labels map[string
 	for k, v := range k3d.DefaultObjectLabels {
 		volumeCreateOptions.Labels[k] = v
 	}
+	for k, v := range k3d.DefaultObjectLabelsVar {
+		volumeCreateOptions.Labels[k] = v
+	}
 
 	vol, err := docker.VolumeCreate(ctx, volumeCreateOptions)
 	if err != nil {
