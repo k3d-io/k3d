@@ -374,7 +374,7 @@ func patchAgentSpec(node *k3d.Node) error {
 	return nil
 }
 
-// patchServerSpec adds agent node specific settings to a node
+// patchServerSpec adds server node specific settings to a node
 func patchServerSpec(node *k3d.Node, runtime runtimes.Runtime) error {
 	// command / arguments
 	if node.Cmd == nil {
@@ -391,6 +391,8 @@ func patchServerSpec(node *k3d.Node, runtime runtimes.Runtime) error {
 	if runtime == runtimes.Docker {
 		dockerHost := runtime.GetHost()
 		if dockerHost != "" {
+			dockerHost = strings.Split(dockerHost, ":")[0] // remove the port
+			log.Tracef("Using docker host %s", dockerHost)
 			node.Labels[k3d.LabelServerAPIHostIP] = dockerHost
 			node.Labels[k3d.LabelServerAPIHost] = dockerHost
 		}

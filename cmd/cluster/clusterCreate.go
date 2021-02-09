@@ -352,7 +352,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	// -> API-PORT
 	// parse the port mapping
 	var (
-		err error
+		err       error
 		exposeAPI *k3d.ExposureOpts
 	)
 
