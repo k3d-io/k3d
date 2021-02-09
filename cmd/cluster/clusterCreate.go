@@ -24,6 +24,7 @@ package cluster
 
 import (
 	"fmt"
+	"github.com/docker/go-connections/nat"
 	"os"
 	"runtime"
 	"strings"
@@ -348,11 +349,18 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		exposeAPI *k3d.ExposureOpts
 	)
 
-	exposeAPI, err = cliutil.ParsePortExposureSpec(cfg.ExposeAPI.HostPort, k3d.DefaultAPIPort)
-	if err != nil {
-		return cfg, err
+	// Apply config file values as defaults
+	exposeAPI = &k3d.ExposureOpts{
+		PortMapping: nat.PortMapping{
+			Binding: nat.PortBinding{
+				HostIP:   cfg.ExposeAPI.HostIP,
+				HostPort: cfg.ExposeAPI.HostPort,
+			},
+		},
+		Host: cfg.ExposeAPI.Host,
 	}
 
+	// Overwrite if cli arg is set
 	if ppViper.IsSet("cli.api-port") {
 		if cfg.ExposeAPI.HostPort != "" {
 			log.Debugf("Overriding pre-defined kubeAPI Exposure Spec %+v with CLI argument %s", cfg.ExposeAPI, ppViper.GetString("cli.api-port"))
@@ -363,6 +371,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		}
 	}
 
+	// Set to random port if port is empty string
 	if len(exposeAPI.Binding.HostPort) == 0 {
 		exposeAPI, err = cliutil.ParsePortExposureSpec("random", k3d.DefaultAPIPort)
 		if err != nil {
