@@ -106,8 +106,12 @@ var ClusterExternalNodeRoles = []Role{
 
 // DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
 var DefaultObjectLabels = map[string]string{
-	"app":         "k3d",
-	"k3d.version": version.Version,
+	"app": "k3d",
+}
+
+// DefaultObjectLabelsVar specifies a set of labels that will be attached to k3d objects by default but are not static (e.g. across k3d versions)
+var DefaultObjectLabelsVar = map[string]string{
+	"k3d.version": version.GetVersion(),
 }
 
 // List of k3d technical label name
