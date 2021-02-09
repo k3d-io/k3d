@@ -39,7 +39,7 @@ registries:
 options:
   k3d:
     wait: true
-    timeout: "60s"
+    timeout: "360s" # should be pretty high for multi-server clusters to allow for a proper startup routine
     disableLoadbalancer: false
     disableImageVolume: false
   k3s:

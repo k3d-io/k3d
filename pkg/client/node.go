@@ -129,6 +129,10 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		}
 	}
 
+	// clear status fields
+	node.State.Running = false
+	node.State.Status = ""
+
 	if err := NodeRun(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
 		return err
 	}
@@ -233,6 +237,17 @@ func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, node
 
 // NodeStart starts an existing node
 func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeStartOpts k3d.NodeStartOpts) error {
+
+	// return early, if the node is already running
+	if node.State.Running {
+		log.Infof("Node %s is already running", node.Name)
+		return nil
+	}
+
+	startTime := time.Now()
+	log.Debugf("Node %s Start Time: %+v", node.Name, startTime)
+
+	// execute lifecycle hook actions
 	for _, hook := range nodeStartOpts.NodeHooks {
 		if hook.Stage == k3d.LifecycleStagePreStart {
 			log.Tracef("Node %s: Executing preStartAction '%s'", node.Name, reflect.TypeOf(hook))
@@ -241,19 +256,30 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 			}
 		}
 	}
+
+	// start the node
 	log.Tracef("Starting node '%s'", node.Name)
 
-	startTime := time.Now()
 	if err := runtime.StartNode(ctx, node); err != nil {
 		log.Errorf("Failed to start node '%s'", node.Name)
 		return err
 	}
 
+	if node.State.Started != "" {
+		ts, err := time.Parse("2006-01-02T15:04:05.999999999Z", node.State.Started)
+		if err != nil {
+			log.Debugf("Failed to parse '%s.State.Started' timestamp '%s', falling back to calulated time", node.Name, node.State.Started)
+		}
+		startTime = ts
+	}
+
 	if nodeStartOpts.Wait {
-		log.Debugf("Waiting for node %s to get ready", node.Name)
-		readyLogMessage := k3d.ReadyLogMessageByRole[node.Role]
-		if readyLogMessage != "" {
-			if err := NodeWaitForLogMessage(ctx, runtime, node, readyLogMessage, startTime); err != nil {
+		if nodeStartOpts.ReadyLogMessage == "" {
+			nodeStartOpts.ReadyLogMessage = k3d.ReadyLogMessageByRole[node.Role]
+		}
+		if nodeStartOpts.ReadyLogMessage != "" {
+			log.Debugf("Waiting for node %s to get ready (Log: '%s')", node.Name, nodeStartOpts.ReadyLogMessage)
+			if err := NodeWaitForLogMessage(ctx, runtime, node, nodeStartOpts.ReadyLogMessage, startTime); err != nil {
 				return fmt.Errorf("Node %s failed to get ready: %+v", node.Name, err)
 			}
 		} else {
@@ -277,6 +303,9 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 	// ### Labels ###
 	labels := make(map[string]string)
 	for k, v := range k3d.DefaultObjectLabels {
+		labels[k] = v
+	}
+	for k, v := range k3d.DefaultObjectLabelsVar {
 		labels[k] = v
 	}
 	for k, v := range node.Labels {
@@ -401,6 +430,13 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 	for {
 		select {
 		case <-ctx.Done():
+			if ctx.Err() == context.DeadlineExceeded {
+				d, ok := ctx.Deadline()
+				if ok {
+					log.Debugf("NodeWaitForLogMessage: Context Deadline (%s) > Current Time (%s)", d, time.Now())
+				}
+				return fmt.Errorf("Context deadline exceeded while waiting for log message '%s' of node %s", message, node.Name)
+			}
 			return ctx.Err()
 		default:
 		}

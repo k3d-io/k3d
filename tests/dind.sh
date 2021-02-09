@@ -22,6 +22,7 @@ k3de2e=$(docker run -d \
           -e E2E_INCLUDE="$E2E_INCLUDE" \
           -e E2E_EXCLUDE="$E2E_EXCLUDE" \
           -e E2E_EXTRA="$E2E_EXTRA" \
+          -e LOG_TIMESTAMPS="true" \
           --add-host "k3d-registrytest-registry:127.0.0.1" \
           --name "k3d-e2e-runner-$TIMESTAMP" \
           "k3d:$K3D_IMAGE_TAG")
@@ -50,6 +51,7 @@ done
 if [ -z "$E2E_HELPER_IMAGE_TAG" ]; then
   docker exec --workdir /src "$k3de2e" make build-helper-images
   # execute tests
+  echo "Start time outside runner: $(date)"
   docker exec "$k3de2e" /src/tests/runner.sh
 else
   # execute tests

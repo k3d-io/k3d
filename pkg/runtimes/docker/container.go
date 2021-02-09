@@ -161,8 +161,7 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 		All:     true,
 	})
 	if err != nil {
-		log.Errorln("Failed to list containers")
-		return nil, err
+		return nil, fmt.Errorf("Failed to list containers: %+v", err)
 	}
 
 	if len(containers) > 1 {

@@ -50,7 +50,7 @@ func NewCmdNodeCreate() *cobra.Command {
 			nodes, cluster := parseCreateNodeCmd(cmd, args)
 			if err := k3dc.NodeAddToClusterMulti(cmd.Context(), runtimes.SelectedRuntime, nodes, cluster, createNodeOpts); err != nil {
 				log.Errorf("Failed to add nodes to cluster '%s'", cluster.Name)
-				log.Errorln(err)
+				log.Fatalln(err)
 			}
 		},
 	}

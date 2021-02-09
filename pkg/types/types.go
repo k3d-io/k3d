@@ -28,6 +28,7 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/rancher/k3d/v4/pkg/types/k3s"
+	"github.com/rancher/k3d/v4/version"
 )
 
 // DefaultClusterName specifies the default name used for newly created clusters
@@ -106,6 +107,11 @@ var ClusterExternalNodeRoles = []Role{
 // DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
 var DefaultObjectLabels = map[string]string{
 	"app": "k3d",
+}
+
+// DefaultObjectLabelsVar specifies a set of labels that will be attached to k3d objects by default but are not static (e.g. across k3d versions)
+var DefaultObjectLabelsVar = map[string]string{
+	"k3d.version": version.GetVersion(),
 }
 
 // List of k3d technical label name
@@ -224,9 +230,10 @@ type NodeCreateOpts struct {
 
 // NodeStartOpts describes a set of options one can set when (re-)starting a node
 type NodeStartOpts struct {
-	Wait      bool
-	Timeout   time.Duration
-	NodeHooks []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	Wait            bool
+	Timeout         time.Duration
+	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	ReadyLogMessage string
 }
 
 // NodeDeleteOpts describes a set of options one can set when deleting a node
@@ -357,6 +364,7 @@ func GetDefaultObjectName(name string) string {
 type NodeState struct {
 	Running bool
 	Status  string
+	Started string
 }
 
 /*

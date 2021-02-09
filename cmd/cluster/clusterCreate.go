@@ -330,10 +330,10 @@ func NewCmdClusterCreate() *cobra.Command {
 	_ = cfgViper.BindPFlag("registries.config", cmd.Flags().Lookup("registry-config"))
 
 	/* k3s */
-	cmd.Flags().StringArray("k3s-server-arg", nil, "Additional args passed to the `k3s server` command on server nodes (new flag per arg)")
+	cmd.Flags().StringSlice("k3s-server-arg", nil, "Additional args passed to the `k3s server` command on server nodes (new flag per arg)")
 	_ = cfgViper.BindPFlag("options.k3s.extraserverargs", cmd.Flags().Lookup("k3s-server-arg"))
 
-	cmd.Flags().StringArray("k3s-agent-arg", nil, "Additional args passed to the `k3s agent` command on agent nodes (new flag per arg)")
+	cmd.Flags().StringSlice("k3s-agent-arg", nil, "Additional args passed to the `k3s agent` command on agent nodes (new flag per arg)")
 	_ = cfgViper.BindPFlag("options.k3s.extraagentargs", cmd.Flags().Lookup("k3s-agent-arg"))
 
 	/* Subcommands */

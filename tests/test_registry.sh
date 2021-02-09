@@ -15,6 +15,8 @@ if [[ -n "$K3S_IMAGE_TAG" ]]; then
   EXTRA_TITLE="(rancher/k3s:$K3S_IMAGE_TAG)"
 fi
 
+export CURRENT_STAGE="Test | registry | $K3S_IMAGE_TAG"
+
 
 clustername="registrytest"
 
