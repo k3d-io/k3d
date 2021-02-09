@@ -1,5 +1,24 @@
 # Changelog
 
+## v4.2.0
+
+### Features / Enhancements
+
+- add processing step for cluster config, to configure it e.g. for hostnetwork mode (#477, @konradmalik)
+- allow proxying UDP ports via the load balancer (#488, @k0da)
+
+### Fixes
+
+- fix usage of `DOCKER_HOST` env var for Kubeconfig server ref (trim port)
+- fix error when trying to attach the same node (e.g. registry) to the same network twice (#486, @kuritka)
+- fix Kube-API settings in configg file got overwritten (#490, @dtomasi)
+
+### Misc
+
+- add `k3d.version` label to created resources
+- add Pull-Request template
+- docs: add hint on minimal requirements for multi-server clusters (#481, @Filius-Patris)
+
 ## v4.1.1
 
 ### Fixes
