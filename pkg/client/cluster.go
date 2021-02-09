@@ -93,11 +93,7 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 
 	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
 	if !clusterConfig.ClusterCreateOpts.PrepDisableHostIPInjection {
-		if clusterConfig.Cluster.Network.Name != "host" {
-			prepInjectHostIP(ctx, runtime, &clusterConfig.Cluster)
-		} else {
-			log.Infoln("Hostnetwork selected -> Skipping injection of docker host into the cluster")
-		}
+		prepInjectHostIP(ctx, runtime, &clusterConfig.Cluster)
 	}
 
 	// create the registry hosting configmap
@@ -492,55 +488,51 @@ ClusterCreatOpts:
 	 */
 	// *** ServerLoadBalancer ***
 	if !clusterCreateOpts.DisableLoadBalancer {
-		if cluster.Network.Name != "host" { // serverlb not supported in hostnetwork mode due to port collisions with server node
-			// Generate a comma-separated list of server/server names to pass to the LB container
-			servers := ""
-			for _, node := range cluster.Nodes {
-				if node.Role == k3d.ServerRole {
-					if servers == "" {
-						servers = node.Name
-					} else {
-						servers = fmt.Sprintf("%s,%s", servers, node.Name)
-					}
+		// Generate a comma-separated list of server/server names to pass to the LB container
+		servers := ""
+		for _, node := range cluster.Nodes {
+			if node.Role == k3d.ServerRole {
+				if servers == "" {
+					servers = node.Name
+				} else {
+					servers = fmt.Sprintf("%s,%s", servers, node.Name)
 				}
 			}
-
-			// generate comma-separated list of extra ports to forward
-			ports := k3d.DefaultAPIPort
-			for exposedPort := range cluster.ServerLoadBalancer.Ports {
-				ports += "," + exposedPort.Port()
-			}
-
-			if cluster.ServerLoadBalancer.Ports == nil {
-				cluster.ServerLoadBalancer.Ports = nat.PortMap{}
-			}
-			cluster.ServerLoadBalancer.Ports[k3d.DefaultAPIPort] = []nat.PortBinding{cluster.KubeAPI.Binding}
-
-			// Create LB as a modified node with loadbalancerRole
-			lbNode := &k3d.Node{
-				Name:  fmt.Sprintf("%s-%s-serverlb", k3d.DefaultObjectNamePrefix, cluster.Name),
-				Image: fmt.Sprintf("%s:%s", k3d.DefaultLBImageRepo, version.GetHelperImageVersion()),
-				Ports: cluster.ServerLoadBalancer.Ports,
-				Env: []string{
-					fmt.Sprintf("SERVERS=%s", servers),
-					fmt.Sprintf("PORTS=%s", ports),
-					fmt.Sprintf("WORKER_PROCESSES=%d", len(strings.Split(ports, ","))),
-				},
-				Role:     k3d.LoadBalancerRole,
-				Labels:   clusterCreateOpts.GlobalLabels, // TODO: createLoadBalancer: add more expressive labels
-				Networks: []string{cluster.Network.Name},
-				Restart:  true,
-			}
-			cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
-			log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
-			if err := NodeCreate(clusterCreateCtx, runtime, lbNode, k3d.NodeCreateOpts{}); err != nil {
-				log.Errorln("Failed to create loadbalancer")
-				return err
-			}
-			log.Debugf("Created loadbalancer '%s'", lbNode.Name)
-		} else {
-			log.Infoln("Hostnetwork selected -> Skipping creation of server LoadBalancer")
 		}
+
+		// generate comma-separated list of extra ports to forward
+		ports := k3d.DefaultAPIPort
+		for exposedPort := range cluster.ServerLoadBalancer.Ports {
+			ports += "," + exposedPort.Port()
+		}
+
+		if cluster.ServerLoadBalancer.Ports == nil {
+			cluster.ServerLoadBalancer.Ports = nat.PortMap{}
+		}
+		cluster.ServerLoadBalancer.Ports[k3d.DefaultAPIPort] = []nat.PortBinding{cluster.KubeAPI.Binding}
+
+		// Create LB as a modified node with loadbalancerRole
+		lbNode := &k3d.Node{
+			Name:  fmt.Sprintf("%s-%s-serverlb", k3d.DefaultObjectNamePrefix, cluster.Name),
+			Image: fmt.Sprintf("%s:%s", k3d.DefaultLBImageRepo, version.GetHelperImageVersion()),
+			Ports: cluster.ServerLoadBalancer.Ports,
+			Env: []string{
+				fmt.Sprintf("SERVERS=%s", servers),
+				fmt.Sprintf("PORTS=%s", ports),
+				fmt.Sprintf("WORKER_PROCESSES=%d", len(strings.Split(ports, ","))),
+			},
+			Role:     k3d.LoadBalancerRole,
+			Labels:   clusterCreateOpts.GlobalLabels, // TODO: createLoadBalancer: add more expressive labels
+			Networks: []string{cluster.Network.Name},
+			Restart:  true,
+		}
+		cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
+		log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
+		if err := NodeCreate(clusterCreateCtx, runtime, lbNode, k3d.NodeCreateOpts{}); err != nil {
+			log.Errorln("Failed to create loadbalancer")
+			return err
+		}
+		log.Debugf("Created loadbalancer '%s'", lbNode.Name)
 	}
 
 	return nil

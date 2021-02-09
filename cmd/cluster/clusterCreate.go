@@ -134,7 +134,7 @@ func NewCmdClusterCreate() *cobra.Command {
 			log.Debugf("========== Merged Simple Config ==========\n%+v\n==========================\n", cfg)
 
 			/**************************************
-			 * Transform & Validate Configuration *
+			 * Transform, Process & Validate Configuration *
 			 **************************************/
 
 			// Set the name
@@ -146,7 +146,14 @@ func NewCmdClusterCreate() *cobra.Command {
 			if err != nil {
 				log.Fatalln(err)
 			}
-			log.Debugf("===== Cluster Config =====\n%+v\n===== ===== =====\n", clusterConfig)
+			log.Debugf("===== Merged Cluster Config =====\n%+v\n===== ===== =====\n", clusterConfig)
+
+			clusterConfig, err = config.ProcessClusterConfig(*clusterConfig)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			log.Debugf("===== Processed Cluster Config =====\n%+v\n===== ===== =====\n", clusterConfig)
+
 			if err := config.ValidateClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *clusterConfig); err != nil {
 				log.Fatalln("Failed Cluster Configuration Validation: ", err)
 			}
