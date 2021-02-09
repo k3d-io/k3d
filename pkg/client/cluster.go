@@ -501,9 +501,14 @@ ClusterCreatOpts:
 		}
 
 		// generate comma-separated list of extra ports to forward
-		ports := k3d.DefaultAPIPort
+		ports := []string{k3d.DefaultAPIPort}
+		var udp_ports []string
 		for exposedPort := range cluster.ServerLoadBalancer.Ports {
-			ports += "," + exposedPort.Port()
+			if exposedPort.Proto() == "udp" {
+				udp_ports = append(udp_ports, exposedPort.Port())
+				continue
+			}
+			ports = append(ports, exposedPort.Port())
 		}
 
 		if cluster.ServerLoadBalancer.Ports == nil {
@@ -518,13 +523,16 @@ ClusterCreatOpts:
 			Ports: cluster.ServerLoadBalancer.Ports,
 			Env: []string{
 				fmt.Sprintf("SERVERS=%s", servers),
-				fmt.Sprintf("PORTS=%s", ports),
-				fmt.Sprintf("WORKER_PROCESSES=%d", len(strings.Split(ports, ","))),
+				fmt.Sprintf("PORTS=%s", strings.Join(ports, ",")),
+				fmt.Sprintf("WORKER_PROCESSES=%d", len(ports)),
 			},
 			Role:     k3d.LoadBalancerRole,
 			Labels:   clusterCreateOpts.GlobalLabels, // TODO: createLoadBalancer: add more expressive labels
 			Networks: []string{cluster.Network.Name},
 			Restart:  true,
+		}
+		if len(udp_ports) > 0 {
+			lbNode.Env = append(lbNode.Env, fmt.Sprintf("UDP_PORTS=%s", strings.Join(udp_ports, ",")))
 		}
 		cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
 		log.Infof("Creating LoadBalancer '%s'", lbNode.Name)

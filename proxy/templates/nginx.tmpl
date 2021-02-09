@@ -1,5 +1,6 @@
 {{- $servers := split (getenv "SERVERS") "," -}}
 {{- $ports := split (getenv "PORTS") "," -}}
+{{- $udp_ports := split (getenv "UDP_PORTS") "," -}}
 error_log stderr notice;
 
 worker_processes auto;
@@ -23,5 +24,21 @@ stream {
     proxy_timeout 600;
     proxy_connect_timeout 2s;
   }
+  {{- end }}
+  {{- range $port := $udp_ports }}
+  {{- if $port }}
+  upstream server_nodes_{{ $port }} {
+    {{- range $server := $servers }}
+    server {{ $server }}:{{ $port }} max_fails=1 fail_timeout=10s;
+    {{- end }}
+  }
+
+  server {
+    listen        {{ $port }} udp;
+    proxy_pass    server_nodes_{{ $port }};
+    proxy_timeout 600;
+    proxy_connect_timeout 2s;
+  }
+  {{- end }}
   {{- end }}
 }
