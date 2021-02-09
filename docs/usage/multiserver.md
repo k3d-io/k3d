@@ -2,6 +2,7 @@
 
 !!! info "Important note"
     For the best results (and less unexpected issues), choose 1, 3, 5, ... server nodes.
+	At least 2 cores and 4GiB of RAM are recommended.
 
 ## Embedded dqlite
 
