@@ -200,6 +200,12 @@ var JSONSchema = `{
           "properties": {
             "gpuRequest": {
               "type": "string"
+            },
+            "serversMemory": {
+              "type": "string"
+            },
+            "agentsMemory": {
+              "type": "string"
             }
           }
         }

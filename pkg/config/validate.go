@@ -63,6 +63,11 @@ func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config
 		return fmt.Errorf("The API Port can not be changed when using 'host' network")
 	}
 
+	// memory limits must have proper format
+	if !util.ValidateMemoryLimit(config.ClusterCreateOpts.ServersMemory) || !util.ValidateMemoryLimit(config.ClusterCreateOpts.AgentsMemory) {
+		return fmt.Errorf("Specified memory limits are invalid. Make sure they follow docker format and units [b,k,m,g]")
+	}
+
 	// validate nodes one by one
 	for _, node := range config.Cluster.Nodes {
 
