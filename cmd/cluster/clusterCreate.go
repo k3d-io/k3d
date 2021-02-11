@@ -317,10 +317,10 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().String("gpus", "", "GPU devices to add to the cluster node containers ('all' to pass all GPUs) [From docker]")
 	_ = cfgViper.BindPFlag("options.runtime.gpurequest", cmd.Flags().Lookup("gpus"))
 
-	cmd.Flags().String("servers-memory", "", "Memory limit imposed on the server nodes. Units like in docker [b,k,m,g]")
+	cmd.Flags().String("servers-memory", "", "Memory limit imposed on the server nodes [From docker]")
 	_ = cfgViper.BindPFlag("options.runtime.serversmemory", cmd.Flags().Lookup("servers-memory"))
 
-	cmd.Flags().String("agents-memory", "", "Memory limit imposed on the agents nodes. Units like in docker [b,k,m,g]")
+	cmd.Flags().String("agents-memory", "", "Memory limit imposed on the agents nodes [From docker]")
 	_ = cfgViper.BindPFlag("options.runtime.agentsmemory", cmd.Flags().Lookup("agents-memory"))
 
 	/* Image Importing */

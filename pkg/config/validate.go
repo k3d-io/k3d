@@ -34,6 +34,7 @@ import (
 
 	"fmt"
 
+	dockerunits "github.com/docker/go-units"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -64,8 +65,10 @@ func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config
 	}
 
 	// memory limits must have proper format
-	if !util.ValidateMemoryLimit(config.ClusterCreateOpts.ServersMemory) || !util.ValidateMemoryLimit(config.ClusterCreateOpts.AgentsMemory) {
-		return fmt.Errorf("Specified memory limits are invalid. Make sure they follow docker format and units [b,k,m,g]")
+	_, errServers := dockerunits.RAMInBytes(config.ClusterCreateOpts.ServersMemory)
+	_, errAgents := dockerunits.RAMInBytes(config.ClusterCreateOpts.AgentsMemory)
+	if errServers != nil || errAgents != nil {
+		log.Errorf("Provided memory limit value is invalid")
 	}
 
 	// validate nodes one by one

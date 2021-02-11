@@ -16,6 +16,7 @@ require (
 	github.com/docker/cli v20.10.0+incompatible
 	github.com/docker/docker v20.10.0+incompatible
 	github.com/docker/go-connections v0.4.0
+	github.com/docker/go-units v0.4.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-test/deep v1.0.4
 	github.com/gogo/googleapis v1.4.0 // indirect
