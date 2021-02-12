@@ -40,17 +40,26 @@ func meminfoContent(totalKB int64) string {
 	return strings.Join(lines, "\n")
 }
 
-// FakeMeminfo creates a fake meminfo file to be mounted and provide a specific RAM capacity.
-// This file is created on a per specific container basis, container id ensures that.
-// Returns a path to the file
-func FakeMeminfo(memoryBytes int64, containerID string) (string, error) {
+// GetFakeMeminfoPathForName returns a path to (existent or not) fake meminfo file for a given node/container name
+func GetFakeMeminfoPathForName(uniqueName string) (string, error) {
 	// this file needs to be kept across reboots, keep it in ~/.k3d
 	configdir, err := GetConfigDirOrCreate()
 	if err != nil {
 		return "", err
 	}
-	fakeMeminfoFilename := fmt.Sprintf(".meminfo-%s", containerID)
-	fakememinfo, err := os.Create(path.Join(configdir, fakeMeminfoFilename))
+	fakeMeminfoFilename := fmt.Sprintf(".meminfo-%s", uniqueName)
+	return path.Join(configdir, fakeMeminfoFilename), nil
+}
+
+// MakeFakeMeminfo creates a fake meminfo file to be mounted and provide a specific RAM capacity.
+// This file is created on a per specific container/node basis, uniqueName must ensure that.
+// Returns a path to the file
+func MakeFakeMeminfo(memoryBytes int64, uniqueName string) (string, error) {
+	fakeMeminfoPath, err := GetFakeMeminfoPathForName(uniqueName)
+	if err != nil {
+		return "", err
+	}
+	fakememinfo, err := os.Create(fakeMeminfoPath)
 	defer fakememinfo.Close()
 	if err != nil {
 		return "", err

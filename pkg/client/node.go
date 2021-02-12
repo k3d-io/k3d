@@ -26,13 +26,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"time"
 
+	dockerunits "github.com/docker/go-units"
 	"github.com/imdario/mergo"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
@@ -329,6 +332,20 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 		}
 	}
 
+	// memory limits
+	if node.Memory != "" {
+		memory, err := dockerunits.RAMInBytes(node.Memory)
+		if err != nil {
+			return fmt.Errorf("Invalid memory limit format: %+v", err)
+		}
+		// mount fake meminfo as readonly
+		fakemempath, err := util.MakeFakeMeminfo(memory, node.Name)
+		if err != nil {
+			return fmt.Errorf("Failed to create fake meminfo: %+v", err)
+		}
+		node.Volumes = append(node.Volumes, fmt.Sprintf("%s:/proc/meminfo:ro", fakemempath))
+	}
+
 	/*
 	 * CREATION
 	 */
@@ -344,6 +361,17 @@ func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, o
 	// delete node
 	if err := runtime.DeleteNode(ctx, node); err != nil {
 		log.Error(err)
+	}
+
+	// delete fake meminfo
+	if node.Memory != "" {
+		log.Debug("Cleaning memfile from k3d config dir for this node...")
+		filepath, err := util.GetFakeMeminfoPathForName(node.Name)
+		err = os.Remove(filepath)
+		if err != nil {
+			// this err prob should not be fatal, just log it
+			log.Errorf("Could not remove fake meminfo file for node %s: %+v", node.Name, err)
+		}
 	}
 
 	// update the server loadbalancer

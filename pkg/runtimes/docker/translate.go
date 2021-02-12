@@ -87,6 +87,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	}
 
 	// memory limits
+	// fake meminfo is mounted to hostConfig.Binds
 	if node.Memory != "" {
 		memory, err := dockerunits.RAMInBytes(node.Memory)
 		if err != nil {
@@ -245,6 +246,10 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 
 	// memory limit
 	memoryStr := dockerunits.HumanSize(float64(containerDetails.HostConfig.Memory))
+	// no-limit is returned as 0B, filter this out
+	if memoryStr == "0B" {
+		memoryStr = ""
+	}
 
 	node := &k3d.Node{
 		Name:       strings.TrimPrefix(containerDetails.Name, "/"), // container name with leading '/' cut off
