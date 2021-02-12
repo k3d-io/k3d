@@ -65,10 +65,18 @@ func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config
 	}
 
 	// memory limits must have proper format
-	_, errServers := dockerunits.RAMInBytes(config.ClusterCreateOpts.ServersMemory)
-	_, errAgents := dockerunits.RAMInBytes(config.ClusterCreateOpts.AgentsMemory)
-	if errServers != nil || errAgents != nil {
-		log.Errorf("Provided memory limit value is invalid")
+	// if empty we don't care about errors in parsing
+	if config.ClusterCreateOpts.ServersMemory != "" {
+		if _, err := dockerunits.RAMInBytes(config.ClusterCreateOpts.ServersMemory); err != nil {
+			log.Errorf("Provided servers memory limit value is invalid")
+		}
+
+	}
+
+	if config.ClusterCreateOpts.AgentsMemory != "" {
+		if _, err := dockerunits.RAMInBytes(config.ClusterCreateOpts.AgentsMemory); err != nil {
+			log.Errorf("Provided agents memory limit value is invalid")
+		}
 	}
 
 	// validate nodes one by one
