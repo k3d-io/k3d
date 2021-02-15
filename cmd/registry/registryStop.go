@@ -21,9 +21,79 @@ THE SOFTWARE.
 */
 package registry
 
-import "github.com/spf13/cobra"
+import (
+	log "github.com/sirupsen/logrus"
+
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
+
+	"github.com/rancher/k3d/v4/pkg/client"
+
+	"github.com/spf13/cobra"
+)
+
+type regStopFlags struct {
+	All bool
+}
 
 // NewCmdRegistryStop creates a new cobra command
 func NewCmdRegistryStop() *cobra.Command {
-	return &cobra.Command{}
+	flags := &regStopFlags{}
+
+	// create new command
+	cmd := &cobra.Command{
+		Use:   "stop (NAME | --all)",
+		Short: "Stop a registry/registries",
+		Long:  `Stop a registry/registries`,
+		Args:  cobra.MaximumNArgs(1), // maximum one name accepted
+		Run: func(cmd *cobra.Command, args []string) {
+			nodes := parseRegistryStopCmd(cmd, args, flags)
+			if len(nodes) == 0 {
+				log.Infoln("No registries found")
+			} else {
+				for _, node := range nodes {
+					err := client.RegistryStop(cmd.Context(), runtimes.SelectedRuntime, node)
+					if err != nil {
+						log.Fatalln(err)
+					}
+				}
+			}
+		},
+	}
+
+	// add flags
+	cmd.Flags().BoolVarP(&flags.All, "all", "a", false, "Stop all running registries")
+
+	// done
+	return cmd
+}
+
+// parseRegistryStopCmd parses the command input into variables required to stop nodes
+func parseRegistryStopCmd(cmd *cobra.Command, args []string, flags *regStopFlags) []*k3d.Node {
+
+	var nodes []*k3d.Node
+	var err error
+
+	if flags.All {
+		nodes, err = client.NodeList(cmd.Context(), runtimes.SelectedRuntime)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
+	if !flags.All && len(args) < 1 {
+		log.Fatalln("Expecting at least one registry name if `--all` is not set")
+	}
+
+	for _, name := range args {
+		node, err := client.NodeGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Node{Name: name, State: k3d.NodeState{Running: true}})
+		if err != nil {
+			log.Fatalln(err)
+		}
+		nodes = append(nodes, node)
+	}
+
+	nodes = client.NodeFilterByRoles(nodes, []k3d.Role{k3d.RegistryRole}, []k3d.Role{})
+
+	return nodes
 }
