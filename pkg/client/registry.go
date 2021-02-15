@@ -70,9 +70,17 @@ func RegistryStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node
 	log.Debugf("Registry started: %+v", node.Name)
 	return nil
 }
+
+// RegistryStop stops a running registry node
+func RegistryStop(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) error {
+
+	log.Infof("Stopping Registry: %+v", node.Name)
+
+	if err := NodeStop(ctx, runtime, node); err != nil {
+		return fmt.Errorf("Failed to stop registry: %+v", err)
 	}
 
-	return regNode, err
+	return nil
 }
 
 // RegistryCreate creates a registry node

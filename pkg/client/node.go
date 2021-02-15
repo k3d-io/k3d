@@ -290,6 +290,26 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 	return nil
 }
 
+// NodeStop stops a running node
+func NodeStop(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) error {
+
+	// return early if the node is not running
+	if !node.State.Running {
+		log.Tracef("Node %s is not running", node.Name)
+		return nil
+	}
+
+	// stop the node
+	log.Tracef("Stopping node '%s'", node.Name)
+
+	if err := runtime.StopNode(ctx, node); err != nil {
+		log.Errorf("Failed to stop node '%s'", node.Name)
+		return err
+	}
+
+	return nil
+}
+
 // NodeCreate creates a new containerized k3s node
 func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, createNodeOpts k3d.NodeCreateOpts) error {
 	log.Tracef("Creating node from spec\n%+v", node)
