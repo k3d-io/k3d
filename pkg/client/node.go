@@ -363,14 +363,14 @@ func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, o
 		log.Error(err)
 	}
 
-	// delete fake meminfo
+	// delete fake folder created for limits
 	if node.Memory != "" {
-		log.Debug("Cleaning memfile from k3d config dir for this node...")
-		filepath, err := util.GetFakeMeminfoPathForName(node.Name)
-		err = os.Remove(filepath)
+		log.Debug("Cleaning fake files folder from k3d config dir for this node...")
+		filepath, err := util.GetNodeFakerDirOrCreate(node.Name)
+		err = os.RemoveAll(filepath)
 		if err != nil {
 			// this err prob should not be fatal, just log it
-			log.Errorf("Could not remove fake meminfo file for node %s: %+v", node.Name, err)
+			log.Errorf("Could not remove fake files folder for node %s: %+v", node.Name, err)
 		}
 	}
 

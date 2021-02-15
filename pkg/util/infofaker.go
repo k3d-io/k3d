@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	dockerunits "github.com/docker/go-units"
+	log "github.com/sirupsen/logrus"
 )
 
 // creates a mininal fake meminfo with fields required by cadvisor (see machine.go in cadvisor)
@@ -40,15 +41,34 @@ func meminfoContent(totalKB int64) string {
 	return strings.Join(lines, "\n")
 }
 
-// GetFakeMeminfoPathForName returns a path to (existent or not) fake meminfo file for a given node/container name
-func GetFakeMeminfoPathForName(uniqueName string) (string, error) {
-	// this file needs to be kept across reboots, keep it in ~/.k3d
+// GetNodeFakerDirOrCreate creates or gets a hidden folder in k3d home dir
+// to keep container(node)-specific fake files in it
+func GetNodeFakerDirOrCreate(name string) (string, error) {
+	// this folder needs to be kept across reboots, keep it in ~/.k3d
 	configdir, err := GetConfigDirOrCreate()
 	if err != nil {
 		return "", err
 	}
-	fakeMeminfoFilename := fmt.Sprintf(".meminfo-%s", uniqueName)
-	return path.Join(configdir, fakeMeminfoFilename), nil
+	fakeDir := path.Join(configdir, fmt.Sprintf(".%s", name))
+
+	// create directories if necessary
+	if err := createDirIfNotExists(fakeDir); err != nil {
+		log.Errorf("Failed to create fake files path '%s'", fakeDir)
+		return "", err
+	}
+
+	return fakeDir, nil
+
+}
+
+// GetFakeMeminfoPathForName returns a path to (existent or not) fake meminfo file for a given node/container name
+func GetFakeMeminfoPathForName(uniqueName string) (string, error) {
+	// this file needs to be kept across reboots, keep it in ~/.k3d
+	dir, err := GetNodeFakerDirOrCreate(uniqueName)
+	if err != nil {
+		return "", err
+	}
+	return path.Join(dir, "meminfo"), nil
 }
 
 // MakeFakeMeminfo creates a fake meminfo file to be mounted and provide a specific RAM capacity.
