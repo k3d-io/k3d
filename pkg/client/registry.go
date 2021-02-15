@@ -43,8 +43,21 @@ func RegistryRun(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registr
 		return nil, fmt.Errorf("Failed to create registry: %+v", err)
 	}
 
-	if err := NodeStart(ctx, runtime, regNode, k3d.NodeStartOpts{}); err != nil {
-		return nil, fmt.Errorf("Failed to start registry: %+v", err)
+// RegistryStart starts an existing registry node
+func RegistryStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) error {
+	var err error
+
+	log.Infof("Starting Registry: %+v", node.Name)
+
+	if err = NodeStart(ctx, runtime, node, k3d.NodeStartOpts{
+		Wait: true,
+	}); err != nil {
+		return fmt.Errorf("Failed to start registry: %+v", err)
+	}
+
+	log.Debugf("Registry started: %+v", node.Name)
+	return nil
+}
 	}
 
 	return regNode, err
