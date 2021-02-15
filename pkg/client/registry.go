@@ -37,11 +37,23 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// RegistryRun creates and starts a new registry
 func RegistryRun(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registry) (*k3d.Node, error) {
-	regNode, err := RegistryCreate(ctx, runtime, reg)
+	var regNode *k3d.Node
+	var err error
+
+	regNode, err = RegistryCreate(ctx, runtime, reg)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create registry: %+v", err)
 	}
+
+	err = RegistryStart(ctx, runtime, regNode)
+	if err != nil {
+		return nil, err
+	}
+
+	return regNode, nil
+}
 
 // RegistryStart starts an existing registry node
 func RegistryStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) error {
