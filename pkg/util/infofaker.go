@@ -63,12 +63,7 @@ func GetNodeFakerDirOrCreate(name string) (string, error) {
 
 // GetFakeMeminfoPathForName returns a path to (existent or not) fake meminfo file for a given node/container name
 func GetFakeMeminfoPathForName(uniqueName string) (string, error) {
-	// this file needs to be kept across reboots, keep it in ~/.k3d
-	dir, err := GetNodeFakerDirOrCreate(uniqueName)
-	if err != nil {
-		return "", err
-	}
-	return path.Join(dir, "meminfo"), nil
+	return fakeInfoPathForName("meminfo", uniqueName)
 }
 
 // MakeFakeMeminfo creates a fake meminfo file to be mounted and provide a specific RAM capacity.
@@ -94,4 +89,14 @@ func MakeFakeMeminfo(memoryBytes int64, uniqueName string) (string, error) {
 	}
 
 	return fakememinfo.Name(), nil
+}
+
+// returns a path to (existent or not) fake (mem or cpu)info file for a given node/container name
+func fakeInfoPathForName(infoType string, uniqueName string) (string, error) {
+	// this file needs to be kept across reboots, keep it in ~/.k3d
+	dir, err := GetNodeFakerDirOrCreate(uniqueName)
+	if err != nil {
+		return "", err
+	}
+	return path.Join(dir, infoType), nil
 }
