@@ -176,3 +176,51 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 	return &containers[0], nil
 
 }
+
+// TODO just a template to work with
+func executeCheckInContainer(cmd string) (int64, error) {
+	//[ -d \"/sys/devices/system/edac\" ] && exit 0 || exit 1
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+
+	reader, err := cli.ImagePull(ctx, "docker.io/library/alpine", types.ImagePullOptions{})
+	if err != nil {
+		panic(err)
+	}
+	io.Copy(os.Stdout, reader)
+
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Image: "alpine",
+		Cmd:   []string{"sh", "-c", "[ -d \"/sys/devices/system/edac\" ] && exit 0 || exit 1"},
+		Tty:   false,
+	}, nil, nil, nil, "")
+	if err != nil {
+		panic(err)
+	}
+
+	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		panic(err)
+	}
+
+	exitCode := -1
+	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			panic(err)
+		}
+	case status := <-statusCh:
+		fmt.Printf("status was %d\n", status.StatusCode)
+		exitCode = int(status.StatusCode)
+	}
+
+	err = cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{Force: true})
+	if err != nil {
+		panic(err)
+	}
+
+	return int64(exitCode), nil
+}
