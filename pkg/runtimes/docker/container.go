@@ -177,50 +177,58 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 
 }
 
-// TODO just a template to work with
-func executeCheckInContainer(cmd string) (int64, error) {
-	//[ -d \"/sys/devices/system/edac\" ] && exit 0 || exit 1
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+// executes an arbitrary command in a container while returning its exit code.
+// useful to check something in docker env
+func executeCheckInContainer(ctx context.Context, image string, cmd []string) (int64, error) {
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		log.Errorln("Failed to create docker client")
+		return -1, err
+	}
+	defer docker.Close()
+
+	if err = pullImage(ctx, docker, image); err != nil {
+		return -1, err
 	}
 
-	reader, err := cli.ImagePull(ctx, "docker.io/library/alpine", types.ImagePullOptions{})
-	if err != nil {
-		panic(err)
-	}
-	io.Copy(os.Stdout, reader)
-
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: "alpine",
-		Cmd:   []string{"sh", "-c", "[ -d \"/sys/devices/system/edac\" ] && exit 0 || exit 1"},
+	resp, err := docker.ContainerCreate(ctx, &container.Config{
+		Image: image,
+		Cmd:   cmd,
 		Tty:   false,
 	}, nil, nil, nil, "")
 	if err != nil {
-		panic(err)
+		log.Errorln("Failed to create container from image %s with cmd %s", image, cmd)
+		return -1, err
 	}
 
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		panic(err)
+	if err = startContainer(ctx, resp.ID); err != nil {
+		return -1, err
 	}
 
 	exitCode := -1
-	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	statusCh, errCh := docker.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
-			panic(err)
+			log.Errorln("Error while waiting for container %s to exit", resp.ID)
+			return -1, err
 		}
 	case status := <-statusCh:
-		fmt.Printf("status was %d\n", status.StatusCode)
 		exitCode = int(status.StatusCode)
 	}
 
-	err = cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{Force: true})
-	if err != nil {
-		panic(err)
+	if err = removeContainer(ctx, resp.ID); err != nil {
+		return -1, err
 	}
 
 	return int64(exitCode), nil
+}
+
+// CheckIfDirectoryExists checks for the existence of a given path inside the docker environment
+func CheckIfDirectoryExists(ctx context.Context, image string, dir string) (bool, error) {
+	shellCmd := fmt.Sprintf("[ -d \"%s\" ] && exit 0 || exit 1", dir)
+	cmd := []string{"sh", "-c", shellCmd}
+	exitCode, err := executeCheckInContainer(ctx, image, cmd)
+	return exitCode == 0, err
+
 }
