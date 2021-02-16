@@ -34,6 +34,7 @@ import (
 	dockerunits "github.com/docker/go-units"
 	"github.com/imdario/mergo"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/pkg/util"
 	log "github.com/sirupsen/logrus"
@@ -344,6 +345,20 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 			return fmt.Errorf("Failed to create fake meminfo: %+v", err)
 		}
 		node.Volumes = append(node.Volumes, fmt.Sprintf("%s:/proc/meminfo:ro", fakemempath))
+		// mount empty edac folder, but only if it exists
+		exists, err := docker.CheckIfDirectoryExists(ctx, node.Image, "/sys/devices/system/edac")
+		if err != nil {
+			return fmt.Errorf("Failed to check for the existence of edac folder: %+v", err)
+		}
+		if exists {
+			log.Debugln("Found edac folder")
+			fakeedacpath, err := util.MakeFakeEdac(node.Name)
+			if err != nil {
+				return fmt.Errorf("Failed to create fake edac: %+v", err)
+			}
+			node.Volumes = append(node.Volumes, fmt.Sprintf("%s:/sys/devices/system/edac:ro", fakeedacpath))
+		}
+
 	}
 
 	/*

@@ -91,6 +91,23 @@ func MakeFakeMeminfo(memoryBytes int64, uniqueName string) (string, error) {
 	return fakememinfo.Name(), nil
 }
 
+// MakeFakeEdac creates an empty edac folder to force cadvisor
+// to use meminfo even for ECC memory
+func MakeFakeEdac(uniqueName string) (string, error) {
+	dir, err := GetNodeFakerDirOrCreate(uniqueName)
+	if err != nil {
+		return "", err
+	}
+	edacPath := path.Join(dir, "edac")
+	// create directories if necessary
+	if err := createDirIfNotExists(edacPath); err != nil {
+		log.Errorf("Failed to create fake edac path '%s'", edacPath)
+		return "", err
+	}
+
+	return edacPath, nil
+}
+
 // returns a path to (existent or not) fake (mem or cpu)info file for a given node/container name
 func fakeInfoPathForName(infoType string, uniqueName string) (string, error) {
 	// this file needs to be kept across reboots, keep it in ~/.k3d

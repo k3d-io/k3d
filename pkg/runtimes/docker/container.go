@@ -192,12 +192,13 @@ func executeCheckInContainer(ctx context.Context, image string, cmd []string) (i
 	}
 
 	resp, err := docker.ContainerCreate(ctx, &container.Config{
-		Image: image,
-		Cmd:   cmd,
-		Tty:   false,
+		Image:      image,
+		Cmd:        cmd,
+		Tty:        false,
+		Entrypoint: []string{},
 	}, nil, nil, nil, "")
 	if err != nil {
-		log.Errorln("Failed to create container from image %s with cmd %s", image, cmd)
+		log.Errorf("Failed to create container from image %s with cmd %s", image, cmd)
 		return -1, err
 	}
 
@@ -210,7 +211,7 @@ func executeCheckInContainer(ctx context.Context, image string, cmd []string) (i
 	select {
 	case err := <-errCh:
 		if err != nil {
-			log.Errorln("Error while waiting for container %s to exit", resp.ID)
+			log.Errorf("Error while waiting for container %s to exit", resp.ID)
 			return -1, err
 		}
 	case status := <-statusCh:
@@ -226,9 +227,11 @@ func executeCheckInContainer(ctx context.Context, image string, cmd []string) (i
 
 // CheckIfDirectoryExists checks for the existence of a given path inside the docker environment
 func CheckIfDirectoryExists(ctx context.Context, image string, dir string) (bool, error) {
+	log.Tracef("checking if dir %s exists in docker environment...", dir)
 	shellCmd := fmt.Sprintf("[ -d \"%s\" ] && exit 0 || exit 1", dir)
 	cmd := []string{"sh", "-c", shellCmd}
 	exitCode, err := executeCheckInContainer(ctx, image, cmd)
+	log.Tracef("check dir container returned %d exist code", exitCode)
 	return exitCode == 0, err
 
 }
