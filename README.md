@@ -9,7 +9,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d?style=flat-square)](https://goreportcard.com/report/github.com/rancher/k3d)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-11-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-12-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
@@ -133,6 +133,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://inerciatech.com/"><img src="https://avatars2.githubusercontent.com/u/1841612?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alvaro</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=inercia" title="Code">💻</a> <a href="#ideas-inercia" title="Ideas, Planning, & Feedback">🤔</a> <a href="#plugin-inercia" title="Plugin/utility libraries">🔌</a></td>
     <td align="center"><a href="http://wsl.dev"><img src="https://avatars2.githubusercontent.com/u/905874?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Nuno do Carmo</b></sub></a><br /><a href="#content-nunix" title="Content">🖋</a> <a href="#tutorial-nunix" title="Tutorials">✅</a> <a href="#question-nunix" title="Answering Questions">💬</a></td>
     <td align="center"><a href="https://github.com/erwinkersten"><img src="https://avatars0.githubusercontent.com/u/4391121?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Erwin Kersten</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=erwinkersten" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://www.alexsears.com"><img src="https://avatars.githubusercontent.com/u/3712883?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alex Sears</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=searsaw" title="Documentation">📖</a></td>
   </tr>
 </table>
 

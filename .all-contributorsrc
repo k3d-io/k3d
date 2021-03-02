@@ -112,6 +112,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "searsaw",
+      "name": "Alex Sears",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3712883?v=4",
+      "profile": "http://www.alexsears.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
