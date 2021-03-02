@@ -56,7 +56,7 @@ func NewCmdClusterStop() *cobra.Command {
 	}
 
 	// add flags
-	cmd.Flags().BoolP("all", "a", false, "Start all existing clusters")
+	cmd.Flags().BoolP("all", "a", false, "Stop all existing clusters")
 
 	// add subcommands
 
