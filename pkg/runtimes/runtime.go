@@ -29,9 +29,9 @@ import (
 	"net"
 	"time"
 
-	"github.com/rancher/k3d/v3/pkg/runtimes/containerd"
-	"github.com/rancher/k3d/v3/pkg/runtimes/docker"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/runtimes/containerd"
+	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
 
 // SelectedRuntime is a runtime (pun intended) variable determining the selected runtime
@@ -51,14 +51,18 @@ var Runtimes = map[string]Runtime{
 
 // Runtime defines an interface that can be implemented for various container runtime environments (docker, containerd, etc.)
 type Runtime interface {
+	ID() string
+	GetHost() string
 	CreateNode(context.Context, *k3d.Node) error
 	DeleteNode(context.Context, *k3d.Node) error
 	GetNodesByLabel(context.Context, map[string]string) ([]*k3d.Node, error)
 	GetNode(context.Context, *k3d.Node) (*k3d.Node, error)
+	GetNodeStatus(context.Context, *k3d.Node) (bool, string, error)
+	GetNodesInNetwork(context.Context, string) ([]*k3d.Node, error)
 	CreateNetworkIfNotPresent(context.Context, string) (string, bool, error) // @return NETWORK_NAME, EXISTS, ERROR
 	GetKubeconfig(context.Context, *k3d.Node) (io.ReadCloser, error)
 	DeleteNetwork(context.Context, string) error
-	StartNode(context.Context, *k3d.Node) error
+	StartNode(context.Context, *k3d.Node) error // starts an existing container
 	StopNode(context.Context, *k3d.Node) error
 	CreateVolume(context.Context, string, map[string]string) error
 	DeleteVolume(context.Context, string) error
@@ -68,8 +72,11 @@ type Runtime interface {
 	ExecInNodeGetLogs(context.Context, *k3d.Node, []string) (*bufio.Reader, error)
 	GetNodeLogs(context.Context, *k3d.Node, time.Time) (io.ReadCloser, error)
 	GetImages(context.Context) ([]string, error)
-	CopyToNode(context.Context, string, string, *k3d.Node) error
+	CopyToNode(context.Context, string, string, *k3d.Node) error  // @param context, source, destination, node
+	WriteToNode(context.Context, []byte, string, *k3d.Node) error // @param context, content, destination, node
 	GetHostIP(context.Context, string) (net.IP, error)
+	ConnectNodeToNetwork(context.Context, *k3d.Node, string) error      // @param context, node, network name
+	DisconnectNodeFromNetwork(context.Context, *k3d.Node, string) error // @param context, node, network name
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it

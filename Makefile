@@ -16,6 +16,11 @@ export GO111MODULE=on
 ########## Tags ##########
 
 # get git tag
+ifneq ($(GIT_TAG_OVERRIDE),)
+$(info GIT_TAG set from env override!)
+GIT_TAG := $(GIT_TAG_OVERRIDE)
+endif
+
 GIT_TAG   ?= $(shell git describe --tags)
 ifeq ($(GIT_TAG),)
 GIT_TAG   := $(shell git describe --always)
@@ -41,14 +46,17 @@ REC_DIRS := cmd
 
 ########## Test Settings ##########
 E2E_LOG_LEVEL ?= WARN
-E2E_SKIP ?=
+E2E_INCLUDE ?=
+E2E_EXCLUDE ?=
 E2E_EXTRA ?=
 E2E_RUNNER_START_TIMEOUT ?= 10
+E2E_HELPER_IMAGE_TAG ?=
 
 ########## Go Build Options ##########
 # Build targets
 TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 windows/amd64
 TARGET_OBJS ?= darwin-amd64.tar.gz darwin-amd64.tar.gz.sha256 linux-amd64.tar.gz linux-amd64.tar.gz.sha256 linux-386.tar.gz linux-386.tar.gz.sha256 linux-arm.tar.gz linux-arm.tar.gz.sha256 linux-arm64.tar.gz linux-arm64.tar.gz.sha256 windows-amd64.zip windows-amd64.zip.sha256
+K3D_HELPER_VERSION ?=
 
 # Go options
 GO        ?= go
@@ -56,11 +64,17 @@ PKG       := $(shell go mod vendor)
 TAGS      :=
 TESTS     := ./...
 TESTFLAGS :=
-LDFLAGS   := -w -s -X github.com/rancher/k3d/v3/version.Version=${GIT_TAG} -X github.com/rancher/k3d/v3/version.K3sVersion=${K3S_TAG}
+LDFLAGS   := -w -s -X github.com/rancher/k3d/v4/version.Version=${GIT_TAG} -X github.com/rancher/k3d/v4/version.K3sVersion=${K3S_TAG}
 GCFLAGS   := 
 GOFLAGS   :=
 BINDIR    := $(CURDIR)/bin
 BINARIES  := k3d
+
+# Set version of the k3d helper images for build
+ifneq ($(K3D_HELPER_VERSION),)
+$(info [INFO] Helper Image version set to ${K3D_HELPER_VERSION})
+LDFLAGS += -X github.com/rancher/k3d/v4/version.HelperVersionOverride=${K3D_HELPER_VERSION}
+endif
 
 # Rules for finding all go source files using 'DIRS' and 'REC_DIRS'
 GO_SRC := $(foreach dir,$(DIRS),$(wildcard $(dir)/*.go))
@@ -69,7 +83,7 @@ GO_SRC += $(foreach dir,$(REC_DIRS),$(shell find $(dir) -name "*.go"))
 ########## Required Tools ##########
 # Go Package required
 PKG_GOX := github.com/mitchellh/gox@v1.0.1
-PKG_GOLANGCI_LINT_VERSION := 1.28.3
+PKG_GOLANGCI_LINT_VERSION := 1.31.0
 PKG_GOLANGCI_LINT_SCRIPT := https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
 PKG_GOLANGCI_LINT := github.com/golangci/golangci-lint/cmd/golangci-lint@v${PKG_GOLANGCI_LINT_VERSION}
 
@@ -88,7 +102,7 @@ LINT_DIRS := $(DIRS) $(foreach dir,$(REC_DIRS),$(dir)/...)
 
 .PHONY: all build build-cross clean fmt check-fmt lint check extra-clean install-tools
 
-all: clean fmt check build
+all: clean fmt check test build
 
 ############################
 ########## Builds ##########
@@ -110,14 +124,14 @@ build-cross:
 # build a specific docker target ( '%' matches the target as specified in the Dockerfile)
 build-docker-%:
 	@echo "Building Docker image k3d:$(K3D_IMAGE_TAG)-$*"
-	docker build . -t k3d:$(K3D_IMAGE_TAG)-$* --target $*
+	DOCKER_BUILDKIT=1 docker build . -t k3d:$(K3D_IMAGE_TAG)-$* --target $*
 
 # build helper images
 build-helper-images:
 	@echo "Building docker image rancher/k3d-proxy:$(GIT_TAG)"
-	docker build proxy/ -f proxy/Dockerfile -t rancher/k3d-proxy:$(GIT_TAG)
+	DOCKER_BUILDKIT=1 docker build proxy/ -f proxy/Dockerfile -t rancher/k3d-proxy:$(GIT_TAG)
 	@echo "Building docker image rancher/k3d-tools:$(GIT_TAG)"
-	docker build --no-cache tools/ -f tools/Dockerfile -t rancher/k3d-tools:$(GIT_TAG) --build-arg GIT_TAG=$(GIT_TAG)
+	DOCKER_BUILDKIT=1 docker build --no-cache tools/ -f tools/Dockerfile -t rancher/k3d-tools:$(GIT_TAG) --build-arg GIT_TAG=$(GIT_TAG)
 
 ##############################
 ########## Cleaning ##########
@@ -156,7 +170,7 @@ test:
 
 e2e: build-docker-dind
 	@echo "Running e2e tests in k3d:$(K3D_IMAGE_TAG)"
-	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_SKIP="$(E2E_SKIP)" E2E_EXTRA="$(E2E_EXTRA)" E2E_RUNNER_START_TIMEOUT=$(E2E_RUNNER_START_TIMEOUT) tests/dind.sh "${K3D_IMAGE_TAG}-dind"
+	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_INCLUDE="$(E2E_INCLUDE)" E2E_EXCLUDE="$(E2E_EXCLUDE)" E2E_EXTRA="$(E2E_EXTRA)" E2E_RUNNER_START_TIMEOUT=$(E2E_RUNNER_START_TIMEOUT) E2E_HELPER_IMAGE_TAG="$(E2E_HELPER_IMAGE_TAG)" tests/dind.sh "${K3D_IMAGE_TAG}-dind"
 
 ci-tests: fmt check e2e
 

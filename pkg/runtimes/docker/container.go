@@ -33,20 +33,20 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
 // createContainer creates a new docker container from translated specs
-func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string) error {
+func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string) (string, error) {
 
 	log.Tracef("Creating docker container with translated config\n%+v\n", dockerNode)
 
 	// initialize docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
-		return err
+		return "", err
 	}
 	defer docker.Close()
 
@@ -58,31 +58,37 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 			if client.IsErrNotFound(err) {
 				if err := pullImage(ctx, docker, dockerNode.ContainerConfig.Image); err != nil {
 					log.Errorf("Failed to create container '%s'", name)
-					return err
+					return "", err
 				}
 				continue
 			}
 			log.Errorf("Failed to create container '%s'", name)
-			return err
+			return "", err
 		}
 		log.Debugf("Created container %s (ID: %s)", name, resp.ID)
 		break
 	}
 
-	// start container
-	if err := docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		log.Errorln("Failed to start container")
+	return resp.ID, nil
+}
+
+func startContainer(ctx context.Context, ID string) error {
+	// initialize docker client
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
 		return err
 	}
+	defer docker.Close()
 
-	return nil
+	return docker.ContainerStart(ctx, ID, types.ContainerStartOptions{})
 }
 
 // removeContainer deletes a running container (like docker rm -f)
 func removeContainer(ctx context.Context, ID string) error {
 
 	// (0) create docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return err
@@ -135,7 +141,7 @@ func pullImage(ctx context.Context, docker *client.Client, image string) error {
 
 func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, error) {
 	// (0) create docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return nil, err
@@ -155,8 +161,7 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 		All:     true,
 	})
 	if err != nil {
-		log.Errorln("Failed to list containers")
-		return nil, err
+		return nil, fmt.Errorf("Failed to list containers: %+v", err)
 	}
 
 	if len(containers) > 1 {

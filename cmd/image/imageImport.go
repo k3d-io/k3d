@@ -22,12 +22,14 @@ THE SOFTWARE.
 package image
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 
-	"github.com/rancher/k3d/v3/cmd/util"
-	"github.com/rancher/k3d/v3/pkg/runtimes"
-	"github.com/rancher/k3d/v3/pkg/tools"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	"github.com/rancher/k3d/v4/cmd/util"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v4/pkg/tools"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -46,15 +48,20 @@ func NewCmdImageImport() *cobra.Command {
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			images, clusters := parseLoadImageCmd(cmd, args)
-			log.Debugf("Load images [%+v] from runtime [%s] into clusters [%+v]", images, runtimes.SelectedRuntime, clusters)
+			log.Debugf("Importing image(s) [%+v] from runtime [%s] into cluster(s) [%+v]...", images, runtimes.SelectedRuntime, clusters)
+			errOccured := false
 			for _, cluster := range clusters {
-				log.Infof("Loading images into '%s'", cluster.Name)
+				log.Infof("Importing image(s) into cluster '%s'", cluster.Name)
 				if err := tools.ImageImportIntoClusterMulti(cmd.Context(), runtimes.SelectedRuntime, images, &cluster, loadImageOpts); err != nil {
-					log.Errorf("Failed to load images into cluster '%s'", cluster.Name)
-					log.Errorln(err)
+					log.Errorf("Failed to import image(s) into cluster '%s': %+v", cluster.Name, err)
+					errOccured = true
 				}
 			}
-			log.Info("DONE")
+			if errOccured {
+				log.Warnln("At least one error occured while trying to import the image(s) into the selected cluster(s)")
+				os.Exit(1)
+			}
+			log.Infof("Successfully imported %d image(s) into %d cluster(s)", len(images), len(clusters))
 		},
 	}
 

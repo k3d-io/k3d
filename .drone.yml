@@ -14,7 +14,7 @@ platform:
 steps:
 
   - name: lint
-    image: golang:1.14
+    image: golang:1.15
     commands:
       - make ci-setup
       - make check-fmt lint
@@ -25,7 +25,7 @@ steps:
         - tag
 
   - name: test
-    image: docker:19.03
+    image: docker:20.10
     volumes:
       - name: dockersock
         path: /var/run
@@ -40,7 +40,7 @@ steps:
         - tag
 
   - name: build
-    image: golang:1.14
+    image: golang:1.15
     environment:
       GIT_TAG: "${DRONE_TAG}"
     commands:
@@ -52,6 +52,8 @@ steps:
     when:
       branch:
         - main
+        - main-v* # major version branches
+        - release-*
       event:
         - push
         - tag
@@ -78,6 +80,7 @@ steps:
           - "refs/tags/*rc*"
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
+          - "refs/tags/*test*"
 
   - name: release
     image: plugins/github-release
@@ -100,9 +103,12 @@ steps:
           - "refs/tags/*rc*"
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
+          - "refs/tags/*test*"
 
   - name: docker_build_push_dind
     image: plugins/docker
+    environment:
+      DOCKER_BUILDKIT: "1"
     settings:
       repo: rancher/k3d
       tags:
@@ -115,6 +121,8 @@ steps:
         from_secret: docker_username
       password:
         from_secret: docker_password
+      build_args:
+        - GIT_TAG_OVERRIDE=${DRONE_TAG}
     depends_on:
       - lint
       - test
@@ -124,6 +132,8 @@ steps:
         - tag
 
   - name: docker_build_push_binary
+    environment:
+      DOCKER_BUILDKIT: "1"
     image: plugins/docker
     settings:
       repo: rancher/k3d
@@ -131,12 +141,14 @@ steps:
         - latest
         - "${DRONE_TAG}"
       dockerfile: Dockerfile
-      target: dind
+      target: binary-only
       context: .
       username:
         from_secret: docker_username
       password:
         from_secret: docker_password
+      build_args:
+        - GIT_TAG_OVERRIDE=${DRONE_TAG}
     depends_on:
       - lint
       - test
@@ -148,7 +160,7 @@ steps:
 services:
   # Starting the docker service to be used by dind
   - name: docker
-    image: docker:19.03-dind
+    image: docker:20.10-dind
     privileged: true
     volumes:
       - name: dockersock
@@ -174,7 +186,7 @@ platform:
 steps:
 
   - name: build
-    image: python:3.8
+    image: python:3.9
     commands:
       - python3 -m pip install -r docs/requirements.txt
       - mkdocs build --verbose --clean --strict

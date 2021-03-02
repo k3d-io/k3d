@@ -24,6 +24,16 @@ package containerd
 
 type Containerd struct{}
 
+// ID returns the identity of the runtime
+func (d Containerd) ID() string {
+	return "containerd"
+}
+
+// GetHost returns an empty string in containerd
+func (d Containerd) GetHost() string {
+	return ""
+}
+
 // GetRuntimePath returns the path of the containerd socket
 func (d Containerd) GetRuntimePath() string {
 	return "/run/containerd/containerd.sock"

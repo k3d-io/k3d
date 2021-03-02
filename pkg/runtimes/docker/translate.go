@@ -31,13 +31,15 @@ import (
 	docker "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
+
+	dockercliopts "github.com/docker/cli/opts"
 )
 
 // TranslateNodeToContainer translates a k3d node specification to a docker container representation
 func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
-
 	/* initialize everything that we need */
 	containerConfig := docker.Config{}
 	hostConfig := docker.HostConfig{
@@ -75,6 +77,14 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 		hostConfig.Tmpfs[mnt] = ""
 	}
 
+	if node.GPURequest != "" {
+		gpuopts := dockercliopts.GpuOpts{}
+		if err := gpuopts.Set(node.GPURequest); err != nil {
+			return nil, fmt.Errorf("Failed to set GPU Request: %+v", err)
+		}
+		hostConfig.DeviceRequests = gpuopts.Value()
+	}
+
 	/* They have to run in privileged mode */
 	// TODO: can we replace this by a reduced set of capabilities?
 	hostConfig.Privileged = true
@@ -84,23 +94,30 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	// containerConfig.Volumes = map[string]struct{}{} // TODO: do we need this? We only used binds before
 
 	/* Ports */
-	exposedPorts, portBindings, err := nat.ParsePortSpecs(node.Ports)
-	if err != nil {
-		log.Errorf("Failed to parse port specs '%v'", node.Ports)
-		return nil, err
+	exposedPorts := nat.PortSet{}
+	for ep := range node.Ports {
+		if _, exists := exposedPorts[ep]; !exists {
+			exposedPorts[ep] = struct{}{}
+		}
 	}
 	containerConfig.ExposedPorts = exposedPorts
-	hostConfig.PortBindings = portBindings
+	hostConfig.PortBindings = node.Ports
 	/* Network */
-	networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
-		node.Network: {},
+	endpointsConfig := map[string]*network.EndpointSettings{}
+	for _, net := range node.Networks {
+		endpointsConfig[net] = &network.EndpointSettings{}
 	}
-	netInfo, err := GetNetwork(context.Background(), node.Network)
-	if err != nil {
-		log.Warnln("Failed to get network information")
-		log.Warnln(err)
-	} else if netInfo.Driver == "host" {
-		hostConfig.NetworkMode = "host"
+
+	networkingConfig.EndpointsConfig = endpointsConfig
+
+	if len(node.Networks) > 0 {
+		netInfo, err := GetNetwork(context.Background(), node.Networks[0]) // FIXME: only considering first network here, as that's the one k3d creates for a cluster
+		if err != nil {
+			log.Warnln("Failed to get network information")
+			log.Warnln(err)
+		} else if netInfo.Driver == "host" {
+			hostConfig.NetworkMode = "host"
+		}
 	}
 
 	return &NodeInDocker{
@@ -125,11 +142,19 @@ func TranslateContainerToNode(cont *types.Container) (*k3d.Node, error) {
 // TranslateContainerDetailsToNode translates a docker containerJSON object into a k3d node representation
 func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d.Node, error) {
 
-	// translate portMap to string representation
-	ports := []string{}
-	for containerPort, portBindingList := range containerDetails.HostConfig.PortBindings {
-		for _, hostInfo := range portBindingList {
-			ports = append(ports, fmt.Sprintf("%s:%s:%s", hostInfo.HostIP, hostInfo.HostPort, containerPort))
+	// first, make sure, that it's actually a k3d managed container by checking if it has all the default labels
+	for k, v := range k3d.DefaultObjectLabels {
+		log.Tracef("TranslateContainerDetailsToNode: Checking for default object label %s=%s on container %s", k, v, containerDetails.Name)
+		found := false
+		for lk, lv := range containerDetails.Config.Labels {
+			if lk == k && lv == v {
+				found = true
+				break
+			}
+		}
+		if !found {
+			log.Debugf("Container %s is missing default label %s=%s in label set %+v", containerDetails.Name, k, v, containerDetails.Config.Labels)
+			return nil, runtimeErr.ErrRuntimeContainerUnknown
 		}
 	}
 
@@ -139,23 +164,50 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		restart = true
 	}
 
-	// get the clusterNetwork
-	clusterNetwork := ""
+	// get networks and ensure that the cluster network is first in list
+	orderedNetworks := []string{}
+	otherNetworks := []string{}
 	for networkName := range containerDetails.NetworkSettings.Networks {
 		if strings.HasPrefix(networkName, fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, containerDetails.Config.Labels[k3d.LabelClusterName])) { // FIXME: catch error if label 'k3d.cluster' does not exist, but this should also never be the case
-			clusterNetwork = networkName
+			orderedNetworks = append(orderedNetworks, networkName)
+			continue
+		}
+		otherNetworks = append(otherNetworks, networkName)
+	}
+	orderedNetworks = append(orderedNetworks, otherNetworks...)
+
+	/**
+	 * ServerOpts
+	 */
+
+	// IsInit
+	serverOpts := k3d.ServerOpts{IsInit: false}
+	clusterInitFlagSet := false
+	for _, arg := range containerDetails.Args {
+		if strings.Contains(arg, "--cluster-init") {
+			clusterInitFlagSet = true
+			break
+		}
+	}
+	if serverIsInitLabel, ok := containerDetails.Config.Labels[k3d.LabelServerIsInit]; ok {
+		if serverIsInitLabel == "true" {
+			if !clusterInitFlagSet {
+				log.Errorf("Container %s has label %s=true, but the args do not contain the --cluster-init flag", containerDetails.Name, k3d.LabelServerIsInit)
+			} else {
+				serverOpts.IsInit = true
+			}
 		}
 	}
 
-	// serverOpts
-	serverOpts := k3d.ServerOpts{IsInit: false}
+	// Kube API
+	serverOpts.KubeAPI = &k3d.ExposureOpts{}
 	for k, v := range containerDetails.Config.Labels {
 		if k == k3d.LabelServerAPIHostIP {
-			serverOpts.ExposeAPI.HostIP = v
+			serverOpts.KubeAPI.Binding.HostIP = v
 		} else if k == k3d.LabelServerAPIHost {
-			serverOpts.ExposeAPI.Host = v
+			serverOpts.KubeAPI.Host = v
 		} else if k == k3d.LabelServerAPIPort {
-			serverOpts.ExposeAPI.Port = v
+			serverOpts.KubeAPI.Binding.HostPort = v
 		}
 	}
 
@@ -189,10 +241,11 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		Env:        env,
 		Cmd:        containerDetails.Config.Cmd,
 		Args:       []string{}, // empty, since Cmd already contains flags
-		Ports:      ports,
+		Ports:      containerDetails.HostConfig.PortBindings,
 		Restart:    restart,
+		Created:    containerDetails.Created,
 		Labels:     labels,
-		Network:    clusterNetwork,
+		Networks:   orderedNetworks,
 		ServerOpts: serverOpts,
 		AgentOpts:  k3d.AgentOpts{},
 		State:      nodeState,

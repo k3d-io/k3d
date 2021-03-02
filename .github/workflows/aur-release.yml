@@ -1,0 +1,23 @@
+name: AUR Release
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  aur-release:
+    runs-on: ubuntu-latest
+    container: archlinux:20200705
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v1
+      - name: Publish Release to AUR
+        run: |
+          export COMMIT_REF=$GITHUB_REF
+          ./deploy-aur.sh
+        env:
+          PACKAGE_NAME: rancher-k3d-bin
+          COMMIT_USERNAME: GitHub Action
+          COMMIT_EMAIL: iwilltry42+k3d@gmail.com
+          COMMIT_MESSAGE: "[CI] Updated to $NEW_RELEASE"
+          SSH_PRIVATE_KEY: ${{ secrets.AUR_PRIVATE_KEY }}

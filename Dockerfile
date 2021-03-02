@@ -1,9 +1,10 @@
-FROM golang:1.14 as builder
+FROM golang:1.15 as builder
+ARG GIT_TAG_OVERRIDE
 WORKDIR /app
 COPY . .
-RUN make build && bin/k3d version
+RUN make build -e GIT_TAG_OVERRIDE=${GIT_TAG_OVERRIDE} && bin/k3d version
 
-FROM docker:19.03-dind as dind
+FROM docker:20.10-dind as dind
 RUN apk update && apk add bash curl sudo jq git make netcat-openbsd
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl && \
     chmod +x ./kubectl && \

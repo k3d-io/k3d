@@ -30,7 +30,7 @@ import (
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/containers"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -118,6 +118,11 @@ func (d Containerd) GetNode(ctx context.Context, node *k3d.Node) (*k3d.Node, err
 	return nil, nil
 }
 
+// GetNodeStatus returns the status of a node (Running, Started, etc.)
+func (d Containerd) GetNodeStatus(ctx context.Context, node *k3d.Node) (bool, string, error) {
+	return true, "", nil
+}
+
 // GetNodeLogs returns the logs from a given node
 func (d Containerd) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time) (io.ReadCloser, error) {
 	return nil, nil
@@ -130,5 +135,10 @@ func (d Containerd) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string
 
 // ExecInNodeGetLogs execs a command inside a node and returns its logreader
 func (d Containerd) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []string) (*bufio.Reader, error) {
+	return nil, nil
+}
+
+// GetNodesInNetwork returns all the nodes connected to a given network
+func (d Containerd) GetNodesInNetwork(ctx context.Context, network string) ([]*k3d.Node, error) {
 	return nil, nil
 }

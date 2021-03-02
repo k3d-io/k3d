@@ -23,20 +23,10 @@ package util
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-
-	"github.com/rancher/k3d/v3/pkg/util"
-
-	"regexp"
 )
-
-// Regexp pattern to match node filters
-var filterRegexp = regexp.MustCompile(`^(?P<group>server|agent|loadbalancer|all)(?P<subsetSpec>\[(?P<subset>(?P<subsetList>(\d+,?)+)|(?P<subsetRange>\d*:\d*)|(?P<subsetWildcard>\*))\])?$`)
 
 // SplitFiltersFromFlag separates a flag's value from the node filter, if there is one
 func SplitFiltersFromFlag(flag string) (string, []string, error) {
@@ -50,158 +40,40 @@ func SplitFiltersFromFlag(flag string) (string, []string, error) {
 	/* Case 2) filter indicated using '@' in flag */
 
 	split := strings.Split(flag, "@")
+	newsplit := []string{}
+	buffer := ""
+
+	for i, it := range split {
+
+		// Case 1: There's a '\' just before the '@' sign -> Should it be escaped (aka be a literal '@')?
+		if strings.HasSuffix(it, "\\") && i != len(split)-1 {
+			// Case 1.1: Escaped backslash
+			if strings.HasSuffix(it, "\\\\") {
+				it = strings.TrimSuffix(it, "\\")
+				log.Warnf("The part '%s' of the flag input '%s' ends with a double backslash, so we assume you want to escape the backslash before the '@'. That's the only time we do this.", it, flag)
+			} else {
+				// Case 1.2: Unescaped backslash -> Escaping the '@' -> remove suffix and append it to buffer, followed by the escaped @ sign
+				log.Tracef("Item '%s' just before an '@' ends with '\\', so we assume it's escaping a literal '@'", it)
+				buffer += strings.TrimSuffix(it, "\\") + "@"
+				continue
+			}
+		}
+		// Case 2: There's no '\': append item to buffer, save it to new slice, empty buffer and continue
+		newsplit = append(newsplit, buffer+it)
+		buffer = ""
+		continue
+	}
 
 	// max number of pieces after split = 2 (only one @ allowed in flag)
-	if len(split) > 2 {
-		return "", nil, fmt.Errorf("Invalid flag '%s': only one '@' for node filter allowed", flag)
+	if len(newsplit) > 2 {
+		return "", nil, fmt.Errorf("Invalid flag '%s': only one unescaped '@' allowed for node filter(s) (Escape literal '@' with '\\')", flag)
 	}
 
 	// trailing or leading '@'
-	if len(split) < 2 {
-		return "", nil, fmt.Errorf("Invalid flag '%s' includes '@' but is missing either an object or a filter", flag)
+	if len(newsplit) < 2 {
+		return "", nil, fmt.Errorf("Invalid flag '%s' includes unescaped '@' but is missing a node filter (Escape literal '@' with '\\')", flag)
 	}
 
-	return split[0], strings.Split(split[1], ";"), nil
+	return newsplit[0], strings.Split(newsplit[1], ";"), nil
 
-}
-
-// FilterNodes takes a string filter to return a filtered list of nodes
-func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
-
-	if len(filters) == 0 || len(filters[0]) == 0 {
-		log.Warnln("No node filter specified")
-		return nodes, nil
-	}
-
-	// map roles to subsets
-	serverNodes := []*k3d.Node{}
-	agentNodes := []*k3d.Node{}
-	var serverlb *k3d.Node
-	for _, node := range nodes {
-		if node.Role == k3d.ServerRole {
-			serverNodes = append(serverNodes, node)
-		} else if node.Role == k3d.AgentRole {
-			agentNodes = append(agentNodes, node)
-		} else if node.Role == k3d.LoadBalancerRole {
-			serverlb = node
-		}
-	}
-
-	filteredNodes := []*k3d.Node{}
-	set := make(map[*k3d.Node]struct{})
-
-	// range over all instances of group[subset] specs
-	for _, filter := range filters {
-
-		// match regex with capturing groups
-		match := filterRegexp.FindStringSubmatch(filter)
-
-		if len(match) == 0 {
-			return nil, fmt.Errorf("Failed to parse node filters: invalid format or empty subset in '%s'", filter)
-		}
-
-		// map capturing group names to submatches
-		submatches := util.MapSubexpNames(filterRegexp.SubexpNames(), match)
-
-		// if one of the filters is 'all', we only return this and drop all others
-		if submatches["group"] == "all" {
-			// TODO: filterNodes: only log if really more than one is specified
-			log.Warnf("Node filter 'all' set, but more were specified in '%+v'", filters)
-			return nodes, nil
-		}
-
-		// Choose the group of nodes to operate on
-		groupNodes := []*k3d.Node{}
-		if submatches["group"] == string(k3d.ServerRole) {
-			groupNodes = serverNodes
-		} else if submatches["group"] == string(k3d.AgentRole) {
-			groupNodes = agentNodes
-		} else if submatches["group"] == string(k3d.LoadBalancerRole) {
-			filteredNodes = append(filteredNodes, serverlb)
-			return filteredNodes, nil // early exit if filtered group is the loadbalancer
-		}
-
-		/* Option 1) subset defined by list */
-		if submatches["subsetList"] != "" {
-			for _, index := range strings.Split(submatches["subsetList"], ",") {
-				if index != "" {
-					num, err := strconv.Atoi(index)
-					if err != nil {
-						return nil, fmt.Errorf("Failed to convert subset number to integer in '%s'", filter)
-					}
-					if num < 0 || num >= len(groupNodes) {
-						return nil, fmt.Errorf("Index out of range: index '%d' < 0 or > number of available nodes in filter '%s'", num, filter)
-					}
-					if _, exists := set[groupNodes[num]]; !exists {
-						filteredNodes = append(filteredNodes, groupNodes[num])
-						set[groupNodes[num]] = struct{}{}
-					}
-				}
-			}
-
-			/* Option 2) subset defined by range */
-		} else if submatches["subsetRange"] != "" {
-
-			/*
-			 * subset specified by a range 'START:END', where each side is optional
-			 */
-
-			split := strings.Split(submatches["subsetRange"], ":")
-			if len(split) != 2 {
-				return nil, fmt.Errorf("Failed to parse subset range in '%s'", filter)
-			}
-
-			start := 0
-			end := len(groupNodes) - 1
-
-			var err error
-
-			if split[0] != "" {
-				start, err = strconv.Atoi(split[0])
-				if err != nil {
-					return nil, fmt.Errorf("Failed to convert subset range start to integer in '%s'", filter)
-				}
-				if start < 0 || start >= len(groupNodes) {
-					return nil, fmt.Errorf("Invalid subset range: start < 0 or > number of available nodes in '%s'", filter)
-				}
-
-			}
-
-			if split[1] != "" {
-				end, err = strconv.Atoi(split[1])
-				if err != nil {
-					return nil, fmt.Errorf("Failed to convert subset range start to integer in '%s'", filter)
-				}
-				if end < start || end >= len(groupNodes) {
-					return nil, fmt.Errorf("Invalid subset range: end < start or > number of available nodes in '%s'", filter)
-				}
-			}
-
-			for i := start; i <= end; i++ {
-				if _, exists := set[groupNodes[i]]; !exists {
-					filteredNodes = append(filteredNodes, groupNodes[i])
-					set[groupNodes[i]] = struct{}{}
-				}
-			}
-
-			/* Option 3) subset defined by wildcard */
-		} else if submatches["subsetWildcard"] == "*" {
-			/*
-			 * '*' = all nodes
-			 */
-			for _, node := range groupNodes {
-				if _, exists := set[node]; !exists {
-					filteredNodes = append(filteredNodes, node)
-					set[node] = struct{}{}
-				}
-			}
-
-			/* Option X) invalid/unknown subset */
-		} else {
-			return nil, fmt.Errorf("Failed to parse node specifiers: unknown subset in '%s'", filter)
-		}
-
-	}
-
-	return filteredNodes, nil
 }

@@ -25,12 +25,15 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -39,7 +42,7 @@ import (
 func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (string, bool, error) {
 
 	// (0) create new docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return "", false, err
@@ -85,7 +88,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (str
 // DeleteNetwork deletes a network
 func (d Docker) DeleteNetwork(ctx context.Context, ID string) error {
 	// (0) create new docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return err
@@ -93,12 +96,18 @@ func (d Docker) DeleteNetwork(ctx context.Context, ID string) error {
 	defer docker.Close()
 
 	// (3) delete network
-	return docker.NetworkRemove(ctx, ID)
+	if err := docker.NetworkRemove(ctx, ID); err != nil {
+		if strings.HasSuffix(err.Error(), "active endpoints") {
+			return runtimeErr.ErrRuntimeNetworkNotEmpty
+		}
+		return err
+	}
+	return nil
 }
 
 // GetNetwork gets information about a network by its ID
 func GetNetwork(ctx context.Context, ID string) (types.NetworkResource, error) {
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return types.NetworkResource{}, err
@@ -118,4 +127,64 @@ func GetGatewayIP(ctx context.Context, network string) (net.IP, error) {
 	gatewayIP := net.ParseIP(bridgeNetwork.IPAM.Config[0].Gateway)
 
 	return gatewayIP, nil
+}
+
+// ConnectNodeToNetwork connects a node to a network
+func (d Docker) ConnectNodeToNetwork(ctx context.Context, node *k3d.Node, networkName string) error {
+	// check that node was not attached to network before
+	if isAttachedToNetwork(node, networkName) {
+		log.Infof("Container '%s' is already connected to '%s'", node.Name,networkName)
+		return nil
+	}
+
+	// get container
+	container, err := getNodeContainer(ctx, node)
+	if err != nil {
+		return err
+	}
+
+	// get docker client
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return err
+	}
+	defer docker.Close()
+
+	// get network
+	networkResource, err := GetNetwork(ctx, networkName)
+	if err != nil {
+		log.Errorf("Failed to get network '%s'", networkName)
+		return err
+	}
+
+	// connect container to network
+	return docker.NetworkConnect(ctx, networkResource.ID, container.ID, &network.EndpointSettings{})
+}
+
+// DisconnectNodeFromNetwork disconnects a node from a network (u don't say :O)
+func (d Docker) DisconnectNodeFromNetwork(ctx context.Context, node *k3d.Node, networkName string) error {
+	log.Debugf("Disconnecting node %s from network %s...", node.Name, networkName)
+	// get container
+	container, err := getNodeContainer(ctx, node)
+	if err != nil {
+		return err
+	}
+
+	// get docker client
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return err
+	}
+	defer docker.Close()
+
+	// get network
+	networkResource, err := GetNetwork(ctx, networkName)
+	if err != nil {
+		log.Errorf("Failed to get network '%s'", networkName)
+		return err
+	}
+
+	return docker.NetworkDisconnect(ctx, networkResource.ID, container.ID, true)
 }

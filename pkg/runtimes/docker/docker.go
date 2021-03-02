@@ -22,7 +22,30 @@ THE SOFTWARE.
 
 package docker
 
+import (
+	"net/url"
+	"os"
+
+	log "github.com/sirupsen/logrus"
+)
+
 type Docker struct{}
+
+// ID returns the identity of the runtime
+func (d Docker) ID() string {
+	return "docker"
+}
+
+// GetHost returns the docker daemon host
+func (d Docker) GetHost() string {
+	dockerHost := os.Getenv("DOCKER_HOST")
+	url, err := url.Parse(dockerHost)
+	if err != nil {
+		return ""
+	}
+	log.Debugf("DockerHost: %s", url.Host)
+	return url.Host
+}
 
 // GetRuntimePath returns the path of the docker socket
 func (d Docker) GetRuntimePath() string {

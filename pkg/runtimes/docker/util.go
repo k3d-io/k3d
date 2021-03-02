@@ -22,14 +22,20 @@ THE SOFTWARE.
 package docker
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"strings"
 
+	"github.com/docker/cli/cli/connhelper"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
+	"github.com/pkg/errors"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,7 +52,7 @@ func GetDefaultObjectLabelsFilter(clusterName string) filters.Args {
 // CopyToNode copies a file from the local FS to the selected node
 func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k3d.Node) error {
 	// create docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return err
@@ -87,4 +93,89 @@ func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k
 	defer preparedArchive.Close()
 
 	return docker.CopyToContainer(ctx, container.ID, destDir, preparedArchive, types.CopyToContainerOptions{AllowOverwriteDirWithFile: false})
+}
+
+// WriteToNode writes a byte array to the selected node
+func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, node *k3d.Node) error {
+
+	nodeContainer, err := getNodeContainer(ctx, node)
+	if err != nil {
+		return fmt.Errorf("Failed to find container for node '%s': %+v", node.Name, err)
+	}
+
+	// create docker client
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return err
+	}
+	defer docker.Close()
+
+	buf := new(bytes.Buffer)
+	tarWriter := tar.NewWriter(buf)
+	defer tarWriter.Close()
+	tarHeader := &tar.Header{
+		Name: dest,
+		Mode: 0644,
+		Size: int64(len(content)),
+	}
+
+	if err := tarWriter.WriteHeader(tarHeader); err != nil {
+		return fmt.Errorf("Failed to write tar header: %+v", err)
+	}
+
+	if _, err := tarWriter.Write(content); err != nil {
+		return fmt.Errorf("Failed to write tar content: %+v", err)
+	}
+
+	if err := tarWriter.Close(); err != nil {
+		log.Debugf("Failed to close tar writer: %+v", err)
+	}
+
+	tarBytes := bytes.NewReader(buf.Bytes())
+	if err := docker.CopyToContainer(ctx, nodeContainer.ID, "/", tarBytes, types.CopyToContainerOptions{AllowOverwriteDirWithFile: true}); err != nil {
+		return fmt.Errorf("Failed to copy content to container '%s': %+v", nodeContainer.ID, err)
+	}
+
+	return nil
+}
+
+
+// GetDockerClient returns a docker client
+func GetDockerClient() (*client.Client, error) {
+	var err error
+	var cli *client.Client
+
+	dockerHost := os.Getenv("DOCKER_HOST")
+
+	if strings.HasPrefix(dockerHost, "ssh://") {
+		var helper *connhelper.ConnectionHelper
+
+		helper, err = connhelper.GetConnectionHelper(dockerHost)
+		if err != nil {
+			return nil, err
+		}
+		cli, err = client.NewClientWithOpts(
+			client.WithHost(helper.Host),
+			client.WithDialContext(helper.Dialer),
+			client.WithAPIVersionNegotiation(),
+		)
+	} else {
+		cli, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	}
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return cli, err
+}
+
+// isAttachedToNetwork return true if node is attached to network
+func isAttachedToNetwork(node *k3d.Node, network string) bool {
+	for _, nw := range node.Networks {
+		if nw == network {
+			return true
+		}
+	}
+	return false
 }

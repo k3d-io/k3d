@@ -27,11 +27,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/rancher/k3d/v3/cmd/util"
-	k3dc "github.com/rancher/k3d/v3/pkg/cluster"
-	"github.com/rancher/k3d/v3/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-	"github.com/rancher/k3d/v3/version"
+	"github.com/rancher/k3d/v4/cmd/util"
+	k3dc "github.com/rancher/k3d/v4/pkg/client"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -50,7 +50,7 @@ func NewCmdNodeCreate() *cobra.Command {
 			nodes, cluster := parseCreateNodeCmd(cmd, args)
 			if err := k3dc.NodeAddToClusterMulti(cmd.Context(), runtimes.SelectedRuntime, nodes, cluster, createNodeOpts); err != nil {
 				log.Errorf("Failed to add nodes to cluster '%s'", cluster.Name)
-				log.Errorln(err)
+				log.Fatalln(err)
 			}
 		},
 	}
@@ -122,6 +122,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 			Labels: map[string]string{
 				k3d.LabelRole: roleStr,
 			},
+			Restart: true,
 		}
 		nodes = append(nodes, node)
 	}

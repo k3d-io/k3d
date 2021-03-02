@@ -196,10 +196,11 @@ func (a *dockerAuthorizer) generateTokenOptions(ctx context.Context, host string
 	}
 
 	scope, ok := c.parameters["scope"]
-	if !ok {
-		return tokenOptions{}, errors.Errorf("no scope specified for token auth challenge")
+	if ok {
+		to.scopes = append(to.scopes, scope)
+	} else {
+		log.G(ctx).WithField("host", host).Debug("no scope specified for token auth challenge")
 	}
-	to.scopes = append(to.scopes, scope)
 
 	if a.credentials != nil {
 		to.username, to.secret, err = a.credentials(host)
@@ -272,10 +273,7 @@ func (ah *authHandler) doBearerAuth(ctx context.Context) (string, error) {
 	// copy common tokenOptions
 	to := ah.common
 
-	to.scopes = getTokenScopes(ctx, to.scopes)
-	if len(to.scopes) == 0 {
-		return "", errors.Errorf("no scope specified for token auth challenge")
-	}
+	to.scopes = GetTokenScopes(ctx, to.scopes)
 
 	// Docs: https://docs.docker.com/registry/spec/auth/scope
 	scoped := strings.Join(to.scopes, " ")
@@ -332,7 +330,9 @@ type postTokenResponse struct {
 
 func (ah *authHandler) fetchTokenWithOAuth(ctx context.Context, to tokenOptions) (string, error) {
 	form := url.Values{}
-	form.Set("scope", strings.Join(to.scopes, " "))
+	if len(to.scopes) > 0 {
+		form.Set("scope", strings.Join(to.scopes, " "))
+	}
 	form.Set("service", to.service)
 	// TODO: Allow setting client_id
 	form.Set("client_id", "containerd-client")

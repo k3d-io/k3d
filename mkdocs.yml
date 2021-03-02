@@ -30,7 +30,7 @@ theme:
   favicon: static/img/favicons_black_blue/favicon.png  
 
 # Navigation
-# nav: ommitted, because we're using the awesome-pages plugin (https://squidfunk.github.io/mkdocs-material/plugins/awesome-pages/)
+# nav: omitted, because we're using the awesome-pages plugin (https://squidfunk.github.io/mkdocs-material/plugins/awesome-pages/)
 
 # Extensions
 markdown_extensions:

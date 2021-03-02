@@ -15,6 +15,8 @@ if [[ -n "$K3S_IMAGE_TAG" ]]; then
   EXTRA_TITLE="(rancher/k3s:$K3S_IMAGE_TAG)"
 fi
 
+export CURRENT_STAGE="Test | lifecycle | $K3S_IMAGE_TAG"
+
 
 clustername="lifecycletest"
 
@@ -24,7 +26,7 @@ info "Creating cluster $clustername..."
 $EXE cluster create "$clustername" --agents 1 --api-port 6443 --wait --timeout 360s $EXTRA_FLAG || failed "could not create cluster $clustername $EXTRA_TITLE"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
-sleep 5
+sleep 10
 
 # 1. check initial access to the cluster
 info "Checking that we have access to the cluster..."

@@ -30,10 +30,10 @@ import (
 	"sync"
 	"time"
 
-	k3dc "github.com/rancher/k3d/v3/pkg/cluster"
-	"github.com/rancher/k3d/v3/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v3/pkg/types"
-	"github.com/rancher/k3d/v3/version"
+	k3dc "github.com/rancher/k3d/v4/pkg/client"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,7 +46,7 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 	runtimeImages, err := runtime.GetImages(ctx)
 	if err != nil {
-		log.Errorln("Failed to fetch list of exsiting images from runtime")
+		log.Errorln("Failed to fetch list of existing images from runtime")
 		return err
 	}
 
@@ -201,18 +201,25 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 // startToolsNode will start a new k3d tools container and connect it to the network of the chosen cluster
 func startToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, network string, volumes []string) (*k3d.Node, error) {
+	labels := map[string]string{}
+	for k, v := range k3d.DefaultObjectLabels {
+		labels[k] = v
+	}
+	for k, v := range k3d.DefaultObjectLabelsVar {
+		labels[k] = v
+	}
 	node := &k3d.Node{
-		Name:    fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name),
-		Image:   fmt.Sprintf("%s:%s", k3d.DefaultToolsImageRepo, version.GetHelperImageVersion()),
-		Role:    k3d.NoRole,
-		Volumes: volumes,
-		Network: network,
-		Cmd:     []string{},
-		Args:    []string{"noop"},
-		Labels:  k3d.DefaultObjectLabels,
+		Name:     fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name),
+		Image:    fmt.Sprintf("%s:%s", k3d.DefaultToolsImageRepo, version.GetHelperImageVersion()),
+		Role:     k3d.NoRole,
+		Volumes:  volumes,
+		Networks: []string{network},
+		Cmd:      []string{},
+		Args:     []string{"noop"},
+		Labels:   k3d.DefaultObjectLabels,
 	}
 	node.Labels[k3d.LabelClusterName] = cluster.Name
-	if err := runtime.CreateNode(ctx, node); err != nil {
+	if err := k3dc.NodeRun(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
 		log.Errorf("Failed to create tools container for cluster '%s'", cluster.Name)
 		return node, err
 	}
