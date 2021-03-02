@@ -124,16 +124,20 @@ func GetGatewayIP(ctx context.Context, network string) (net.IP, error) {
 		return nil, err
 	}
 
-	gatewayIP := net.ParseIP(bridgeNetwork.IPAM.Config[0].Gateway)
+	if len(bridgeNetwork.IPAM.Config) > 0 {
+		gatewayIP := net.ParseIP(bridgeNetwork.IPAM.Config[0].Gateway)
+		return gatewayIP, nil
+	} else {
+		return nil, fmt.Errorf("Failed to get IPAM Config for network %s", bridgeNetwork.Name)
+	}
 
-	return gatewayIP, nil
 }
 
 // ConnectNodeToNetwork connects a node to a network
 func (d Docker) ConnectNodeToNetwork(ctx context.Context, node *k3d.Node, networkName string) error {
 	// check that node was not attached to network before
 	if isAttachedToNetwork(node, networkName) {
-		log.Infof("Container '%s' is already connected to '%s'", node.Name,networkName)
+		log.Infof("Container '%s' is already connected to '%s'", node.Name, networkName)
 		return nil
 	}
 

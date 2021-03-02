@@ -24,10 +24,10 @@ package util
 import (
 	"fmt"
 	"os"
-	"strings"
 	rt "runtime"
-	
-	"github.com/rancher/k3d/v3/pkg/runtimes"
+	"strings"
+
+	"github.com/rancher/k3d/v4/pkg/runtimes"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -56,7 +56,7 @@ func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) (string, 
 		return "", fmt.Errorf("No volume/path specified")
 	}
 	if len(split) > maxParts {
-		return "", fmt.Errorf("Invalid volume mount '%s': maximal %d ':' allowed", volumeMount, maxParts - 1)
+		return "", fmt.Errorf("Invalid volume mount '%s': maximal %d ':' allowed", volumeMount, maxParts-1)
 	}
 
 	// we only have SRC specified -> DEST = SRC
