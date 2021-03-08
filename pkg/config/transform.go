@@ -62,24 +62,22 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 
 	// -> API
-	if simpleConfig.ExposeAPI.Host == "" {
-		simpleConfig.ExposeAPI.Host = k3d.DefaultAPIHost
-	}
 	if simpleConfig.ExposeAPI.HostIP == "" {
 		simpleConfig.ExposeAPI.HostIP = k3d.DefaultAPIHost
 	}
+	if simpleConfig.ExposeAPI.Host == "" {
+		simpleConfig.ExposeAPI.Host = simpleConfig.ExposeAPI.HostIP
+	}
 
-	kubeAPIExposureOpts := &k3d.ExposureOpts{}
-	if simpleConfig.ExposeAPI.Host == k3d.DefaultAPIHost {
-		kubeAPIExposureOpts.Host = simpleConfig.ExposeAPI.HostIP
-	} else {
-		kubeAPIExposureOpts.Host = simpleConfig.ExposeAPI.Host
+	kubeAPIExposureOpts := &k3d.ExposureOpts{
+		Host: simpleConfig.ExposeAPI.Host,
 	}
 	kubeAPIExposureOpts.Port = k3d.DefaultAPIPort
 	kubeAPIExposureOpts.Binding = nat.PortBinding{
 		HostIP:   simpleConfig.ExposeAPI.HostIP,
 		HostPort: simpleConfig.ExposeAPI.HostPort,
 	}
+	fmt.Printf("RES2: %+v", kubeAPIExposureOpts)
 
 	// FILL CLUSTER CONFIG
 	newCluster := k3d.Cluster{
