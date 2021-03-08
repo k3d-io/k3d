@@ -22,29 +22,10 @@ THE SOFTWARE.
 package config
 
 import (
-	"bytes"
-	"io/ioutil"
 	"testing"
 
 	"github.com/rancher/k3d/v4/pkg/config/v1alpha2"
 )
-
-// TestEnsureHardcodedSchemaMatchesFile ensures that the JSONSchema hardcoded in the config package matches the corresponding file
-/*
- * TODO: as soon as we move to Go 1.16, the file will be embedded using //go:embed and we can drop this test
- */
-func TestEnsureHardcodedSchemaMatchesFile(t *testing.T) {
-	schemaFilePath := "./v1alpha2/schema.json"
-	schemaContents, err := ioutil.ReadFile(schemaFilePath)
-	if err != nil {
-		t.Fatalf("Failed to read schema file %s: %+v", schemaFilePath, err)
-	}
-
-	if bytes.Compare([]byte(v1alpha2.JSONSchema), schemaContents) != 0 {
-		t.Errorf("Schema file %s does not match hardcoded schema!", schemaFilePath)
-	}
-
-}
 
 func TestValidateSchema(t *testing.T) {
 
