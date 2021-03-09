@@ -62,11 +62,11 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 
 	// -> API
-	if simpleConfig.ExposeAPI.Host == "" {
-		simpleConfig.ExposeAPI.Host = k3d.DefaultAPIHost
-	}
 	if simpleConfig.ExposeAPI.HostIP == "" {
 		simpleConfig.ExposeAPI.HostIP = k3d.DefaultAPIHost
+	}
+	if simpleConfig.ExposeAPI.Host == "" {
+		simpleConfig.ExposeAPI.Host = simpleConfig.ExposeAPI.HostIP
 	}
 
 	kubeAPIExposureOpts := &k3d.ExposureOpts{
