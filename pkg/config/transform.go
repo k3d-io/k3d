@@ -77,7 +77,6 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		HostIP:   simpleConfig.ExposeAPI.HostIP,
 		HostPort: simpleConfig.ExposeAPI.HostPort,
 	}
-	fmt.Printf("RES2: %+v", kubeAPIExposureOpts)
 
 	// FILL CLUSTER CONFIG
 	newCluster := k3d.Cluster{
