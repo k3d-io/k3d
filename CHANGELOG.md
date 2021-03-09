@@ -1,5 +1,27 @@
 # Changelog
 
+## v4.3.0
+
+### Features / Enhancements
+
+- Use Go 1.16
+  - update dependencies, including kubernetes, docker, containerd and more
+  - add `darwin/arm64` (Apple Silicon, M1) build target (#530)
+  - use the new `//go:embed` feature to directly embed the jsonschema in the binary (#529)
+- Add a status column to `k3d registry list` output (#496, @ebr)
+- Allow non-prefixed (i.e. without `k3d-` prefix) user input when fetching resources (e.g. `k3d node get mycluster-server-0` would return successfully)
+
+### Fixes
+
+- Allow absolute paths for volumes on Windows (#510, @markrexwinkel)
+- fix nil-pointer exception in case of non-existent IPAM network config
+- Properly handle combinations of host/hostIP in kubeAPI settings reflected in the kubeconfig (#500, @fabricev)
+
+### Misc
+
+- docs: fix typo in stop command help text (#513, @searsaw)
+- ci/ghaction: AUR (pre-)release now on Ubuntu 20.04 and latest archlinux image
+
 ## v4.2.0
 
 ### Features / Enhancements
