@@ -21,6 +21,7 @@
 
 - docs: fix typo in stop command help text (#513, @searsaw)
 - ci/ghaction: AUR (pre-)release now on Ubuntu 20.04 and latest archlinux image
+- REMOVE incomplete and unused `containerd` runtime from codebase, as it was causing issues to build for windows and hasn't made any progress in quite some time now
 
 ## v4.2.0
 
