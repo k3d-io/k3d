@@ -105,35 +105,43 @@ Finally, we can create the cluster, mounting the CA file in the path we specifie
 
 #### Create a customized k3d-managed registry
 
-1. `#!bash k3d registry create myregistry.localhost --port 5111` creates a new registry called `myregistry.localhost` (could be used with automatic resolution of `*.localhost`, see next section)
-2. `#!bash k3d cluster create newcluster --registry-use k3d-myregistry.localhost:5111` (make sure you use the `k3d-` prefix here) creates a new cluster set up to us that registry
+1. `#!bash k3d registry create myregistry.localhost --port 12345` creates a new registry called `k3d-myregistry.localhost` (could be used with automatic resolution of `*.localhost`, see next section - also, **note the `k3d-` prefix** that k3d adds to all resources it creates)
+2. `#!bash k3d cluster create newcluster --registry-use k3d-myregistry.localhost:12345` (make sure you use the **`k3d-` prefix** here) creates a new cluster set up to us that registry
 3. continue with step 3 and 4 from the last section for testing
 
+<!-- Admonition to describe usage of a non-k3d-managed registry -->
 ### Using your own (not k3d-managed) local registry
 
-You can start your own local registry it with some `docker` commands, like:
+*We recommend using a k3d-managed registry, as it plays nicely together with k3d clusters, but here's also a guide to create your own (not k3d-managed) registry, if you need features or customizations, that k3d does not provide:*
 
-```bash
-docker volume create local_registry
-docker container run -d --name registry.localhost -v local_registry:/var/lib/registry --restart always -p 5000:5000 registry:2
-```
+??? nonk3dregistry "Using your own (not k3d-managed) local registry"
 
-These commands will start your registry in `registry.localhost:5000`. In order to push to this registry, you will need to make it accessible as described in the next section.
-Once your registry is up and running, we will need to add it to your `registries.yaml` configuration file.
-Finally, you have to connect the registry network to the k3d cluster network: `#!bash docker network connect k3d-k3s-default registry.localhost`. And then you can [test your local registry](#testing-your-registry).
+    You can start your own local registry it with some `docker` commands, like:
+
+    ```bash
+    docker volume create local_registry
+    docker container run -d --name registry.localhost -v local_registry:/var/lib/registry --restart always -p 5000:5000 registry:2
+    ```
+
+    These commands will start your registry in `registry.localhost:5000`. In order to push to this registry, you will need to make it accessible as described in the next section.
+    Once your registry is up and running, we will need to add it to your `registries.yaml` configuration file.
+    Finally, you have to connect the registry network to the k3d cluster network: `#!bash docker network connect k3d-k3s-default registry.localhost`. And then you can [test your local registry](#testing-your-registry).
 
 ### Pushing to your local registry address
 
-As per the guide above, the registry will be available at `registry.localhost:5000`. All the nodes in your k3d cluster can resolve this hostname (thanks to the DNS server provided by the Docker daemon) but, in order to be able to push to this registry, this hostname also has to be resolved by your host.
+As per the guide above, the registry will be available at `registry.localhost:5000`.
 
-Luckily (for Linux users), [NSS-myhostname](http://man7.org/linux/man-pages/man8/nss-myhostname.8.html) ships with many Linux distributions
-and should resolve `*.localhost` automatically to `127.0.0.1`.  
-Otherwise, it's installable using `sudo apt install libnss-myhostname`.
+All the nodes in your k3d cluster can resolve this hostname (thanks to the DNS server provided by the Docker daemon) but, in order to be able to push to this registry, this hostname also has to be resolved by your host.
 
-If it's not the case, you can add an entry in your `/etc/hosts` file like this:
+!!! info "nss-myhostname to resolve `*.localhost`"
+    Luckily (for Linux users), [NSS-myhostname](http://man7.org/linux/man-pages/man8/nss-myhostname.8.html) ships with many Linux distributions
+    and should resolve `*.localhost` automatically to `127.0.0.1`.  
+    Otherwise, it's installable using `sudo apt install libnss-myhostname`.
+
+If your system does not provide/support tools that can auto-resolve specific names to `127.0.0.1`, you can manually add an entry in your `/etc/hosts` (`c:\windows\system32\drivers\etc\hosts` on Windows) file like this:
 
 ```bash
-127.0.0.1 registry.localhost
+127.0.0.1 k3d-registry.localhost
 ```
 
 Once again, this will only work with k3s >= v0.10.0 (see the some sections below when using k3s <= v0.9.1)
@@ -145,14 +153,14 @@ You should test that you can
 - push to your registry from your local development machine.
 - use images from that registry in `Deployments` in your k3d cluster.
 
-We will verify these two things for a local registry (located at `registry.localhost:5000`) running in your development machine. Things would be basically the same for checking an external registry, but some additional configuration could be necessary in your local machine when using an authenticated or secure registry (please refer to Docker's documentation for this).
+We will verify these two things for a local registry (located at `k3d-registry.localhost:12345`) running in your development machine. Things would be basically the same for checking an external registry, but some additional configuration could be necessary in your local machine when using an authenticated or secure registry (please refer to Docker's documentation for this).
 
 First, we can download some image (like `nginx`) and push it to our local registry with:
 
 ```bash
 docker pull nginx:latest
-docker tag nginx:latest registry.localhost:5000/nginx:latest
-docker push registry.localhost:5000/nginx:latest
+docker tag nginx:latest k3d-registry.localhost:5000/nginx:latest
+docker push k3d-registry.localhost:5000/nginx:latest
 ```
 
 Then we can deploy a pod referencing this image to your cluster:
@@ -177,7 +185,7 @@ spec:
     spec:
       containers:
       - name: nginx-test-registry
-        image: registry.localhost:5000/nginx:latest
+        image: k3d-registry.localhost:12345/nginx:latest
         ports:
         - containerPort: 80
 EOF
@@ -191,32 +199,34 @@ k3s servers below v0.9.1 do not recognize the `registries.yaml` file as describe
 the in the beginning, so you will need to embed the contents of that file in a `containerd` configuration file.
 You will have to create your own `containerd` configuration file at some well-known path like `${HOME}/.k3d/config.toml.tmpl`, like this:
 
-<pre>
-# Original section: no changes
-[plugins.opt]
-path = "{{ .NodeConfig.Containerd.Opt }}"
-[plugins.cri]
-stream_server_address = "{{ .NodeConfig.AgentConfig.NodeName }}"
-stream_server_port = "10010"
-{{- if .IsRunningInUserNS }}
-disable_cgroup = true
-disable_apparmor = true
-restrict_oom_score_adj = true
-{{ end -}}
-{{- if .NodeConfig.AgentConfig.PauseImage }}
-sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
-{{ end -}}
-{{- if not .NodeConfig.NoFlannel }}
-  [plugins.cri.cni]
-    bin_dir = "{{ .NodeConfig.AgentConfig.CNIBinDir }}"
-    conf_dir = "{{ .NodeConfig.AgentConfig.CNIConfDir }}"
-{{ end -}}
+??? registriesprev091 "config.toml.tmpl"
 
-# Added section: additional registries and the endpoints
-[plugins.cri.registry.mirrors]
-  [plugins.cri.registry.mirrors."<b>registry.localhost:5000</b>"]
-    endpoint = ["http://<b>registry.localhost:5000</b>"]
-</pre>
+    ```toml
+    # Original section: no changes
+    [plugins.opt]
+    path = "{{ .NodeConfig.Containerd.Opt }}"
+    [plugins.cri]
+    stream_server_address = "{{ .NodeConfig.AgentConfig.NodeName }}"
+    stream_server_port = "10010"
+    {{- if .IsRunningInUserNS }}
+    disable_cgroup = true
+    disable_apparmor = true
+    restrict_oom_score_adj = true
+    {{ end -}}
+    {{- if .NodeConfig.AgentConfig.PauseImage }}
+    sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
+    {{ end -}}
+    {{- if not .NodeConfig.NoFlannel }}
+      [plugins.cri.cni]
+        bin_dir = "{{ .NodeConfig.AgentConfig.CNIBinDir }}"
+        conf_dir = "{{ .NodeConfig.AgentConfig.CNIConfDir }}"
+    {{ end -}}
+
+    # Added section: additional registries and the endpoints
+    [plugins.cri.registry.mirrors]
+      [plugins.cri.registry.mirrors."<b>registry.localhost:5000</b>"]
+        endpoint = ["http://<b>registry.localhost:5000</b>"]
+    ```
 
 and then mount it at `/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl` (where `containerd` in your k3d nodes will load it) when creating the k3d cluster:
 
