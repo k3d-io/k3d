@@ -827,25 +827,32 @@ For example, if we mount the CA file in <code>/etc/ssl/certs/my-company-root.pem
 </ol>
 <h4 id="create-a-customized-k3d-managed-registry">Create a customized k3d-managed registry<a class="headerlink" href="#create-a-customized-k3d-managed-registry" title="Permanent link">&para;</a></h4>
 <ol>
-<li><code class="highlight">k3d registry create myregistry.localhost --port <span class="m">5111</span></code> creates a new registry called <code>myregistry.localhost</code> (could be used with automatic resolution of <code>*.localhost</code>, see next section)</li>
-<li><code class="highlight">k3d cluster create newcluster --registry-use k3d-myregistry.localhost:5111</code> (make sure you use the <code>k3d-</code> prefix here) creates a new cluster set up to us that registry</li>
+<li><code class="highlight">k3d registry create myregistry.localhost --port <span class="m">12345</span></code> creates a new registry called <code>k3d-myregistry.localhost</code> (could be used with automatic resolution of <code>*.localhost</code>, see next section - also, <strong>note the <code>k3d-</code> prefix</strong> that k3d adds to all resources it creates)</li>
+<li><code class="highlight">k3d cluster create newcluster --registry-use k3d-myregistry.localhost:12345</code> (make sure you use the <strong><code>k3d-</code> prefix</strong> here) creates a new cluster set up to us that registry</li>
 <li>continue with step 3 and 4 from the last section for testing</li>
 </ol>
+<!-- Admonition to describe usage of a non-k3d-managed registry -->
 <h3 id="using-your-own-not-k3d-managed-local-registry">Using your own (not k3d-managed) local registry<a class="headerlink" href="#using-your-own-not-k3d-managed-local-registry" title="Permanent link">&para;</a></h3>
-<p>You can start your own local registry it with some <code>docker</code> commands, like:</p>
+<p><em>We recommend using a k3d-managed registry, as it plays nicely together with k3d clusters, but here&rsquo;s also a guide to create your own (not k3d-managed) registry, if you need features or customizations, that k3d does not provide:</em></p>
+<details class="nonk3dregistry"><summary>Using your own (not k3d-managed) local registry</summary><p>You can start your own local registry it with some <code>docker</code> commands, like:</p>
 <div class="highlight"><pre><span></span><code>docker volume create local_registry
 docker container run -d --name registry.localhost -v local_registry:/var/lib/registry --restart always -p <span class="m">5000</span>:5000 registry:2
 </code></pre></div>
 <p>These commands will start your registry in <code>registry.localhost:5000</code>. In order to push to this registry, you will need to make it accessible as described in the next section.
 Once your registry is up and running, we will need to add it to your <code>registries.yaml</code> configuration file.
 Finally, you have to connect the registry network to the k3d cluster network: <code class="highlight">docker network connect k3d-k3s-default registry.localhost</code>. And then you can <a href="#testing-your-registry">test your local registry</a>.</p>
+</details>
 <h3 id="pushing-to-your-local-registry-address">Pushing to your local registry address<a class="headerlink" href="#pushing-to-your-local-registry-address" title="Permanent link">&para;</a></h3>
-<p>As per the guide above, the registry will be available at <code>registry.localhost:5000</code>. All the nodes in your k3d cluster can resolve this hostname (thanks to the DNS server provided by the Docker daemon) but, in order to be able to push to this registry, this hostname also has to be resolved by your host.</p>
+<p>As per the guide above, the registry will be available at <code>registry.localhost:5000</code>.</p>
+<p>All the nodes in your k3d cluster can resolve this hostname (thanks to the DNS server provided by the Docker daemon) but, in order to be able to push to this registry, this hostname also has to be resolved by your host.</p>
+<div class="admonition info">
+<p class="admonition-title">nss-myhostname to resolve <code>*.localhost</code></p>
 <p>Luckily (for Linux users), <a href="http://man7.org/linux/man-pages/man8/nss-myhostname.8.html">NSS-myhostname</a> ships with many Linux distributions
 and should resolve <code>*.localhost</code> automatically to <code>127.0.0.1</code>.<br />
 Otherwise, it&rsquo;s installable using <code>sudo apt install libnss-myhostname</code>.</p>
-<p>If it&rsquo;s not the case, you can add an entry in your <code>/etc/hosts</code> file like this:</p>
-<div class="highlight"><pre><span></span><code><span class="m">127</span>.0.0.1 registry.localhost
+</div>
+<p>If your system does not provide/support tools that can auto-resolve specific names to <code>127.0.0.1</code>, you can manually add an entry in your <code>/etc/hosts</code> (<code>c:\windows\system32\drivers\etc\hosts</code> on Windows) file like this:</p>
+<div class="highlight"><pre><span></span><code><span class="m">127</span>.0.0.1 k3d-registry.localhost
 </code></pre></div>
 <p>Once again, this will only work with k3s &gt;= v0.10.0 (see the some sections below when using k3s &lt;= v0.9.1)</p>
 <h2 id="testing-your-registry">Testing your registry<a class="headerlink" href="#testing-your-registry" title="Permanent link">&para;</a></h2>
@@ -854,11 +861,11 @@ Otherwise, it&rsquo;s installable using <code>sudo apt install libnss-myhostname
 <li>push to your registry from your local development machine.</li>
 <li>use images from that registry in <code>Deployments</code> in your k3d cluster.</li>
 </ul>
-<p>We will verify these two things for a local registry (located at <code>registry.localhost:5000</code>) running in your development machine. Things would be basically the same for checking an external registry, but some additional configuration could be necessary in your local machine when using an authenticated or secure registry (please refer to Docker&rsquo;s documentation for this).</p>
+<p>We will verify these two things for a local registry (located at <code>k3d-registry.localhost:12345</code>) running in your development machine. Things would be basically the same for checking an external registry, but some additional configuration could be necessary in your local machine when using an authenticated or secure registry (please refer to Docker&rsquo;s documentation for this).</p>
 <p>First, we can download some image (like <code>nginx</code>) and push it to our local registry with:</p>
 <div class="highlight"><pre><span></span><code>docker pull nginx:latest
-docker tag nginx:latest registry.localhost:5000/nginx:latest
-docker push registry.localhost:5000/nginx:latest
+docker tag nginx:latest k3d-registry.localhost:5000/nginx:latest
+docker push k3d-registry.localhost:5000/nginx:latest
 </code></pre></div>
 <p>Then we can deploy a pod referencing this image to your cluster:</p>
 <div class="highlight"><pre><span></span><code>cat <span class="s">&lt;&lt;EOF | kubectl apply -f -</span>
@@ -880,7 +887,7 @@ docker push registry.localhost:5000/nginx:latest
 <span class="s">    spec:</span>
 <span class="s">      containers:</span>
 <span class="s">      - name: nginx-test-registry</span>
-<span class="s">        image: registry.localhost:5000/nginx:latest</span>
+<span class="s">        image: k3d-registry.localhost:12345/nginx:latest</span>
 <span class="s">        ports:</span>
 <span class="s">        - containerPort: 80</span>
 <span class="s">EOF</span>
@@ -890,33 +897,32 @@ docker push registry.localhost:5000/nginx:latest
 <p>k3s servers below v0.9.1 do not recognize the <code>registries.yaml</code> file as described in
 the in the beginning, so you will need to embed the contents of that file in a <code>containerd</code> configuration file.
 You will have to create your own <code>containerd</code> configuration file at some well-known path like <code>${HOME}/.k3d/config.toml.tmpl</code>, like this:</p>
-<pre>
-# Original section: no changes
-[plugins.opt]
-path = "{{ .NodeConfig.Containerd.Opt }}"
-[plugins.cri]
-stream_server_address = "{{ .NodeConfig.AgentConfig.NodeName }}"
-stream_server_port = "10010"
-{{- if .IsRunningInUserNS }}
-disable_cgroup = true
-disable_apparmor = true
-restrict_oom_score_adj = true
-{{ end -}}
-{{- if .NodeConfig.AgentConfig.PauseImage }}
-sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
-{{ end -}}
-{{- if not .NodeConfig.NoFlannel }}
-  [plugins.cri.cni]
-    bin_dir = "{{ .NodeConfig.AgentConfig.CNIBinDir }}"
-    conf_dir = "{{ .NodeConfig.AgentConfig.CNIConfDir }}"
-{{ end -}}
+<details class="registriesprev091"><summary>config.toml.tmpl</summary><div class="highlight"><pre><span></span><code><span class="c1"># Original section: no changes</span>
+<span class="k">[plugins.opt]</span>
+<span class="n">path</span> <span class="o">=</span> <span class="s">&quot;{{ .NodeConfig.Containerd.Opt }}&quot;</span>
+<span class="k">[plugins.cri]</span>
+<span class="n">stream_server_address</span> <span class="o">=</span> <span class="s">&quot;{{ .NodeConfig.AgentConfig.NodeName }}&quot;</span>
+<span class="n">stream_server_port</span> <span class="o">=</span> <span class="s">&quot;10010&quot;</span>
+<span class="p">{{</span><span class="err">-</span> <span class="n">if</span> <span class="p">.</span><span class="n">IsRunningInUserNS</span> <span class="p">}}</span>
+<span class="n">disable_cgroup</span> <span class="o">=</span> <span class="kc">true</span>
+<span class="n">disable_apparmor</span> <span class="o">=</span> <span class="kc">true</span>
+<span class="n">restrict_oom_score_adj</span> <span class="o">=</span> <span class="kc">true</span>
+<span class="p">{{</span> <span class="n">end</span> <span class="err">-</span><span class="p">}}</span>
+<span class="p">{{</span><span class="err">-</span> <span class="n">if</span> <span class="p">.</span><span class="n">NodeConfig</span><span class="p">.</span><span class="n">AgentConfig</span><span class="p">.</span><span class="n">PauseImage</span> <span class="p">}}</span>
+<span class="n">sandbox_image</span> <span class="o">=</span> <span class="s">&quot;{{ .NodeConfig.AgentConfig.PauseImage }}&quot;</span>
+<span class="p">{{</span> <span class="n">end</span> <span class="err">-</span><span class="p">}}</span>
+<span class="p">{{</span><span class="err">-</span> <span class="n">if</span> <span class="n">not</span> <span class="p">.</span><span class="n">NodeConfig</span><span class="p">.</span><span class="n">NoFlannel</span> <span class="p">}}</span>
+  <span class="k">[plugins.cri.cni]</span>
+    <span class="n">bin_dir</span> <span class="o">=</span> <span class="s">&quot;{{ .NodeConfig.AgentConfig.CNIBinDir }}&quot;</span>
+    <span class="n">conf_dir</span> <span class="o">=</span> <span class="s">&quot;{{ .NodeConfig.AgentConfig.CNIConfDir }}&quot;</span>
+<span class="p">{{</span> <span class="n">end</span> <span class="err">-</span><span class="p">}}</span>
 
-# Added section: additional registries and the endpoints
-[plugins.cri.registry.mirrors]
-  [plugins.cri.registry.mirrors."<b>registry.localhost:5000</b>"]
-    endpoint = ["http://<b>registry.localhost:5000</b>"]
-</pre>
-
+<span class="c1"># Added section: additional registries and the endpoints</span>
+<span class="k">[plugins.cri.registry.mirrors]</span>
+  <span class="k">[plugins.cri.registry.mirrors.&quot;&lt;b&gt;registry.localhost:5000&lt;/b&gt;&quot;]</span>
+    <span class="n">endpoint</span> <span class="o">=</span> <span class="k">[&quot;http://&lt;b&gt;registry.localhost:5000&lt;/b&gt;&quot;]</span>
+</code></pre></div>
+</details>
 <p>and then mount it at <code>/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl</code> (where <code>containerd</code> in your k3d nodes will load it) when creating the k3d cluster:</p>
 <div class="highlight"><pre><span></span><code>k3d cluster create mycluster <span class="se">\</span>
     --volume <span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/.k3d/config.toml.tmpl:/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
@@ -929,7 +935,7 @@ sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">February 3, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">March 11, 2021</span>
     
   </small>
 </div>
