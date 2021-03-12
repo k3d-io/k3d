@@ -13,6 +13,14 @@ This allows you to define all the things that you defined with CLI flags before 
     - k3d options are bundled in a scope named `options.k3d`, where `--no-rollback` is defined as `options.k3d.disableRollback`
     - repeatable flags (like `--port`) are reflected as YAML lists
 
+## Usage
+
+Using a config file is as easy as putting it in a well-known place in your file system and then referencing it via flag:
+
+- All options in config file: `k3d cluster create --config /home/me/my-awesome-config.yaml` (must be `.yaml`/`.yml`)
+- With CLI override (name): `k3d cluster create somename --config /home/me/my-awesome-config.yaml`
+- With CLI override (extra volume): `k3d cluster create --config /home/me/my-awesome-config.yaml --volume '/some/path:/some:path@server[0]'`
+
 ## Required Fields
 
 As of the time of writing this documentation, the config file only **requires** you to define two fields:
