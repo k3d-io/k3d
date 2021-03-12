@@ -526,6 +526,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#running-behind-a-corporate-proxy" class="md-nav__link">
+    Running behind a corporate proxy
+  </a>
+  
+    <nav class="md-nav" aria-label="Running behind a corporate proxy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pods-fail-to-start-x509-certificate-signed-by-unknown-authority" class="md-nav__link">
+    Pods fail to start: x509: certificate signed by unknown authority
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -618,6 +638,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#running-behind-a-corporate-proxy" class="md-nav__link">
+    Running behind a corporate proxy
+  </a>
+  
+    <nav class="md-nav" aria-label="Running behind a corporate proxy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pods-fail-to-start-x509-certificate-signed-by-unknown-authority" class="md-nav__link">
+    Pods fail to start: x509: certificate signed by unknown authority
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -692,6 +732,16 @@
 <ul>
 <li>As of version v3.1.0, we&rsquo;re injecting the <code>host.k3d.internal</code> entry into the k3d containers (k3s nodes) and into the CoreDNS ConfigMap, enabling you to access your host system by referring to it as <code>host.k3d.internal</code></li>
 </ul>
+<h2 id="running-behind-a-corporate-proxy">Running behind a corporate proxy<a class="headerlink" href="#running-behind-a-corporate-proxy" title="Permanent link">&para;</a></h2>
+<p>Running k3d behind a corporate proxy can lead to some issues with k3d that have already been reported in more than one issue.
+Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables to k3d, some have to be fixed in docker&rsquo;s <code>daemon.json</code> file and some are as easy as adding a volume mount.</p>
+<h3 id="pods-fail-to-start-x509-certificate-signed-by-unknown-authority">Pods fail to start: <code>x509: certificate signed by unknown authority</code><a class="headerlink" href="#pods-fail-to-start-x509-certificate-signed-by-unknown-authority" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Example Error Message: <code>Failed to create pod sandbox: rpc error: code = Unknown desc = failed to get sandbox image "docker.io/rancher/pause:3.1": failed to pull image "docker.io/rancher/pause:3.1": failed to pull and unpack image "docker.io/rancher/pause:3.1": failed to resolve reference "docker.io/rancher/pause:3.1": failed to do request: Head https://registry-1.docker.io/v2/rancher/pause/manifests/3.1: x509: certificate signed by unknown authority</code></li>
+<li>Problem: inside the container, the certificate of the corporate proxy cannot be validated</li>
+<li>Possible Solution: Mounting the CA Certificate from your host into the node containers at start time via <code>k3d cluster create --volume /path/to/your/certs.crt:/etc/ssl/certs/yourcert.crt</code></li>
+<li>Issue: <a href="https://github.com/rancher/k3d/discussions/535#discussioncomment-474982">rancher/k3d#535</a></li>
+</ul>
                 
                   
                     
@@ -700,7 +750,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 6, 2020</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">March 12, 2021</span>
     
   </small>
 </div>
