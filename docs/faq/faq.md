@@ -49,3 +49,15 @@
 ## How to access services (like a database) running on my Docker Host Machine
 
 - As of version v3.1.0, we're injecting the `host.k3d.internal` entry into the k3d containers (k3s nodes) and into the CoreDNS ConfigMap, enabling you to access your host system by referring to it as `host.k3d.internal`
+
+## Running behind a corporate proxy
+
+Running k3d behind a corporate proxy can lead to some issues with k3d that have already been reported in more than one issue.
+Some can be fixed by passing the `HTTP_PROXY` environment variables to k3d, some have to be fixed in docker's `daemon.json` file and some are as easy as adding a volume mount.
+
+### Pods fail to start: `x509: certificate signed by unknown authority`
+
+- Example Error Message: `Failed to create pod sandbox: rpc error: code = Unknown desc = failed to get sandbox image "docker.io/rancher/pause:3.1": failed to pull image "docker.io/rancher/pause:3.1": failed to pull and unpack image "docker.io/rancher/pause:3.1": failed to resolve reference "docker.io/rancher/pause:3.1": failed to do request: Head https://registry-1.docker.io/v2/rancher/pause/manifests/3.1: x509: certificate signed by unknown authority`
+- Problem: inside the container, the certificate of the corporate proxy cannot be validated
+- Possible Solution: Mounting the CA Certificate from your host into the node containers at start time via `k3d cluster create --volume /path/to/your/certs.crt:/etc/ssl/certs/yourcert.crt`
+- Issue: [rancher/k3d#535](https://github.com/rancher/k3d/discussions/535#discussioncomment-474982)
