@@ -297,6 +297,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    Usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#required-fields" class="md-nav__link">
     Required Fields
   </a>
@@ -590,6 +597,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    Usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#required-fields" class="md-nav__link">
     Required Fields
   </a>
@@ -661,6 +675,13 @@ This concerns naming and style/usage/structure, e.g.</p>
 <li>repeatable flags (like <code>--port</code>) are reflected as YAML lists</li>
 </ul>
 </div>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<p>Using a config file is as easy as putting it in a well-known place in your file system and then referencing it via flag:</p>
+<ul>
+<li>All options in config file: <code>k3d cluster create --config /home/me/my-awesome-config.yaml</code> (must be <code>.yaml</code>/<code>.yml</code>)</li>
+<li>With CLI override (name): <code>k3d cluster create somename --config /home/me/my-awesome-config.yaml</code></li>
+<li>With CLI override (extra volume): <code>k3d cluster create --config /home/me/my-awesome-config.yaml --volume '/some/path:/some:path@server[0]'</code></li>
+</ul>
 <h2 id="required-fields">Required Fields<a class="headerlink" href="#required-fields" title="Permanent link">&para;</a></h2>
 <p>As of the time of writing this documentation, the config file only <strong>requires</strong> you to define two fields:</p>
 <ul>
