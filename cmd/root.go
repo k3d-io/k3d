@@ -31,6 +31,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	rt "runtime"
+
 	"github.com/rancher/k3d/v4/cmd/cluster"
 	cfg "github.com/rancher/k3d/v4/cmd/config"
 	"github.com/rancher/k3d/v4/cmd/image"
@@ -182,7 +184,7 @@ func initRuntime() {
 		log.Fatalln(err)
 	}
 	runtimes.SelectedRuntime = runtime
-	log.Debugf("Selected runtime is '%T'", runtimes.SelectedRuntime)
+	log.Debugf("Selected runtime is '%T' on GOOS '%s/%s'", runtimes.SelectedRuntime, rt.GOOS, rt.GOARCH)
 }
 
 func printVersion() {

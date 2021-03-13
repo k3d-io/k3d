@@ -41,8 +41,23 @@ type regCreatePreProcessedFlags struct {
 }
 
 type regCreateFlags struct {
-	Image string
+	Image  string
+	NoHelp bool
 }
+
+var helptext string = `# You can now use the registry like this (example):
+# 1. create a new cluster that uses this registry
+k3d cluster create --registry-use %s
+
+# 2. tag an existing local image to be pushed to the registry
+docker tag nginx:latest %s/mynginx:v0.1
+
+# 3. push that image to the registry
+docker push %s/mynginx:v0.1
+
+# 4. run a pod that uses this image
+kubectl run mynginx --image %s/mynginx:v0.1
+`
 
 // NewCmdRegistryCreate returns a new cobra command
 func NewCmdRegistryCreate() *cobra.Command {
@@ -65,6 +80,11 @@ func NewCmdRegistryCreate() *cobra.Command {
 			if err := client.RegistryConnectClusters(cmd.Context(), runtimes.SelectedRuntime, regNode, clusters); err != nil {
 				log.Errorln(err)
 			}
+			log.Infof("Successfully created registry '%s'", reg.Host)
+			regString := fmt.Sprintf("%s:%s", reg.Host, reg.ExposureOpts.Binding.HostPort)
+			if !flags.NoHelp {
+				fmt.Println(fmt.Sprintf(helptext, regString, regString, regString, regString))
+			}
 		},
 	}
 
@@ -82,6 +102,8 @@ func NewCmdRegistryCreate() *cobra.Command {
 	cmd.Flags().StringVarP(&flags.Image, "image", "i", fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag), "Specify image used for the registry")
 
 	cmd.Flags().StringVarP(&ppFlags.Port, "port", "p", "random", "Select which port the registry should be listening on on your machine (localhost) (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d registry create --port 0.0.0.0:5111`")
+
+	cmd.Flags().BoolVar(&flags.NoHelp, "no-help", false, "Disable the help text (How-To use the registry)")
 
 	// done
 	return cmd

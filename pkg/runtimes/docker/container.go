@@ -140,6 +140,7 @@ func pullImage(ctx context.Context, docker *client.Client, image string) error {
 }
 
 func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, error) {
+
 	// (0) create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
@@ -153,8 +154,12 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 	for k, v := range node.Labels {
 		filters.Add("label", fmt.Sprintf("%s=%s", k, v))
 	}
-	// See https://github.com/moby/moby/issues/29997 for explanation around initial /
-	filters.Add("name", fmt.Sprintf("^/?%s$", node.Name)) // regex filtering for exact name match
+
+	// regex filtering for exact name match
+	// Assumptions:
+	// -> container names start with a / (see https://github.com/moby/moby/issues/29997)
+	// -> user input may or may not have the "k3d-" prefix
+	filters.Add("name", fmt.Sprintf("^/?(%s-)?%s$", k3d.DefaultObjectNamePrefix, node.Name))
 
 	containers, err := docker.ContainerList(ctx, types.ContainerListOptions{
 		Filters: filters,
@@ -165,8 +170,7 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 	}
 
 	if len(containers) > 1 {
-		log.Errorln("Failed to get a single container")
-		return nil, err
+		return nil, fmt.Errorf("Failed to get a single container for name '%s'. Found: %d", node.Name, len(containers))
 	}
 
 	if len(containers) == 0 {
