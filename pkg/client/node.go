@@ -335,30 +335,33 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 
 	// memory limits
 	if node.Memory != "" {
-		memory, err := dockerunits.RAMInBytes(node.Memory)
-		if err != nil {
-			return fmt.Errorf("Invalid memory limit format: %+v", err)
-		}
-		// mount fake meminfo as readonly
-		fakemempath, err := util.MakeFakeMeminfo(memory, node.Name)
-		if err != nil {
-			return fmt.Errorf("Failed to create fake meminfo: %+v", err)
-		}
-		node.Volumes = append(node.Volumes, fmt.Sprintf("%s:/proc/meminfo:ro", fakemempath))
-		// mount empty edac folder, but only if it exists
-		exists, err := docker.CheckIfDirectoryExists(ctx, node.Image, "/sys/devices/system/edac")
-		if err != nil {
-			return fmt.Errorf("Failed to check for the existence of edac folder: %+v", err)
-		}
-		if exists {
-			log.Debugln("Found edac folder")
-			fakeedacpath, err := util.MakeFakeEdac(node.Name)
+		if runtime != runtimes.Docker {
+			log.Warn("ignoring specified memory limits as runtime is not Docker")
+		} else {
+			memory, err := dockerunits.RAMInBytes(node.Memory)
 			if err != nil {
-				return fmt.Errorf("Failed to create fake edac: %+v", err)
+				return fmt.Errorf("Invalid memory limit format: %+v", err)
 			}
-			node.Volumes = append(node.Volumes, fmt.Sprintf("%s:/sys/devices/system/edac:ro", fakeedacpath))
+			// mount fake meminfo as readonly
+			fakemempath, err := util.MakeFakeMeminfo(memory, node.Name)
+			if err != nil {
+				return fmt.Errorf("Failed to create fake meminfo: %+v", err)
+			}
+			node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s:ro", util.MemInfoPath, fakemempath))
+			// mount empty edac folder, but only if it exists
+			exists, err := docker.CheckIfDirectoryExists(ctx, node.Image, util.EdacFolderPath)
+			if err != nil {
+				return fmt.Errorf("Failed to check for the existence of edac folder: %+v", err)
+			}
+			if exists {
+				log.Debugln("Found edac folder")
+				fakeedacpath, err := util.MakeFakeEdac(node.Name)
+				if err != nil {
+					return fmt.Errorf("Failed to create fake edac: %+v", err)
+				}
+				node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s:ro", util.EdacFolderPath, fakeedacpath))
+			}
 		}
-
 	}
 
 	/*

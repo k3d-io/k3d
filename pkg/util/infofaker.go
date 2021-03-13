@@ -31,6 +31,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	EdacFolderPath = "/sys/devices/system/edac"
+	MemInfoPath    = "/proc/meminfo"
+)
+
 // creates a mininal fake meminfo with fields required by cadvisor (see machine.go in cadvisor)
 func meminfoContent(totalKB int64) string {
 	var lines = []string{
@@ -62,15 +67,15 @@ func GetNodeFakerDirOrCreate(name string) (string, error) {
 }
 
 // GetFakeMeminfoPathForName returns a path to (existent or not) fake meminfo file for a given node/container name
-func GetFakeMeminfoPathForName(uniqueName string) (string, error) {
-	return fakeInfoPathForName("meminfo", uniqueName)
+func GetFakeMeminfoPathForName(nodeName string) (string, error) {
+	return fakeInfoPathForName("meminfo", nodeName)
 }
 
 // MakeFakeMeminfo creates a fake meminfo file to be mounted and provide a specific RAM capacity.
 // This file is created on a per specific container/node basis, uniqueName must ensure that.
 // Returns a path to the file
-func MakeFakeMeminfo(memoryBytes int64, uniqueName string) (string, error) {
-	fakeMeminfoPath, err := GetFakeMeminfoPathForName(uniqueName)
+func MakeFakeMeminfo(memoryBytes int64, nodeName string) (string, error) {
+	fakeMeminfoPath, err := GetFakeMeminfoPathForName(nodeName)
 	if err != nil {
 		return "", err
 	}
@@ -93,8 +98,8 @@ func MakeFakeMeminfo(memoryBytes int64, uniqueName string) (string, error) {
 
 // MakeFakeEdac creates an empty edac folder to force cadvisor
 // to use meminfo even for ECC memory
-func MakeFakeEdac(uniqueName string) (string, error) {
-	dir, err := GetNodeFakerDirOrCreate(uniqueName)
+func MakeFakeEdac(nodeName string) (string, error) {
+	dir, err := GetNodeFakerDirOrCreate(nodeName)
 	if err != nil {
 		return "", err
 	}
@@ -109,9 +114,9 @@ func MakeFakeEdac(uniqueName string) (string, error) {
 }
 
 // returns a path to (existent or not) fake (mem or cpu)info file for a given node/container name
-func fakeInfoPathForName(infoType string, uniqueName string) (string, error) {
+func fakeInfoPathForName(infoType string, nodeName string) (string, error) {
 	// this file needs to be kept across reboots, keep it in ~/.k3d
-	dir, err := GetNodeFakerDirOrCreate(uniqueName)
+	dir, err := GetNodeFakerDirOrCreate(nodeName)
 	if err != nil {
 		return "", err
 	}
