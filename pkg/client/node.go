@@ -347,7 +347,7 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 			if err != nil {
 				return fmt.Errorf("Failed to create fake meminfo: %+v", err)
 			}
-			node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s:ro", util.MemInfoPath, fakemempath))
+			node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s:ro", fakemempath, util.MemInfoPath))
 			// mount empty edac folder, but only if it exists
 			exists, err := docker.CheckIfDirectoryExists(ctx, node.Image, util.EdacFolderPath)
 			if err != nil {
@@ -359,7 +359,7 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 				if err != nil {
 					return fmt.Errorf("Failed to create fake edac: %+v", err)
 				}
-				node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s:ro", util.EdacFolderPath, fakeedacpath))
+				node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s:ro", fakeedacpath, util.EdacFolderPath))
 			}
 		}
 	}
