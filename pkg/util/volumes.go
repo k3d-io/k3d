@@ -19,17 +19,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
 package util
 
 import (
 	"fmt"
 	"os"
+	rt "runtime"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/rancher/k3d/v4/pkg/runtimes"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // ValidateVolumeMount checks, if the source of volume mounts exists and if the destination is an absolute path
@@ -41,17 +41,29 @@ func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) error {
 
 	// validate 'SRC[:DEST]' substring
 	split := strings.Split(volumeMount, ":")
+	// a volume mapping can have 3 parts seperated by a ':' followed by a node filter
+	// [SOURCE:]DEST[:OPT[,OPT]][@NODEFILTER[;NODEFILTER...]]
+	// On Windows the source path needs to be an absolute path which means the path starts with
+	// a drive designator and will also have a ':' in it. So for Windows the maxParts is increased by one.
+	maxParts := 3
+	if rt.GOOS == "windows" {
+		maxParts++
+	}
 	if len(split) < 1 {
 		return fmt.Errorf("No volume/path specified")
 	}
-	if len(split) > 3 {
-		return fmt.Errorf("Invalid volume mount '%s': maximal 2 ':' allowed", volumeMount)
+	if len(split) > maxParts {
+		return fmt.Errorf("Invalid volume mount '%s': maximal %d ':' allowed", volumeMount, maxParts-1)
 	}
 
 	// we only have SRC specified -> DEST = SRC
+	// On windows the first part of the SRC is the drive letter, so we need to concat the first and second parts to get the path.
 	if len(split) == 1 {
 		src = split[0]
 		dest = src
+	} else if rt.GOOS == "windows" {
+		src = split[0] + ":" + split[1]
+		dest = split[2]
 	} else {
 		src = split[0]
 		dest = split[1]
