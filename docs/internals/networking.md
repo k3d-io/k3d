@@ -25,4 +25,4 @@ run into issues with grabbing certificates from the API-Server. Single-Node clus
 
 ### `none` "network"
 
-Well.. this doesn't really make sense for k3d anyway ¯\_(ツ)_/¯
+Well.. this doesn't really make sense for k3d anyway ¯\\\_(ツ)\_/¯
