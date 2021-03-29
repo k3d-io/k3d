@@ -180,3 +180,62 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 	return &containers[0], nil
 
 }
+
+// executes an arbitrary command in a container while returning its exit code.
+// useful to check something in docker env
+func executeCheckInContainer(ctx context.Context, image string, cmd []string) (int64, error) {
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return -1, err
+	}
+	defer docker.Close()
+
+	if err = pullImage(ctx, docker, image); err != nil {
+		return -1, err
+	}
+
+	resp, err := docker.ContainerCreate(ctx, &container.Config{
+		Image:      image,
+		Cmd:        cmd,
+		Tty:        false,
+		Entrypoint: []string{},
+	}, nil, nil, nil, "")
+	if err != nil {
+		log.Errorf("Failed to create container from image %s with cmd %s", image, cmd)
+		return -1, err
+	}
+
+	if err = startContainer(ctx, resp.ID); err != nil {
+		return -1, err
+	}
+
+	exitCode := -1
+	statusCh, errCh := docker.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			log.Errorf("Error while waiting for container %s to exit", resp.ID)
+			return -1, err
+		}
+	case status := <-statusCh:
+		exitCode = int(status.StatusCode)
+	}
+
+	if err = removeContainer(ctx, resp.ID); err != nil {
+		return -1, err
+	}
+
+	return int64(exitCode), nil
+}
+
+// CheckIfDirectoryExists checks for the existence of a given path inside the docker environment
+func CheckIfDirectoryExists(ctx context.Context, image string, dir string) (bool, error) {
+	log.Tracef("checking if dir %s exists in docker environment...", dir)
+	shellCmd := fmt.Sprintf("[ -d \"%s\" ] && exit 0 || exit 1", dir)
+	cmd := []string{"sh", "-c", shellCmd}
+	exitCode, err := executeCheckInContainer(ctx, image, cmd)
+	log.Tracef("check dir container returned %d exist code", exitCode)
+	return exitCode == 0, err
+
+}

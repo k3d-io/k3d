@@ -97,7 +97,9 @@ type SimpleConfigOptions struct {
 }
 
 type SimpleConfigOptionsRuntime struct {
-	GPURequest string `mapstructure:"gpuRequest" yaml:"gpuRequest"`
+	GPURequest    string `mapstructure:"gpuRequest" yaml:"gpuRequest"`
+	ServersMemory string `mapstructure:"serversMemory" yaml:"serversMemory"`
+	AgentsMemory  string `mapstructure:"agentsMemory" yaml:"agentsMemory"`
 }
 
 type SimpleConfigOptionsK3d struct {

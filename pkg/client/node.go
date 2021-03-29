@@ -26,13 +26,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"time"
 
+	dockerunits "github.com/docker/go-units"
 	"github.com/imdario/mergo"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
@@ -329,6 +333,37 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 		}
 	}
 
+	// memory limits
+	if node.Memory != "" {
+		if runtime != runtimes.Docker {
+			log.Warn("ignoring specified memory limits as runtime is not Docker")
+		} else {
+			memory, err := dockerunits.RAMInBytes(node.Memory)
+			if err != nil {
+				return fmt.Errorf("Invalid memory limit format: %+v", err)
+			}
+			// mount fake meminfo as readonly
+			fakemempath, err := util.MakeFakeMeminfo(memory, node.Name)
+			if err != nil {
+				return fmt.Errorf("Failed to create fake meminfo: %+v", err)
+			}
+			node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s:ro", fakemempath, util.MemInfoPath))
+			// mount empty edac folder, but only if it exists
+			exists, err := docker.CheckIfDirectoryExists(ctx, node.Image, util.EdacFolderPath)
+			if err != nil {
+				return fmt.Errorf("Failed to check for the existence of edac folder: %+v", err)
+			}
+			if exists {
+				log.Debugln("Found edac folder")
+				fakeedacpath, err := util.MakeFakeEdac(node.Name)
+				if err != nil {
+					return fmt.Errorf("Failed to create fake edac: %+v", err)
+				}
+				node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s:ro", fakeedacpath, util.EdacFolderPath))
+			}
+		}
+	}
+
 	/*
 	 * CREATION
 	 */
@@ -344,6 +379,17 @@ func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, o
 	// delete node
 	if err := runtime.DeleteNode(ctx, node); err != nil {
 		log.Error(err)
+	}
+
+	// delete fake folder created for limits
+	if node.Memory != "" {
+		log.Debug("Cleaning fake files folder from k3d config dir for this node...")
+		filepath, err := util.GetNodeFakerDirOrCreate(node.Name)
+		err = os.RemoveAll(filepath)
+		if err != nil {
+			// this err prob should not be fatal, just log it
+			log.Errorf("Could not remove fake files folder for node %s: %+v", node.Name, err)
+		}
 	}
 
 	// update the server loadbalancer

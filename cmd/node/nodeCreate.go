@@ -27,6 +27,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	dockerunits "github.com/docker/go-units"
 	"github.com/rancher/k3d/v4/cmd/util"
 	k3dc "github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
@@ -67,6 +68,7 @@ func NewCmdNodeCreate() *cobra.Command {
 	}
 
 	cmd.Flags().StringP("image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image used for the node(s)")
+	cmd.Flags().String("memory", "", "Memory limit imposed on the node [From docker]")
 
 	cmd.Flags().BoolVar(&createNodeOpts.Wait, "wait", false, "Wait for the node(s) to be ready before returning.")
 	cmd.Flags().DurationVar(&createNodeOpts.Timeout, "timeout", 0*time.Second, "Maximum waiting time for '--wait' before canceling/returning.")
@@ -112,6 +114,16 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 		Name: clusterName,
 	}
 
+	// --memory
+	memory, err := cmd.Flags().GetString("memory")
+	if err != nil {
+		log.Errorln("No memory specified")
+		log.Fatalln(err)
+	}
+	if _, err := dockerunits.RAMInBytes(memory); memory != "" && err != nil {
+		log.Errorf("Provided memory limit value is invalid")
+	}
+
 	// generate list of nodes
 	nodes := []*k3d.Node{}
 	for i := 0; i < replicas; i++ {
@@ -123,6 +135,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 				k3d.LabelRole: roleStr,
 			},
 			Restart: true,
+			Memory:  memory,
 		}
 		nodes = append(nodes, node)
 	}

@@ -184,6 +184,8 @@ type ClusterCreateOpts struct {
 	K3sServerArgs              []string          `yaml:"k3sServerArgs" json:"k3sServerArgs,omitempty"`
 	K3sAgentArgs               []string          `yaml:"k3sAgentArgs" json:"k3sAgentArgs,omitempty"`
 	GPURequest                 string            `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
+	ServersMemory              string            `yaml:"serversMemory" json:"serversMemory,omitempty"`
+	AgentsMemory               string            `yaml:"agentsMemory" json:"agentsMemory,omitempty"`
 	NodeHooks                  []NodeHook        `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 	GlobalLabels               map[string]string `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
 	GlobalEnv                  []string          `yaml:"globalEnv,omitempty" json:"globalEnv,omitempty"`
@@ -328,6 +330,7 @@ type Node struct {
 	ServerOpts ServerOpts        `yaml:"serverOpts" json:"serverOpts,omitempty"`
 	AgentOpts  AgentOpts         `yaml:"agentOpts" json:"agentOpts,omitempty"`
 	GPURequest string            // filled automatically
+	Memory     string            // filled automatically
 	State      NodeState         // filled automatically
 }
 

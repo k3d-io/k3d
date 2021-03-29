@@ -34,6 +34,7 @@ import (
 
 	"fmt"
 
+	dockerunits "github.com/docker/go-units"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -61,6 +62,21 @@ func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config
 		// in hostNetwork mode, we're not going to map a hostport. Here it should always use 6443.
 		// Note that hostNetwork mode is super inflexible and since we don't change the backend port (on the container), it will only be one hostmode cluster allowed.
 		return fmt.Errorf("The API Port can not be changed when using 'host' network")
+	}
+
+	// memory limits must have proper format
+	// if empty we don't care about errors in parsing
+	if config.ClusterCreateOpts.ServersMemory != "" {
+		if _, err := dockerunits.RAMInBytes(config.ClusterCreateOpts.ServersMemory); err != nil {
+			return fmt.Errorf("Provided servers memory limit value is invalid")
+		}
+
+	}
+
+	if config.ClusterCreateOpts.AgentsMemory != "" {
+		if _, err := dockerunits.RAMInBytes(config.ClusterCreateOpts.AgentsMemory); err != nil {
+			return fmt.Errorf("Provided agents memory limit value is invalid")
+		}
 	}
 
 	// validate nodes one by one

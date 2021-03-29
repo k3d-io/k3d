@@ -24,11 +24,12 @@ package cluster
 
 import (
 	"fmt"
-	"github.com/docker/go-connections/nat"
 	"os"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/docker/go-connections/nat"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -315,6 +316,12 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	cmd.Flags().String("gpus", "", "GPU devices to add to the cluster node containers ('all' to pass all GPUs) [From docker]")
 	_ = cfgViper.BindPFlag("options.runtime.gpurequest", cmd.Flags().Lookup("gpus"))
+
+	cmd.Flags().String("servers-memory", "", "Memory limit imposed on the server nodes [From docker]")
+	_ = cfgViper.BindPFlag("options.runtime.serversmemory", cmd.Flags().Lookup("servers-memory"))
+
+	cmd.Flags().String("agents-memory", "", "Memory limit imposed on the agents nodes [From docker]")
+	_ = cfgViper.BindPFlag("options.runtime.agentsmemory", cmd.Flags().Lookup("agents-memory"))
 
 	/* Image Importing */
 	cmd.Flags().Bool("no-image-volume", false, "Disable the creation of a volume for importing images")
