@@ -1,5 +1,24 @@
 # Changelog
 
+## v4.4.0
+
+### Features / Enhancements
+
+- Support for Memory Limits using e.g. `--servers-memory 1g` or `--agents-memory 1.5g` (#494, @konradmalik)
+  - enabled by providing fake `meminfo` files
+
+### Fixes
+
+- fix absolute paths in volume mounts on Windows (#510, @markrexwinkel)
+
+### Documentation
+
+- clarify registry names in docs and help text
+- add usage section about config file (#534)
+- add FAQ entry on certificate error when running behind corporate proxy
+- add MacPorts install instructions (#539, @herbygillot)
+- Heal Shruggie: Replace amputated arm (#540, @claycooper)
+
 ## v4.3.0
 
 ### Features / Enhancements
