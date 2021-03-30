@@ -152,7 +152,6 @@ github.com/magiconair/properties
 ## explicit
 github.com/mitchellh/go-homedir
 # github.com/mitchellh/mapstructure v1.3.3
-## explicit
 github.com/mitchellh/mapstructure
 # github.com/moby/sys/mount v0.2.0
 ## explicit
@@ -186,8 +185,7 @@ github.com/pkg/errors
 ## explicit
 github.com/sirupsen/logrus
 github.com/sirupsen/logrus/hooks/writer
-# github.com/spf13/afero v1.3.4
-## explicit
+# github.com/spf13/afero v1.5.1
 github.com/spf13/afero
 github.com/spf13/afero/mem
 # github.com/spf13/cast v1.3.1
@@ -201,7 +199,7 @@ github.com/spf13/cobra
 github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
-# github.com/spf13/viper v1.7.1
+# github.com/spf13/viper v1.7.1 => github.com/iwilltry42/viper v1.7.2-iwilltry42.0
 ## explicit
 github.com/spf13/viper
 # github.com/stretchr/testify v1.7.0
@@ -384,3 +382,4 @@ sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.2.0
 ## explicit
 sigs.k8s.io/yaml
+# github.com/spf13/viper => github.com/iwilltry42/viper v1.7.2-iwilltry42.0

@@ -19,7 +19,6 @@ require (
 	github.com/imdario/mergo v0.3.11
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/moby/term v0.0.0-20201110203204-bea5bbe245bf // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
@@ -28,7 +27,6 @@ require (
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/afero v1.3.4 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
@@ -50,3 +48,5 @@ require (
 	k8s.io/client-go v0.20.4
 	sigs.k8s.io/yaml v1.2.0
 )
+
+replace github.com/spf13/viper => github.com/iwilltry42/viper v1.7.2-iwilltry42.0
