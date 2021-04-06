@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.4.1
+
+### Fixes
+
+- use viper fork that contains a fix to make cobra's `StringArray` flags work properly
+  - this fixes the issue, that flag values containing commas got split (because we had to use `StringSlice` type flags)
+  - this is to be changed back to upstream viper as soon as <https://github.com/spf13/viper/pull/398> (or a similar fix) got merged
+
 ## v4.4.0
 
 ### Features / Enhancements
