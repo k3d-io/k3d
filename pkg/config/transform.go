@@ -30,7 +30,7 @@ import (
 	"strings"
 
 	"github.com/docker/go-connections/nat"
-	cliutil "github.com/rancher/k3d/v4/cmd/util" // TODO: move parseapiport to pkg
+	cliutil "github.com/rancher/k3d/v4/cmd/v1/util" // TODO: move parseapiport to pkg
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
