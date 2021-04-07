@@ -30,6 +30,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 
 	rt "runtime"
 
@@ -121,6 +122,23 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			printVersion()
 		},
+	})
+
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "runtime-info",
+		Short: "Show runtime information",
+		Long:  "Show some information about the runtime environment (e.g. docker info)",
+		Run: func(cmd *cobra.Command, args []string) {
+			info, err := runtimes.SelectedRuntime.Info()
+			if err != nil {
+				log.Fatalln(err)
+			}
+			err = yaml.NewEncoder(os.Stdout).Encode(info)
+			if err != nil {
+				log.Fatalln(err)
+			}
+		},
+		Hidden: true,
 	})
 
 	// Init
