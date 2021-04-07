@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
+	runtimeTypes "github.com/rancher/k3d/v4/pkg/runtimes/types"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
 
@@ -72,6 +73,7 @@ type Runtime interface {
 	GetHostIP(context.Context, string) (net.IP, error)
 	ConnectNodeToNetwork(context.Context, *k3d.Node, string) error      // @param context, node, network name
 	DisconnectNodeFromNetwork(context.Context, *k3d.Node, string) error // @param context, node, network name
+	Info() (*runtimeTypes.RuntimeInfo, error)
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it
