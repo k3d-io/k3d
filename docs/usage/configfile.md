@@ -47,7 +47,7 @@ Currently, the config file is still in an Alpha-State, meaning, that it is subje
 
 ### All Options: Example
 
-Since the config options and the config file are changing quite a bit, it's hard to keep track of all the supported config file settinggs, so here's an example showing all of them as of the time of writing:
+Since the config options and the config file are changing quite a bit, it's hard to keep track of all the supported config file settings, so here's an example showing all of them as of the time of writing:
 
 ```yaml
 # k3d configuration file, saved as e.g. /home/me/myk3dcluster.yaml
