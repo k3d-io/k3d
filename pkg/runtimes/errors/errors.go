@@ -28,3 +28,9 @@ var ErrRuntimeNetworkNotEmpty = errors.New("network not empty")
 
 // ErrRuntimeContainerUnknown describes the situation, where we're inspecting a container that's not obviously managed by k3d
 var ErrRuntimeContainerUnknown = errors.New("container not managed by k3d: missing default label(s)")
+
+// Runtime Network Errors
+var (
+	ErrRuntimeNetworkNotExists     = errors.New("network does not exist")
+	ErrRuntimeNetworkMultiSameName = errors.New("multiple networks with same name found")
+)
