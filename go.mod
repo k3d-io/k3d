@@ -45,6 +45,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools v2.2.0+incompatible
 	gotest.tools/v3 v3.0.3 // indirect
+	inet.af/netaddr v0.0.0-20210403172118-1e1430f727e0
 	k8s.io/client-go v0.20.4
 	sigs.k8s.io/yaml v1.2.0
 )

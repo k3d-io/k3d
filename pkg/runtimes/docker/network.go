@@ -37,6 +37,63 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// GetNetwork returns a given network
+func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (*k3d.ClusterNetwork, error) {
+	// (0) create new docker client
+	docker, err := GetDockerClient()
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return nil, err
+	}
+	defer docker.Close()
+
+	if searchNet.ID == "" && searchNet.Name == "" {
+		return nil, fmt.Errorf("need one of name, id to get network")
+	}
+	// configure list filters
+	filter := filters.NewArgs()
+	if searchNet.ID != "" {
+		filter.Add("id", fmt.Sprintf("^/?%s$", searchNet.ID)) // regex filtering for exact ID match
+	}
+	if searchNet.Name != "" {
+		filter.Add("name", fmt.Sprintf("^/?%s$", searchNet.Name)) // regex filtering for exact name match
+	}
+
+	// get filtered list of networks
+	networkList, err := docker.NetworkList(ctx, types.NetworkListOptions{
+		Filters: filter,
+	})
+	if err != nil {
+		log.Errorln("Failed to list docker networks")
+		return nil, err
+	}
+
+	// Only one Network allowed
+	if len(networkList) > 1 {
+		return nil, fmt.Errorf("found %d networks instead of only one", len(networkList))
+	}
+
+	network := &k3d.ClusterNetwork{
+		Name: networkList[0].Name,
+		ID:   networkList[0].ID,
+		IPAM: k3d.IPAM{
+			IPRange: networkList[0].IPAM.Config[0].Subnet,
+			IPsUsed: []string{
+				networkList[0].IPAM.Config[0].Gateway,
+			},
+		},
+	}
+
+	for _, container := range networkList[0].Containers {
+		if container.IPv4Address != "" {
+			network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, container.IPv4Address)
+		}
+	}
+
+	return network, nil
+
+}
+
 // CreateNetworkIfNotPresent creates a new docker network
 // @return: network, exists, error
 func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (*k3d.ClusterNetwork, bool, error) {
@@ -69,12 +126,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (*k3
 
 	if len(networkList) > 0 {
 		log.Infof("Network with name '%s' already exists with ID '%s'", name, networkList[0].ID)
-		networkDetails, err := docker.NetworkInspect(ctx, networkList[0].ID, types.NetworkInspectOptions{})
-		if err != nil {
-			log.Errorln("Failed to inspect existing network")
-			return nil, true, err
-		}
-		return &k3d.ClusterNetwork{Name: name, ID: networkDetails.ID, IPRange: networkDetails.IPAM.Config[0].Subnet}, true, nil
+		return &k3d.ClusterNetwork{Name: name, ID: networkList[0].ID, IPAM: k3d.IPAM{IPRange: networkList[0].IPAM.Config[0].Subnet}}, true, nil
 	}
 
 	// (3) Create a new network
@@ -94,7 +146,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (*k3
 	}
 
 	log.Infof("Created network '%s'", name)
-	return &k3d.ClusterNetwork{Name: name, ID: networkDetails.ID, IPRange: networkDetails.IPAM.Config[0].Subnet}, false, nil
+	return &k3d.ClusterNetwork{Name: name, ID: networkDetails.ID, IPAM: k3d.IPAM{IPRange: networkDetails.IPAM.Config[0].Subnet}}, false, nil
 }
 
 // DeleteNetwork deletes a network
