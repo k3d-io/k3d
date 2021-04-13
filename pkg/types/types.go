@@ -29,6 +29,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/rancher/k3d/v4/pkg/types/k3s"
 	"github.com/rancher/k3d/v4/version"
+	"inet.af/netaddr"
 )
 
 // DefaultClusterName specifies the default name used for newly created clusters
@@ -256,8 +257,9 @@ type ImageImportOpts struct {
 }
 
 type IPAM struct {
-	IPRange string   `yaml:"ipRange" json:"ipRange,omitempty"`
-	IPsUsed []string `yaml:"ipsUsed" json:"ipsUsed,omitempty"`
+	IPPrefix netaddr.IPPrefix `yaml:"ipPrefix" json:"ipPrefix,omitempty"`
+	IPsUsed  []netaddr.IP     `yaml:"ipsUsed" json:"ipsUsed,omitempty"`
+	Managed  bool             // IPAM is done by k3d
 }
 
 // ClusterNetwork describes a network which a cluster is running in

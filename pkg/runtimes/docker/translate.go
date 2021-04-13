@@ -124,7 +124,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	networkingConfig.EndpointsConfig = endpointsConfig
 
 	/* Static IP */
-	if node.Role == k3d.ServerRole && node.IP.IP != "" && node.IP.Static {
+	if node.IP.IP != "" && node.IP.Static {
 		epconf := networkingConfig.EndpointsConfig[node.Networks[0]]
 		if epconf.IPAMConfig == nil {
 			epconf.IPAMConfig = &network.EndpointIPAMConfig{}

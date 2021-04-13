@@ -126,6 +126,7 @@ type SimpleConfig struct {
 	ExposeAPI    SimpleExposureOpts      `mapstructure:"kubeAPI" yaml:"kubeAPI" json:"kubeAPI,omitempty"`
 	Image        string                  `mapstructure:"image" yaml:"image" json:"image,omitempty"`
 	Network      string                  `mapstructure:"network" yaml:"network" json:"network,omitempty"`
+	Subnet       string                  `mapstructure:"subnet" yaml:"subnet" json:"subnet,omitempty"`
 	ClusterToken string                  `mapstructure:"token" yaml:"clusterToken" json:"clusterToken,omitempty"` // default: auto-generated
 	Volumes      []VolumeWithNodeFilters `mapstructure:"volumes" yaml:"volumes" json:"volumes,omitempty"`
 	Ports        []PortWithNodeFilters   `mapstructure:"ports" yaml:"ports" json:"ports,omitempty"`

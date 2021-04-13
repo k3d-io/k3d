@@ -37,26 +37,17 @@ func GetIP(ctx context.Context, runtime k3drt.Runtime, network *k3d.ClusterNetwo
 		return "", err
 	}
 
-	prefix, err := netaddr.ParseIPPrefix(network.IPAM.IPRange)
-	if err != nil {
-		return "", err
-	}
-
 	var ipsetbuilder netaddr.IPSetBuilder
 
-	ipsetbuilder.AddPrefix(prefix)
+	ipsetbuilder.AddPrefix(network.IPAM.IPPrefix)
 
 	for _, ipused := range network.IPAM.IPsUsed {
-		ip, err := netaddr.ParseIP(ipused)
-		if err != nil {
-			return "", err
-		}
-		ipsetbuilder.Remove(ip)
+		ipsetbuilder.Remove(ipused)
 	}
 
 	// exclude first and last address
-	ipsetbuilder.Remove(prefix.Range().From)
-	ipsetbuilder.Remove(prefix.Range().To)
+	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().From)
+	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().To)
 
 	ipset := ipsetbuilder.IPSet()
 
