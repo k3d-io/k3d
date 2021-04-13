@@ -31,6 +31,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"inet.af/netaddr"
 
 	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
@@ -68,26 +69,44 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 		return nil, err
 	}
 
-	// Only one Network allowed
-	if len(networkList) > 1 {
-		return nil, fmt.Errorf("found %d networks instead of only one", len(networkList))
+	if len(networkList) == 0 {
+		return nil, runtimeErr.ErrRuntimeNetworkNotExists
+	}
+
+	prefix, err := netaddr.ParseIPPrefix(networkList[0].IPAM.Config[0].Subnet)
+	if err != nil {
+		return nil, err
+	}
+
+	gateway, err := netaddr.ParseIP(networkList[0].IPAM.Config[0].Gateway)
+	if err != nil {
+		return nil, err
 	}
 
 	network := &k3d.ClusterNetwork{
 		Name: networkList[0].Name,
 		ID:   networkList[0].ID,
 		IPAM: k3d.IPAM{
-			IPRange: networkList[0].IPAM.Config[0].Subnet,
-			IPsUsed: []string{
-				networkList[0].IPAM.Config[0].Gateway,
+			IPPrefix: prefix,
+			IPsUsed: []netaddr.IP{
+				gateway,
 			},
 		},
 	}
 
 	for _, container := range networkList[0].Containers {
 		if container.IPv4Address != "" {
-			network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, container.IPv4Address)
+			ip, err := netaddr.ParseIP(container.IPv4Address)
+			if err != nil {
+				return nil, err
+			}
+			network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, ip)
 		}
+	}
+
+	// Only one Network allowed, but some functions don't care about this, so they can ignore the error and just use the first one returned
+	if len(networkList) > 1 {
+		return network, runtimeErr.ErrRuntimeNetworkMultiSameName
 	}
 
 	return network, nil
@@ -96,7 +115,7 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 
 // CreateNetworkIfNotPresent creates a new docker network
 // @return: network, exists, error
-func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (*k3d.ClusterNetwork, bool, error) {
+func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.ClusterNetwork) (*k3d.ClusterNetwork, bool, error) {
 
 	// (0) create new docker client
 	docker, err := GetDockerClient()
@@ -106,47 +125,60 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (*k3
 	}
 	defer docker.Close()
 
-	// (1) configure list filters
-	filter := filters.NewArgs()
-	filter.Add("name", fmt.Sprintf("^/?%s$", name)) // regex filtering for exact name match
-
-	// (2) get filtered list of networks
-	networkList, err := docker.NetworkList(ctx, types.NetworkListOptions{
-		Filters: filter,
-	})
+	existingNet, err := d.GetNetwork(ctx, inNet)
 	if err != nil {
-		log.Errorln("Failed to list docker networks")
-		return nil, false, err
+		if err != runtimeErr.ErrRuntimeNetworkNotExists {
+			if existingNet == nil {
+				log.Errorln("Failed to check for duplicate networks")
+				return nil, false, err
+			} else if err == runtimeErr.ErrRuntimeNetworkMultiSameName {
+				log.Warnf("%+v, returning the first one: %s (%s)", err, existingNet.Name, existingNet.ID)
+				return existingNet, true, nil
+			} else {
+				return nil, false, fmt.Errorf("unhandled error while checking for existing networks: %+v", err)
+			}
+		}
 	}
-
-	// (2.1) If possible, return an existing network
-	if len(networkList) > 1 {
-		log.Warnf("Found %d networks instead of only one. Choosing the first one: '%s'.", len(networkList), networkList[0].ID)
-	}
-
-	if len(networkList) > 0 {
-		log.Infof("Network with name '%s' already exists with ID '%s'", name, networkList[0].ID)
-		return &k3d.ClusterNetwork{Name: name, ID: networkList[0].ID, IPAM: k3d.IPAM{IPRange: networkList[0].IPAM.Config[0].Subnet}}, true, nil
+	if existingNet != nil {
+		return existingNet, true, nil
 	}
 
 	// (3) Create a new network
-	network, err := docker.NetworkCreate(ctx, name, types.NetworkCreate{
+	netCreateOpts := types.NetworkCreate{
 		CheckDuplicate: true,
 		Labels:         k3d.DefaultObjectLabels,
-	})
+	}
+
+	// use user-defined subnet, if given
+	if !inNet.IPAM.IPPrefix.IsZero() {
+		netCreateOpts.IPAM = &network.IPAM{
+			Config: []network.IPAMConfig{
+				{
+					Subnet:  inNet.IPAM.IPPrefix.String(),
+					Gateway: inNet.IPAM.IPPrefix.Range().From.Next().String(), // second IP in subnet will be the Gateway (Next, so we don't hit x.x.x.0)
+				},
+			},
+		}
+	}
+
+	newNet, err := docker.NetworkCreate(ctx, inNet.Name, netCreateOpts)
 	if err != nil {
-		log.Errorln("Failed to create network")
+		log.Errorln("Failed to create new network")
 		return nil, false, err
 	}
 
-	networkDetails, err := docker.NetworkInspect(ctx, network.ID, types.NetworkInspectOptions{})
+	networkDetails, err := docker.NetworkInspect(ctx, newNet.ID, types.NetworkInspectOptions{})
 	if err != nil {
 		log.Errorln("Failed to inspect newly created network")
 		return nil, false, err
 	}
 
-	log.Infof("Created network '%s'", name)
-	return &k3d.ClusterNetwork{Name: name, ID: networkDetails.ID, IPAM: k3d.IPAM{IPRange: networkDetails.IPAM.Config[0].Subnet}}, false, nil
+	log.Infof("Created network '%s' (%s)", inNet.Name, networkDetails.ID)
+	prefix, err := netaddr.ParseIPPrefix(networkDetails.IPAM.Config[0].Subnet)
+	if err != nil {
+		return nil, false, err
+	}
+	return &k3d.ClusterNetwork{Name: inNet.Name, ID: networkDetails.ID, IPAM: k3d.IPAM{IPPrefix: prefix}}, false, nil
 }
 
 // DeleteNetwork deletes a network

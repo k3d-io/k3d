@@ -38,6 +38,7 @@ import (
 	"github.com/rancher/k3d/v4/pkg/util"
 	"github.com/rancher/k3d/v4/version"
 	"gopkg.in/yaml.v2"
+	"inet.af/netaddr"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -59,6 +60,15 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	if simpleConfig.Network != "" {
 		clusterNetwork.Name = simpleConfig.Network
 		clusterNetwork.External = true
+	}
+
+	if simpleConfig.Subnet != "" {
+		subnet, err := netaddr.ParseIPPrefix(simpleConfig.Subnet)
+		if err != nil {
+			return nil, err
+		}
+		clusterNetwork.IPAM.IPPrefix = subnet
+		clusterNetwork.IPAM.Managed = true
 	}
 
 	// -> API
