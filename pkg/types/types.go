@@ -133,6 +133,7 @@ const (
 	LabelRegistryHostIP       string = "k3d.registry.hostIP"
 	LabelRegistryPortExternal string = "k3s.registry.port.external"
 	LabelRegistryPortInternal string = "k3s.registry.port.internal"
+	LabelNodeStaticIP         string = "k3d.node.staticIP"
 )
 
 // DefaultRoleCmds maps the node roles to their respective default commands
@@ -254,12 +255,17 @@ type ImageImportOpts struct {
 	KeepTar bool
 }
 
+type IPAM struct {
+	IPRange string   `yaml:"ipRange" json:"ipRange,omitempty"`
+	IPsUsed []string `yaml:"ipsUsed" json:"ipsUsed,omitempty"`
+}
+
 // ClusterNetwork describes a network which a cluster is running in
 type ClusterNetwork struct {
 	Name     string `yaml:"name" json:"name,omitempty"`
 	ID       string `yaml:"id" json:"id"` // may be the same as name, but e.g. docker only differentiates by random ID, not by name
 	External bool   `yaml:"external" json:"isExternal,omitempty"`
-	IPRange  string `yaml:"ipRange" json:"ipRange,omitempty"`
+	IPAM     IPAM   `yaml:"ipam" json:"ipam,omitempty"`
 }
 
 // Cluster describes a k3d cluster
@@ -315,6 +321,11 @@ func (c *Cluster) HasLoadBalancer() bool {
 	return false
 }
 
+type NodeIP struct {
+	IP     string
+	Static bool
+}
+
 // Node describes a k3d node
 type Node struct {
 	Name       string            `yaml:"name" json:"name,omitempty"`
@@ -335,6 +346,7 @@ type Node struct {
 	GPURequest string            // filled automatically
 	Memory     string            // filled automatically
 	State      NodeState         // filled automatically
+	IP         NodeIP            // filled automatically
 }
 
 // ServerOpts describes some additional server role specific opts

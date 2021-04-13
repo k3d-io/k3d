@@ -1,0 +1,3 @@
+[submodule "corpus"]
+	path = corpus
+	url = git@github.com:inetaf/netaddr-corpus.git

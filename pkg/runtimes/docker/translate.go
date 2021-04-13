@@ -113,13 +113,24 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	}
 	containerConfig.ExposedPorts = exposedPorts
 	hostConfig.PortBindings = node.Ports
+
 	/* Network */
 	endpointsConfig := map[string]*network.EndpointSettings{}
 	for _, net := range node.Networks {
-		endpointsConfig[net] = &network.EndpointSettings{}
+		epSettings := &network.EndpointSettings{}
+		endpointsConfig[net] = epSettings
 	}
 
 	networkingConfig.EndpointsConfig = endpointsConfig
+
+	/* Static IP */
+	if node.Role == k3d.ServerRole && node.IP.IP != "" && node.IP.Static {
+		epconf := networkingConfig.EndpointsConfig[node.Networks[0]]
+		if epconf.IPAMConfig == nil {
+			epconf.IPAMConfig = &network.EndpointIPAMConfig{}
+		}
+		epconf.IPAMConfig.IPv4Address = node.IP.IP
+	}
 
 	if len(node.Networks) > 0 {
 		netInfo, err := GetNetwork(context.Background(), node.Networks[0]) // FIXME: only considering first network here, as that's the one k3d creates for a cluster

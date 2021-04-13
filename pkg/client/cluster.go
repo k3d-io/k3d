@@ -258,7 +258,7 @@ func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d
 	// handle hostnetwork
 	if cluster.Network.Name == "host" {
 		if len(cluster.Nodes) > 1 {
-			return fmt.Errorf("Only one server node supported when using host network")
+			return fmt.Errorf("only one server node supported when using host network")
 		}
 	}
 
@@ -271,7 +271,7 @@ func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d
 	cluster.Network = *network
 	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkID] = network.ID
 	clusterCreateOpts.GlobalLabels[k3d.LabelNetwork] = cluster.Network.Name
-	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkIPRange] = cluster.Network.IPRange
+	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkIPRange] = cluster.Network.IPAM.IPRange
 	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkExternal] = strconv.FormatBool(cluster.Network.External)
 	if networkExists {
 		clusterCreateOpts.GlobalLabels[k3d.LabelNetworkExternal] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)
@@ -387,6 +387,14 @@ ClusterCreatOpts:
 
 		// node role specific settings
 		if node.Role == k3d.ServerRole {
+
+			ip, err := GetIP(ctx, runtime, &cluster.Network)
+			if err != nil {
+				return err
+			}
+			node.IP.Static = true
+			node.IP.IP = ip
+			node.Labels[k3d.LabelNodeStaticIP] = ip
 
 			node.ServerOpts.KubeAPI = cluster.KubeAPI
 
