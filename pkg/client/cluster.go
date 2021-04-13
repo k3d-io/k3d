@@ -263,13 +263,15 @@ func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d
 	}
 
 	// create cluster network or use an existing one
-	networkID, networkExists, err := runtime.CreateNetworkIfNotPresent(ctx, cluster.Network.Name)
+	network, networkExists, err := runtime.CreateNetworkIfNotPresent(ctx, cluster.Network.Name)
 	if err != nil {
 		log.Errorln("Failed to create cluster network")
 		return err
 	}
-	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkID] = networkID
+	cluster.Network = *network
+	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkID] = network.ID
 	clusterCreateOpts.GlobalLabels[k3d.LabelNetwork] = cluster.Network.Name
+	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkIPRange] = cluster.Network.IPRange
 	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkExternal] = strconv.FormatBool(cluster.Network.External)
 	if networkExists {
 		clusterCreateOpts.GlobalLabels[k3d.LabelNetworkExternal] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)

@@ -123,6 +123,7 @@ const (
 	LabelNetworkExternal      string = "k3d.cluster.network.external"
 	LabelNetwork              string = "k3d.cluster.network"
 	LabelNetworkID            string = "k3d.cluster.network.id"
+	LabelNetworkIPRange       string = "k3d.cluster.network.iprange"
 	LabelRole                 string = "k3d.role"
 	LabelServerAPIPort        string = "k3d.server.api.port"
 	LabelServerAPIHost        string = "k3d.server.api.host"
@@ -256,7 +257,9 @@ type ImageImportOpts struct {
 // ClusterNetwork describes a network which a cluster is running in
 type ClusterNetwork struct {
 	Name     string `yaml:"name" json:"name,omitempty"`
+	ID       string `yaml:"id" json:"id"` // may be the same as name, but e.g. docker only differentiates by random ID, not by name
 	External bool   `yaml:"external" json:"isExternal,omitempty"`
+	IPRange  string `yaml:"ipRange" json:"ipRange,omitempty"`
 }
 
 // Cluster describes a k3d cluster

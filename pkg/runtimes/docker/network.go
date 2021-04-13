@@ -38,14 +38,14 @@ import (
 )
 
 // CreateNetworkIfNotPresent creates a new docker network
-// @return: network name, exists, error
-func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (string, bool, error) {
+// @return: network, exists, error
+func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (*k3d.ClusterNetwork, bool, error) {
 
 	// (0) create new docker client
 	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
-		return "", false, err
+		return nil, false, err
 	}
 	defer docker.Close()
 
@@ -59,7 +59,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (str
 	})
 	if err != nil {
 		log.Errorln("Failed to list docker networks")
-		return "", false, err
+		return nil, false, err
 	}
 
 	// (2.1) If possible, return an existing network
@@ -69,20 +69,32 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, name string) (str
 
 	if len(networkList) > 0 {
 		log.Infof("Network with name '%s' already exists with ID '%s'", name, networkList[0].ID)
-		return networkList[0].ID, true, nil
+		networkDetails, err := docker.NetworkInspect(ctx, networkList[0].ID, types.NetworkInspectOptions{})
+		if err != nil {
+			log.Errorln("Failed to inspect existing network")
+			return nil, true, err
+		}
+		return &k3d.ClusterNetwork{Name: name, ID: networkDetails.ID, IPRange: networkDetails.IPAM.Config[0].Subnet}, true, nil
 	}
 
 	// (3) Create a new network
 	network, err := docker.NetworkCreate(ctx, name, types.NetworkCreate{
-		Labels: k3d.DefaultObjectLabels,
+		CheckDuplicate: true,
+		Labels:         k3d.DefaultObjectLabels,
 	})
 	if err != nil {
 		log.Errorln("Failed to create network")
-		return "", false, err
+		return nil, false, err
+	}
+
+	networkDetails, err := docker.NetworkInspect(ctx, network.ID, types.NetworkInspectOptions{})
+	if err != nil {
+		log.Errorln("Failed to inspect newly created network")
+		return nil, false, err
 	}
 
 	log.Infof("Created network '%s'", name)
-	return network.ID, false, nil
+	return &k3d.ClusterNetwork{Name: name, ID: networkDetails.ID, IPRange: networkDetails.IPAM.Config[0].Subnet}, false, nil
 }
 
 // DeleteNetwork deletes a network
