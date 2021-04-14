@@ -105,6 +105,13 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 		}
 	}
 
+	// append the used IPs that we already know from the search network
+	// this is needed because the network inspect does not return the container list until the containers are actually started
+	// and we already need this when we create the containers
+	for _, used := range searchNet.IPAM.IPsUsed {
+		network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, used)
+	}
+
 	// Only one Network allowed, but some functions don't care about this, so they can ignore the error and just use the first one returned
 	if len(networkList) > 1 {
 		return network, runtimeErr.ErrRuntimeNetworkMultiSameName

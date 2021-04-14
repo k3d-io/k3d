@@ -124,12 +124,12 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	networkingConfig.EndpointsConfig = endpointsConfig
 
 	/* Static IP */
-	if node.IP.IP != "" && node.IP.Static {
+	if !node.IP.IP.IsZero() && node.IP.Static {
 		epconf := networkingConfig.EndpointsConfig[node.Networks[0]]
 		if epconf.IPAMConfig == nil {
 			epconf.IPAMConfig = &network.EndpointIPAMConfig{}
 		}
-		epconf.IPAMConfig.IPv4Address = node.IP.IP
+		epconf.IPAMConfig.IPv4Address = node.IP.IP.String()
 	}
 
 	if len(node.Networks) > 0 {
