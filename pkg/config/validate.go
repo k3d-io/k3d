@@ -29,8 +29,8 @@ import (
 	k3dc "github.com/rancher/k3d/v4/pkg/client"
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
+	runtimeutil "github.com/rancher/k3d/v4/pkg/runtimes/util"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	"github.com/rancher/k3d/v4/pkg/util"
 
 	"fmt"
 
@@ -90,7 +90,7 @@ func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config
 		// volumes have to be either an existing path on the host or a named runtime volume
 		for _, volume := range node.Volumes {
 
-			if err := util.ValidateVolumeMount(runtime, volume); err != nil {
+			if err := runtimeutil.ValidateVolumeMount(runtime, volume); err != nil {
 				return err
 			}
 		}
