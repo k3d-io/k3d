@@ -30,11 +30,11 @@ import (
 	"inet.af/netaddr"
 )
 
-func GetIP(ctx context.Context, runtime k3drt.Runtime, network *k3d.ClusterNetwork) (string, error) {
+func GetIP(ctx context.Context, runtime k3drt.Runtime, network *k3d.ClusterNetwork) (netaddr.IP, error) {
 
 	network, err := runtime.GetNetwork(ctx, network)
 	if err != nil {
-		return "", err
+		return netaddr.IP{}, err
 	}
 
 	var ipsetbuilder netaddr.IPSetBuilder
@@ -51,9 +51,9 @@ func GetIP(ctx context.Context, runtime k3drt.Runtime, network *k3d.ClusterNetwo
 
 	ipset := ipsetbuilder.IPSet()
 
-	ip := ipset.Ranges()[0].From.String()
+	ip := ipset.Ranges()[0].From
 
-	log.Debugf("Found free IP %s in network %s", ip, network.Name)
+	log.Debugf("Found free IP %s in network %s", ip.String(), network.Name)
 
 	return ip, nil
 }

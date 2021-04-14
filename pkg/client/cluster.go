@@ -398,9 +398,10 @@ ClusterCreatOpts:
 				if err != nil {
 					return err
 				}
+				cluster.Network.IPAM.IPsUsed = append(cluster.Network.IPAM.IPsUsed, ip) // make sure that we're not reusing the same IP next time
 				node.IP.Static = true
 				node.IP.IP = ip
-				node.Labels[k3d.LabelNodeStaticIP] = ip
+				node.Labels[k3d.LabelNodeStaticIP] = ip.String()
 			}
 
 			node.ServerOpts.KubeAPI = cluster.KubeAPI

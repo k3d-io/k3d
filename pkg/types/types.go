@@ -324,7 +324,7 @@ func (c *Cluster) HasLoadBalancer() bool {
 }
 
 type NodeIP struct {
-	IP     string
+	IP     netaddr.IP
 	Static bool
 }
 
