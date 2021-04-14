@@ -97,6 +97,10 @@ func Execute() {
 	}
 }
 
+func GetRootCmd() *cobra.Command {
+	return rootCmd
+}
+
 func init() {
 
 	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
