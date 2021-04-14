@@ -50,10 +50,6 @@ steps:
       - lint
       - test
     when:
-      branch:
-        - main
-        - main-v* # major version branches
-        - release-*
       event:
         - push
         - tag
