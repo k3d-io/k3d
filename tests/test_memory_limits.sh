@@ -20,18 +20,18 @@ check_clusters "$clustername" || failed "error checking cluster"
 
 info "Checking Memory Limits (docker)..."
 if [[ $(docker inspect k3d-$clustername-server-0 | jq '.[0].HostConfig.Memory') != "1073741824" ]]; then
-  fail "Server Memory not set to 1g as expected (docker)"
+  failed "Server Memory not set to 1g as expected (docker)"
 fi
 if [[ $(docker inspect k3d-$clustername-agent-0 | jq '.[0].HostConfig.Memory') != "1610612736" ]]; then
-  fail "Agent Memory not set to 1.5g as expected (docker)"
+  failed "Agent Memory not set to 1.5g as expected (docker)"
 fi
 
 info "Checking Memory Limits (Kubernetes)..."
 if [[ $(kubectl get node k3d-$clustername-server-0 -o go-template='{{ .status.capacity.memory }}') != "1073741Ki" ]]; then
-  fail "Server Memory not set to 1g as expected (k8s)"
+  failed "Server Memory not set to 1g as expected (k8s)"
 fi
 if [[ $(kubectl get node k3d-$clustername-agent-0 -o go-template='{{ .status.capacity.memory }}') != "1610612Ki" ]]; then
-  fail "Agent Memory not set to 1.5g as expected (k8s)"
+  failed "Agent Memory not set to 1.5g as expected (k8s)"
 fi
 
 info "Deleting clusters..."
