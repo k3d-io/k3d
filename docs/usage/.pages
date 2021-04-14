@@ -1,6 +1,6 @@
 title: Usage
-arrange:
-  - commands.md
+nav:
+  - commands
   - configfile.md
   - kubeconfig.md
   - multiserver.md
