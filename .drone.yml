@@ -81,6 +81,7 @@ steps:
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
           - "refs/tags/*test*"
+          - "refs/tags/*dev*"
 
   - name: release
     image: plugins/github-release
@@ -104,6 +105,7 @@ steps:
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
           - "refs/tags/*test*"
+          - "refs/tags/*dev*"
 
   - name: docker_build_push_dind
     image: plugins/docker
