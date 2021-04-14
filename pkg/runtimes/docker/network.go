@@ -35,6 +35,7 @@ import (
 
 	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -147,6 +148,16 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 	netCreateOpts := types.NetworkCreate{
 		CheckDuplicate: true,
 		Labels:         k3d.DefaultObjectLabels,
+	}
+
+	// we want a managed (user-defined) network, but user didn't specify a subnet, so we try to auto-generate one
+	if inNet.IPAM.Managed && inNet.IPAM.IPPrefix.IsZero() {
+		log.Traceln("No subnet prefix given, but network should be managed: Trying to get a free subnet prefix...")
+		freeSubnetPrefix, err := d.getFreeSubnetPrefix(ctx)
+		if err != nil {
+			return nil, false, err
+		}
+		inNet.IPAM.IPPrefix = freeSubnetPrefix
 	}
 
 	// use user-defined subnet, if given
@@ -294,4 +305,34 @@ func (d Docker) DisconnectNodeFromNetwork(ctx context.Context, node *k3d.Node, n
 	}
 
 	return docker.NetworkDisconnect(ctx, networkResource.ID, container.ID, true)
+}
+
+func (d Docker) getFreeSubnetPrefix(ctx context.Context) (netaddr.IPPrefix, error) {
+	// (0) create new docker client
+	docker, err := GetDockerClient()
+	if err != nil {
+		return netaddr.IPPrefix{}, fmt.Errorf("failed to create docker client %w", err)
+	}
+	defer docker.Close()
+
+	// 1. Create a fake network to get auto-generated subnet prefix
+	fakenetName := fmt.Sprintf("%s-fakenet-%s", k3d.DefaultObjectNamePrefix, util.GenerateRandomString(10))
+	fakenetResp, err := docker.NetworkCreate(ctx, fakenetName, types.NetworkCreate{})
+	if err != nil {
+		return netaddr.IPPrefix{}, fmt.Errorf("failed to create fake network: %w", err)
+	}
+
+	fakenet, err := d.GetNetwork(ctx, &k3d.ClusterNetwork{ID: fakenetResp.ID})
+	if err != nil {
+		return netaddr.IPPrefix{}, fmt.Errorf("failed to inspect fake network %s: %w", fakenetResp.ID, err)
+	}
+
+	log.Tracef("Created fake network %s (%s) with subnet prefix %s. Deleting it again to re-use that prefix...", fakenet.Name, fakenet.ID, fakenet.IPAM.IPPrefix.String())
+
+	if err := d.DeleteNetwork(ctx, fakenet.ID); err != nil {
+		return netaddr.IPPrefix{}, fmt.Errorf("failed to delete fake network %s (%s): %w", fakenet.Name, fakenet.ID, err)
+	}
+
+	return fakenet.IPAM.IPPrefix, nil
+
 }
