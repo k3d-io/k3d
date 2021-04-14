@@ -178,7 +178,14 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 	if err != nil {
 		return nil, false, err
 	}
-	return &k3d.ClusterNetwork{Name: inNet.Name, ID: networkDetails.ID, IPAM: k3d.IPAM{IPPrefix: prefix}}, false, nil
+
+	newClusterNet := &k3d.ClusterNetwork{Name: inNet.Name, ID: networkDetails.ID, IPAM: k3d.IPAM{IPPrefix: prefix}}
+
+	if !inNet.IPAM.IPPrefix.IsZero() {
+		newClusterNet.IPAM.Managed = true
+	}
+
+	return newClusterNet, false, nil
 }
 
 // DeleteNetwork deletes a network
