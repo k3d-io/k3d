@@ -7,7 +7,7 @@
 
 ## Issues with ZFS
 
-- k3s currently has [no support for ZFS](ttps://github.com/rancher/k3s/issues/66) and thus, creating multi-server setups (e.g. `k3d cluster create multiserver --servers 3`) fails, because the initializing server node (server flag `--cluster-init`) errors out with the following log:
+- k3s currently has [no support for ZFS](https://github.com/rancher/k3s/issues/66) and thus, creating multi-server setups (e.g. `k3d cluster create multiserver --servers 3`) fails, because the initializing server node (server flag `--cluster-init`) errors out with the following log:
 
   ```bash
   starting kubernetes: preparing server: start cluster and https: raft_init(): io: create I/O capabilities probe file: posix_allocate: operation not supported on socket
