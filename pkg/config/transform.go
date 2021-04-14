@@ -63,11 +63,13 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 
 	if simpleConfig.Subnet != "" {
-		subnet, err := netaddr.ParseIPPrefix(simpleConfig.Subnet)
-		if err != nil {
-			return nil, err
+		if simpleConfig.Subnet != "auto" {
+			subnet, err := netaddr.ParseIPPrefix(simpleConfig.Subnet)
+			if err != nil {
+				return nil, fmt.Errorf("invalid subnet '%s': %w", simpleConfig.Subnet, err)
+			}
+			clusterNetwork.IPAM.IPPrefix = subnet
 		}
-		clusterNetwork.IPAM.IPPrefix = subnet
 		clusterNetwork.IPAM.Managed = true
 	}
 
