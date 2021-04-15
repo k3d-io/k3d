@@ -60,6 +60,7 @@ K3D_HELPER_VERSION ?=
 
 # Go options
 GO        ?= go
+GOENVPATH := $(shell go env GOPATH)
 PKG       := $(shell go mod vendor)
 TAGS      :=
 TESTS     := ./...
@@ -83,7 +84,7 @@ GO_SRC += $(foreach dir,$(REC_DIRS),$(shell find $(dir) -name "*.go"))
 ########## Required Tools ##########
 # Go Package required
 PKG_GOX := github.com/mitchellh/gox@v1.0.1
-PKG_GOLANGCI_LINT_VERSION := 1.31.0
+PKG_GOLANGCI_LINT_VERSION := 1.39.0
 PKG_GOLANGCI_LINT_SCRIPT := https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
 PKG_GOLANGCI_LINT := github.com/golangci/golangci-lint/cmd/golangci-lint@v${PKG_GOLANGCI_LINT_VERSION}
 
@@ -196,13 +197,13 @@ ifndef HAS_GOX
 	($(GO) get $(PKG_GOX))
 endif
 ifndef HAS_GOLANGCI
-	(curl -sfL $(PKG_GOLANGCI_LINT_SCRIPT) | sh -s -- -b ${GOPATH}/bin v${PKG_GOLANGCI_LINT_VERSION})
+	(curl -sfL $(PKG_GOLANGCI_LINT_SCRIPT) | sh -s -- -b $(GOENVPATH)/bin v${PKG_GOLANGCI_LINT_VERSION})
 endif
 ifdef HAS_GOLANGCI
 ifeq ($(HAS_GOLANGCI_VERSION),)
 ifdef INTERACTIVE
 	@echo "Warning: Your installed version of golangci-lint (interactive: ${INTERACTIVE}) differs from what we'd like to use. Switch to v${PKG_GOLANGCI_LINT_VERSION}? [Y/n]"
-	@read line; if [ $$line == "y" ]; then (curl -sfL $(PKG_GOLANGCI_LINT_SCRIPT) | sh -s -- -b ${GOPATH}/bin v${PKG_GOLANGCI_LINT_VERSION}); fi
+	@read line; if [ $$line == "y" ]; then (curl -sfL $(PKG_GOLANGCI_LINT_SCRIPT) | sh -s -- -b $(GOENVPATH)/bin v${PKG_GOLANGCI_LINT_VERSION}); fi
 else
 	@echo "Warning: you're not using the same version of golangci-lint as us (v${PKG_GOLANGCI_LINT_VERSION})"
 endif
@@ -215,7 +216,7 @@ endif
 # - kubectl for E2E-tests (e2e)
 ci-setup:
 	@echo "Installing Go tools..."
-	curl -sfL $(PKG_GOLANGCI_LINT_SCRIPT) | sh -s -- -b ${GOPATH}/bin v$(PKG_GOLANGCI_LINT_VERSION)
+	curl -sfL $(PKG_GOLANGCI_LINT_SCRIPT) | sh -s -- -b $(GOENVPATH)/bin v$(PKG_GOLANGCI_LINT_VERSION)
 	$(GO) get $(PKG_GOX)
 
 	@echo "Installing kubectl..."
