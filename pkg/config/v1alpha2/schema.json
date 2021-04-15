@@ -11,13 +11,15 @@
       "type": "string",
       "enum": [
         "k3d.io/v1alpha2"
-      ]
+      ],
+      "default": "k3d.io/v1alpha2"
     },
     "kind": {
       "type": "string",
       "enum": [
         "Simple"
-      ]
+      ],
+      "default": "Simple"
     },
     "name": {
       "description": "Name of the cluster (must be a valid hostname and will be prefixed with 'k3d-'). Example: 'mycluster'.",
@@ -41,16 +43,26 @@
         },
         "hostIP": {
           "type": "string",
-          "format": "ipv4"
+          "format": "ipv4",
+          "examples": [
+            "0.0.0.0",
+            "192.168.178.55"
+          ]
         },
         "hostPort": {
-          "type":"string"
+          "type":"string",
+          "examples": [
+            "6443"
+          ]
         }
       },
       "additionalProperties": false
     },
     "image": {
-      "type": "string"
+      "type": "string",
+      "examples": [
+        "rancher/k3s:latest"
+      ]
     },
     "network": {
       "type": "string"
@@ -114,7 +126,12 @@
               "default": true
             },
             "timeout": {
-              "type": "string"
+              "type": "string",
+              "examples": [
+                "60s",
+                "1m",
+                "1m30s"
+              ]
             },
             "disableLoadbalancer": {
               "type": "boolean",
@@ -209,7 +226,14 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "examples": [
+        "loadbalancer",
+        "server[*]",
+        "server[0]",
+        "agent[1]",
+        "all"
+      ]
     }
   }
 }
