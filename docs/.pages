@@ -1,5 +1,6 @@
-arrange:
+nav:
   - index.md
   - usage
   - internals
   - faq
+collapse: false

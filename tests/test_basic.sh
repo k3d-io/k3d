@@ -6,6 +6,8 @@ CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./common.sh
 source "$CURR_DIR/common.sh"
 
+export CURRENT_STAGE="Test | basic"
+
 info "Creating two clusters..."
 $EXE cluster create c1 --wait --timeout 60s --api-port 6443 --env 'TEST_VAR=user\@pass\\@server[0]' || failed "could not create cluster c1"
 $EXE cluster create c2 --wait --timeout 60s || failed "could not create cluster c2"

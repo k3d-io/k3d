@@ -1,0 +1,6 @@
+apiVersion: k3d.io/v1alpha2
+kind: Cluster
+name: foo
+nodes:
+  - name: foo-node-0
+    role: server

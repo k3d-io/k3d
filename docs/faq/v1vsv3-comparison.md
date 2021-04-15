@@ -24,7 +24,7 @@
     - --label                     -> planned
     - --workers                   -> implemented
     - --auto-restart              -> dropped (docker's `unless-stopped` is set by default)
-    - --enable-registry           -> planned (possible consolidation into less registry-related commands?)
+    - --enable-registry           -> coming in v4.0.0 (2021) as `--registry-create` and `--registry-use`
     - --registry-name             -> TBD
     - --registry-port             -> TBD
     - --registry-volume           -> TBD

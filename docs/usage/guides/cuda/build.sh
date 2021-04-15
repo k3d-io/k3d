@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 cd $(dirname $0)
- 
+
 K3S_TAG="${1:-v1.18.10+k3s1}"
 IMAGE_TAG="${K3S_TAG/+/-}"
 

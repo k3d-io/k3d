@@ -103,6 +103,24 @@
         "tutorial",
         "question"
       ]
+    },
+    {
+      "login": "erwinkersten",
+      "name": "Erwin Kersten",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/4391121?v=4",
+      "profile": "https://github.com/erwinkersten",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "searsaw",
+      "name": "Alex Sears",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3712883?v=4",
+      "profile": "http://www.alexsears.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

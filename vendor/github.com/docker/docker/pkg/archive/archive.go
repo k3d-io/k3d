@@ -11,7 +11,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -25,18 +24,8 @@ import (
 	"github.com/docker/docker/pkg/pools"
 	"github.com/docker/docker/pkg/system"
 	"github.com/sirupsen/logrus"
+	exec "golang.org/x/sys/execabs"
 )
-
-var unpigzPath string
-
-func init() {
-	if path, err := exec.LookPath("unpigz"); err != nil {
-		logrus.Debug("unpigz binary not found in PATH, falling back to go gzip library")
-	} else {
-		logrus.Debugf("Using unpigz binary found at path %s", path)
-		unpigzPath = path
-	}
-}
 
 type (
 	// Compression is the state represents if compressed or not.
@@ -158,18 +147,29 @@ func xzDecompress(ctx context.Context, archive io.Reader) (io.ReadCloser, error)
 }
 
 func gzDecompress(ctx context.Context, buf io.Reader) (io.ReadCloser, error) {
-	if unpigzPath == "" {
+	noPigzEnv := os.Getenv("MOBY_DISABLE_PIGZ")
+	var noPigz bool
+
+	if noPigzEnv != "" {
+		var err error
+		noPigz, err = strconv.ParseBool(noPigzEnv)
+		if err != nil {
+			logrus.WithError(err).Warn("invalid value in MOBY_DISABLE_PIGZ env var")
+		}
+	}
+
+	if noPigz {
+		logrus.Debugf("Use of pigz is disabled due to MOBY_DISABLE_PIGZ=%s", noPigzEnv)
 		return gzip.NewReader(buf)
 	}
 
-	disablePigzEnv := os.Getenv("MOBY_DISABLE_PIGZ")
-	if disablePigzEnv != "" {
-		if disablePigz, err := strconv.ParseBool(disablePigzEnv); err != nil {
-			return nil, err
-		} else if disablePigz {
-			return gzip.NewReader(buf)
-		}
+	unpigzPath, err := exec.LookPath("unpigz")
+	if err != nil {
+		logrus.Debugf("unpigz binary not found, falling back to go gzip library")
+		return gzip.NewReader(buf)
 	}
+
+	logrus.Debugf("Using %s to decompress", unpigzPath)
 
 	return cmdStream(exec.CommandContext(ctx, unpigzPath, "-d", "-c"), buf)
 }
@@ -917,6 +917,12 @@ loop:
 			return err
 		}
 
+		// ignore XGlobalHeader early to avoid creating parent directories for them
+		if hdr.Typeflag == tar.TypeXGlobalHeader {
+			logrus.Debugf("PAX Global Extended Headers found for %s and ignored", hdr.Name)
+			continue
+		}
+
 		// Normalize name, for safety and for a simple is-root check
 		// This keeps "../" as-is, but normalizes "/../" to "/". Or Windows:
 		// This keeps "..\" as-is, but normalizes "\..\" to "\".
@@ -936,7 +942,7 @@ loop:
 			parent := filepath.Dir(hdr.Name)
 			parentPath := filepath.Join(dest, parent)
 			if _, err := os.Lstat(parentPath); err != nil && os.IsNotExist(err) {
-				err = idtools.MkdirAllAndChownNew(parentPath, 0777, rootIDs)
+				err = idtools.MkdirAllAndChownNew(parentPath, 0755, rootIDs)
 				if err != nil {
 					return err
 				}

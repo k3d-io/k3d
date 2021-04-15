@@ -1,7 +1,7 @@
 # Networking
 
 - Related issues:
-    - [rancher/k3d #220](https://github.com/rancher/k3d/issues/220)
+  - [rancher/k3d #220](https://github.com/rancher/k3d/issues/220)
 
 ## Introduction
 
@@ -25,4 +25,4 @@ run into issues with grabbing certificates from the API-Server. Single-Node clus
 
 ### `none` "network"
 
-Well.. this doesn't really make sense for k3d anyway ¯\_(ツ)_/¯
+Well.. this doesn't really make sense for k3d anyway ¯\\\_(ツ)\_/¯

@@ -30,28 +30,32 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 
-	"github.com/rancher/k3d/v3/cmd/cluster"
-	"github.com/rancher/k3d/v3/cmd/image"
-	"github.com/rancher/k3d/v3/cmd/kubeconfig"
-	"github.com/rancher/k3d/v3/cmd/node"
-	cliutil "github.com/rancher/k3d/v3/cmd/util"
-	"github.com/rancher/k3d/v3/pkg/runtimes"
-	"github.com/rancher/k3d/v3/version"
+	rt "runtime"
+
+	"github.com/rancher/k3d/v4/cmd/cluster"
+	cfg "github.com/rancher/k3d/v4/cmd/config"
+	"github.com/rancher/k3d/v4/cmd/image"
+	"github.com/rancher/k3d/v4/cmd/kubeconfig"
+	"github.com/rancher/k3d/v4/cmd/node"
+	"github.com/rancher/k3d/v4/cmd/registry"
+	cliutil "github.com/rancher/k3d/v4/cmd/util"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
 )
 
 // RootFlags describes a struct that holds flags that can be set on root level of the command
 type RootFlags struct {
-	debugLogging bool
-	traceLogging bool
-	version      bool
+	debugLogging       bool
+	traceLogging       bool
+	timestampedLogging bool
+	version            bool
 }
 
 var flags = RootFlags{}
-
-// var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -93,13 +97,15 @@ func Execute() {
 	}
 }
 
-func init() {
-	cobra.OnInitialize(initLogging, initRuntime)
+func GetRootCmd() *cobra.Command {
+	return rootCmd
+}
 
-	// add persistent flags (present to all subcommands)
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k3d/config.yaml)")
+func init() {
+
 	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
 	rootCmd.PersistentFlags().BoolVar(&flags.traceLogging, "trace", false, "Enable super verbose output (trace logging)")
+	rootCmd.PersistentFlags().BoolVar(&flags.timestampedLogging, "timestamps", false, "Enable Log timestamps")
 
 	// add local flags
 	rootCmd.Flags().BoolVar(&flags.version, "version", false, "Show k3d and default k3s version")
@@ -110,6 +116,8 @@ func init() {
 	rootCmd.AddCommand(kubeconfig.NewCmdKubeconfig())
 	rootCmd.AddCommand(node.NewCmdNode())
 	rootCmd.AddCommand(image.NewCmdImage())
+	rootCmd.AddCommand(cfg.NewCmdConfig())
+	rootCmd.AddCommand(registry.NewCmdRegistry())
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
@@ -119,6 +127,26 @@ func init() {
 			printVersion()
 		},
 	})
+
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "runtime-info",
+		Short: "Show runtime information",
+		Long:  "Show some information about the runtime environment (e.g. docker info)",
+		Run: func(cmd *cobra.Command, args []string) {
+			info, err := runtimes.SelectedRuntime.Info()
+			if err != nil {
+				log.Fatalln(err)
+			}
+			err = yaml.NewEncoder(os.Stdout).Encode(info)
+			if err != nil {
+				log.Fatalln(err)
+			}
+		},
+		Hidden: true,
+	})
+
+	// Init
+	cobra.OnInitialize(initLogging, initRuntime)
 }
 
 // initLogging initializes the logger
@@ -159,9 +187,17 @@ func initLogging() {
 			log.TraceLevel,
 		},
 	})
-	log.SetFormatter(&log.TextFormatter{
+
+	formatter := &log.TextFormatter{
 		ForceColors: true,
-	})
+	}
+
+	if flags.timestampedLogging || os.Getenv("LOG_TIMESTAMPS") != "" {
+		formatter.FullTimestamp = true
+	}
+
+	log.SetFormatter(formatter)
+
 }
 
 func initRuntime() {
@@ -170,7 +206,7 @@ func initRuntime() {
 		log.Fatalln(err)
 	}
 	runtimes.SelectedRuntime = runtime
-	log.Debugf("Selected runtime is '%T'", runtimes.SelectedRuntime)
+	log.Debugf("Selected runtime is '%T' on GOOS '%s/%s'", runtimes.SelectedRuntime, rt.GOOS, rt.GOARCH)
 }
 
 func printVersion() {
@@ -184,8 +220,16 @@ func generateFishCompletion(writer io.Writer) error {
 
 // Completion
 var completionFunctions = map[string]func(io.Writer) error{
-	"bash":       rootCmd.GenBashCompletion,
-	"zsh":        rootCmd.GenZshCompletion,
+	"bash": rootCmd.GenBashCompletion,
+	"zsh": func(writer io.Writer) error {
+		if err := rootCmd.GenZshCompletion(writer); err != nil {
+			return err
+		}
+
+		fmt.Fprintf(writer, "\n# source completion file\ncompdef _k3d k3d\n")
+
+		return nil
+	},
 	"psh":        rootCmd.GenPowerShellCompletion,
 	"powershell": rootCmd.GenPowerShellCompletion,
 	"fish":       generateFishCompletion,
@@ -200,8 +244,8 @@ func NewCmdCompletion() *cobra.Command {
 		Long:  `Generate completion scripts for [bash, zsh, fish, powershell | psh]`,
 		Args:  cobra.ExactArgs(1), // TODO: NewCmdCompletion: add support for 0 args = auto detection
 		Run: func(cmd *cobra.Command, args []string) {
-			if f, ok := completionFunctions[args[0]]; ok {
-				if err := f(os.Stdout); err != nil {
+			if completionFunc, ok := completionFunctions[args[0]]; ok {
+				if err := completionFunc(os.Stdout); err != nil {
 					log.Fatalf("Failed to generate completion script for shell '%s'", args[0])
 				}
 				return

@@ -13,7 +13,7 @@ BLOCK='\033[1;37m'
 PATH=/usr/local/bin:$PATH
 export PATH
 
-log() { >&2 printf "${BLOCK}>>>${END} $1\n"; }
+log() { >&2 printf "$(date -u +"%Y-%m-%d %H:%M:%S %Z") [${CURRENT_STAGE:-undefined}] ${BLOCK}>>>${END} $1\n"; }
 
 info() { log "${BLU}$1${END}"; }
 highlight() { log "${MGT}$1${END}"; }
@@ -68,7 +68,7 @@ check_url() {
 check_clusters() {
   [ -n "$EXE" ] || abort "EXE is not defined"
   for c in "$@" ; do
-    $EXE kubeconfig merge "$c" --switch-context
+    $EXE kubeconfig merge "$c" --kubeconfig-switch-context
     if kubectl cluster-info ; then
       passed "cluster $c is reachable"
     else
@@ -82,7 +82,7 @@ check_clusters() {
 
 check_cluster_count() {
   expectedClusterCount=$1
-  actualClusterCount=$($EXE cluster list --no-headers | wc -l)
+  actualClusterCount=$(LOG_LEVEL=warn $EXE cluster list --no-headers | wc -l) # this must always have a loglevel of <= warn or it will fail
   if [[ $actualClusterCount != $expectedClusterCount ]]; then
     failed "incorrect number of clusters available: $actualClusterCount != $expectedClusterCount"
     return 1
@@ -94,7 +94,7 @@ check_cluster_count() {
 check_multi_node() {
   cluster=$1
   expectedNodeCount=$2
-  $EXE kubeconfig merge "$cluster" --switch-context
+  $EXE kubeconfig merge "$cluster" --kubeconfig-switch-context
   nodeCount=$(kubectl get nodes -o=custom-columns=NAME:.metadata.name --no-headers | wc -l)
   if [[ $nodeCount == $expectedNodeCount ]]; then
     passed "cluster $cluster has $expectedNodeCount nodes, as expected"
@@ -163,4 +163,16 @@ wait_for_pod_exec() {
   done
   echo "Command '$2' in pod '$1' did NOT return successfully in $max_retries tries"
   return 1
+}
+
+exec_in_node() {
+  # $1 = container/node name
+  # $2 = command
+  docker exec "$1" sh -c "$2"
+}
+
+docker_assert_container_label() {
+  # $1 = container/node name
+  # $2 = label to assert
+  docker inspect --format '{{ range $k, $v := .Config.Labels }}{{ printf "%s=%s\n" $k $v }}{{ end }}' "$1" | grep -E "^$2$"
 }
