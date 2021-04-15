@@ -4,4 +4,5 @@ dest = "/etc/nginx/nginx.conf"
 keys = [
     "SERVERS",
     "PORTS",
+    "UDP_PORTS",
 ]
