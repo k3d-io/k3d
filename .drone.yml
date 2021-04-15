@@ -14,7 +14,7 @@ platform:
 steps:
 
   - name: lint
-    image: golang:1.15
+    image: golang:1.16
     commands:
       - make ci-setup
       - make check-fmt lint
@@ -40,7 +40,7 @@ steps:
         - tag
 
   - name: build
-    image: golang:1.15
+    image: golang:1.16
     environment:
       GIT_TAG: "${DRONE_TAG}"
     commands:
@@ -50,10 +50,6 @@ steps:
       - lint
       - test
     when:
-      branch:
-        - main
-        - main-v* # major version branches
-        - release-*
       event:
         - push
         - tag
@@ -81,6 +77,7 @@ steps:
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
           - "refs/tags/*test*"
+          - "refs/tags/*dev*"
 
   - name: release
     image: plugins/github-release
@@ -104,6 +101,7 @@ steps:
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
           - "refs/tags/*test*"
+          - "refs/tags/*dev*"
 
   - name: docker_build_push_dind
     image: plugins/docker

@@ -36,6 +36,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	dockercliopts "github.com/docker/cli/opts"
+	dockerunits "github.com/docker/go-units"
 )
 
 // TranslateNodeToContainer translates a k3d node specification to a docker container representation
@@ -83,6 +84,16 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 			return nil, fmt.Errorf("Failed to set GPU Request: %+v", err)
 		}
 		hostConfig.DeviceRequests = gpuopts.Value()
+	}
+
+	// memory limits
+	// fake meminfo is mounted to hostConfig.Binds
+	if node.Memory != "" {
+		memory, err := dockerunits.RAMInBytes(node.Memory)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to set memory limit: %+v", err)
+		}
+		hostConfig.Memory = memory
 	}
 
 	/* They have to run in privileged mode */
@@ -233,6 +244,13 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		Status:  containerDetails.ContainerJSONBase.State.Status,
 	}
 
+	// memory limit
+	memoryStr := dockerunits.HumanSize(float64(containerDetails.HostConfig.Memory))
+	// no-limit is returned as 0B, filter this out
+	if memoryStr == "0B" {
+		memoryStr = ""
+	}
+
 	node := &k3d.Node{
 		Name:       strings.TrimPrefix(containerDetails.Name, "/"), // container name with leading '/' cut off
 		Role:       k3d.NodeRoles[containerDetails.Config.Labels[k3d.LabelRole]],
@@ -249,6 +267,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		ServerOpts: serverOpts,
 		AgentOpts:  k3d.AgentOpts{},
 		State:      nodeState,
+		Memory:     memoryStr,
 	}
 	return node, nil
 }

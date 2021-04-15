@@ -29,8 +29,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/rancher/k3d/v4/pkg/runtimes/containerd"
 	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
+	runtimeTypes "github.com/rancher/k3d/v4/pkg/runtimes/types"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
 
@@ -40,13 +40,9 @@ var SelectedRuntime Runtime = docker.Docker{}
 // Docker docker
 var Docker = docker.Docker{}
 
-// Containerd containerd
-var Containerd = containerd.Containerd{}
-
 // Runtimes defines a map of implemented k3d runtimes
 var Runtimes = map[string]Runtime{
-	"docker":     docker.Docker{},
-	"containerd": containerd.Containerd{},
+	"docker": docker.Docker{},
 }
 
 // Runtime defines an interface that can be implemented for various container runtime environments (docker, containerd, etc.)
@@ -77,6 +73,7 @@ type Runtime interface {
 	GetHostIP(context.Context, string) (net.IP, error)
 	ConnectNodeToNetwork(context.Context, *k3d.Node, string) error      // @param context, node, network name
 	DisconnectNodeFromNetwork(context.Context, *k3d.Node, string) error // @param context, node, network name
+	Info() (*runtimeTypes.RuntimeInfo, error)
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it

@@ -10,6 +10,7 @@ k3d
   cluster [CLUSTERNAME]  # default cluster name is 'k3s-default'
     create
       -a, --agents  # specify how many agent nodes you want to create (integer, default: 0)
+      --agents-memory # specify memory limit for agent containers/nodes (unit, e.g. 1g)
       --api-port  # specify the port on which the cluster will be accessible (format '[HOST:]HOSTPORT', default: random)
       -c, --config  # use a config file (format 'PATH')
       -e, --env  # add environment variables to the nodes (quoted string, format: 'KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]', use flag multiple times)
@@ -29,6 +30,7 @@ k3d
       --registry-create  # create a new (docker) registry dedicated for this cluster (default: false)
       --registry-use  # use an existing local (docker) registry with this cluster (string, use multiple times)
       -s, --servers  # specify how many server nodes you want to create (integer, default: 1)
+      --servers-memory # specify memory limit for server containers/nodes (unit, e.g. 1g)
       --token  # specify a cluster token (string, default: auto-generated)
       --timeout  # specify a timeout, after which the cluster creation will be interrupted and changes rolled back (duration, e.g. '10s')
       -v, --volume  # specify additional bind-mounts (format: '[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]', use flag multiple times)

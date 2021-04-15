@@ -30,6 +30,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
+
+	rt "runtime"
 
 	"github.com/rancher/k3d/v4/cmd/cluster"
 	cfg "github.com/rancher/k3d/v4/cmd/config"
@@ -94,6 +97,10 @@ func Execute() {
 	}
 }
 
+func GetRootCmd() *cobra.Command {
+	return rootCmd
+}
+
 func init() {
 
 	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
@@ -119,6 +126,23 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			printVersion()
 		},
+	})
+
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "runtime-info",
+		Short: "Show runtime information",
+		Long:  "Show some information about the runtime environment (e.g. docker info)",
+		Run: func(cmd *cobra.Command, args []string) {
+			info, err := runtimes.SelectedRuntime.Info()
+			if err != nil {
+				log.Fatalln(err)
+			}
+			err = yaml.NewEncoder(os.Stdout).Encode(info)
+			if err != nil {
+				log.Fatalln(err)
+			}
+		},
+		Hidden: true,
 	})
 
 	// Init
@@ -182,7 +206,7 @@ func initRuntime() {
 		log.Fatalln(err)
 	}
 	runtimes.SelectedRuntime = runtime
-	log.Debugf("Selected runtime is '%T'", runtimes.SelectedRuntime)
+	log.Debugf("Selected runtime is '%T' on GOOS '%s/%s'", runtimes.SelectedRuntime, rt.GOOS, rt.GOARCH)
 }
 
 func printVersion() {

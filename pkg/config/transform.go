@@ -62,11 +62,11 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 
 	// -> API
-	if simpleConfig.ExposeAPI.Host == "" {
-		simpleConfig.ExposeAPI.Host = k3d.DefaultAPIHost
-	}
 	if simpleConfig.ExposeAPI.HostIP == "" {
 		simpleConfig.ExposeAPI.HostIP = k3d.DefaultAPIHost
+	}
+	if simpleConfig.ExposeAPI.Host == "" {
+		simpleConfig.ExposeAPI.Host = simpleConfig.ExposeAPI.HostIP
 	}
 
 	kubeAPIExposureOpts := &k3d.ExposureOpts{
@@ -107,6 +107,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			Image:      simpleConfig.Image,
 			Args:       simpleConfig.Options.K3sOptions.ExtraServerArgs,
 			ServerOpts: k3d.ServerOpts{},
+			Memory:     simpleConfig.Options.Runtime.ServersMemory,
 		}
 
 		// first server node will be init node if we have more than one server specified but no external datastore
@@ -120,9 +121,10 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 	for i := 0; i < simpleConfig.Agents; i++ {
 		agentNode := k3d.Node{
-			Role:  k3d.AgentRole,
-			Image: simpleConfig.Image,
-			Args:  simpleConfig.Options.K3sOptions.ExtraAgentArgs,
+			Role:   k3d.AgentRole,
+			Image:  simpleConfig.Image,
+			Args:   simpleConfig.Options.K3sOptions.ExtraAgentArgs,
+			Memory: simpleConfig.Options.Runtime.AgentsMemory,
 		}
 		newCluster.Nodes = append(newCluster.Nodes, &agentNode)
 	}
@@ -226,6 +228,9 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		DisableLoadBalancer:        simpleConfig.Options.K3dOptions.DisableLoadbalancer,
 		K3sServerArgs:              simpleConfig.Options.K3sOptions.ExtraServerArgs,
 		K3sAgentArgs:               simpleConfig.Options.K3sOptions.ExtraAgentArgs,
+		GPURequest:                 simpleConfig.Options.Runtime.GPURequest,
+		ServersMemory:              simpleConfig.Options.Runtime.ServersMemory,
+		AgentsMemory:               simpleConfig.Options.Runtime.AgentsMemory,
 		GlobalLabels:               map[string]string{}, // empty init
 		GlobalEnv:                  []string{},          // empty init
 	}

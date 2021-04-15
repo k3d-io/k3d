@@ -1,5 +1,55 @@
 # Changelog
 
+## v4.4.1
+
+### Fixes
+
+- use viper fork that contains a fix to make cobra's `StringArray` flags work properly
+  - this fixes the issue, that flag values containing commas got split (because we had to use `StringSlice` type flags)
+  - this is to be changed back to upstream viper as soon as <https://github.com/spf13/viper/pull/398> (or a similar fix) got merged
+
+## v4.4.0
+
+### Features / Enhancements
+
+- Support for Memory Limits using e.g. `--servers-memory 1g` or `--agents-memory 1.5g` (#494, @konradmalik)
+  - enabled by providing fake `meminfo` files
+
+### Fixes
+
+- fix absolute paths in volume mounts on Windows (#510, @markrexwinkel)
+
+### Documentation
+
+- clarify registry names in docs and help text
+- add usage section about config file (#534)
+- add FAQ entry on certificate error when running behind corporate proxy
+- add MacPorts install instructions (#539, @herbygillot)
+- Heal Shruggie: Replace amputated arm (#540, @claycooper)
+
+## v4.3.0
+
+### Features / Enhancements
+
+- Use Go 1.16
+  - update dependencies, including kubernetes, docker, containerd and more
+  - add `darwin/arm64` (Apple Silicon, M1) build target (#530)
+  - use the new `//go:embed` feature to directly embed the jsonschema in the binary (#529)
+- Add a status column to `k3d registry list` output (#496, @ebr)
+- Allow non-prefixed (i.e. without `k3d-` prefix) user input when fetching resources (e.g. `k3d node get mycluster-server-0` would return successfully)
+
+### Fixes
+
+- Allow absolute paths for volumes on Windows (#510, @markrexwinkel)
+- fix nil-pointer exception in case of non-existent IPAM network config
+- Properly handle combinations of host/hostIP in kubeAPI settings reflected in the kubeconfig (#500, @fabricev)
+
+### Misc
+
+- docs: fix typo in stop command help text (#513, @searsaw)
+- ci/ghaction: AUR (pre-)release now on Ubuntu 20.04 and latest archlinux image
+- REMOVE incomplete and unused `containerd` runtime from codebase, as it was causing issues to build for windows and hasn't made any progress in quite some time now
+
 ## v4.2.0
 
 ### Features / Enhancements

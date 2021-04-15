@@ -23,12 +23,17 @@ THE SOFTWARE.
 package v1alpha2
 
 import (
+	_ "embed"
 	"fmt"
 	"time"
 
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/version"
 )
+
+// JSONSchema describes the schema used to validate config files
+//go:embed schema.json
+var JSONSchema string
 
 // DefaultConfigTpl for printing
 const DefaultConfigTpl = `---
@@ -47,7 +52,7 @@ var DefaultConfig = fmt.Sprintf(
 	fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)),
 )
 
-// TypeMeta, basically copied from https://github.com/kubernetes/apimachinery/blob/a3b564b22db316a41e94fdcffcf9995424fe924c/pkg/apis/meta/v1/types.go#L36-L56
+// TypeMeta is basically copied from https://github.com/kubernetes/apimachinery/blob/a3b564b22db316a41e94fdcffcf9995424fe924c/pkg/apis/meta/v1/types.go#L36-L56
 type TypeMeta struct {
 	Kind       string `mapstructure:"kind,omitempty" yaml:"kind,omitempty" json:"kind,omitempty"`
 	APIVersion string `mapstructure:"apiVersion,omitempty" yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
@@ -92,7 +97,9 @@ type SimpleConfigOptions struct {
 }
 
 type SimpleConfigOptionsRuntime struct {
-	GPURequest string `mapstructure:"gpuRequest" yaml:"gpuRequest"`
+	GPURequest    string `mapstructure:"gpuRequest" yaml:"gpuRequest"`
+	ServersMemory string `mapstructure:"serversMemory" yaml:"serversMemory"`
+	AgentsMemory  string `mapstructure:"agentsMemory" yaml:"agentsMemory"`
 }
 
 type SimpleConfigOptionsK3d struct {

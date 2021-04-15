@@ -19,7 +19,7 @@ ports:
     nodeFilters:
       - loadbalancer
 env:
-  - envVar: bar=baz
+  - envVar: bar=baz,bob
     nodeFilters:
       - all
 labels:
