@@ -11,6 +11,10 @@ events {
 }
 
 stream {
+
+  #######
+  # TCP #
+  #######
   {{- range $port := $ports }}
   upstream server_nodes_{{ $port }} {
     {{- range $server := $servers }}
@@ -25,9 +29,14 @@ stream {
     proxy_connect_timeout 2s;
   }
   {{- end }}
+
+  #######
+  # UDP #
+  #######
+
   {{- range $port := $udp_ports }}
   {{- if $port }}
-  upstream server_nodes_{{ $port }} {
+  upstream server_nodes_udp_{{ $port }} {
     {{- range $server := $servers }}
     server {{ $server }}:{{ $port }} max_fails=1 fail_timeout=10s;
     {{- end }}
@@ -35,7 +44,7 @@ stream {
 
   server {
     listen        {{ $port }} udp;
-    proxy_pass    server_nodes_{{ $port }};
+    proxy_pass    server_nodes_udp_{{ $port }};
     proxy_timeout 600;
     proxy_connect_timeout 2s;
   }
