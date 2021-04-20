@@ -1,5 +1,27 @@
 # Changelog
 
+## v4.4.2
+
+### Fixes
+
+- k3d-proxy: rename udp upstreams to avoid collisions/duplicates (#564)
+
+### Features
+
+- add *hidden* command `k3d runtime-info` used for debugging (#553)
+  - this comes with some additions on package/runtime level
+- add *experimental* `--subnet` flag to get some k3d IPAM to ensure that server nodes keep static IPs across restarts (#560)
+
+### Misc
+
+- docs: fix typo (#556, @gcalmettes)
+- docs: fix typo (#561, @alechartung)
+- ci/drone: pre-release on `-dev.X` tags
+- ci/drone: always build no matter the branch name (just not release)
+- docs: add automatic command tree generation via cobra (#562)
+- makefile: use `go env gopath` as install target for tools (as per #445)
+- JSONSchema: add some examples and defaults (now also available via <https://raw.githubusercontent.com/rancher/k3d/main/pkg/config/v1alpha2/schema.json> in your IDE)
+
 ## v4.4.1
 
 ### Fixes
