@@ -29,6 +29,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/rancher/k3d/v4/pkg/types/k3s"
 	"github.com/rancher/k3d/v4/version"
+	"inet.af/netaddr"
 )
 
 // DefaultClusterName specifies the default name used for newly created clusters
@@ -123,6 +124,7 @@ const (
 	LabelNetworkExternal      string = "k3d.cluster.network.external"
 	LabelNetwork              string = "k3d.cluster.network"
 	LabelNetworkID            string = "k3d.cluster.network.id"
+	LabelNetworkIPRange       string = "k3d.cluster.network.iprange"
 	LabelRole                 string = "k3d.role"
 	LabelServerAPIPort        string = "k3d.server.api.port"
 	LabelServerAPIHost        string = "k3d.server.api.host"
@@ -132,6 +134,7 @@ const (
 	LabelRegistryHostIP       string = "k3d.registry.hostIP"
 	LabelRegistryPortExternal string = "k3s.registry.port.external"
 	LabelRegistryPortInternal string = "k3s.registry.port.internal"
+	LabelNodeStaticIP         string = "k3d.node.staticIP"
 )
 
 // DefaultRoleCmds maps the node roles to their respective default commands
@@ -253,10 +256,18 @@ type ImageImportOpts struct {
 	KeepTar bool
 }
 
+type IPAM struct {
+	IPPrefix netaddr.IPPrefix `yaml:"ipPrefix" json:"ipPrefix,omitempty"`
+	IPsUsed  []netaddr.IP     `yaml:"ipsUsed" json:"ipsUsed,omitempty"`
+	Managed  bool             // IPAM is done by k3d
+}
+
 // ClusterNetwork describes a network which a cluster is running in
 type ClusterNetwork struct {
 	Name     string `yaml:"name" json:"name,omitempty"`
+	ID       string `yaml:"id" json:"id"` // may be the same as name, but e.g. docker only differentiates by random ID, not by name
 	External bool   `yaml:"external" json:"isExternal,omitempty"`
+	IPAM     IPAM   `yaml:"ipam" json:"ipam,omitempty"`
 }
 
 // Cluster describes a k3d cluster
@@ -312,6 +323,11 @@ func (c *Cluster) HasLoadBalancer() bool {
 	return false
 }
 
+type NodeIP struct {
+	IP     netaddr.IP
+	Static bool
+}
+
 // Node describes a k3d node
 type Node struct {
 	Name       string            `yaml:"name" json:"name,omitempty"`
@@ -332,6 +348,7 @@ type Node struct {
 	GPURequest string            // filled automatically
 	Memory     string            // filled automatically
 	State      NodeState         // filled automatically
+	IP         NodeIP            // filled automatically
 }
 
 // ServerOpts describes some additional server role specific opts

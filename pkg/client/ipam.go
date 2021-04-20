@@ -19,18 +19,41 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package runtimes
+package client
 
-import "errors"
+import (
+	"context"
 
-// ErrRuntimeNetworkNotEmpty describes an error that occurs because a network still has containers connected to it (e.g. cannot be deleted)
-var ErrRuntimeNetworkNotEmpty = errors.New("network not empty")
-
-// ErrRuntimeContainerUnknown describes the situation, where we're inspecting a container that's not obviously managed by k3d
-var ErrRuntimeContainerUnknown = errors.New("container not managed by k3d: missing default label(s)")
-
-// Runtime Network Errors
-var (
-	ErrRuntimeNetworkNotExists     = errors.New("network does not exist")
-	ErrRuntimeNetworkMultiSameName = errors.New("multiple networks with same name found")
+	k3drt "github.com/rancher/k3d/v4/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
+	log "github.com/sirupsen/logrus"
+	"inet.af/netaddr"
 )
+
+func GetIP(ctx context.Context, runtime k3drt.Runtime, network *k3d.ClusterNetwork) (netaddr.IP, error) {
+
+	network, err := runtime.GetNetwork(ctx, network)
+	if err != nil {
+		return netaddr.IP{}, err
+	}
+
+	var ipsetbuilder netaddr.IPSetBuilder
+
+	ipsetbuilder.AddPrefix(network.IPAM.IPPrefix)
+
+	for _, ipused := range network.IPAM.IPsUsed {
+		ipsetbuilder.Remove(ipused)
+	}
+
+	// exclude first and last address
+	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().From)
+	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().To)
+
+	ipset := ipsetbuilder.IPSet()
+
+	ip := ipset.Ranges()[0].From
+
+	log.Debugf("Found free IP %s in network %s", ip.String(), network.Name)
+
+	return ip, nil
+}

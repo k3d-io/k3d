@@ -44,7 +44,7 @@ info "Pushing an image to the registry..."
 registryPort=$(docker inspect k3d-$clustername-registry | jq '.[0].NetworkSettings.Ports["5000/tcp"][0].HostPort' | sed -E 's/"//g')
 docker pull alpine:latest > /dev/null
 docker tag alpine:latest k3d-$clustername-registry:$registryPort/alpine:local > /dev/null
-docker push k3d-$clustername-registry:$registryPort/alpine:local || fail "Failed to push image to managed registry"
+docker push k3d-$clustername-registry:$registryPort/alpine:local || failed "Failed to push image to managed registry"
 
 # 4. use imported image
 info "Spawning a pod using the pushed image..."

@@ -55,7 +55,7 @@ type Runtime interface {
 	GetNode(context.Context, *k3d.Node) (*k3d.Node, error)
 	GetNodeStatus(context.Context, *k3d.Node) (bool, string, error)
 	GetNodesInNetwork(context.Context, string) ([]*k3d.Node, error)
-	CreateNetworkIfNotPresent(context.Context, string) (string, bool, error) // @return NETWORK_NAME, EXISTS, ERROR
+	CreateNetworkIfNotPresent(context.Context, *k3d.ClusterNetwork) (*k3d.ClusterNetwork, bool, error) // @param context, name - @return NETWORK, EXISTS, ERROR
 	GetKubeconfig(context.Context, *k3d.Node) (io.ReadCloser, error)
 	DeleteNetwork(context.Context, string) error
 	StartNode(context.Context, *k3d.Node) error // starts an existing container
@@ -74,6 +74,7 @@ type Runtime interface {
 	ConnectNodeToNetwork(context.Context, *k3d.Node, string) error      // @param context, node, network name
 	DisconnectNodeFromNetwork(context.Context, *k3d.Node, string) error // @param context, node, network name
 	Info() (*runtimeTypes.RuntimeInfo, error)
+	GetNetwork(context.Context, *k3d.ClusterNetwork) (*k3d.ClusterNetwork, error) // @param context, network (so we can filter by name or by id)
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it

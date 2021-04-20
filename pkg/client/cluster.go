@@ -250,6 +250,10 @@ func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d
 		return fmt.Errorf("Failed to use external network because no name was specified")
 	}
 
+	if cluster.Network.Name != "" && cluster.Network.External && !cluster.Network.IPAM.IPPrefix.IsZero() {
+		return fmt.Errorf("cannot specify subnet for exiting network")
+	}
+
 	// generate cluster network name, if not set
 	if cluster.Network.Name == "" && !cluster.Network.External {
 		cluster.Network.Name = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, cluster.Name)
@@ -258,20 +262,23 @@ func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d
 	// handle hostnetwork
 	if cluster.Network.Name == "host" {
 		if len(cluster.Nodes) > 1 {
-			return fmt.Errorf("Only one server node supported when using host network")
+			return fmt.Errorf("only one server node supported when using host network")
 		}
 	}
 
 	// create cluster network or use an existing one
-	networkID, networkExists, err := runtime.CreateNetworkIfNotPresent(ctx, cluster.Network.Name)
+	network, networkExists, err := runtime.CreateNetworkIfNotPresent(ctx, &cluster.Network)
 	if err != nil {
 		log.Errorln("Failed to create cluster network")
 		return err
 	}
-	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkID] = networkID
+	cluster.Network = *network
+	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkID] = network.ID
 	clusterCreateOpts.GlobalLabels[k3d.LabelNetwork] = cluster.Network.Name
+	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkIPRange] = cluster.Network.IPAM.IPPrefix.String()
 	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkExternal] = strconv.FormatBool(cluster.Network.External)
 	if networkExists {
+		log.Infof("Re-using existing network '%s' (%s)", network.Name, network.ID)
 		clusterCreateOpts.GlobalLabels[k3d.LabelNetworkExternal] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)
 	}
 
@@ -385,6 +392,17 @@ ClusterCreatOpts:
 
 		// node role specific settings
 		if node.Role == k3d.ServerRole {
+
+			if cluster.Network.IPAM.Managed {
+				ip, err := GetIP(ctx, runtime, &cluster.Network)
+				if err != nil {
+					return err
+				}
+				cluster.Network.IPAM.IPsUsed = append(cluster.Network.IPAM.IPsUsed, ip) // make sure that we're not reusing the same IP next time
+				node.IP.Static = true
+				node.IP.IP = ip
+				node.Labels[k3d.LabelNodeStaticIP] = ip.String()
+			}
 
 			node.ServerOpts.KubeAPI = cluster.KubeAPI
 
