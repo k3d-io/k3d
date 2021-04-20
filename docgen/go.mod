@@ -30,5 +30,3 @@ require (
 	k8s.io/utils v0.0.0-20210305010621-2afb4311ab10 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.1 // indirect
 )
-
-replace github.com/rancher/k3d/v4 => /home/thklein/git/github.com/rancher/k3d

@@ -47,6 +47,7 @@ k3d cluster create NAME [flags]
       --registry-use stringArray                                       Connect to one or more k3d-managed registries running locally
   -s, --servers int                                                    Specify how many servers you want to create
       --servers-memory string                                          Memory limit imposed on the server nodes [From docker]
+      --subnet 172.28.0.0/16                                           [Experimental: IPAM] Define a subnet for the newly created container network (Example: 172.28.0.0/16)
       --timeout duration                                               Rollback changes if cluster couldn't be created in specified duration.
       --token string                                                   Specify a cluster token. By default, we generate one.
   -v, --volume [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]              Mount volumes into the nodes (Format: [SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]

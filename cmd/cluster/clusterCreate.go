@@ -290,9 +290,8 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().String("network", "", "Join an existing network")
 	_ = cfgViper.BindPFlag("network", cmd.Flags().Lookup("network"))
 
-	cmd.Flags().String("subnet", "", "Define a subnet for the newly created container network")
+	cmd.Flags().String("subnet", "", "[Experimental: IPAM] Define a subnet for the newly created container network (Example: `172.28.0.0/16`)")
 	_ = cfgViper.BindPFlag("subnet", cmd.Flags().Lookup("subnet"))
-	_ = cmd.Flags().MarkHidden("subnet")
 
 	cmd.Flags().String("token", "", "Specify a cluster token. By default, we generate one.")
 	_ = cfgViper.BindPFlag("token", cmd.Flags().Lookup("token"))
