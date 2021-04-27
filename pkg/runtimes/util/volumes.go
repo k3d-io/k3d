@@ -61,7 +61,7 @@ func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) error {
 	if len(split) == 1 {
 		src = split[0]
 		dest = src
-	} else if rt.GOOS == "windows" {
+	} else if rt.GOOS == "windows" && len(split) >= 3 {
 		src = split[0] + ":" + split[1]
 		dest = split[2]
 	} else {
