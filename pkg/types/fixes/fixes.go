@@ -19,23 +19,29 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package actions
+package fixes
 
 import (
-	"context"
+	_ "embed"
 	"os"
-
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
 
-type WriteFileAction struct {
-	Runtime runtimes.Runtime
-	Content []byte
-	Dest    string
-	Mode    os.FileMode
-}
+/* NOTE
+ * This file includes types used for workarounds and hotfixes which are subject to change
+ * and may disappear anytime, e.g. when the fix was included in an upstream project
+ */
 
-func (act WriteFileAction) Run(ctx context.Context, node *k3d.Node) error {
-	return act.Runtime.WriteToNode(ctx, act.Content, act.Dest, act.Mode, node)
+/*
+ * Cgroupv2 fix as per https://github.com/k3s-io/k3s/pull/3237 & https://github.com/k3s-io/k3s/pull/3242
+ * FIXME: FixCgroupV2 - to be removed when fixed upstream
+ */
+
+// EnvFixCgroupV2 is the environment variable that k3d will check for to enable/disable the cgroupv2 workaround
+const EnvFixCgroupV2 = "K3D_FIX_CGROUPV2"
+
+//go:embed assets/cgroupv2-entrypoint.sh
+var CgroupV2Entrypoint []byte
+
+func FixCgroupV2Enabled() bool {
+	return os.Getenv(EnvFixCgroupV2) == "1" || os.Getenv(EnvFixCgroupV2) == "true"
 }

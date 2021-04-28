@@ -33,6 +33,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/types/fixes"
 	log "github.com/sirupsen/logrus"
 
 	dockercliopts "github.com/docker/cli/opts"
@@ -54,6 +55,15 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	containerConfig.Image = node.Image
 
 	/* Command & Arguments */
+	// FIXME: FixCgroupV2 - to be removed when fixed upstream
+	if fixes.FixCgroupV2Enabled() {
+		if node.Role == k3d.AgentRole || node.Role == k3d.ServerRole {
+			containerConfig.Entrypoint = []string{
+				"/bin/entrypoint.sh",
+			}
+		}
+	}
+
 	containerConfig.Cmd = []string{}
 
 	containerConfig.Cmd = append(containerConfig.Cmd, node.Cmd...)  // contains k3s command and role-specific required flags/args

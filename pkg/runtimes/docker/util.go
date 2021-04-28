@@ -96,7 +96,7 @@ func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k
 }
 
 // WriteToNode writes a byte array to the selected node
-func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, node *k3d.Node) error {
+func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, mode os.FileMode, node *k3d.Node) error {
 
 	nodeContainer, err := getNodeContainer(ctx, node)
 	if err != nil {
@@ -116,7 +116,7 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, no
 	defer tarWriter.Close()
 	tarHeader := &tar.Header{
 		Name: dest,
-		Mode: 0644,
+		Mode: int64(mode),
 		Size: int64(len(content)),
 	}
 
@@ -139,7 +139,6 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, no
 
 	return nil
 }
-
 
 // GetDockerClient returns a docker client
 func GetDockerClient() (*client.Client, error) {

@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"time"
 
 	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
@@ -68,8 +69,8 @@ type Runtime interface {
 	ExecInNodeGetLogs(context.Context, *k3d.Node, []string) (*bufio.Reader, error)
 	GetNodeLogs(context.Context, *k3d.Node, time.Time) (io.ReadCloser, error)
 	GetImages(context.Context) ([]string, error)
-	CopyToNode(context.Context, string, string, *k3d.Node) error  // @param context, source, destination, node
-	WriteToNode(context.Context, []byte, string, *k3d.Node) error // @param context, content, destination, node
+	CopyToNode(context.Context, string, string, *k3d.Node) error               // @param context, source, destination, node
+	WriteToNode(context.Context, []byte, string, os.FileMode, *k3d.Node) error // @param context, content, destination, filemode, node
 	GetHostIP(context.Context, string) (net.IP, error)
 	ConnectNodeToNetwork(context.Context, *k3d.Node, string) error      // @param context, node, network name
 	DisconnectNodeFromNetwork(context.Context, *k3d.Node, string) error // @param context, node, network name
