@@ -24,6 +24,7 @@ package fixes
 import (
 	_ "embed"
 	"os"
+	"strconv"
 )
 
 /* NOTE
@@ -43,5 +44,9 @@ const EnvFixCgroupV2 = "K3D_FIX_CGROUPV2"
 var CgroupV2Entrypoint []byte
 
 func FixCgroupV2Enabled() bool {
-	return os.Getenv(EnvFixCgroupV2) == "1" || os.Getenv(EnvFixCgroupV2) == "true"
+	enabled, err := strconv.ParseBool(os.Getenv(EnvFixCgroupV2))
+	if err != nil {
+		return false
+	}
+	return enabled
 }
