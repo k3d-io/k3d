@@ -31,6 +31,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/types/fixes"
 )
 
 func TestTranslateNodeToContainer(t *testing.T) {
@@ -91,6 +92,11 @@ func TestTranslateNodeToContainer(t *testing.T) {
 				"mynet": {},
 			},
 		},
+	}
+
+	// TODO: // FIXME: FixCgroupV2 - to be removed when fixed upstream
+	if fixes.FixCgroupV2Enabled() {
+		expectedRepresentation.ContainerConfig.Entrypoint = []string{"/bin/entrypoint.sh"}
 	}
 
 	actualRepresentation, err := TranslateNodeToContainer(inputNode)
