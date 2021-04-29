@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.4.3
+
+### Highlights
+
+- cgroupv2 support: to properly work on cgroupv2 systems, k3s has to move all the processes from the root cgroup to a new /init cgroup and enable subtree_control
+  - this is going to be included in the k3s agent code directly (<https://github.com/k3s-io/k3s/pull/3242>)
+  - for now we're overriding the container entrypoint with a script that does this (#579, compare <https://github.com/k3s-io/k3s/pull/3237>)
+  - thanks a lot for all the input and support @AkihiroSuda
+  - **Usage**: set the environment variable `K3D_FIX_CGROUPV2` to a `true` value before/when creating a cluster with k3d
+    - e.g. `export K3D_FIX_CGROUPV2=1`
+
 ## v4.4.2
 
 ### Fixes
