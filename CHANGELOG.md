@@ -11,6 +11,15 @@
   - **Usage**: set the environment variable `K3D_FIX_CGROUPV2` to a `true` value before/when creating a cluster with k3d
     - e.g. `export K3D_FIX_CGROUPV2=1`
 
+### Fixes
+
+- fix: docker volume not mountable due to validation failure
+  - was not able to mount named volume on windows as we're checking for `:` meant for drive-letters and k3d separators
+
+### Misc
+
+- fix create command's flags typo (#568, @Jason-ZW)
+
 ## v4.4.2
 
 ### Fixes
