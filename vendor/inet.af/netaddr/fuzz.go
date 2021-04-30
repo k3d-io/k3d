@@ -31,6 +31,19 @@ func Fuzz(b []byte) int {
 		if s2 != ip2.String() {
 			panic("IP String round trip identity failure")
 		}
+
+		b, err := ip.MarshalBinary()
+		if err != nil {
+			panic(err)
+		}
+		var ip3 IP
+		if err := ip3.UnmarshalBinary(b); err != nil {
+			panic(err)
+		}
+		if ip != ip3 {
+			fmt.Printf("ip=%#v ip3=%#v\n", ip, ip3)
+			panic("IP binary marshal round trip identity failure")
+		}
 	}
 	// Check that we match the standard library's IP parser, modulo zones.
 	if !strings.Contains(s, "%") {
