@@ -74,42 +74,48 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 		return nil, runtimeErr.ErrRuntimeNetworkNotExists
 	}
 
-	prefix, err := netaddr.ParseIPPrefix(networkList[0].IPAM.Config[0].Subnet)
-	if err != nil {
-		return nil, err
-	}
-
-	gateway, err := netaddr.ParseIP(networkList[0].IPAM.Config[0].Gateway)
-	if err != nil {
-		return nil, err
-	}
-
 	network := &k3d.ClusterNetwork{
 		Name: networkList[0].Name,
 		ID:   networkList[0].ID,
-		IPAM: k3d.IPAM{
+	}
+
+	// for networks that have an IPAM config, we inspect that as well (e.g. "host" network doesn't have it)
+	if len(networkList[0].IPAM.Config) > 0 {
+		prefix, err := netaddr.ParseIPPrefix(networkList[0].IPAM.Config[0].Subnet)
+		if err != nil {
+			return nil, err
+		}
+
+		gateway, err := netaddr.ParseIP(networkList[0].IPAM.Config[0].Gateway)
+		if err != nil {
+			return nil, err
+		}
+
+		network.IPAM = k3d.IPAM{
 			IPPrefix: prefix,
 			IPsUsed: []netaddr.IP{
 				gateway,
 			},
-		},
-	}
-
-	for _, container := range networkList[0].Containers {
-		if container.IPv4Address != "" {
-			ip, err := netaddr.ParseIP(container.IPv4Address)
-			if err != nil {
-				return nil, err
-			}
-			network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, ip)
 		}
-	}
 
-	// append the used IPs that we already know from the search network
-	// this is needed because the network inspect does not return the container list until the containers are actually started
-	// and we already need this when we create the containers
-	for _, used := range searchNet.IPAM.IPsUsed {
-		network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, used)
+		for _, container := range networkList[0].Containers {
+			if container.IPv4Address != "" {
+				ip, err := netaddr.ParseIP(container.IPv4Address)
+				if err != nil {
+					return nil, err
+				}
+				network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, ip)
+			}
+		}
+
+		// append the used IPs that we already know from the search network
+		// this is needed because the network inspect does not return the container list until the containers are actually started
+		// and we already need this when we create the containers
+		for _, used := range searchNet.IPAM.IPsUsed {
+			network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, used)
+		}
+	} else {
+		log.Debugf("Network %s does not have an IPAM config", network.Name)
 	}
 
 	// Only one Network allowed, but some functions don't care about this, so they can ignore the error and just use the first one returned
