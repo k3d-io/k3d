@@ -74,7 +74,7 @@ func NewCmdNodeCreate() *cobra.Command {
 	cmd.Flags().BoolVar(&createNodeOpts.Wait, "wait", false, "Wait for the node(s) to be ready before returning.")
 	cmd.Flags().DurationVar(&createNodeOpts.Timeout, "timeout", 0*time.Second, "Maximum waiting time for '--wait' before canceling/returning.")
 
-	cmd.Flags().StringSliceP("labels", "l", []string{}, "Specify node labels in format \"foo=bar\"")
+	cmd.Flags().StringSliceP("k3s-node-label", "", []string{}, "Specify k3s node labels in format \"foo=bar\"")
 
 	// done
 	return cmd
@@ -127,19 +127,19 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 		log.Errorf("Provided memory limit value is invalid")
 	}
 
-	labels, err := cmd.Flags().GetStringSlice("labels")
+	k3sNodeLabelsFlag, err := cmd.Flags().GetStringSlice("k3s-node-label")
 	if err != nil {
-		log.Errorln("No labels specified")
+		log.Errorln("No node-label specified")
 		log.Fatalln(err)
 	}
 
-	extraLabels := make(map[string]string, len(labels))
-	for _, label := range labels {
+	k3sNodeLabels := make(map[string]string, len(k3sNodeLabelsFlag))
+	for _, label := range k3sNodeLabelsFlag {
 		labelSplitted := strings.Split(label, "=")
 		if len(labelSplitted) != 2 {
 			log.Fatalf("unknown label format format: %s, use format \"foo=bar\"", label)
 		}
-		extraLabels[labelSplitted[0]] = labelSplitted[1]
+		k3sNodeLabels[labelSplitted[0]] = labelSplitted[1]
 	}
 
 	// generate list of nodes
@@ -152,9 +152,9 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 			Labels: map[string]string{
 				k3d.LabelRole: roleStr,
 			},
-			ExtraLabels: extraLabels,
-			Restart:     true,
-			Memory:      memory,
+			K3sNodeLabels: k3sNodeLabels,
+			Restart:       true,
+			Memory:        memory,
 		}
 		nodes = append(nodes, node)
 	}
