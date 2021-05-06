@@ -1,159 +1,159 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
      <loc>https://k3d.io/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_cluster/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_cluster_create/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_cluster_delete/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_cluster_list/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_cluster_start/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_cluster_stop/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_completion/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_config/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_config_init/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_docgen/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_image/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_image_import/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_kubeconfig/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_kubeconfig_get/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_kubeconfig_merge/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_node/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_node_create/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_node_delete/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_node_list/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_node_start/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_node_stop/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_registry/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_registry_create/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_registry_delete/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_registry_list/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/commands/k3d_version/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/configfile/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/kubeconfig/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/multiserver/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/guides/exposing_services/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/guides/registries/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/guides/calico/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/usage/guides/cuda/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/internals/defaults/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/internals/networking/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/faq/faq/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://k3d.io/faq/v1vsv3-comparison/</loc>
-     <lastmod>2021-04-30</lastmod>
+     <lastmod>2021-05-06</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>
