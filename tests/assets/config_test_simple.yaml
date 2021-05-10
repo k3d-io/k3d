@@ -22,7 +22,12 @@ env:
   - envVar: bar=baz,bob
     nodeFilters:
       - all
-labels:
+k3sNodeLabels:
+  - label: foo=bar
+    nodeFilters:
+      - server[0]
+      - loadbalancer
+runtimeLabels:
   - label: foo=bar
     nodeFilters:
       - server[0]

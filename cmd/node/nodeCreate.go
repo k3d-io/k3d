@@ -74,6 +74,7 @@ func NewCmdNodeCreate() *cobra.Command {
 	cmd.Flags().BoolVar(&createNodeOpts.Wait, "wait", false, "Wait for the node(s) to be ready before returning.")
 	cmd.Flags().DurationVar(&createNodeOpts.Timeout, "timeout", 0*time.Second, "Maximum waiting time for '--wait' before canceling/returning.")
 
+	cmd.Flags().StringSliceP("runtime-label", "", []string{}, "Specify container runtime labels in format \"foo=bar\"")
 	cmd.Flags().StringSliceP("k3s-node-label", "", []string{}, "Specify k3s node labels in format \"foo=bar\"")
 
 	// done
@@ -127,9 +128,26 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 		log.Errorf("Provided memory limit value is invalid")
 	}
 
+	// --runtime-label
+	runtimeLabelsFlag, err := cmd.Flags().GetStringSlice("runtime-label")
+	if err != nil {
+		log.Errorln("No runtime-label specified")
+		log.Fatalln(err)
+	}
+
+	runtimeLabels := make(map[string]string, len(runtimeLabelsFlag))
+	for _, label := range runtimeLabelsFlag {
+		labelSplitted := strings.Split(label, "=")
+		if len(labelSplitted) != 2 {
+			log.Fatalf("unknown runtime-label format format: %s, use format \"foo=bar\"", label)
+		}
+		runtimeLabels[labelSplitted[0]] = labelSplitted[1]
+	}
+
+	// --k3s-node-label
 	k3sNodeLabelsFlag, err := cmd.Flags().GetStringSlice("k3s-node-label")
 	if err != nil {
-		log.Errorln("No node-label specified")
+		log.Errorln("No k3s-node-label specified")
 		log.Fatalln(err)
 	}
 
@@ -137,7 +155,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 	for _, label := range k3sNodeLabelsFlag {
 		labelSplitted := strings.Split(label, "=")
 		if len(labelSplitted) != 2 {
-			log.Fatalf("unknown label format format: %s, use format \"foo=bar\"", label)
+			log.Fatalf("unknown k3s-node-label format format: %s, use format \"foo=bar\"", label)
 		}
 		k3sNodeLabels[labelSplitted[0]] = labelSplitted[1]
 	}
@@ -153,6 +171,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 				k3d.LabelRole: roleStr,
 			},
 			K3sNodeLabels: k3sNodeLabels,
+			RuntimeLabels: runtimeLabels,
 			Restart:       true,
 			Memory:        memory,
 		}

@@ -315,9 +315,16 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 	for k, v := range node.Labels {
 		labels[k] = v
 	}
+	for k, v := range node.RuntimeLabels {
+		labels[k] = v
+	}
 	node.Labels = labels
 	// second most important: the node role label
 	node.Labels[k3d.LabelRole] = string(node.Role)
+
+	for k, v := range node.K3sNodeLabels {
+		node.Args = append(node.Args, "--node-label", fmt.Sprintf("%s=%s", k, v))
+	}
 
 	// ### Environment ###
 	node.Env = append(node.Env, k3d.DefaultNodeEnv...) // append default node env vars
@@ -416,10 +423,6 @@ func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, o
 func patchAgentSpec(node *k3d.Node) error {
 	if node.Cmd == nil {
 		node.Cmd = []string{"agent"}
-	}
-
-	for k, v := range node.K3sNodeLabels {
-		node.Args = append(node.Args, "--node-label", fmt.Sprintf("%s=%s", k, v))
 	}
 
 	return nil

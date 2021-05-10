@@ -63,7 +63,13 @@ func TestReadSimpleConfig(t *testing.T) {
 				NodeFilters: []string{"loadbalancer"},
 			},
 		},
-		Labels: []conf.LabelWithNodeFilters{
+		K3sNodeLabels: []conf.LabelWithNodeFilters{
+			{
+				Label:       "foo=bar",
+				NodeFilters: []string{"server[0]", "loadbalancer"},
+			},
+		},
+		RuntimeLabels: []conf.LabelWithNodeFilters{
 			{
 				Label:       "foo=bar",
 				NodeFilters: []string{"server[0]", "loadbalancer"},

@@ -108,7 +108,22 @@
         "additionalProperties": false
       }
     },
-    "labels": {
+    "k3sNodeLabels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "nodeFilters": {  
+            "$ref": "#/definitions/nodeFilters"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "runtimeLabels": {
       "type": "array",
       "items": {
         "type": "object",

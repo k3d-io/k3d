@@ -341,6 +341,7 @@ type Node struct {
 	Restart       bool              `yaml:"restart" json:"restart,omitempty"`
 	Created       string            `yaml:"created" json:"created,omitempty"`
 	Labels        map[string]string // filled automatically
+	RuntimeLabels map[string]string `yaml:"runtimeLabels" json:"runtimeLabels,omitempty"`
 	K3sNodeLabels map[string]string `yaml:"k3sNodeLabels" json:"k3sNodeLabels,omitempty"`
 	Networks      []string          // filled automatically
 	ExtraHosts    []string          // filled automatically
