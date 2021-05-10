@@ -26,6 +26,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -35,6 +36,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/pkg/errors"
+	runtimeErrors "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
@@ -138,6 +140,30 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, mo
 	}
 
 	return nil
+}
+
+// ReadFromNode reads from a given filepath inside the node container
+func (d Docker) ReadFromNode(ctx context.Context, path string, node *k3d.Node) (io.ReadCloser, error) {
+	log.Tracef("Reading path %s from node %s...", path, node.Name)
+	nodeContainer, err := getNodeContainer(ctx, node)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to find container for node '%s': %+v", node.Name, err)
+	}
+
+	docker, err := GetDockerClient()
+	if err != nil {
+		return nil, err
+	}
+
+	reader, _, err := docker.CopyFromContainer(ctx, nodeContainer.ID, path)
+	if err != nil {
+		if client.IsErrNotFound(err) {
+			return nil, errors.Wrap(runtimeErrors.ErrRuntimeFileNotFound, err.Error())
+		}
+		return nil, err
+	}
+
+	return reader, err
 }
 
 // GetDockerClient returns a docker client
