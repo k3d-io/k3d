@@ -40,6 +40,7 @@ import (
 	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
 	runtimeErrors "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/types/fixes"
 	"github.com/rancher/k3d/v4/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
@@ -288,6 +289,27 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 		return nil
 	}
 
+	// FIXME: FixCgroupV2 - to be removed when fixed upstream
+	if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
+		EnableCgroupV2FixIfNeeded(runtime)
+		if fixes.FixCgroupV2Enabled() {
+
+			if nodeStartOpts.NodeHooks == nil {
+				nodeStartOpts.NodeHooks = []k3d.NodeHook{}
+			}
+
+			nodeStartOpts.NodeHooks = append(nodeStartOpts.NodeHooks, k3d.NodeHook{
+				Stage: k3d.LifecycleStagePreStart,
+				Action: actions.WriteFileAction{
+					Runtime: runtime,
+					Content: fixes.CgroupV2Entrypoint,
+					Dest:    "/bin/entrypoint.sh",
+					Mode:    0744,
+				},
+			})
+		}
+	}
+
 	startTime := time.Now()
 	log.Debugf("Node %s Start Time: %+v", node.Name, startTime)
 
@@ -336,6 +358,8 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 
 // NodeCreate creates a new containerized k3s node
 func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, createNodeOpts k3d.NodeCreateOpts) error {
+	// FIXME: FixCgroupV2 - to be removed when fixed upstream
+	EnableCgroupV2FixIfNeeded(runtime)
 	log.Tracef("Creating node from spec\n%+v", node)
 
 	/*
