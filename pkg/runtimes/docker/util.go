@@ -29,9 +29,13 @@ import (
 	"io"
 	"os"
 	"strings"
+	"path"
 
 	"github.com/docker/cli/cli/connhelper"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/cli/cli/command"
+	dockercontext "github.com/docker/cli/cli/context"
+	"github.com/docker/cli/cli/flags"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
@@ -168,7 +172,18 @@ func (d Docker) ReadFromNode(ctx context.Context, path string, node *k3d.Node) (
 
 // GetDockerClient returns a docker client
 func GetDockerClient() (*client.Client, error) {
-	var err error
+	dockerCli, err := command.NewDockerCli(command.WithStandardStreams())
+	if err != nil {
+		return nil, err
+	}
+
+	err = dockerCli.Initialize(flags.NewClientOptions())
+	if err != nil {
+		return nil, err
+	}
+
+	currentContext := dockerCli.CurrentContext()
+
 	var cli *client.Client
 
 	dockerHost := os.Getenv("DOCKER_HOST")
@@ -184,6 +199,33 @@ func GetDockerClient() (*client.Client, error) {
 			client.WithHost(helper.Host),
 			client.WithDialContext(helper.Dialer),
 			client.WithAPIVersionNegotiation(),
+		)
+	} else if currentContext != "default" {
+		c, err := dockerCli.ContextStore().GetMetadata(currentContext)
+		if err != nil {
+			return nil, err
+		}
+
+		storageInfo := dockerCli.ContextStore().GetStorageInfo(currentContext)
+
+		tlsFilesMap, err := dockerCli.ContextStore().ListTLSFiles(currentContext)
+		if err != nil {
+			return nil, err
+		}
+
+		endpointDriver := "docker"
+		tlsFiles := tlsFilesMap[endpointDriver]
+
+		endpointMetaBase := c.Endpoints[endpointDriver].(dockercontext.EndpointMetaBase)
+
+		cli, err = client.NewClientWithOpts(
+			client.FromEnv,
+			client.WithAPIVersionNegotiation(),
+			client.WithTLSClientConfig(
+				path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[0]),
+				path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[1]),
+				path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[2])),
+			client.WithHost(endpointMetaBase.Host),
 		)
 	} else {
 		cli, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
