@@ -29,8 +29,8 @@ k3d cluster create NAME [flags]
       --gpus string                                                    GPU devices to add to the cluster node containers ('all' to pass all GPUs) [From docker]
   -h, --help                                                           help for create
   -i, --image string                                                   Specify k3s image that you want to use for the nodes
-      --k3s-agent-arg k3s agent                                        Additional args passed to the k3s agent command on agent nodes (new flag per arg)
-      --k3s-server-arg k3s server                                      Additional args passed to the k3s server command on server nodes (new flag per arg)
+      --k3s-arg ARG@NODEFILTER[;@NODEFILTER]                           Additional args passed to k3s command (Format: ARG@NODEFILTER[;@NODEFILTER])
+                                                                        - Example: `k3d cluster create --k3s-arg "--disable=traefik@server[0]"
       --kubeconfig-switch-context                                      Directly switch the default kubeconfig's current-context to the new cluster's context (requires --kubeconfig-update-default) (default true)
       --kubeconfig-update-default                                      Directly update the default kubeconfig with the new cluster's context (default true)
   -l, --label KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]                 Add label to node container (Format: KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]

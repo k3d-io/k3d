@@ -1,15 +1,15 @@
-## k3d docgen
+## k3d config migrate
 
-Generate command docs
+
 
 ```
-k3d docgen [flags]
+k3d config migrate INPUT OUTPUT [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for docgen
+  -h, --help   help for migrate
 ```
 
 ### Options inherited from parent commands
@@ -22,5 +22,5 @@ k3d docgen [flags]
 
 ### SEE ALSO
 
-* [k3d](k3d.md)	 - https://k3d.io/ -> Run k3s in Docker!
+* [k3d config](k3d_config.md)	 - Work with config file(s)
 

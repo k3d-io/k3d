@@ -26,7 +26,7 @@ import (
 	"context"
 	"testing"
 
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/spf13/viper"
 )

@@ -38,7 +38,7 @@ import (
 	cliutil "github.com/rancher/k3d/v4/cmd/util"
 	k3dCluster "github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/config"
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/version"
@@ -77,11 +77,6 @@ func initConfig() {
 		if _, err := os.Stat(configFile); err != nil {
 			log.Fatalf("Failed to stat config file %s: %+v", configFile, err)
 		}
-		log.Tracef("Schema: %+v", conf.JSONSchema)
-
-		if err := config.ValidateSchemaFile(configFile, []byte(conf.JSONSchema)); err != nil {
-			log.Fatalf("Schema Validation failed for config file %s: %+v", configFile, err)
-		}
 
 		// try to read config into memory (viper map structure)
 		if err := cfgViper.ReadInConfig(); err != nil {
@@ -92,7 +87,16 @@ func initConfig() {
 			log.Fatalf("Failed to read config file %s: %+v", configFile, err)
 		}
 
-		log.Infof("Using config file %s", cfgViper.ConfigFileUsed())
+		schema, err := config.GetSchemaByVersion(cfgViper.GetString("apiVersion"))
+		if err != nil {
+			log.Fatalf("Cannot validate config file %s: %+v", configFile, err)
+		}
+
+		if err := config.ValidateSchemaFile(configFile, schema); err != nil {
+			log.Fatalf("Schema Validation failed for config file %s: %+v", configFile, err)
+		}
+
+		log.Infof("Using config file %s (%s#%s)", cfgViper.ConfigFileUsed(), strings.ToLower(cfgViper.GetString("apiVersion")), strings.ToLower(cfgViper.GetString("kind")))
 	}
 	if log.GetLevel() >= log.DebugLevel {
 		c, _ := yaml.Marshal(cfgViper.AllSettings())
@@ -121,19 +125,35 @@ func NewCmdClusterCreate() *cobra.Command {
 			/*************************
 			 * Compute Configuration *
 			 *************************/
-			cfg, err := config.FromViperSimple(cfgViper)
+			if cfgViper.GetString("apiversion") == "" {
+				cfgViper.Set("apiversion", config.DefaultConfigApiVersion)
+			}
+			if cfgViper.GetString("kind") == "" {
+				cfgViper.Set("kind", "Simple")
+			}
+			cfg, err := config.FromViper(cfgViper)
 			if err != nil {
 				log.Fatalln(err)
 			}
 
-			log.Debugf("========== Simple Config ==========\n%+v\n==========================\n", cfg)
+			if cfg.GetAPIVersion() != config.DefaultConfigApiVersion {
+				log.Warnf("Default config apiVersion is '%s', but you're using '%s': consider migrating.", config.DefaultConfigApiVersion, cfg.GetAPIVersion())
+				cfg, err = config.Migrate(cfg, config.DefaultConfigApiVersion)
+				if err != nil {
+					log.Fatalln(err)
+				}
+			}
 
-			cfg, err = applyCLIOverrides(cfg)
+			simpleCfg := cfg.(conf.SimpleConfig)
+
+			log.Debugf("========== Simple Config ==========\n%+v\n==========================\n", simpleCfg)
+
+			simpleCfg, err = applyCLIOverrides(simpleCfg)
 			if err != nil {
 				log.Fatalf("Failed to apply CLI overrides: %+v", err)
 			}
 
-			log.Debugf("========== Merged Simple Config ==========\n%+v\n==========================\n", cfg)
+			log.Debugf("========== Merged Simple Config ==========\n%+v\n==========================\n", simpleCfg)
 
 			/**************************************
 			 * Transform, Process & Validate Configuration *
@@ -141,10 +161,10 @@ func NewCmdClusterCreate() *cobra.Command {
 
 			// Set the name
 			if len(args) != 0 {
-				cfg.Name = args[0]
+				simpleCfg.Name = args[0]
 			}
 
-			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, cfg)
+			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, simpleCfg)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -178,7 +198,7 @@ func NewCmdClusterCreate() *cobra.Command {
 			if err := k3dCluster.ClusterRun(cmd.Context(), runtimes.SelectedRuntime, clusterConfig); err != nil {
 				// rollback if creation failed
 				log.Errorln(err)
-				if cfg.Options.K3dOptions.NoRollback { // TODO: move rollback mechanics to pkg/
+				if simpleCfg.Options.K3dOptions.NoRollback { // TODO: move rollback mechanics to pkg/
 					log.Fatalln("Cluster creation FAILED, rollback deactivated.")
 				}
 				// rollback if creation failed
@@ -202,7 +222,7 @@ func NewCmdClusterCreate() *cobra.Command {
 
 			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig {
 				log.Debugf("Updating default kubeconfig with a new context for cluster %s", clusterConfig.Cluster.Name)
-				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: cfg.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
+				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: simpleCfg.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
 					log.Warningln(err)
 				}
 			}
@@ -265,6 +285,10 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	cmd.Flags().StringArrayP("label", "l", nil, "Add label to node container (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -l \"my.label@agent[0,1]\" -l \"other.label=somevalue@server[0]\"`")
 	_ = ppViper.BindPFlag("cli.labels", cmd.Flags().Lookup("label"))
+
+	/* k3s */
+	cmd.Flags().StringArray("k3s-arg", nil, "Additional args passed to k3s command (Format: `ARG@NODEFILTER[;@NODEFILTER]`)\n - Example: `k3d cluster create --k3s-arg \"--disable=traefik@server[0]\"")
+	_ = cfgViper.BindPFlag("cli.k3sargs", cmd.Flags().Lookup("k3s-arg"))
 
 	/******************
 	 * "Normal" Flags *
@@ -339,13 +363,6 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	cmd.Flags().String("registry-config", "", "Specify path to an extra registries.yaml file")
 	_ = cfgViper.BindPFlag("registries.config", cmd.Flags().Lookup("registry-config"))
-
-	/* k3s */
-	cmd.Flags().StringArray("k3s-server-arg", nil, "Additional args passed to the `k3s server` command on server nodes (new flag per arg)")
-	_ = cfgViper.BindPFlag("options.k3s.extraserverargs", cmd.Flags().Lookup("k3s-server-arg"))
-
-	cmd.Flags().StringArray("k3s-agent-arg", nil, "Additional args passed to the `k3s agent` command on agent nodes (new flag per arg)")
-	_ = cfgViper.BindPFlag("options.k3s.extraagentargs", cmd.Flags().Lookup("k3s-agent-arg"))
 
 	/* Subcommands */
 
@@ -519,6 +536,31 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	}
 
 	log.Tracef("EnvFilterMap: %+v", envFilterMap)
+
+	// --k3s-arg
+	argFilterMap := make(map[string][]string, 1)
+	for _, argFlag := range ppViper.GetStringSlice("cli.k3sargs") {
+
+		// split node filter from the specified arg
+		arg, filters, err := cliutil.SplitFiltersFromFlag(argFlag)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// create new entry or append filter to existing entry
+		if _, exists := argFilterMap[arg]; exists {
+			argFilterMap[arg] = append(argFilterMap[arg], filters...)
+		} else {
+			argFilterMap[arg] = filters
+		}
+	}
+
+	for arg, nodeFilters := range argFilterMap {
+		cfg.Options.K3sOptions.ExtraArgs = append(cfg.Options.K3sOptions.ExtraArgs, conf.K3sArgWithNodeFilters{
+			Arg:         arg,
+			NodeFilters: nodeFilters,
+		})
+	}
 
 	return cfg, nil
 }
