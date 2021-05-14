@@ -25,7 +25,9 @@ package client
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
@@ -33,9 +35,12 @@ import (
 
 	dockerunits "github.com/docker/go-units"
 	"github.com/imdario/mergo"
+	"github.com/rancher/k3d/v4/pkg/actions"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
+	runtimeErrors "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/types/fixes"
 	"github.com/rancher/k3d/v4/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
@@ -89,6 +94,25 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 
 	log.Debugf("Adding node %+v \n>>> to cluster %+v\n>>> based on existing node %+v", node, cluster, chosenNode)
 
+	// fetch registry config
+	registryConfigBytes := []byte{}
+	registryConfigReader, err := runtime.ReadFromNode(ctx, k3d.DefaultRegistriesFilePath, chosenNode)
+	if err != nil {
+		if !errors.Is(err, runtimeErrors.ErrRuntimeFileNotFound) {
+			log.Warnf("Failed to read registry config from node %s: %+v", node.Name, err)
+		}
+	} else {
+		defer registryConfigReader.Close()
+
+		var err error
+		registryConfigBytes, err = ioutil.ReadAll(registryConfigReader)
+		if err != nil {
+			log.Warnf("Failed to read registry config from node %s: %+v", node.Name, err)
+		}
+		registryConfigReader.Close()
+		registryConfigBytes = bytes.Trim(registryConfigBytes[512:], "\x00") // trim control characters, etc.
+	}
+
 	// merge node config of new node into existing node config
 	if err := mergo.MergeWithOverwrite(chosenNode, *node); err != nil {
 		log.Errorln("Failed to merge new node config into existing node config")
@@ -133,11 +157,27 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		}
 	}
 
+	// add node actions
+	if len(registryConfigBytes) != 0 {
+		if createNodeOpts.NodeHooks == nil {
+			createNodeOpts.NodeHooks = []k3d.NodeHook{}
+		}
+		createNodeOpts.NodeHooks = append(createNodeOpts.NodeHooks, k3d.NodeHook{
+			Stage: k3d.LifecycleStagePreStart,
+			Action: actions.WriteFileAction{
+				Runtime: runtime,
+				Content: registryConfigBytes,
+				Dest:    k3d.DefaultRegistriesFilePath,
+				Mode:    0644,
+			},
+		})
+	}
+
 	// clear status fields
 	node.State.Running = false
 	node.State.Status = ""
 
-	if err := NodeRun(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
+	if err := NodeRun(ctx, runtime, node, createNodeOpts); err != nil {
 		return err
 	}
 
@@ -162,7 +202,7 @@ func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes 
 
 	nodeWaitGroup, ctx := errgroup.WithContext(ctx)
 	for _, node := range nodes {
-		if err := NodeAddToCluster(ctx, runtime, node, cluster, k3d.NodeCreateOpts{}); err != nil {
+		if err := NodeAddToCluster(ctx, runtime, node, cluster, createNodeOpts); err != nil {
 			return err
 		}
 		if createNodeOpts.Wait {
@@ -230,8 +270,9 @@ func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, node
 	}
 
 	if err := NodeStart(ctx, runtime, node, k3d.NodeStartOpts{
-		Wait:    nodeCreateOpts.Wait,
-		Timeout: nodeCreateOpts.Timeout,
+		Wait:      nodeCreateOpts.Wait,
+		Timeout:   nodeCreateOpts.Timeout,
+		NodeHooks: nodeCreateOpts.NodeHooks,
 	}); err != nil {
 		return err
 	}
@@ -246,6 +287,27 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 	if node.State.Running {
 		log.Infof("Node %s is already running", node.Name)
 		return nil
+	}
+
+	// FIXME: FixCgroupV2 - to be removed when fixed upstream
+	if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
+		EnableCgroupV2FixIfNeeded(runtime)
+		if fixes.FixCgroupV2Enabled() {
+
+			if nodeStartOpts.NodeHooks == nil {
+				nodeStartOpts.NodeHooks = []k3d.NodeHook{}
+			}
+
+			nodeStartOpts.NodeHooks = append(nodeStartOpts.NodeHooks, k3d.NodeHook{
+				Stage: k3d.LifecycleStagePreStart,
+				Action: actions.WriteFileAction{
+					Runtime: runtime,
+					Content: fixes.CgroupV2Entrypoint,
+					Dest:    "/bin/entrypoint.sh",
+					Mode:    0744,
+				},
+			})
+		}
 	}
 
 	startTime := time.Now()
@@ -296,6 +358,8 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 
 // NodeCreate creates a new containerized k3s node
 func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, createNodeOpts k3d.NodeCreateOpts) error {
+	// FIXME: FixCgroupV2 - to be removed when fixed upstream
+	EnableCgroupV2FixIfNeeded(runtime)
 	log.Tracef("Creating node from spec\n%+v", node)
 
 	/*

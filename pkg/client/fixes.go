@@ -19,21 +19,35 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package errors
+package client
 
-import "errors"
+import (
+	"os"
+	"strconv"
 
-// ErrRuntimeNetworkNotEmpty describes an error that occurs because a network still has containers connected to it (e.g. cannot be deleted)
-var ErrRuntimeNetworkNotEmpty = errors.New("network not empty")
-
-// ErrRuntimeContainerUnknown describes the situation, where we're inspecting a container that's not obviously managed by k3d
-var ErrRuntimeContainerUnknown = errors.New("container not managed by k3d: missing default label(s)")
-
-// Runtime Network Errors
-var (
-	ErrRuntimeNetworkNotExists     = errors.New("network does not exist")
-	ErrRuntimeNetworkMultiSameName = errors.New("multiple networks with same name found")
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v4/pkg/types/fixes"
+	log "github.com/sirupsen/logrus"
 )
 
-// Container Filesystem Errors
-var ErrRuntimeFileNotFound = errors.New("file not found")
+// FIXME: FixCgroupV2 - to be removed when fixed upstream
+func EnableCgroupV2FixIfNeeded(runtime runtimes.Runtime) {
+	if _, isSet := os.LookupEnv(fixes.EnvFixCgroupV2); !isSet {
+		runtimeInfo, err := runtime.Info()
+		if err != nil {
+			log.Warnf("Failed to get runtime information: %+v", err)
+			return
+		}
+		cgroupVersion, err := strconv.Atoi(runtimeInfo.CgroupVersion)
+		if err != nil {
+			log.Debugf("Failed to parse cgroupVersion: %+v", err)
+			return
+		}
+		if cgroupVersion == 2 {
+			log.Debugf("Detected CgroupV2, enabling custom entrypoint (disable by setting %s=false)", fixes.EnvFixCgroupV2)
+			if err := os.Setenv(fixes.EnvFixCgroupV2, "true"); err != nil {
+				log.Errorf("Detected CgroupsV2 but failed to enable k3d's hotfix (try `export %s=true`): %+v", fixes.EnvFixCgroupV2, err)
+			}
+		}
+	}
+}
