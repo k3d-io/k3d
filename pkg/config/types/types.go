@@ -1,5 +1,5 @@
 /*
-Copyright © 2020-2021 The k3d Author(s)
+Copyright © 2020 The k3d Author(s)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,37 +19,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+package types
 
-package config
+// TypeMeta is basically copied from https://github.com/kubernetes/apimachinery/blob/a3b564b22db316a41e94fdcffcf9995424fe924c/pkg/apis/meta/v1/types.go#L36-L56
+type TypeMeta struct {
+	Kind       string `mapstructure:"kind,omitempty" yaml:"kind,omitempty" json:"kind,omitempty"`
+	APIVersion string `mapstructure:"apiVersion,omitempty" yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
+}
 
-import (
-	"context"
-	"testing"
-
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	"github.com/spf13/viper"
-)
-
-func TestTransformSimpleConfigToClusterConfig(t *testing.T) {
-	cfgFile := "./test_assets/config_test_simple.yaml"
-
-	vip := viper.New()
-	vip.SetConfigFile(cfgFile)
-	_ = vip.ReadInConfig()
-
-	cfg, err := FromViper(vip)
-	if err != nil {
-		t.Error(err)
-	}
-
-	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", cfg)
-
-	clusterCfg, err := TransformSimpleToClusterConfig(context.Background(), runtimes.Docker, cfg.(conf.SimpleConfig))
-	if err != nil {
-		t.Error(err)
-	}
-
-	t.Logf("\n===== Resulting Cluster Config =====\n%+v\n===============\n", clusterCfg)
-
+// Config interface.
+type Config interface {
+	GetKind() string
+	GetAPIVersion() string
 }

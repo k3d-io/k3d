@@ -23,7 +23,7 @@ THE SOFTWARE.
 package config
 
 import (
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 	log "github.com/sirupsen/logrus"
 )
 

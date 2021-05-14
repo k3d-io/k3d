@@ -36,7 +36,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/imdario/mergo"
 	"github.com/rancher/k3d/v4/pkg/actions"
-	config "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
+	config "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 	k3drt "github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
 	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"

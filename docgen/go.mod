@@ -7,11 +7,8 @@ require (
 	github.com/containerd/cgroups v0.0.0-20210414074453-680c246289fb // indirect
 	github.com/containerd/containerd v1.5.0-rc.1 // indirect
 	github.com/containerd/continuity v0.0.0-20210315143101-93e15499afd5 // indirect
-	github.com/docker/cli v20.10.6+incompatible // indirect
-	github.com/docker/docker v20.10.6+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/pelletier/go-toml v1.9.0 // indirect
@@ -26,7 +23,6 @@ require (
 	google.golang.org/genproto v0.0.0-20210413151531-c14fb6ef47c3 // indirect
 	google.golang.org/grpc v1.37.0 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
-	k8s.io/client-go v0.21.0 // indirect
 	k8s.io/utils v0.0.0-20210305010621-2afb4311ab10 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.1 // indirect
 )

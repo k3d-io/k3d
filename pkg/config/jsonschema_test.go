@@ -24,14 +24,14 @@ package config
 import (
 	"testing"
 
-	"github.com/rancher/k3d/v4/pkg/config/v1alpha2"
+	"github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 )
 
 func TestValidateSchema(t *testing.T) {
 
 	cfgPath := "./test_assets/config_test_simple.yaml"
 
-	if err := ValidateSchemaFile(cfgPath, []byte(v1alpha2.JSONSchema)); err != nil {
+	if err := ValidateSchemaFile(cfgPath, []byte(v1alpha3.JSONSchema)); err != nil {
 		t.Errorf("Validation of config file %s against the default schema failed: %+v", cfgPath, err)
 	}
 
@@ -42,7 +42,7 @@ func TestValidateSchemaFail(t *testing.T) {
 	cfgPath := "./test_assets/config_test_simple_invalid_servers.yaml"
 
 	var err error
-	if err = ValidateSchemaFile(cfgPath, []byte(v1alpha2.JSONSchema)); err == nil {
+	if err = ValidateSchemaFile(cfgPath, []byte(v1alpha3.JSONSchema)); err == nil {
 		t.Errorf("Validation of config file %s against the default schema passed where we expected a failure", cfgPath)
 	}
 
