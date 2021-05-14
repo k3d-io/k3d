@@ -1,11 +1,11 @@
-apiVersion: k3d.io/v1alpha3
+apiVersion: k3d.io/v1alpha2
 kind: Simple
 name: test
-servers: 1
+servers: 3
 agents: 2
 kubeAPI:
   hostIP: "0.0.0.0"
-  hostPort: "6443"
+  hostPort: "6446"
 image: rancher/k3s:latest
 volumes:
   - volume: /my/path:/some/path
@@ -19,26 +19,33 @@ ports:
     nodeFilters:
       - loadbalancer
 env:
-  - envVar: bar=baz
+  - envVar: bar=baz,bob
     nodeFilters:
       - all
 labels:
   - label: foo=bar
     nodeFilters:
-      - "server[0]"
+      - server[0]
       - loadbalancer
+registries:
+  create: true
+  use: []
+  config: |
+    mirrors:
+      "my.company.registry":
+        endpoint:
+          - http://my.company.registry:5000
 
 options:
   k3d:
     wait: true
-    timeout: "60s"
+    timeout: "360s" # should be pretty high for multi-server clusters to allow for a proper startup routine
     disableLoadbalancer: false
     disableImageVolume: false
   k3s:
-    extraArgs:
-      - arg: --tls-san=127.0.0.1
-        nodeFilters:
-          - "server[*]"
+    extraServerArgs:
+      - --tls-san=127.0.0.1
+    extraAgentArgs: []
   kubeconfig:
     updateDefaultKubeconfig: true
     switchCurrentContext: true
