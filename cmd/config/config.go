@@ -41,6 +41,7 @@ func NewCmdConfig() *cobra.Command {
 	}
 
 	cmd.AddCommand(NewCmdConfigInit())
+	cmd.AddCommand(NewCmdConfigMigrate())
 
 	return cmd
 }

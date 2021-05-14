@@ -29,43 +29,51 @@ import (
 
 	"github.com/spf13/viper"
 
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
+	"github.com/rancher/k3d/v4/pkg/config/v1alpha2"
+	"github.com/rancher/k3d/v4/pkg/config/v1alpha3"
+	defaultConfig "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
+
+	types "github.com/rancher/k3d/v4/pkg/config/types"
 )
 
-func FromViperSimple(config *viper.Viper) (conf.SimpleConfig, error) {
+const DefaultConfigApiVersion = defaultConfig.ApiVersion
 
-	var cfg conf.SimpleConfig
-
-	// determine config kind
-	if config.GetString("kind") != "" && strings.ToLower(config.GetString("kind")) != "simple" {
-		return cfg, fmt.Errorf("Wrong `kind` '%s' != 'simple' in config file", config.GetString("kind"))
-	}
-
-	if err := config.Unmarshal(&cfg); err != nil {
-		log.Errorln("Failed to unmarshal File config")
-
-		return cfg, err
-	}
-
-	return cfg, nil
+var Schemas = map[string]string{
+	v1alpha2.ApiVersion: v1alpha2.JSONSchema,
+	v1alpha3.ApiVersion: v1alpha3.JSONSchema,
 }
 
-func FromViper(config *viper.Viper) (conf.Config, error) {
+func GetSchemaByVersion(apiVersion string) ([]byte, error) {
+	schema, ok := Schemas[strings.ToLower(apiVersion)]
+	if !ok {
+		return nil, fmt.Errorf("unsupported apiVersion '%s'", apiVersion)
+	}
+	return []byte(schema), nil
+}
 
-	var cfg conf.Config
+func FromViper(config *viper.Viper) (types.Config, error) {
 
-	// determine config kind
-	switch strings.ToLower(config.GetString("kind")) {
-	case "simple":
-		cfg = conf.SimpleConfig{}
-	case "cluster":
-		cfg = conf.ClusterConfig{}
-	case "clusterlist":
-		cfg = conf.ClusterListConfig{}
+	var cfg types.Config
+	var err error
+
+	apiVersion := strings.ToLower(config.GetString("apiversion"))
+	kind := strings.ToLower(config.GetString("kind"))
+
+	log.Tracef("Trying to read config apiVersion='%s', kind='%s'", apiVersion, kind)
+
+	switch apiVersion {
+	case "k3d.io/v1alpha2":
+		cfg, err = v1alpha2.GetConfigByKind(kind)
+	case "k3d.io/v1alpha3":
+		cfg, err = v1alpha3.GetConfigByKind(kind)
 	case "":
-		return nil, fmt.Errorf("Missing `kind` in config file")
+		cfg, err = defaultConfig.GetConfigByKind(kind)
 	default:
-		return nil, fmt.Errorf("Unknown `kind` '%s' in config file", config.GetString("kind"))
+		return nil, fmt.Errorf("cannot read config with apiversion '%s'", config.GetString("apiversion"))
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	if err := config.Unmarshal(&cfg); err != nil {
@@ -75,4 +83,13 @@ func FromViper(config *viper.Viper) (conf.Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func getMigrations(version string) map[string]func(types.Config) (types.Config, error) {
+	switch version {
+	case v1alpha3.ApiVersion:
+		return v1alpha3.Migrations
+	default:
+		return nil
+	}
 }
