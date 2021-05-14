@@ -492,6 +492,11 @@ func patchAgentSpec(node *k3d.Node) error {
 	if node.Cmd == nil {
 		node.Cmd = []string{"agent"}
 	}
+
+	for k, v := range node.K3sNodeLabels {
+		node.Args = append(node.Args, "--node-label", fmt.Sprintf("%s=%s", k, v))
+	}
+
 	return nil
 }
 
