@@ -28,4 +28,5 @@ k3d config [flags]
 
 * [k3d](k3d.md)	 - https://k3d.io/ -> Run k3s in Docker!
 * [k3d config init](k3d_config_init.md)	 - 
+* [k3d config migrate](k3d_config_migrate.md)	 - 
 

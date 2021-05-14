@@ -31,7 +31,7 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	cliutil "github.com/rancher/k3d/v4/cmd/util" // TODO: move parseapiport to pkg
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/pkg/types/k3s"
@@ -117,7 +117,6 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		serverNode := k3d.Node{
 			Role:       k3d.ServerRole,
 			Image:      simpleConfig.Image,
-			Args:       simpleConfig.Options.K3sOptions.ExtraServerArgs,
 			ServerOpts: k3d.ServerOpts{},
 			Memory:     simpleConfig.Options.Runtime.ServersMemory,
 		}
@@ -135,7 +134,6 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		agentNode := k3d.Node{
 			Role:   k3d.AgentRole,
 			Image:  simpleConfig.Image,
-			Args:   simpleConfig.Options.K3sOptions.ExtraAgentArgs,
 			Memory: simpleConfig.Options.Runtime.AgentsMemory,
 		}
 		newCluster.Nodes = append(newCluster.Nodes, &agentNode)
@@ -228,6 +226,22 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		}
 	}
 
+	// -> ARGS
+	for _, argWithNodeFilters := range simpleConfig.Options.K3sOptions.ExtraArgs {
+		if len(argWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
+			return nil, fmt.Errorf("K3sExtraArg '%s' lacks a node filter, but there's more than one node", argWithNodeFilters.Arg)
+		}
+
+		nodes, err := util.FilterNodes(nodeList, argWithNodeFilters.NodeFilters)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, node := range nodes {
+			node.Args = append(node.Args, argWithNodeFilters.Arg)
+		}
+	}
+
 	/**************************
 	 * Cluster Create Options *
 	 **************************/
@@ -238,8 +252,6 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		WaitForServer:              simpleConfig.Options.K3dOptions.Wait,
 		Timeout:                    simpleConfig.Options.K3dOptions.Timeout,
 		DisableLoadBalancer:        simpleConfig.Options.K3dOptions.DisableLoadbalancer,
-		K3sServerArgs:              simpleConfig.Options.K3sOptions.ExtraServerArgs,
-		K3sAgentArgs:               simpleConfig.Options.K3sOptions.ExtraAgentArgs,
 		GPURequest:                 simpleConfig.Options.Runtime.GPURequest,
 		ServersMemory:              simpleConfig.Options.Runtime.ServersMemory,
 		AgentsMemory:               simpleConfig.Options.Runtime.AgentsMemory,

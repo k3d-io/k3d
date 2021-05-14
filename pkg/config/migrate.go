@@ -1,5 +1,5 @@
 /*
-Copyright © 2020-2021 The k3d Author(s)
+Copyright © 2020 The k3d Author(s)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,33 +23,18 @@ THE SOFTWARE.
 package config
 
 import (
-	"context"
-	"testing"
+	"fmt"
 
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	"github.com/spf13/viper"
+	types "github.com/rancher/k3d/v4/pkg/config/types"
 )
 
-func TestTransformSimpleConfigToClusterConfig(t *testing.T) {
-	cfgFile := "./test_assets/config_test_simple.yaml"
+func Migrate(config types.Config, targetVersion string) (types.Config, error) {
 
-	vip := viper.New()
-	vip.SetConfigFile(cfgFile)
-	_ = vip.ReadInConfig()
-
-	cfg, err := FromViper(vip)
-	if err != nil {
-		t.Error(err)
+	migration, ok := getMigrations(targetVersion)[config.GetAPIVersion()]
+	if !ok {
+		return nil, fmt.Errorf("no migration possible from '%s' to '%s'", config.GetAPIVersion(), targetVersion)
 	}
 
-	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", cfg)
-
-	clusterCfg, err := TransformSimpleToClusterConfig(context.Background(), runtimes.Docker, cfg.(conf.SimpleConfig))
-	if err != nil {
-		t.Error(err)
-	}
-
-	t.Logf("\n===== Resulting Cluster Config =====\n%+v\n===============\n", clusterCfg)
+	return migration(config)
 
 }

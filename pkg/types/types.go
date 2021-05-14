@@ -184,8 +184,6 @@ type ClusterCreateOpts struct {
 	WaitForServer              bool              `yaml:"waitForServer" json:"waitForServer,omitempty"`
 	Timeout                    time.Duration     `yaml:"timeout" json:"timeout,omitempty"`
 	DisableLoadBalancer        bool              `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
-	K3sServerArgs              []string          `yaml:"k3sServerArgs" json:"k3sServerArgs,omitempty"`
-	K3sAgentArgs               []string          `yaml:"k3sAgentArgs" json:"k3sAgentArgs,omitempty"`
 	GPURequest                 string            `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
 	ServersMemory              string            `yaml:"serversMemory" json:"serversMemory,omitempty"`
 	AgentsMemory               string            `yaml:"agentsMemory" json:"agentsMemory,omitempty"`
