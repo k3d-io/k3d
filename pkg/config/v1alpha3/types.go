@@ -95,9 +95,10 @@ type SimpleConfigOptions struct {
 }
 
 type SimpleConfigOptionsRuntime struct {
-	GPURequest    string `mapstructure:"gpuRequest" yaml:"gpuRequest"`
-	ServersMemory string `mapstructure:"serversMemory" yaml:"serversMemory"`
-	AgentsMemory  string `mapstructure:"agentsMemory" yaml:"agentsMemory"`
+	GPURequest    string                 `mapstructure:"gpuRequest" yaml:"gpuRequest"`
+	ServersMemory string                 `mapstructure:"serversMemory" yaml:"serversMemory"`
+	AgentsMemory  string                 `mapstructure:"agentsMemory" yaml:"agentsMemory"`
+	Labels        []LabelWithNodeFilters `mapstructure:"labels" yaml:"labels"`
 }
 
 type SimpleConfigOptionsK3d struct {
@@ -111,7 +112,8 @@ type SimpleConfigOptionsK3d struct {
 }
 
 type SimpleConfigOptionsK3s struct {
-	ExtraArgs []K3sArgWithNodeFilters `mapstructure:"extraArgs" yaml:"extraArgs"`
+	ExtraArgs  []K3sArgWithNodeFilters `mapstructure:"extraArgs" yaml:"extraArgs"`
+	NodeLabels []LabelWithNodeFilters  `mapstructure:"nodeLabels" yaml:"nodeLabels"`
 }
 
 // SimpleConfig describes the toplevel k3d configuration file.
@@ -127,7 +129,6 @@ type SimpleConfig struct {
 	ClusterToken    string                  `mapstructure:"token" yaml:"clusterToken" json:"clusterToken,omitempty"` // default: auto-generated
 	Volumes         []VolumeWithNodeFilters `mapstructure:"volumes" yaml:"volumes" json:"volumes,omitempty"`
 	Ports           []PortWithNodeFilters   `mapstructure:"ports" yaml:"ports" json:"ports,omitempty"`
-	Labels          []LabelWithNodeFilters  `mapstructure:"labels" yaml:"labels" json:"labels,omitempty"`
 	Options         SimpleConfigOptions     `mapstructure:"options" yaml:"options" json:"options,omitempty"`
 	Env             []EnvVarWithNodeFilters `mapstructure:"env" yaml:"env" json:"env,omitempty"`
 	Registries      struct {

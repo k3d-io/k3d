@@ -191,7 +191,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 
 	// -> K3S NODE LABELS
-	for _, k3sNodeLabelWithNodeFilters := range simpleConfig.K3sNodeLabels {
+	for _, k3sNodeLabelWithNodeFilters := range simpleConfig.Options.K3sOptions.NodeLabels {
 		if len(k3sNodeLabelWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
 			return nil, fmt.Errorf("K3sNodeLabelmapping '%s' lacks a node filter, but there's more than one node", k3sNodeLabelWithNodeFilters.Label)
 		}
@@ -212,7 +212,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 
 	// -> RUNTIME LABELS
-	for _, runtimeLabelWithNodeFilters := range simpleConfig.RuntimeLabels {
+	for _, runtimeLabelWithNodeFilters := range simpleConfig.Options.Runtime.Labels {
 		if len(runtimeLabelWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
 			return nil, fmt.Errorf("RuntimeLabelmapping '%s' lacks a node filter, but there's more than one node", runtimeLabelWithNodeFilters.Label)
 		}

@@ -44,6 +44,10 @@ exec_in_node "k3d-$clustername-agent-1" "env" | grep "x=y" || failed "Expected e
 info "Ensuring that container labels have been set as stated in the config"
 docker_assert_container_label "k3d-$clustername-server-0" "foo=bar" || failed "Expected label 'foo=bar' not present on container/node k3d-$clustername-server-0"
 
+## K3s Node Labels
+info "Ensuring that k3s node labels have been set as stated in the config"
+k3s_assert_node_label "k3d-$clustername-server-0" "foo=bar" || failed "Expected label 'foo=bar' not present on node k3d-$clustername-server-0"
+
 ## Registry Node
 info "Ensuring, that we DO NOT have a registry node present"
 $EXE node list "k3d-$clustername-registry" && failed "Expected k3d-$clustername-registry to NOT be present"

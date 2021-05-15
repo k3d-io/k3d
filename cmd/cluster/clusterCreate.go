@@ -504,7 +504,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	}
 
 	for label, nodeFilters := range k3sNodeLabelFilterMap {
-		cfg.K3sNodeLabels = append(cfg.K3sNodeLabels, conf.LabelWithNodeFilters{
+		cfg.Options.K3sOptions.NodeLabels = append(cfg.Options.K3sOptions.NodeLabels, conf.LabelWithNodeFilters{
 			Label:       label,
 			NodeFilters: nodeFilters,
 		})
@@ -532,7 +532,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	}
 
 	for label, nodeFilters := range runtimeLabelFilterMap {
-		cfg.RuntimeLabels = append(cfg.RuntimeLabels, conf.LabelWithNodeFilters{
+		cfg.Options.Runtime.Labels = append(cfg.Options.Runtime.Labels, conf.LabelWithNodeFilters{
 			Label:       label,
 			NodeFilters: nodeFilters,
 		})

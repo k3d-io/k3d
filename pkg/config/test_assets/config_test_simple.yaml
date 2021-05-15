@@ -22,16 +22,6 @@ env:
   - envVar: bar=baz
     nodeFilters:
       - all
-k3sNodeLabels:
-  - label: foo=bar
-    nodeFilters:
-      - server[0]
-      - loadbalancer
-runtimeLabels:
-  - label: foo=bar
-    nodeFilters:
-      - "server[0]"
-      - loadbalancer
 
 options:
   k3d:
@@ -44,6 +34,17 @@ options:
       - arg: --tls-san=127.0.0.1
         nodeFilters:
           - "server[*]"
+    nodeLabels:
+      - label: foo=bar
+        nodeFilters:
+          - server[0]
+          - loadbalancer
   kubeconfig:
     updateDefaultKubeconfig: true
     switchCurrentContext: true
+  runtime:
+    labels:
+      - label: foo=bar
+        nodeFilters:
+          - server[0]
+          - loadbalancer
