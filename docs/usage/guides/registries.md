@@ -29,7 +29,7 @@ This file can also be used for providing additional information necessary for ac
 If you're using a `SimpleConfig` file to configure your k3d cluster, you may as well embed the registries.yaml in there directly:
 
 ```yaml
-apiVersion: k3d.io/v1alpha2
+apiVersion: k3d.io/v1alpha3
 kind: Simple
 name: test
 servers: 1

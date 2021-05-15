@@ -19,38 +19,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package config
 
 import (
-	"testing"
+	"fmt"
 
-	"github.com/rancher/k3d/v4/pkg/config/v1alpha3"
+	types "github.com/rancher/k3d/v4/pkg/config/types"
 )
 
-func TestValidateSchema(t *testing.T) {
+func Migrate(config types.Config, targetVersion string) (types.Config, error) {
 
-	cfgPath := "./test_assets/config_test_simple.yaml"
-
-	if err := ValidateSchemaFile(cfgPath, []byte(v1alpha3.JSONSchema)); err != nil {
-		t.Errorf("Validation of config file %s against the default schema failed: %+v", cfgPath, err)
+	migration, ok := getMigrations(targetVersion)[config.GetAPIVersion()]
+	if !ok {
+		return nil, fmt.Errorf("no migration possible from '%s' to '%s'", config.GetAPIVersion(), targetVersion)
 	}
 
-}
-
-func TestValidateSchemaFail(t *testing.T) {
-
-	cfgPath := "./test_assets/config_test_simple_invalid_servers.yaml"
-
-	var err error
-	if err = ValidateSchemaFile(cfgPath, []byte(v1alpha3.JSONSchema)); err == nil {
-		t.Errorf("Validation of config file %s against the default schema passed where we expected a failure", cfgPath)
-	}
-
-	expectedErrorText := `- name: Invalid type. Expected: string, given: integer
-`
-
-	if err.Error() != expectedErrorText {
-		t.Errorf("Actual validation error\n%s\ndoes not match expected error\n%s\n", err.Error(), expectedErrorText)
-	}
+	return migration(config)
 
 }

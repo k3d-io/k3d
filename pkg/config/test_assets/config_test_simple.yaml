@@ -1,4 +1,4 @@
-apiVersion: k3d.io/v1alpha2
+apiVersion: k3d.io/v1alpha3
 kind: Simple
 name: test
 servers: 1
@@ -30,7 +30,7 @@ k3sNodeLabels:
 runtimeLabels:
   - label: foo=bar
     nodeFilters:
-      - server[0]
+      - "server[0]"
       - loadbalancer
 
 options:
@@ -40,9 +40,10 @@ options:
     disableLoadbalancer: false
     disableImageVolume: false
   k3s:
-    extraServerArgs:
-      - --tls-san=127.0.0.1
-    extraAgentArgs: []
+    extraArgs:
+      - arg: --tls-san=127.0.0.1
+        nodeFilters:
+          - "server[*]"
   kubeconfig:
     updateDefaultKubeconfig: true
     switchCurrentContext: true

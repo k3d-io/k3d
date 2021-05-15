@@ -26,6 +26,7 @@ import (
 	"context"
 	"testing"
 
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/spf13/viper"
 	"gotest.tools/assert"
@@ -38,14 +39,14 @@ func TestProcessClusterConfig(t *testing.T) {
 	vip.SetConfigFile(cfgFile)
 	_ = vip.ReadInConfig()
 
-	cfg, err := FromViperSimple(vip)
+	cfg, err := FromViper(vip)
 	if err != nil {
 		t.Error(err)
 	}
 
 	t.Logf("\n========== Read Config and transform to cluster ==========\n%+v\n=================================\n", cfg)
 
-	clusterCfg, err := TransformSimpleToClusterConfig(context.Background(), runtimes.Docker, cfg)
+	clusterCfg, err := TransformSimpleToClusterConfig(context.Background(), runtimes.Docker, cfg.(conf.SimpleConfig))
 	if err != nil {
 		t.Error(err)
 	}

@@ -26,7 +26,8 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
+	configtypes "github.com/rancher/k3d/v4/pkg/config/types"
+	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 	"github.com/spf13/viper"
 
 	k3d "github.com/rancher/k3d/v4/pkg/types"
@@ -39,8 +40,8 @@ func TestReadSimpleConfig(t *testing.T) {
 	exposedAPI.HostPort = "6443"
 
 	expectedConfig := conf.SimpleConfig{
-		TypeMeta: conf.TypeMeta{
-			APIVersion: "k3d.io/v1alpha2",
+		TypeMeta: configtypes.TypeMeta{
+			APIVersion: "k3d.io/v1alpha3",
 			Kind:       "Simple",
 		},
 		Name:      "test",
@@ -89,8 +90,12 @@ func TestReadSimpleConfig(t *testing.T) {
 				DisableImageVolume:  false,
 			},
 			K3sOptions: conf.SimpleConfigOptionsK3s{
-				ExtraServerArgs: []string{"--tls-san=127.0.0.1"},
-				ExtraAgentArgs:  []string{},
+				ExtraArgs: []conf.K3sArgWithNodeFilters{
+					{
+						Arg:         "--tls-san=127.0.0.1",
+						NodeFilters: []string{"server[*]"},
+					},
+				},
 			},
 			KubeconfigOptions: conf.SimpleConfigOptionsKubeconfig{
 				UpdateDefaultKubeconfig: true,
@@ -113,7 +118,7 @@ func TestReadSimpleConfig(t *testing.T) {
 		t.Error(err)
 	}
 
-	cfg, err := FromViperSimple(config)
+	cfg, err := FromViper(config)
 	if err != nil {
 		t.Error(err)
 	}
@@ -129,8 +134,8 @@ func TestReadSimpleConfig(t *testing.T) {
 func TestReadClusterConfig(t *testing.T) {
 
 	expectedConfig := conf.ClusterConfig{
-		TypeMeta: conf.TypeMeta{
-			APIVersion: "k3d.io/v1alpha2",
+		TypeMeta: configtypes.TypeMeta{
+			APIVersion: "k3d.io/v1alpha3",
 			Kind:       "Cluster",
 		},
 		Cluster: k3d.Cluster{
@@ -174,8 +179,8 @@ func TestReadClusterConfig(t *testing.T) {
 func TestReadClusterListConfig(t *testing.T) {
 
 	expectedConfig := conf.ClusterListConfig{
-		TypeMeta: conf.TypeMeta{
-			APIVersion: "k3d.io/v1alpha2",
+		TypeMeta: configtypes.TypeMeta{
+			APIVersion: "k3d.io/v1alpha3",
 			Kind:       "ClusterList",
 		},
 		Clusters: []k3d.Cluster{
@@ -243,7 +248,7 @@ func TestReadUnknownConfig(t *testing.T) {
 		t.Error(err)
 	}
 
-	_, err := FromViperSimple(config)
+	_, err := FromViper(config)
 	if err == nil {
 		t.Fail()
 	}

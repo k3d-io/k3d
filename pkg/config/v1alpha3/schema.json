@@ -1,0 +1,254 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SimpleConfig",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind"
+  ],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": [
+        "k3d.io/v1alpha3"
+      ],
+      "default": "k3d.io/v1alpha3"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "Simple"
+      ],
+      "default": "Simple"
+    },
+    "name": {
+      "description": "Name of the cluster (must be a valid hostname and will be prefixed with 'k3d-'). Example: 'mycluster'.",
+			"type": "string",
+			"format": "hostname"
+    },
+    "servers": {
+      "type": "number",
+      "minimum": 1
+    },
+    "agents": {
+      "type": "number",
+      "minimum": 0
+    },
+    "kubeAPI": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "format": "hostname"
+        },
+        "hostIP": {
+          "type": "string",
+          "format": "ipv4",
+          "examples": [
+            "0.0.0.0",
+            "192.168.178.55"
+          ]
+        },
+        "hostPort": {
+          "type":"string",
+          "examples": [
+            "6443"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "image": {
+      "type": "string",
+      "examples": [
+        "rancher/k3s:latest"
+      ]
+    },
+    "network": {
+      "type": "string"
+    },
+    "subnet": {
+      "type": "string",
+      "default": "auto",
+      "examples": [
+        "172.28.0.0/16",
+        "192.162.0.0/16"
+      ]
+    },
+    "token": {
+      "type": "string"
+    },
+    "volumes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "volume": {
+            "type": "string"
+          },
+          "nodeFilters": {  
+            "$ref": "#/definitions/nodeFilters"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "port": {
+            "type": "string"
+          },
+          "nodeFilters": {  
+            "$ref": "#/definitions/nodeFilters"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "nodeFilters": {  
+            "$ref": "#/definitions/nodeFilters"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "k3d": {
+          "type": "object",
+          "properties": {
+            "wait": {
+              "type": "boolean",
+              "default": true
+            },
+            "timeout": {
+              "type": "string",
+              "examples": [
+                "60s",
+                "1m",
+                "1m30s"
+              ]
+            },
+            "disableLoadbalancer": {
+              "type": "boolean",
+              "default": false
+            },
+            "disableImageVolume": {
+              "type": "boolean",
+              "default": false
+            },
+            "disableRollback": {
+              "type": "boolean",
+              "default": false
+            },
+            "disableHostIPInjection": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "k3s": {
+          "type": "object",
+          "properties": {
+            "extraArgs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "arg": {
+                    "type": "string",
+                    "examples": [
+                      "--tls-san=127.0.0.1",
+                      "--disable=traefik"
+                    ]
+                  },
+                  "nodeFilters": {  
+                    "$ref": "#/definitions/nodeFilters"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "kubeconfig": {
+          "type": "object",
+          "properties": {
+            "updateDefaultKubeconfig": {
+              "type": "boolean",
+              "default": true
+            },
+            "switchCurrentContext": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "runtime": {
+          "type": "object",
+          "properties": {
+            "gpuRequest": {
+              "type": "string"
+            },
+            "serversMemory": {
+              "type": "string"
+            },
+            "agentsMemory": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "env": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "envVar": {
+            "type": "string"
+          },
+          "nodeFilters": {  
+            "$ref": "#/definitions/nodeFilters"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "registries": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "nodeFilters": {  
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "examples": [
+        "loadbalancer",
+        "server[*]",
+        "server[0]",
+        "agent[1]",
+        "all"
+      ]
+    }
+  }
+}

@@ -19,38 +19,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package config
+package types
 
-import (
-	"testing"
-
-	"github.com/rancher/k3d/v4/pkg/config/v1alpha3"
-)
-
-func TestValidateSchema(t *testing.T) {
-
-	cfgPath := "./test_assets/config_test_simple.yaml"
-
-	if err := ValidateSchemaFile(cfgPath, []byte(v1alpha3.JSONSchema)); err != nil {
-		t.Errorf("Validation of config file %s against the default schema failed: %+v", cfgPath, err)
-	}
-
+// TypeMeta is basically copied from https://github.com/kubernetes/apimachinery/blob/a3b564b22db316a41e94fdcffcf9995424fe924c/pkg/apis/meta/v1/types.go#L36-L56
+type TypeMeta struct {
+	Kind       string `mapstructure:"kind,omitempty" yaml:"kind,omitempty" json:"kind,omitempty"`
+	APIVersion string `mapstructure:"apiVersion,omitempty" yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
 }
 
-func TestValidateSchemaFail(t *testing.T) {
-
-	cfgPath := "./test_assets/config_test_simple_invalid_servers.yaml"
-
-	var err error
-	if err = ValidateSchemaFile(cfgPath, []byte(v1alpha3.JSONSchema)); err == nil {
-		t.Errorf("Validation of config file %s against the default schema passed where we expected a failure", cfgPath)
-	}
-
-	expectedErrorText := `- name: Invalid type. Expected: string, given: integer
-`
-
-	if err.Error() != expectedErrorText {
-		t.Errorf("Actual validation error\n%s\ndoes not match expected error\n%s\n", err.Error(), expectedErrorText)
-	}
-
+// Config interface.
+type Config interface {
+	GetKind() string
+	GetAPIVersion() string
 }
