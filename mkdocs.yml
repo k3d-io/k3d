@@ -17,6 +17,9 @@ extra_css:
 repo_name: rancher/k3d
 repo_url: https://github.com/rancher/k3d
 
+# Edit Link on Site
+edit_uri: edit/main/docs/
+
 # Theme
 theme:
   name: material
