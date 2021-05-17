@@ -61,3 +61,11 @@ Some can be fixed by passing the `HTTP_PROXY` environment variables to k3d, some
 - Problem: inside the container, the certificate of the corporate proxy cannot be validated
 - Possible Solution: Mounting the CA Certificate from your host into the node containers at start time via `k3d cluster create --volume /path/to/your/certs.crt:/etc/ssl/certs/yourcert.crt`
 - Issue: [rancher/k3d#535](https://github.com/rancher/k3d/discussions/535#discussioncomment-474982)
+
+### Spurious PID entries in `/proc` after deleting `k3d` cluster with shared mounts
+
+- When you perform cluster create and deletion operations multiple times with **same cluster name** and **shared volume mounts**, it was observed that `grep k3d /proc/*/mountinfo` resuting in many spurious entries
+- Problem: Due to above, at times you'll see `no space left on device: unknown` when a pod is scheduled to the nodes
+- If you observe anything of above sort you can check for inaccessible file systems and unmount them by using below command (note: please remove `xargs umount -l` and check for the diff o/p first)
+- `diff <(df -ha | grep pods | awk '{print $NF}') <(df -h | grep pods | awk '{print $NF}') | awk '{print $2}' | xargs umount -l`
+- As per the conversation on [rancher/k3d#594](https://github.com/rancher/k3d/issues/594#issuecomment-837900646) above issue wasn't reported/unknown earlier and so there are high chances that it's no universal.
