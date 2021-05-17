@@ -88,7 +88,7 @@ func NewCmdNodeList() *cobra.Command {
 					fmt.Fprintf(tabwriter, "%s\t%s\t%s\t%s\n",
 						strings.TrimPrefix(node.Name, "/"),
 						string(node.Role),
-						node.Labels[k3d.LabelClusterName],
+						node.RuntimeLabels[k3d.LabelClusterName],
 						node.State.Status)
 				}))
 		},

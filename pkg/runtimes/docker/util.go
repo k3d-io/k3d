@@ -44,7 +44,7 @@ import (
 // GetDefaultObjectLabelsFilter returns docker type filters created from k3d labels
 func GetDefaultObjectLabelsFilter(clusterName string) filters.Args {
 	filters := filters.NewArgs()
-	for key, value := range k3d.DefaultObjectLabels {
+	for key, value := range k3d.DefaultRuntimeLabels {
 		filters.Add("label", fmt.Sprintf("%s=%s", key, value))
 	}
 	filters.Add("label", fmt.Sprintf("%s=%s", k3d.LabelClusterName, clusterName))

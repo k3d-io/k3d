@@ -77,7 +77,7 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 	}
 
 	// setup the node labels
-	registryNode.Labels = map[string]string{
+	registryNode.RuntimeLabels = map[string]string{
 		k3d.LabelClusterName:          reg.ClusterRef,
 		k3d.LabelRole:                 string(k3d.RegistryRole),
 		k3d.LabelRegistryHost:         reg.ExposureOpts.Host, // TODO: docker machine host?
@@ -85,11 +85,11 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 		k3d.LabelRegistryPortExternal: reg.ExposureOpts.Binding.HostPort,
 		k3d.LabelRegistryPortInternal: reg.ExposureOpts.Port.Port(),
 	}
-	for k, v := range k3d.DefaultObjectLabels {
-		registryNode.Labels[k] = v
+	for k, v := range k3d.DefaultRuntimeLabels {
+		registryNode.RuntimeLabels[k] = v
 	}
-	for k, v := range k3d.DefaultObjectLabelsVar {
-		registryNode.Labels[k] = v
+	for k, v := range k3d.DefaultRuntimeLabelsVar {
+		registryNode.RuntimeLabels[k] = v
 	}
 
 	// port

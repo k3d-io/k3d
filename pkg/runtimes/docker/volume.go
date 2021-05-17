@@ -49,10 +49,10 @@ func (d Docker) CreateVolume(ctx context.Context, name string, labels map[string
 		DriverOpts: map[string]string{},
 	}
 
-	for k, v := range k3d.DefaultObjectLabels {
+	for k, v := range k3d.DefaultRuntimeLabels {
 		volumeCreateOptions.Labels[k] = v
 	}
-	for k, v := range k3d.DefaultObjectLabelsVar {
+	for k, v := range k3d.DefaultRuntimeLabelsVar {
 		volumeCreateOptions.Labels[k] = v
 	}
 

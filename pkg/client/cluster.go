@@ -381,13 +381,13 @@ ClusterCreatOpts:
 
 	nodeSetup := func(node *k3d.Node, suffix int) error {
 		// cluster specific settings
-		if node.Labels == nil {
-			node.Labels = make(map[string]string) // TODO: maybe create an init function?
+		if node.RuntimeLabels == nil {
+			node.RuntimeLabels = make(map[string]string) // TODO: maybe create an init function?
 		}
 
 		// ensure global labels
 		for k, v := range clusterCreateOpts.GlobalLabels {
-			node.Labels[k] = v
+			node.RuntimeLabels[k] = v
 		}
 
 		// ensure global env
@@ -404,7 +404,7 @@ ClusterCreatOpts:
 				cluster.Network.IPAM.IPsUsed = append(cluster.Network.IPAM.IPsUsed, ip) // make sure that we're not reusing the same IP next time
 				node.IP.Static = true
 				node.IP.IP = ip
-				node.Labels[k3d.LabelNodeStaticIP] = ip.String()
+				node.RuntimeLabels[k3d.LabelNodeStaticIP] = ip.String()
 			}
 
 			node.ServerOpts.KubeAPI = cluster.KubeAPI
@@ -412,7 +412,7 @@ ClusterCreatOpts:
 			// the cluster has an init server node, but its not this one, so connect it to the init node
 			if cluster.InitNode != nil && !node.ServerOpts.IsInit {
 				node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", connectionURL))
-				node.Labels[k3d.LabelServerIsInit] = "false" // set label, that this server node is not the init server
+				node.RuntimeLabels[k3d.LabelServerIsInit] = "false" // set label, that this server node is not the init server
 			}
 
 		} else if node.Role == k3d.AgentRole {
@@ -446,10 +446,10 @@ ClusterCreatOpts:
 	if cluster.InitNode != nil {
 		log.Infoln("Creating initializing server node")
 		cluster.InitNode.Args = append(cluster.InitNode.Args, "--cluster-init")
-		if cluster.InitNode.Labels == nil {
-			cluster.InitNode.Labels = map[string]string{}
+		if cluster.InitNode.RuntimeLabels == nil {
+			cluster.InitNode.RuntimeLabels = map[string]string{}
 		}
-		cluster.InitNode.Labels[k3d.LabelServerIsInit] = "true" // set label, that this server node is the init server
+		cluster.InitNode.RuntimeLabels[k3d.LabelServerIsInit] = "true" // set label, that this server node is the init server
 
 		// in case the LoadBalancer was disabled, expose the API Port on the initializing server node
 		if clusterCreateOpts.DisableLoadBalancer {
@@ -547,10 +547,10 @@ ClusterCreatOpts:
 				fmt.Sprintf("PORTS=%s", strings.Join(ports, ",")),
 				fmt.Sprintf("WORKER_PROCESSES=%d", len(ports)),
 			},
-			Role:     k3d.LoadBalancerRole,
-			Labels:   clusterCreateOpts.GlobalLabels, // TODO: createLoadBalancer: add more expressive labels
-			Networks: []string{cluster.Network.Name},
-			Restart:  true,
+			Role:          k3d.LoadBalancerRole,
+			RuntimeLabels: clusterCreateOpts.GlobalLabels, // TODO: createLoadBalancer: add more expressive labels
+			Networks:      []string{cluster.Network.Name},
+			Restart:       true,
 		}
 		if len(udp_ports) > 0 {
 			lbNode.Env = append(lbNode.Env, fmt.Sprintf("UDP_PORTS=%s", strings.Join(udp_ports, ",")))
@@ -673,7 +673,7 @@ func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 // ClusterList returns a list of all existing clusters
 func ClusterList(ctx context.Context, runtime k3drt.Runtime) ([]*k3d.Cluster, error) {
 	log.Traceln("Listing Clusters...")
-	nodes, err := runtime.GetNodesByLabel(ctx, k3d.DefaultObjectLabels)
+	nodes, err := runtime.GetNodesByLabel(ctx, k3d.DefaultRuntimeLabels)
 	if err != nil {
 		log.Errorln("Failed to get clusters")
 		return nil, err
@@ -691,7 +691,7 @@ func ClusterList(ctx context.Context, runtime k3drt.Runtime) ([]*k3d.Cluster, er
 	log.Tracef("Found %d cluster-internal nodes", len(nodes))
 	if log.GetLevel() == log.TraceLevel {
 		for _, node := range nodes {
-			log.Tracef("Found cluster-internal node %s of role %s belonging to cluster %s", node.Name, node.Role, node.Labels[k3d.LabelClusterName])
+			log.Tracef("Found cluster-internal node %s of role %s belonging to cluster %s", node.Name, node.Role, node.RuntimeLabels[k3d.LabelClusterName])
 		}
 	}
 
@@ -700,7 +700,7 @@ func ClusterList(ctx context.Context, runtime k3drt.Runtime) ([]*k3d.Cluster, er
 	for _, node := range nodes {
 		clusterExists := false
 		for _, cluster := range clusters {
-			if node.Labels[k3d.LabelClusterName] == cluster.Name { // TODO: handle case, where this label doesn't exist
+			if node.RuntimeLabels[k3d.LabelClusterName] == cluster.Name { // TODO: handle case, where this label doesn't exist
 				cluster.Nodes = append(cluster.Nodes, node)
 				clusterExists = true
 				break
@@ -709,7 +709,7 @@ func ClusterList(ctx context.Context, runtime k3drt.Runtime) ([]*k3d.Cluster, er
 		// cluster is not in the list yet, so we add it with the current node as its first member
 		if !clusterExists {
 			clusters = append(clusters, &k3d.Cluster{
-				Name:  node.Labels[k3d.LabelClusterName],
+				Name:  node.RuntimeLabels[k3d.LabelClusterName],
 				Nodes: []*k3d.Node{node},
 			})
 		}
@@ -734,7 +734,7 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 
 		// get the name of the cluster network
 		if cluster.Network.Name == "" {
-			if networkName, ok := node.Labels[k3d.LabelNetwork]; ok {
+			if networkName, ok := node.RuntimeLabels[k3d.LabelNetwork]; ok {
 				cluster.Network.Name = networkName
 			}
 		}
@@ -742,7 +742,7 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 		// check if the network is external
 		// since the struct value is a bool, initialized as false, we cannot check if it's unset
 		if !cluster.Network.External && !networkExternalSet {
-			if networkExternalString, ok := node.Labels[k3d.LabelNetworkExternal]; ok {
+			if networkExternalString, ok := node.RuntimeLabels[k3d.LabelNetworkExternal]; ok {
 				if networkExternal, err := strconv.ParseBool(networkExternalString); err == nil {
 					cluster.Network.External = networkExternal
 					networkExternalSet = true
@@ -752,14 +752,14 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 
 		// get image volume // TODO: enable external image volumes the same way we do it with networks
 		if cluster.ImageVolume == "" {
-			if imageVolumeName, ok := node.Labels[k3d.LabelImageVolume]; ok {
+			if imageVolumeName, ok := node.RuntimeLabels[k3d.LabelImageVolume]; ok {
 				cluster.ImageVolume = imageVolumeName
 			}
 		}
 
 		// get k3s cluster's token
 		if cluster.Token == "" {
-			if token, ok := node.Labels[k3d.LabelClusterToken]; ok {
+			if token, ok := node.RuntimeLabels[k3d.LabelClusterToken]; ok {
 				cluster.Token = token
 			}
 		}

@@ -88,8 +88,8 @@ func NewCmdRegistryList() *cobra.Command {
 			util.PrintNodes(existingNodes, registryListFlags.output,
 				headers, util.NodePrinterFunc(func(tabwriter *tabwriter.Writer, node *k3d.Node) {
 					cluster := "*"
-					if _, ok := node.Labels[k3d.LabelClusterName]; ok {
-						cluster = node.Labels[k3d.LabelClusterName]
+					if _, ok := node.RuntimeLabels[k3d.LabelClusterName]; ok {
+						cluster = node.RuntimeLabels[k3d.LabelClusterName]
 					}
 					fmt.Fprintf(tabwriter, "%s\t%s\t%s\t%s\n",
 						strings.TrimPrefix(node.Name, "/"),

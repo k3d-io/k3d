@@ -135,7 +135,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 		log.Fatalln(err)
 	}
 
-	runtimeLabels := make(map[string]string, len(runtimeLabelsFlag))
+	runtimeLabels := make(map[string]string, len(runtimeLabelsFlag)+1)
 	for _, label := range runtimeLabelsFlag {
 		labelSplitted := strings.Split(label, "=")
 		if len(labelSplitted) != 2 {
@@ -143,6 +143,9 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 		}
 		runtimeLabels[labelSplitted[0]] = labelSplitted[1]
 	}
+
+	// Internal k3d runtime labels take precedence over user-defined labels
+	runtimeLabels[k3d.LabelRole] = roleStr
 
 	// --k3s-node-label
 	k3sNodeLabelsFlag, err := cmd.Flags().GetStringSlice("k3s-node-label")
@@ -164,12 +167,9 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 	nodes := []*k3d.Node{}
 	for i := 0; i < replicas; i++ {
 		node := &k3d.Node{
-			Name:  fmt.Sprintf("%s-%s-%d", k3d.DefaultObjectNamePrefix, args[0], i),
-			Role:  role,
-			Image: image,
-			Labels: map[string]string{
-				k3d.LabelRole: roleStr,
-			},
+			Name:          fmt.Sprintf("%s-%s-%d", k3d.DefaultObjectNamePrefix, args[0], i),
+			Role:          role,
+			Image:         image,
 			K3sNodeLabels: k3sNodeLabels,
 			RuntimeLabels: runtimeLabels,
 			Restart:       true,
