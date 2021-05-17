@@ -64,7 +64,7 @@ Some can be fixed by passing the `HTTP_PROXY` environment variables to k3d, some
 
 ### Spurious PID entries in `/proc` after deleting `k3d` cluster with shared mounts
 
-- When you perform cluster create and deletion operations multiple times with **same cluster name** and **shared volume mounts**, it was observed that `grep k3d /proc/*/mountinfo` resuting in many spurious entries
+- When you perform cluster create and deletion operations multiple times with **same cluster name** and **shared volume mounts**, it was observed that `grep k3d /proc/*/mountinfo` shows many spurious entries
 - Problem: Due to above, at times you'll see `no space left on device: unknown` when a pod is scheduled to the nodes
 - If you observe anything of above sort you can check for inaccessible file systems and unmount them by using below command (note: please remove `xargs umount -l` and check for the diff o/p first)
 - `diff <(df -ha | grep pods | awk '{print $NF}') <(df -h | grep pods | awk '{print $NF}') | awk '{print $2}' | xargs umount -l`
