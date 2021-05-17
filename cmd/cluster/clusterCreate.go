@@ -523,6 +523,8 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 			log.Fatalln(err)
 		}
 
+		cliutil.ValidateRuntimeLabelKey(strings.Split(label, "=")[0])
+
 		// create new entry or append filter to existing entry
 		if _, exists := runtimeLabelFilterMap[label]; exists {
 			runtimeLabelFilterMap[label] = append(runtimeLabelFilterMap[label], nodeFilters...)

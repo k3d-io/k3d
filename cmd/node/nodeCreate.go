@@ -30,6 +30,7 @@ import (
 
 	dockerunits "github.com/docker/go-units"
 	"github.com/rancher/k3d/v4/cmd/util"
+	cliutil "github.com/rancher/k3d/v4/cmd/util"
 	k3dc "github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
@@ -141,6 +142,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 		if len(labelSplitted) != 2 {
 			log.Fatalf("unknown runtime-label format format: %s, use format \"foo=bar\"", label)
 		}
+		cliutil.ValidateRuntimeLabelKey(labelSplitted[0])
 		runtimeLabels[labelSplitted[0]] = labelSplitted[1]
 	}
 

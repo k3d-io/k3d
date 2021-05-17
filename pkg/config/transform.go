@@ -227,6 +227,9 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 				node.RuntimeLabels = make(map[string]string) // ensure that the map is initialized
 			}
 			k, v := util.SplitLabelKeyValue(runtimeLabelWithNodeFilters.Label)
+
+			cliutil.ValidateRuntimeLabelKey(k)
+
 			node.RuntimeLabels[k] = v
 		}
 	}
