@@ -878,6 +878,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts" class="md-nav__link">
+    Spurious PID entries in /proc after deleting k3d cluster with shared mounts
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -991,6 +998,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts" class="md-nav__link">
+    Spurious PID entries in /proc after deleting k3d cluster with shared mounts
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1080,6 +1094,14 @@ Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables t
 <li>Possible Solution: Mounting the CA Certificate from your host into the node containers at start time via <code>k3d cluster create --volume /path/to/your/certs.crt:/etc/ssl/certs/yourcert.crt</code></li>
 <li>Issue: <a href="https://github.com/rancher/k3d/discussions/535#discussioncomment-474982">rancher/k3d#535</a></li>
 </ul>
+<h3 id="spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts">Spurious PID entries in <code>/proc</code> after deleting <code>k3d</code> cluster with shared mounts<a class="headerlink" href="#spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts" title="Permanent link">&para;</a></h3>
+<ul>
+<li>When you perform cluster create and deletion operations multiple times with <strong>same cluster name</strong> and <strong>shared volume mounts</strong>, it was observed that <code>grep k3d /proc/*/mountinfo</code> shows many spurious entries</li>
+<li>Problem: Due to above, at times you&rsquo;ll see <code>no space left on device: unknown</code> when a pod is scheduled to the nodes</li>
+<li>If you observe anything of above sort you can check for inaccessible file systems and unmount them by using below command (note: please remove <code>xargs umount -l</code> and check for the diff o/p first)</li>
+<li><code>diff &lt;(df -ha | grep pods | awk '{print $NF}') &lt;(df -h | grep pods | awk '{print $NF}') | awk '{print $2}' | xargs umount -l</code></li>
+<li>As per the conversation on <a href="https://github.com/rancher/k3d/issues/594#issuecomment-837900646">rancher/k3d#594</a> above issue wasn&rsquo;t reported/known earlier and so there are high chances that it&rsquo;s not universal.</li>
+</ul>
                 
                   
                     
@@ -1088,7 +1110,7 @@ Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables t
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">April 14, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">May 17, 2021</span>
       
     
   </small>
