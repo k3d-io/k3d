@@ -64,12 +64,6 @@ func TestReadSimpleConfig(t *testing.T) {
 				NodeFilters: []string{"loadbalancer"},
 			},
 		},
-		Labels: []conf.LabelWithNodeFilters{
-			{
-				Label:       "foo=bar",
-				NodeFilters: []string{"server[0]", "loadbalancer"},
-			},
-		},
 		Env: []conf.EnvVarWithNodeFilters{
 			{
 				EnvVar:      "bar=baz",
@@ -90,10 +84,24 @@ func TestReadSimpleConfig(t *testing.T) {
 						NodeFilters: []string{"server[*]"},
 					},
 				},
+				NodeLabels: []conf.LabelWithNodeFilters{
+					{
+						Label:       "foo=bar",
+						NodeFilters: []string{"server[0]", "loadbalancer"},
+					},
+				},
 			},
 			KubeconfigOptions: conf.SimpleConfigOptionsKubeconfig{
 				UpdateDefaultKubeconfig: true,
 				SwitchCurrentContext:    true,
+			},
+			Runtime: conf.SimpleConfigOptionsRuntime{
+				Labels: []conf.LabelWithNodeFilters{
+					{
+						Label:       "foo=bar",
+						NodeFilters: []string{"server[0]", "loadbalancer"},
+					},
+				},
 			},
 		},
 	}

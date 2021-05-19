@@ -176,3 +176,9 @@ docker_assert_container_label() {
   # $2 = label to assert
   docker inspect --format '{{ range $k, $v := .Config.Labels }}{{ printf "%s=%s\n" $k $v }}{{ end }}' "$1" | grep -E "^$2$"
 }
+
+k3s_assert_node_label() {
+  # $1 = node name
+  # $2 = label to assert
+  kubectl get node "$1" --output go-template='{{ range $k, $v := .metadata.labels }}{{ printf "%s=%s\n" $k $v }}{{ end }}' | grep -E "^$2$"
+}

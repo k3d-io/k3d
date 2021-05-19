@@ -93,7 +93,7 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 	var ok bool
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
-			if imageVolume, ok = node.Labels[k3d.LabelImageVolume]; ok {
+			if imageVolume, ok = node.RuntimeLabels[k3d.LabelImageVolume]; ok {
 				break
 			}
 		}
@@ -202,23 +202,23 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 // startToolsNode will start a new k3d tools container and connect it to the network of the chosen cluster
 func startToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, network string, volumes []string) (*k3d.Node, error) {
 	labels := map[string]string{}
-	for k, v := range k3d.DefaultObjectLabels {
+	for k, v := range k3d.DefaultRuntimeLabels {
 		labels[k] = v
 	}
-	for k, v := range k3d.DefaultObjectLabelsVar {
+	for k, v := range k3d.DefaultRuntimeLabelsVar {
 		labels[k] = v
 	}
 	node := &k3d.Node{
-		Name:     fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name),
-		Image:    fmt.Sprintf("%s:%s", k3d.DefaultToolsImageRepo, version.GetHelperImageVersion()),
-		Role:     k3d.NoRole,
-		Volumes:  volumes,
-		Networks: []string{network},
-		Cmd:      []string{},
-		Args:     []string{"noop"},
-		Labels:   k3d.DefaultObjectLabels,
+		Name:          fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name),
+		Image:         fmt.Sprintf("%s:%s", k3d.DefaultToolsImageRepo, version.GetHelperImageVersion()),
+		Role:          k3d.NoRole,
+		Volumes:       volumes,
+		Networks:      []string{network},
+		Cmd:           []string{},
+		Args:          []string{"noop"},
+		RuntimeLabels: k3d.DefaultRuntimeLabels,
 	}
-	node.Labels[k3d.LabelClusterName] = cluster.Name
+	node.RuntimeLabels[k3d.LabelClusterName] = cluster.Name
 	if err := k3dc.NodeRun(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
 		log.Errorf("Failed to create tools container for cluster '%s'", cluster.Name)
 		return node, err

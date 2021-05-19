@@ -159,7 +159,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 	// (3) Create a new network
 	netCreateOpts := types.NetworkCreate{
 		CheckDuplicate: true,
-		Labels:         k3d.DefaultObjectLabels,
+		Labels:         k3d.DefaultRuntimeLabels,
 	}
 
 	// we want a managed (user-defined) network, but user didn't specify a subnet, so we try to auto-generate one

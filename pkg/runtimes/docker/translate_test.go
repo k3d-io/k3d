@@ -52,9 +52,9 @@ func TestTranslateNodeToContainer(t *testing.T) {
 				},
 			},
 		},
-		Restart:  true,
-		Labels:   map[string]string{k3d.LabelRole: string(k3d.ServerRole), "test_key_1": "test_val_1"},
-		Networks: []string{"mynet"},
+		Restart:       true,
+		RuntimeLabels: map[string]string{k3d.LabelRole: string(k3d.ServerRole), "test_key_1": "test_val_1"},
+		Networks:      []string{"mynet"},
 	}
 
 	init := true

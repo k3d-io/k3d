@@ -22,11 +22,6 @@ env:
   - envVar: bar=baz,bob
     nodeFilters:
       - all
-labels:
-  - label: foo=bar
-    nodeFilters:
-      - server[0]
-      - loadbalancer
 registries:
   create: true
   use: []
@@ -47,6 +42,17 @@ options:
       - arg: --tls-san=127.0.0.1
         nodeFilters:
           - server[*]
+    nodeLabels:
+      - label: foo=bar
+        nodeFilters:
+          - server[0]
+          - loadbalancer
   kubeconfig:
     updateDefaultKubeconfig: true
     switchCurrentContext: true
+  runtime:
+    labels:
+      - label: foo=bar
+        nodeFilters:
+          - server[0]
+          - loadbalancer

@@ -151,7 +151,7 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 
 	// (1) list containers which have the default k3d labels attached
 	filters := filters.NewArgs()
-	for k, v := range node.Labels {
+	for k, v := range node.RuntimeLabels {
 		filters.Add("label", fmt.Sprintf("%s=%s", k, v))
 	}
 
