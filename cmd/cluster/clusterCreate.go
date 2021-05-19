@@ -283,8 +283,11 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent[0] -p 8081@agent[1]`")
 	_ = ppViper.BindPFlag("cli.ports", cmd.Flags().Lookup("port"))
 
-	cmd.Flags().StringArrayP("label", "l", nil, "Add label to node container (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -l \"my.label@agent[0,1]\" -l \"other.label=somevalue@server[0]\"`")
-	_ = ppViper.BindPFlag("cli.labels", cmd.Flags().Lookup("label"))
+	cmd.Flags().StringArrayP("k3s-node-label", "", nil, "Add label to k3s node (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 --k3s-node-label \"my.label@agent[0,1]\" --k3s-node-label \"other.label=somevalue@server[0]\"`")
+	_ = ppViper.BindPFlag("cli.k3s-node-labels", cmd.Flags().Lookup("k3s-node-label"))
+
+	cmd.Flags().StringArrayP("runtime-label", "", nil, "Add label to container runtime (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 --runtime-label \"my.label@agent[0,1]\" --runtime-label \"other.label=somevalue@server[0]\"`")
+	_ = ppViper.BindPFlag("cli.runtime-labels", cmd.Flags().Lookup("runtime-label"))
 
 	/* k3s */
 	cmd.Flags().StringArray("k3s-arg", nil, "Additional args passed to k3s command (Format: `ARG@NODEFILTER[;@NODEFILTER]`)\n - Example: `k3d cluster create --k3s-arg \"--disable=traefik@server[0]\"")
@@ -481,10 +484,10 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 
 	log.Tracef("PortFilterMap: %+v", portFilterMap)
 
-	// --label
-	// labelFilterMap will add container label to applied node filters
-	labelFilterMap := make(map[string][]string, 1)
-	for _, labelFlag := range ppViper.GetStringSlice("cli.labels") {
+	// --k3s-node-label
+	// k3sNodeLabelFilterMap will add k3s node label to applied node filters
+	k3sNodeLabelFilterMap := make(map[string][]string, 1)
+	for _, labelFlag := range ppViper.GetStringSlice("cli.k3s-node-labels") {
 
 		// split node filter from the specified label
 		label, nodeFilters, err := cliutil.SplitFiltersFromFlag(labelFlag)
@@ -493,21 +496,51 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		}
 
 		// create new entry or append filter to existing entry
-		if _, exists := labelFilterMap[label]; exists {
-			labelFilterMap[label] = append(labelFilterMap[label], nodeFilters...)
+		if _, exists := k3sNodeLabelFilterMap[label]; exists {
+			k3sNodeLabelFilterMap[label] = append(k3sNodeLabelFilterMap[label], nodeFilters...)
 		} else {
-			labelFilterMap[label] = nodeFilters
+			k3sNodeLabelFilterMap[label] = nodeFilters
 		}
 	}
 
-	for label, nodeFilters := range labelFilterMap {
-		cfg.Labels = append(cfg.Labels, conf.LabelWithNodeFilters{
+	for label, nodeFilters := range k3sNodeLabelFilterMap {
+		cfg.Options.K3sOptions.NodeLabels = append(cfg.Options.K3sOptions.NodeLabels, conf.LabelWithNodeFilters{
 			Label:       label,
 			NodeFilters: nodeFilters,
 		})
 	}
 
-	log.Tracef("LabelFilterMap: %+v", labelFilterMap)
+	log.Tracef("K3sNodeLabelFilterMap: %+v", k3sNodeLabelFilterMap)
+
+	// --runtime-label
+	// runtimeLabelFilterMap will add container runtime label to applied node filters
+	runtimeLabelFilterMap := make(map[string][]string, 1)
+	for _, labelFlag := range ppViper.GetStringSlice("cli.runtime-labels") {
+
+		// split node filter from the specified label
+		label, nodeFilters, err := cliutil.SplitFiltersFromFlag(labelFlag)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		cliutil.ValidateRuntimeLabelKey(strings.Split(label, "=")[0])
+
+		// create new entry or append filter to existing entry
+		if _, exists := runtimeLabelFilterMap[label]; exists {
+			runtimeLabelFilterMap[label] = append(runtimeLabelFilterMap[label], nodeFilters...)
+		} else {
+			runtimeLabelFilterMap[label] = nodeFilters
+		}
+	}
+
+	for label, nodeFilters := range runtimeLabelFilterMap {
+		cfg.Options.Runtime.Labels = append(cfg.Options.Runtime.Labels, conf.LabelWithNodeFilters{
+			Label:       label,
+			NodeFilters: nodeFilters,
+		})
+	}
+
+	log.Tracef("RuntimeLabelFilterMap: %+v", runtimeLabelFilterMap)
 
 	// --env
 	// envFilterMap will add container env vars to applied node filters

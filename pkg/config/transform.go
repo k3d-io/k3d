@@ -190,23 +190,47 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		}
 	}
 
-	// -> LABELS
-	for _, labelWithNodeFilters := range simpleConfig.Labels {
-		if len(labelWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
-			return nil, fmt.Errorf("Labelmapping '%s' lacks a node filter, but there's more than one node", labelWithNodeFilters.Label)
+	// -> K3S NODE LABELS
+	for _, k3sNodeLabelWithNodeFilters := range simpleConfig.Options.K3sOptions.NodeLabels {
+		if len(k3sNodeLabelWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
+			return nil, fmt.Errorf("K3sNodeLabelmapping '%s' lacks a node filter, but there's more than one node", k3sNodeLabelWithNodeFilters.Label)
 		}
 
-		nodes, err := util.FilterNodes(nodeList, labelWithNodeFilters.NodeFilters)
+		nodes, err := util.FilterNodes(nodeList, k3sNodeLabelWithNodeFilters.NodeFilters)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, node := range nodes {
-			if node.Labels == nil {
-				node.Labels = make(map[string]string) // ensure that the map is initialized
+			if node.K3sNodeLabels == nil {
+				node.K3sNodeLabels = make(map[string]string) // ensure that the map is initialized
 			}
-			k, v := util.SplitLabelKeyValue(labelWithNodeFilters.Label)
-			node.Labels[k] = v
+			k, v := util.SplitLabelKeyValue(k3sNodeLabelWithNodeFilters.Label)
+			node.K3sNodeLabels[k] = v
+
+		}
+	}
+
+	// -> RUNTIME LABELS
+	for _, runtimeLabelWithNodeFilters := range simpleConfig.Options.Runtime.Labels {
+		if len(runtimeLabelWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
+			return nil, fmt.Errorf("RuntimeLabelmapping '%s' lacks a node filter, but there's more than one node", runtimeLabelWithNodeFilters.Label)
+		}
+
+		nodes, err := util.FilterNodes(nodeList, runtimeLabelWithNodeFilters.NodeFilters)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, node := range nodes {
+			if node.RuntimeLabels == nil {
+				node.RuntimeLabels = make(map[string]string) // ensure that the map is initialized
+			}
+			k, v := util.SplitLabelKeyValue(runtimeLabelWithNodeFilters.Label)
+
+			cliutil.ValidateRuntimeLabelKey(k)
+
+			node.RuntimeLabels[k] = v
 		}
 	}
 
@@ -260,7 +284,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 
 	// ensure, that we have the default object labels
-	for k, v := range k3d.DefaultObjectLabels {
+	for k, v := range k3d.DefaultRuntimeLabels {
 		clusterCreateOpts.GlobalLabels[k] = v
 	}
 

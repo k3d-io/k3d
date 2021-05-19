@@ -131,11 +131,11 @@ func KubeconfigGet(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.C
 	APIHost := k3d.DefaultAPIHost
 
 	for _, server := range serverNodes {
-		if _, ok := server.Labels[k3d.LabelServerAPIPort]; ok {
+		if _, ok := server.RuntimeLabels[k3d.LabelServerAPIPort]; ok {
 			chosenServer = server
-			APIPort = server.Labels[k3d.LabelServerAPIPort]
-			if _, ok := server.Labels[k3d.LabelServerAPIHost]; ok {
-				APIHost = server.Labels[k3d.LabelServerAPIHost]
+			APIPort = server.RuntimeLabels[k3d.LabelServerAPIPort]
+			if _, ok := server.RuntimeLabels[k3d.LabelServerAPIHost]; ok {
+				APIHost = server.RuntimeLabels[k3d.LabelServerAPIHost]
 			}
 			break
 		}

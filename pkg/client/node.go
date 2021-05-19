@@ -59,8 +59,8 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	node.Networks = []string{cluster.Network.Name}
 
 	// skeleton
-	if node.Labels == nil {
-		node.Labels = map[string]string{
+	if node.RuntimeLabels == nil {
+		node.RuntimeLabels = map[string]string{
 			k3d.LabelRole: string(node.Role),
 		}
 	}
@@ -141,7 +141,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		}
 	}
 	if !k3sURLFound {
-		if url, ok := node.Labels[k3d.LabelClusterURL]; ok {
+		if url, ok := node.RuntimeLabels[k3d.LabelClusterURL]; ok {
 			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", url))
 		} else {
 			log.Warnln("Failed to find K3S_URL value!")
@@ -381,18 +381,22 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 
 	// ### Labels ###
 	labels := make(map[string]string)
-	for k, v := range k3d.DefaultObjectLabels {
+	for k, v := range k3d.DefaultRuntimeLabels {
 		labels[k] = v
 	}
-	for k, v := range k3d.DefaultObjectLabelsVar {
+	for k, v := range k3d.DefaultRuntimeLabelsVar {
 		labels[k] = v
 	}
-	for k, v := range node.Labels {
+	for k, v := range node.RuntimeLabels {
 		labels[k] = v
 	}
-	node.Labels = labels
+	node.RuntimeLabels = labels
 	// second most important: the node role label
-	node.Labels[k3d.LabelRole] = string(node.Role)
+	node.RuntimeLabels[k3d.LabelRole] = string(node.Role)
+
+	for k, v := range node.K3sNodeLabels {
+		node.Args = append(node.Args, "--node-label", fmt.Sprintf("%s=%s", k, v))
+	}
 
 	// ### Environment ###
 	node.Env = append(node.Env, k3d.DefaultNodeEnv...) // append default node env vars
@@ -469,7 +473,7 @@ func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, o
 
 	// update the server loadbalancer
 	if !opts.SkipLBUpdate && (node.Role == k3d.ServerRole || node.Role == k3d.AgentRole) {
-		cluster, err := ClusterGet(ctx, runtime, &k3d.Cluster{Name: node.Labels[k3d.LabelClusterName]})
+		cluster, err := ClusterGet(ctx, runtime, &k3d.Cluster{Name: node.RuntimeLabels[k3d.LabelClusterName]})
 		if err != nil {
 			log.Errorf("Failed to find cluster for node '%s'", node.Name)
 			return err
@@ -493,10 +497,6 @@ func patchAgentSpec(node *k3d.Node) error {
 		node.Cmd = []string{"agent"}
 	}
 
-	for k, v := range node.K3sNodeLabels {
-		node.Args = append(node.Args, "--node-label", fmt.Sprintf("%s=%s", k, v))
-	}
-
 	return nil
 }
 
@@ -509,9 +509,9 @@ func patchServerSpec(node *k3d.Node, runtime runtimes.Runtime) error {
 
 	// Add labels and TLS SAN for the exposed API
 	// FIXME: For now, the labels concerning the API on the server nodes are only being used for configuring the kubeconfig
-	node.Labels[k3d.LabelServerAPIHostIP] = node.ServerOpts.KubeAPI.Binding.HostIP // TODO: maybe get docker machine IP here
-	node.Labels[k3d.LabelServerAPIHost] = node.ServerOpts.KubeAPI.Host
-	node.Labels[k3d.LabelServerAPIPort] = node.ServerOpts.KubeAPI.Binding.HostPort
+	node.RuntimeLabels[k3d.LabelServerAPIHostIP] = node.ServerOpts.KubeAPI.Binding.HostIP // TODO: maybe get docker machine IP here
+	node.RuntimeLabels[k3d.LabelServerAPIHost] = node.ServerOpts.KubeAPI.Host
+	node.RuntimeLabels[k3d.LabelServerAPIPort] = node.ServerOpts.KubeAPI.Binding.HostPort
 
 	// If the runtime is docker, attempt to use the docker host
 	if runtime == runtimes.Docker {
@@ -519,19 +519,19 @@ func patchServerSpec(node *k3d.Node, runtime runtimes.Runtime) error {
 		if dockerHost != "" {
 			dockerHost = strings.Split(dockerHost, ":")[0] // remove the port
 			log.Tracef("Using docker host %s", dockerHost)
-			node.Labels[k3d.LabelServerAPIHostIP] = dockerHost
-			node.Labels[k3d.LabelServerAPIHost] = dockerHost
+			node.RuntimeLabels[k3d.LabelServerAPIHostIP] = dockerHost
+			node.RuntimeLabels[k3d.LabelServerAPIHost] = dockerHost
 		}
 	}
 
-	node.Args = append(node.Args, "--tls-san", node.Labels[k3d.LabelServerAPIHost]) // add TLS SAN for non default host name
+	node.Args = append(node.Args, "--tls-san", node.RuntimeLabels[k3d.LabelServerAPIHost]) // add TLS SAN for non default host name
 
 	return nil
 }
 
 // NodeList returns a list of all existing clusters
 func NodeList(ctx context.Context, runtime runtimes.Runtime) ([]*k3d.Node, error) {
-	nodes, err := runtime.GetNodesByLabel(ctx, k3d.DefaultObjectLabels)
+	nodes, err := runtime.GetNodesByLabel(ctx, k3d.DefaultRuntimeLabels)
 	if err != nil {
 		log.Errorln("Failed to get nodes")
 		return nil, err
