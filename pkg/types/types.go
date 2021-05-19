@@ -105,13 +105,13 @@ var ClusterExternalNodeRoles = []Role{
 	RegistryRole,
 }
 
-// DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
-var DefaultObjectLabels = map[string]string{
+// DefaultRuntimeLabels specifies a set of labels that will be attached to k3d runtime objects by default
+var DefaultRuntimeLabels = map[string]string{
 	"app": "k3d",
 }
 
-// DefaultObjectLabelsVar specifies a set of labels that will be attached to k3d objects by default but are not static (e.g. across k3d versions)
-var DefaultObjectLabelsVar = map[string]string{
+// DefaultRuntimeLabelsVar specifies a set of labels that will be attached to k3d runtime objects by default but are not static (e.g. across k3d versions)
+var DefaultRuntimeLabelsVar = map[string]string{
 	"k3d.version": version.GetVersion(),
 }
 
@@ -338,7 +338,7 @@ type Node struct {
 	Ports         nat.PortMap       `yaml:"portMappings" json:"portMappings,omitempty"`
 	Restart       bool              `yaml:"restart" json:"restart,omitempty"`
 	Created       string            `yaml:"created" json:"created,omitempty"`
-	Labels        map[string]string // filled automatically
+	RuntimeLabels map[string]string `yaml:"runtimeLabels" json:"runtimeLabels,omitempty"`
 	K3sNodeLabels map[string]string `yaml:"k3sNodeLabels" json:"k3sNodeLabels,omitempty"`
 	Networks      []string          // filled automatically
 	ExtraHosts    []string          // filled automatically

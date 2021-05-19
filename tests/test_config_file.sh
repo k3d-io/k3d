@@ -18,7 +18,7 @@ fi
 export CURRENT_STAGE="Test | config-file | $K3S_IMAGE_TAG"
 
 
-clustername="ConfigTest"
+clustername="configtest"
 
 highlight "[START] ConfigTest $EXTRA_TITLE"
 
@@ -44,6 +44,10 @@ exec_in_node "k3d-$clustername-server-0" "env" | grep "bar=baz,bob" || failed "E
 ## Container Labels
 info "Ensuring that container labels have been set as stated in the config"
 docker_assert_container_label "k3d-$clustername-server-0" "foo=bar" || failed "Expected label 'foo=bar' not present on container/node k3d-$clustername-server-0"
+
+## K3s Node Labels
+info "Ensuring that k3s node labels have been set as stated in the config"
+k3s_assert_node_label "k3d-$clustername-server-0" "foo=bar" || failed "Expected label 'foo=bar' not present on node k3d-$clustername-server-0"
 
 ## Registry Node
 info "Ensuring, that we have a registry node present"

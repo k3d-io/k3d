@@ -178,7 +178,7 @@ func getContainersByLabel(ctx context.Context, labels map[string]string) ([]type
 
 	// (1) list containers which have the default k3d labels attached
 	filters := filters.NewArgs()
-	for k, v := range k3d.DefaultObjectLabels {
+	for k, v := range k3d.DefaultRuntimeLabels {
 		filters.Add("label", fmt.Sprintf("%s=%s", k, v))
 	}
 	for k, v := range labels {

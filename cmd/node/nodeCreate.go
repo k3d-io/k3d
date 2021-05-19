@@ -30,6 +30,7 @@ import (
 
 	dockerunits "github.com/docker/go-units"
 	"github.com/rancher/k3d/v4/cmd/util"
+	cliutil "github.com/rancher/k3d/v4/cmd/util"
 	k3dc "github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
@@ -74,6 +75,7 @@ func NewCmdNodeCreate() *cobra.Command {
 	cmd.Flags().BoolVar(&createNodeOpts.Wait, "wait", false, "Wait for the node(s) to be ready before returning.")
 	cmd.Flags().DurationVar(&createNodeOpts.Timeout, "timeout", 0*time.Second, "Maximum waiting time for '--wait' before canceling/returning.")
 
+	cmd.Flags().StringSliceP("runtime-label", "", []string{}, "Specify container runtime labels in format \"foo=bar\"")
 	cmd.Flags().StringSliceP("k3s-node-label", "", []string{}, "Specify k3s node labels in format \"foo=bar\"")
 
 	// done
@@ -127,9 +129,30 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 		log.Errorf("Provided memory limit value is invalid")
 	}
 
+	// --runtime-label
+	runtimeLabelsFlag, err := cmd.Flags().GetStringSlice("runtime-label")
+	if err != nil {
+		log.Errorln("No runtime-label specified")
+		log.Fatalln(err)
+	}
+
+	runtimeLabels := make(map[string]string, len(runtimeLabelsFlag)+1)
+	for _, label := range runtimeLabelsFlag {
+		labelSplitted := strings.Split(label, "=")
+		if len(labelSplitted) != 2 {
+			log.Fatalf("unknown runtime-label format format: %s, use format \"foo=bar\"", label)
+		}
+		cliutil.ValidateRuntimeLabelKey(labelSplitted[0])
+		runtimeLabels[labelSplitted[0]] = labelSplitted[1]
+	}
+
+	// Internal k3d runtime labels take precedence over user-defined labels
+	runtimeLabels[k3d.LabelRole] = roleStr
+
+	// --k3s-node-label
 	k3sNodeLabelsFlag, err := cmd.Flags().GetStringSlice("k3s-node-label")
 	if err != nil {
-		log.Errorln("No node-label specified")
+		log.Errorln("No k3s-node-label specified")
 		log.Fatalln(err)
 	}
 
@@ -137,7 +160,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 	for _, label := range k3sNodeLabelsFlag {
 		labelSplitted := strings.Split(label, "=")
 		if len(labelSplitted) != 2 {
-			log.Fatalf("unknown label format format: %s, use format \"foo=bar\"", label)
+			log.Fatalf("unknown k3s-node-label format format: %s, use format \"foo=bar\"", label)
 		}
 		k3sNodeLabels[labelSplitted[0]] = labelSplitted[1]
 	}
@@ -146,13 +169,11 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 	nodes := []*k3d.Node{}
 	for i := 0; i < replicas; i++ {
 		node := &k3d.Node{
-			Name:  fmt.Sprintf("%s-%s-%d", k3d.DefaultObjectNamePrefix, args[0], i),
-			Role:  role,
-			Image: image,
-			Labels: map[string]string{
-				k3d.LabelRole: roleStr,
-			},
+			Name:          fmt.Sprintf("%s-%s-%d", k3d.DefaultObjectNamePrefix, args[0], i),
+			Role:          role,
+			Image:         image,
 			K3sNodeLabels: k3sNodeLabels,
+			RuntimeLabels: runtimeLabels,
 			Restart:       true,
 			Memory:        memory,
 		}

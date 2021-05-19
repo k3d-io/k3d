@@ -49,6 +49,15 @@ func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
 			return nil, err
 		}
 
+		cfg.Options.Runtime.Labels = []LabelWithNodeFilters{}
+
+		for _, label := range input.(v1alpha2.SimpleConfig).Labels {
+			cfg.Options.Runtime.Labels = append(cfg.Options.Runtime.Labels, LabelWithNodeFilters{
+				Label:       label.Label,
+				NodeFilters: label.NodeFilters,
+			})
+		}
+
 		cfg.Options.K3sOptions.ExtraArgs = []K3sArgWithNodeFilters{}
 
 		for _, arg := range input.(v1alpha2.SimpleConfig).Options.K3sOptions.ExtraServerArgs {
