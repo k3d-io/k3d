@@ -1,5 +1,22 @@
 # Changelog
 
+## v4.4.4
+
+### Enhancements
+
+- nodes created via `k3d node create` now inherit the registry config from existing nodes (if there is any) (#597)
+- the cgroupv2 hotfix (custom entrypoint script) is now enabled by default (#603)
+  - disable by setting the environment variable `K3D_FIX_CGROUPV2=false`
+
+### Fixes
+
+- fix using networks without IPAM config (e.g. `host`)
+
+### Misc
+
+- docs: edit links on k3d.io now point to the correct branch (`main`)
+- docs: new FAQ entry on spurious PID entries when using shared mounts (#609, @leelavg)
+
 ## v4.4.3
 
 ### Highlights
