@@ -69,3 +69,12 @@ Some can be fixed by passing the `HTTP_PROXY` environment variables to k3d, some
 - If you observe anything of above sort you can check for inaccessible file systems and unmount them by using below command (note: please remove `xargs umount -l` and check for the diff o/p first)
 - `diff <(df -ha | grep pods | awk '{print $NF}') <(df -h | grep pods | awk '{print $NF}') | awk '{print $2}' | xargs umount -l`
 - As per the conversation on [rancher/k3d#594](https://github.com/rancher/k3d/issues/594#issuecomment-837900646) above issue wasn't reported/known earlier and so there are high chances that it's not universal.
+
+## Nodes fail to start or get stuck in `NotReady` state with log `nf_conntrack_max: permission denied`
+
+- When: This happens when running k3d on a Linux system with a kernel version >= 5.12.2 (and others like >= 5.11.19) when creating a new cluster
+  - the node(s) stop or get stuck with a log line like this: `<TIMESTAMP>  F0516 05:05:31.782902       7 server.go:495] open /proc/sys/net/netfilter/nf_conntrack_max: permission denied`
+- Why: The issue was introduced by a change in the Linux kernel ([Changelog 5.12.2](https://cdn.kernel.org/pub/linux/kernel/v5.x/ChangeLog-5.12.2): [Commit](https://github.com/torvalds/linux/commit/671c54ea8c7ff47bd88444f3fffb65bf9799ce43)), that changed the netfilter_conntrack behavior in a way that `kube-proxy` is not able to set the `nf_conntrack_max` value anymore
+- Workaround: as a workaround, we can tell `kube-proxy` to not even try to set this value: `k3d cluster create --k3s-server-arg "--kube-proxy-arg=conntrack-max-per-core=0" --k3s-agent-arg "--kube-proxy-arg=conntrack-max-per-core=0" --image rancher/k3s:v1.20.6-k3s`
+- Fix: This is going to be fixed "upstream" in k3s itself in [rancher/k3s#3337](https://github.com/k3s-io/k3s/pull/3337) and backported to k3s versions as low as v1.18.
+- Issue Reference: [rancher/k3s#607](https://github.com/rancher/k3d/issues/607)
