@@ -885,15 +885,15 @@
   
 </li>
         
-          <li class="md-nav__item">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied" class="md-nav__link">
     Nodes fail to start or get stuck in NotReady state with log nf_conntrack_max: permission denied
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1012,15 +1012,15 @@
   
 </li>
         
-          <li class="md-nav__item">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied" class="md-nav__link">
     Nodes fail to start or get stuck in NotReady state with log nf_conntrack_max: permission denied
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1116,9 +1116,9 @@ Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables t
 <li><code>diff &lt;(df -ha | grep pods | awk '{print $NF}') &lt;(df -h | grep pods | awk '{print $NF}') | awk '{print $2}' | xargs umount -l</code></li>
 <li>As per the conversation on <a href="https://github.com/rancher/k3d/issues/594#issuecomment-837900646">rancher/k3d#594</a> above issue wasn&rsquo;t reported/known earlier and so there are high chances that it&rsquo;s not universal.</li>
 </ul>
-<h3 id="nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied">Nodes fail to start or get stuck in <code>NotReady</code> state with log <code>nf_conntrack_max: permission denied</code><a class="headerlink" href="#nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied" title="Permanent link">&para;</a></h3>
+<h2 id="nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied">Nodes fail to start or get stuck in <code>NotReady</code> state with log <code>nf_conntrack_max: permission denied</code><a class="headerlink" href="#nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied" title="Permanent link">&para;</a></h2>
 <ul>
-<li>When: This happens when running k3d on a Linux system with a kernel version &gt;= 5.12.2 when creating a new cluster</li>
+<li>When: This happens when running k3d on a Linux system with a kernel version &gt;= 5.12.2 (and others like &gt;= 5.11.19) when creating a new cluster</li>
 <li>the node(s) stop or get stuck with a log line like this: <code>&lt;TIMESTAMP&gt;  F0516 05:05:31.782902       7 server.go:495] open /proc/sys/net/netfilter/nf_conntrack_max: permission denied</code></li>
 <li>Why: The issue was introduced by a change in the Linux kernel (<a href="https://cdn.kernel.org/pub/linux/kernel/v5.x/ChangeLog-5.12.2">Changelog 5.12.2</a>: <a href="https://github.com/torvalds/linux/commit/671c54ea8c7ff47bd88444f3fffb65bf9799ce43">Commit</a>), that changed the netfilter_conntrack behavior in a way that <code>kube-proxy</code> is not able to set the <code>nf_conntrack_max</code> value anymore</li>
 <li>Workaround: as a workaround, we can tell <code>kube-proxy</code> to not even try to set this value: <code>k3d cluster create --k3s-server-arg "--kube-proxy-arg=conntrack-max-per-core=0" --k3s-agent-arg "--kube-proxy-arg=conntrack-max-per-core=0" --image rancher/k3s:v1.20.6-k3s</code></li>
