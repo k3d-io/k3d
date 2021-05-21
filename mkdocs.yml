@@ -27,10 +27,23 @@ theme:
   features:
     - tabs
   palette:
-    primary: "black"
-    accent: "grey"
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: "black"
+      accent: "grey"
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: light blue
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
   logo: static/img/k3d_logo_black_green.svg
-  favicon: static/img/favicons_black_blue/favicon.png  
+  favicon: static/img/favicons_black_blue/favicon.png
+  icon:
+    repo: fontawesome/brands/github
 
 # Navigation
 # nav: omitted, because we're using the awesome-pages plugin (https://squidfunk.github.io/mkdocs-material/plugins/awesome-pages/)
@@ -45,7 +58,11 @@ markdown_extensions:
   - pymdownx.superfences # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#superfences
   - pymdownx.tabbed # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#tabbed
   - pymdownx.details # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#details
+  - pymdownx.emoji: # https://squidfunk.github.io/mkdocs-material/reference/icons-emojis/#configuration
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
   - smarty # https://python-markdown.github.io/extensions/smarty/
+  - mdx_truly_sane_lists # https://github.com/radude/mdx_truly_sane_lists -> proper indentation of md list items
 
 # Plugins
 plugins:
