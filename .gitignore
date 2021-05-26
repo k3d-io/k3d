@@ -23,3 +23,6 @@ site/
 .local/
 .idea/
 *.iml
+
+# Pipenv
+Pipfile*
