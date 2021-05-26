@@ -447,3 +447,21 @@ func (d Docker) GetNodesInNetwork(ctx context.Context, network string) ([]*k3d.N
 
 	return connectedNodes, nil
 }
+
+func (d Docker) RenameNode(ctx context.Context, node *k3d.Node, newName string) error {
+	// get the container for the given node
+	container, err := getNodeContainer(ctx, node)
+	if err != nil {
+		return err
+	}
+
+	// create docker client
+	docker, err := GetDockerClient()
+	if err != nil {
+		log.Errorln("Failed to create docker client")
+		return err
+	}
+	defer docker.Close()
+
+	return docker.ContainerRename(ctx, container.ID, newName)
+}

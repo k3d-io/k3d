@@ -33,6 +33,9 @@ import (
 	"strings"
 	"time"
 
+	copystruct "github.com/mitchellh/copystructure"
+
+	"github.com/docker/go-connections/nat"
 	dockerunits "github.com/docker/go-units"
 	"github.com/imdario/mergo"
 	"github.com/rancher/k3d/v4/pkg/actions"
@@ -638,4 +641,98 @@ nodeLoop:
 	log.Tracef("Filteres %d nodes by roles (in: %+v | ex: %+v), got %d left", len(nodes), includeRoles, excludeRoles, len(resultList))
 
 	return resultList
+}
+
+// NodeEdit let's you update an existing node
+func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, changeset *k3d.Node) error {
+
+	/*
+	 * Make a deep copy of the existing node
+	 */
+
+	var result *k3d.Node
+
+	targetCopy, err := copystruct.Copy(existingNode)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	result = targetCopy.(*k3d.Node)
+
+	// ensure that node state is empty
+	result.State = k3d.NodeState{}
+
+	/*
+	 * Apply changes
+	 */
+
+	// === Ports ===
+	if result.Ports == nil {
+		result.Ports = nat.PortMap{}
+	}
+	for port, portbindings := range changeset.Ports {
+		result.Ports[port] = append(result.Ports[port], portbindings...)
+	}
+
+	// --- Loadbalancer specifics ---
+	if result.Role == k3d.LoadBalancerRole {
+		tcp_ports := []string{}
+		udp_ports := []string{}
+		for index, env := range result.Env {
+			if strings.HasPrefix(env, "PORTS=") || strings.HasPrefix(env, "UDP_PORTS=") {
+				// Remove matching environment variable from slice (does not preserve order)
+				result.Env[index] = result.Env[len(result.Env)-1] // copy last element to index of matching env
+				result.Env[len(result.Env)-1] = ""                // remove last element
+				result.Env = result.Env[:len(result.Env)-1]       // truncate
+			}
+		}
+
+		for port := range result.Ports {
+			switch port.Proto() {
+			case "tcp":
+				tcp_ports = append(tcp_ports, port.Port())
+				break
+			case "udp":
+				udp_ports = append(udp_ports, port.Port())
+				break
+			default:
+				log.Warnf("Unknown port protocol %s for port %s", port.Proto(), port.Port())
+			}
+		}
+		result.Env = append(result.Env, fmt.Sprintf("PORTS=%s", strings.Join(tcp_ports, ",")))
+		result.Env = append(result.Env, fmt.Sprintf("UDP_PORTS=%s", strings.Join(udp_ports, ",")))
+	}
+
+	/*
+	 * Replace existing node
+	 */
+	backupName := fmt.Sprintf("%s-old", existingNode.Name)
+	log.Infof("Renaming existing node %s to %s...", existingNode.Name, backupName)
+	if err := runtime.RenameNode(ctx, existingNode, backupName); err != nil {
+		return err
+	}
+	existingNode.Name = backupName
+
+	log.Infof("Stopping existing node %s...", existingNode.Name)
+	if err := runtime.StopNode(ctx, existingNode); err != nil {
+		return err
+	}
+
+	if changeset.Ports != nil {
+		time.Sleep(3 * time.Second) // arbitrary wait time, since sometimes it takes some time for ports to be free
+	}
+
+	log.Infof("Creating new node %s...", result.Name)
+	if err := NodeRun(ctx, runtime, result, k3d.NodeCreateOpts{Wait: true}); err != nil {
+		// TODO: handle rollback
+		return err
+	}
+
+	log.Infof("Deleting existing (old) node %s...", existingNode.Name)
+	if err := NodeDelete(ctx, runtime, existingNode, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
+		return err
+	}
+
+	return nil
+
 }

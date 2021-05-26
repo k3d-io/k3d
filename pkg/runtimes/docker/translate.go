@@ -243,14 +243,6 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		}
 	}
 
-	// env vars: only copy K3S_* and K3D_* // FIXME: should we really do this? Might be unexpected, if user has e.g. HTTP_PROXY vars
-	env := []string{}
-	for _, envVar := range containerDetails.Config.Env {
-		if strings.HasPrefix(envVar, "K3D_") || strings.HasPrefix(envVar, "K3S_") {
-			env = append(env, envVar)
-		}
-	}
-
 	// labels: only copy k3d.* labels
 	labels := map[string]string{}
 	for k, v := range containerDetails.Config.Labels {
@@ -273,22 +265,22 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 	}
 
 	node := &k3d.Node{
-		Name:          strings.TrimPrefix(containerDetails.Name, "/"), // container name with leading '/' cut off
-		Role:          k3d.NodeRoles[containerDetails.Config.Labels[k3d.LabelRole]],
-		Image:         containerDetails.Image,
-		Volumes:       containerDetails.HostConfig.Binds,
-		Env:           env,
-		Cmd:           containerDetails.Config.Cmd,
-		Args:          []string{}, // empty, since Cmd already contains flags
-		Ports:         containerDetails.HostConfig.PortBindings,
-		Restart:       restart,
-		Created:       containerDetails.Created,
-		RuntimeLabels: labels,
-		Networks:      orderedNetworks,
-		ServerOpts:    serverOpts,
-		AgentOpts:     k3d.AgentOpts{},
-		State:         nodeState,
-		Memory:        memoryStr,
+		Name:       strings.TrimPrefix(containerDetails.Name, "/"), // container name with leading '/' cut off
+		Role:       k3d.NodeRoles[containerDetails.Config.Labels[k3d.LabelRole]],
+		Image:      containerDetails.Image,
+		Volumes:    containerDetails.HostConfig.Binds,
+		Env:        containerDetails.Config.Env,
+		Cmd:        containerDetails.Config.Cmd,
+		Args:       []string{}, // empty, since Cmd already contains flags
+		Ports:      containerDetails.HostConfig.PortBindings,
+		Restart:    restart,
+		Created:    containerDetails.Created,
+		Labels:     labels,
+		Networks:   orderedNetworks,
+		ServerOpts: serverOpts,
+		AgentOpts:  k3d.AgentOpts{},
+		State:      nodeState,
+		Memory:     memoryStr,
 	}
 	return node, nil
 }
