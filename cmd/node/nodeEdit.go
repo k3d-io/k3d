@@ -94,6 +94,9 @@ func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *k3d.Node) 
 		return nil, nil
 	}
 
+	// init portmap
+	changeset.Ports = nat.PortMap{}
+
 	for _, flag := range portFlags {
 
 		portmappings, err := nat.ParsePortSpec(flag)
@@ -101,7 +104,6 @@ func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *k3d.Node) 
 			log.Fatalf("Failed to parse port spec '%s': %+v", flag, err)
 		}
 
-		changeset.Ports = nat.PortMap{}
 		for _, pm := range portmappings {
 			changeset.Ports[pm.Port] = append(changeset.Ports[pm.Port], pm.Binding)
 		}

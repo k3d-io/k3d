@@ -671,7 +671,19 @@ func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, chang
 		result.Ports = nat.PortMap{}
 	}
 	for port, portbindings := range changeset.Ports {
-		result.Ports[port] = append(result.Ports[port], portbindings...)
+	loopChangesetPortbindings:
+		for _, portbinding := range portbindings {
+
+			// loop over existing portbindings to avoid port collisions (docker doesn't check for it)
+			for _, existingPB := range result.Ports[port] {
+				if util.IsPortBindingEqual(portbinding, existingPB) { // also matches on "equal" HostIPs (127.0.0.1, "", 0.0.0.0)
+					log.Tracef("Skipping existing PortBinding: %+v", existingPB)
+					continue loopChangesetPortbindings
+				}
+			}
+			log.Tracef("Adding portbinding %+v for port %s", portbinding, port.Port())
+			result.Ports[port] = append(result.Ports[port], portbinding)
+		}
 	}
 
 	// --- Loadbalancer specifics ---

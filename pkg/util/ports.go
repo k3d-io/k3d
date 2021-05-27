@@ -25,6 +25,7 @@ package util
 import (
 	"net"
 
+	"github.com/docker/go-connections/nat"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -44,4 +45,22 @@ func GetFreePort() (int, error) {
 	defer tcpListener.Close()
 
 	return tcpListener.Addr().(*net.TCPAddr).Port, nil
+}
+
+var equalHostIPs = map[string]interface{}{
+	"":          nil,
+	"127.0.0.1": nil,
+	"0.0.0.0":   nil,
+	"localhost": nil,
+}
+
+func IsPortBindingEqual(a, b nat.PortBinding) bool {
+	if a.HostPort == b.HostPort {
+		if _, ok := equalHostIPs[a.HostIP]; ok {
+			if _, ok := equalHostIPs[b.HostIP]; ok {
+				return true
+			}
+		}
+	}
+	return false
 }
