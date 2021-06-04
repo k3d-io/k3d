@@ -106,7 +106,7 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, mo
 	}
 
 	// create docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return err

@@ -74,7 +74,7 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 
 func startContainer(ctx context.Context, ID string) error {
 	// initialize docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return err
@@ -184,7 +184,7 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 // executes an arbitrary command in a container while returning its exit code.
 // useful to check something in docker env
 func executeCheckInContainer(ctx context.Context, image string, cmd []string) (int64, error) {
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return -1, err

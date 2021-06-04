@@ -30,7 +30,6 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/client"
 	"inet.af/netaddr"
 
 	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
@@ -275,7 +274,7 @@ func (d Docker) ConnectNodeToNetwork(ctx context.Context, node *k3d.Node, networ
 	}
 
 	// get docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return err
@@ -303,7 +302,7 @@ func (d Docker) DisconnectNodeFromNetwork(ctx context.Context, node *k3d.Node, n
 	}
 
 	// get docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return err
