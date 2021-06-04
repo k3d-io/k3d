@@ -36,6 +36,12 @@ const (
 	MemInfoPath    = "/proc/meminfo"
 )
 
+// DoNotCopyVolumeSuffices defines a set of volume mounts that should not be copied to a new node (e.g. to avoid duplicate mountpoints)
+var DoNotCopyVolumeSuffices = []string{
+	fmt.Sprintf("%s:ro", EdacFolderPath),
+	fmt.Sprintf("%s:ro", MemInfoPath),
+}
+
 // creates a mininal fake meminfo with fields required by cadvisor (see machine.go in cadvisor)
 func meminfoContent(totalKB int64) string {
 	var lines = []string{

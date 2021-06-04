@@ -121,6 +121,16 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 
 	node = chosenNode
 
+	// TODO: I guess proper deduplication can be handled in a cleaner/better way or at the infofaker level at some point
+	for _, forbiddenMount := range util.DoNotCopyVolumeSuffices {
+		for i, mount := range node.Volumes {
+			if strings.Contains(mount, forbiddenMount) {
+				log.Tracef("Dropping copied volume mount %s to avoid issues...", mount)
+				node.Volumes = util.RemoveElementFromStringSlice(node.Volumes, i)
+			}
+		}
+	}
+
 	log.Debugf("Resulting node %+v", node)
 
 	k3sURLFound := false
