@@ -11,11 +11,6 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://k3d.io/faq/v1vsv3-comparison/</loc>
-         <lastmod>2021-06-09</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://k3d.io/internals/defaults/</loc>
          <lastmod>2021-06-09</lastmod>
          <changefreq>daily</changefreq>

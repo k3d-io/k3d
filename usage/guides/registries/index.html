@@ -14,7 +14,7 @@
         <link rel="canonical" href="https://k3d.io/usage/guides/registries/">
       
       <link rel="icon" href="../../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.2, mkdocs-material-7.1.7">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.7">
     
     
       
@@ -955,18 +955,6 @@
   
 
           
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../faq/v1vsv3-comparison/" class="md-nav__link">
-        Feature Comparison: v1 vs. v3
-      </a>
-    </li>
-  
-
-          
         </ul>
       </nav>
     </li>
@@ -1165,7 +1153,7 @@
 </code></pre></div>
 <h3 id="secure-registries">Secure registries<a class="headerlink" href="#secure-registries" title="Permanent link">&para;</a></h3>
 <p>When using secure registries, the <a href="#registries-file"><code>registries.yaml</code> file</a> must include information about the certificates. For example, if you want to use images from the secure registry running at <code>https://my.company.registry</code>, you must first download a CA file valid for that server and store it in some well-known directory like <code>${HOME}/.k3d/my-company-root.pem</code>.  </p>
-<p>Then you have to mount the CA file in some directory in the nodes in the cluster and include that mounted file in a <code>configs</code> section in the <a href="#registries-file"><code>registries.yaml</code> file</a>.
+<p>Then you have to mount the CA file in some directory in the nodes in the cluster and include that mounted file in a <code>configs</code> section in the <a href="#registries-file"><code>registries.yaml</code> file</a>.<br />
 For example, if we mount the CA file in <code>/etc/ssl/certs/my-company-root.pem</code>, the <code>registries.yaml</code> will look like:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">mirrors</span><span class="p">:</span>
   <span class="nt">my.company.registry</span><span class="p">:</span>
@@ -1179,7 +1167,10 @@ For example, if we mount the CA file in <code>/etc/ssl/certs/my-company-root.pem
       <span class="nt">ca_file</span><span class="p">:</span> <span class="s">&quot;/etc/ssl/certs/my-company-root.pem&quot;</span>
 </code></pre></div>
 <p>Finally, we can create the cluster, mounting the CA file in the path we specified in <code>ca_file</code>:</p>
-<p><code class="highlight">k3d cluster create --volume <span class="s2">&quot;</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.k3d/my-registries.yaml:/etc/rancher/k3s/registries.yaml&quot;</span> --volume <span class="s2">&quot;</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.k3d/my-company-root.pem:/etc/ssl/certs/my-company-root.pem&quot;</span></code></p>
+<div class="highlight"><pre><span></span><code>k3d cluster create <span class="se">\</span>
+  --volume <span class="s2">&quot;</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.k3d/my-registries.yaml:/etc/rancher/k3s/registries.yaml&quot;</span> <span class="se">\</span>
+  --volume <span class="s2">&quot;</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.k3d/my-company-root.pem:/etc/ssl/certs/my-company-root.pem&quot;</span>
+</code></pre></div>
 <h2 id="using-a-local-registry">Using a local registry<a class="headerlink" href="#using-a-local-registry" title="Permanent link">&para;</a></h2>
 <h3 id="using-k3d-managed-registries">Using k3d-managed registries<a class="headerlink" href="#using-k3d-managed-registries" title="Permanent link">&para;</a></h3>
 <div class="admonition info">
@@ -1188,10 +1179,16 @@ For example, if we mount the CA file in <code>/etc/ssl/certs/my-company-root.pem
 </div>
 <h4 id="create-a-dedicated-registry-together-with-your-cluster">Create a dedicated registry together with your cluster<a class="headerlink" href="#create-a-dedicated-registry-together-with-your-cluster" title="Permanent link">&para;</a></h4>
 <ol>
-<li><code class="highlight">k3d cluster create mycluster --registry-create</code>: This creates your cluster <code>mycluster</code> together with a registry container called <code>k3d-mycluster-registry</code>
-    - k3d sets everything up in the cluster for containerd to be able to pull images from that registry (using the <code>registries.yaml</code> file)
-    - the port, which the registry is listening on will be mapped to a random port on your host system</li>
-<li>Check the k3d command output or <code class="highlight">docker ps -f <span class="nv">name</span><span class="o">=</span>k3d-mycluster-registry</code> to find the exposed port (let&rsquo;s use <code>12345</code> here)</li>
+<li>
+<p><code class="highlight">k3d cluster create mycluster --registry-create</code>: This creates your cluster <code>mycluster</code> together with a registry container called <code>k3d-mycluster-registry</code></p>
+<ul>
+<li>k3d sets everything up in the cluster for containerd to be able to pull images from that registry (using the <code>registries.yaml</code> file)</li>
+<li>the port, which the registry is listening on will be mapped to a random port on your host system</li>
+</ul>
+</li>
+<li>
+<p>Check the k3d command output or <code class="highlight">docker ps -f <span class="nv">name</span><span class="o">=</span>k3d-mycluster-registry</code> to find the exposed port (let&rsquo;s use <code>12345</code> here)</p>
+</li>
 <li>Pull some image (optional) <code class="highlight">docker pull alpine:latest</code>, re-tag it to reference your newly created registry <code class="highlight">docker tag alpine:latest k3d-mycluster-registry:12345/testimage:local</code> and push it <code class="highlight">docker push k3d-mycluster-registry:12345/testimage:local</code></li>
 <li>Use kubectl to create a new pod in your cluster using that image to see, if the cluster can pull from the new registry: <code class="highlight">kubectl run --image k3d-mycluster-registry:12345/testimage:local testimage --command -- tail -f /dev/null</code> (creates a container that will not do anything but keep on running)</li>
 </ol>
@@ -1231,7 +1228,8 @@ Otherwise, it&rsquo;s installable using <code>sudo apt install libnss-myhostname
 <li>push to your registry from your local development machine.</li>
 <li>use images from that registry in <code>Deployments</code> in your k3d cluster.</li>
 </ul>
-<p>We will verify these two things for a local registry (located at <code>k3d-registry.localhost:12345</code>) running in your development machine. Things would be basically the same for checking an external registry, but some additional configuration could be necessary in your local machine when using an authenticated or secure registry (please refer to Docker&rsquo;s documentation for this).</p>
+<p>We will verify these two things for a local registry (located at <code>k3d-registry.localhost:12345</code>) running in your development machine.<br />
+Things would be basically the same for checking an external registry, but some additional configuration could be necessary in your local machine when using an authenticated or secure registry (please refer to Docker&rsquo;s documentation for this).</p>
 <p>First, we can download some image (like <code>nginx</code>) and push it to our local registry with:</p>
 <div class="highlight"><pre><span></span><code>docker pull nginx:latest
 docker tag nginx:latest k3d-registry.localhost:5000/nginx:latest
@@ -1264,8 +1262,7 @@ docker push k3d-registry.localhost:5000/nginx:latest
 </code></pre></div>
 <p>Then you should check that the pod is running with <code>kubectl get pods -l "app=nginx-test-registry"</code>.</p>
 <h2 id="configuring-registries-for-k3s-v091">Configuring registries for k3s &lt;= v0.9.1<a class="headerlink" href="#configuring-registries-for-k3s-v091" title="Permanent link">&para;</a></h2>
-<p>k3s servers below v0.9.1 do not recognize the <code>registries.yaml</code> file as described in
-the in the beginning, so you will need to embed the contents of that file in a <code>containerd</code> configuration file.
+<p>k3s servers below v0.9.1 do not recognize the <code>registries.yaml</code> file as described in the in the beginning, so you will need to embed the contents of that file in a <code>containerd</code> configuration file.<br />
 You will have to create your own <code>containerd</code> configuration file at some well-known path like <code>${HOME}/.k3d/config.toml.tmpl</code>, like this:</p>
 <details class="registriesprev091"><summary>config.toml.tmpl</summary><div class="highlight"><pre><span></span><code><span class="c1"># Original section: no changes</span>
 <span class="k">[plugins.opt]</span>
@@ -1305,7 +1302,7 @@ You will have to create your own <code>containerd</code> configuration file at s
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">March 11, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 9, 2021</span>
       
     
   </small>

@@ -14,7 +14,7 @@
         <link rel="canonical" href="https://k3d.io/faq/faq/">
       
       <link rel="icon" href="../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.2, mkdocs-material-7.1.7">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.7">
     
     
       
@@ -927,18 +927,6 @@
   
 
           
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../v1vsv3-comparison/" class="md-nav__link">
-        Feature Comparison: v1 vs. v3
-      </a>
-    </li>
-  
-
-          
         </ul>
       </nav>
     </li>
@@ -1067,14 +1055,14 @@
 <h2 id="issues-with-btrfs">Issues with BTRFS<a class="headerlink" href="#issues-with-btrfs" title="Permanent link">&para;</a></h2>
 <ul>
 <li>As <a href="https://github.com/jaredallard">@jaredallard</a> <a href="https://github.com/rancher/k3d/pull/48">pointed out</a>, people running <code>k3d</code> on a system with <strong>btrfs</strong>, may need to mount <code>/dev/mapper</code> into the nodes for the setup to work.<ul>
-<li>This will do: <code>k3d cluster create CLUSTER_NAME -v /dev/mapper:/dev/mapper</code></li>
+<li>This will do: <code class="highlight">k3d cluster create CLUSTER_NAME -v /dev/mapper:/dev/mapper</code></li>
 </ul>
 </li>
 </ul>
 <h2 id="issues-with-zfs">Issues with ZFS<a class="headerlink" href="#issues-with-zfs" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
-<p>k3s currently has <a href="https://github.com/rancher/k3s/issues/66">no support for ZFS</a> and thus, creating multi-server setups (e.g. <code>k3d cluster create multiserver --servers 3</code>) fails, because the initializing server node (server flag <code>--cluster-init</code>) errors out with the following log:</p>
+<p>k3s currently has <a href="https://github.com/rancher/k3s/issues/66">no support for ZFS</a> and thus, creating multi-server setups (e.g. <code class="highlight">k3d cluster create multiserver --servers <span class="m">3</span></code>) fails, because the initializing server node (server flag <code>--cluster-init</code>) errors out with the following log:</p>
 <div class="highlight"><pre><span></span><code>starting kubernetes: preparing server: start cluster and https: raft_init<span class="o">()</span>: io: create I/O capabilities probe file: posix_allocate: operation not supported on socket
 </code></pre></div>
 <ul>
@@ -1091,7 +1079,13 @@
 <li>Possible <a href="https://github.com/rancher/k3d/issues/133#issuecomment-549065666">fix/workaround by @zer0def</a>:<ul>
 <li>use a docker storage driver which cleans up properly (e.g. overlay2)</li>
 <li>clean up or expand docker root filesystem</li>
-<li>change the kubelet&rsquo;s eviction thresholds upon cluster creation: <code>k3d cluster create --k3s-agent-arg '--kubelet-arg=eviction-hard=imagefs.available&lt;1%,nodefs.available&lt;1%' --k3s-agent-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%'</code></li>
+<li>
+<p>change the kubelet&rsquo;s eviction thresholds upon cluster creation:</p>
+<div class="highlight"><pre><span></span><code>k3d cluster create <span class="se">\</span>
+  --k3s-agent-arg <span class="s1">&#39;--kubelet-arg=eviction-hard=imagefs.available&lt;1%,nodefs.available&lt;1%&#39;</span> <span class="se">\</span>
+  --k3s-agent-arg <span class="s1">&#39;--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%&#39;</span>
+</code></pre></div>
+</li>
 </ul>
 </li>
 </ul>
@@ -1110,7 +1104,7 @@
 <li>The Problem: Passing a feature flag to the Kubernetes API Server running inside k3s.</li>
 <li>Example: you want to enable the EphemeralContainers feature flag in Kubernetes</li>
 <li>Solution: <code class="highlight">k3d cluster create --k3s-server-arg <span class="s1">&#39;--kube-apiserver-arg=feature-gates=EphemeralContainers=true&#39;</span></code><ul>
-<li>Note: Be aware of where the flags require dashes (<code>--</code>) and where not.<ul>
+<li><strong>Note</strong>: Be aware of where the flags require dashes (<code>--</code>) and where not.<ul>
 <li>the k3s flag (<code>--kube-apiserver-arg</code>) has the dashes</li>
 <li>the kube-apiserver flag <code>feature-gates</code> doesn&rsquo;t have them (k3s adds them internally)</li>
 </ul>
@@ -1119,8 +1113,17 @@
 </li>
 </ul>
 <ul>
-<li>Second example: <code class="highlight">k3d cluster create k3d-one --k3s-server-arg --cluster-cidr<span class="o">=</span><span class="s2">&quot;10.118.0.0/17&quot;</span> --k3s-server-arg --service-cidr<span class="o">=</span><span class="s2">&quot;10.118.128.0/17&quot;</span> --k3s-server-arg --disable<span class="o">=</span>servicelb --k3s-server-arg --disable<span class="o">=</span>traefik --verbose</code><ul>
-<li>Note: There are many ways to use the <code>"</code> and <code>'</code> quotes, just be aware, that sometimes shells also try to interpret/interpolate parts of the commands</li>
+<li>
+<p>Second example:</p>
+<div class="highlight"><pre><span></span><code>k3d cluster create k3d-one <span class="se">\</span>
+  --k3s-server-arg --cluster-cidr<span class="o">=</span><span class="s2">&quot;10.118.0.0/17&quot;</span> <span class="se">\</span>
+  --k3s-server-arg --service-cidr<span class="o">=</span><span class="s2">&quot;10.118.128.0/17&quot;</span> <span class="se">\</span>
+  --k3s-server-arg --disable<span class="o">=</span>servicelb <span class="se">\</span>
+  --k3s-server-arg --disable<span class="o">=</span>traefik <span class="se">\</span>
+  --verbose
+</code></pre></div>
+<ul>
+<li><strong>Note</strong>: There are many ways to use the <code>"</code> and <code>'</code> quotes, just be aware, that sometimes shells also try to interpret/interpolate parts of the commands</li>
 </ul>
 </li>
 </ul>
@@ -1129,11 +1132,17 @@
 <li>As of version v3.1.0, we&rsquo;re injecting the <code>host.k3d.internal</code> entry into the k3d containers (k3s nodes) and into the CoreDNS ConfigMap, enabling you to access your host system by referring to it as <code>host.k3d.internal</code></li>
 </ul>
 <h2 id="running-behind-a-corporate-proxy">Running behind a corporate proxy<a class="headerlink" href="#running-behind-a-corporate-proxy" title="Permanent link">&para;</a></h2>
-<p>Running k3d behind a corporate proxy can lead to some issues with k3d that have already been reported in more than one issue.
+<p>Running k3d behind a corporate proxy can lead to some issues with k3d that have already been reported in more than one issue.<br />
 Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables to k3d, some have to be fixed in docker&rsquo;s <code>daemon.json</code> file and some are as easy as adding a volume mount.</p>
 <h3 id="pods-fail-to-start-x509-certificate-signed-by-unknown-authority">Pods fail to start: <code>x509: certificate signed by unknown authority</code><a class="headerlink" href="#pods-fail-to-start-x509-certificate-signed-by-unknown-authority" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Example Error Message: <code>Failed to create pod sandbox: rpc error: code = Unknown desc = failed to get sandbox image "docker.io/rancher/pause:3.1": failed to pull image "docker.io/rancher/pause:3.1": failed to pull and unpack image "docker.io/rancher/pause:3.1": failed to resolve reference "docker.io/rancher/pause:3.1": failed to do request: Head https://registry-1.docker.io/v2/rancher/pause/manifests/3.1: x509: certificate signed by unknown authority</code></li>
+<li>
+<p>Example Error Message:</p>
+<div class="highlight"><pre><span></span><code>Failed to create pod sandbox: rpc error: <span class="nv">code</span> <span class="o">=</span> Unknown <span class="nv">desc</span> <span class="o">=</span> failed to get sandbox image <span class="s2">&quot;docker.io/rancher/pause:3.1&quot;</span>: failed to pull image <span class="s2">&quot;docker.io/rancher/pause:3.1&quot;</span>: failed to pull and unpack image <span class="s2">&quot;docker.io/rancher/pause:3.1&quot;</span>: failed to resolve reference <span class="s2">&quot;docker.io/rancher/pause:3.1&quot;</span>: failed to <span class="k">do</span> request: Head https://registry-1.docker.io/v2/rancher/pause/manifests/3.1: x509: certificate signed by unknown authority
+</code></pre></div>
+</li>
+</ul>
+<ul>
 <li>Problem: inside the container, the certificate of the corporate proxy cannot be validated</li>
 <li>Possible Solution: Mounting the CA Certificate from your host into the node containers at start time via <code>k3d cluster create --volume /path/to/your/certs.crt:/etc/ssl/certs/yourcert.crt</code></li>
 <li>Issue: <a href="https://github.com/rancher/k3d/discussions/535#discussioncomment-474982">rancher/k3d#535</a></li>
@@ -1153,7 +1162,16 @@ Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables t
 </ul>
 </li>
 <li>Why: The issue was introduced by a change in the Linux kernel (<a href="https://cdn.kernel.org/pub/linux/kernel/v5.x/ChangeLog-5.12.2">Changelog 5.12.2</a>: <a href="https://github.com/torvalds/linux/commit/671c54ea8c7ff47bd88444f3fffb65bf9799ce43">Commit</a>), that changed the netfilter_conntrack behavior in a way that <code>kube-proxy</code> is not able to set the <code>nf_conntrack_max</code> value anymore</li>
-<li>Workaround: as a workaround, we can tell <code>kube-proxy</code> to not even try to set this value: <code>k3d cluster create --k3s-server-arg "--kube-proxy-arg=conntrack-max-per-core=0" --k3s-agent-arg "--kube-proxy-arg=conntrack-max-per-core=0" --image rancher/k3s:v1.20.6-k3s</code></li>
+<li>
+<p>Workaround: as a workaround, we can tell <code>kube-proxy</code> to not even try to set this value:</p>
+<div class="highlight"><pre><span></span><code>k3d cluster create <span class="se">\</span>
+  --k3s-server-arg <span class="s2">&quot;--kube-proxy-arg=conntrack-max-per-core=0&quot;</span> <span class="se">\</span>
+  --k3s-agent-arg <span class="s2">&quot;--kube-proxy-arg=conntrack-max-per-core=0&quot;</span> <span class="se">\</span>
+  --image rancher/k3s:v1.20.6-k3s
+</code></pre></div>
+</li>
+</ul>
+<ul>
 <li>Fix: This is going to be fixed &ldquo;upstream&rdquo; in k3s itself in <a href="https://github.com/k3s-io/k3s/pull/3337">rancher/k3s#3337</a> and backported to k3s versions as low as v1.18.</li>
 <li>Issue Reference: <a href="https://github.com/rancher/k3d/issues/607">rancher/k3s#607</a></li>
 </ul>
@@ -1165,7 +1183,7 @@ Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables t
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">May 20, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 9, 2021</span>
       
     
   </small>
@@ -1204,21 +1222,6 @@ Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables t
           </div>
         </a>
       
-      
-        
-        <a href="../v1vsv3-comparison/" class="md-footer__link md-footer__link--next" aria-label="Next: Feature Comparison: v1 vs. v3" rel="next">
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              Feature Comparison: v1 vs. v3
-            </div>
-          </div>
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-          </div>
-        </a>
       
     </nav>
   

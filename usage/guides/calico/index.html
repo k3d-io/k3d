@@ -14,7 +14,7 @@
         <link rel="canonical" href="https://k3d.io/usage/guides/calico/">
       
       <link rel="icon" href="../../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.2, mkdocs-material-7.1.7">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.7">
     
     
       
@@ -874,18 +874,6 @@
   
 
           
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../faq/v1vsv3-comparison/" class="md-nav__link">
-        Feature Comparison: v1 vs. v3
-      </a>
-    </li>
-  
-
-          
         </ul>
       </nav>
     </li>
@@ -957,55 +945,65 @@
                 
                 <h1 id="use-calico-instead-of-flannel">Use Calico instead of Flannel<a class="headerlink" href="#use-calico-instead-of-flannel" title="Permanent link">&para;</a></h1>
 <p>If you want to use NetworkPolicy you can use Calico in k3s instead of Flannel.</p>
-<h3 id="1-download-and-modify-the-calico-descriptor">1. Download and modify the Calico descriptor<a class="headerlink" href="#1-download-and-modify-the-calico-descriptor" title="Permanent link">&para;</a></h3>
+<h2 id="1-download-and-modify-the-calico-descriptor">1. Download and modify the Calico descriptor<a class="headerlink" href="#1-download-and-modify-the-calico-descriptor" title="Permanent link">&para;</a></h2>
 <p>You can following the <a href="https://docs.projectcalico.org/master/reference/cni-plugin/configuration">documentation</a></p>
-<p>And then you have to change the ConfigMap <code>calico-config</code>. On the <code>cni_network_config</code> add the entry for allowing IP forwarding<br />
-<div class="highlight"><pre><span></span><code>    <span class="nt">&quot;container_settings&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="nt">&quot;allow_ip_forwarding&quot;</span><span class="p">:</span> <span class="kc">true</span>
-    <span class="p">}</span>
+<p>And then you have to change the ConfigMap <code>calico-config</code>. On the <code>cni_network_config</code> add the entry for allowing IP forwarding  </p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;container_settings&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;allow_ip_forwarding&quot;</span><span class="p">:</span> <span class="kc">true</span>
+<span class="p">}</span>
 </code></pre></div>
-Or you can directly use this <a href="../calico.yaml">calico.yaml</a> manifest</p>
+<p>Or you can directly use this <a href="../calico.yaml">calico.yaml</a> manifest</p>
 <h2 id="2-create-the-cluster-without-flannel-and-with-calico">2. Create the cluster without flannel and with calico<a class="headerlink" href="#2-create-the-cluster-without-flannel-and-with-calico" title="Permanent link">&para;</a></h2>
-<p>On the k3s cluster creation :
-- add the flag <code>--flannel-backend=none</code>. For this, on k3d you need to forward this flag to k3s with the option <code>--k3s-server-arg</code>.
-- mount (<code>--volume</code>) the calico descriptor in the auto deploy manifest directory of k3s <code>/var/lib/rancher/k3s/server/manifests/</code></p>
-<p>So the command of the cluster creation is (when you are at root of the k3d repository)
-<div class="highlight"><pre><span></span><code>    k3d cluster create <span class="s2">&quot;</span><span class="si">${</span><span class="nv">clustername</span><span class="si">}</span><span class="s2">&quot;</span> --k3s-server-arg <span class="s1">&#39;--flannel-backend=none&#39;</span> --volume <span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/docs/usage/guides/calico.yaml:/var/lib/rancher/k3s/server/manifests/calico.yaml&quot;</span>
+<p>On the k3s cluster creation :</p>
+<ul>
+<li>add the flag <code>--flannel-backend=none</code>. For this, on k3d you need to forward this flag to k3s with the option <code>--k3s-server-arg</code>.</li>
+<li>mount (<code>--volume</code>) the calico descriptor in the auto deploy manifest directory of k3s <code>/var/lib/rancher/k3s/server/manifests/</code></li>
+</ul>
+<p>So the command of the cluster creation is (when you are at root of the k3d repository)</p>
+<div class="highlight"><pre><span></span><code>k3d cluster create <span class="s2">&quot;</span><span class="si">${</span><span class="nv">clustername</span><span class="si">}</span><span class="s2">&quot;</span> <span class="se">\</span>
+  --k3s-server-arg <span class="s1">&#39;--flannel-backend=none&#39;</span> <span class="se">\</span>
+  --volume <span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/docs/usage/guides/calico.yaml:/var/lib/rancher/k3s/server/manifests/calico.yaml&quot;</span>
 </code></pre></div>
-In this example :
-- change <code>"${clustername}"</code> with the name of the cluster (or set a variable). 
-- <code>$(pwd)/docs/usage/guides/calico.yaml</code> is the absolute path of the calico manifest, you can adapt it.</p>
+<p>In this example :</p>
+<ul>
+<li>change <code>"${clustername}"</code> with the name of the cluster (or set a variable).</li>
+<li><code>$(pwd)/docs/usage/guides/calico.yaml</code> is the absolute path of the calico manifest, you can adapt it.</li>
+</ul>
 <p>You can add other options, <a href="../../commands/">see</a>.  </p>
 <p>The cluster will start without flannel and with Calico as CNI Plugin.</p>
-<p>For watching for the pod(s) deployment
-<div class="highlight"><pre><span></span><code>    watch <span class="s2">&quot;kubectl get pods -n kube-system&quot;</span>    
-</code></pre></div></p>
-<p>You will have something like this at beginning (with the command line <code>kubectl get pods -n kube-system</code>)
+<p>For watching for the pod(s) deployment</p>
+<div class="highlight"><pre><span></span><code>watch <span class="s2">&quot;kubectl get pods -n kube-system&quot;</span>    
+</code></pre></div>
+<p>You will have something like this at beginning (with the command line <code class="highlight">kubectl get pods -n kube-system</code>)</p>
 <div class="highlight"><pre><span></span><code>NAME                                       READY   STATUS     RESTARTS   AGE
-helm-install-traefik-pn84f                 0/1     Pending    0          3s
-calico-node-97rx8                          0/1     Init:0/3   0          3s
-metrics-server-7566d596c8-hwnqq            0/1     Pending    0          2s
-calico-kube-controllers-58b656d69f-2z7cn   0/1     Pending    0          2s
-local-path-provisioner-6d59f47c7-rmswg     0/1     Pending    0          2s
-coredns-8655855d6-cxtnr                    0/1     Pending    0          2s
-</code></pre></div></p>
-<p>And when it finish to start
+helm-install-traefik-pn84f                 <span class="m">0</span>/1     Pending    <span class="m">0</span>          3s
+calico-node-97rx8                          <span class="m">0</span>/1     Init:0/3   <span class="m">0</span>          3s
+metrics-server-7566d596c8-hwnqq            <span class="m">0</span>/1     Pending    <span class="m">0</span>          2s
+calico-kube-controllers-58b656d69f-2z7cn   <span class="m">0</span>/1     Pending    <span class="m">0</span>          2s
+local-path-provisioner-6d59f47c7-rmswg     <span class="m">0</span>/1     Pending    <span class="m">0</span>          2s
+coredns-8655855d6-cxtnr                    <span class="m">0</span>/1     Pending    <span class="m">0</span>          2s
+</code></pre></div>
+<p>And when it finish to start</p>
 <div class="highlight"><pre><span></span><code>NAME                                       READY   STATUS      RESTARTS   AGE
-metrics-server-7566d596c8-hwnqq            1/1     Running     0          56s
-calico-node-97rx8                          1/1     Running     0          57s
-helm-install-traefik-pn84f                 0/1     Completed   1          57s
-svclb-traefik-lmjr5                        2/2     Running     0          28s
-calico-kube-controllers-58b656d69f-2z7cn   1/1     Running     0          56s
-local-path-provisioner-6d59f47c7-rmswg     1/1     Running     0          56s
-traefik-758cd5fc85-x8p57                   1/1     Running     0          28s
-coredns-8655855d6-cxtnr                    1/1     Running     0          56s
-</code></pre></div></p>
-<p>Note : 
-- you can use the auto deploy manifest or a kubectl apply depending on your needs
-- &lt;!&gt; Calico is not as quick as Flannel (but it provides more features)</p>
+metrics-server-7566d596c8-hwnqq            <span class="m">1</span>/1     Running     <span class="m">0</span>          56s
+calico-node-97rx8                          <span class="m">1</span>/1     Running     <span class="m">0</span>          57s
+helm-install-traefik-pn84f                 <span class="m">0</span>/1     Completed   <span class="m">1</span>          57s
+svclb-traefik-lmjr5                        <span class="m">2</span>/2     Running     <span class="m">0</span>          28s
+calico-kube-controllers-58b656d69f-2z7cn   <span class="m">1</span>/1     Running     <span class="m">0</span>          56s
+local-path-provisioner-6d59f47c7-rmswg     <span class="m">1</span>/1     Running     <span class="m">0</span>          56s
+traefik-758cd5fc85-x8p57                   <span class="m">1</span>/1     Running     <span class="m">0</span>          28s
+coredns-8655855d6-cxtnr                    <span class="m">1</span>/1     Running     <span class="m">0</span>          56s
+</code></pre></div>
+<p>Note :</p>
+<ul>
+<li>you can use the auto deploy manifest or a kubectl apply depending on your needs</li>
+<li><img alt="❗" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/2757.svg" title=":exclamation:" /> Calico is not as quick as Flannel (but it provides more features)</li>
+</ul>
 <h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
-<p>https://rancher.com/docs/k3s/latest/en/installation/network-options/<br />
-https://docs.projectcalico.org/getting-started/kubernetes/k3s/</p>
+<ul>
+<li><a href="https://rancher.com/docs/k3s/latest/en/installation/network-options/">https://rancher.com/docs/k3s/latest/en/installation/network-options/</a>  </li>
+<li><a href="https://docs.projectcalico.org/getting-started/kubernetes/k3s/">https://docs.projectcalico.org/getting-started/kubernetes/k3s/</a></li>
+</ul>
                 
                   
                     
@@ -1014,7 +1012,7 @@ https://docs.projectcalico.org/getting-started/kubernetes/k3s/</p>
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 5, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 9, 2021</span>
       
     
   </small>

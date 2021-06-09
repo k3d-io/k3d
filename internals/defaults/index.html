@@ -14,7 +14,7 @@
         <link rel="canonical" href="https://k3d.io/internals/defaults/">
       
       <link rel="icon" href="../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.2, mkdocs-material-7.1.7">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.7">
     
     
       
@@ -766,9 +766,60 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Defaults
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Defaults
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#multiple-server-nodes" class="md-nav__link">
+    Multiple server nodes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-ports" class="md-nav__link">
+    API-Ports
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kubeconfig" class="md-nav__link">
+    Kubeconfig
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#networking" class="md-nav__link">
+    Networking
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -828,18 +879,6 @@
   
 
           
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../faq/v1vsv3-comparison/" class="md-nav__link">
-        Feature Comparison: v1 vs. v3
-      </a>
-    </li>
-  
-
-          
         </ul>
       </nav>
     </li>
@@ -865,6 +904,42 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#multiple-server-nodes" class="md-nav__link">
+    Multiple server nodes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-ports" class="md-nav__link">
+    API-Ports
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kubeconfig" class="md-nav__link">
+    Kubeconfig
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#networking" class="md-nav__link">
+    Networking
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -881,32 +956,30 @@
                 
                 
                 <h1 id="defaults">Defaults<a class="headerlink" href="#defaults" title="Permanent link">&para;</a></h1>
+<h2 id="multiple-server-nodes">Multiple server nodes<a class="headerlink" href="#multiple-server-nodes" title="Permanent link">&para;</a></h2>
 <ul>
-<li>multiple server nodes<ul>
 <li>by default, when <code>--server</code> &gt; 1 and no <code>--datastore-x</code> option is set, the first server node (server-0) will be the initializing server node<ul>
 <li>the initializing server node will have the <code>--cluster-init</code> flag appended</li>
 <li>all other server nodes will refer to the initializing server node via <code>--server https://&lt;init-node&gt;:6443</code></li>
 </ul>
 </li>
 </ul>
-</li>
-<li>API-Ports<ul>
+<h2 id="api-ports">API-Ports<a class="headerlink" href="#api-ports" title="Permanent link">&para;</a></h2>
+<ul>
 <li>by default, we expose the API-Port (<code>6443</code>) by forwarding traffic from the default server loadbalancer (nginx container) to the server node(s)</li>
 <li>port <code>6443</code> of the loadbalancer is then mapped to a specific (<code>--api-port</code> flag) or a random (default) port on the host system</li>
 </ul>
-</li>
-<li>kubeconfig<ul>
+<h2 id="kubeconfig">Kubeconfig<a class="headerlink" href="#kubeconfig" title="Permanent link">&para;</a></h2>
+<ul>
 <li>if <code>--kubeconfig-update-default</code> is set, we use the default loading rules to get the default kubeconfig:<ul>
 <li>First: kubeconfig specified via the KUBECONFIG environment variable (error out if multiple are specified)</li>
 <li>Second: default kubeconfig in home directory (e.g. <code>$HOME/.kube/config</code>)</li>
 </ul>
 </li>
 </ul>
-</li>
-<li>Networking<ul>
+<h2 id="networking">Networking<a class="headerlink" href="#networking" title="Permanent link">&para;</a></h2>
+<ul>
 <li><a href="./networking">by default, k3d creates a new (docker) network for every cluster</a></li>
-</ul>
-</li>
 </ul>
                 
                   
@@ -916,7 +989,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">May 21, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 9, 2021</span>
       
     
   </small>

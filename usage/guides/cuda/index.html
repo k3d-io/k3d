@@ -14,7 +14,7 @@
         <link rel="canonical" href="https://k3d.io/usage/guides/cuda/">
       
       <link rel="icon" href="../../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.2, mkdocs-material-7.1.7">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.7">
     
     
       
@@ -922,18 +922,6 @@
   
 
           
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../faq/v1vsv3-comparison/" class="md-nav__link">
-        Feature Comparison: v1 vs. v3
-      </a>
-    </li>
-  
-
-          
         </ul>
       </nav>
     </li>
@@ -1052,11 +1040,14 @@
                 
                 
                 <h1 id="running-cuda-workloads">Running CUDA workloads<a class="headerlink" href="#running-cuda-workloads" title="Permanent link">&para;</a></h1>
-<p>If you want to run CUDA workloads on the K3S container you need to customize the container.
-CUDA workloads require the NVIDIA Container Runtime, so containerd needs to be configured to use this runtime.
-The K3S container itself also needs to run with this runtime. If you are using Docker you can install the <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html">NVIDIA Container Toolkit</a>.</p>
+<p>If you want to run CUDA workloads on the K3S container you need to customize the container.<br />
+CUDA workloads require the NVIDIA Container Runtime, so containerd needs to be configured to use this runtime.<br />
+The K3S container itself also needs to run with this runtime.<br />
+If you are using Docker you can install the <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html">NVIDIA Container Toolkit</a>.</p>
 <h2 id="building-a-customized-k3s-image">Building a customized K3S image<a class="headerlink" href="#building-a-customized-k3s-image" title="Permanent link">&para;</a></h2>
-<p>To get the NVIDIA container runtime in the K3S image you need to build your own K3S image. The native K3S image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet. To get around this we need to build the image with a supported base image.</p>
+<p>To get the NVIDIA container runtime in the K3S image you need to build your own K3S image.<br />
+The native K3S image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet.<br />
+To get around this we need to build the image with a supported base image.</p>
 <h3 id="adapt-the-dockerfile">Adapt the Dockerfile<a class="headerlink" href="#adapt-the-dockerfile" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">FROM</span> <span class="s">ubuntu:18.04</span> <span class="k">as</span> <span class="s">base</span>
 <span class="k">RUN</span> apt-get update -y <span class="o">&amp;&amp;</span> apt-get install -y ca-certificates
@@ -1097,7 +1088,7 @@ The K3S container itself also needs to run with this runtime. If you are using D
 <span class="k">ENTRYPOINT</span> <span class="p">[</span><span class="s2">&quot;/bin/k3s&quot;</span><span class="p">]</span>
 <span class="k">CMD</span> <span class="p">[</span><span class="s2">&quot;agent&quot;</span><span class="p">]</span>
 </code></pre></div>
-<p>This <a href="cuda/Dockerfile">Dockerfile</a> is based on the <a href="https://github.com/rancher/k3s/blob/master/package/Dockerfile">K3S Dockerfile</a>.
+<p>This <a href="cuda/Dockerfile">Dockerfile</a> is based on the <a href="https://github.com/rancher/k3s/blob/master/package/Dockerfile">K3s Dockerfile</a>.
 The following changes are applied:</p>
 <ol>
 <li>Change the base images to Ubuntu 18.04 so the NVIDIA Container Runtime can be installed</li>
@@ -1105,7 +1096,7 @@ The following changes are applied:</p>
 <li>Add a manifest for the NVIDIA driver plugin for Kubernetes</li>
 </ol>
 <h3 id="configure-containerd">Configure containerd<a class="headerlink" href="#configure-containerd" title="Permanent link">&para;</a></h3>
-<p>We need to configure containerd to use the NVIDIA Container Runtime. We need to customize the config.toml that is used at startup. K3S provides a way to do this using a <a href="config.toml.tmpl">config.toml.tmpl</a> file. More information can be found on the <a href="https://rancher.com/docs/k3s/latest/en/advanced/#configuring-containerd">K3S site</a>.</p>
+<p>We need to configure containerd to use the NVIDIA Container Runtime. We need to customize the config.toml that is used at startup. K3s provides a way to do this using a <a href="config.toml.tmpl">config.toml.tmpl</a> file. More information can be found on the <a href="https://rancher.com/docs/k3s/latest/en/advanced/#configuring-containerd">K3s site</a>.</p>
 <div class="highlight"><pre><span></span><code><span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">opt</span><span class="p">]</span>
   <span class="nx">path</span> <span class="p">=</span> <span class="s">&quot;{{ .NodeConfig.Containerd.Opt }}&quot;</span>
 
@@ -1281,7 +1272,7 @@ kubectl logs cuda-vector-add
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 5, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 9, 2021</span>
       
     
   </small>

@@ -14,7 +14,7 @@
         <link rel="canonical" href="https://k3d.io/usage/guides/exposing_services/">
       
       <link rel="icon" href="../../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.2, mkdocs-material-7.1.7">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.7">
     
     
       
@@ -867,18 +867,6 @@
   
 
           
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../faq/v1vsv3-comparison/" class="md-nav__link">
-        Feature Comparison: v1 vs. v3
-      </a>
-    </li>
-  
-
-          
         </ul>
       </nav>
     </li>
@@ -943,7 +931,7 @@
                 
                 <h1 id="exposing-services">Exposing Services<a class="headerlink" href="#exposing-services" title="Permanent link">&para;</a></h1>
 <h2 id="1-via-ingress-recommended">1. via Ingress (recommended)<a class="headerlink" href="#1-via-ingress-recommended" title="Permanent link">&para;</a></h2>
-<p>In this example, we will deploy a simple nginx webserver deployment and make it accessible via ingress.
+<p>In this example, we will deploy a simple nginx webserver deployment and make it accessible via ingress.<br />
 Therefore, we have to create the cluster in a way, that the internal port 80 (where the <code>traefik</code> ingress controller is listening on) is exposed on the host system.</p>
 <ol>
 <li>
@@ -952,11 +940,16 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <div class="admonition info">
 <p class="admonition-title">Good to know</p>
 <ul>
-<li><code>--api-port 6550</code> is not required for the example to work. It&rsquo;s used to have <code>k3s</code>&lsquo;s API-Server listening on port 6550 with that port mapped to the host system.</li>
-<li>the port-mapping construct <code>8081:80@loadbalancer</code> means
-    - map port <code>8081</code> from the host to port <code>80</code> on the container which matches the nodefilter <code>loadbalancer</code></li>
-<li>the <code>loadbalancer</code> nodefilter matches only the <code>serverlb</code> that&rsquo;s deployed in front of a cluster&rsquo;s server nodes
-    - all ports exposed on the <code>serverlb</code> will be proxied to the same ports on all server nodes in the cluster</li>
+<li><code>--api-port 6550</code> is not required for the example to work.<br />
+  It&rsquo;s used to have <code>k3s</code>&lsquo;s API-Server listening on port 6550 with that port mapped to the host system.</li>
+<li>the port-mapping construct <code>8081:80@loadbalancer</code> means:<br />
+  &ldquo;map port <code>8081</code> from the host to port <code>80</code> on the container which matches the nodefilter <code>loadbalancer</code>&ldquo;<ul>
+<li>the <code>loadbalancer</code> nodefilter matches only the <code>serverlb</code> that&rsquo;s deployed in front of a cluster&rsquo;s server nodes<ul>
+<li>all ports exposed on the <code>serverlb</code> will be proxied to the same ports on all server nodes in the cluster</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </li>
@@ -973,8 +966,8 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 <p><code class="highlight">kubectl create service clusterip nginx --tcp<span class="o">=</span><span class="m">80</span>:80</code></p>
 </li>
 <li>
-<p>Create an ingress object for it with <code class="highlight">kubectl apply -f</code>
-  <em>Note</em>: <code>k3s</code> deploys <a href="https://github.com/containous/traefik"><code>traefik</code></a> as the default ingress controller</p>
+<p>Create an ingress object for it by copying the following manifest to a file and applying with <code class="highlight">kubectl apply -f thatfile.yaml</code></p>
+<p><strong>Note</strong>: <code>k3s</code> deploys <a href="https://github.com/containous/traefik"><code>traefik</code></a> as the default ingress controller</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># apiVersion: networking.k8s.io/v1beta1 # for k3s &lt; v1.19</span>
 <span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
@@ -1002,16 +995,22 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 </ol>
 <h2 id="2-via-nodeport">2. via NodePort<a class="headerlink" href="#2-via-nodeport" title="Permanent link">&para;</a></h2>
 <ol>
-<li>Create a cluster, mapping the port 30080 from agent-0 to localhost:8082<p><code class="highlight">k3d cluster create mycluster -p <span class="s2">&quot;8082:30080@agent[0]&quot;</span> --agents <span class="m">2</span></code></p>
-<p>- <strong>Note</strong>: Kubernetes&rsquo; default NodePort range is <a href="https://kubernetes.io/docs/concepts/services-networking/service/#nodeport"><code>30000-32767</code></a></p>
-<p>- <strong>Note</strong>: You may as well expose the whole NodePort range from the very beginning, e.g. via <code>k3d cluster create mycluster --agents 3 -p "30000-32767:30000-32767@server[0]"</code> (See <a href="https://www.youtube.com/watch?v=5HaU6338lAk">this video from @portainer</a>)
-    - <strong>Warning</strong>: Docker creates iptable entries and a new proxy process per port-mapping, so this may take a very long time or even freeze your system!</p>
-</li>
-</ol>
-<p>&hellip; (Steps 2 and 3 like above) &hellip;</p>
-<ol>
 <li>
-<p>Create a NodePort service for it with <code class="highlight">kubectl apply -f</code></p>
+<p>Create a cluster, mapping the port <code>30080</code> from <code>agent-0</code> to <code>localhost:8082</code></p>
+<p><code class="highlight">k3d cluster create mycluster -p <span class="s2">&quot;8082:30080@agent[0]&quot;</span> --agents <span class="m">2</span></code></p>
+<ul>
+<li><strong>Note 1</strong>: Kubernetes&rsquo; default NodePort range is <a href="https://kubernetes.io/docs/concepts/services-networking/service/#nodeport"><code>30000-32767</code></a></li>
+<li>
+<p><strong>Note 2</strong>: You may as well expose the whole NodePort range from the very beginning, e.g. via <code>k3d cluster create mycluster --agents 3 -p "30000-32767:30000-32767@server[0]"</code> (See <a href="https://www.youtube.com/watch?v=5HaU6338lAk">this video from @portainer</a>)</p>
+<ul>
+<li><strong>Warning</strong>: Docker creates iptable entries and a new proxy process per port-mapping, so this may take a very long time or even freeze your system!</li>
+</ul>
+<p>&hellip; (Steps 2 and 3 like above) &hellip;</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Create a NodePort service for it by copying the following manifest to a file and applying it with <code class="highlight">kubectl apply -f</code></p>
 <div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Service</span>
 <span class="nt">metadata</span><span class="p">:</span>
