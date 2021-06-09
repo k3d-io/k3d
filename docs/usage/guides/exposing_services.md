@@ -9,12 +9,12 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
     `#!bash k3d cluster create --api-port 6550 -p "8081:80@loadbalancer" --agents 2`
 
-    !!! info "Good to know"
-        - `--api-port 6550` is not required for the example to work. It's used to have `k3s`'s API-Server listening on port 6550 with that port mapped to the host system.
-        - the port-mapping construct `8081:80@loadbalancer` means
-            - map port `8081` from the host to port `80` on the container which matches the nodefilter `loadbalancer`
-        - the `loadbalancer` nodefilter matches only the `serverlb` that's deployed in front of a cluster's server nodes
-            - all ports exposed on the `serverlb` will be proxied to the same ports on all server nodes in the cluster
+  !!! info "Good to know"
+      - `--api-port 6550` is not required for the example to work. It's used to have `k3s`'s API-Server listening on port 6550 with that port mapped to the host system.
+      - the port-mapping construct `8081:80@loadbalancer` means
+          - map port `8081` from the host to port `80` on the container which matches the nodefilter `loadbalancer`
+      - the `loadbalancer` nodefilter matches only the `serverlb` that's deployed in front of a cluster's server nodes
+          - all ports exposed on the `serverlb` will be proxied to the same ports on all server nodes in the cluster
 
 2. Get the kubeconfig file (redundant, as `k3d cluster create` already merges it into your default kubeconfig file)
 
