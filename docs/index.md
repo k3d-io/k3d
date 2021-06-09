@@ -16,10 +16,10 @@ k3d makes it very easy to create single- and multi-node [k3s](https://github.com
 !!! Tip "k3d demo repository: [iwilltry42/k3d-demo](https://github.com/iwilltry42/k3d-demo)"
     Featured use-cases include:
 
-      - **hot-reloading** of code when developing on k3d (Python Flask App)
-      - build-deploy-test cycle using **Tilt**
-      - full cluster lifecycle for simple and **multi-server** clusters
-      - Proof of Concept of using k3d as a service in **Drone CI**
+    - **hot-reloading** of code when developing on k3d (Python Flask App)
+    - build-deploy-test cycle using **Tilt**
+    - full cluster lifecycle for simple and **multi-server** clusters
+    - Proof of Concept of using k3d as a service in **Drone CI**
 
 - [Rancher Meetup - May 2020 - Simplifying Your Cloud-Native Development Workflow With K3s, K3c and K3d (YouTube)](https://www.youtube.com/watch?v=hMr3prm9gDM)
 

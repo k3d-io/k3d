@@ -67,7 +67,7 @@ configs:
 
 When using secure registries, the [`registries.yaml` file](#registries-file) must include information about the certificates. For example, if you want to use images from the secure registry running at `https://my.company.registry`, you must first download a CA file valid for that server and store it in some well-known directory like `${HOME}/.k3d/my-company-root.pem`.  
 
-Then you have to mount the CA file in some directory in the nodes in the cluster and include that mounted file in a `configs` section in the [`registries.yaml` file](#registries-file).
+Then you have to mount the CA file in some directory in the nodes in the cluster and include that mounted file in a `configs` section in the [`registries.yaml` file](#registries-file).  
 For example, if we mount the CA file in `/etc/ssl/certs/my-company-root.pem`, the `registries.yaml` will look like:
 
 ```yaml
@@ -85,7 +85,11 @@ configs:
 
 Finally, we can create the cluster, mounting the CA file in the path we specified in `ca_file`:
 
-`#!bash k3d cluster create --volume "${HOME}/.k3d/my-registries.yaml:/etc/rancher/k3s/registries.yaml" --volume "${HOME}/.k3d/my-company-root.pem:/etc/ssl/certs/my-company-root.pem"`
+```bash
+k3d cluster create \
+  --volume "${HOME}/.k3d/my-registries.yaml:/etc/rancher/k3s/registries.yaml" \
+  --volume "${HOME}/.k3d/my-company-root.pem:/etc/ssl/certs/my-company-root.pem"
+```
 
 ## Using a local registry
 
@@ -97,8 +101,10 @@ Finally, we can create the cluster, mounting the CA file in the path we specifie
 #### Create a dedicated registry together with your cluster
 
 1. `#!bash k3d cluster create mycluster --registry-create`: This creates your cluster `mycluster` together with a registry container called `k3d-mycluster-registry`
-    - k3d sets everything up in the cluster for containerd to be able to pull images from that registry (using the `registries.yaml` file)
-    - the port, which the registry is listening on will be mapped to a random port on your host system
+
+  - k3d sets everything up in the cluster for containerd to be able to pull images from that registry (using the `registries.yaml` file)
+  - the port, which the registry is listening on will be mapped to a random port on your host system
+
 2. Check the k3d command output or `#!bash docker ps -f name=k3d-mycluster-registry` to find the exposed port (let's use `12345` here)
 3. Pull some image (optional) `#!bash docker pull alpine:latest`, re-tag it to reference your newly created registry `#!bash docker tag alpine:latest k3d-mycluster-registry:12345/testimage:local` and push it `#!bash docker push k3d-mycluster-registry:12345/testimage:local`
 4. Use kubectl to create a new pod in your cluster using that image to see, if the cluster can pull from the new registry: `#!bash kubectl run --image k3d-mycluster-registry:12345/testimage:local testimage --command -- tail -f /dev/null` (creates a container that will not do anything but keep on running)
@@ -153,7 +159,8 @@ You should test that you can
 - push to your registry from your local development machine.
 - use images from that registry in `Deployments` in your k3d cluster.
 
-We will verify these two things for a local registry (located at `k3d-registry.localhost:12345`) running in your development machine. Things would be basically the same for checking an external registry, but some additional configuration could be necessary in your local machine when using an authenticated or secure registry (please refer to Docker's documentation for this).
+We will verify these two things for a local registry (located at `k3d-registry.localhost:12345`) running in your development machine.  
+Things would be basically the same for checking an external registry, but some additional configuration could be necessary in your local machine when using an authenticated or secure registry (please refer to Docker's documentation for this).
 
 First, we can download some image (like `nginx`) and push it to our local registry with:
 
@@ -195,8 +202,7 @@ Then you should check that the pod is running with `kubectl get pods -l "app=ngi
 
 ## Configuring registries for k3s <= v0.9.1
 
-k3s servers below v0.9.1 do not recognize the `registries.yaml` file as described in
-the in the beginning, so you will need to embed the contents of that file in a `containerd` configuration file.
+k3s servers below v0.9.1 do not recognize the `registries.yaml` file as described in the in the beginning, so you will need to embed the contents of that file in a `containerd` configuration file.  
 You will have to create your own `containerd` configuration file at some well-known path like `${HOME}/.k3d/config.toml.tmpl`, like this:
 
 ??? registriesprev091 "config.toml.tmpl"
