@@ -2,19 +2,20 @@
 
 ## 1. via Ingress (recommended)
 
-In this example, we will deploy a simple nginx webserver deployment and make it accessible via ingress.
+In this example, we will deploy a simple nginx webserver deployment and make it accessible via ingress.  
 Therefore, we have to create the cluster in a way, that the internal port 80 (where the `traefik` ingress controller is listening on) is exposed on the host system.
 
 1. Create a cluster, mapping the ingress port 80 to localhost:8081
 
     `#!bash k3d cluster create --api-port 6550 -p "8081:80@loadbalancer" --agents 2`
 
-    !!! info "Good to know"
-        - `--api-port 6550` is not required for the example to work. It's used to have `k3s`'s API-Server listening on port 6550 with that port mapped to the host system.
-        - the port-mapping construct `8081:80@loadbalancer` means
-            - map port `8081` from the host to port `80` on the container which matches the nodefilter `loadbalancer`
+  !!! info "Good to know"
+      - `--api-port 6550` is not required for the example to work.  
+        It's used to have `k3s`'s API-Server listening on port 6550 with that port mapped to the host system.
+      - the port-mapping construct `8081:80@loadbalancer` means:  
+        "map port `8081` from the host to port `80` on the container which matches the nodefilter `loadbalancer`"
         - the `loadbalancer` nodefilter matches only the `serverlb` that's deployed in front of a cluster's server nodes
-            - all ports exposed on the `serverlb` will be proxied to the same ports on all server nodes in the cluster
+          - all ports exposed on the `serverlb` will be proxied to the same ports on all server nodes in the cluster
 
 2. Get the kubeconfig file (redundant, as `k3d cluster create` already merges it into your default kubeconfig file)
 
@@ -28,8 +29,9 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
     `#!bash kubectl create service clusterip nginx --tcp=80:80`
 
-5. Create an ingress object for it with `#!bash kubectl apply -f`
-  *Note*: `k3s` deploys [`traefik`](https://github.com/containous/traefik) as the default ingress controller
+5. Create an ingress object for it by copying the following manifest to a file and applying with `#!bash kubectl apply -f thatfile.yaml`
+  
+  **Note**: `k3s` deploys [`traefik`](https://github.com/containous/traefik) as the default ingress controller
 
     ```YAML
     # apiVersion: networking.k8s.io/v1beta1 # for k3s < v1.19
@@ -58,18 +60,17 @@ Therefore, we have to create the cluster in a way, that the internal port 80 (wh
 
 ## 2. via NodePort
 
-1. Create a cluster, mapping the port 30080 from agent-0 to localhost:8082
+1. Create a cluster, mapping the port `30080` from `agent-0` to `localhost:8082`
 
-    `#!bash k3d cluster create mycluster -p "8082:30080@agent[0]" --agents 2`
+  `#!bash k3d cluster create mycluster -p "8082:30080@agent[0]" --agents 2`
 
-    - **Note**: Kubernetes' default NodePort range is [`30000-32767`](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
+  - **Note 1**: Kubernetes' default NodePort range is [`30000-32767`](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
+  - **Note 2**: You may as well expose the whole NodePort range from the very beginning, e.g. via `k3d cluster create mycluster --agents 3 -p "30000-32767:30000-32767@server[0]"` (See [this video from @portainer](https://www.youtube.com/watch?v=5HaU6338lAk))
+    - **Warning**: Docker creates iptable entries and a new proxy process per port-mapping, so this may take a very long time or even freeze your system!
 
-    - **Note**: You may as well expose the whole NodePort range from the very beginning, e.g. via `k3d cluster create mycluster --agents 3 -p "30000-32767:30000-32767@server[0]"` (See [this video from @portainer](https://www.youtube.com/watch?v=5HaU6338lAk))
-      - **Warning**: Docker creates iptable entries and a new proxy process per port-mapping, so this may take a very long time or even freeze your system!
+    ... (Steps 2 and 3 like above) ...
 
-... (Steps 2 and 3 like above) ...
-
-1. Create a NodePort service for it with `#!bash kubectl apply -f`
+1. Create a NodePort service for it by copying the following manifest to a file and applying it with `#!bash kubectl apply -f`
 
     ```YAML
     apiVersion: v1
