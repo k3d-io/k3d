@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 The k3d Author(s)
+Copyright © 2020-2021 The k3d Author(s)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,6 @@ import (
 	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	"github.com/rancher/k3d/v4/pkg/types"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	"github.com/rancher/k3d/v4/pkg/types/fixes"
 	"github.com/rancher/k3d/v4/pkg/types/k3s"
 	"github.com/rancher/k3d/v4/pkg/util"
 	"github.com/rancher/k3d/v4/version"
@@ -237,22 +236,6 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 				Content: regConfBytes,
 				Dest:    k3d.DefaultRegistriesFilePath,
 				Mode:    0644,
-			},
-		})
-	}
-
-	// FIXME: FixCgroupV2 - to be removed when fixed upstream
-	if fixes.FixCgroupV2Enabled() {
-
-		log.Debugln("experimental cgroupv2 fix enabled")
-
-		clusterConfig.ClusterCreateOpts.NodeHooks = append(clusterConfig.ClusterCreateOpts.NodeHooks, k3d.NodeHook{
-			Stage: k3d.LifecycleStagePreStart,
-			Action: actions.WriteFileAction{
-				Runtime: runtime,
-				Content: fixes.CgroupV2Entrypoint,
-				Dest:    "/bin/entrypoint.sh",
-				Mode:    0744,
 			},
 		})
 	}

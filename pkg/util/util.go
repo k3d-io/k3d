@@ -19,16 +19,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package types
 
-type RuntimeInfo struct {
-	Name          string
-	Endpoint      string `yaml:",omitempty" json:",omitempty"`
-	Version       string `yaml:",omitempty" json:",omitempty"`
-	OSType        string `yaml:",omitempty" json:",omitempty"`
-	OS            string `yaml:",omitempty" json:",omitempty"`
-	Arch          string `yaml:",omitempty" json:",omitempty"`
-	CgroupVersion string `yaml:",omitempty" json:",omitempty"`
-	CgroupDriver  string `yaml:",omitempty" json:",omitempty"`
-	Filesystem    string `yaml:",omitempty" json:",omitempty"`
+package util
+
+func RemoveElementFromStringSlice(slice []string, index int) []string {
+	slice[index] = slice[len(slice)-1]
+	return slice[:len(slice)-1]
 }

@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 The k3d Author(s)
+Copyright © 2020-2021 The k3d Author(s)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/rancher/k3d/v4/pkg/runtimes"
@@ -81,8 +81,8 @@ func KubeconfigGetWrite(ctx context.Context, runtime runtimes.Runtime, cluster *
 				log.Debugf("Output path '%s' doesn't exist, trying to create it...", output)
 
 				// create directory path
-				if err := os.MkdirAll(path.Dir(output), 0755); err != nil {
-					log.Errorf("Failed to create output directory '%s'", path.Dir(output))
+				if err := os.MkdirAll(filepath.Dir(output), 0755); err != nil {
+					log.Errorf("Failed to create output directory '%s'", filepath.Dir(output))
 					return output, err
 				}
 

@@ -19,16 +19,35 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package types
+package client
 
-type RuntimeInfo struct {
-	Name          string
-	Endpoint      string `yaml:",omitempty" json:",omitempty"`
-	Version       string `yaml:",omitempty" json:",omitempty"`
-	OSType        string `yaml:",omitempty" json:",omitempty"`
-	OS            string `yaml:",omitempty" json:",omitempty"`
-	Arch          string `yaml:",omitempty" json:",omitempty"`
-	CgroupVersion string `yaml:",omitempty" json:",omitempty"`
-	CgroupDriver  string `yaml:",omitempty" json:",omitempty"`
-	Filesystem    string `yaml:",omitempty" json:",omitempty"`
+import (
+	"os"
+	"strconv"
+
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v4/pkg/types/fixes"
+	log "github.com/sirupsen/logrus"
+)
+
+// FIXME: FixCgroupV2 - to be removed when fixed upstream
+func EnableCgroupV2FixIfNeeded(runtime runtimes.Runtime) {
+	if _, isSet := os.LookupEnv(fixes.EnvFixCgroupV2); !isSet {
+		runtimeInfo, err := runtime.Info()
+		if err != nil {
+			log.Warnf("Failed to get runtime information: %+v", err)
+			return
+		}
+		cgroupVersion, err := strconv.Atoi(runtimeInfo.CgroupVersion)
+		if err != nil {
+			log.Debugf("Failed to parse cgroupVersion: %+v", err)
+			return
+		}
+		if cgroupVersion == 2 {
+			log.Debugf("Detected CgroupV2, enabling custom entrypoint (disable by setting %s=false)", fixes.EnvFixCgroupV2)
+			if err := os.Setenv(fixes.EnvFixCgroupV2, "true"); err != nil {
+				log.Errorf("Detected CgroupsV2 but failed to enable k3d's hotfix (try `export %s=true`): %+v", fixes.EnvFixCgroupV2, err)
+			}
+		}
+	}
 }

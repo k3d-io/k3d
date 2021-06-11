@@ -1,12 +1,15 @@
 # Running CUDA workloads
 
-If you want to run CUDA workloads on the K3S container you need to customize the container.
-CUDA workloads require the NVIDIA Container Runtime, so containerd needs to be configured to use this runtime.
-The K3S container itself also needs to run with this runtime. If you are using Docker you can install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html).
+If you want to run CUDA workloads on the K3S container you need to customize the container.  
+CUDA workloads require the NVIDIA Container Runtime, so containerd needs to be configured to use this runtime.  
+The K3S container itself also needs to run with this runtime.  
+If you are using Docker you can install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html).
 
 ## Building a customized K3S image
 
-To get the NVIDIA container runtime in the K3S image you need to build your own K3S image. The native K3S image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet. To get around this we need to build the image with a supported base image.
+To get the NVIDIA container runtime in the K3S image you need to build your own K3S image.  
+The native K3S image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet.  
+To get around this we need to build the image with a supported base image.
 
 ### Adapt the Dockerfile
 
@@ -51,7 +54,7 @@ ENTRYPOINT ["/bin/k3s"]
 CMD ["agent"]
 ```
 
-This [Dockerfile](cuda/Dockerfile) is based on the [K3S Dockerfile](https://github.com/rancher/k3s/blob/master/package/Dockerfile).
+This [Dockerfile](cuda/Dockerfile) is based on the [K3s Dockerfile](https://github.com/rancher/k3s/blob/master/package/Dockerfile).
 The following changes are applied:
 
 1. Change the base images to Ubuntu 18.04 so the NVIDIA Container Runtime can be installed
@@ -60,7 +63,7 @@ The following changes are applied:
 
 ### Configure containerd
 
-We need to configure containerd to use the NVIDIA Container Runtime. We need to customize the config.toml that is used at startup. K3S provides a way to do this using a [config.toml.tmpl](cuda/config.toml.tmpl) file. More information can be found on the [K3S site](https://rancher.com/docs/k3s/latest/en/advanced/#configuring-containerd).
+We need to configure containerd to use the NVIDIA Container Runtime. We need to customize the config.toml that is used at startup. K3s provides a way to do this using a [config.toml.tmpl](cuda/config.toml.tmpl) file. More information can be found on the [K3s site](https://rancher.com/docs/k3s/latest/en/advanced/#configuring-containerd).
 
 ```go
 [plugins.opt]

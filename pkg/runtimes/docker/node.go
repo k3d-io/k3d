@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 The k3d Author(s)
+Copyright © 2020-2021 The k3d Author(s)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,6 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/client"
 	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
@@ -251,7 +250,7 @@ func (d Docker) GetNodeStatus(ctx context.Context, node *k3d.Node) (bool, string
 	}
 
 	// create docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return running, stateString, err
@@ -415,7 +414,7 @@ func executeInNode(ctx context.Context, node *k3d.Node, cmd []string) (*types.Hi
 // GetNodesInNetwork returns all the nodes connected to a given network
 func (d Docker) GetNodesInNetwork(ctx context.Context, network string) ([]*k3d.Node, error) {
 	// create docker client
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	docker, err := GetDockerClient()
 	if err != nil {
 		log.Errorln("Failed to create docker client")
 		return nil, err

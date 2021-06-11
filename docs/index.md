@@ -13,8 +13,15 @@ k3d makes it very easy to create single- and multi-node [k3s](https://github.com
 
 ## Learning
 
+!!! Tip "k3d demo repository: [iwilltry42/k3d-demo](https://github.com/iwilltry42/k3d-demo)"
+    Featured use-cases include:
+
+    - **hot-reloading** of code when developing on k3d (Python Flask App)
+    - build-deploy-test cycle using **Tilt**
+    - full cluster lifecycle for simple and **multi-server** clusters
+    - Proof of Concept of using k3d as a service in **Drone CI**
+
 - [Rancher Meetup - May 2020 - Simplifying Your Cloud-Native Development Workflow With K3s, K3c and K3d (YouTube)](https://www.youtube.com/watch?v=hMr3prm9gDM)
-  - k3d demo repository: [iwilltry42/k3d-demo](https://github.com/iwilltry42/k3d-demo)
 
 ## Requirements
 
@@ -33,22 +40,48 @@ k3d makes it very easy to create single- and multi-node [k3s](https://github.com
 
 You have several options there:
 
-- use the install script to grab the latest release:
-  - wget: `#!bash wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash`
-  - curl: `#!bash curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash`
-- use the install script to grab a specific release (via `TAG` environment variable):
-  - wget: `#!bash wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v4.0.0 bash`
-  - curl: `#!bash curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v4.0.0 bash`
+### [:fontawesome-regular-file-code: Install Script](https://raw.githubusercontent.com/rancher/k3d/main/install.sh)
 
-- use [Homebrew](https://brew.sh): `#!bash brew install k3d` (Homebrew is available for MacOS and Linux)
-  - Formula can be found in [homebrew/homebrew-core](https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb) and is mirrored to [homebrew/linuxbrew-core](https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb)
-- install via [AUR](https://aur.archlinux.org/) package [rancher-k3d-bin](https://aur.archlinux.org/packages/rancher-k3d-bin/): `yay -S rancher-k3d-bin`
-- grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
-- install via go: `#!bash go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
-- use [arkade](https://github.com/alexellis/arkade): `arkade get k3d`
-- use [asdf](https://asdf-vm.com): `asdf plugin-add k3d`, then `asdf install k3d <tag>` with `<tag> = latest` or `3.x.x` for a specific version (maintained by [spencergilbert/asdf-k3d](https://github.com/spencergilbert/asdf-k3d))
-- use [Chocolatey](https://chocolatey.org/): `choco install k3d` (Chocolatey package manager is available for Windows)
-  - package source can be found in [erwinkersten/chocolatey-packages](https://github.com/erwinkersten/chocolatey-packages/tree/master/automatic/k3d)
+#### Install current latest release
+
+- wget: `#!bash wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash`
+- curl: `#!bash curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash`
+
+#### Install specific release
+
+Use the install script to grab a specific release (via `TAG` environment variable):
+
+- wget: `#!bash wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v4.0.0 bash`
+- curl: `#!bash curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v4.0.0 bash`
+
+### Other Installers
+
+??? Tip "Other Installation Methods"
+
+    - [:fontawesome-solid-beer: Homebrew (MacOS/Linux)](https://brew.sh): `#!bash brew install k3d`
+
+        *Note*: The formula can be found in [homebrew/homebrew-core](https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb) and is mirrored to [homebrew/linuxbrew-core](https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb)
+
+    - [:material-arch: AUR (Arch Linux User Repository)](https://aur.archlinux.org/):  `#!bash yay -S rancher-k3d-bin`
+
+      Package [rancher-k3d-bin](https://aur.archlinux.org/packages/rancher-k3d-bin/)
+
+    - [:material-github: Download GitHub Release](https://github.com/rancher/k3d/releases)
+
+      Grab a release binary from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself
+
+    - [:material-microsoft-windows: Chocolatey (Windows)](https://chocolatey.org/): `choco install k3d`
+
+      *Note*: package source can be found in [erwinkersten/chocolatey-packages](https://github.com/erwinkersten/chocolatey-packages/tree/master/automatic/k3d)
+
+    - [arkade](https://github.com/alexellis/arkade): `arkade get k3d`
+
+    - [asdf](https://asdf-vm.com): `asdf plugin-add k3d && asdf install k3d latest`
+
+      *Note*: `asdf plugin-add k3d`, then `asdf install k3d <tag>` with `<tag> = latest` or `4.x.x` for a specific version (maintained by [spencergilbert/asdf-k3d](https://github.com/spencergilbert/asdf-k3d))
+
+    - Others
+      - install via go: `#!bash go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
 
 ## Quick Start
 
@@ -58,19 +91,22 @@ Create a cluster named `mycluster` with just a single server node:
 k3d cluster create mycluster
 ```
 
-Get the new cluster's connection details merged into your default kubeconfig (usually specified using the `KUBECONFIG` environment variable or the default path `#!bash $HOME/.kube/config`) and directly switch to the new context:
-
-```bash
-k3d kubeconfig merge mycluster --kubeconfig-switch-context
-```
-
 Use the new cluster with [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/), e.g.:
 
 ```bash
 kubectl get nodes
 ```
 
+??? Note "Getting the cluster's kubeconfig (included in `k3d cluster create`)"
+    Get the new cluster's connection details merged into your default kubeconfig (usually specified using the `KUBECONFIG` environment variable or the default path `#!bash $HOME/.kube/config`) and directly switch to the new context:
+
+    ```bash
+    k3d kubeconfig merge mycluster --kubeconfig-switch-context
+    ```
+
 ## Related Projects
 
+- [vscode-k3d](https://github.com/inercia/vscode-k3d/): VSCode Extension to handle k3d clusters from within VSCode
 - [k3x](https://github.com/inercia/k3x): a graphics interface (for Linux) to k3d.
 - [AbsaOSS/k3d-action](https://github.com/AbsaOSS/k3d-action): fully customizable GitHub Action to run lightweight Kubernetes clusters.
+- [AutoK3s](https://github.com/cnrancher/autok3s): a lightweight tool to help run K3s everywhere including k3d provider.

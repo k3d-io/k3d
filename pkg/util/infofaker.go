@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 The k3d Author(s)
+Copyright © 2020-2021 The k3d Author(s)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,12 @@ const (
 	EdacFolderPath = "/sys/devices/system/edac"
 	MemInfoPath    = "/proc/meminfo"
 )
+
+// DoNotCopyVolumeSuffices defines a set of volume mounts that should not be copied to a new node (e.g. to avoid duplicate mountpoints)
+var DoNotCopyVolumeSuffices = []string{
+	fmt.Sprintf("%s:ro", EdacFolderPath),
+	fmt.Sprintf("%s:ro", MemInfoPath),
+}
 
 // creates a mininal fake meminfo with fields required by cadvisor (see machine.go in cadvisor)
 func meminfoContent(totalKB int64) string {

@@ -3,7 +3,7 @@
 CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 [ -d "$CURR_DIR" ] || { echo "FATAL: no current dir (maybe running in zsh?)";  exit 1; }
 
-K3S_VERSIONS=("v1.17.17-k3s1" "v1.18.15-k3s1" "v1.19.7-k3s1" "v1.20.2-k3s1")
+K3S_VERSIONS=("v1.18.19-k3s1" "v1.19.11-k3s1" "v1.20.7-k3s1" "v1.21.1-k3s1")
 FAILED_TESTS=()
 
 # shellcheck source=./common.sh
