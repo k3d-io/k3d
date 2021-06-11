@@ -86,11 +86,13 @@ func KubeconfigGetWrite(ctx context.Context, runtime runtimes.Runtime, cluster *
 					return output, err
 				}
 
-				// create output file
-				if _, err := os.Create(output); err != nil {
+				// try create output file
+				f, err := os.Create(output)
+				if err != nil {
 					log.Errorf("Failed to create output file '%s'", output)
 					return output, err
 				}
+				f.Close()
 
 				// try again, but do not try to create the file this time
 				firstRun = false
