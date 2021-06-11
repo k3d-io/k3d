@@ -1,5 +1,21 @@
 # Changelog
 
+## v4.4.5
+
+### Fixes
+
+- overall: use the getDockerClient helper function everywhere to e.g. support docker via ssh everywhere
+- nodeCreate: do not copy meminfo/edac volume mounts from existing nodes, to avoid conflicts with generated mounts
+- kubeconfig: fix file handling on windows (#626 + #628, @dragonflylee)
+
+### Misc
+
+- docs: add [FAQ entry](https://k3d.io/faq/faq/#nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied) on nf_conntrack_max: permission denied issue from kube-proxy (#607)
+- docs: cleanup, fix formatting, etc.
+- license: update to include 2021 in time range
+- docs: link to AutoK3s (#614, @JacieChao)
+- tests/e2e: update the list of tested k3s versions
+
 ## v4.4.4
 
 ### Enhancements
