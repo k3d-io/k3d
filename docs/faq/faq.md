@@ -71,7 +71,7 @@
 Running k3d behind a corporate proxy can lead to some issues with k3d that have already been reported in more than one issue.  
 Some can be fixed by passing the `HTTP_PROXY` environment variables to k3d, some have to be fixed in docker's `daemon.json` file and some are as easy as adding a volume mount.
 
-### Pods fail to start: `x509: certificate signed by unknown authority`
+## Pods fail to start: `x509: certificate signed by unknown authority`
 
 - Example Error Message:
 
@@ -83,7 +83,7 @@ Some can be fixed by passing the `HTTP_PROXY` environment variables to k3d, some
 - Possible Solution: Mounting the CA Certificate from your host into the node containers at start time via `k3d cluster create --volume /path/to/your/certs.crt:/etc/ssl/certs/yourcert.crt`
 - Issue: [rancher/k3d#535](https://github.com/rancher/k3d/discussions/535#discussioncomment-474982)
 
-### Spurious PID entries in `/proc` after deleting `k3d` cluster with shared mounts
+## Spurious PID entries in `/proc` after deleting `k3d` cluster with shared mounts
 
 - When you perform cluster create and deletion operations multiple times with **same cluster name** and **shared volume mounts**, it was observed that `grep k3d /proc/*/mountinfo` shows many spurious entries
 - Problem: Due to above, at times you'll see `no space left on device: unknown` when a pod is scheduled to the nodes
@@ -91,11 +91,16 @@ Some can be fixed by passing the `HTTP_PROXY` environment variables to k3d, some
 - `diff <(df -ha | grep pods | awk '{print $NF}') <(df -h | grep pods | awk '{print $NF}') | awk '{print $2}' | xargs umount -l`
 - As per the conversation on [rancher/k3d#594](https://github.com/rancher/k3d/issues/594#issuecomment-837900646) above issue wasn't reported/known earlier and so there are high chances that it's not universal.
 
-## Nodes fail to start or get stuck in `NotReady` state with log `nf_conntrack_max: permission denied`
+## [SOLVED] Nodes fail to start or get stuck in `NotReady` state with log `nf_conntrack_max: permission denied`
+
+### Problem
 
 - When: This happens when running k3d on a Linux system with a kernel version >= 5.12.2 (and others like >= 5.11.19) when creating a new cluster
   - the node(s) stop or get stuck with a log line like this: `<TIMESTAMP>  F0516 05:05:31.782902       7 server.go:495] open /proc/sys/net/netfilter/nf_conntrack_max: permission denied`
 - Why: The issue was introduced by a change in the Linux kernel ([Changelog 5.12.2](https://cdn.kernel.org/pub/linux/kernel/v5.x/ChangeLog-5.12.2): [Commit](https://github.com/torvalds/linux/commit/671c54ea8c7ff47bd88444f3fffb65bf9799ce43)), that changed the netfilter_conntrack behavior in a way that `kube-proxy` is not able to set the `nf_conntrack_max` value anymore
+
+### Workaround
+
 - Workaround: as a workaround, we can tell `kube-proxy` to not even try to set this value:
 
   ```bash
@@ -105,5 +110,15 @@ Some can be fixed by passing the `HTTP_PROXY` environment variables to k3d, some
     --image rancher/k3s:v1.20.6-k3s
   ```
 
-- Fix: This is going to be fixed "upstream" in k3s itself in [rancher/k3s#3337](https://github.com/k3s-io/k3s/pull/3337) and backported to k3s versions as low as v1.18.
+### Fix
+
+- **Note**: k3d v4.4.5 already uses rancher/k3s:v1.21.1-k3s1 as the new default k3s image, so no workarounds needed there!
+
+This is going to be fixed "upstream" in k3s itself in [rancher/k3s#3337](https://github.com/k3s-io/k3s/pull/3337) and backported to k3s versions as low as v1.18.
+
+- **The fix was released and backported in k3s, so you don't need to use the workaround when using one of the following k3s versions (or later ones)**
+  - v1.18.19-k3s1 ([rancher/k3s#3344](https://github.com/k3s-io/k3s/pull/3344))
+  - v1.19.11-k3s1 ([rancher/k3s#3343](https://github.com/k3s-io/k3s/pull/3343))
+  - v1.20.7-k3s1 ([rancher/k3s#3342](https://github.com/k3s-io/k3s/pull/3342))
+  - v1.21.1-k3s1 ([rancher/k3s#3341](https://github.com/k3s-io/k3s/pull/3341)))
 - Issue Reference: [rancher/k3s#607](https://github.com/rancher/k3d/issues/607)
