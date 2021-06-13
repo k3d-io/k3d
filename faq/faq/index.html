@@ -14,7 +14,7 @@
         <link rel="canonical" href="https://k3d.io/faq/faq/">
       
       <link rel="icon" href="../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.7">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.8">
     
     
       
@@ -46,6 +46,8 @@
     
     
       
+
+
     
     
   </head>
@@ -890,32 +892,53 @@
     Running behind a corporate proxy
   </a>
   
-    <nav class="md-nav" aria-label="Running behind a corporate proxy">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pods-fail-to-start-x509-certificate-signed-by-unknown-authority" class="md-nav__link">
     Pods fail to start: x509: certificate signed by unknown authority
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts" class="md-nav__link">
     Spurious PID entries in /proc after deleting k3d cluster with shared mounts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solved-nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied" class="md-nav__link">
+    [SOLVED] Nodes fail to start or get stuck in NotReady state with log nf_conntrack_max: permission denied
+  </a>
+  
+    <nav class="md-nav" aria-label="[SOLVED] Nodes fail to start or get stuck in NotReady state with log nf_conntrack_max: permission denied">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    Problem
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#workaround" class="md-nav__link">
+    Workaround
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix" class="md-nav__link">
+    Fix
   </a>
   
 </li>
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied" class="md-nav__link">
-    Nodes fail to start or get stuck in NotReady state with log nf_conntrack_max: permission denied
-  </a>
   
 </li>
       
@@ -1005,32 +1028,53 @@
     Running behind a corporate proxy
   </a>
   
-    <nav class="md-nav" aria-label="Running behind a corporate proxy">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pods-fail-to-start-x509-certificate-signed-by-unknown-authority" class="md-nav__link">
     Pods fail to start: x509: certificate signed by unknown authority
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts" class="md-nav__link">
     Spurious PID entries in /proc after deleting k3d cluster with shared mounts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solved-nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied" class="md-nav__link">
+    [SOLVED] Nodes fail to start or get stuck in NotReady state with log nf_conntrack_max: permission denied
+  </a>
+  
+    <nav class="md-nav" aria-label="[SOLVED] Nodes fail to start or get stuck in NotReady state with log nf_conntrack_max: permission denied">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    Problem
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#workaround" class="md-nav__link">
+    Workaround
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix" class="md-nav__link">
+    Fix
   </a>
   
 </li>
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied" class="md-nav__link">
-    Nodes fail to start or get stuck in NotReady state with log nf_conntrack_max: permission denied
-  </a>
   
 </li>
       
@@ -1134,7 +1178,7 @@
 <h2 id="running-behind-a-corporate-proxy">Running behind a corporate proxy<a class="headerlink" href="#running-behind-a-corporate-proxy" title="Permanent link">&para;</a></h2>
 <p>Running k3d behind a corporate proxy can lead to some issues with k3d that have already been reported in more than one issue.<br />
 Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables to k3d, some have to be fixed in docker&rsquo;s <code>daemon.json</code> file and some are as easy as adding a volume mount.</p>
-<h3 id="pods-fail-to-start-x509-certificate-signed-by-unknown-authority">Pods fail to start: <code>x509: certificate signed by unknown authority</code><a class="headerlink" href="#pods-fail-to-start-x509-certificate-signed-by-unknown-authority" title="Permanent link">&para;</a></h3>
+<h2 id="pods-fail-to-start-x509-certificate-signed-by-unknown-authority">Pods fail to start: <code>x509: certificate signed by unknown authority</code><a class="headerlink" href="#pods-fail-to-start-x509-certificate-signed-by-unknown-authority" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
 <p>Example Error Message:</p>
@@ -1147,7 +1191,7 @@ Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables t
 <li>Possible Solution: Mounting the CA Certificate from your host into the node containers at start time via <code>k3d cluster create --volume /path/to/your/certs.crt:/etc/ssl/certs/yourcert.crt</code></li>
 <li>Issue: <a href="https://github.com/rancher/k3d/discussions/535#discussioncomment-474982">rancher/k3d#535</a></li>
 </ul>
-<h3 id="spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts">Spurious PID entries in <code>/proc</code> after deleting <code>k3d</code> cluster with shared mounts<a class="headerlink" href="#spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts" title="Permanent link">&para;</a></h3>
+<h2 id="spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts">Spurious PID entries in <code>/proc</code> after deleting <code>k3d</code> cluster with shared mounts<a class="headerlink" href="#spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts" title="Permanent link">&para;</a></h2>
 <ul>
 <li>When you perform cluster create and deletion operations multiple times with <strong>same cluster name</strong> and <strong>shared volume mounts</strong>, it was observed that <code>grep k3d /proc/*/mountinfo</code> shows many spurious entries</li>
 <li>Problem: Due to above, at times you&rsquo;ll see <code>no space left on device: unknown</code> when a pod is scheduled to the nodes</li>
@@ -1155,13 +1199,17 @@ Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables t
 <li><code>diff &lt;(df -ha | grep pods | awk '{print $NF}') &lt;(df -h | grep pods | awk '{print $NF}') | awk '{print $2}' | xargs umount -l</code></li>
 <li>As per the conversation on <a href="https://github.com/rancher/k3d/issues/594#issuecomment-837900646">rancher/k3d#594</a> above issue wasn&rsquo;t reported/known earlier and so there are high chances that it&rsquo;s not universal.</li>
 </ul>
-<h2 id="nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied">Nodes fail to start or get stuck in <code>NotReady</code> state with log <code>nf_conntrack_max: permission denied</code><a class="headerlink" href="#nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied" title="Permanent link">&para;</a></h2>
+<h2 id="solved-nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied">[SOLVED] Nodes fail to start or get stuck in <code>NotReady</code> state with log <code>nf_conntrack_max: permission denied</code><a class="headerlink" href="#solved-nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied" title="Permanent link">&para;</a></h2>
+<h3 id="problem">Problem<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h3>
 <ul>
 <li>When: This happens when running k3d on a Linux system with a kernel version &gt;= 5.12.2 (and others like &gt;= 5.11.19) when creating a new cluster<ul>
 <li>the node(s) stop or get stuck with a log line like this: <code>&lt;TIMESTAMP&gt;  F0516 05:05:31.782902       7 server.go:495] open /proc/sys/net/netfilter/nf_conntrack_max: permission denied</code></li>
 </ul>
 </li>
 <li>Why: The issue was introduced by a change in the Linux kernel (<a href="https://cdn.kernel.org/pub/linux/kernel/v5.x/ChangeLog-5.12.2">Changelog 5.12.2</a>: <a href="https://github.com/torvalds/linux/commit/671c54ea8c7ff47bd88444f3fffb65bf9799ce43">Commit</a>), that changed the netfilter_conntrack behavior in a way that <code>kube-proxy</code> is not able to set the <code>nf_conntrack_max</code> value anymore</li>
+</ul>
+<h3 id="workaround">Workaround<a class="headerlink" href="#workaround" title="Permanent link">&para;</a></h3>
+<ul>
 <li>
 <p>Workaround: as a workaround, we can tell <code>kube-proxy</code> to not even try to set this value:</p>
 <div class="highlight"><pre><span></span><code>k3d cluster create <span class="se">\</span>
@@ -1171,8 +1219,19 @@ Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables t
 </code></pre></div>
 </li>
 </ul>
+<h3 id="fix">Fix<a class="headerlink" href="#fix" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Fix: This is going to be fixed &ldquo;upstream&rdquo; in k3s itself in <a href="https://github.com/k3s-io/k3s/pull/3337">rancher/k3s#3337</a> and backported to k3s versions as low as v1.18.</li>
+<li><strong>Note</strong>: k3d v4.4.5 already uses rancher/k3s:v1.21.1-k3s1 as the new default k3s image, so no workarounds needed there!</li>
+</ul>
+<p>This is going to be fixed &ldquo;upstream&rdquo; in k3s itself in <a href="https://github.com/k3s-io/k3s/pull/3337">rancher/k3s#3337</a> and backported to k3s versions as low as v1.18.</p>
+<ul>
+<li><strong>The fix was released and backported in k3s, so you don&rsquo;t need to use the workaround when using one of the following k3s versions (or later ones)</strong><ul>
+<li>v1.18.19-k3s1 (<a href="https://github.com/k3s-io/k3s/pull/3344">rancher/k3s#3344</a>)</li>
+<li>v1.19.11-k3s1 (<a href="https://github.com/k3s-io/k3s/pull/3343">rancher/k3s#3343</a>)</li>
+<li>v1.20.7-k3s1 (<a href="https://github.com/k3s-io/k3s/pull/3342">rancher/k3s#3342</a>)</li>
+<li>v1.21.1-k3s1 (<a href="https://github.com/k3s-io/k3s/pull/3341">rancher/k3s#3341</a>))</li>
+</ul>
+</li>
 <li>Issue Reference: <a href="https://github.com/rancher/k3d/issues/607">rancher/k3s#607</a></li>
 </ul>
                 
@@ -1183,7 +1242,7 @@ Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables t
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 9, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 13, 2021</span>
       
     
   </small>
