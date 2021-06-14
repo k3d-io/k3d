@@ -942,6 +942,53 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#dockerhub-pull-rate-limit" class="md-nav__link">
+    DockerHub Pull Rate Limit
+  </a>
+  
+    <nav class="md-nav" aria-label="DockerHub Pull Rate Limit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#problem_1" class="md-nav__link">
+    Problem
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cause" class="md-nav__link">
+    Cause
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solution" class="md-nav__link">
+    Solution
+  </a>
+  
+    <nav class="md-nav" aria-label="Solution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#c-authenticate-containerd-against-dockerhub" class="md-nav__link">
+    (c) Authenticate Containerd against DockerHub
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1070,6 +1117,53 @@
   <a href="#fix" class="md-nav__link">
     Fix
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dockerhub-pull-rate-limit" class="md-nav__link">
+    DockerHub Pull Rate Limit
+  </a>
+  
+    <nav class="md-nav" aria-label="DockerHub Pull Rate Limit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#problem_1" class="md-nav__link">
+    Problem
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cause" class="md-nav__link">
+    Cause
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solution" class="md-nav__link">
+    Solution
+  </a>
+  
+    <nav class="md-nav" aria-label="Solution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#c-authenticate-containerd-against-dockerhub" class="md-nav__link">
+    (c) Authenticate Containerd against DockerHub
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1234,6 +1328,36 @@ Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables t
 </li>
 <li>Issue Reference: <a href="https://github.com/rancher/k3d/issues/607">rancher/k3s#607</a></li>
 </ul>
+<h2 id="dockerhub-pull-rate-limit">DockerHub Pull Rate Limit<a class="headerlink" href="#dockerhub-pull-rate-limit" title="Permanent link">&para;</a></h2>
+<h3 id="problem_1">Problem<a class="headerlink" href="#problem_1" title="Permanent link">&para;</a></h3>
+<p>You&rsquo;re deploying something to the cluster using an image from DockerHub and the image fails to be pulled, with a <code>429</code> response code and a message saying <code>You have reached your pull rate limit. You may increase the limit by authenticating and upgrading</code>.</p>
+<h3 id="cause">Cause<a class="headerlink" href="#cause" title="Permanent link">&para;</a></h3>
+<p>This is caused by DockerHub&rsquo;s pull rate limit (see <a href="https://docs.docker.com/docker-hub/download-rate-limit/">https://docs.docker.com/docker-hub/download-rate-limit/</a>), which limits pulls from unauthenticated/anonymous users to 100 pulls per hour and for authenticated users (not paying customers) to 200 pulls per hour (as of the time of writing).</p>
+<h3 id="solution">Solution<a class="headerlink" href="#solution" title="Permanent link">&para;</a></h3>
+<p>a) use images from a private registry, e.g. configured as a pull-through cache for DockerHub<br />
+b) use a different public registry without such limitations, if the same image is stored there<br />
+c) authenticate containerd inside k3s/k3d to use your DockerHub user  </p>
+<h4 id="c-authenticate-containerd-against-dockerhub">(c) Authenticate Containerd against DockerHub<a class="headerlink" href="#c-authenticate-containerd-against-dockerhub" title="Permanent link">&para;</a></h4>
+<ol>
+<li>
+<p>Create a registry configuration file for containerd:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># saved as e.g. $HOME/registries.yaml</span>
+<span class="nt">configs</span><span class="p">:</span>
+  <span class="s">&quot;docker.io&quot;</span><span class="p p-Indicator">:</span>
+    <span class="nt">auth</span><span class="p">:</span>
+      <span class="nt">username</span><span class="p">:</span> <span class="s">&quot;$USERNAME&quot;</span>
+      <span class="nt">password</span><span class="p">:</span> <span class="s">&quot;$PASSWORD&quot;</span>
+</code></pre></div>
+</li>
+<li>
+<p>Create a k3d cluster using that config:</p>
+<div class="highlight"><pre><span></span><code>k3d cluster create --registry-config <span class="nv">$HOME</span>/registries.yaml
+</code></pre></div>
+</li>
+<li>
+<p>Profit. That&rsquo;s it. In the test for this, we pulled the same image 120 times in a row (confirmed, that pull numbers went up), without being rate limited (as a non-paying, normal user)</p>
+</li>
+</ol>
                 
                   
                     
@@ -1242,7 +1366,7 @@ Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables t
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 13, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 14, 2021</span>
       
     
   </small>
