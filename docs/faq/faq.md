@@ -122,3 +122,40 @@ This is going to be fixed "upstream" in k3s itself in [rancher/k3s#3337](https:/
   - v1.20.7-k3s1 ([rancher/k3s#3342](https://github.com/k3s-io/k3s/pull/3342))
   - v1.21.1-k3s1 ([rancher/k3s#3341](https://github.com/k3s-io/k3s/pull/3341)))
 - Issue Reference: [rancher/k3s#607](https://github.com/rancher/k3d/issues/607)
+
+## DockerHub Pull Rate Limit
+
+### Problem
+
+You're deploying something to the cluster using an image from DockerHub and the image fails to be pulled, with a `429` response code and a message saying `You have reached your pull rate limit. You may increase the limit by authenticating and upgrading`.
+
+### Cause
+
+This is caused by DockerHub's pull rate limit (see <https://docs.docker.com/docker-hub/download-rate-limit/>), which limits pulls from unauthenticated/anonymous users to 100 pulls per hour and for authenticated users (not paying customers) to 200 pulls per hour (as of the time of writing).
+
+### Solution
+
+a) use images from a private registry, e.g. configured as a pull-through cache for DockerHub  
+b) use a different public registry without such limitations, if the same image is stored there  
+c) authenticate containerd inside k3s/k3d to use your DockerHub user  
+
+#### (c) Authenticate Containerd against DockerHub
+
+1. Create a registry configuration file for containerd:
+
+  ```yaml
+  # saved as e.g. $HOME/registries.yaml
+  configs:
+    "docker.io":
+      auth:
+        username: "$USERNAME"
+        password: "$PASSWORD"
+  ```
+
+2. Create a k3d cluster using that config:
+
+  ```bash
+  k3d cluster create --registry-config $HOME/registries.yaml
+  ```
+
+3. Profit. That's it. In the test for this, we pulled the same image 120 times in a row (confirmed, that pull numbers went up), without being rate limited (as a non-paying, normal user)
