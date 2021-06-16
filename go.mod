@@ -17,6 +17,7 @@ require (
 	github.com/heroku/docker-registry-client v0.0.0-20190909225348-afc9e1acc3d5
 	github.com/imdario/mergo v0.3.12
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de
+	github.com/mitchellh/copystructure v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/moby/term v0.0.0-20201110203204-bea5bbe245bf // indirect
