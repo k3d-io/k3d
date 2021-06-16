@@ -34,7 +34,10 @@ import (
 	"time"
 
 	copystruct "github.com/mitchellh/copystructure"
+<<<<<<< HEAD
 	"gopkg.in/yaml.v2"
+=======
+>>>>>>> 9a18c3a3 ([FEATURE] add ability to add ports to an existing loadbalancer (#615))
 
 	"github.com/docker/go-connections/nat"
 	dockerunits "github.com/docker/go-units"
@@ -750,7 +753,11 @@ func NodeReplace(ctx context.Context, runtime runtimes.Runtime, old, new *k3d.No
 
 	// start new node
 	log.Infof("Starting new node %s...", new.Name)
+<<<<<<< HEAD
 	if err := NodeStart(ctx, runtime, new, k3d.NodeStartOpts{Wait: true, NodeHooks: new.HookActions}); err != nil {
+=======
+	if err := NodeStart(ctx, runtime, new, k3d.NodeStartOpts{Wait: true}); err != nil {
+>>>>>>> 9a18c3a3 ([FEATURE] add ability to add ports to an existing loadbalancer (#615))
 		if err := NodeDelete(ctx, runtime, new, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
 			return fmt.Errorf("Failed to start new node. Also failed to rollback: %+v", err)
 		}
