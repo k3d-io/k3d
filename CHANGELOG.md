@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.4.6
+
+### Fixes
+
+- fix an issue where the cluster creation would stall waiting for the `starting worker processes` log message from the loadbalancer/serverlb
+  - this was likely caused by a rounding issue when asking docker to get the container logs starting at a specific timestamp
+  - we now drop subsecond precision for this to avoid the rounding issue, which was confirmed to work
+  - see issues #592 & #621
+
+### Misc
+
+- to debug the issue mentioned above, we introduced a new environment variable `K3D_LOG_NODE_WAIT_LOGS`, which can be set to a list of node roles (e.g. `K3D_LOG_NODE_WAIT_LOGS=loadbalancer,agent`) to output the container logs that k3d inspects
+
 ## v4.4.5
 
 ### Fixes
