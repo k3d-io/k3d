@@ -146,11 +146,16 @@ github.com/json-iterator/go
 github.com/liggitt/tabwriter
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
+# github.com/mitchellh/copystructure v1.2.0
+## explicit
+github.com/mitchellh/copystructure
 # github.com/mitchellh/go-homedir v1.1.0
 ## explicit
 github.com/mitchellh/go-homedir
 # github.com/mitchellh/mapstructure v1.3.3
 github.com/mitchellh/mapstructure
+# github.com/mitchellh/reflectwalk v1.0.2
+github.com/mitchellh/reflectwalk
 # github.com/moby/sys/mount v0.2.0
 ## explicit
 github.com/moby/sys/mount
