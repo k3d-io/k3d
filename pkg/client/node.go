@@ -346,7 +346,8 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 		if err != nil {
 			log.Debugf("Failed to parse '%s.State.Started' timestamp '%s', falling back to calulated time", node.Name, node.State.Started)
 		}
-		startTime = ts
+		startTime = ts.Truncate(time.Second)
+		log.Debugf("Truncated %s to %s", ts, startTime)
 	}
 
 	if nodeStartOpts.Wait {
@@ -579,6 +580,9 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 		out.Close()
 		output := buf.String()
 
+		if nRead > 0 && strings.Contains(os.Getenv("K3D_LOG_NODE_WAIT_LOGS"), string(node.Role)) {
+			log.Tracef("=== Read logs since %s ===\n%s\n", since, output)
+		}
 		// check if we can find the specified line in the log
 		if nRead > 0 && strings.Contains(output, message) {
 			break
