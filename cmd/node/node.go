@@ -48,6 +48,7 @@ func NewCmdNode() *cobra.Command {
 	cmd.AddCommand(NewCmdNodeStop())
 	cmd.AddCommand(NewCmdNodeDelete())
 	cmd.AddCommand(NewCmdNodeList())
+	cmd.AddCommand(NewCmdNodeEdit())
 
 	// add flags
 

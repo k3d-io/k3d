@@ -1,5 +1,6 @@
-/*
-Copyright © 2020-2021 The k3d Author(s)
+The MIT License (MIT)
+
+Copyright (c) 2014 Mitchell Hashimoto
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -18,49 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-*/
-
-package util
-
-import (
-	"net"
-
-	"github.com/docker/go-connections/nat"
-	log "github.com/sirupsen/logrus"
-)
-
-// GetFreePort tries to fetch an open port from the OS-Kernel
-func GetFreePort() (int, error) {
-	tcpAddress, err := net.ResolveTCPAddr("tcp", "localhost:0")
-	if err != nil {
-		log.Errorln("Failed to resolve address")
-		return 0, err
-	}
-
-	tcpListener, err := net.ListenTCP("tcp", tcpAddress)
-	if err != nil {
-		log.Errorln("Failed to create TCP Listener")
-		return 0, err
-	}
-	defer tcpListener.Close()
-
-	return tcpListener.Addr().(*net.TCPAddr).Port, nil
-}
-
-var equalHostIPs = map[string]interface{}{
-	"":          nil,
-	"127.0.0.1": nil,
-	"0.0.0.0":   nil,
-	"localhost": nil,
-}
-
-func IsPortBindingEqual(a, b nat.PortBinding) bool {
-	if a.HostPort == b.HostPort {
-		if _, ok := equalHostIPs[a.HostIP]; ok {
-			if _, ok := equalHostIPs[b.HostIP]; ok {
-				return true
-			}
-		}
-	}
-	return false
-}

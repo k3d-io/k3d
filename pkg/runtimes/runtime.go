@@ -52,6 +52,7 @@ type Runtime interface {
 	GetHost() string
 	CreateNode(context.Context, *k3d.Node) error
 	DeleteNode(context.Context, *k3d.Node) error
+	RenameNode(context.Context, *k3d.Node, string) error
 	GetNodesByLabel(context.Context, map[string]string) ([]*k3d.Node, error)
 	GetNode(context.Context, *k3d.Node) (*k3d.Node, error)
 	GetNodeStatus(context.Context, *k3d.Node) (bool, string, error)

@@ -33,6 +33,9 @@ import (
 	"strings"
 	"time"
 
+	copystruct "github.com/mitchellh/copystructure"
+
+	"github.com/docker/go-connections/nat"
 	dockerunits "github.com/docker/go-units"
 	"github.com/imdario/mergo"
 	"github.com/rancher/k3d/v4/pkg/actions"
@@ -638,4 +641,151 @@ nodeLoop:
 	log.Tracef("Filteres %d nodes by roles (in: %+v | ex: %+v), got %d left", len(nodes), includeRoles, excludeRoles, len(resultList))
 
 	return resultList
+}
+
+// NodeEdit let's you update an existing node
+func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, changeset *k3d.Node) error {
+
+	/*
+	 * Make a deep copy of the existing node
+	 */
+
+	result, err := CopyNode(ctx, existingNode, CopyNodeOpts{keepState: false})
+	if err != nil {
+		return err
+	}
+
+	/*
+	 * Apply changes
+	 */
+
+	// === Ports ===
+	if result.Ports == nil {
+		result.Ports = nat.PortMap{}
+	}
+	for port, portbindings := range changeset.Ports {
+	loopChangesetPortbindings:
+		for _, portbinding := range portbindings {
+
+			// loop over existing portbindings to avoid port collisions (docker doesn't check for it)
+			for _, existingPB := range result.Ports[port] {
+				if util.IsPortBindingEqual(portbinding, existingPB) { // also matches on "equal" HostIPs (127.0.0.1, "", 0.0.0.0)
+					log.Tracef("Skipping existing PortBinding: %+v", existingPB)
+					continue loopChangesetPortbindings
+				}
+			}
+			log.Tracef("Adding portbinding %+v for port %s", portbinding, port.Port())
+			result.Ports[port] = append(result.Ports[port], portbinding)
+		}
+	}
+
+	// --- Loadbalancer specifics ---
+	if result.Role == k3d.LoadBalancerRole {
+		nodeEditApplyLBSpecifics(ctx, result)
+	}
+
+	// replace existing node
+	return NodeReplace(ctx, runtime, existingNode, result)
+
+}
+
+func nodeEditApplyLBSpecifics(ctx context.Context, lbNode *k3d.Node) {
+	tcp_ports := []string{}
+	udp_ports := []string{}
+	for index, env := range lbNode.Env {
+		if strings.HasPrefix(env, "PORTS=") || strings.HasPrefix(env, "UDP_PORTS=") {
+			// Remove matching environment variable from slice (does not preserve order)
+			lbNode.Env[index] = lbNode.Env[len(lbNode.Env)-1] // copy last element to index of matching env
+			lbNode.Env[len(lbNode.Env)-1] = ""                // remove last element
+			lbNode.Env = lbNode.Env[:len(lbNode.Env)-1]       // truncate
+		}
+	}
+
+	for port := range lbNode.Ports {
+		switch port.Proto() {
+		case "tcp":
+			tcp_ports = append(tcp_ports, port.Port())
+			break
+		case "udp":
+			udp_ports = append(udp_ports, port.Port())
+			break
+		default:
+			log.Warnf("Unknown port protocol %s for port %s", port.Proto(), port.Port())
+		}
+	}
+	lbNode.Env = append(lbNode.Env, fmt.Sprintf("PORTS=%s", strings.Join(tcp_ports, ",")))
+	lbNode.Env = append(lbNode.Env, fmt.Sprintf("UDP_PORTS=%s", strings.Join(udp_ports, ",")))
+}
+
+func NodeReplace(ctx context.Context, runtime runtimes.Runtime, old, new *k3d.Node) error {
+
+	// rename existing node
+	oldNameTemp := fmt.Sprintf("%s-%s", old.Name, util.GenerateRandomString(5))
+	oldNameOriginal := old.Name
+	log.Infof("Renaming existing node %s to %s...", old.Name, oldNameTemp)
+	if err := runtime.RenameNode(ctx, old, oldNameTemp); err != nil {
+		return err
+	}
+	old.Name = oldNameTemp
+
+	// create (not start) new node
+	log.Infof("Creating new node %s...", new.Name)
+	if err := NodeCreate(ctx, runtime, new, k3d.NodeCreateOpts{Wait: true}); err != nil {
+		if err := runtime.RenameNode(ctx, old, oldNameOriginal); err != nil {
+			return fmt.Errorf("Failed to create new node. Also failed to rename %s back to %s: %+v", old.Name, oldNameOriginal, err)
+		}
+		return fmt.Errorf("Failed to create new node. Brought back old node: %+v", err)
+	}
+
+	// stop existing/old node
+	log.Infof("Stopping existing node %s...", old.Name)
+	if err := runtime.StopNode(ctx, old); err != nil {
+		return err
+	}
+
+	// start new node
+	log.Infof("Starting new node %s...", new.Name)
+	if err := NodeStart(ctx, runtime, new, k3d.NodeStartOpts{Wait: true}); err != nil {
+		if err := NodeDelete(ctx, runtime, new, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
+			return fmt.Errorf("Failed to start new node. Also failed to rollback: %+v", err)
+		}
+		if err := runtime.RenameNode(ctx, old, oldNameOriginal); err != nil {
+			return fmt.Errorf("Failed to start new node. Also failed to rename %s back to %s: %+v", old.Name, oldNameOriginal, err)
+		}
+		old.Name = oldNameOriginal
+		if err := NodeStart(ctx, runtime, old, k3d.NodeStartOpts{Wait: true}); err != nil {
+			return fmt.Errorf("Failed to start new node. Also failed to restart old node: %+v", err)
+		}
+		return fmt.Errorf("Failed to start new node. Rolled back: %+v", err)
+	}
+
+	// cleanup: delete old node
+	log.Infof("Deleting old node %s...", old.Name)
+	if err := NodeDelete(ctx, runtime, old, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
+		return err
+	}
+
+	// done
+	return nil
+}
+
+type CopyNodeOpts struct {
+	keepState bool
+}
+
+func CopyNode(ctx context.Context, src *k3d.Node, opts CopyNodeOpts) (*k3d.Node, error) {
+
+	targetCopy, err := copystruct.Copy(src)
+	if err != nil {
+		return nil, err
+	}
+
+	result := targetCopy.(*k3d.Node)
+
+	if !opts.keepState {
+		// ensure that node state is empty
+		result.State = k3d.NodeState{}
+	}
+
+	return result, err
 }
