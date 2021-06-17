@@ -1,7 +1,9 @@
 #!/bin/sh
 
 # Run confd
-confd -onetime -backend env
+set -e
+confd -onetime -backend file -file /etc/confd/values.yaml -log-level debug
+set +e
 
 # Output Configuration
 echo "===== Initial nginx configuration ====="
