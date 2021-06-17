@@ -1,0 +1,7 @@
+ports:
+  1234.tcp:
+    - server-0
+    - server-1
+  4321.udp:
+    - agent-0
+    - agent-1
