@@ -11,5 +11,6 @@ RUN echo "Building for '${OS}/${ARCH}'..." \
 COPY templates /etc/confd/templates/
 COPY conf.d /etc/confd/conf.d/
 COPY nginx-proxy /usr/bin/
+COPY test/portmap.yaml /etc/confd/values.yaml
 
 ENTRYPOINT nginx-proxy
