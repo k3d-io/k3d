@@ -22,13 +22,17 @@ THE SOFTWARE.
 package client
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"strings"
 
 	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v4/pkg/types"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
+	"sigs.k8s.io/yaml"
 )
 
 // UpdateLoadbalancerConfig updates the loadbalancer config with an updated list of servers belonging to that cluster
@@ -69,4 +73,39 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 	}
 
 	return nil
+}
+
+func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*types.LoadbalancerConfig, error) {
+
+	if cluster.ServerLoadBalancer == nil {
+		for _, node := range cluster.Nodes {
+			if node.Role == types.LoadBalancerRole {
+				var err error
+				cluster.ServerLoadBalancer, err = NodeGet(ctx, runtime, node)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+
+	reader, err := runtime.ReadFromNode(ctx, types.DefaultLoadbalancerConfigPath, cluster.ServerLoadBalancer)
+	if err != nil {
+		return &k3d.LoadbalancerConfig{}, err
+	}
+	defer reader.Close()
+
+	file, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	file = bytes.Trim(file[512:], "\x00") // trim control characters, etc.
+
+	currentConfig := &types.LoadbalancerConfig{}
+	if err := yaml.Unmarshal(file, currentConfig); err != nil {
+		return nil, err
+	}
+
+	return currentConfig, nil
 }

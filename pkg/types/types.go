@@ -426,3 +426,23 @@ type RegistryExternal struct {
 	Host     string `yaml:"host" json:"host"`
 	Port     string `yaml:"port" json:"port"`
 }
+
+/*
+ * Loadbalancer
+ */
+
+/* LoadbalancerConfig defines the coarse file structure to configure the k3d-proxy
+ * Example:
+ * ports:
+ * 	1234.tcp:
+ * 		- k3d-k3s-default-server-0
+ * 		- k3d-k3s-default-server-1
+ * 	4321.udp:
+ * 		- k3d-k3s-default-agent-0
+ * 		- k3d-k3s-default-agent-1
+ */
+type LoadbalancerConfig struct {
+	Ports map[string][]string `yaml:"ports"`
+}
+
+const DefaultLoadbalancerConfigPath = "/etc/confd/portmap.yaml"
