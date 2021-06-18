@@ -70,36 +70,75 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	node.Env = []string{}
 
 	// copy labels and env vars from a similar node in the selected cluster
-	var chosenNode *k3d.Node
+	var srcNode *k3d.Node
 	for _, existingNode := range cluster.Nodes {
 		if existingNode.Role == node.Role {
-			chosenNode = existingNode
+			srcNode = existingNode
 			break
 		}
 	}
 	// if we didn't find a node with the same role in the cluster, just choose any other node
-	if chosenNode == nil {
+	if srcNode == nil {
 		log.Debugf("Didn't find node with role '%s' in cluster '%s'. Choosing any other node (and using defaults)...", node.Role, cluster.Name)
 		node.Cmd = k3d.DefaultRoleCmds[node.Role]
 		for _, existingNode := range cluster.Nodes {
 			if existingNode.Role != k3d.LoadBalancerRole { // any role except for the LoadBalancer role
-				chosenNode = existingNode
+				srcNode = existingNode
 				break
 			}
 		}
 	}
 
 	// get node details
-	chosenNode, err = NodeGet(ctx, runtime, chosenNode)
+	srcNode, err = NodeGet(ctx, runtime, srcNode)
 	if err != nil {
 		return err
 	}
 
-	log.Debugf("Adding node %+v \n>>> to cluster %+v\n>>> based on existing node %+v", node, cluster, chosenNode)
+	/*
+	 * Sanitize Source Node
+	 * -> remove fields that are not safe to copy as they break something down the stream
+	 */
+
+	// TODO: I guess proper deduplication can be handled in a cleaner/better way or at the infofaker level at some point
+	for _, forbiddenMount := range util.DoNotCopyVolumeSuffices {
+		for i, mount := range node.Volumes {
+			if strings.Contains(mount, forbiddenMount) {
+				log.Tracef("Dropping copied volume mount %s to avoid issues...", mount)
+				node.Volumes = util.RemoveElementFromStringSlice(node.Volumes, i)
+			}
+		}
+	}
+
+	// drop port mappings as we  cannot use the same port mapping for a two nodes (port collisions)
+	srcNode.Ports = nat.PortMap{}
+
+	// we cannot have two servers as init servers
+	if node.Role == k3d.ServerRole {
+		for _, forbiddenCmd := range k3d.DoNotCopyServerFlags {
+			for i, cmd := range srcNode.Cmd {
+				// cut out the '--cluster-init' flag as this should only be done by the initializing server node
+				if cmd == forbiddenCmd {
+					log.Tracef("Dropping '%s' from source node's cmd", forbiddenCmd)
+					srcNode.Cmd = append(srcNode.Cmd[:i], srcNode.Cmd[i+1:]...)
+				}
+			}
+			for i, arg := range node.Args {
+				// cut out the '--cluster-init' flag as this should only be done by the initializing server node
+				if arg == forbiddenCmd {
+					log.Tracef("Dropping '%s' from source node's args", forbiddenCmd)
+					srcNode.Args = append(srcNode.Args[:i], srcNode.Args[i+1:]...)
+				}
+			}
+		}
+	}
+
+	log.Debugf("Adding node %s to cluster %s based on existing (sanitized) node %s", node.Name, cluster.Name, srcNode.Name)
+	log.Tracef("Sanitized Source Node: %+v\nNew Node: %+v", srcNode, node)
 
 	// fetch registry config
 	registryConfigBytes := []byte{}
-	registryConfigReader, err := runtime.ReadFromNode(ctx, k3d.DefaultRegistriesFilePath, chosenNode)
+	registryConfigReader, err := runtime.ReadFromNode(ctx, k3d.DefaultRegistriesFilePath, srcNode)
 	if err != nil {
 		if !errors.Is(err, runtimeErrors.ErrRuntimeFileNotFound) {
 			log.Warnf("Failed to read registry config from node %s: %+v", node.Name, err)
@@ -117,22 +156,12 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	}
 
 	// merge node config of new node into existing node config
-	if err := mergo.MergeWithOverwrite(chosenNode, *node); err != nil {
+	if err := mergo.MergeWithOverwrite(srcNode, *node); err != nil {
 		log.Errorln("Failed to merge new node config into existing node config")
 		return err
 	}
 
-	node = chosenNode
-
-	// TODO: I guess proper deduplication can be handled in a cleaner/better way or at the infofaker level at some point
-	for _, forbiddenMount := range util.DoNotCopyVolumeSuffices {
-		for i, mount := range node.Volumes {
-			if strings.Contains(mount, forbiddenMount) {
-				log.Tracef("Dropping copied volume mount %s to avoid issues...", mount)
-				node.Volumes = util.RemoveElementFromStringSlice(node.Volumes, i)
-			}
-		}
-	}
+	node = srcNode
 
 	log.Debugf("Resulting node %+v", node)
 
@@ -148,25 +177,6 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", url))
 		} else {
 			log.Warnln("Failed to find K3S_URL value!")
-		}
-	}
-
-	if node.Role == k3d.ServerRole {
-		for _, forbiddenCmd := range k3d.DoNotCopyServerFlags {
-			for i, cmd := range node.Cmd {
-				// cut out the '--cluster-init' flag as this should only be done by the initializing server node
-				if cmd == forbiddenCmd {
-					log.Debugf("Dropping '%s' from node's cmd", forbiddenCmd)
-					node.Cmd = append(node.Cmd[:i], node.Cmd[i+1:]...)
-				}
-			}
-			for i, arg := range node.Args {
-				// cut out the '--cluster-init' flag as this should only be done by the initializing server node
-				if arg == forbiddenCmd {
-					log.Debugf("Dropping '%s' from node's args", forbiddenCmd)
-					node.Args = append(node.Args[:i], node.Args[i+1:]...)
-				}
-			}
 		}
 	}
 
