@@ -507,9 +507,16 @@ ClusterCreatOpts:
 	 */
 	// *** ServerLoadBalancer ***
 	if !clusterCreateOpts.DisableLoadBalancer {
-		if err := LoadbalancerCreate(ctx, runtime, cluster, &k3d.LoadbalancerCreateOpts{Labels: clusterCreateOpts.GlobalLabels}); err != nil {
+		node, nodeCreateOpts, err := LoadbalancerPrepare(ctx, runtime, cluster, &k3d.LoadbalancerCreateOpts{Labels: clusterCreateOpts.GlobalLabels})
+		if err != nil {
 			return err
 		}
+		if err := NodeCreate(ctx, runtime, node, *nodeCreateOpts); err != nil {
+			log.Errorln("Failed to create loadbalancer")
+			return err
+		}
+		log.Debugf("Created loadbalancer '%s'", node.Name)
+		return err
 	}
 
 	return nil

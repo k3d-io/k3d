@@ -2,5 +2,6 @@
 src = "nginx.tmpl"
 dest = "/etc/nginx/nginx.conf"
 keys = [
-    "ports"
+    "ports",
+    "settings"
 ]
