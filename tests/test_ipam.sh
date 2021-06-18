@@ -18,7 +18,7 @@ expectedIPServer0="$expectedIPLabelServer0/16" # k3d excludes the subnet_start (
 expectedIPServerLB="172.45.0.3/16"
 
 info "Creating cluster $clustername..."
-$EXE cluster create $clustername --subnet $subnet || failed "could not create cluster $clustername"
+$EXE cluster create $clustername --timeout 360s --subnet $subnet || failed "could not create cluster $clustername"
 
 info "Checking we have access to the cluster..."
 check_clusters "$clustername" || failed "error checking cluster"
