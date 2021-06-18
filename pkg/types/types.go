@@ -333,6 +333,7 @@ type Node struct {
 	Memory        string            // filled automatically
 	State         NodeState         // filled automatically
 	IP            NodeIP            // filled automatically
+	HookActions   []NodeHook        `yaml:"hooks" json:"hooks,omitempty"`
 }
 
 // ServerOpts describes some additional server role specific opts
@@ -436,7 +437,7 @@ type LoadBalancerSettings struct {
 }
 
 const (
-	DefaultLoadbalancerConfigPath      = "/etc/confd/portmap.yaml"
+	DefaultLoadbalancerConfigPath      = "/etc/confd/values.yaml"
 	DefaultLoadbalancerWorkerProcesses = 1024
 )
 

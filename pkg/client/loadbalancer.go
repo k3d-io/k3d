@@ -29,7 +29,6 @@ import (
 	"strings"
 
 	"github.com/docker/go-connections/nat"
-	"github.com/rancher/k3d/v4/pkg/actions"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/types"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
@@ -112,8 +111,7 @@ func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 	return currentConfig, nil
 }
 
-func LoadbalancerPrepare(ctx context.Context, runtime runtimes.Runtime, cluster *types.Cluster, opts *k3d.LoadbalancerCreateOpts) (*k3d.Node, *k3d.NodeCreateOpts, error) {
-
+func LoadbalancerGenerateConfig(cluster *k3d.Cluster) (k3d.LoadbalancerConfig, error) {
 	lbConfig := k3d.LoadbalancerConfig{
 		Ports:    map[string][]string{},
 		Settings: k3d.LoadBalancerSettings{},
@@ -136,6 +134,14 @@ func LoadbalancerPrepare(ctx context.Context, runtime runtimes.Runtime, cluster 
 		lbConfig.Ports[fmt.Sprintf("%s.%s", exposedPort.Port(), exposedPort.Proto())] = servers
 	}
 
+	// some additional nginx settings
+	lbConfig.Settings.WorkerProcesses = k3d.DefaultLoadbalancerWorkerProcesses + len(cluster.ServerLoadBalancer.Ports)*len(servers)
+
+	return lbConfig, nil
+}
+
+func LoadbalancerPrepare(ctx context.Context, runtime runtimes.Runtime, cluster *types.Cluster, opts *k3d.LoadbalancerCreateOpts) (*k3d.Node, error) {
+
 	if cluster.ServerLoadBalancer.Ports == nil {
 		cluster.ServerLoadBalancer.Ports = nat.PortMap{}
 	}
@@ -151,28 +157,7 @@ func LoadbalancerPrepare(ctx context.Context, runtime runtimes.Runtime, cluster 
 		Networks:      []string{cluster.Network.Name},
 		Restart:       true,
 	}
-	cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
-	log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
 
-	// some additional nginx settings
-	lbConfig.Settings.WorkerProcesses = k3d.DefaultLoadbalancerWorkerProcesses + len(cluster.ServerLoadBalancer.Ports)*len(servers)
-
-	// prepare to write config to lb container
-	configyaml, err := yaml.Marshal(lbConfig)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	writeLbConfigAction := k3d.NodeHook{
-		Stage: k3d.LifecycleStagePreStart,
-		Action: actions.WriteFileAction{
-			Runtime: runtime,
-			Dest:    k3d.DefaultLoadbalancerConfigPath,
-			Mode:    0744,
-			Content: configyaml,
-		},
-	}
-
-	return lbNode, &k3d.NodeCreateOpts{NodeHooks: []k3d.NodeHook{writeLbConfigAction}}, nil
+	return lbNode, nil
 
 }
