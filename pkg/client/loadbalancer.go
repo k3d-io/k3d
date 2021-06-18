@@ -28,9 +28,11 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/docker/go-connections/nat"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/types"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/version"
 	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/yaml"
 )
@@ -108,4 +110,61 @@ func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 	}
 
 	return currentConfig, nil
+}
+
+func LoadbalancerCreate(ctx context.Context, runtime runtimes.Runtime, cluster *types.Cluster, opts *k3d.LoadbalancerCreateOpts) error {
+	// Generate a comma-separated list of server/server names to pass to the LB container
+	servers := ""
+	for _, node := range cluster.Nodes {
+		if node.Role == k3d.ServerRole {
+			if servers == "" {
+				servers = node.Name
+			} else {
+				servers = fmt.Sprintf("%s,%s", servers, node.Name)
+			}
+		}
+	}
+
+	// generate comma-separated list of extra ports to forward
+	ports := []string{k3d.DefaultAPIPort}
+	var udp_ports []string
+	for exposedPort := range cluster.ServerLoadBalancer.Ports {
+		if exposedPort.Proto() == "udp" {
+			udp_ports = append(udp_ports, exposedPort.Port())
+			continue
+		}
+		ports = append(ports, exposedPort.Port())
+	}
+
+	if cluster.ServerLoadBalancer.Ports == nil {
+		cluster.ServerLoadBalancer.Ports = nat.PortMap{}
+	}
+	cluster.ServerLoadBalancer.Ports[k3d.DefaultAPIPort] = []nat.PortBinding{cluster.KubeAPI.Binding}
+
+	// Create LB as a modified node with loadbalancerRole
+	lbNode := &k3d.Node{
+		Name:  fmt.Sprintf("%s-%s-serverlb", k3d.DefaultObjectNamePrefix, cluster.Name),
+		Image: fmt.Sprintf("%s:%s", k3d.DefaultLBImageRepo, version.GetHelperImageVersion()),
+		Ports: cluster.ServerLoadBalancer.Ports,
+		Env: []string{
+			fmt.Sprintf("SERVERS=%s", servers),
+			fmt.Sprintf("PORTS=%s", strings.Join(ports, ",")),
+			fmt.Sprintf("WORKER_PROCESSES=%d", len(ports)),
+		},
+		Role:          k3d.LoadBalancerRole,
+		RuntimeLabels: opts.Labels, // TODO: createLoadBalancer: add more expressive labels
+		Networks:      []string{cluster.Network.Name},
+		Restart:       true,
+	}
+	if len(udp_ports) > 0 {
+		lbNode.Env = append(lbNode.Env, fmt.Sprintf("UDP_PORTS=%s", strings.Join(udp_ports, ",")))
+	}
+	cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
+	log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
+	if err := NodeCreate(ctx, runtime, lbNode, k3d.NodeCreateOpts{}); err != nil {
+		log.Errorln("Failed to create loadbalancer")
+		return err
+	}
+	log.Debugf("Created loadbalancer '%s'", lbNode.Name)
+	return nil
 }
