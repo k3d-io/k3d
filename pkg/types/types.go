@@ -41,21 +41,6 @@ const DefaultClusterName = "k3s-default"
 // ... and still stay within the 64 character limit (e.g. of docker)
 const DefaultClusterNameMaxLength = 32
 
-// DefaultK3sImageRepo specifies the default image repository for the used k3s image
-const DefaultK3sImageRepo = "docker.io/rancher/k3s"
-
-// DefaultLBImageRepo defines the default cluster load balancer image
-const DefaultLBImageRepo = "docker.io/rancher/k3d-proxy"
-
-// DefaultToolsImageRepo defines the default image used for the tools container
-const DefaultToolsImageRepo = "docker.io/rancher/k3d-tools"
-
-// DefaultRegistryImageRepo defines the default image used for the k3d-managed registry
-const DefaultRegistryImageRepo = "docker.io/library/registry"
-
-// DefaultRegistryImageTag defines the default image tag used for the k3d-managed registry
-const DefaultRegistryImageTag = "2"
-
 // DefaultObjectNamePrefix defines the name prefix for every object created by k3d
 const DefaultObjectNamePrefix = "k3d"
 
