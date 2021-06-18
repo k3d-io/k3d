@@ -5,16 +5,13 @@
 #             #######             #
 ###################################
 
-{{- $servers := split (getenv "SERVERS") "," -}}
-{{- $ports := split (getenv "PORTS") "," -}}
-{{- $udp_ports := split (getenv "UDP_PORTS") "," -}}
 error_log stderr notice;
 
 worker_processes auto;
 events {
   multi_accept on;
   use epoll;
-  worker_connections {{ add 1024 (len $ports) }};
+  worker_connections {{ getv "/settings/workerProcesses" }};
 }
 
 stream {

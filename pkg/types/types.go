@@ -442,10 +442,18 @@ type RegistryExternal struct {
  * 		- k3d-k3s-default-agent-1
  */
 type LoadbalancerConfig struct {
-	Ports map[string][]string `yaml:"ports"`
+	Ports    map[string][]string  `yaml:"ports"`
+	Settings LoadBalancerSettings `yaml:"settings"`
 }
 
-const DefaultLoadbalancerConfigPath = "/etc/confd/portmap.yaml"
+type LoadBalancerSettings struct {
+	WorkerProcesses int `yaml:"workerProcesses"`
+}
+
+const (
+	DefaultLoadbalancerConfigPath      = "/etc/confd/portmap.yaml"
+	DefaultLoadbalancerWorkerProcesses = 1024
+)
 
 type LoadbalancerCreateOpts struct {
 	Labels map[string]string

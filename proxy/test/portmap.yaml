@@ -5,3 +5,6 @@ ports:
   4321.udp:
     - agent-0
     - agent-1
+
+settings:
+  workerProcesses: 1030
