@@ -13,7 +13,7 @@ highlight "[START] MemoryLimitTest $EXTRA_TITLE"
 clustername="memlimittest"
 
 info "Creating cluster $clustername..."
-$EXE cluster create $clustername --servers-memory 1g --agents 1 --agents-memory 1.5g || failed "could not create cluster $clustername"
+$EXE cluster create $clustername --timeout 360s --servers-memory 1g --agents 1 --agents-memory 1.5g || failed "could not create cluster $clustername"
 
 info "Checking we have access to the cluster..."
 check_clusters "$clustername" || failed "error checking cluster"

@@ -18,7 +18,7 @@ newPortMappingHostPort="3333"
 newPortMappingContainerPort="4444"
 
 info "Creating cluster $clustername..."
-$EXE cluster create $clustername --port "$existingPortMappingHostPort:$existingPortMappingContainerPort@loadbalancer" || failed "could not create cluster $clustername"
+$EXE cluster create $clustername --timeout 360s --port "$existingPortMappingHostPort:$existingPortMappingContainerPort@loadbalancer" || failed "could not create cluster $clustername"
 
 info "Checking cluster access..."
 check_clusters "$clustername" || failed "error checking cluster access"
