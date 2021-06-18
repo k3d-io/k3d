@@ -507,15 +507,40 @@ ClusterCreatOpts:
 	 */
 	// *** ServerLoadBalancer ***
 	if !clusterCreateOpts.DisableLoadBalancer {
-		node, nodeCreateOpts, err := LoadbalancerPrepare(ctx, runtime, cluster, &k3d.LoadbalancerCreateOpts{Labels: clusterCreateOpts.GlobalLabels})
+		lbNode, err := LoadbalancerPrepare(ctx, runtime, cluster, &k3d.LoadbalancerCreateOpts{Labels: clusterCreateOpts.GlobalLabels})
 		if err != nil {
 			return err
 		}
-		if err := NodeCreate(ctx, runtime, node, *nodeCreateOpts); err != nil {
-			log.Errorln("Failed to create loadbalancer")
+		cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
+
+		lbConfig, err := LoadbalancerGenerateConfig(cluster)
+		if err != nil {
+			return fmt.Errorf("error generating loadbalancer config: %v", err)
+		}
+
+		// prepare to write config to lb container
+		configyaml, err := yaml.Marshal(lbConfig)
+		if err != nil {
 			return err
 		}
-		log.Debugf("Created loadbalancer '%s'", node.Name)
+
+		writeLbConfigAction := k3d.NodeHook{
+			Stage: k3d.LifecycleStagePreStart,
+			Action: actions.WriteFileAction{
+				Runtime: runtime,
+				Dest:    k3d.DefaultLoadbalancerConfigPath,
+				Mode:    0744,
+				Content: configyaml,
+			},
+		}
+
+		lbNode.HookActions = append(lbNode.HookActions, writeLbConfigAction)
+
+		log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
+		if err := NodeCreate(ctx, runtime, lbNode, k3d.NodeCreateOpts{}); err != nil {
+			return fmt.Errorf("error creating loadbalancer: %v", err)
+		}
+		log.Debugf("Created loadbalancer '%s'", lbNode.Name)
 		return err
 	}
 
@@ -865,7 +890,9 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	log.Infoln("Starting helpers...")
 	failedHelpers := 0
 	for _, helperNode := range aux {
-		nodeStartOpts := k3d.NodeStartOpts{}
+		nodeStartOpts := k3d.NodeStartOpts{
+			NodeHooks: helperNode.HookActions,
+		}
 		if helperNode.Role == k3d.LoadBalancerRole {
 			nodeStartOpts.Wait = true
 		}
