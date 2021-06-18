@@ -29,6 +29,21 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// DefaultK3sImageRepo specifies the default image repository for the used k3s image
+const DefaultK3sImageRepo = "docker.io/rancher/k3s"
+
+// DefaultLBImageRepo defines the default cluster load balancer image
+const DefaultLBImageRepo = "docker.io/rancher/k3d-proxy"
+
+// DefaultToolsImageRepo defines the default image used for the tools container
+const DefaultToolsImageRepo = "docker.io/rancher/k3d-tools"
+
+// DefaultRegistryImageRepo defines the default image used for the k3d-managed registry
+const DefaultRegistryImageRepo = "docker.io/library/registry"
+
+// DefaultRegistryImageTag defines the default image tag used for the k3d-managed registry
+const DefaultRegistryImageTag = "2"
+
 func GetLoadbalancerImage() string {
 	if img := os.Getenv("K3D_IMAGE_LOADBALANCER"); img != "" {
 		log.Infof("Loadbalancer image set from env var $K3D_IMAGE_LOADBALANCER: %s", img)
