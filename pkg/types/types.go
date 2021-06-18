@@ -447,3 +447,7 @@ type LoadbalancerConfig struct {
 }
 
 const DefaultLoadbalancerConfigPath = "/etc/confd/portmap.yaml"
+
+type LoadbalancerCreateOpts struct {
+	Labels map[string]string
+}
