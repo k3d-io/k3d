@@ -1,14 +1,24 @@
 #!/bin/sh
 
-# Run confd
 set -e
-confd -onetime -backend file -file /etc/confd/values.yaml -log-level debug
-set +e
+
+# Config Options
+INIT_CONFIG_MAX_RETRIES=3
+
+# Run confd
+for i in $(seq 1 $INIT_CONFIG_MAX_RETRIES); do
+  echo "[$(date -Iseconds)] creating initial nginx config (try $i/$INIT_CONFIG_MAX_RETRIES)"
+  confd -onetime -backend file -file /etc/confd/values.yaml -log-level debug -sync-only
+  sleep 2
+done
 
 # Output Configuration
 echo "===== Initial nginx configuration ====="
-cat /etc/nginx/nginx.conf
+nginx -T -c /etc/nginx/nginx.conf
 echo "======================================="
+
+# Start confd in watch mode (every second)
+confd -watch -backend file -file /etc/confd/values.yaml -log-level debug &
 
 # Start nginx
 nginx -g 'daemon off;'
