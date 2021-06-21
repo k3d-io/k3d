@@ -26,7 +26,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"strings"
 
 	"github.com/docker/go-connections/nat"
 	"github.com/go-test/deep"
@@ -74,14 +73,7 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 		return fmt.Errorf("error writing new loadbalancer config to container: %w", err)
 	}
 
-	command := "confd -onetime -backend file -file /etc/confd/values.yaml -log-level debug && nginx -s reload"
-	if err := runtime.ExecInNode(ctx, cluster.ServerLoadBalancer, []string{"sh", "-c", command}); err != nil {
-		if strings.Contains(err.Error(), "host not found in upstream") {
-			log.Warnf("Loadbalancer configuration updated, but one or more k3d nodes seem to be down, check the logs:\n%s", err.Error())
-			return nil
-		}
-		return err
-	}
+	// TODO: check if loadbalancer is running fine after auto-applying the change
 
 	return nil
 }
