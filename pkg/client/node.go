@@ -34,6 +34,7 @@ import (
 	"time"
 
 	copystruct "github.com/mitchellh/copystructure"
+	"gopkg.in/yaml.v2"
 
 	"github.com/docker/go-connections/nat"
 	dockerunits "github.com/docker/go-units"
@@ -691,40 +692,37 @@ func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, chang
 
 	// --- Loadbalancer specifics ---
 	if result.Role == k3d.LoadBalancerRole {
-		nodeEditApplyLBSpecifics(ctx, result)
+		cluster, err := ClusterGet(ctx, runtime, &k3d.Cluster{Name: existingNode.RuntimeLabels[k3d.LabelClusterName]})
+		if err != nil {
+			return fmt.Errorf("error updating loadbalancer config: %w", err)
+		}
+		cluster.ServerLoadBalancer = result
+		lbConfig, err := LoadbalancerGenerateConfig(cluster)
+		if err != nil {
+			return fmt.Errorf("error generating loadbalancer config: %v", err)
+		}
+
+		// prepare to write config to lb container
+		configyaml, err := yaml.Marshal(lbConfig)
+		if err != nil {
+			return err
+		}
+
+		writeLbConfigAction := k3d.NodeHook{
+			Stage: k3d.LifecycleStagePreStart,
+			Action: actions.WriteFileAction{
+				Runtime: runtime,
+				Dest:    k3d.DefaultLoadbalancerConfigPath,
+				Mode:    0744,
+				Content: configyaml,
+			},
+		}
+
+		result.HookActions = append(result.HookActions, writeLbConfigAction)
 	}
 
 	// replace existing node
 	return NodeReplace(ctx, runtime, existingNode, result)
-
-}
-
-func nodeEditApplyLBSpecifics(ctx context.Context, lbNode *k3d.Node) {
-	tcp_ports := []string{}
-	udp_ports := []string{}
-	for index, env := range lbNode.Env {
-		if strings.HasPrefix(env, "PORTS=") || strings.HasPrefix(env, "UDP_PORTS=") {
-			// Remove matching environment variable from slice (does not preserve order)
-			lbNode.Env[index] = lbNode.Env[len(lbNode.Env)-1] // copy last element to index of matching env
-			lbNode.Env[len(lbNode.Env)-1] = ""                // remove last element
-			lbNode.Env = lbNode.Env[:len(lbNode.Env)-1]       // truncate
-		}
-	}
-
-	for port := range lbNode.Ports {
-		switch port.Proto() {
-		case "tcp":
-			tcp_ports = append(tcp_ports, port.Port())
-			break
-		case "udp":
-			udp_ports = append(udp_ports, port.Port())
-			break
-		default:
-			log.Warnf("Unknown port protocol %s for port %s", port.Proto(), port.Port())
-		}
-	}
-	lbNode.Env = append(lbNode.Env, fmt.Sprintf("PORTS=%s", strings.Join(tcp_ports, ",")))
-	lbNode.Env = append(lbNode.Env, fmt.Sprintf("UDP_PORTS=%s", strings.Join(udp_ports, ",")))
 }
 
 func NodeReplace(ctx context.Context, runtime runtimes.Runtime, old, new *k3d.Node) error {
@@ -755,7 +753,7 @@ func NodeReplace(ctx context.Context, runtime runtimes.Runtime, old, new *k3d.No
 
 	// start new node
 	log.Infof("Starting new node %s...", new.Name)
-	if err := NodeStart(ctx, runtime, new, k3d.NodeStartOpts{Wait: true}); err != nil {
+	if err := NodeStart(ctx, runtime, new, k3d.NodeStartOpts{Wait: true, NodeHooks: new.HookActions}); err != nil {
 		if err := NodeDelete(ctx, runtime, new, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
 			return fmt.Errorf("Failed to start new node. Also failed to rollback: %+v", err)
 		}
