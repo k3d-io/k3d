@@ -5,3 +5,5 @@ keys = [
     "ports",
     "settings"
 ]
+check_cmd = "/usr/sbin/nginx -T -c {{.src}}"
+reload_cmd = "/usr/sbin/nginx -s reload"
