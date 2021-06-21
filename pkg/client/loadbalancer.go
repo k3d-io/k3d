@@ -29,11 +29,12 @@ import (
 	"strings"
 
 	"github.com/docker/go-connections/nat"
+	"github.com/go-test/deep"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/types"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
-	"sigs.k8s.io/yaml"
+	"gopkg.in/yaml.v2"
 )
 
 // UpdateLoadbalancerConfig updates the loadbalancer config with an updated list of servers belonging to that cluster
@@ -47,25 +48,34 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 		return err
 	}
 
-	// find the LoadBalancer for the target cluster
-	serverNodesList := []string{}
-	var loadbalancer *k3d.Node
-	for _, node := range cluster.Nodes {
-		if node.Role == k3d.LoadBalancerRole { // get the loadbalancer we want to update
-			loadbalancer = node
-		} else if node.Role == k3d.ServerRole { // create a list of server nodes
-			serverNodesList = append(serverNodesList, node.Name)
-		}
-	}
-	serverNodes := strings.Join(serverNodesList, ",")
-	if loadbalancer == nil {
-		return fmt.Errorf("Failed to find loadbalancer for cluster '%s'", cluster.Name)
+	currentConfig, err := GetLoadbalancerConfig(ctx, runtime, cluster)
+	if err != nil {
+		return fmt.Errorf("error getting current config from loadbalancer: %w", err)
 	}
 
-	log.Debugf("Servers as passed to serverlb: '%s'", serverNodes)
+	log.Tracef("Current loadbalancer config:\n%+v", currentConfig)
 
-	command := fmt.Sprintf("SERVERS=%s %s", serverNodes, "confd -onetime -backend env && nginx -s reload")
-	if err := runtime.ExecInNode(ctx, loadbalancer, []string{"sh", "-c", command}); err != nil {
+	newLBConfig, err := LoadbalancerGenerateConfig(cluster)
+	if err != nil {
+		return fmt.Errorf("error generating new loadbalancer config: %w", err)
+	}
+	log.Tracef("New loadbalancer config:\n%+v", currentConfig)
+
+	if diff := deep.Equal(currentConfig, newLBConfig); diff != nil {
+		log.Debugf("Updating the loadbalancer with this diff: %+v", diff)
+	}
+
+	newLbConfigYaml, err := yaml.Marshal(&newLBConfig)
+	if err != nil {
+		return fmt.Errorf("error marshalling the new loadbalancer config: %w", err)
+	}
+	log.Debugf("Writing lb config:\n%s", string(newLbConfigYaml))
+	if err := runtime.WriteToNode(ctx, newLbConfigYaml, k3d.DefaultLoadbalancerConfigPath, 0744, cluster.ServerLoadBalancer); err != nil {
+		return fmt.Errorf("error writing new loadbalancer config to container: %w", err)
+	}
+
+	command := "confd -onetime -backend file -file /etc/confd/values.yaml -log-level debug && nginx -s reload"
+	if err := runtime.ExecInNode(ctx, cluster.ServerLoadBalancer, []string{"sh", "-c", command}); err != nil {
 		if strings.Contains(err.Error(), "host not found in upstream") {
 			log.Warnf("Loadbalancer configuration updated, but one or more k3d nodes seem to be down, check the logs:\n%s", err.Error())
 			return nil
@@ -76,7 +86,9 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 	return nil
 }
 
-func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*types.LoadbalancerConfig, error) {
+func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (types.LoadbalancerConfig, error) {
+
+	var cfg k3d.LoadbalancerConfig
 
 	if cluster.ServerLoadBalancer == nil {
 		for _, node := range cluster.Nodes {
@@ -84,7 +96,7 @@ func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 				var err error
 				cluster.ServerLoadBalancer, err = NodeGet(ctx, runtime, node)
 				if err != nil {
-					return nil, err
+					return cfg, err
 				}
 			}
 		}
@@ -92,23 +104,22 @@ func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 
 	reader, err := runtime.ReadFromNode(ctx, types.DefaultLoadbalancerConfigPath, cluster.ServerLoadBalancer)
 	if err != nil {
-		return &k3d.LoadbalancerConfig{}, err
+		return cfg, err
 	}
 	defer reader.Close()
 
 	file, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return nil, err
+		return cfg, err
 	}
 
 	file = bytes.Trim(file[512:], "\x00") // trim control characters, etc.
 
-	currentConfig := &types.LoadbalancerConfig{}
-	if err := yaml.Unmarshal(file, currentConfig); err != nil {
-		return nil, err
+	if err := yaml.Unmarshal(file, &cfg); err != nil {
+		return cfg, err
 	}
 
-	return currentConfig, nil
+	return cfg, nil
 }
 
 func LoadbalancerGenerateConfig(cluster *k3d.Cluster) (k3d.LoadbalancerConfig, error) {
