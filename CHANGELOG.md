@@ -20,11 +20,29 @@
 - helper images can now be set explicitly via environment variables: `K3D_IMAGE_LOADBALANCER` & `K3D_IMAGE_TOOLS` (#638)
 - concurrently add new nodes to an existing cluster (remove some dumb code) (#640)
   - `--wait` is now the default for `k3d node create`
+- normalized flag usage for k3s and runtime (#598, @ejose19)
+  - rename `k3d cluster create --label` to `k3d cluster create --runtime-label` (as it's labelling the node on runtime level, e.g. docker)
+    - config option moved to `options.runtime.labels`
+  - add `k3d cluster create --k3s-node-label` to add Kubernetes node labels via k3s flag (#584, @developer-guy, @ejose, @dentrax)
+    - new config option `options.k3s.nodeLabels`
+  - the same for `k3d node create`
+- improved config file handling (#605)
+  - new version `v1alpha3`
+    - warning when using outdated version
+    - validation dynamically based on provided config apiVersion
+    - new default for `k3d config init`
+  - new command `k3d config migrate INPUT [OUTPUT]` to migrate config files between versions
+    - currently supported migration `v1alpha2` -> `v1alpha3`
+  - pkg: new `Config` interface type to support new generic `FromViper` config file parsing
+- changed flags `--k3s-server-arg` & `--k3s-agent-arg` into `--k3s-arg` with nodefilter support (#605)
+  - new config path `options.k3s.extraArgs`
 
 ### Misc
 
 - tests/e2e: timeouts everywhere to avoid killing DroneCI (#638)
 - logs: really final output when creating/deleting nodes (so far, we were not outputting a final success message and the process was still doing stuff) (#640)
+- tests/e2e: add tests for v1alpha2 to v1alpha3 migration
+- docs: use v1alpha3 config version
 
 ## v4.4.6
 
