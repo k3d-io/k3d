@@ -228,26 +228,13 @@ func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes 
 
 	nodeWaitGroup, ctx := errgroup.WithContext(ctx)
 	for _, node := range nodes {
-		if err := NodeAddToCluster(ctx, runtime, node, cluster, createNodeOpts); err != nil {
-			return err
-		}
-		if createNodeOpts.Wait {
-			currentNode := node
-			nodeWaitGroup.Go(func() error {
-				log.Debugf("Starting to wait for node '%s'", currentNode.Name)
-				readyLogMessage := k3d.ReadyLogMessageByRole[currentNode.Role]
-				if readyLogMessage != "" {
-					return NodeWaitForLogMessage(ctx, runtime, currentNode, readyLogMessage, time.Time{})
-				}
-				log.Warnf("NodeAddToClusterMulti: Set to wait for node %s to get ready, but there's no target log message defined", currentNode.Name)
-				return nil
-			})
-		}
+		currentNode := node
+		nodeWaitGroup.Go(func() error {
+			return NodeAddToCluster(ctx, runtime, currentNode, cluster, createNodeOpts)
+		})
 	}
 	if err := nodeWaitGroup.Wait(); err != nil {
-		log.Errorln("Failed to bring up all nodes in time. Check the logs:")
-		log.Errorf(">>> %+v", err)
-		return fmt.Errorf("Failed to add nodes")
+		return fmt.Errorf("Failed to add one or more nodes: %w", err)
 	}
 
 	return nil

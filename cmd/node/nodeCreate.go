@@ -73,7 +73,7 @@ func NewCmdNodeCreate() *cobra.Command {
 	cmd.Flags().StringP("image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image used for the node(s)")
 	cmd.Flags().String("memory", "", "Memory limit imposed on the node [From docker]")
 
-	cmd.Flags().BoolVar(&createNodeOpts.Wait, "wait", false, "Wait for the node(s) to be ready before returning.")
+	cmd.Flags().BoolVar(&createNodeOpts.Wait, "wait", true, "Wait for the node(s) to be ready before returning.")
 	cmd.Flags().DurationVar(&createNodeOpts.Timeout, "timeout", 0*time.Second, "Maximum waiting time for '--wait' before canceling/returning.")
 
 	cmd.Flags().StringSliceP("runtime-label", "", []string{}, "Specify container runtime labels in format \"foo=bar\"")
