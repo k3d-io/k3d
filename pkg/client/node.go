@@ -604,6 +604,14 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 		}
 		// check if we can find the specified line in the log
 		if nRead > 0 && strings.Contains(output, message) {
+			if log.GetLevel() >= log.TraceLevel {
+				temp := strings.Split(output, "\n")
+				for _, l := range temp {
+					if strings.Contains(l, message) {
+						log.Tracef("Found target log line: `%s`", l)
+					}
+				}
+			}
 			break
 		}
 
