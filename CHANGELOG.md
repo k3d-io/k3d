@@ -1,5 +1,28 @@
 # Changelog
 
+## v5.0.0
+
+### Fixes
+
+- cleaned up and properly sorted the sanitization of existing resources used to create new nodes (#638)
+
+### Features & Enhancements
+
+- new command: `k3d node edit` to edit existing nodes (#615)
+  - currently only allows `k3d node edit NODE --port-add HOSTPORT:CONTAINERPORT` for the serverlb/loadbalancer to add new ports
+  - pkg: new `NodeEdit` function
+- new (hidden) command: `k3d debug` with some options for debugging k3d resources (#638)
+  - e.g. `k3d debug loadbalancer get-config` to get the current loadbalancer configuration
+- loadbalancer / k3d-proxy (#638)
+  - updated fork of `confd` to make usage of the file backend including a file watcher for auto-reloads
+    - this also checks the config before applying it, so the lb doesn't crash on a faulty config
+  - updating the loadbalancer writes the new config file and also checks if everything's going fine afterwards
+- helper images can now be set explicitly via environment variables: `K3D_IMAGE_LOADBALANCER` & `K3D_IMAGE_TOOLS` (#638)
+
+### Misc
+
+- tests/e2e: timeouts everywhere to avoid killing DroneCI (#638)
+
 ## v4.4.6
 
 ### Fixes
