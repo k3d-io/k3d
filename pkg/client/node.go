@@ -207,6 +207,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 
 	// if it's a server node, then update the loadbalancer configuration
 	if node.Role == k3d.ServerRole {
+		log.Infoln("Updating loadbalancer config to include new server node(s)")
 		if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
 			if !errors.Is(err, LBConfigErrHostNotFound) {
 				return fmt.Errorf("error updating loadbalancer: %w", err)

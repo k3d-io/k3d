@@ -59,6 +59,7 @@ func NewCmdNodeDelete() *cobra.Command {
 						log.Fatalln(err)
 					}
 				}
+				log.Infof("Successfully deleted %d node(s)!", len(nodes))
 			}
 		},
 	}
