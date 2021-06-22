@@ -55,6 +55,7 @@ func NewCmdNodeCreate() *cobra.Command {
 				log.Errorf("Failed to add nodes to cluster '%s'", cluster.Name)
 				log.Fatalln(err)
 			}
+			log.Infof("Successfully created %d node(s)!", len(nodes))
 		},
 	}
 
