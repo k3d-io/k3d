@@ -77,7 +77,6 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 	}
 	log.Debugf("Writing lb config:\n%s", string(newLbConfigYaml))
 	startTime := time.Now().Truncate(time.Second).UTC()
-	log.Debugf("timestamp: %s", startTime.Format("2006-01-02T15:04:05.999999999Z"))
 	if err := runtime.WriteToNode(ctx, newLbConfigYaml, k3d.DefaultLoadbalancerConfigPath, 0744, cluster.ServerLoadBalancer); err != nil {
 		return fmt.Errorf("error writing new loadbalancer config to container: %w", err)
 	}
@@ -102,6 +101,7 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 			return LBConfigErrFailedTest
 		}
 	}
+	log.Infof("Successfully configured loadbalancer %s!", cluster.ServerLoadBalancer.Name)
 
 	time.Sleep(1 * time.Second) // waiting for a second, to avoid issues with too fast lb updates which would screw up the log waits
 
