@@ -24,8 +24,10 @@ package client
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"time"
 
 	"github.com/docker/go-connections/nat"
 	"github.com/go-test/deep"
@@ -34,6 +36,11 @@ import (
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
+)
+
+var (
+	LBConfigErrHostNotFound = errors.New("lbconfig: host not found")
+	LBConfigErrFailedTest   = errors.New("lbconfig: failed to test")
 )
 
 // UpdateLoadbalancerConfig updates the loadbalancer config with an updated list of servers belonging to that cluster
@@ -69,11 +76,34 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 		return fmt.Errorf("error marshalling the new loadbalancer config: %w", err)
 	}
 	log.Debugf("Writing lb config:\n%s", string(newLbConfigYaml))
+	startTime := time.Now().Truncate(time.Second).UTC()
+	log.Debugf("timestamp: %s", startTime.Format("2006-01-02T15:04:05.999999999Z"))
 	if err := runtime.WriteToNode(ctx, newLbConfigYaml, k3d.DefaultLoadbalancerConfigPath, 0744, cluster.ServerLoadBalancer); err != nil {
 		return fmt.Errorf("error writing new loadbalancer config to container: %w", err)
 	}
 
-	// TODO: check if loadbalancer is running fine after auto-applying the change
+	successCtx, successCtxCancel := context.WithDeadline(ctx, time.Now().Add(5*time.Second))
+	defer successCtxCancel()
+	err = NodeWaitForLogMessage(successCtx, runtime, cluster.ServerLoadBalancer, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], startTime)
+	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			failureCtx, failureCtxCancel := context.WithDeadline(ctx, time.Now().Add(5*time.Second))
+			defer failureCtxCancel()
+			err = NodeWaitForLogMessage(failureCtx, runtime, cluster.ServerLoadBalancer, "host not found in upstream", startTime)
+			if err != nil {
+				log.Warnf("Failed to check if the loadbalancer was configured correctly or if it broke. Please check it manually or try again: %v", err)
+				return LBConfigErrFailedTest
+			} else {
+				log.Warnln("Failed to configure loadbalancer because one of the nodes seems to be down! Run `k3d node list` to see which one it could be.")
+				return LBConfigErrHostNotFound
+			}
+		} else {
+			log.Warnf("Failed to ensure that loadbalancer was configured correctly. Please check it manually or try again: %v", err)
+			return LBConfigErrFailedTest
+		}
+	}
+
+	time.Sleep(1 * time.Second) // waiting for a second, to avoid issues with too fast lb updates which would screw up the log waits
 
 	return nil
 }
