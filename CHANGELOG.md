@@ -18,10 +18,13 @@
     - this also checks the config before applying it, so the lb doesn't crash on a faulty config
   - updating the loadbalancer writes the new config file and also checks if everything's going fine afterwards
 - helper images can now be set explicitly via environment variables: `K3D_IMAGE_LOADBALANCER` & `K3D_IMAGE_TOOLS` (#638)
+- concurrently add new nodes to an existing cluster (remove some dumb code) (#640)
+  - `--wait` is now the default for `k3d node create`
 
 ### Misc
 
 - tests/e2e: timeouts everywhere to avoid killing DroneCI (#638)
+- logs: really final output when creating/deleting nodes (so far, we were not outputting a final success message and the process was still doing stuff) (#640)
 
 ## v4.4.6
 
