@@ -208,8 +208,9 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	// if it's a server node, then update the loadbalancer configuration
 	if node.Role == k3d.ServerRole {
 		if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
-			log.Errorln("Failed to update cluster loadbalancer")
-			return err
+			if !errors.Is(err, LBConfigErrHostNotFound) {
+				return fmt.Errorf("error updating loadbalancer: %w", err)
+			}
 		}
 	}
 
@@ -496,8 +497,9 @@ func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, o
 		// if it's a server node, then update the loadbalancer configuration
 		if node.Role == k3d.ServerRole {
 			if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
-				log.Errorln("Failed to update cluster loadbalancer")
-				return err
+				if !errors.Is(err, LBConfigErrHostNotFound) {
+					return fmt.Errorf("Failed to update cluster loadbalancer: %w", err)
+				}
 			}
 		}
 	}
@@ -577,7 +579,7 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 				if ok {
 					log.Debugf("NodeWaitForLogMessage: Context Deadline (%s) > Current Time (%s)", d, time.Now())
 				}
-				return fmt.Errorf("Context deadline exceeded while waiting for log message '%s' of node %s", message, node.Name)
+				return fmt.Errorf("Context deadline exceeded while waiting for log message '%s' of node %s: %w", message, node.Name, ctx.Err())
 			}
 			return ctx.Err()
 		default:
@@ -589,8 +591,7 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 			if out != nil {
 				out.Close()
 			}
-			log.Errorf("Failed waiting for log message '%s' from node '%s'", message, node.Name)
-			return err
+			return fmt.Errorf("Failed waiting for log message '%s' from node '%s': %w", message, node.Name, err)
 		}
 		defer out.Close()
 
