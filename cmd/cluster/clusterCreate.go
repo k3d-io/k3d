@@ -24,7 +24,9 @@ package cluster
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -72,11 +74,30 @@ func initConfig() {
 
 	// Set config file, if specified
 	if configFile != "" {
-		cfgViper.SetConfigFile(configFile)
 
 		if _, err := os.Stat(configFile); err != nil {
 			log.Fatalf("Failed to stat config file %s: %+v", configFile, err)
 		}
+
+		// create temporary file to expand environment variables in the config without writing that back to the original file
+		// we're doing it here, because this happens just before absolutely all other processing
+		tmpfile, err := os.CreateTemp(os.TempDir(), fmt.Sprintf("k3d-config-tmp-%s", filepath.Base(configFile)))
+		if err != nil {
+			log.Fatalf("error creating temp copy of configfile %s for variable expansion: %v", configFile, err)
+		}
+		defer tmpfile.Close()
+
+		originalcontent, err := ioutil.ReadFile(configFile)
+		if err != nil {
+			log.Fatalf("error reading config file %s: %v", configFile, err)
+		}
+		expandedcontent := os.ExpandEnv(string(originalcontent))
+		if _, err := tmpfile.WriteString(expandedcontent); err != nil {
+			log.Fatalf("error writing expanded config file contents to temp file %s: %v", tmpfile.Name(), err)
+		}
+
+		// use temp file with expanded variables
+		cfgViper.SetConfigFile(tmpfile.Name())
 
 		// try to read config into memory (viper map structure)
 		if err := cfgViper.ReadInConfig(); err != nil {
@@ -96,7 +117,7 @@ func initConfig() {
 			log.Fatalf("Schema Validation failed for config file %s: %+v", configFile, err)
 		}
 
-		log.Infof("Using config file %s (%s#%s)", cfgViper.ConfigFileUsed(), strings.ToLower(cfgViper.GetString("apiVersion")), strings.ToLower(cfgViper.GetString("kind")))
+		log.Infof("Using config file %s (%s#%s)", configFile, strings.ToLower(cfgViper.GetString("apiVersion")), strings.ToLower(cfgViper.GetString("kind")))
 	}
 	if log.GetLevel() >= log.DebugLevel {
 		c, _ := yaml.Marshal(cfgViper.AllSettings())
