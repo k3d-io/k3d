@@ -8,7 +8,7 @@ kubeAPI:
   hostPort: "6446"
 image: rancher/k3s:latest
 volumes:
-  - volume: /my/path:/some/path
+  - volume: $HOME:/some/path
     nodeFilters:
       - all
 ports:
