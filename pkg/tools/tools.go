@@ -54,12 +54,20 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 		found := false
 		// Check if the current element is a file
 		if _, err := os.Stat(image); os.IsNotExist(err) {
+			// `runtimeImages` are returned without the 'docker.io/' prefix. So if `image` has such a prefix, we shall drop it.
+			localImageName := strings.TrimPrefix(image, "docker.io/")
+
+			// `runtimeImages` always contain a `:versionName` part. So if `image` doesn't, we shall add the default tag `:latest`.
+			if !strings.Contains(image, ":") {
+				localImageName = fmt.Sprintf("%s:latest", localImageName)
+			}
+
 			// not a file? Check if such an image is present in the container runtime
 			for _, runtimeImage := range runtimeImages {
-				if image == runtimeImage {
+				if localImageName == runtimeImage {
 					found = true
-					imagesFromRuntime = append(imagesFromRuntime, image)
-					log.Debugf("Selected image '%s' found in runtime", image)
+					imagesFromRuntime = append(imagesFromRuntime, runtimeImage)
+					log.Debugf("Selected image '%s' (found as '%s') in runtime", image, runtimeImage)
 					break
 				}
 			}
