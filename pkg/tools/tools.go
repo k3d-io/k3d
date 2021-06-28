@@ -40,46 +40,9 @@ import (
 // ImageImportIntoClusterMulti starts up a k3d tools container for the selected cluster and uses it to export
 // images from the runtime to import them into the nodes of the selected cluster
 func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, loadImageOpts k3d.ImageImportOpts) error {
-
-	var imagesFromRuntime []string
-	var imagesFromTar []string
-
-	runtimeImages, err := runtime.GetImages(ctx)
+	imagesFromRuntime, imagesFromTar, err := findImages(ctx, runtime, images)
 	if err != nil {
-		log.Errorln("Failed to fetch list of existing images from runtime")
 		return err
-	}
-
-	for _, image := range images {
-		found := false
-		// Check if the current element is a file
-		if _, err := os.Stat(image); os.IsNotExist(err) {
-			// `runtimeImages` are returned without the 'docker.io/' prefix. So if `image` has such a prefix, we shall drop it.
-			localImageName := strings.TrimPrefix(image, "docker.io/")
-
-			// `runtimeImages` always contain a `:versionName` part. So if `image` doesn't, we shall add the default tag `:latest`.
-			if !containsVersionPart(image) {
-				localImageName = fmt.Sprintf("%s:latest", localImageName)
-			}
-
-			// not a file? Check if such an image is present in the container runtime
-			for _, runtimeImage := range runtimeImages {
-				if localImageName == runtimeImage {
-					found = true
-					imagesFromRuntime = append(imagesFromRuntime, runtimeImage)
-					log.Debugf("Selected image '%s' (found as '%s') in runtime", image, runtimeImage)
-					break
-				}
-			}
-		} else {
-			// file exists
-			found = true
-			imagesFromTar = append(imagesFromTar, image)
-			log.Debugf("Selected image '%s' is a file", image)
-		}
-		if !found {
-			log.Warnf("Image '%s' is not a file and couldn't be found in the container runtime", image)
-		}
 	}
 
 	// no images found to load -> exit early
@@ -205,6 +168,79 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 	return nil
 
+}
+
+func findImages(ctx context.Context, runtime runtimes.Runtime, requestedImages []string) (imagesFromRuntime, imagesFromTar []string, err error) {
+	runtimeImages, err := runtime.GetImages(ctx)
+	if err != nil {
+		log.Errorln("Failed to fetch list of existing images from runtime")
+		return nil, nil, err
+	}
+
+	for _, requestedImage := range requestedImages {
+		if isFile(requestedImage) {
+			imagesFromTar = append(imagesFromTar, requestedImage)
+			log.Debugf("Selected image '%s' is a file", requestedImage)
+			break
+		}
+
+		runtimeImage, found := findRuntimeImage(requestedImage, runtimeImages)
+		if found {
+			imagesFromRuntime = append(imagesFromRuntime, runtimeImage)
+			log.Debugf("Selected image '%s' (found as '%s') in runtime", requestedImage, runtimeImage)
+			break
+		}
+
+		log.Warnf("Image '%s' is not a file and couldn't be found in the container runtime", requestedImage)
+	}
+	return imagesFromRuntime, imagesFromTar, err
+}
+
+func findRuntimeImage(requestedImage string, runtimeImages []string) (string, bool) {
+	canonicalRequestedImage := canonicalImageName(requestedImage)
+
+	for _, runtimeImage := range runtimeImages {
+		if imageNamesEqual(canonicalRequestedImage, runtimeImage) {
+			return runtimeImage, true
+		}
+	}
+	return "", false
+}
+
+func isFile(image string) bool {
+	file, err := os.Stat(image)
+	if err != nil {
+		return false
+	}
+	return !file.IsDir()
+}
+
+// canonicalImageName turns any docker image name in the form `registry/orgName/imageName:versionName`.
+// If `:versionName` is not present, `:latest` is suffixed.
+// If `orgName` is not present, `library` is added.
+// If `registry` is not present, `docker.io` is prefixed.
+func canonicalImageName(image string) string {
+	if !containsVersionPart(image) {
+		image = fmt.Sprintf("%s:latest", image)
+	}
+
+	slashCount := strings.Count(image, "/")
+	switch slashCount {
+	case 0: // zero slashes -> library image tag (e.g. `postgres`)
+		return fmt.Sprintf("docker.io/library/%s", image)
+	case 1: // one slash -> no registry (e.g. `library/postgres`)
+		return fmt.Sprintf("docker.io/%s", image)
+	default: // two slashes or more -> already contains registry name
+		return image
+	}
+}
+
+func imageNamesEqual(requestedImageName string, runtimeImageName string) bool {
+	if requestedImageName == runtimeImageName {
+		return true
+	}
+
+	return requestedImageName == canonicalImageName(runtimeImageName)
 }
 
 func containsVersionPart(imageTag string) bool {
