@@ -31,15 +31,26 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type NodeFilterSuffix string
+
+const (
+	NodeFilterSuffixNone NodeFilterSuffix = "none"
+	NodeFilterMapKeyAll                   = "all"
+)
+
 // Regexp pattern to match node filters
-var filterRegexp = regexp.MustCompile(`^(?P<group>server|agent|loadbalancer|all)(?P<subsetSpec>\[(?P<subset>(?P<subsetList>(\d+,?)+)|(?P<subsetRange>\d*:\d*)|(?P<subsetWildcard>\*))\])?$`)
+var NodeFilterRegexp = regexp.MustCompile(`^(?P<group>server|servers|agent|agents|loadbalancer|all)(?P<subsetSpec>:(?P<subset>(?P<subsetList>(\d+,?)+)|(?P<subsetRange>\d*-\d*)|(?P<subsetWildcard>\*)))?(?P<suffix>:[[:alpha:]]+)?$`)
 
 // FilterNodes takes a string filter to return a filtered list of nodes
-func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
+func FilterNodes(nodes []*k3d.Node, filters []string) (map[string][]*k3d.Node, error) {
+
+	result := map[string][]*k3d.Node{
+		NodeFilterMapKeyAll: nodes,
+	}
 
 	if len(filters) == 0 || len(filters[0]) == 0 {
 		log.Warnln("No node filter specified")
-		return nodes, nil
+		return result, nil
 	}
 
 	// map roles to subsets
@@ -64,21 +75,21 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 	for _, filter := range filters {
 
 		// match regex with capturing groups
-		match := filterRegexp.FindStringSubmatch(filter)
+		match := NodeFilterRegexp.FindStringSubmatch(filter)
 
 		if len(match) == 0 {
 			return nil, fmt.Errorf("Failed to parse node filters: invalid format or empty subset in '%s'", filter)
 		}
 
 		// map capturing group names to submatches
-		submatches := MapSubexpNames(filterRegexp.SubexpNames(), match)
+		submatches := MapSubexpNames(NodeFilterRegexp.SubexpNames(), match)
 
 		// if one of the filters is 'all', we only return this and drop all others
 		if submatches["group"] == "all" {
 			if len(filters) > 1 {
 				log.Warnf("Node filter 'all' set, but more were specified in '%+v'", filters)
 			}
-			return nodes, nil
+			return result, nil
 		}
 
 		// Choose the group of nodes to operate on
