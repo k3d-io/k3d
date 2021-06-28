@@ -176,6 +176,8 @@ func DecodeHook(hook mapstructure.DecodeHookFunc) DecoderConfigOption {
 //		"user": "root",
 //		"endpoint": "https://localhost"
 //	}
+//
+// Note: Vipers are not safe for concurrent Get() and Set() operations.
 type Viper struct {
 	// Delimiter that separates a list of keys
 	// used to access a nested value in one go
@@ -196,6 +198,9 @@ type Viper struct {
 	configType        string
 	configPermissions os.FileMode
 	envPrefix         string
+
+	// Specific commands for ini parsing
+	iniLoadOptions ini.LoadOptions
 
 	automaticEnvApplied bool
 	envKeyReplacer      StringReplacer
@@ -342,7 +347,7 @@ func (v *Viper) WatchConfig() {
 	initWG := sync.WaitGroup{}
 	initWG.Add(1)
 	go func() {
-		watcher, err := fsnotify.NewWatcher()
+		watcher, err := newWatcher()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -1635,7 +1640,7 @@ func (v *Viper) unmarshalReader(in io.Reader, c map[string]interface{}) error {
 		}
 
 	case "ini":
-		cfg := ini.Empty()
+		cfg := ini.Empty(v.iniLoadOptions)
 		err := cfg.Append(buf.Bytes())
 		if err != nil {
 			return ConfigParseError{err}
@@ -1824,7 +1829,7 @@ func mergeMaps(
 
 		svType := reflect.TypeOf(sv)
 		tvType := reflect.TypeOf(tv)
-		if svType != tvType {
+		if tvType != nil && svType != tvType { // Allow for the target to be nil
 			jww.ERROR.Printf(
 				"svType != tvType; key=%s, st=%v, tt=%v, sv=%v, tv=%v",
 				sk, svType, tvType, sv, tv)
@@ -2077,6 +2082,13 @@ func SetConfigPermissions(perm os.FileMode) { v.SetConfigPermissions(perm) }
 
 func (v *Viper) SetConfigPermissions(perm os.FileMode) {
 	v.configPermissions = perm.Perm()
+}
+
+// IniLoadOptions sets the load options for ini parsing.
+func IniLoadOptions(in ini.LoadOptions) Option {
+	return optionFunc(func(v *Viper) {
+		v.iniLoadOptions = in
+	})
 }
 
 func (v *Viper) getConfigType() string {

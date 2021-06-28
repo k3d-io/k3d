@@ -119,7 +119,7 @@ viper.AddConfigPath("$HOME/.appname")  // call multiple times to add many search
 viper.AddConfigPath(".")               // optionally look for config in the working directory
 err := viper.ReadInConfig() // Find and read the config file
 if err != nil { // Handle errors reading the config file
-	panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	panic(fmt.Errorf("Fatal error config file: %w \n", err))
 }
 ```
 
@@ -856,6 +856,9 @@ There has been several attempts to implement case sensitivity, but unfortunately
 
 You can vote for case sensitivity by filling out this feedback form: https://forms.gle/R6faU74qPRPAzchZ9
 
+### Is it safe to concurrently read and write to a viper?
+
+No, you will need to synchronize access to the viper yourself (for example by using the `sync` package). Concurrent reads and writes can cause a panic.
 
 ## Troubleshooting
 
