@@ -296,16 +296,6 @@ func (c *Cluster) AgentCountRunning() (int, int) {
 	return agentCount, agentsRunning
 }
 
-// HasLoadBalancer returns true if cluster has a loadbalancer node
-func (c *Cluster) HasLoadBalancer() bool {
-	for _, node := range c.Nodes {
-		if node.Role == LoadBalancerRole {
-			return true
-		}
-	}
-	return false
-}
-
 type NodeIP struct {
 	IP     netaddr.IP
 	Static bool
@@ -411,36 +401,4 @@ type RegistryExternal struct {
 	Protocol string `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
 	Host     string `yaml:"host" json:"host"`
 	Port     string `yaml:"port" json:"port"`
-}
-
-/*
- * Loadbalancer
- */
-
-/* LoadbalancerConfig defines the coarse file structure to configure the k3d-proxy
- * Example:
- * ports:
- * 	1234.tcp:
- * 		- k3d-k3s-default-server-0
- * 		- k3d-k3s-default-server-1
- * 	4321.udp:
- * 		- k3d-k3s-default-agent-0
- * 		- k3d-k3s-default-agent-1
- */
-type LoadbalancerConfig struct {
-	Ports    map[string][]string  `yaml:"ports"`
-	Settings LoadBalancerSettings `yaml:"settings"`
-}
-
-type LoadBalancerSettings struct {
-	WorkerProcesses int `yaml:"workerProcesses"`
-}
-
-const (
-	DefaultLoadbalancerConfigPath      = "/etc/confd/values.yaml"
-	DefaultLoadbalancerWorkerProcesses = 1024
-)
-
-type LoadbalancerCreateOpts struct {
-	Labels map[string]string
 }

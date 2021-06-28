@@ -386,19 +386,7 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 	/* global node configuration (applies for any node role) */
 
 	// ### Labels ###
-	labels := make(map[string]string)
-	for k, v := range k3d.DefaultRuntimeLabels {
-		labels[k] = v
-	}
-	for k, v := range k3d.DefaultRuntimeLabelsVar {
-		labels[k] = v
-	}
-	for k, v := range node.RuntimeLabels {
-		labels[k] = v
-	}
-	node.RuntimeLabels = labels
-	// second most important: the node role label
-	node.RuntimeLabels[k3d.LabelRole] = string(node.Role)
+	node.FillRuntimeLabels()
 
 	for k, v := range node.K3sNodeLabels {
 		node.Args = append(node.Args, "--node-label", fmt.Sprintf("%s=%s", k, v))
