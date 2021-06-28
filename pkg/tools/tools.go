@@ -58,7 +58,7 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 			localImageName := strings.TrimPrefix(image, "docker.io/")
 
 			// `runtimeImages` always contain a `:versionName` part. So if `image` doesn't, we shall add the default tag `:latest`.
-			if !strings.Contains(image, ":") {
+			if !containsVersionPart(image) {
 				localImageName = fmt.Sprintf("%s:latest", localImageName)
 			}
 
@@ -205,6 +205,29 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 	return nil
 
+}
+
+func containsVersionPart(imageTag string) bool {
+	// e.g. imageName has no colon -> false
+	// e.g. repoName/imageName has no colon -> false
+	// e.g. registry/repoName/imageName has no colon -> false
+	// e.g. registry:1234/repoName/imageName has colon, but before the slash -> false
+	// e.g. imageName:versionName has colon -> true
+	// e.g. repoName/imageName:versionName has colon after slash -> true
+	// e.g. registry/repoName/imageName:versionName has colon after slash -> true
+	// e.g. registry:1234/repoName/imageName:versionName has colon after slash -> false
+	if !strings.Contains(imageTag, ":") {
+		return false
+	}
+
+	if !strings.Contains(imageTag, "/") {
+		// happens if someone refers to a library image by just it's imageName (e.g. `postgres` instead of `library/postgres`)
+		return strings.Contains(imageTag, ":")
+	}
+
+	indexOfSlash := strings.Index(imageTag, "/") // can't be -1 because the existence of a '/' is ensured above
+	substringAfterSlash := imageTag[indexOfSlash:]
+	return strings.Contains(substringAfterSlash, ":")
 }
 
 // startToolsNode will start a new k3d tools container and connect it to the network of the chosen cluster
