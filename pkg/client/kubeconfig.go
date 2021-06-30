@@ -278,13 +278,6 @@ func KubeconfigMerge(ctx context.Context, newKubeConfig *clientcmdapi.Config, ex
 		existingKubeConfig.CurrentContext = newKubeConfig.CurrentContext
 	}
 
-	kubeconfigYaml, err := clientcmd.Write(*existingKubeConfig)
-	if err != nil {
-		log.Debugf("Merged Kubeconfig:\n%+v", existingKubeConfig)
-	} else {
-		log.Tracef("Merged Kubeconfig:\n%s", kubeconfigYaml)
-	}
-
 	return KubeconfigWrite(ctx, existingKubeConfig, outPath)
 }
 
