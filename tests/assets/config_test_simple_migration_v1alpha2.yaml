@@ -25,7 +25,7 @@ env:
 labels:
   - label: foo=bar
     nodeFilters:
-      - server[0]
+      - server:0
       - loadbalancer
 registries:
   create: true

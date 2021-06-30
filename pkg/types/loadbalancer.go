@@ -34,16 +34,17 @@ package types
  */
 
 type Loadbalancer struct {
-	Node   Node               `mapstructure:",squash" yaml:",inline"` // the underlying node
+	Node   *Node              `mapstructure:",squash" yaml:",inline"` // the underlying node
 	Config LoadbalancerConfig `mapstructure:"config" yaml:"config"`   // its configuration
 }
 
 func NewLoadbalancer() *Loadbalancer {
 	return &Loadbalancer{
-		Node: Node{
+		Node: &Node{
 			Role:  LoadBalancerRole,
 			Image: GetLoadbalancerImage(),
 		},
+		Config: LoadbalancerConfig{Ports: map[string][]string{}},
 	}
 }
 

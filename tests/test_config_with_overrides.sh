@@ -21,7 +21,7 @@ clustername="cfgoverridetest"
 highlight "[START] Config With Override $EXTRA_TITLE"
 
 info "Creating cluster $clustername..."
-$EXE cluster create "$clustername" --config "$CURR_DIR/assets/config_test_simple.yaml" --servers 4 -v /tmp/test:/tmp/test@loadbalancer --registry-create=false --env "x=y@agent[1]" $EXTRA_FLAG  || failed "could not create cluster $clustername $EXTRA_TITLE"
+$EXE cluster create "$clustername" --config "$CURR_DIR/assets/config_test_simple.yaml" --servers 4 -v /tmp/test:/tmp/test@loadbalancer --registry-create=false --env "x=y@agent:1" $EXTRA_FLAG  || failed "could not create cluster $clustername $EXTRA_TITLE"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
 sleep 5

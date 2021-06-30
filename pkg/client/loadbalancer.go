@@ -77,18 +77,18 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 	}
 	log.Debugf("Writing lb config:\n%s", string(newLbConfigYaml))
 	startTime := time.Now().Truncate(time.Second).UTC()
-	if err := runtime.WriteToNode(ctx, newLbConfigYaml, k3d.DefaultLoadbalancerConfigPath, 0744, cluster.ServerLoadBalancer); err != nil {
+	if err := runtime.WriteToNode(ctx, newLbConfigYaml, k3d.DefaultLoadbalancerConfigPath, 0744, cluster.ServerLoadBalancer.Node); err != nil {
 		return fmt.Errorf("error writing new loadbalancer config to container: %w", err)
 	}
 
 	successCtx, successCtxCancel := context.WithDeadline(ctx, time.Now().Add(5*time.Second))
 	defer successCtxCancel()
-	err = NodeWaitForLogMessage(successCtx, runtime, cluster.ServerLoadBalancer, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], startTime)
+	err = NodeWaitForLogMessage(successCtx, runtime, cluster.ServerLoadBalancer.Node, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], startTime)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			failureCtx, failureCtxCancel := context.WithDeadline(ctx, time.Now().Add(5*time.Second))
 			defer failureCtxCancel()
-			err = NodeWaitForLogMessage(failureCtx, runtime, cluster.ServerLoadBalancer, "host not found in upstream", startTime)
+			err = NodeWaitForLogMessage(failureCtx, runtime, cluster.ServerLoadBalancer.Node, "host not found in upstream", startTime)
 			if err != nil {
 				log.Warnf("Failed to check if the loadbalancer was configured correctly or if it broke. Please check it manually or try again: %v", err)
 				return LBConfigErrFailedTest
@@ -101,7 +101,7 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 			return LBConfigErrFailedTest
 		}
 	}
-	log.Infof("Successfully configured loadbalancer %s!", cluster.ServerLoadBalancer.Name)
+	log.Infof("Successfully configured loadbalancer %s!", cluster.ServerLoadBalancer.Node.Name)
 
 	time.Sleep(1 * time.Second) // waiting for a second, to avoid issues with too fast lb updates which would screw up the log waits
 
@@ -116,7 +116,7 @@ func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 		for _, node := range cluster.Nodes {
 			if node.Role == types.LoadBalancerRole {
 				var err error
-				cluster.ServerLoadBalancer, err = NodeGet(ctx, runtime, node)
+				cluster.ServerLoadBalancer.Node, err = NodeGet(ctx, runtime, node)
 				if err != nil {
 					return cfg, err
 				}
@@ -124,7 +124,7 @@ func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 		}
 	}
 
-	reader, err := runtime.ReadFromNode(ctx, types.DefaultLoadbalancerConfigPath, cluster.ServerLoadBalancer)
+	reader, err := runtime.ReadFromNode(ctx, types.DefaultLoadbalancerConfigPath, cluster.ServerLoadBalancer.Node)
 	if err != nil {
 		return cfg, err
 	}
@@ -162,31 +162,36 @@ func LoadbalancerGenerateConfig(cluster *k3d.Cluster) (k3d.LoadbalancerConfig, e
 	lbConfig.Ports[fmt.Sprintf("%s.tcp", k3d.DefaultAPIPort)] = servers
 
 	// generate comma-separated list of extra ports to forward // TODO: no default targets?
-	for exposedPort := range cluster.ServerLoadBalancer.Ports {
+	for exposedPort := range cluster.ServerLoadBalancer.Node.Ports {
 		// TODO: catch duplicates here?
 		lbConfig.Ports[fmt.Sprintf("%s.%s", exposedPort.Port(), exposedPort.Proto())] = servers
 	}
 
 	// some additional nginx settings
-	lbConfig.Settings.WorkerProcesses = k3d.DefaultLoadbalancerWorkerProcesses + len(cluster.ServerLoadBalancer.Ports)*len(servers)
+	lbConfig.Settings.WorkerProcesses = k3d.DefaultLoadbalancerWorkerProcesses + len(cluster.ServerLoadBalancer.Node.Ports)*len(servers)
 
 	return lbConfig, nil
 }
 
 func LoadbalancerPrepare(ctx context.Context, runtime runtimes.Runtime, cluster *types.Cluster, opts *k3d.LoadbalancerCreateOpts) (*k3d.Node, error) {
+	labels := map[string]string{}
 
-	if cluster.ServerLoadBalancer.Ports == nil {
-		cluster.ServerLoadBalancer.Ports = nat.PortMap{}
+	if opts != nil && opts.Labels == nil && len(opts.Labels) == 0 {
+		labels = opts.Labels
 	}
-	cluster.ServerLoadBalancer.Ports[k3d.DefaultAPIPort] = []nat.PortBinding{cluster.KubeAPI.Binding}
+
+	if cluster.ServerLoadBalancer.Node.Ports == nil {
+		cluster.ServerLoadBalancer.Node.Ports = nat.PortMap{}
+	}
+	cluster.ServerLoadBalancer.Node.Ports[k3d.DefaultAPIPort] = []nat.PortBinding{cluster.KubeAPI.Binding}
 
 	// Create LB as a modified node with loadbalancerRole
 	lbNode := &k3d.Node{
 		Name:          fmt.Sprintf("%s-%s-serverlb", k3d.DefaultObjectNamePrefix, cluster.Name),
 		Image:         k3d.GetLoadbalancerImage(),
-		Ports:         cluster.ServerLoadBalancer.Ports,
+		Ports:         cluster.ServerLoadBalancer.Node.Ports,
 		Role:          k3d.LoadBalancerRole,
-		RuntimeLabels: opts.Labels, // TODO: createLoadBalancer: add more expressive labels
+		RuntimeLabels: labels, // TODO: createLoadBalancer: add more expressive labels
 		Networks:      []string{cluster.Network.Name},
 		Restart:       true,
 	}

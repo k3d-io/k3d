@@ -372,12 +372,12 @@ ClusterCreatOpts:
 	clusterCreateOpts.GlobalLabels[k3d.LabelClusterName] = cluster.Name
 
 	// agent defaults (per cluster)
-	// connection url is always the name of the first server node (index 0)
-	connectionURL := fmt.Sprintf("https://%s:%s", generateNodeName(cluster.Name, k3d.ServerRole, 0), k3d.DefaultAPIPort)
+	// connection url is always the name of the first server node (index 0) // TODO: change this to the server loadbalancer
+	connectionURL := fmt.Sprintf("https://%s:%s", GenerateNodeName(cluster.Name, k3d.ServerRole, 0), k3d.DefaultAPIPort)
 	clusterCreateOpts.GlobalLabels[k3d.LabelClusterURL] = connectionURL
 	clusterCreateOpts.GlobalEnv = append(clusterCreateOpts.GlobalEnv, fmt.Sprintf("K3S_TOKEN=%s", cluster.Token))
 
-	nodeSetup := func(node *k3d.Node, suffix int) error {
+	nodeSetup := func(node *k3d.Node) error {
 		// cluster specific settings
 		if node.RuntimeLabels == nil {
 			node.RuntimeLabels = make(map[string]string) // TODO: maybe create an init function?
@@ -417,7 +417,6 @@ ClusterCreatOpts:
 			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", connectionURL))
 		}
 
-		node.Name = generateNodeName(cluster.Name, node.Role, suffix)
 		node.Networks = []string{cluster.Network.Name}
 		node.Restart = true
 		node.GPURequest = clusterCreateOpts.GPURequest
@@ -437,8 +436,6 @@ ClusterCreatOpts:
 
 	// used for node suffices
 	serverCount := 0
-	agentCount := 0
-	suffix := 0
 
 	// create init node first
 	if cluster.InitNode != nil {
@@ -457,7 +454,7 @@ ClusterCreatOpts:
 			cluster.InitNode.Ports[k3d.DefaultAPIPort] = []nat.PortBinding{cluster.KubeAPI.Binding}
 		}
 
-		if err := nodeSetup(cluster.InitNode, serverCount); err != nil {
+		if err := nodeSetup(cluster.InitNode); err != nil {
 			return err
 		}
 		serverCount++
@@ -481,17 +478,11 @@ ClusterCreatOpts:
 
 			time.Sleep(1 * time.Second) // FIXME: arbitrary wait for one second to avoid race conditions of servers registering
 
-			// name suffix
-			suffix = serverCount
 			serverCount++
 
-		} else if node.Role == k3d.AgentRole {
-			// name suffix
-			suffix = agentCount
-			agentCount++
 		}
 		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
-			if err := nodeSetup(node, suffix); err != nil {
+			if err := nodeSetup(node); err != nil {
 				return err
 			}
 		}
@@ -499,7 +490,7 @@ ClusterCreatOpts:
 
 	// WARN, if there are exactly two server nodes: that means we're using etcd, but don't have fault tolerance
 	if serverCount == 2 {
-		log.Warnln("You're creating 2 server nodes: Please consider creating at least 3 to achieve quorum & fault tolerance")
+		log.Warnln("You're creating 2 server nodes: Please consider creating at least 3 to achieve etcd quorum & fault tolerance")
 	}
 
 	/*
@@ -507,19 +498,26 @@ ClusterCreatOpts:
 	 */
 	// *** ServerLoadBalancer ***
 	if !clusterCreateOpts.DisableLoadBalancer {
-		lbNode, err := LoadbalancerPrepare(ctx, runtime, cluster, &k3d.LoadbalancerCreateOpts{Labels: clusterCreateOpts.GlobalLabels})
-		if err != nil {
-			return err
+		if cluster.ServerLoadBalancer == nil {
+			lbNode, err := LoadbalancerPrepare(ctx, runtime, cluster, &k3d.LoadbalancerCreateOpts{Labels: clusterCreateOpts.GlobalLabels})
+			if err != nil {
+				return err
+			}
+			cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
 		}
-		cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
 
-		lbConfig, err := LoadbalancerGenerateConfig(cluster)
-		if err != nil {
-			return fmt.Errorf("error generating loadbalancer config: %v", err)
+		if len(cluster.ServerLoadBalancer.Config.Ports) == 0 {
+			lbConfig, err := LoadbalancerGenerateConfig(cluster)
+			if err != nil {
+				return fmt.Errorf("error generating loadbalancer config: %v", err)
+			}
+			cluster.ServerLoadBalancer.Config = lbConfig
 		}
+
+		cluster.ServerLoadBalancer.Node.RuntimeLabels = clusterCreateOpts.GlobalLabels
 
 		// prepare to write config to lb container
-		configyaml, err := yaml.Marshal(lbConfig)
+		configyaml, err := yaml.Marshal(cluster.ServerLoadBalancer.Config)
 		if err != nil {
 			return err
 		}
@@ -534,13 +532,13 @@ ClusterCreatOpts:
 			},
 		}
 
-		lbNode.HookActions = append(lbNode.HookActions, writeLbConfigAction)
+		cluster.ServerLoadBalancer.Node.HookActions = append(cluster.ServerLoadBalancer.Node.HookActions, writeLbConfigAction)
 
-		log.Infof("Creating LoadBalancer '%s'", lbNode.Name)
-		if err := NodeCreate(ctx, runtime, lbNode, k3d.NodeCreateOpts{}); err != nil {
+		log.Infof("Creating LoadBalancer '%s'", cluster.ServerLoadBalancer.Node.Name)
+		if err := NodeCreate(ctx, runtime, cluster.ServerLoadBalancer.Node, k3d.NodeCreateOpts{}); err != nil {
 			return fmt.Errorf("error creating loadbalancer: %v", err)
 		}
-		log.Debugf("Created loadbalancer '%s'", lbNode.Name)
+		log.Debugf("Created loadbalancer '%s'", cluster.ServerLoadBalancer.Node.Name)
 		return err
 	}
 
@@ -795,7 +793,7 @@ func GenerateClusterToken() string {
 	return util.GenerateRandomString(20)
 }
 
-func generateNodeName(cluster string, role k3d.Role, suffix int) string {
+func GenerateNodeName(cluster string, role k3d.Role, suffix int) string {
 	return fmt.Sprintf("%s-%s-%s-%d", k3d.DefaultObjectNamePrefix, cluster, role, suffix)
 }
 
