@@ -1,0 +1,32 @@
+FROM nvidia/cuda:11.2.0-base-ubuntu18.04
+
+ENV DEBIAN_FRONTEND noninteractive
+
+ARG DOCKER_VERSION
+ENV DOCKER_VERSION=$DOCKER_VERSION
+
+RUN set -x && \
+    apt-get update && \
+    apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    wget \
+    tar \
+    zstd \
+    gnupg \
+    lsb-release \
+    git \
+    software-properties-common \
+    build-essential && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN set -x && \
+    curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    apt-get install -y \
+    containerd.io \
+    docker-ce=5:$DOCKER_VERSION~3-0~$(lsb_release -is | tr '[:upper:]' '[:lower:]')-$(lsb_release -cs) \
+    docker-ce-cli=5:$DOCKER_VERSION~3-0~$(lsb_release -is | tr '[:upper:]' '[:lower:]')-$(lsb_release -cs) && \
+    rm -rf /var/lib/apt/lists/*
