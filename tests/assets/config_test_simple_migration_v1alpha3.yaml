@@ -41,7 +41,7 @@ options:
     extraArgs:
       - arg: --tls-san=127.0.0.1
         nodeFilters:
-          - server[*]
+          - server:*
   kubeconfig:
     updateDefaultKubeconfig: true
     switchCurrentContext: true
@@ -49,5 +49,5 @@ options:
     labels:
       - label: foo=bar
         nodeFilters:
-          - server[0]
+          - server:0
           - loadbalancer

@@ -81,13 +81,13 @@ func TestReadSimpleConfig(t *testing.T) {
 				ExtraArgs: []conf.K3sArgWithNodeFilters{
 					{
 						Arg:         "--tls-san=127.0.0.1",
-						NodeFilters: []string{"server[*]"},
+						NodeFilters: []string{"server:*"},
 					},
 				},
 				NodeLabels: []conf.LabelWithNodeFilters{
 					{
 						Label:       "foo=bar",
-						NodeFilters: []string{"server[0]", "loadbalancer"},
+						NodeFilters: []string{"server:0", "loadbalancer"},
 					},
 				},
 			},
@@ -99,7 +99,7 @@ func TestReadSimpleConfig(t *testing.T) {
 				Labels: []conf.LabelWithNodeFilters{
 					{
 						Label:       "foo=bar",
-						NodeFilters: []string{"server[0]", "loadbalancer"},
+						NodeFilters: []string{"server:0", "loadbalancer"},
 					},
 				},
 			},
