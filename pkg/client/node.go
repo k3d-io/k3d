@@ -684,7 +684,7 @@ func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, chang
 		if err != nil {
 			return fmt.Errorf("error updating loadbalancer config: %w", err)
 		}
-		cluster.ServerLoadBalancer = result
+		cluster.ServerLoadBalancer.Node = result
 		lbConfig, err := LoadbalancerGenerateConfig(cluster)
 		if err != nil {
 			return fmt.Errorf("error generating loadbalancer config: %v", err)

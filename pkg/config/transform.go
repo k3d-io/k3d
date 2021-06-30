@@ -31,6 +31,7 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	cliutil "github.com/rancher/k3d/v4/cmd/util" // TODO: move parseapiport to pkg
+	"github.com/rancher/k3d/v4/pkg/client"
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
@@ -102,8 +103,11 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	newCluster.Nodes = []*k3d.Node{}
 
 	if !simpleConfig.Options.K3dOptions.DisableLoadbalancer {
-		newCluster.ServerLoadBalancer = &k3d.Node{
-			Role: k3d.LoadBalancerRole,
+		newCluster.ServerLoadBalancer = k3d.NewLoadbalancer()
+		var err error
+		newCluster.ServerLoadBalancer.Node, err = client.LoadbalancerPrepare(ctx, runtime, &newCluster, nil)
+		if err != nil {
+			return nil, fmt.Errorf("error preparing the loadbalancer: %w", err)
 		}
 	} else {
 		log.Debugln("Disabling the load balancer")
@@ -115,6 +119,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 	for i := 0; i < simpleConfig.Servers; i++ {
 		serverNode := k3d.Node{
+			Name:       client.GenerateNodeName(newCluster.Name, k3d.ServerRole, i),
 			Role:       k3d.ServerRole,
 			Image:      simpleConfig.Image,
 			ServerOpts: k3d.ServerOpts{},
@@ -132,6 +137,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 	for i := 0; i < simpleConfig.Agents; i++ {
 		agentNode := k3d.Node{
+			Name:   client.GenerateNodeName(newCluster.Name, k3d.AgentRole, i),
 			Role:   k3d.AgentRole,
 			Image:  simpleConfig.Image,
 			Memory: simpleConfig.Options.Runtime.AgentsMemory,
@@ -148,7 +154,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	nodeList := newCluster.Nodes
 	if !simpleConfig.Options.K3dOptions.DisableLoadbalancer {
 		nodeCount++
-		nodeList = append(nodeList, newCluster.ServerLoadBalancer)
+		nodeList = append(nodeList, newCluster.ServerLoadBalancer.Node)
 	}
 	for _, volumeWithNodeFilters := range simpleConfig.Volumes {
 		nodes, err := util.FilterNodes(nodeList, volumeWithNodeFilters.NodeFilters)
@@ -167,27 +173,35 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			return nil, fmt.Errorf("Portmapping '%s' lacks a node filter, but there's more than one node", portWithNodeFilters.Port)
 		}
 
-		nodes, err := util.FilterNodes(nodeList, portWithNodeFilters.NodeFilters)
+		x, err := util.FilterNodesWithSuffix(nodeList, portWithNodeFilters.NodeFilters)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, node := range nodes {
+		for suffix, nodes := range x {
 			portmappings, err := nat.ParsePortSpec(portWithNodeFilters.Port)
 			if err != nil {
-				return nil, fmt.Errorf("Failed to parse port spec '%s': %+v", portWithNodeFilters.Port, err)
+				return nil, fmt.Errorf("error parsing port spec '%s': %+v", portWithNodeFilters.Port, err)
 			}
-			if node.Ports == nil {
-				node.Ports = nat.PortMap{}
-			}
-			for _, pm := range portmappings {
-				if _, exists := node.Ports[pm.Port]; exists {
-					node.Ports[pm.Port] = append(node.Ports[pm.Port], pm.Binding)
-				} else {
-					node.Ports[pm.Port] = []nat.PortBinding{pm.Binding}
+			if suffix == "proxy" || suffix == util.NodeFilterSuffixNone { // proxy is the default suffix for port mappings
+				if newCluster.ServerLoadBalancer == nil {
+					return nil, fmt.Errorf("port-mapping of type 'proxy' specified, but loadbalancer is disabled")
+				}
+				if err := addPortMappings(newCluster.ServerLoadBalancer.Node, portmappings); err != nil {
+					return nil, err
+				}
+				for _, pm := range portmappings {
+					loadbalancerAddPortConfigs(newCluster.ServerLoadBalancer, pm, nodes)
+				}
+			} else if suffix == "direct" {
+				for _, node := range nodes {
+					if err := addPortMappings(node, portmappings); err != nil {
+						return nil, err
+					}
 				}
 			}
 		}
+
 	}
 
 	// -> K3S NODE LABELS
@@ -357,4 +371,45 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 
 	return clusterConfig, nil
+}
+
+func addPortMappings(node *k3d.Node, portmappings []nat.PortMapping) error {
+
+	if node.Ports == nil {
+		node.Ports = nat.PortMap{}
+	}
+	for _, pm := range portmappings {
+		if _, exists := node.Ports[pm.Port]; exists {
+			node.Ports[pm.Port] = append(node.Ports[pm.Port], pm.Binding)
+		} else {
+			node.Ports[pm.Port] = []nat.PortBinding{pm.Binding}
+		}
+	}
+	return nil
+}
+
+func loadbalancerAddPortConfigs(loadbalancer *k3d.Loadbalancer, pm nat.PortMapping, nodes []*k3d.Node) error {
+	portconfig := fmt.Sprintf("%s.%s", pm.Port.Port(), pm.Port.Proto())
+	nodenames := []string{}
+	for _, node := range nodes {
+		nodenames = append(nodenames, node.Name)
+	}
+
+	// entry for that port doesn't exist yet, so we simply create it with the list of node names
+	if _, ok := loadbalancer.Config.Ports[portconfig]; !ok {
+		loadbalancer.Config.Ports[portconfig] = nodenames
+		return nil
+	}
+
+nodenameLoop:
+	for _, nodename := range nodenames {
+		for _, existingNames := range loadbalancer.Config.Ports[portconfig] {
+			if nodename == existingNames {
+				continue nodenameLoop
+			}
+			loadbalancer.Config.Ports[portconfig] = append(loadbalancer.Config.Ports[portconfig], nodename)
+		}
+	}
+
+	return nil
 }
