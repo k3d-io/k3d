@@ -11,53 +11,125 @@ To get the NVIDIA container runtime in the K3S image you need to build your own 
 The native K3S image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet.  
 To get around this we need to build the image with a supported base image.
 
-### Adapt the Dockerfile
+### Dockerfiles:  
+  
+Dockerfile.base:
+```Dockerfile
+FROM nvidia/cuda:11.2.0-base-ubuntu18.04
+
+ENV DEBIAN_FRONTEND noninteractive
+
+ARG DOCKER_VERSION
+ENV DOCKER_VERSION=$DOCKER_VERSION
+
+RUN set -x && \
+    apt-get update && \
+    apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    wget \
+    tar \
+    zstd \
+    gnupg \
+    lsb-release \
+    git \
+    software-properties-common \
+    build-essential && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN set -x && \
+    curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    apt-get install -y \
+    containerd.io \
+    docker-ce=5:$DOCKER_VERSION~3-0~$(lsb_release -is | tr '[:upper:]' '[:lower:]')-$(lsb_release -cs) \
+    docker-ce-cli=5:$DOCKER_VERSION~3-0~$(lsb_release -is | tr '[:upper:]' '[:lower:]')-$(lsb_release -cs) && \
+    rm -rf /var/lib/apt/lists/*
+
+```  
+  
+  
+  
+Dockerfile.k3d-gpu:  
 
 ```Dockerfile
-FROM ubuntu:18.04 as base
-RUN apt-get update -y && apt-get install -y ca-certificates
-ADD k3s/build/out/data.tar.gz /image
-RUN mkdir -p /image/etc/ssl/certs /image/run /image/var/run /image/tmp /image/lib/modules /image/lib/firmware && \
+FROM nvidia/cuda:11.2.0-base-ubuntu18.04 as base
+
+RUN set -x && \
+    apt-get update && \
+    apt-get install -y ca-certificates zstd
+
+COPY k3s/build/out/data.tar.zst /
+
+RUN set -x && \
+    mkdir -p /image/etc/ssl/certs /image/run /image/var/run /image/tmp /image/lib/modules /image/lib/firmware && \
+    tar -I zstd -xf /data.tar.zst -C /image && \
     cp /etc/ssl/certs/ca-certificates.crt /image/etc/ssl/certs/ca-certificates.crt
-RUN cd image/bin && \
+
+RUN set -x && \
+    cd image/bin && \
     rm -f k3s && \
     ln -s k3s-server k3s
 
-FROM ubuntu:18.04
-RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-RUN apt-get update -y && apt-get -y install gnupg2 curl
+FROM nvidia/cuda:11.2.0-base-ubuntu18.04
 
-# Install the NVIDIA CUDA drivers and Container Runtime
-RUN apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
-RUN sh -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
-RUN curl -s -L https://nvidia.github.io/nvidia-container-runtime/gpgkey | apt-key add -
-RUN curl -s -L https://nvidia.github.io/nvidia-container-runtime/ubuntu18.04/nvidia-container-runtime.list | tee /etc/apt/sources.list.d/nvidia-container-runtime.list
-RUN apt-get update -y
-RUN apt-get -y install cuda-drivers nvidia-container-runtime
+RUN set -x && \
+    echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+
+RUN set -x && \
+    apt-get update && \
+    apt-get -y install gnupg2 curl
+
+# Install NVIDIA Container Runtime
+RUN set -x && \
+    curl -s -L https://nvidia.github.io/nvidia-container-runtime/gpgkey | apt-key add -
+
+RUN set -x && \
+    curl -s -L https://nvidia.github.io/nvidia-container-runtime/ubuntu18.04/nvidia-container-runtime.list | tee /etc/apt/sources.list.d/nvidia-container-runtime.list
+
+RUN set -x && \
+    apt-get update && \
+    apt-get -y install nvidia-container-runtime=3.5.0-1
+
 
 COPY --from=base /image /
-RUN mkdir -p /etc && \
+
+RUN set -x && \
+    mkdir -p /etc && \
     echo 'hosts: files dns' > /etc/nsswitch.conf
-RUN chmod 1777 /tmp
+
+RUN set -x && \
+    chmod 1777 /tmp
+
 # Provide custom containerd configuration to configure the nvidia-container-runtime
-RUN mkdir -p /var/lib/rancher/k3s/agent/etc/containerd/
+RUN set -x && \
+    mkdir -p /var/lib/rancher/k3s/agent/etc/containerd/
+
 COPY config.toml.tmpl /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+
 # Deploy the nvidia driver plugin on startup
-RUN mkdir -p /var/lib/rancher/k3s/server/manifests
+RUN set -x && \
+    mkdir -p /var/lib/rancher/k3s/server/manifests
+
 COPY gpu.yaml /var/lib/rancher/k3s/server/manifests/gpu.yaml
+
 VOLUME /var/lib/kubelet
 VOLUME /var/lib/rancher/k3s
 VOLUME /var/lib/cni
 VOLUME /var/log
+
 ENV PATH="$PATH:/bin/aux"
+
 ENTRYPOINT ["/bin/k3s"]
 CMD ["agent"]
 ```
 
-This [Dockerfile](cuda/Dockerfile) is based on the [K3s Dockerfile](https://github.com/rancher/k3s/blob/master/package/Dockerfile).
+These Dockerfiles [Dockerfile.base](https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/Dockerfile.base) + [Dockerfile.k3d-gpu](https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/Dockerfile.k3d-gpu) are based on the [K3s Dockerfile](https://github.com/rancher/k3s/blob/master/package/Dockerfile)
 The following changes are applied:
 
-1. Change the base images to Ubuntu 18.04 so the NVIDIA Container Runtime can be installed
+1. Change the base images to nvidia/cuda:11.2.0-base-ubuntu18.04 so the NVIDIA Container Runtime can be installed. The version of `cuda:xx.x.x` must match the one you're planning to use.
 2. Add a custom containerd `config.toml` template to add the NVIDIA Container Runtime. This replaces the default `runc` runtime
 3. Add a manifest for the NVIDIA driver plugin for Kubernetes
 
@@ -180,39 +252,51 @@ spec:
 To build the custom image we need to build K3S because we need the generated output.
 
 Put the following files in a directory:
-
-* [Dockerfile](cuda/Dockerfile)
+* [Dockerfile.base](https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/Dockerfile.base)
+* [Dockerfile.k3d-gpu](https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/Dockerfile.k3d-gpu)
 * [config.toml.tmpl](cuda/config.toml.tmpl)
-* [gpu.yaml](cuda/gpu.yaml)
-* [build.sh](cuda/build.sh)
-* [cuda-vector-add.yaml](cuda/cuda-vector-add.yaml)
+* [gpu.yaml](https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/gpu.yaml)
+* [build.sh](https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/build.sh)
+* [cuda-vector-add.yaml](https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/cuda-vector-add.yaml)
 
-The `build.sh` files takes the K3S git tag as argument, it defaults to `v1.18.10+k3s1`. The script performs the following steps:
+The `build.sh` script is configured using exports & defaults to `v1.21.2+k3s1`. Please set your CI_REGISTRY_IMAGE! The script performs the following steps:
 
 * pulls K3S
 * builds K3S
-* build the custom K3S Docker image
+* build the custom K3D Docker image
 
 The resulting image is tagged as k3s-gpu:&lt;version tag&gt;. The version tag is the git tag but the '+' sign is replaced with a '-'.
 
-[build.sh](cuda/build.sh):
+[build.sh](https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/build.sh):
 
 ```bash
 #!/bin/bash
-set -e
-cd $(dirname $0)
- 
-K3S_TAG="${1:-v1.18.10+k3s1}"
-IMAGE_TAG="${K3S_TAG/+/-}"
 
-if [ -d k3s ]; then
-    rm -rf k3s
+export CI_REGISTRY_IMAGE="YOUR_REGISTRY_IMAGE_URL"
+export VERSION="1.0"
+export K3S_TAG="v1.21.2+k3s1"
+export DOCKER_VERSION="20.10.7"
+export IMAGE_TAG="v1.21.2-k3s1"
+
+sudo docker build -f Dockerfile.base --build-arg DOCKER_VERSION=$DOCKER_VERSION -t $CI_REGISTRY_IMAGE/base:$VERSION . && \
+sudo docker push $CI_REGISTRY_IMAGE/base:$VERSION
+
+sudo rm -rf ./k3s && \
+git clone --depth 1 https://github.com/rancher/k3s.git -b "$K3S_TAG" && \
+sudo docker run -ti -v ${PWD}/k3s:/k3s -v /var/run/docker.sock:/var/run/docker.sock $CI_REGISTRY_IMAGE/base:1.0 sh -c "cd /k3s && make" && \
+sudo ls -al k3s/build/out/data.tar.zst
+
+if [ -f k3s/build/out/data.tar.zst ]; then
+  echo "File exists! Building!"
+  sudo docker build -f Dockerfile.k3d-gpu -t $CI_REGISTRY_IMAGE:$IMAGE_TAG . && \
+  sudo docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG
+  echo "Done!"
+else
+  echo "Error, file does not exist!"
+  exit 1
 fi
-git clone --depth 1 https://github.com/rancher/k3s.git -b $K3S_TAG
-cd k3s
-make
-cd ..
-docker build -t k3s-gpu:$IMAGE_TAG .
+
+docker build -t $CI_REGISTRY_IMAGE:$IMAGE_TAG .
 ```
 
 ## Run and test the custom image with Docker
@@ -220,10 +304,10 @@ docker build -t k3s-gpu:$IMAGE_TAG .
 You can run a container based on the new image with Docker:
 
 ```bash
-docker run --name k3s-gpu -d --privileged --gpus all k3s-gpu:v1.18.10-k3s1
+docker run --name k3s-gpu -d --privileged --gpus all $CI_REGISTRY_IMAGE:$IMAGE_TAG
 ```
 
-Deploy a [test pod](cuda/cuda-vector-add.yaml):
+Deploy a [test pod](https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/cuda-vector-add.yaml):
 
 ```bash
 docker cp cuda-vector-add.yaml k3s-gpu:/cuda-vector-add.yaml
@@ -236,10 +320,10 @@ docker exec k3s-gpu kubectl logs cuda-vector-add
 Tou can use the image with k3d:
 
 ```bash
-k3d cluster create --no-lb --image k3s-gpu:v1.18.10-k3s1 --gpus all
+k3d cluster create local --image=$CI_REGISTRY_IMAGE:$IMAGE_TAG --gpus=1
 ```
 
-Deploy a [test pod](cuda/cuda-vector-add.yaml):
+Deploy a [test pod](https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/cuda-vector-add.yaml):
 
 ```bash
 kubectl apply -f cuda-vector-add.yaml
@@ -257,3 +341,4 @@ Most of the information in this article was obtained from various sources:
 * [Add NVIDIA GPU support to k3s with containerd](https://dev.to/mweibel/add-nvidia-gpu-support-to-k3s-with-containerd-4j17)
 * [microk8s](https://github.com/ubuntu/microk8s)
 * [K3S](https://github.com/rancher/k3s)
+* [k3s-gpu](https://gitlab.com/vainkop1/k3s-gpu)
