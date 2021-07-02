@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package tools
 
 import (
@@ -197,10 +198,15 @@ func findImages(ctx context.Context, runtime runtimes.Runtime, requestedImages [
 }
 
 func findRuntimeImage(requestedImage string, runtimeImages []string) (string, bool) {
-	canonicalRequestedImage := canonicalImageName(requestedImage)
-
 	for _, runtimeImage := range runtimeImages {
-		if imageNamesEqual(canonicalRequestedImage, runtimeImage) {
+		if imageNamesEqual(requestedImage, runtimeImage) {
+			return runtimeImage, true
+		}
+	}
+
+	// if not found, check for special Docker image naming
+	for _, runtimeImage := range runtimeImages {
+		if dockerSpecialImageNameEqual(requestedImage, runtimeImage) {
 			return runtimeImage, true
 		}
 	}
@@ -215,43 +221,37 @@ func isFile(image string) bool {
 	return !file.IsDir()
 }
 
-// canonicalImageName turns any docker image name in the form `registry/orgName/imageName:versionName`.
-// If `:versionName` is not present, `:latest` is suffixed.
-// If `orgName` is not present, `library` is added.
-// If `registry` is not present, `docker.io` is prefixed.
-func canonicalImageName(image string) string {
-	if !containsVersionPart(image) {
-		image = fmt.Sprintf("%s:latest", image)
+func dockerSpecialImageNameEqual(requestedImageName string, runtimeImageName string) bool {
+	if strings.HasPrefix(requestedImageName, "docker.io/") {
+		return dockerSpecialImageNameEqual(strings.TrimPrefix(requestedImageName, "docker.io/"), runtimeImageName)
 	}
 
-	slashCount := strings.Count(image, "/")
-	switch slashCount {
-	case 0: // zero slashes -> library image tag (e.g. `postgres`)
-		return fmt.Sprintf("docker.io/library/%s", image)
-	case 1: // one slash -> no registry (e.g. `library/postgres`)
-		return fmt.Sprintf("docker.io/%s", image)
-	default: // two slashes or more -> already contains registry name
-		return image
+	if strings.HasPrefix(requestedImageName, "library/") {
+		return imageNamesEqual(strings.TrimPrefix(requestedImageName, "library/"), runtimeImageName)
 	}
+
+	return false
 }
 
 func imageNamesEqual(requestedImageName string, runtimeImageName string) bool {
+	// first, compare what the user provided
 	if requestedImageName == runtimeImageName {
 		return true
 	}
 
-	return requestedImageName == canonicalImageName(runtimeImageName)
+	// transform to canonical image name, i.e. ensure `:versionName` part on both ends
+	return canonicalImageName(requestedImageName) == runtimeImageName
+}
+
+// canonicalImageName adds `:latest` suffix if `:anyOtherVersionName` is not present.
+func canonicalImageName(image string) string {
+	if !containsVersionPart(image) {
+		image = fmt.Sprintf("%s:latest", image)
+	}
+	return image
 }
 
 func containsVersionPart(imageTag string) bool {
-	// e.g. imageName has no colon -> false
-	// e.g. repoName/imageName has no colon -> false
-	// e.g. registry/repoName/imageName has no colon -> false
-	// e.g. registry:1234/repoName/imageName has colon, but before the slash -> false
-	// e.g. imageName:versionName has colon -> true
-	// e.g. repoName/imageName:versionName has colon after slash -> true
-	// e.g. registry/repoName/imageName:versionName has colon after slash -> true
-	// e.g. registry:1234/repoName/imageName:versionName has colon after slash -> false
 	if !strings.Contains(imageTag, ":") {
 		return false
 	}

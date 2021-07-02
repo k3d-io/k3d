@@ -48,6 +48,9 @@ func NewCmdImageImport() *cobra.Command {
 If an IMAGE starts with the prefix 'docker.io/', then this prefix is stripped internally.
 That is, 'docker.io/rancher/k3d-tools:latest' is treated as 'rancher/k3d-tools:latest'.
 
+If an IMAGE starts with the prefix 'library/' (or 'docker.io/library/'), then this prefix is stripped internally.
+That is, 'library/busybox:latest' (or 'docker.io/library/busybox:latest') are treated as 'busybox:latest'.
+
 If an IMAGE does not have a version tag, then ':latest' is assumed.
 That is, 'rancher/k3d-tools' is treated as 'rancher/k3d-tools:latest'.
 
