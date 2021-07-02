@@ -80,21 +80,9 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 
 	// for networks that have an IPAM config, we inspect that as well (e.g. "host" network doesn't have it)
 	if len(networkList[0].IPAM.Config) > 0 {
-		prefix, err := netaddr.ParseIPPrefix(networkList[0].IPAM.Config[0].Subnet)
+		network.IPAM, err = d.parseIPAM(networkList[0].IPAM.Config[0])
 		if err != nil {
 			return nil, err
-		}
-
-		gateway, err := netaddr.ParseIP(networkList[0].IPAM.Config[0].Gateway)
-		if err != nil {
-			return nil, err
-		}
-
-		network.IPAM = k3d.IPAM{
-			IPPrefix: prefix,
-			IPsUsed: []netaddr.IP{
-				gateway,
-			},
 		}
 
 		for _, container := range networkList[0].Containers {
@@ -347,4 +335,25 @@ func (d Docker) getFreeSubnetPrefix(ctx context.Context) (netaddr.IPPrefix, erro
 
 	return fakenet.IPAM.IPPrefix, nil
 
+}
+
+// parseIPAM Returns an IPAM structure with the subnet and gateway filled in. If some of the values
+// cannot be parsed, an error is returned. If gateway is empty, the function calculates the default gateway.
+func (d Docker) parseIPAM(config network.IPAMConfig) (ipam k3d.IPAM, err error){
+	var gateway netaddr.IP
+	ipam = k3d.IPAM{ IPsUsed: []netaddr.IP{}}
+
+	ipam.IPPrefix, err = netaddr.ParseIPPrefix(config.Subnet)
+	if err != nil {
+		return
+	}
+
+	if config.Gateway == "" {
+		gateway = ipam.IPPrefix.IP.Next()
+	} else  {
+		gateway, err = netaddr.ParseIP(config.Gateway)
+	}
+	ipam.IPsUsed = append(ipam.IPsUsed, gateway)
+
+	return
 }
