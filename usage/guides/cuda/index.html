@@ -754,8 +754,8 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#adapt-the-dockerfile" class="md-nav__link">
-    Adapt the Dockerfile
+  <a href="#dockerfiles" class="md-nav__link">
+    Dockerfiles:
   </a>
   
 </li>
@@ -810,6 +810,13 @@
         <li class="md-nav__item">
   <a href="#acknowledgements" class="md-nav__link">
     Acknowledgements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authors" class="md-nav__link">
+    Authors
   </a>
   
 </li>
@@ -964,8 +971,8 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#adapt-the-dockerfile" class="md-nav__link">
-    Adapt the Dockerfile
+  <a href="#dockerfiles" class="md-nav__link">
+    Dockerfiles:
   </a>
   
 </li>
@@ -1024,6 +1031,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#authors" class="md-nav__link">
+    Authors
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1050,50 +1064,119 @@ If you are using Docker you can install the <a href="https://docs.nvidia.com/dat
 <p>To get the NVIDIA container runtime in the K3S image you need to build your own K3S image.<br />
 The native K3S image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet.<br />
 To get around this we need to build the image with a supported base image.</p>
-<h3 id="adapt-the-dockerfile">Adapt the Dockerfile<a class="headerlink" href="#adapt-the-dockerfile" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">FROM</span> <span class="s">ubuntu:18.04</span> <span class="k">as</span> <span class="s">base</span>
-<span class="k">RUN</span> apt-get update -y <span class="o">&amp;&amp;</span> apt-get install -y ca-certificates
-<span class="k">ADD</span> k3s/build/out/data.tar.gz /image
-<span class="k">RUN</span> mkdir -p /image/etc/ssl/certs /image/run /image/var/run /image/tmp /image/lib/modules /image/lib/firmware <span class="o">&amp;&amp;</span> <span class="se">\</span>
+<h3 id="dockerfiles">Dockerfiles:<a class="headerlink" href="#dockerfiles" title="Permanent link">&para;</a></h3>
+<p>Dockerfile.base:
+<div class="highlight"><pre><span></span><code><span class="k">FROM</span> <span class="s">nvidia/cuda:11.2.0-base-ubuntu18.04</span>
+
+<span class="k">ENV</span> DEBIAN_FRONTEND noninteractive
+
+<span class="k">ARG</span> DOCKER_VERSION
+<span class="k">ENV</span> <span class="nv">DOCKER_VERSION</span><span class="o">=</span><span class="nv">$DOCKER_VERSION</span>
+
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    apt-get update <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    apt-get install -y <span class="se">\</span>
+    apt-transport-https <span class="se">\</span>
+    ca-certificates <span class="se">\</span>
+    curl <span class="se">\</span>
+    wget <span class="se">\</span>
+    tar <span class="se">\</span>
+    zstd <span class="se">\</span>
+    gnupg <span class="se">\</span>
+    lsb-release <span class="se">\</span>
+    git <span class="se">\</span>
+    software-properties-common <span class="se">\</span>
+    build-essential <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    rm -rf /var/lib/apt/lists/*
+
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    curl -fsSL https://download.docker.com/linux/<span class="k">$(</span>lsb_release -is <span class="p">|</span> tr <span class="s1">&#39;[:upper:]&#39;</span> <span class="s1">&#39;[:lower:]&#39;</span><span class="k">)</span>/gpg <span class="p">|</span> gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    <span class="nb">echo</span> <span class="s2">&quot;deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/</span><span class="k">$(</span>lsb_release -is <span class="p">|</span> tr <span class="s1">&#39;[:upper:]&#39;</span> <span class="s1">&#39;[:lower:]&#39;</span><span class="k">)</span><span class="s2"> </span><span class="k">$(</span>lsb_release -cs<span class="k">)</span><span class="s2"> stable&quot;</span> <span class="p">|</span> tee /etc/apt/sources.list.d/docker.list &gt; /dev/null <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    apt-get update <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    apt-get install -y <span class="se">\</span>
+    containerd.io <span class="se">\</span>
+    docker-ce<span class="o">=</span><span class="m">5</span>:<span class="nv">$DOCKER_VERSION</span>~3-0~<span class="k">$(</span>lsb_release -is <span class="p">|</span> tr <span class="s1">&#39;[:upper:]&#39;</span> <span class="s1">&#39;[:lower:]&#39;</span><span class="k">)</span>-<span class="k">$(</span>lsb_release -cs<span class="k">)</span> <span class="se">\</span>
+    docker-ce-cli<span class="o">=</span><span class="m">5</span>:<span class="nv">$DOCKER_VERSION</span>~3-0~<span class="k">$(</span>lsb_release -is <span class="p">|</span> tr <span class="s1">&#39;[:upper:]&#39;</span> <span class="s1">&#39;[:lower:]&#39;</span><span class="k">)</span>-<span class="k">$(</span>lsb_release -cs<span class="k">)</span> <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    rm -rf /var/lib/apt/lists/*
+</code></pre></div></p>
+<p>Dockerfile.k3d-gpu:  </p>
+<div class="highlight"><pre><span></span><code><span class="k">FROM</span> <span class="s">nvidia/cuda:11.2.0-base-ubuntu18.04</span> <span class="k">as</span> <span class="s">base</span>
+
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    apt-get update <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    apt-get install -y ca-certificates zstd
+
+<span class="k">COPY</span> k3s/build/out/data.tar.zst /
+
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    mkdir -p /image/etc/ssl/certs /image/run /image/var/run /image/tmp /image/lib/modules /image/lib/firmware <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    tar -I zstd -xf /data.tar.zst -C /image <span class="o">&amp;&amp;</span> <span class="se">\</span>
     cp /etc/ssl/certs/ca-certificates.crt /image/etc/ssl/certs/ca-certificates.crt
-<span class="k">RUN</span> <span class="nb">cd</span> image/bin <span class="o">&amp;&amp;</span> <span class="se">\</span>
+
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    <span class="nb">cd</span> image/bin <span class="o">&amp;&amp;</span> <span class="se">\</span>
     rm -f k3s <span class="o">&amp;&amp;</span> <span class="se">\</span>
     ln -s k3s-server k3s
 
-<span class="k">FROM</span> <span class="s">ubuntu:18.04</span>
-<span class="k">RUN</span> <span class="nb">echo</span> <span class="s1">&#39;debconf debconf/frontend select Noninteractive&#39;</span> <span class="p">|</span> debconf-set-selections
-<span class="k">RUN</span> apt-get update -y <span class="o">&amp;&amp;</span> apt-get -y install gnupg2 curl
+<span class="k">FROM</span> <span class="s">nvidia/cuda:11.2.0-base-ubuntu18.04</span>
 
-<span class="c"># Install the NVIDIA CUDA drivers and Container Runtime</span>
-<span class="k">RUN</span> apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
-<span class="k">RUN</span> sh -c <span class="s1">&#39;echo &quot;deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64 /&quot; &gt; /etc/apt/sources.list.d/cuda.list&#39;</span>
-<span class="k">RUN</span> curl -s -L https://nvidia.github.io/nvidia-container-runtime/gpgkey <span class="p">|</span> apt-key add -
-<span class="k">RUN</span> curl -s -L https://nvidia.github.io/nvidia-container-runtime/ubuntu18.04/nvidia-container-runtime.list <span class="p">|</span> tee /etc/apt/sources.list.d/nvidia-container-runtime.list
-<span class="k">RUN</span> apt-get update -y
-<span class="k">RUN</span> apt-get -y install cuda-drivers nvidia-container-runtime
+<span class="k">ARG</span> NVIDIA_CONTAINER_RUNTIME_VERSION
+<span class="k">ENV</span> <span class="nv">NVIDIA_CONTAINER_RUNTIME_VERSION</span><span class="o">=</span><span class="nv">$NVIDIA_CONTAINER_RUNTIME_VERSION</span>
+
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    <span class="nb">echo</span> <span class="s1">&#39;debconf debconf/frontend select Noninteractive&#39;</span> <span class="p">|</span> debconf-set-selections
+
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    apt-get update <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    apt-get -y install gnupg2 curl
+
+<span class="c"># Install NVIDIA Container Runtime</span>
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    curl -s -L https://nvidia.github.io/nvidia-container-runtime/gpgkey <span class="p">|</span> apt-key add -
+
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    curl -s -L https://nvidia.github.io/nvidia-container-runtime/ubuntu18.04/nvidia-container-runtime.list <span class="p">|</span> tee /etc/apt/sources.list.d/nvidia-container-runtime.list
+
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    apt-get update <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    apt-get -y install nvidia-container-runtime<span class="o">=</span><span class="si">${</span><span class="nv">NVIDIA_CONTAINER_RUNTIME_VERSION</span><span class="si">}</span>
+
 
 <span class="k">COPY</span> --from<span class="o">=</span>base /image /
-<span class="k">RUN</span> mkdir -p /etc <span class="o">&amp;&amp;</span> <span class="se">\</span>
+
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    mkdir -p /etc <span class="o">&amp;&amp;</span> <span class="se">\</span>
     <span class="nb">echo</span> <span class="s1">&#39;hosts: files dns&#39;</span> &gt; /etc/nsswitch.conf
-<span class="k">RUN</span> chmod <span class="m">1777</span> /tmp
+
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    chmod <span class="m">1777</span> /tmp
+
 <span class="c"># Provide custom containerd configuration to configure the nvidia-container-runtime</span>
-<span class="k">RUN</span> mkdir -p /var/lib/rancher/k3s/agent/etc/containerd/
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    mkdir -p /var/lib/rancher/k3s/agent/etc/containerd/
+
 <span class="k">COPY</span> config.toml.tmpl /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+
 <span class="c"># Deploy the nvidia driver plugin on startup</span>
-<span class="k">RUN</span> mkdir -p /var/lib/rancher/k3s/server/manifests
+<span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    mkdir -p /var/lib/rancher/k3s/server/manifests
+
 <span class="k">COPY</span> gpu.yaml /var/lib/rancher/k3s/server/manifests/gpu.yaml
+
 <span class="k">VOLUME</span><span class="s"> /var/lib/kubelet</span>
 <span class="k">VOLUME</span><span class="s"> /var/lib/rancher/k3s</span>
 <span class="k">VOLUME</span><span class="s"> /var/lib/cni</span>
 <span class="k">VOLUME</span><span class="s"> /var/log</span>
+
 <span class="k">ENV</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$PATH</span><span class="s2">:/bin/aux&quot;</span>
+
 <span class="k">ENTRYPOINT</span> <span class="p">[</span><span class="s2">&quot;/bin/k3s&quot;</span><span class="p">]</span>
 <span class="k">CMD</span> <span class="p">[</span><span class="s2">&quot;agent&quot;</span><span class="p">]</span>
 </code></pre></div>
-<p>This <a href="cuda/Dockerfile">Dockerfile</a> is based on the <a href="https://github.com/rancher/k3s/blob/master/package/Dockerfile">K3s Dockerfile</a>.
+<p>These Dockerfiles <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/Dockerfile.base">Dockerfile.base</a> + <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/Dockerfile.k3d-gpu">Dockerfile.k3d-gpu</a> are based on the <a href="https://github.com/rancher/k3s/blob/master/package/Dockerfile">K3s Dockerfile</a>
 The following changes are applied:</p>
 <ol>
-<li>Change the base images to Ubuntu 18.04 so the NVIDIA Container Runtime can be installed</li>
+<li>Change the base images to nvidia/cuda:11.2.0-base-ubuntu18.04 so the NVIDIA Container Runtime can be installed. The version of <code>cuda:xx.x.x</code> must match the one you&rsquo;re planning to use.</li>
 <li>Add a custom containerd <code>config.toml</code> template to add the NVIDIA Container Runtime. This replaces the default <code>runc</code> runtime</li>
 <li>Add a manifest for the NVIDIA driver plugin for Kubernetes</li>
 </ol>
@@ -1206,52 +1289,66 @@ The following changes are applied:</p>
 </code></pre></div>
 <h3 id="build-the-k3s-image">Build the K3S image<a class="headerlink" href="#build-the-k3s-image" title="Permanent link">&para;</a></h3>
 <p>To build the custom image we need to build K3S because we need the generated output.</p>
-<p>Put the following files in a directory:</p>
-<ul>
-<li><a href="cuda/Dockerfile">Dockerfile</a></li>
-<li><a href="config.toml.tmpl">config.toml.tmpl</a></li>
-<li><a href="gpu.yaml">gpu.yaml</a></li>
-<li><a href="build.sh">build.sh</a></li>
-<li><a href="cuda-vector-add.yaml">cuda-vector-add.yaml</a></li>
-</ul>
-<p>The <code>build.sh</code> files takes the K3S git tag as argument, it defaults to <code>v1.18.10+k3s1</code>. The script performs the following steps:</p>
+<p>Put the following files in a directory:
+* <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/Dockerfile.base">Dockerfile.base</a>
+* <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/Dockerfile.k3d-gpu">Dockerfile.k3d-gpu</a>
+* <a href="config.toml.tmpl">config.toml.tmpl</a>
+* <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/gpu.yaml">gpu.yaml</a>
+* <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/build.sh">build.sh</a>
+* <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/cuda-vector-add.yaml">cuda-vector-add.yaml</a></p>
+<p>The <code>build.sh</code> script is configured using exports &amp; defaults to <code>v1.21.2+k3s1</code>. Please set your CI_REGISTRY_IMAGE! The script performs the following steps:</p>
 <ul>
 <li>pulls K3S</li>
 <li>builds K3S</li>
-<li>build the custom K3S Docker image</li>
+<li>build the custom K3D Docker image</li>
 </ul>
 <p>The resulting image is tagged as k3s-gpu:&lt;version tag&gt;. The version tag is the git tag but the &lsquo;+&rsquo; sign is replaced with a &lsquo;-&lsquo;.</p>
-<p><a href="build.sh">build.sh</a>:</p>
+<p><a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/build.sh">build.sh</a>:</p>
 <div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
-<span class="nb">set</span> -e
-<span class="nb">cd</span> <span class="k">$(</span>dirname <span class="nv">$0</span><span class="k">)</span>
 
-<span class="nv">K3S_TAG</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">1</span><span class="k">:-</span><span class="nv">v1</span><span class="p">.18.10+k3s1</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="nv">IMAGE_TAG</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">K3S_TAG</span><span class="p">/+/-</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nb">export</span> <span class="nv">CI_REGISTRY_IMAGE</span><span class="o">=</span><span class="s2">&quot;YOUR_REGISTRY_IMAGE_URL&quot;</span>
+<span class="nb">export</span> <span class="nv">VERSION</span><span class="o">=</span><span class="s2">&quot;1.0&quot;</span>
+<span class="nb">export</span> <span class="nv">K3S_TAG</span><span class="o">=</span><span class="s2">&quot;v1.21.2+k3s1&quot;</span>
+<span class="nb">export</span> <span class="nv">DOCKER_VERSION</span><span class="o">=</span><span class="s2">&quot;20.10.7&quot;</span>
+<span class="nb">export</span> <span class="nv">IMAGE_TAG</span><span class="o">=</span><span class="s2">&quot;v1.21.2-k3s1&quot;</span>
+<span class="nb">export</span> <span class="nv">NVIDIA_CONTAINER_RUNTIME_VERSION</span><span class="o">=</span><span class="s2">&quot;3.5.0-1&quot;</span>
 
-<span class="k">if</span> <span class="o">[</span> -d k3s <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-    rm -rf k3s
+docker build -f Dockerfile.base --build-arg <span class="nv">DOCKER_VERSION</span><span class="o">=</span><span class="nv">$DOCKER_VERSION</span> -t <span class="nv">$CI_REGISTRY_IMAGE</span>/base:<span class="nv">$VERSION</span> . <span class="o">&amp;&amp;</span> <span class="se">\</span>
+docker push <span class="nv">$CI_REGISTRY_IMAGE</span>/base:<span class="nv">$VERSION</span>
+
+rm -rf ./k3s <span class="o">&amp;&amp;</span> <span class="se">\</span>
+git clone --depth <span class="m">1</span> https://github.com/rancher/k3s.git -b <span class="s2">&quot;</span><span class="nv">$K3S_TAG</span><span class="s2">&quot;</span> <span class="o">&amp;&amp;</span> <span class="se">\</span>
+docker run -ti -v <span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/k3s:/k3s -v /var/run/docker.sock:/var/run/docker.sock <span class="nv">$CI_REGISTRY_IMAGE</span>/base:1.0 sh -c <span class="s2">&quot;cd /k3s &amp;&amp; make&quot;</span> <span class="o">&amp;&amp;</span> <span class="se">\</span>
+ls -al k3s/build/out/data.tar.zst
+
+<span class="k">if</span> <span class="o">[</span> -f k3s/build/out/data.tar.zst <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+  <span class="nb">echo</span> <span class="s2">&quot;File exists! Building!&quot;</span>
+  docker build -f Dockerfile.k3d-gpu <span class="se">\</span>
+    --build-arg <span class="nv">NVIDIA_CONTAINER_RUNTIME_VERSION</span><span class="o">=</span><span class="nv">$NVIDIA_CONTAINER_RUNTIME_VERSION</span> <span class="se">\</span>
+    -t <span class="nv">$CI_REGISTRY_IMAGE</span>:<span class="nv">$IMAGE_TAG</span> . <span class="o">&amp;&amp;</span> <span class="se">\</span>
+  docker push <span class="nv">$CI_REGISTRY_IMAGE</span>:<span class="nv">$IMAGE_TAG</span>
+  <span class="nb">echo</span> <span class="s2">&quot;Done!&quot;</span>
+<span class="k">else</span>
+  <span class="nb">echo</span> <span class="s2">&quot;Error, file does not exist!&quot;</span>
+  <span class="nb">exit</span> <span class="m">1</span>
 <span class="k">fi</span>
-git clone --depth <span class="m">1</span> https://github.com/rancher/k3s.git -b <span class="nv">$K3S_TAG</span>
-<span class="nb">cd</span> k3s
-make
-<span class="nb">cd</span> ..
-docker build -t k3s-gpu:<span class="nv">$IMAGE_TAG</span> .
+
+docker build -t <span class="nv">$CI_REGISTRY_IMAGE</span>:<span class="nv">$IMAGE_TAG</span> .
 </code></pre></div>
 <h2 id="run-and-test-the-custom-image-with-docker">Run and test the custom image with Docker<a class="headerlink" href="#run-and-test-the-custom-image-with-docker" title="Permanent link">&para;</a></h2>
 <p>You can run a container based on the new image with Docker:</p>
-<div class="highlight"><pre><span></span><code>docker run --name k3s-gpu -d --privileged --gpus all k3s-gpu:v1.18.10-k3s1
+<div class="highlight"><pre><span></span><code>docker run --name k3s-gpu -d --privileged --gpus all <span class="nv">$CI_REGISTRY_IMAGE</span>:<span class="nv">$IMAGE_TAG</span>
 </code></pre></div>
-<p>Deploy a <a href="cuda-vector-add.yaml">test pod</a>:</p>
+<p>Deploy a <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/cuda-vector-add.yaml">test pod</a>:</p>
 <div class="highlight"><pre><span></span><code>docker cp cuda-vector-add.yaml k3s-gpu:/cuda-vector-add.yaml
 docker <span class="nb">exec</span> k3s-gpu kubectl apply -f /cuda-vector-add.yaml
 docker <span class="nb">exec</span> k3s-gpu kubectl logs cuda-vector-add
 </code></pre></div>
 <h2 id="run-and-test-the-custom-image-with-k3d">Run and test the custom image with k3d<a class="headerlink" href="#run-and-test-the-custom-image-with-k3d" title="Permanent link">&para;</a></h2>
 <p>Tou can use the image with k3d:</p>
-<div class="highlight"><pre><span></span><code>k3d cluster create --no-lb --image k3s-gpu:v1.18.10-k3s1 --gpus all
+<div class="highlight"><pre><span></span><code>k3d cluster create <span class="nb">local</span> --image<span class="o">=</span><span class="nv">$CI_REGISTRY_IMAGE</span>:<span class="nv">$IMAGE_TAG</span> --gpus<span class="o">=</span><span class="m">1</span>
 </code></pre></div>
-<p>Deploy a <a href="cuda-vector-add.yaml">test pod</a>:</p>
+<p>Deploy a <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/cuda-vector-add.yaml">test pod</a>:</p>
 <div class="highlight"><pre><span></span><code>kubectl apply -f cuda-vector-add.yaml
 kubectl logs cuda-vector-add
 </code></pre></div>
@@ -1265,6 +1362,12 @@ kubectl logs cuda-vector-add
 <li><a href="https://dev.to/mweibel/add-nvidia-gpu-support-to-k3s-with-containerd-4j17">Add NVIDIA GPU support to k3s with containerd</a></li>
 <li><a href="https://github.com/ubuntu/microk8s">microk8s</a></li>
 <li><a href="https://github.com/rancher/k3s">K3S</a></li>
+<li><a href="https://gitlab.com/vainkop1/k3s-gpu">k3s-gpu</a></li>
+</ul>
+<h2 id="authors">Authors<a class="headerlink" href="#authors" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://github.com/markrexwinkel">@markrexwinkel</a></li>
+<li><a href="https://github.com/vainkop">@vainkop</a></li>
 </ul>
                 
                   
@@ -1274,7 +1377,7 @@ kubectl logs cuda-vector-add
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 9, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 5, 2021</span>
       
     
   </small>
