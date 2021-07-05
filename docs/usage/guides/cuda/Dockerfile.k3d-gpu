@@ -18,6 +18,9 @@ RUN set -x && \
 
 FROM nvidia/cuda:11.2.0-base-ubuntu18.04
 
+ARG NVIDIA_CONTAINER_RUNTIME_VERSION
+ENV NVIDIA_CONTAINER_RUNTIME_VERSION=$NVIDIA_CONTAINER_RUNTIME_VERSION
+
 RUN set -x && \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
@@ -34,7 +37,7 @@ RUN set -x && \
 
 RUN set -x && \
     apt-get update && \
-    apt-get -y install nvidia-container-runtime=3.5.0-1
+    apt-get -y install nvidia-container-runtime=${NVIDIA_CONTAINER_RUNTIME_VERSION}
 
 
 COPY --from=base /image /
