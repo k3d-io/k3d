@@ -70,6 +70,7 @@ plugins:
   - git-revision-date-localized: # https://squidfunk.github.io/mkdocs-material/plugins/revision-date/
       type: date
   - awesome-pages # https://squidfunk.github.io/mkdocs-material/plugins/awesome-pages/
+  - include-markdown # https://github.com/mondeja/mkdocs-include-markdown-plugin
 
 # Other Settings
 strict: true # halt processing when a warning is raised
