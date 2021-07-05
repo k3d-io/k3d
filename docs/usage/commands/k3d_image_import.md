@@ -6,6 +6,15 @@ Import image(s) from docker into k3d cluster(s).
 
 Import image(s) from docker into k3d cluster(s).
 
+If an IMAGE starts with the prefix 'docker.io/', then this prefix is stripped internally.
+That is, 'docker.io/rancher/k3d-tools:latest' is treated as 'rancher/k3d-tools:latest'.
+
+If an IMAGE does not have a version tag, then ':latest' is assumed.
+That is, 'rancher/k3d-tools' is treated as 'rancher/k3d-tools:latest'.
+
+A file ARCHIVE always takes precedence.
+So if a file './rancher/k3d-tools' exists, k3d will try to import it instead of the IMAGE of the same name.
+
 ```
 k3d image import [IMAGE | ARCHIVE [IMAGE | ARCHIVE...]] [flags]
 ```
