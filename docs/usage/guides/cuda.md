@@ -342,3 +342,8 @@ Most of the information in this article was obtained from various sources:
 * [microk8s](https://github.com/ubuntu/microk8s)
 * [K3S](https://github.com/rancher/k3s)
 * [k3s-gpu](https://gitlab.com/vainkop1/k3s-gpu)
+
+## Authors
+
+- [@markrexwinkel](https://github.com/markrexwinkel)
+- [@vainkop](https://github.com/vainkop)
