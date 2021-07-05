@@ -11,22 +11,15 @@ To get the NVIDIA container runtime in the K3s image you need to build your own 
 The native K3s image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet.  
 To get around this we need to build the image with a supported base image.
 
-### Dockerfiles
-  
-[Dockerfile.base](cuda/Dockerfile.base):
+### Dockerfile
+
+[Dockerfile](cuda/Dockerfile):  
 
 ```Dockerfile
-{% include "cuda/Dockerfile.base" %}
-
-```  
-  
-[Dockerfile.k3d-gpu](cuda/Dockerfile.k3d-gpu):  
-
-```Dockerfile
-{% include "cuda/Dockerfile.k3d-gpu" %}
+{% include "cuda/Dockerfile" %}
 ```
 
-These Dockerfiles are based on the [K3s Dockerfile](https://github.com/rancher/k3s/blob/master/package/Dockerfile)
+This Dockerfile is based on the [K3s Dockerfile](https://github.com/rancher/k3s/blob/master/package/Dockerfile)
 The following changes are applied:
 
 1. Change the base images to nvidia/cuda:11.2.0-base-ubuntu18.04 so the NVIDIA Container Runtime can be installed. The version of `cuda:xx.x.x` must match the one you're planning to use.
@@ -50,7 +43,7 @@ To enable NVIDIA GPU support on Kubernetes you also need to install the [NVIDIA 
 * Run GPU enabled containers in your Kubernetes cluster.
 
 ```yaml
-{% include "cuda/gpu.yaml" %}
+{% include "cuda/device-plugin-daemonset.yaml" %}
 ```
 
 ### Build the K3s image
@@ -59,20 +52,13 @@ To build the custom image we need to build K3s because we need the generated out
 
 Put the following files in a directory:
 
-* [Dockerfile.base](cuda/Dockerfile.base)
-* [Dockerfile.k3d-gpu](cuda/Dockerfile.k3d-gpu)
+* [Dockerfile](cuda/Dockerfile)
 * [config.toml.tmpl](cuda/config.toml.tmpl)
-* [gpu.yaml](cuda/gpu.yaml)
+* [device-plugin-daemonset.yaml](cuda/device-plugin-daemonset.yaml)
 * [build.sh](cuda/build.sh)
 * [cuda-vector-add.yaml](cuda/cuda-vector-add.yaml)
 
-The `build.sh` script is configured using exports & defaults to `v1.21.2+k3s1`. Please set your CI_REGISTRY_IMAGE! The script performs the following steps:
-
-* pulls K3s
-* builds K3s
-* build the custom K3D Docker image
-
-The resulting image is tagged as k3s-gpu:&lt;version tag&gt;. The version tag is the git tag but the '+' sign is replaced with a '-'.
+The `build.sh` script is configured using exports & defaults to `v1.21.2+k3s1`. Please set at least the `IMAGE_REGISTRY` variable! The script performs the following steps builds the custom K3s image including the nvidia drivers.
 
 [build.sh](cuda/build.sh):
 
@@ -80,28 +66,12 @@ The resulting image is tagged as k3s-gpu:&lt;version tag&gt;. The version tag is
 {% include "cuda/build.sh" %}
 ```
 
-## Run and test the custom image with Docker
-
-You can run a container based on the new image with Docker:
-
-```bash
-docker run --name k3s-gpu -d --privileged --gpus all $CI_REGISTRY_IMAGE:$IMAGE_TAG
-```
-
-Deploy a [test pod](cuda/cuda-vector-add.yaml):
-
-```bash
-docker cp cuda-vector-add.yaml k3s-gpu:/cuda-vector-add.yaml
-docker exec k3s-gpu kubectl apply -f /cuda-vector-add.yaml
-docker exec k3s-gpu kubectl logs cuda-vector-add
-```
-
 ## Run and test the custom image with k3d
 
-Tou can use the image with k3d:
+You can use the image with k3d:
 
 ```bash
-k3d cluster create local --image=$CI_REGISTRY_IMAGE:$IMAGE_TAG --gpus=1
+k3d cluster create gputest --image=$IMAGE --gpus=1
 ```
 
 Deploy a [test pod](cuda/cuda-vector-add.yaml):
@@ -110,6 +80,21 @@ Deploy a [test pod](cuda/cuda-vector-add.yaml):
 kubectl apply -f cuda-vector-add.yaml
 kubectl logs cuda-vector-add
 ```
+
+This should output something like the following:
+
+```bash
+$ kubectl logs cuda-vector-add
+
+[Vector addition of 50000 elements]
+Copy input data from the host memory to the CUDA device
+CUDA kernel launch with 196 blocks of 256 threads
+Copy output data from the CUDA device to the host memory
+Test PASSED
+Done
+```
+
+If the `cuda-vector-add` pod is stuck in `Pending` state, probably the device-driver daemonset didn't get deployed correctly from the auto-deploy manifests. In that case, you can apply it manually via `#!bash kubectl apply -f device-plugin-daemonset.yaml`.
 
 ## Known issues
 
