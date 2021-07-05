@@ -747,15 +747,15 @@
       
         <li class="md-nav__item">
   <a href="#building-a-customized-k3s-image" class="md-nav__link">
-    Building a customized K3S image
+    Building a customized K3s image
   </a>
   
-    <nav class="md-nav" aria-label="Building a customized K3S image">
+    <nav class="md-nav" aria-label="Building a customized K3s image">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#dockerfiles" class="md-nav__link">
-    Dockerfiles:
+    Dockerfiles
   </a>
   
 </li>
@@ -776,7 +776,7 @@
         
           <li class="md-nav__item">
   <a href="#build-the-k3s-image" class="md-nav__link">
-    Build the K3S image
+    Build the K3s image
   </a>
   
 </li>
@@ -964,15 +964,15 @@
       
         <li class="md-nav__item">
   <a href="#building-a-customized-k3s-image" class="md-nav__link">
-    Building a customized K3S image
+    Building a customized K3s image
   </a>
   
-    <nav class="md-nav" aria-label="Building a customized K3S image">
+    <nav class="md-nav" aria-label="Building a customized K3s image">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#dockerfiles" class="md-nav__link">
-    Dockerfiles:
+    Dockerfiles
   </a>
   
 </li>
@@ -993,7 +993,7 @@
         
           <li class="md-nav__item">
   <a href="#build-the-k3s-image" class="md-nav__link">
-    Build the K3S image
+    Build the K3s image
   </a>
   
 </li>
@@ -1056,16 +1056,16 @@
                 
                 
                 <h1 id="running-cuda-workloads">Running CUDA workloads<a class="headerlink" href="#running-cuda-workloads" title="Permanent link">&para;</a></h1>
-<p>If you want to run CUDA workloads on the K3S container you need to customize the container.<br />
+<p>If you want to run CUDA workloads on the K3s container you need to customize the container.<br />
 CUDA workloads require the NVIDIA Container Runtime, so containerd needs to be configured to use this runtime.<br />
-The K3S container itself also needs to run with this runtime.<br />
+The K3s container itself also needs to run with this runtime.<br />
 If you are using Docker you can install the <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html">NVIDIA Container Toolkit</a>.</p>
-<h2 id="building-a-customized-k3s-image">Building a customized K3S image<a class="headerlink" href="#building-a-customized-k3s-image" title="Permanent link">&para;</a></h2>
-<p>To get the NVIDIA container runtime in the K3S image you need to build your own K3S image.<br />
-The native K3S image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet.<br />
+<h2 id="building-a-customized-k3s-image">Building a customized K3s image<a class="headerlink" href="#building-a-customized-k3s-image" title="Permanent link">&para;</a></h2>
+<p>To get the NVIDIA container runtime in the K3s image you need to build your own K3s image.<br />
+The native K3s image is based on Alpine but the NVIDIA container runtime is not supported on Alpine yet.<br />
 To get around this we need to build the image with a supported base image.</p>
-<h3 id="dockerfiles">Dockerfiles:<a class="headerlink" href="#dockerfiles" title="Permanent link">&para;</a></h3>
-<p>Dockerfile.base:
+<h3 id="dockerfiles">Dockerfiles<a class="headerlink" href="#dockerfiles" title="Permanent link">&para;</a></h3>
+<p><a href="Dockerfile.base">Dockerfile.base</a>:</p>
 <div class="highlight"><pre><span></span><code><span class="k">FROM</span> <span class="s">nvidia/cuda:11.2.0-base-ubuntu18.04</span>
 
 <span class="k">ENV</span> DEBIAN_FRONTEND noninteractive
@@ -1098,8 +1098,8 @@ To get around this we need to build the image with a supported base image.</p>
     docker-ce<span class="o">=</span><span class="m">5</span>:<span class="nv">$DOCKER_VERSION</span>~3-0~<span class="k">$(</span>lsb_release -is <span class="p">|</span> tr <span class="s1">&#39;[:upper:]&#39;</span> <span class="s1">&#39;[:lower:]&#39;</span><span class="k">)</span>-<span class="k">$(</span>lsb_release -cs<span class="k">)</span> <span class="se">\</span>
     docker-ce-cli<span class="o">=</span><span class="m">5</span>:<span class="nv">$DOCKER_VERSION</span>~3-0~<span class="k">$(</span>lsb_release -is <span class="p">|</span> tr <span class="s1">&#39;[:upper:]&#39;</span> <span class="s1">&#39;[:lower:]&#39;</span><span class="k">)</span>-<span class="k">$(</span>lsb_release -cs<span class="k">)</span> <span class="o">&amp;&amp;</span> <span class="se">\</span>
     rm -rf /var/lib/apt/lists/*
-</code></pre></div></p>
-<p>Dockerfile.k3d-gpu:  </p>
+</code></pre></div>
+<p><a href="Dockerfile.k3d-gpu">Dockerfile.k3d-gpu</a>:  </p>
 <div class="highlight"><pre><span></span><code><span class="k">FROM</span> <span class="s">nvidia/cuda:11.2.0-base-ubuntu18.04</span> <span class="k">as</span> <span class="s">base</span>
 
 <span class="k">RUN</span> <span class="nb">set</span> -x <span class="o">&amp;&amp;</span> <span class="se">\</span>
@@ -1173,7 +1173,7 @@ To get around this we need to build the image with a supported base image.</p>
 <span class="k">ENTRYPOINT</span> <span class="p">[</span><span class="s2">&quot;/bin/k3s&quot;</span><span class="p">]</span>
 <span class="k">CMD</span> <span class="p">[</span><span class="s2">&quot;agent&quot;</span><span class="p">]</span>
 </code></pre></div>
-<p>These Dockerfiles <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/Dockerfile.base">Dockerfile.base</a> + <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/Dockerfile.k3d-gpu">Dockerfile.k3d-gpu</a> are based on the <a href="https://github.com/rancher/k3s/blob/master/package/Dockerfile">K3s Dockerfile</a>
+<p>These Dockerfiles are based on the <a href="https://github.com/rancher/k3s/blob/master/package/Dockerfile">K3s Dockerfile</a>
 The following changes are applied:</p>
 <ol>
 <li>Change the base images to nvidia/cuda:11.2.0-base-ubuntu18.04 so the NVIDIA Container Runtime can be installed. The version of <code>cuda:xx.x.x</code> must match the one you&rsquo;re planning to use.</li>
@@ -1287,23 +1287,25 @@ The following changes are applied:</p>
           <span class="nt">hostPath</span><span class="p">:</span>
             <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/var/lib/kubelet/device-plugins</span>
 </code></pre></div>
-<h3 id="build-the-k3s-image">Build the K3S image<a class="headerlink" href="#build-the-k3s-image" title="Permanent link">&para;</a></h3>
-<p>To build the custom image we need to build K3S because we need the generated output.</p>
-<p>Put the following files in a directory:
-* <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/Dockerfile.base">Dockerfile.base</a>
-* <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/Dockerfile.k3d-gpu">Dockerfile.k3d-gpu</a>
-* <a href="config.toml.tmpl">config.toml.tmpl</a>
-* <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/gpu.yaml">gpu.yaml</a>
-* <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/build.sh">build.sh</a>
-* <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/cuda-vector-add.yaml">cuda-vector-add.yaml</a></p>
+<h3 id="build-the-k3s-image">Build the K3s image<a class="headerlink" href="#build-the-k3s-image" title="Permanent link">&para;</a></h3>
+<p>To build the custom image we need to build K3s because we need the generated output.</p>
+<p>Put the following files in a directory:</p>
+<ul>
+<li><a href="Dockerfile.base">Dockerfile.base</a></li>
+<li><a href="Dockerfile.k3d-gpu">Dockerfile.k3d-gpu</a></li>
+<li><a href="config.toml.tmpl">config.toml.tmpl</a></li>
+<li><a href="gpu.yaml">gpu.yaml</a></li>
+<li><a href="build.sh">build.sh</a></li>
+<li><a href="cuda-vector-add.yaml">cuda-vector-add.yaml</a></li>
+</ul>
 <p>The <code>build.sh</code> script is configured using exports &amp; defaults to <code>v1.21.2+k3s1</code>. Please set your CI_REGISTRY_IMAGE! The script performs the following steps:</p>
 <ul>
-<li>pulls K3S</li>
-<li>builds K3S</li>
+<li>pulls K3s</li>
+<li>builds K3s</li>
 <li>build the custom K3D Docker image</li>
 </ul>
 <p>The resulting image is tagged as k3s-gpu:&lt;version tag&gt;. The version tag is the git tag but the &lsquo;+&rsquo; sign is replaced with a &lsquo;-&lsquo;.</p>
-<p><a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/build.sh">build.sh</a>:</p>
+<p><a href="build.sh">build.sh</a>:</p>
 <div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
 
 <span class="nb">export</span> <span class="nv">CI_REGISTRY_IMAGE</span><span class="o">=</span><span class="s2">&quot;YOUR_REGISTRY_IMAGE_URL&quot;</span>
@@ -1324,7 +1326,7 @@ ls -al k3s/build/out/data.tar.zst
 <span class="k">if</span> <span class="o">[</span> -f k3s/build/out/data.tar.zst <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
   <span class="nb">echo</span> <span class="s2">&quot;File exists! Building!&quot;</span>
   docker build -f Dockerfile.k3d-gpu <span class="se">\</span>
-    --build-arg <span class="nv">NVIDIA_CONTAINER_RUNTIME_VERSION</span><span class="o">=</span><span class="nv">$NVIDIA_CONTAINER_RUNTIME_VERSION</span> <span class="se">\</span>
+    --build-arg <span class="nv">NVIDIA_CONTAINER_RUNTIME_VERSION</span><span class="o">=</span><span class="nv">$NVIDIA_CONTAINER_RUNTIME_VERSION</span><span class="se">\</span>
     -t <span class="nv">$CI_REGISTRY_IMAGE</span>:<span class="nv">$IMAGE_TAG</span> . <span class="o">&amp;&amp;</span> <span class="se">\</span>
   docker push <span class="nv">$CI_REGISTRY_IMAGE</span>:<span class="nv">$IMAGE_TAG</span>
   <span class="nb">echo</span> <span class="s2">&quot;Done!&quot;</span>
@@ -1339,7 +1341,7 @@ docker build -t <span class="nv">$CI_REGISTRY_IMAGE</span>:<span class="nv">$IMA
 <p>You can run a container based on the new image with Docker:</p>
 <div class="highlight"><pre><span></span><code>docker run --name k3s-gpu -d --privileged --gpus all <span class="nv">$CI_REGISTRY_IMAGE</span>:<span class="nv">$IMAGE_TAG</span>
 </code></pre></div>
-<p>Deploy a <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/cuda-vector-add.yaml">test pod</a>:</p>
+<p>Deploy a <a href="cuda-vector-add.yaml">test pod</a>:</p>
 <div class="highlight"><pre><span></span><code>docker cp cuda-vector-add.yaml k3s-gpu:/cuda-vector-add.yaml
 docker <span class="nb">exec</span> k3s-gpu kubectl apply -f /cuda-vector-add.yaml
 docker <span class="nb">exec</span> k3s-gpu kubectl logs cuda-vector-add
@@ -1348,7 +1350,7 @@ docker <span class="nb">exec</span> k3s-gpu kubectl logs cuda-vector-add
 <p>Tou can use the image with k3d:</p>
 <div class="highlight"><pre><span></span><code>k3d cluster create <span class="nb">local</span> --image<span class="o">=</span><span class="nv">$CI_REGISTRY_IMAGE</span>:<span class="nv">$IMAGE_TAG</span> --gpus<span class="o">=</span><span class="m">1</span>
 </code></pre></div>
-<p>Deploy a <a href="https://github.com/vainkop/k3d/blob/main/docs/usage/guides/cuda/cuda-vector-add.yaml">test pod</a>:</p>
+<p>Deploy a <a href="cuda-vector-add.yaml">test pod</a>:</p>
 <div class="highlight"><pre><span></span><code>kubectl apply -f cuda-vector-add.yaml
 kubectl logs cuda-vector-add
 </code></pre></div>
@@ -1361,13 +1363,14 @@ kubectl logs cuda-vector-add
 <ul>
 <li><a href="https://dev.to/mweibel/add-nvidia-gpu-support-to-k3s-with-containerd-4j17">Add NVIDIA GPU support to k3s with containerd</a></li>
 <li><a href="https://github.com/ubuntu/microk8s">microk8s</a></li>
-<li><a href="https://github.com/rancher/k3s">K3S</a></li>
+<li><a href="https://github.com/rancher/k3s">K3s</a></li>
 <li><a href="https://gitlab.com/vainkop1/k3s-gpu">k3s-gpu</a></li>
 </ul>
 <h2 id="authors">Authors<a class="headerlink" href="#authors" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://github.com/markrexwinkel">@markrexwinkel</a></li>
 <li><a href="https://github.com/vainkop">@vainkop</a></li>
+<li><a href="https://github.com/iwilltry42">@iwilltry42</a></li>
 </ul>
                 
                   

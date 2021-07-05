@@ -4,3 +4,4 @@ pymdown-extensions
 mkdocs-git-revision-date-localized-plugin
 mkdocs-awesome-pages-plugin
 mdx_truly_sane_lists
+mkdocs-include-markdown-plugin # https://github.com/mondeja/mkdocs-include-markdown-plugin
