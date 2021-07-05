@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package tools
 
 import (
@@ -40,38 +41,9 @@ import (
 // ImageImportIntoClusterMulti starts up a k3d tools container for the selected cluster and uses it to export
 // images from the runtime to import them into the nodes of the selected cluster
 func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, loadImageOpts k3d.ImageImportOpts) error {
-
-	var imagesFromRuntime []string
-	var imagesFromTar []string
-
-	runtimeImages, err := runtime.GetImages(ctx)
+	imagesFromRuntime, imagesFromTar, err := findImages(ctx, runtime, images)
 	if err != nil {
-		log.Errorln("Failed to fetch list of existing images from runtime")
 		return err
-	}
-
-	for _, image := range images {
-		found := false
-		// Check if the current element is a file
-		if _, err := os.Stat(image); os.IsNotExist(err) {
-			// not a file? Check if such an image is present in the container runtime
-			for _, runtimeImage := range runtimeImages {
-				if image == runtimeImage {
-					found = true
-					imagesFromRuntime = append(imagesFromRuntime, image)
-					log.Debugf("Selected image '%s' found in runtime", image)
-					break
-				}
-			}
-		} else {
-			// file exists
-			found = true
-			imagesFromTar = append(imagesFromTar, image)
-			log.Debugf("Selected image '%s' is a file", image)
-		}
-		if !found {
-			log.Warnf("Image '%s' is not a file and couldn't be found in the container runtime", image)
-		}
 	}
 
 	// no images found to load -> exit early
@@ -197,6 +169,101 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 	return nil
 
+}
+
+func findImages(ctx context.Context, runtime runtimes.Runtime, requestedImages []string) (imagesFromRuntime, imagesFromTar []string, err error) {
+	runtimeImages, err := runtime.GetImages(ctx)
+	if err != nil {
+		log.Errorln("Failed to fetch list of existing images from runtime")
+		return nil, nil, err
+	}
+
+	for _, requestedImage := range requestedImages {
+		if isFile(requestedImage) {
+			imagesFromTar = append(imagesFromTar, requestedImage)
+			log.Debugf("Selected image '%s' is a file", requestedImage)
+			break
+		}
+
+		runtimeImage, found := findRuntimeImage(requestedImage, runtimeImages)
+		if found {
+			imagesFromRuntime = append(imagesFromRuntime, runtimeImage)
+			log.Debugf("Selected image '%s' (found as '%s') in runtime", requestedImage, runtimeImage)
+			break
+		}
+
+		log.Warnf("Image '%s' is not a file and couldn't be found in the container runtime", requestedImage)
+	}
+	return imagesFromRuntime, imagesFromTar, err
+}
+
+func findRuntimeImage(requestedImage string, runtimeImages []string) (string, bool) {
+	for _, runtimeImage := range runtimeImages {
+		if imageNamesEqual(requestedImage, runtimeImage) {
+			return runtimeImage, true
+		}
+	}
+
+	// if not found, check for special Docker image naming
+	for _, runtimeImage := range runtimeImages {
+		if dockerSpecialImageNameEqual(requestedImage, runtimeImage) {
+			return runtimeImage, true
+		}
+	}
+	return "", false
+}
+
+func isFile(image string) bool {
+	file, err := os.Stat(image)
+	if err != nil {
+		return false
+	}
+	return !file.IsDir()
+}
+
+func dockerSpecialImageNameEqual(requestedImageName string, runtimeImageName string) bool {
+	if strings.HasPrefix(requestedImageName, "docker.io/") {
+		return dockerSpecialImageNameEqual(strings.TrimPrefix(requestedImageName, "docker.io/"), runtimeImageName)
+	}
+
+	if strings.HasPrefix(requestedImageName, "library/") {
+		return imageNamesEqual(strings.TrimPrefix(requestedImageName, "library/"), runtimeImageName)
+	}
+
+	return false
+}
+
+func imageNamesEqual(requestedImageName string, runtimeImageName string) bool {
+	// first, compare what the user provided
+	if requestedImageName == runtimeImageName {
+		return true
+	}
+
+	// transform to canonical image name, i.e. ensure `:versionName` part on both ends
+	return canonicalImageName(requestedImageName) == runtimeImageName
+}
+
+// canonicalImageName adds `:latest` suffix if `:anyOtherVersionName` is not present.
+func canonicalImageName(image string) string {
+	if !containsVersionPart(image) {
+		image = fmt.Sprintf("%s:latest", image)
+	}
+	return image
+}
+
+func containsVersionPart(imageTag string) bool {
+	if !strings.Contains(imageTag, ":") {
+		return false
+	}
+
+	if !strings.Contains(imageTag, "/") {
+		// happens if someone refers to a library image by just it's imageName (e.g. `postgres` instead of `library/postgres`)
+		return strings.Contains(imageTag, ":")
+	}
+
+	indexOfSlash := strings.Index(imageTag, "/") // can't be -1 because the existence of a '/' is ensured above
+	substringAfterSlash := imageTag[indexOfSlash:]
+	return strings.Contains(substringAfterSlash, ":")
 }
 
 // startToolsNode will start a new k3d tools container and connect it to the network of the chosen cluster
