@@ -681,6 +681,9 @@ func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, chang
 		if err != nil {
 			return fmt.Errorf("error updating loadbalancer config: %w", err)
 		}
+		if cluster.ServerLoadBalancer == nil {
+			cluster.ServerLoadBalancer = k3d.NewLoadbalancer()
+		}
 		cluster.ServerLoadBalancer.Node = result
 		lbConfig, err := LoadbalancerGenerateConfig(cluster)
 		if err != nil {
