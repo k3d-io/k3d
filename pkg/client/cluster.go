@@ -26,6 +26,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"sort"
 	"strconv"
 	"time"
@@ -511,7 +512,7 @@ ClusterCreatOpts:
 			if err != nil {
 				return fmt.Errorf("error generating loadbalancer config: %v", err)
 			}
-			cluster.ServerLoadBalancer.Config = lbConfig
+			cluster.ServerLoadBalancer.Config = &lbConfig
 		}
 
 		cluster.ServerLoadBalancer.Node.RuntimeLabels = clusterCreateOpts.GlobalLabels
@@ -956,9 +957,29 @@ func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.C
 			hostRecordSuccessMessage += fmt.Sprintf("Successfully added host record to /etc/hosts in %d/%d nodes", (len(cluster.Nodes) - etcHostsFailureCount), len(cluster.Nodes))
 		}
 
-		patchCmd := `test=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s+host\.k3d\.internal$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | busybox xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$test"`
-		if err = runtime.ExecInNode(ctx, cluster.Nodes[0], []string{"sh", "-c", patchCmd}); err != nil {
-			log.Warnf("Failed to patch CoreDNS ConfigMap to include entry '%s': %+v", hostsEntry, err)
+		patchCmd := `patch=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s+host\.k3d\.internal$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | busybox xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$patch"`
+		successInjectCoreDNSEntry := false
+		for _, node := range cluster.Nodes {
+
+			if node.Role == k3d.AgentRole || node.Role == k3d.ServerRole {
+				logreader, err := runtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", patchCmd})
+				if err == nil {
+					successInjectCoreDNSEntry = true
+					break
+				} else {
+					msg := fmt.Sprintf("error patching the CoreDNS ConfigMap to include entry '%s': %+v", hostsEntry, err)
+					readlogs, err := ioutil.ReadAll(logreader)
+					if err != nil {
+						log.Debugf("error reading the logs from failed CoreDNS patch exec process in node %s: %v", node.Name, err)
+					} else {
+						msg += fmt.Sprintf("\nLogs: %s", string(readlogs))
+					}
+					log.Debugln(msg)
+				}
+			}
+		}
+		if successInjectCoreDNSEntry == false {
+			log.Warnf("Failed to patch CoreDNS ConfigMap to include entry '%s' (see debug logs)", hostsEntry)
 		} else {
 			hostRecordSuccessMessage += " and to the CoreDNS ConfigMap"
 		}
