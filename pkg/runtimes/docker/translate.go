@@ -145,8 +145,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	if len(node.Networks) > 0 {
 		netInfo, err := GetNetwork(context.Background(), node.Networks[0]) // FIXME: only considering first network here, as that's the one k3d creates for a cluster
 		if err != nil {
-			log.Warnln("Failed to get network information")
-			log.Warnln(err)
+			log.Warnf("Failed to get network information: %v", err)
 		} else if netInfo.Driver == "host" {
 			hostConfig.NetworkMode = "host"
 		}
