@@ -61,6 +61,9 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	if simpleConfig.Network != "" {
 		clusterNetwork.Name = simpleConfig.Network
 		clusterNetwork.External = true
+	} else {
+		clusterNetwork.Name = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, simpleConfig.Name)
+		clusterNetwork.External = false
 	}
 
 	if simpleConfig.Subnet != "" {
@@ -109,6 +112,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		if err != nil {
 			return nil, fmt.Errorf("error preparing the loadbalancer: %w", err)
 		}
+		newCluster.Nodes = append(newCluster.Nodes, newCluster.ServerLoadBalancer.Node)
 	} else {
 		log.Debugln("Disabling the load balancer")
 	}
@@ -133,6 +137,8 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		}
 
 		newCluster.Nodes = append(newCluster.Nodes, &serverNode)
+
+		newCluster.ServerLoadBalancer.Config.Ports[fmt.Sprintf("%s.tcp", k3d.DefaultAPIPort)] = append(newCluster.ServerLoadBalancer.Config.Ports[fmt.Sprintf("%s.tcp", k3d.DefaultAPIPort)], serverNode.Name)
 	}
 
 	for i := 0; i < simpleConfig.Agents; i++ {
@@ -150,12 +156,8 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	 ****************************/
 
 	// -> VOLUMES
-	nodeCount := simpleConfig.Servers + simpleConfig.Agents
+	nodeCount := len(newCluster.Nodes)
 	nodeList := newCluster.Nodes
-	if !simpleConfig.Options.K3dOptions.DisableLoadbalancer {
-		nodeCount++
-		nodeList = append(nodeList, newCluster.ServerLoadBalancer.Node)
-	}
 	for _, volumeWithNodeFilters := range simpleConfig.Volumes {
 		nodes, err := util.FilterNodes(nodeList, volumeWithNodeFilters.NodeFilters)
 		if err != nil {
@@ -191,7 +193,9 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 					return nil, err
 				}
 				for _, pm := range portmappings {
-					loadbalancerAddPortConfigs(newCluster.ServerLoadBalancer, pm, nodes)
+					if err := loadbalancerAddPortConfigs(newCluster.ServerLoadBalancer, pm, nodes); err != nil {
+						return nil, err
+					}
 				}
 			} else if suffix == "direct" {
 				for _, node := range nodes {
