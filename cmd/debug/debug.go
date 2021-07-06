@@ -67,7 +67,7 @@ func NewCmdDebugLoadbalancer() *cobra.Command {
 	}
 
 	cmd.AddCommand(&cobra.Command{
-		Use:  "get-config",
+		Use:  "get-config CLUSTERNAME",
 		Args: cobra.ExactArgs(1), // cluster name
 		Run: func(cmd *cobra.Command, args []string) {
 			c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &types.Cluster{Name: args[0]})

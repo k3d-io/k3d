@@ -19,7 +19,7 @@ Using a config file is as easy as putting it in a well-known place in your file 
 
 - All options in config file: `k3d cluster create --config /home/me/my-awesome-config.yaml` (must be `.yaml`/`.yml`)
 - With CLI override (name): `k3d cluster create somename --config /home/me/my-awesome-config.yaml`
-- With CLI override (extra volume): `k3d cluster create --config /home/me/my-awesome-config.yaml --volume '/some/path:/some:path@server[0]'`
+- With CLI override (extra volume): `k3d cluster create --config /home/me/my-awesome-config.yaml --volume '/some/path:/some:path@server:0'`
 
 ## Required Fields
 
@@ -64,9 +64,9 @@ image: rancher/k3s:v1.20.4-k3s1 # same as `--image rancher/k3s:v1.20.4-k3s1`
 network: my-custom-net # same as `--network my-custom-net`
 token: superSecretToken # same as `--token superSecretToken`
 volumes: # repeatable flags are represented as YAML lists
-  - volume: /my/host/path:/path/in/node # same as `--volume '/my/host/path:/path/in/node@server[0];agent[*]'`
+  - volume: /my/host/path:/path/in/node # same as `--volume '/my/host/path:/path/in/node@server:0;agent[*]'`
     nodeFilters:
-      - server[0]
+      - server:0
       - agent[*]
 ports:
   - port: 8080:80 # same as `--port '8080:80@loadbalancer'`
@@ -77,9 +77,9 @@ labels:
     nodeFilters:
       - agent[1]
 env:
-  - envVar: bar=baz # same as `--env 'bar=baz@server[0]'`
+  - envVar: bar=baz # same as `--env 'bar=baz@server:0'`
     nodeFilters:
-      - server[0]
+      - server:0
 registries: # define how registries should be created or used
   create: true # creates a default registry to be used with the cluster; same as `--registry-create`
   use:

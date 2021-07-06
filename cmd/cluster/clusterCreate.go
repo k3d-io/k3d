@@ -295,23 +295,23 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().String("api-port", "", "Specify the Kubernetes API server port exposed on the LoadBalancer (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d cluster create --servers 3 --api-port 0.0.0.0:6550`")
 	_ = ppViper.BindPFlag("cli.api-port", cmd.Flags().Lookup("api-port"))
 
-	cmd.Flags().StringArrayP("env", "e", nil, "Add environment variables to nodes (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -e \"HTTP_PROXY=my.proxy.com@server[0]\" -e \"SOME_KEY=SOME_VAL@server[0]\"`")
+	cmd.Flags().StringArrayP("env", "e", nil, "Add environment variables to nodes (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -e \"HTTP_PROXY=my.proxy.com@server:0\" -e \"SOME_KEY=SOME_VAL@server:0\"`")
 	_ = ppViper.BindPFlag("cli.env", cmd.Flags().Lookup("env"))
 
-	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v /my/path@agent[0,1] -v /tmp/test:/tmp/other@server[0]`")
+	cmd.Flags().StringArrayP("volume", "v", nil, "Mount volumes into the nodes (Format: `[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 -v /my/path@agent[0,1] -v /tmp/test:/tmp/other@server:0`")
 	_ = ppViper.BindPFlag("cli.volumes", cmd.Flags().Lookup("volume"))
 
-	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers (via the serverlb) to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent[0] -p 8081@agent[1]`")
+	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers (via the serverlb) to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent:0 -p 8081@agent[1]`")
 	_ = ppViper.BindPFlag("cli.ports", cmd.Flags().Lookup("port"))
 
-	cmd.Flags().StringArrayP("k3s-node-label", "", nil, "Add label to k3s node (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 --k3s-node-label \"my.label@agent[0,1]\" --k3s-node-label \"other.label=somevalue@server[0]\"`")
+	cmd.Flags().StringArrayP("k3s-node-label", "", nil, "Add label to k3s node (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 --k3s-node-label \"my.label@agent[0,1]\" --k3s-node-label \"other.label=somevalue@server:0\"`")
 	_ = ppViper.BindPFlag("cli.k3s-node-labels", cmd.Flags().Lookup("k3s-node-label"))
 
-	cmd.Flags().StringArrayP("runtime-label", "", nil, "Add label to container runtime (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 --runtime-label \"my.label@agent[0,1]\" --runtime-label \"other.label=somevalue@server[0]\"`")
+	cmd.Flags().StringArrayP("runtime-label", "", nil, "Add label to container runtime (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 --runtime-label \"my.label@agent[0,1]\" --runtime-label \"other.label=somevalue@server:0\"`")
 	_ = ppViper.BindPFlag("cli.runtime-labels", cmd.Flags().Lookup("runtime-label"))
 
 	/* k3s */
-	cmd.Flags().StringArray("k3s-arg", nil, "Additional args passed to k3s command (Format: `ARG@NODEFILTER[;@NODEFILTER]`)\n - Example: `k3d cluster create --k3s-arg \"--disable=traefik@server[0]\"")
+	cmd.Flags().StringArray("k3s-arg", nil, "Additional args passed to k3s command (Format: `ARG@NODEFILTER[;@NODEFILTER]`)\n - Example: `k3d cluster create --k3s-arg \"--disable=traefik@server:0\"")
 	_ = cfgViper.BindPFlag("cli.k3sargs", cmd.Flags().Lookup("k3s-arg"))
 
 	/******************
