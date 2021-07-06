@@ -2,6 +2,18 @@
 
 ## v5.0.0
 
+### Breaking Changes
+
+- new syntax for nodefilters
+  - dropped the usage of square brackets `[]` for indexing, as it caused problems with some shells trying to interpret them
+  - new syntax: `@identifier[:index][:opt]` (see <https://github.com/rancher/k3d/discussions/652>)
+    - example for a port-mapping: `--port 8080:80@server:0:proxy`
+      - identifier = `server`, index = `0`, opt = `proxy`
+      - `opt` is an extra optional argument used for different purposes depending on the flag
+        - currently, only the `--port` flag has `opt`s, namely `proxy` and `direct` (see other breaking change)
+
+-
+
 ### Fixes
 
 - cleaned up and properly sorted the sanitization of existing resources used to create new nodes (#638)
