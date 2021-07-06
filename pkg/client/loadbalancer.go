@@ -112,7 +112,8 @@ func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 
 	var cfg k3d.LoadbalancerConfig
 
-	if cluster.ServerLoadBalancer == nil {
+	if cluster.ServerLoadBalancer == nil || cluster.ServerLoadBalancer.Node == nil {
+		cluster.ServerLoadBalancer = &k3d.Loadbalancer{}
 		for _, node := range cluster.Nodes {
 			if node.Role == types.LoadBalancerRole {
 				var err error
@@ -184,6 +185,12 @@ func LoadbalancerPrepare(ctx context.Context, runtime runtimes.Runtime, cluster 
 		cluster.ServerLoadBalancer.Node.Ports = nat.PortMap{}
 	}
 	cluster.ServerLoadBalancer.Node.Ports[k3d.DefaultAPIPort] = []nat.PortBinding{cluster.KubeAPI.Binding}
+
+	if cluster.ServerLoadBalancer.Config == nil {
+		cluster.ServerLoadBalancer.Config = &k3d.LoadbalancerConfig{
+			Ports: map[string][]string{},
+		}
+	}
 
 	// Create LB as a modified node with loadbalancerRole
 	lbNode := &k3d.Node{
