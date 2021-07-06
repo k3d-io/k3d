@@ -64,7 +64,7 @@ func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
 			cfg.Options.K3sOptions.ExtraArgs = append(cfg.Options.K3sOptions.ExtraArgs, K3sArgWithNodeFilters{
 				Arg: arg,
 				NodeFilters: []string{
-					"server[*]",
+					"server:*",
 				},
 			})
 		}
@@ -73,7 +73,7 @@ func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
 			cfg.Options.K3sOptions.ExtraArgs = append(cfg.Options.K3sOptions.ExtraArgs, K3sArgWithNodeFilters{
 				Arg: arg,
 				NodeFilters: []string{
-					"agent[*]",
+					"agent:*",
 				},
 			})
 		}
