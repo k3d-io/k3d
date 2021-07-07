@@ -36,6 +36,16 @@ const (
 	NodeFilterMapKeyAll  = "all"
 )
 
+var (
+	rolesByIdentifier = map[string]k3d.Role{
+		"server":       k3d.ServerRole,
+		"servers":      k3d.ServerRole,
+		"agent":        k3d.AgentRole,
+		"agents":       k3d.AgentRole,
+		"loadbalancer": k3d.LoadBalancerRole,
+	}
+)
+
 // Regexp pattern to match node filters
 var NodeFilterRegexp = regexp.MustCompile(`^(?P<group>server|servers|agent|agents|loadbalancer|all)(?P<subsetSpec>:(?P<subset>(?P<subsetList>(\d+,?)+)|(?P<subsetRange>\d*-\d*)|(?P<subsetWildcard>\*)))?(?P<suffixSpec>:(?P<suffix>[[:alpha:]]+))?$`)
 
@@ -74,7 +84,7 @@ func FilterNodesWithSuffix(nodes []*k3d.Node, nodefilters []string) (map[string]
 			return nil, err
 		}
 
-		log.Tracef("Adding %d nodes for suffix >%s< (filter: %s)", len(filteredNodes), suffix, nf)
+		log.Tracef("Filtered %d nodes for suffix '%s' (filter: %s)", len(filteredNodes), suffix, nf)
 
 		result[suffix] = filteredNodes
 	}
@@ -132,16 +142,21 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 
 		// Choose the group of nodes to operate on
 		groupNodes := []*k3d.Node{}
-		if submatches["group"] == string(k3d.ServerRole) {
-			groupNodes = serverNodes
-		} else if submatches["group"] == string(k3d.AgentRole) {
-			groupNodes = agentNodes
-		} else if submatches["group"] == string(k3d.LoadBalancerRole) {
-			if serverlb == nil {
-				return nil, fmt.Errorf("Node filter '%s' targets a node that does not exist (disabled?)", filter)
+		if role, ok := rolesByIdentifier[submatches["group"]]; ok {
+			switch role {
+			case k3d.ServerRole:
+				groupNodes = serverNodes
+				break
+			case k3d.AgentRole:
+				groupNodes = agentNodes
+				break
+			case k3d.LoadBalancerRole:
+				if serverlb == nil {
+					return nil, fmt.Errorf("Node filter '%s' targets a node that does not exist (disabled?)", filter)
+				}
+				filteredNodes = append(filteredNodes, serverlb)
+				return filteredNodes, nil // early exit if filtered group is the loadbalancer
 			}
-			filteredNodes = append(filteredNodes, serverlb)
-			return filteredNodes, nil // early exit if filtered group is the loadbalancer
 		}
 
 		/* Option 1) subset defined by list */
@@ -166,10 +181,10 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 		} else if submatches["subsetRange"] != "" {
 
 			/*
-			 * subset specified by a range 'START:END', where each side is optional
+			 * subset specified by a range 'START-END', where each side is optional
 			 */
 
-			split := strings.Split(submatches["subsetRange"], ":")
+			split := strings.Split(submatches["subsetRange"], "-")
 			if len(split) != 2 {
 				return nil, fmt.Errorf("Failed to parse subset range in '%s'", filter)
 			}
@@ -225,6 +240,8 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 		}
 
 	}
+
+	log.Tracef("Filtered %d nodes (filter: %s)", len(filteredNodes), filters)
 
 	return filteredNodes, nil
 }

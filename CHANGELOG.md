@@ -11,8 +11,9 @@
       - identifier = `server`, index = `0`, opt = `proxy`
       - `opt` is an extra optional argument used for different purposes depending on the flag
         - currently, only the `--port` flag has `opt`s, namely `proxy` and `direct` (see other breaking change)
-
--
+- port-mapping now go via the loadbalancer (serverlb) by default
+  - the `--port` flag has the `proxy` opt (see new nodefilter syntax above) set by default
+  - to leverage the old behavior of direct port-mappings, use the `direct` opt on the port flag
 
 ### Fixes
 
