@@ -38,7 +38,7 @@ trap finish EXIT
 
 # wait for the runner container to be up or exit early
 TIMEOUT=0
-until docker inspect "$k3de2e" | jq ".[0].State.Running" && docker logs "$k3de2e" 2>&1 | grep -i "API listen on /var/run/docker.sock"; do
+until docker inspect "$k3de2e" | jq ".[0].State.Running" && docker logs "$k3de2e" 2>&1 | grep -qi "API listen on /var/run/docker.sock"; do
   if [[ $TIMEOUT -eq $RUNNER_START_TIMEOUT ]]; then
     echo "Failed to start E2E Runner Container in $RUNNER_START_TIMEOUT seconds"
     exit 1

@@ -19,7 +19,7 @@ info "Checking we have access to both clusters..."
 check_clusters "c1" "c2" || failed "error checking cluster"
 
 info "Checking cluster env var with escaped @ signs..."
-docker exec k3d-c1-server-0 env | grep -E '^TEST_VAR=user@pass\\$' || failed "Failed to lookup proper env var in container"
+docker exec k3d-c1-server-0 env | grep -qE '^TEST_VAR=user@pass\\$' || failed "Failed to lookup proper env var in container"
 
 info "Check k3s token retrieval"
 check_cluster_token_exist "c1" || failed "could not find cluster token c1"
