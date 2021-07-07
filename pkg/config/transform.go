@@ -44,6 +44,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	DefaultTargetsNodefiltersPortMappings = []string{"servers:*:proxy", "agents:*:proxy"}
+)
+
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration
 func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtime, simpleConfig conf.SimpleConfig) (*conf.ClusterConfig, error) {
 
@@ -171,8 +175,18 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 	// -> PORTS
 	for _, portWithNodeFilters := range simpleConfig.Ports {
+		log.Tracef("inspecting port mapping for %s with nodefilters %s", portWithNodeFilters.Port, portWithNodeFilters.NodeFilters)
 		if len(portWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
-			return nil, fmt.Errorf("Portmapping '%s' lacks a node filter, but there's more than one node", portWithNodeFilters.Port)
+			log.Infof("portmapping '%s' lacks a nodefilter, but there's more than one node: defaulting to %s", portWithNodeFilters.Port, DefaultTargetsNodefiltersPortMappings)
+			portWithNodeFilters.NodeFilters = DefaultTargetsNodefiltersPortMappings
+		}
+
+		for _, f := range portWithNodeFilters.NodeFilters {
+			if strings.HasPrefix(f, "loadbalancer") {
+				log.Infof("portmapping '%s' targets the loadbalancer: defaulting to %s", portWithNodeFilters.Port, DefaultTargetsNodefiltersPortMappings)
+				portWithNodeFilters.NodeFilters = DefaultTargetsNodefiltersPortMappings
+				break
+			}
 		}
 
 		filteredNodes, err := util.FilterNodesWithSuffix(nodeList, portWithNodeFilters.NodeFilters)
@@ -180,21 +194,16 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			return nil, err
 		}
 
+		nn := ""
+		for _, n := range filteredNodes["proxy"] {
+			nn = strings.Join([]string{nn, n.Name}, ",")
+		}
+		log.Debugf("Filtered nodes: %#v", nn)
+
 		for suffix, nodes := range filteredNodes {
 			portmappings, err := nat.ParsePortSpec(portWithNodeFilters.Port)
 			if err != nil {
 				return nil, fmt.Errorf("error parsing port spec '%s': %+v", portWithNodeFilters.Port, err)
-			}
-
-			for _, n := range nodes {
-				if n.Role == k3d.LoadBalancerRole && n.Name == newCluster.ServerLoadBalancer.Node.Name {
-					log.Infoln("loadbalancer in filtered list for port mappings: defaulting to all servers and agents as upstream targets")
-					var err error
-					nodes, err = util.FilterNodes(newCluster.Nodes, []string{"agents:*", "servers:*"})
-					if err != nil {
-						return nil, err
-					}
-				}
 			}
 
 			if suffix == "proxy" || suffix == util.NodeFilterSuffixNone { // proxy is the default suffix for port mappings
@@ -220,6 +229,16 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			}
 		}
 
+	}
+
+	// print generated loadbalancer config
+	if log.GetLevel() >= log.DebugLevel {
+		yamlized, err := yaml.Marshal(newCluster.ServerLoadBalancer.Config)
+		if err != nil {
+			log.Errorf("error printing loadbalancer config: %v", err)
+		} else {
+			log.Debugf("generated loadbalancer config:\n%s", string(yamlized))
+		}
 	}
 
 	// -> K3S NODE LABELS

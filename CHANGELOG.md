@@ -14,6 +14,7 @@
 - port-mapping now go via the loadbalancer (serverlb) by default
   - the `--port` flag has the `proxy` opt (see new nodefilter syntax above) set by default
   - to leverage the old behavior of direct port-mappings, use the `direct` opt on the port flag
+  - the nodefilter `loadbalancer` will now do the same as `servers:*;agents:*` (proxied via the loadbalancer)
 
 ### Fixes
 
