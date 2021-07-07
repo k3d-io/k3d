@@ -29,6 +29,7 @@ import (
 	"io/ioutil"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	gort "runtime"
@@ -36,6 +37,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/imdario/mergo"
 	"github.com/rancher/k3d/v4/pkg/actions"
+	conftypes "github.com/rancher/k3d/v4/pkg/config/types"
 	config "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 	k3drt "github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
@@ -779,6 +781,26 @@ func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster
 		if !overwroteExisting {
 			cluster.Nodes = append(cluster.Nodes, node)
 		}
+
+	}
+
+	// Loadbalancer
+	if cluster.ServerLoadBalancer == nil {
+		for _, node := range cluster.Nodes {
+			if node.Role == k3d.LoadBalancerRole {
+				cluster.ServerLoadBalancer = &k3d.Loadbalancer{
+					Node: node,
+				}
+			}
+		}
+
+		if cluster.ServerLoadBalancer.Node != nil {
+			lbcfg, err := GetLoadbalancerConfig(ctx, runtime, cluster)
+			if err != nil {
+				return cluster, fmt.Errorf("error getting loadbalancer config for cluster %s: %w", cluster.Name, err)
+			}
+			cluster.ServerLoadBalancer.Config = &lbcfg
+		}
 	}
 
 	if err := populateClusterFieldsFromLabels(cluster); err != nil {
@@ -1007,5 +1029,52 @@ func prepCreateLocalRegistryHostingConfigMap(ctx context.Context, runtime k3drt.
 	if success == false {
 		log.Warnf("Failed to create LocalRegistryHosting ConfigMap")
 	}
+	return nil
+}
+
+// ClusterEditChangesetSimple modifies an existing cluster with a given SimpleConfig changeset
+func ClusterEditChangesetSimple(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, changeset *config.SimpleConfig) error {
+	nodeCount := len(cluster.Nodes)
+	nodeList := cluster.Nodes
+	// === Ports ===
+
+	existingLB := cluster.ServerLoadBalancer
+	lbChangeset := 
+
+	if len(changeset.Ports) > 0 {
+		for _, portWithNodeFilters := range changeset.Ports {
+			log.Tracef("inspecting port mapping for %s with nodefilters %s", portWithNodeFilters.Port, portWithNodeFilters.NodeFilters)
+			if len(portWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
+				log.Infof("portmapping '%s' lacks a nodefilter, but there's more than one node: defaulting to %s", portWithNodeFilters.Port, conftypes.DefaultTargetsNodefiltersPortMappings)
+				portWithNodeFilters.NodeFilters = conftypes.DefaultTargetsNodefiltersPortMappings
+			}
+
+			for _, f := range portWithNodeFilters.NodeFilters {
+				if strings.HasPrefix(f, "loadbalancer") {
+					log.Infof("portmapping '%s' targets the loadbalancer: defaulting to %s", portWithNodeFilters.Port, conftypes.DefaultTargetsNodefiltersPortMappings)
+					portWithNodeFilters.NodeFilters = conftypes.DefaultTargetsNodefiltersPortMappings
+					break
+				}
+			}
+
+			filteredNodes, err := util.FilterNodesWithSuffix(nodeList, portWithNodeFilters.NodeFilters)
+			if err != nil {
+				return err
+			}
+
+			for suffix, nodes := range filteredNodes {
+				switch suffix {
+				case "proxy", util.NodeFilterSuffixNone:
+					break
+				case util.NodeFilterMapKeyAll:
+					break
+				default:
+					return fmt.Errorf("error: 'cluster edit' does not (yet) support the '%s' opt/suffix for adding ports", suffix)
+				}
+			}
+
+		}
+	}
+
 	return nil
 }

@@ -32,6 +32,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	cliutil "github.com/rancher/k3d/v4/cmd/util" // TODO: move parseapiport to pkg
 	"github.com/rancher/k3d/v4/pkg/client"
+	"github.com/rancher/k3d/v4/pkg/config/types"
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
@@ -42,10 +43,6 @@ import (
 	"inet.af/netaddr"
 
 	log "github.com/sirupsen/logrus"
-)
-
-var (
-	DefaultTargetsNodefiltersPortMappings = []string{"servers:*:proxy", "agents:*:proxy"}
 )
 
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration
@@ -362,10 +359,10 @@ func addPortMappings(node *k3d.Node, portmappings []nat.PortMapping) error {
 	return nil
 }
 
-func loadbalancerAddPortConfigs(loadbalancer *k3d.Loadbalancer, pm nat.PortMapping, nodes []*k3d.Node) error {
-	portconfig := fmt.Sprintf("%s.%s", pm.Port.Port(), pm.Port.Proto())
+func loadbalancerAddPortConfigs(loadbalancer *k3d.Loadbalancer, portmapping nat.PortMapping, targetNodes []*k3d.Node) error {
+	portconfig := fmt.Sprintf("%s.%s", portmapping.Port.Port(), portmapping.Port.Proto())
 	nodenames := []string{}
-	for _, node := range nodes {
+	for _, node := range targetNodes {
 		if node.Role == k3d.LoadBalancerRole {
 			return fmt.Errorf("error adding port config to loadbalancer: cannot add port config referencing the loadbalancer itself (loop)")
 		}
@@ -398,14 +395,14 @@ func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 	for _, portWithNodeFilters := range portsWithNodeFilters {
 		log.Tracef("inspecting port mapping for %s with nodefilters %s", portWithNodeFilters.Port, portWithNodeFilters.NodeFilters)
 		if len(portWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
-			log.Infof("portmapping '%s' lacks a nodefilter, but there's more than one node: defaulting to %s", portWithNodeFilters.Port, DefaultTargetsNodefiltersPortMappings)
-			portWithNodeFilters.NodeFilters = DefaultTargetsNodefiltersPortMappings
+			log.Infof("portmapping '%s' lacks a nodefilter, but there's more than one node: defaulting to %s", portWithNodeFilters.Port, types.DefaultTargetsNodefiltersPortMappings)
+			portWithNodeFilters.NodeFilters = types.DefaultTargetsNodefiltersPortMappings
 		}
 
 		for _, f := range portWithNodeFilters.NodeFilters {
 			if strings.HasPrefix(f, "loadbalancer") {
-				log.Infof("portmapping '%s' targets the loadbalancer: defaulting to %s", portWithNodeFilters.Port, DefaultTargetsNodefiltersPortMappings)
-				portWithNodeFilters.NodeFilters = DefaultTargetsNodefiltersPortMappings
+				log.Infof("portmapping '%s' targets the loadbalancer: defaulting to %s", portWithNodeFilters.Port, types.DefaultTargetsNodefiltersPortMappings)
+				portWithNodeFilters.NodeFilters = types.DefaultTargetsNodefiltersPortMappings
 				break
 			}
 		}
@@ -414,12 +411,6 @@ func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 		if err != nil {
 			return err
 		}
-
-		nn := ""
-		for _, n := range filteredNodes["proxy"] {
-			nn = strings.Join([]string{nn, n.Name}, ",")
-		}
-		log.Debugf("Filtered nodes: %#v", nn)
 
 		for suffix, nodes := range filteredNodes {
 			portmappings, err := nat.ParsePortSpec(portWithNodeFilters.Port)
