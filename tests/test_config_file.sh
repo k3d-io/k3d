@@ -39,7 +39,7 @@ check_multi_node "$clustername" 5 || failed "failed to verify number of nodes"
 
 ## Environment Variables
 info "Ensuring that environment variables are present in the node containers as set in the config (with comma)"
-exec_in_node "k3d-$clustername-server-0" "env" | grep "bar=baz,bob" || failed "Expected env var 'bar=baz,bob' is not present in node k3d-$clustername-server-0"
+exec_in_node "k3d-$clustername-server-0" "env" | grep -q "bar=baz,bob" || failed "Expected env var 'bar=baz,bob' is not present in node k3d-$clustername-server-0"
 
 ## Container Labels
 info "Ensuring that container labels have been set as stated in the config"
@@ -55,8 +55,8 @@ $EXE node list "k3d-$clustername-registry" || failed "Expected k3d-$clustername-
 
 ## merged registries.yaml
 info "Ensuring, that the registries.yaml file contains both registries"
-exec_in_node "k3d-$clustername-server-0" "cat /etc/rancher/k3s/registries.yaml" | grep -i "my.company.registry"  || failed "Expected 'my.company.registry' to be in the /etc/rancher/k3s/registries.yaml"
-exec_in_node "k3d-$clustername-server-0" "cat /etc/rancher/k3s/registries.yaml" | grep -i "k3d-$clustername-registry" || failed "Expected 'k3d-$clustername-registry' to be in the /etc/rancher/k3s/registries.yaml"
+exec_in_node "k3d-$clustername-server-0" "cat /etc/rancher/k3s/registries.yaml" | grep -qi "my.company.registry"  || failed "Expected 'my.company.registry' to be in the /etc/rancher/k3s/registries.yaml"
+exec_in_node "k3d-$clustername-server-0" "cat /etc/rancher/k3s/registries.yaml" | grep -qi "k3d-$clustername-registry" || failed "Expected 'k3d-$clustername-registry' to be in the /etc/rancher/k3s/registries.yaml"
 
 # Cleanup
 
