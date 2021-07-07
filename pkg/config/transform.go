@@ -175,16 +175,28 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			return nil, fmt.Errorf("Portmapping '%s' lacks a node filter, but there's more than one node", portWithNodeFilters.Port)
 		}
 
-		x, err := util.FilterNodesWithSuffix(nodeList, portWithNodeFilters.NodeFilters)
+		filteredNodes, err := util.FilterNodesWithSuffix(nodeList, portWithNodeFilters.NodeFilters)
 		if err != nil {
 			return nil, err
 		}
 
-		for suffix, nodes := range x {
+		for suffix, nodes := range filteredNodes {
 			portmappings, err := nat.ParsePortSpec(portWithNodeFilters.Port)
 			if err != nil {
 				return nil, fmt.Errorf("error parsing port spec '%s': %+v", portWithNodeFilters.Port, err)
 			}
+
+			for _, n := range nodes {
+				if n.Role == k3d.LoadBalancerRole && n.Name == newCluster.ServerLoadBalancer.Node.Name {
+					log.Infoln("loadbalancer in filtered list for port mappings: defaulting to all servers and agents as upstream targets")
+					var err error
+					nodes, err = util.FilterNodes(newCluster.Nodes, []string{"agents:*", "servers:*"})
+					if err != nil {
+						return nil, err
+					}
+				}
+			}
+
 			if suffix == "proxy" || suffix == util.NodeFilterSuffixNone { // proxy is the default suffix for port mappings
 				if newCluster.ServerLoadBalancer == nil {
 					return nil, fmt.Errorf("port-mapping of type 'proxy' specified, but loadbalancer is disabled")
@@ -203,6 +215,8 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 						return nil, err
 					}
 				}
+			} else if suffix != util.NodeFilterMapKeyAll {
+				return nil, fmt.Errorf("error adding port mappings: unknown suffix %s", suffix)
 			}
 		}
 
@@ -396,6 +410,9 @@ func loadbalancerAddPortConfigs(loadbalancer *k3d.Loadbalancer, pm nat.PortMappi
 	portconfig := fmt.Sprintf("%s.%s", pm.Port.Port(), pm.Port.Proto())
 	nodenames := []string{}
 	for _, node := range nodes {
+		if node.Role == k3d.LoadBalancerRole {
+			return fmt.Errorf("error adding port config to loadbalancer: cannot add port config referencing the loadbalancer itself (loop)")
+		}
 		nodenames = append(nodenames, node.Name)
 	}
 
