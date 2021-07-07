@@ -25,7 +25,12 @@ function check_container_port() {
 clustername="lbtest"
 
 info "Creating cluster $clustername..."
-$EXE cluster create $clustername --timeout 360s --agents 1 -p 2222:3333@server:0 -p 8080:80@server:0:proxy -p 1234:4321/tcp@agent:0:direct || failed "could not create cluster $clustername"
+$EXE cluster create $clustername --timeout 360s --agents 1 \
+  -p 2222:3333@server:0 \
+  -p 8080:80@server:0:proxy \
+  -p 1234:4321/tcp@agent:0:direct \
+  -p 4444:5555@loadbalancer:0:proxy \
+  || failed "could not create cluster $clustername"
 
 info "Checking we have access to the cluster..."
 check_clusters "$clustername" || failed "error checking cluster"
@@ -45,8 +50,16 @@ info "> Checking implicit proxy port mapping of port 3333 -> loadbalancer -> ser
 check_container_port k3d-$clustername-server-0 "3333/tcp" && failed "3333/tcp on server-0 but should be on serverlb"
 check_container_port k3d-$clustername-serverlb "3333/tcp" || failed "3333/tcp not on serverlb"
 
+info "> Checking implicit proxy port mapping of port 5555 -> loadbalancer -> server-0 & agent-0"
+check_container_port k3d-$clustername-server-0 "5555/tcp" && failed "5555/tcp on server-0 but should be on serverlb"
+check_container_port k3d-$clustername-agent-0 "5555/tcp" && failed "5555/tcp on agent-0 but should be on serverlb"
+check_container_port k3d-$clustername-serverlb "5555/tcp" || failed "5555/tcp not on serverlb"
+
 info "Checking Loadbalancer Config..."
-$EXE debug loadbalancer get-config $clustername | grep -A1 "80.tcp" | grep "k3d-$clustername-server-0" || failed "port 80.tcp not configured for server-0"
+$EXE debug loadbalancer get-config $clustername | yq read - 'ports."80.tcp"' | grep "k3d-$clustername-server-0" || failed "port 80.tcp not configured for server-0"
+$EXE debug loadbalancer get-config $clustername | yq read - 'ports."5555.tcp"' | grep "k3d-$clustername-server-0" || failed "port 5555.tcp not configured for server-0"
+$EXE debug loadbalancer get-config $clustername | yq read - 'ports."5555.tcp"' | grep "k3d-$clustername-agent-0" || failed "port 5555.tcp not configured for agent-0"
+
 
 info "Deleting clusters..."
 $EXE cluster delete $clustername || failed "could not delete the cluster $clustername"
