@@ -30,6 +30,7 @@ $EXE cluster create $clustername --timeout 360s --agents 1 \
   -p 8080:80@server:0:proxy \
   -p 1234:4321/tcp@agent:0:direct \
   -p 4444:5555@loadbalancer:0:proxy \
+  -p 6666:7777 \
   || failed "could not create cluster $clustername"
 
 info "Checking we have access to the cluster..."
@@ -55,10 +56,18 @@ check_container_port k3d-$clustername-server-0 "5555/tcp" && failed "5555/tcp on
 check_container_port k3d-$clustername-agent-0 "5555/tcp" && failed "5555/tcp on agent-0 but should be on serverlb"
 check_container_port k3d-$clustername-serverlb "5555/tcp" || failed "5555/tcp not on serverlb"
 
+info "> Checking implicit proxy port mapping of port 7777 -> loadbalancer -> server-0 & agent-0"
+check_container_port k3d-$clustername-server-0 "7777/tcp" && failed "7777/tcp on server-0 but should be on serverlb"
+check_container_port k3d-$clustername-agent-0 "7777/tcp" && failed "7777/tcp on agent-0 but should be on serverlb"
+check_container_port k3d-$clustername-serverlb "7777/tcp" || failed "7777/tcp not on serverlb"
+
 info "Checking Loadbalancer Config..."
-$EXE debug loadbalancer get-config $clustername | yq read - 'ports."80.tcp"' | grep "k3d-$clustername-server-0" || failed "port 80.tcp not configured for server-0"
-$EXE debug loadbalancer get-config $clustername | yq read - 'ports."5555.tcp"' | grep "k3d-$clustername-server-0" || failed "port 5555.tcp not configured for server-0"
-$EXE debug loadbalancer get-config $clustername | yq read - 'ports."5555.tcp"' | grep "k3d-$clustername-agent-0" || failed "port 5555.tcp not configured for agent-0"
+LOG_LEVEL=error $EXE debug loadbalancer get-config $clustername > lbconfig.yaml
+yq eval '.ports."80.tcp"' lbconfig.yaml | grep -q "k3d-$clustername-server-0" || failed "port 80.tcp not configured for server-0"
+yq eval '.ports."5555.tcp"' lbconfig.yaml | grep -q "k3d-$clustername-server-0" || failed "port 5555.tcp not configured for server-0"
+yq eval '.ports."5555.tcp"' lbconfig.yaml | grep -q "k3d-$clustername-agent-0" || failed "port 5555.tcp not configured for agent-0"
+yq eval '.ports."7777.tcp"' lbconfig.yaml | grep -q "k3d-$clustername-server-0" || failed "port 7777.tcp not configured for server-0"
+yq eval '.ports."7777.tcp"' lbconfig.yaml | grep -q "k3d-$clustername-agent-0" || failed "port 7777.tcp not configured for agent-0"
 
 
 info "Deleting clusters..."
