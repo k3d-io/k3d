@@ -77,7 +77,9 @@ func FilterNodesWithSuffix(nodes []*k3d.Node, nodefilters []string) (map[string]
 			suffix = sf
 		}
 
-		result[suffix] = make([]*k3d.Node, 0) // init map for this suffix
+		if _, ok := result[suffix]; !ok {
+			result[suffix] = make([]*k3d.Node, 0) // init map for this suffix, if not exists
+		}
 
 		filteredNodes, err := FilterNodes(nodes, []string{nf})
 		if err != nil {
@@ -86,7 +88,7 @@ func FilterNodesWithSuffix(nodes []*k3d.Node, nodefilters []string) (map[string]
 
 		log.Tracef("Filtered %d nodes for suffix '%s' (filter: %s)", len(filteredNodes), suffix, nf)
 
-		result[suffix] = filteredNodes
+		result[suffix] = append(result[suffix], filteredNodes...)
 	}
 
 	return result, nil

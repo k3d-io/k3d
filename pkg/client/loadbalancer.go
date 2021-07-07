@@ -139,7 +139,7 @@ func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 	file = bytes.Trim(file[512:], "\x00") // trim control characters, etc.
 
 	if err := yaml.Unmarshal(file, &cfg); err != nil {
-		return cfg, err
+		return cfg, fmt.Errorf("error unmarshalling loadbalancer config: %w", err)
 	}
 
 	return cfg, nil
