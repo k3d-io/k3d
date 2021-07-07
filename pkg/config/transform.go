@@ -219,6 +219,9 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 					}
 				}
 			} else if suffix == "direct" {
+				if len(nodes) > 1 {
+					return nil, fmt.Errorf("error: cannot apply a direct port-mapping (%s) to more than one node", portmappings)
+				}
 				for _, node := range nodes {
 					if err := addPortMappings(node, portmappings); err != nil {
 						return nil, err
