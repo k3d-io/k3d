@@ -1,5 +1,25 @@
 # Changelog
 
+## v4.4.7
+
+### Features / Enhancements
+
+- new flag: `k3d image import --keep-tools` to not delete the tools node container after importing the image(s) (#672)
+- improve image name handling when importing images (#653, @cimnine)
+  - normalize image names internally, e.g. strip prefixes that docker adds, but that break the process
+  - see <https://k3d.io/usage/commands/k3d_image_import/> for more info
+
+### Fixes
+
+- Use default gateway, when bridge network doesn't have it (#666, @kuritka)
+- Start an existing, but not running tools node to re-use it when importing an image (#672)
+
+### Misc
+
+- deps: switching back to upstream viper including the StringArray fix
+- docs: reference to "nolar/setup-k3d-k3s" step for GitHub Actions (#668, @nolar)
+- docs: updated and simplified CUDA guide (#662, @vainkop) (#669)
+
 ## v4.4.6
 
 ### Fixes
