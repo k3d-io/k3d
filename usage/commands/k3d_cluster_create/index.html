@@ -998,7 +998,7 @@ Every cluster will consist of one or more containers:
                                                                         - Example: `k3d cluster create --servers 3 --api-port 0.0.0.0:6550`
   -c, --config string                                                  Path of a config file to use
   -e, --env KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]                   Add environment variables to nodes (Format: KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]
-                                                                        - Example: `k3d cluster create --agents 2 -e &quot;HTTP_PROXY=my.proxy.com&quot; -e &quot;SOME_KEY=SOME_VAL@server[0]&quot;`
+                                                                        - Example: `k3d cluster create --agents 2 -e &quot;HTTP_PROXY=my.proxy.com@server[0]&quot; -e &quot;SOME_KEY=SOME_VAL@server[0]&quot;`
       --gpus string                                                    GPU devices to add to the cluster node containers (&#39;all&#39; to pass all GPUs) [From docker]
   -h, --help                                                           help for create
   -i, --image string                                                   Specify k3s image that you want to use for the nodes
@@ -1007,7 +1007,7 @@ Every cluster will consist of one or more containers:
       --kubeconfig-switch-context                                      Directly switch the default kubeconfig&#39;s current-context to the new cluster&#39;s context (requires --kubeconfig-update-default) (default true)
       --kubeconfig-update-default                                      Directly update the default kubeconfig with the new cluster&#39;s context (default true)
   -l, --label KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]                 Add label to node container (Format: KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]
-                                                                        - Example: `k3d cluster create --agents 2 -l &quot;my.label@agent[0,1]&quot; -v &quot;other.label=somevalue@server[0]&quot;`
+                                                                        - Example: `k3d cluster create --agents 2 -l &quot;my.label@agent[0,1]&quot; -l &quot;other.label=somevalue@server[0]&quot;`
       --network string                                                 Join an existing network
       --no-hostip                                                      Disable the automatic injection of the Host IP as &#39;host.k3d.internal&#39; into the containers and CoreDNS
       --no-image-volume                                                Disable the creation of a volume for importing images
@@ -1044,7 +1044,7 @@ Every cluster will consist of one or more containers:
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">April 20, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 9, 2021</span>
       
     
   </small>
