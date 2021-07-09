@@ -9,6 +9,9 @@ Import image(s) from docker into k3d cluster(s).
 If an IMAGE starts with the prefix 'docker.io/', then this prefix is stripped internally.
 That is, 'docker.io/rancher/k3d-tools:latest' is treated as 'rancher/k3d-tools:latest'.
 
+If an IMAGE starts with the prefix 'library/' (or 'docker.io/library/'), then this prefix is stripped internally.
+That is, 'library/busybox:latest' (or 'docker.io/library/busybox:latest') are treated as 'busybox:latest'.
+
 If an IMAGE does not have a version tag, then ':latest' is assumed.
 That is, 'rancher/k3d-tools' is treated as 'rancher/k3d-tools:latest'.
 
@@ -25,6 +28,7 @@ k3d image import [IMAGE | ARCHIVE [IMAGE | ARCHIVE...]] [flags]
   -c, --cluster stringArray   Select clusters to load the image to. (default [k3s-default])
   -h, --help                  help for import
   -k, --keep-tarball          Do not delete the tarball containing the saved images from the shared volume
+  -t, --keep-tools            Do not delete the tools node after import
 ```
 
 ### Options inherited from parent commands

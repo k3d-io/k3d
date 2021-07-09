@@ -236,7 +236,8 @@ type NodeHookAction interface {
 
 // ImageImportOpts describes a set of options one can set for loading image(s) into cluster(s)
 type ImageImportOpts struct {
-	KeepTar bool
+	KeepTar       bool
+	KeepToolsNode bool
 }
 
 type IPAM struct {
