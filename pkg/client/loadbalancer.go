@@ -39,8 +39,9 @@ import (
 )
 
 var (
-	LBConfigErrHostNotFound = errors.New("lbconfig: host not found")
-	LBConfigErrFailedTest   = errors.New("lbconfig: failed to test")
+	ErrLBConfigHostNotFound error = errors.New("lbconfig: host not found")
+	ErrLBConfigFailedTest   error = errors.New("lbconfig: failed to test")
+	ErrLBConfigEntryExists  error = errors.New("lbconfig: entry exists in config")
 )
 
 // UpdateLoadbalancerConfig updates the loadbalancer config with an updated list of servers belonging to that cluster
@@ -91,14 +92,14 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 			err = NodeWaitForLogMessage(failureCtx, runtime, cluster.ServerLoadBalancer.Node, "host not found in upstream", startTime)
 			if err != nil {
 				log.Warnf("Failed to check if the loadbalancer was configured correctly or if it broke. Please check it manually or try again: %v", err)
-				return LBConfigErrFailedTest
+				return ErrLBConfigFailedTest
 			} else {
 				log.Warnln("Failed to configure loadbalancer because one of the nodes seems to be down! Run `k3d node list` to see which one it could be.")
-				return LBConfigErrHostNotFound
+				return ErrLBConfigHostNotFound
 			}
 		} else {
 			log.Warnf("Failed to ensure that loadbalancer was configured correctly. Please check it manually or try again: %v", err)
-			return LBConfigErrFailedTest
+			return ErrLBConfigFailedTest
 		}
 	}
 	log.Infof("Successfully configured loadbalancer %s!", cluster.ServerLoadBalancer.Node.Name)
@@ -205,4 +206,33 @@ func LoadbalancerPrepare(ctx context.Context, runtime runtimes.Runtime, cluster 
 
 	return lbNode, nil
 
+}
+
+func loadbalancerAddPortConfigs(loadbalancer *k3d.Loadbalancer, portmapping nat.PortMapping, targetNodes []*k3d.Node) error {
+	portconfig := fmt.Sprintf("%s.%s", portmapping.Port.Port(), portmapping.Port.Proto())
+	nodenames := []string{}
+	for _, node := range targetNodes {
+		if node.Role == k3d.LoadBalancerRole {
+			return fmt.Errorf("error adding port config to loadbalancer: cannot add port config referencing the loadbalancer itself (loop)")
+		}
+		nodenames = append(nodenames, node.Name)
+	}
+
+	// entry for that port doesn't exist yet, so we simply create it with the list of node names
+	if _, ok := loadbalancer.Config.Ports[portconfig]; !ok {
+		loadbalancer.Config.Ports[portconfig] = nodenames
+		return nil
+	}
+
+nodenameLoop:
+	for _, nodename := range nodenames {
+		for _, existingNames := range loadbalancer.Config.Ports[portconfig] {
+			if nodename == existingNames {
+				continue nodenameLoop
+			}
+			loadbalancer.Config.Ports[portconfig] = append(loadbalancer.Config.Ports[portconfig], nodename)
+		}
+	}
+
+	return nil
 }

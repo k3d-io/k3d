@@ -32,8 +32,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewCmdNodeEdit returns a new cobra command
-func NewCmdNodeEdit() *cobra.Command {
+// NewCmdClusterEdit returns a new cobra command
+func NewCmdClusterEdit() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
@@ -48,6 +48,10 @@ func NewCmdNodeEdit() *cobra.Command {
 			existingCluster, changeset := parseEditClusterCmd(cmd, args)
 
 			log.Debugf("===== Current =====\n%+v\n===== Changeset =====\n%+v\n", existingCluster, changeset)
+
+			if err := client.ClusterEditChangesetSimple(cmd.Context(), runtimes.SelectedRuntime, existingCluster, changeset); err != nil {
+				log.Fatalf("Failed to update the cluster: %v", err)
+			}
 
 			log.Infof("Successfully updated %s", existingCluster.Name)
 

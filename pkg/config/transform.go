@@ -32,7 +32,6 @@ import (
 	"github.com/docker/go-connections/nat"
 	cliutil "github.com/rancher/k3d/v4/cmd/util" // TODO: move parseapiport to pkg
 	"github.com/rancher/k3d/v4/pkg/client"
-	"github.com/rancher/k3d/v4/pkg/config/types"
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
@@ -175,7 +174,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 
 	// -> PORTS
-	if err := TransformPorts(ctx, runtime, &newCluster, simpleConfig.Ports); err != nil {
+	if err := client.TransformPorts(ctx, runtime, &newCluster, simpleConfig.Ports); err != nil {
 		return nil, err
 	}
 
@@ -346,118 +345,4 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 
 	return clusterConfig, nil
-}
-
-func addPortMappings(node *k3d.Node, portmappings []nat.PortMapping) error {
-
-	if node.Ports == nil {
-		node.Ports = nat.PortMap{}
-	}
-	for _, pm := range portmappings {
-		if _, exists := node.Ports[pm.Port]; exists {
-			node.Ports[pm.Port] = append(node.Ports[pm.Port], pm.Binding)
-		} else {
-			node.Ports[pm.Port] = []nat.PortBinding{pm.Binding}
-		}
-	}
-	return nil
-}
-
-func loadbalancerAddPortConfigs(loadbalancer *k3d.Loadbalancer, portmapping nat.PortMapping, targetNodes []*k3d.Node) error {
-	portconfig := fmt.Sprintf("%s.%s", portmapping.Port.Port(), portmapping.Port.Proto())
-	nodenames := []string{}
-	for _, node := range targetNodes {
-		if node.Role == k3d.LoadBalancerRole {
-			return fmt.Errorf("error adding port config to loadbalancer: cannot add port config referencing the loadbalancer itself (loop)")
-		}
-		nodenames = append(nodenames, node.Name)
-	}
-
-	// entry for that port doesn't exist yet, so we simply create it with the list of node names
-	if _, ok := loadbalancer.Config.Ports[portconfig]; !ok {
-		loadbalancer.Config.Ports[portconfig] = nodenames
-		return nil
-	}
-
-nodenameLoop:
-	for _, nodename := range nodenames {
-		for _, existingNames := range loadbalancer.Config.Ports[portconfig] {
-			if nodename == existingNames {
-				continue nodenameLoop
-			}
-			loadbalancer.Config.Ports[portconfig] = append(loadbalancer.Config.Ports[portconfig], nodename)
-		}
-	}
-
-	return nil
-}
-
-func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, portsWithNodeFilters []conf.PortWithNodeFilters) error {
-	nodeCount := len(cluster.Nodes)
-	nodeList := cluster.Nodes
-
-	for _, portWithNodeFilters := range portsWithNodeFilters {
-		log.Tracef("inspecting port mapping for %s with nodefilters %s", portWithNodeFilters.Port, portWithNodeFilters.NodeFilters)
-		if len(portWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
-			log.Infof("portmapping '%s' lacks a nodefilter, but there's more than one node: defaulting to %s", portWithNodeFilters.Port, types.DefaultTargetsNodefiltersPortMappings)
-			portWithNodeFilters.NodeFilters = types.DefaultTargetsNodefiltersPortMappings
-		}
-
-		for _, f := range portWithNodeFilters.NodeFilters {
-			if strings.HasPrefix(f, "loadbalancer") {
-				log.Infof("portmapping '%s' targets the loadbalancer: defaulting to %s", portWithNodeFilters.Port, types.DefaultTargetsNodefiltersPortMappings)
-				portWithNodeFilters.NodeFilters = types.DefaultTargetsNodefiltersPortMappings
-				break
-			}
-		}
-
-		filteredNodes, err := util.FilterNodesWithSuffix(nodeList, portWithNodeFilters.NodeFilters)
-		if err != nil {
-			return err
-		}
-
-		for suffix, nodes := range filteredNodes {
-			portmappings, err := nat.ParsePortSpec(portWithNodeFilters.Port)
-			if err != nil {
-				return fmt.Errorf("error parsing port spec '%s': %+v", portWithNodeFilters.Port, err)
-			}
-
-			if suffix == "proxy" || suffix == util.NodeFilterSuffixNone { // proxy is the default suffix for port mappings
-				if cluster.ServerLoadBalancer == nil {
-					return fmt.Errorf("port-mapping of type 'proxy' specified, but loadbalancer is disabled")
-				}
-				if err := addPortMappings(cluster.ServerLoadBalancer.Node, portmappings); err != nil {
-					return err
-				}
-				for _, pm := range portmappings {
-					if err := loadbalancerAddPortConfigs(cluster.ServerLoadBalancer, pm, nodes); err != nil {
-						return err
-					}
-				}
-			} else if suffix == "direct" {
-				if len(nodes) > 1 {
-					return fmt.Errorf("error: cannot apply a direct port-mapping (%s) to more than one node", portmappings)
-				}
-				for _, node := range nodes {
-					if err := addPortMappings(node, portmappings); err != nil {
-						return err
-					}
-				}
-			} else if suffix != util.NodeFilterMapKeyAll {
-				return fmt.Errorf("error adding port mappings: unknown suffix %s", suffix)
-			}
-		}
-
-	}
-
-	// print generated loadbalancer config
-	if log.GetLevel() >= log.DebugLevel {
-		yamlized, err := yaml.Marshal(cluster.ServerLoadBalancer.Config)
-		if err != nil {
-			log.Errorf("error printing loadbalancer config: %v", err)
-		} else {
-			log.Debugf("generated loadbalancer config:\n%s", string(yamlized))
-		}
-	}
-	return nil
 }

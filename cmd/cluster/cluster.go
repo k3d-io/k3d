@@ -48,6 +48,7 @@ func NewCmdCluster() *cobra.Command {
 	cmd.AddCommand(NewCmdClusterStop())
 	cmd.AddCommand(NewCmdClusterDelete())
 	cmd.AddCommand(NewCmdClusterList())
+	cmd.AddCommand(NewCmdClusterEdit())
 
 	// add flags
 
