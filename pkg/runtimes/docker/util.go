@@ -28,14 +28,11 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"path"
 
-	"github.com/docker/cli/cli/connhelper"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/cli/cli/command"
-	dockercontext "github.com/docker/cli/cli/context"
 	"github.com/docker/cli/cli/flags"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
@@ -182,59 +179,44 @@ func GetDockerClient() (*client.Client, error) {
 		return nil, err
 	}
 
+	// check for TLS Files used for protected connections
 	currentContext := dockerCli.CurrentContext()
-
-	var cli *client.Client
-
-	dockerHost := os.Getenv("DOCKER_HOST")
-
-	if strings.HasPrefix(dockerHost, "ssh://") {
-		var helper *connhelper.ConnectionHelper
-
-		helper, err = connhelper.GetConnectionHelper(dockerHost)
-		if err != nil {
-			return nil, err
-		}
-		cli, err = client.NewClientWithOpts(
-			client.WithHost(helper.Host),
-			client.WithDialContext(helper.Dialer),
-			client.WithAPIVersionNegotiation(),
-		)
-	} else if currentContext != "default" {
-		c, err := dockerCli.ContextStore().GetMetadata(currentContext)
-		if err != nil {
-			return nil, err
-		}
-
-		storageInfo := dockerCli.ContextStore().GetStorageInfo(currentContext)
-
-		tlsFilesMap, err := dockerCli.ContextStore().ListTLSFiles(currentContext)
-		if err != nil {
-			return nil, err
-		}
-
-		endpointDriver := "docker"
-		tlsFiles := tlsFilesMap[endpointDriver]
-
-		endpointMetaBase := c.Endpoints[endpointDriver].(dockercontext.EndpointMetaBase)
-
-		cli, err = client.NewClientWithOpts(
-			client.FromEnv,
-			client.WithAPIVersionNegotiation(),
-			client.WithTLSClientConfig(
-				path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[0]),
-				path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[1]),
-				path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[2])),
-			client.WithHost(endpointMetaBase.Host),
-		)
-	} else {
-		cli, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	}
+	storageInfo := dockerCli.ContextStore().GetStorageInfo(currentContext)
+	tlsFilesMap, err := dockerCli.ContextStore().ListTLSFiles(currentContext)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
+	}
+	endpointDriver := "docker"
+	tlsFiles := tlsFilesMap[endpointDriver]
+
+	// get client by endpoint configuration
+	// inspired by https://github.com/docker/cli/blob/a32cd16160f1b41c1c4ae7bee4dac929d1484e59/cli/command/cli.go#L296-L308
+	ep := dockerCli.DockerEndpoint()
+	if ep.Host != "" {
+		clientopts, err := ep.ClientOpts()
+		if err != nil {
+			return nil, err
+		}
+		headers := make(map[string]string, 1)
+		headers["User-Agent"] = command.UserAgent()
+		clientopts = append(clientopts, client.WithHTTPHeaders(headers))
+
+		// only set TLS config if present
+		if len(tlsFiles) >= 3 {
+			clientopts = append(clientopts,
+				client.WithTLSClientConfig(
+					path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[0]),
+					path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[1]),
+					path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[2]),
+				),
+			)
+		}
+
+		return client.NewClientWithOpts(clientopts...)
 	}
 
-	return cli, err
+	// fallback default client
+	return client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 }
 
 // isAttachedToNetwork return true if node is attached to network
