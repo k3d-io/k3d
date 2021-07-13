@@ -1,0 +1,127 @@
+/*
+Copyright © 2020-2021 The k3d Author(s)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+package client
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/docker/go-connections/nat"
+	"github.com/rancher/k3d/v4/pkg/config/types"
+	config "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
+	"github.com/rancher/k3d/v4/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v4/pkg/util"
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
+)
+
+var (
+	ErrNodeAddPortsExists error = errors.New("port exists on target")
+)
+
+func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, portsWithNodeFilters []config.PortWithNodeFilters) error {
+	nodeCount := len(cluster.Nodes)
+	nodeList := cluster.Nodes
+
+	for _, portWithNodeFilters := range portsWithNodeFilters {
+		log.Tracef("inspecting port mapping for %s with nodefilters %s", portWithNodeFilters.Port, portWithNodeFilters.NodeFilters)
+		if len(portWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
+			log.Infof("portmapping '%s' lacks a nodefilter, but there's more than one node: defaulting to %s", portWithNodeFilters.Port, types.DefaultTargetsNodefiltersPortMappings)
+			portWithNodeFilters.NodeFilters = types.DefaultTargetsNodefiltersPortMappings
+		}
+
+		for _, f := range portWithNodeFilters.NodeFilters {
+			if strings.HasPrefix(f, "loadbalancer") {
+				log.Infof("portmapping '%s' targets the loadbalancer: defaulting to %s", portWithNodeFilters.Port, types.DefaultTargetsNodefiltersPortMappings)
+				portWithNodeFilters.NodeFilters = types.DefaultTargetsNodefiltersPortMappings
+				break
+			}
+		}
+
+		filteredNodes, err := util.FilterNodesWithSuffix(nodeList, portWithNodeFilters.NodeFilters)
+		if err != nil {
+			return err
+		}
+
+		for suffix, nodes := range filteredNodes {
+			portmappings, err := nat.ParsePortSpec(portWithNodeFilters.Port)
+			if err != nil {
+				return fmt.Errorf("error parsing port spec '%s': %+v", portWithNodeFilters.Port, err)
+			}
+
+			if suffix == "proxy" || suffix == util.NodeFilterSuffixNone { // proxy is the default suffix for port mappings
+				if cluster.ServerLoadBalancer == nil {
+					return fmt.Errorf("port-mapping of type 'proxy' specified, but loadbalancer is disabled")
+				}
+				if err := addPortMappings(cluster.ServerLoadBalancer.Node, portmappings); err != nil {
+					return err
+				}
+				for _, pm := range portmappings {
+					if err := loadbalancerAddPortConfigs(cluster.ServerLoadBalancer, pm, nodes); err != nil {
+						return err
+					}
+				}
+			} else if suffix == "direct" {
+				if len(nodes) > 1 {
+					return fmt.Errorf("error: cannot apply a direct port-mapping (%s) to more than one node", portmappings)
+				}
+				for _, node := range nodes {
+					if err := addPortMappings(node, portmappings); err != nil {
+						return err
+					}
+				}
+			} else if suffix != util.NodeFilterMapKeyAll {
+				return fmt.Errorf("error adding port mappings: unknown suffix %s", suffix)
+			}
+		}
+
+	}
+
+	// print generated loadbalancer config
+	if log.GetLevel() >= log.DebugLevel {
+		yamlized, err := yaml.Marshal(cluster.ServerLoadBalancer.Config)
+		if err != nil {
+			log.Errorf("error printing loadbalancer config: %v", err)
+		} else {
+			log.Debugf("generated loadbalancer config:\n%s", string(yamlized))
+		}
+	}
+	return nil
+}
+
+func addPortMappings(node *k3d.Node, portmappings []nat.PortMapping) error {
+
+	if node.Ports == nil {
+		node.Ports = nat.PortMap{}
+	}
+	for _, pm := range portmappings {
+		if _, exists := node.Ports[pm.Port]; exists {
+			node.Ports[pm.Port] = append(node.Ports[pm.Port], pm.Binding)
+		} else {
+			node.Ports[pm.Port] = []nat.PortBinding{pm.Binding}
+		}
+	}
+	return nil
+}

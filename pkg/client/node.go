@@ -209,7 +209,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	if node.Role == k3d.ServerRole {
 		log.Infoln("Updating loadbalancer config to include new server node(s)")
 		if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
-			if !errors.Is(err, LBConfigErrHostNotFound) {
+			if !errors.Is(err, ErrLBConfigHostNotFound) {
 				return fmt.Errorf("error updating loadbalancer: %w", err)
 			}
 		}
@@ -473,7 +473,7 @@ func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, o
 		// if it's a server node, then update the loadbalancer configuration
 		if node.Role == k3d.ServerRole {
 			if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
-				if !errors.Is(err, LBConfigErrHostNotFound) {
+				if !errors.Is(err, ErrLBConfigHostNotFound) {
 					return fmt.Errorf("Failed to update cluster loadbalancer: %w", err)
 				}
 			}

@@ -484,10 +484,6 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 			log.Fatalln(err)
 		}
 
-		if len(filters) > 1 {
-			log.Fatalln("Can only apply a Portmap to one node")
-		}
-
 		// create new entry or append filter to existing entry
 		if _, exists := portFilterMap[portmap]; exists {
 			log.Fatalln("Same Portmapping can not be used for multiple nodes")

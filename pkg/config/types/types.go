@@ -32,3 +32,8 @@ type Config interface {
 	GetKind() string
 	GetAPIVersion() string
 }
+
+// Default Targets for NodeFilters
+var (
+	DefaultTargetsNodefiltersPortMappings = []string{"servers:*:proxy", "agents:*:proxy"}
+)

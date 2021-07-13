@@ -35,6 +35,7 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/imdario/mergo"
+	copystruct "github.com/mitchellh/copystructure"
 	"github.com/rancher/k3d/v4/pkg/actions"
 	config "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 	k3drt "github.com/rancher/k3d/v4/pkg/runtimes"
@@ -779,6 +780,26 @@ func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster
 		if !overwroteExisting {
 			cluster.Nodes = append(cluster.Nodes, node)
 		}
+
+	}
+
+	// Loadbalancer
+	if cluster.ServerLoadBalancer == nil {
+		for _, node := range cluster.Nodes {
+			if node.Role == k3d.LoadBalancerRole {
+				cluster.ServerLoadBalancer = &k3d.Loadbalancer{
+					Node: node,
+				}
+			}
+		}
+
+		if cluster.ServerLoadBalancer.Node != nil {
+			lbcfg, err := GetLoadbalancerConfig(ctx, runtime, cluster)
+			if err != nil {
+				return cluster, fmt.Errorf("error getting loadbalancer config for cluster %s: %w", cluster.Name, err)
+			}
+			cluster.ServerLoadBalancer.Config = &lbcfg
+		}
 	}
 
 	if err := populateClusterFieldsFromLabels(cluster); err != nil {
@@ -1007,5 +1028,83 @@ func prepCreateLocalRegistryHostingConfigMap(ctx context.Context, runtime k3drt.
 	if success == false {
 		log.Warnf("Failed to create LocalRegistryHosting ConfigMap")
 	}
+	return nil
+}
+
+// ClusterEditChangesetSimple modifies an existing cluster with a given SimpleConfig changeset
+func ClusterEditChangesetSimple(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, changeset *config.SimpleConfig) error {
+	// nodeCount := len(cluster.Nodes)
+	nodeList := cluster.Nodes
+
+	// === Ports ===
+
+	existingLB := cluster.ServerLoadBalancer
+	lbChangeset := &k3d.Loadbalancer{}
+
+	// copy existing loadbalancer
+	lbChangesetNode, err := CopyNode(ctx, existingLB.Node, CopyNodeOpts{keepState: false})
+	if err != nil {
+		return fmt.Errorf("error copying existing loadbalancer: %w", err)
+	}
+
+	lbChangeset.Node = lbChangesetNode
+
+	// copy config from existing loadbalancer
+	lbChangesetConfig, err := copystruct.Copy(existingLB.Config)
+	if err != nil {
+		return fmt.Errorf("error copying config from existing loadbalancer: %w", err)
+	}
+
+	lbChangeset.Config = lbChangesetConfig.(*k3d.LoadbalancerConfig)
+
+	// loop over ports
+	if len(changeset.Ports) > 0 {
+		// 1. ensure that there are only supported suffices in the node filters // TODO: overly complex right now, needs simplification
+		for _, portWithNodeFilters := range changeset.Ports {
+			filteredNodes, err := util.FilterNodesWithSuffix(nodeList, portWithNodeFilters.NodeFilters)
+			if err != nil {
+				return err
+			}
+
+			for suffix := range filteredNodes {
+				switch suffix {
+				case "proxy", util.NodeFilterSuffixNone, util.NodeFilterMapKeyAll:
+					continue
+				default:
+					return fmt.Errorf("error: 'cluster edit' does not (yet) support the '%s' opt/suffix for adding ports", suffix)
+				}
+			}
+		}
+
+		// 2. transform
+		cluster.ServerLoadBalancer = lbChangeset // we're working with pointers, so let's point to the changeset here to not update the original that we keep as a reference
+		if err := TransformPorts(ctx, runtime, cluster, changeset.Ports); err != nil {
+			return fmt.Errorf("error transforming port config %s: %w", changeset.Ports, err)
+		}
+	}
+
+	log.Debugf("ORIGINAL:\n> Ports: %+v\n> Config: %+v\nCHANGESET:\n> Ports: %+v\n> Config: %+v", existingLB.Node.Ports, existingLB.Config, lbChangeset.Node.Ports, lbChangeset.Config)
+
+	// prepare to write config to lb container
+	configyaml, err := yaml.Marshal(lbChangeset.Config)
+	if err != nil {
+		return err
+	}
+	writeLbConfigAction := k3d.NodeHook{
+		Stage: k3d.LifecycleStagePreStart,
+		Action: actions.WriteFileAction{
+			Runtime: runtime,
+			Dest:    k3d.DefaultLoadbalancerConfigPath,
+			Mode:    0744,
+			Content: configyaml,
+		},
+	}
+	if lbChangeset.Node.HookActions == nil {
+		lbChangeset.Node.HookActions = []k3d.NodeHook{}
+	}
+	lbChangeset.Node.HookActions = append(lbChangeset.Node.HookActions, writeLbConfigAction)
+
+	NodeReplace(ctx, runtime, existingLB.Node, lbChangeset.Node)
+
 	return nil
 }
