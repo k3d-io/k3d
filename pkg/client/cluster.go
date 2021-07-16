@@ -755,7 +755,7 @@ func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster
 	// get nodes that belong to the selected cluster
 	nodes, err := runtime.GetNodesByLabel(ctx, map[string]string{k3d.LabelClusterName: cluster.Name})
 	if err != nil {
-		log.Errorf("Failed to get nodes for cluster '%s'", cluster.Name)
+		log.Errorf("Failed to get nodes for cluster '%s': %v", cluster.Name, err)
 	}
 
 	if len(nodes) == 0 {

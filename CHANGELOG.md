@@ -51,6 +51,7 @@
 - changed flags `--k3s-server-arg` & `--k3s-agent-arg` into `--k3s-arg` with nodefilter support (#605)
   - new config path `options.k3s.extraArgs`
 - config file: environment variables (`$VAR`, `${VAR}` will be expanded unconditionally) (#643)
+- docker context support (#601, @developer-guy & #674)
 
 ### Misc
 
