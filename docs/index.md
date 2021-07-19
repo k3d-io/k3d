@@ -81,7 +81,7 @@ Use the install script to grab a specific release (via `TAG` environment variabl
       *Note*: `asdf plugin-add k3d`, then `asdf install k3d <tag>` with `<tag> = latest` or `4.x.x` for a specific version (maintained by [spencergilbert/asdf-k3d](https://github.com/spencergilbert/asdf-k3d))
 
     - Others
-      - install via go: `#!bash go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
+      - install via go: `#!bash go install github.com/rancher/k3d@latest` (**Note**: this will give you unreleased/bleeding-edge changes)
 
 ## Quick Start
 
