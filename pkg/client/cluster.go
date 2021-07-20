@@ -46,6 +46,7 @@ import (
 	"github.com/rancher/k3d/v4/pkg/types/k3s"
 	"github.com/rancher/k3d/v4/pkg/util"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v2"
 )
 
@@ -893,37 +894,42 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	 * Agent Nodes
 	 */
 
-	failedAgents := 0
+	agentWG, aCtx := errgroup.WithContext(ctx)
 
 	log.Infoln("Starting agents...")
 	for _, agentNode := range agents {
-		if err := NodeStart(ctx, runtime, agentNode, nodeStartOpts); err != nil {
-			log.Warnf("Failed to start agent %s: %+v", agentNode.Name, err)
-			failedAgents++
-		}
+		currentAgentNode := agentNode
+		agentWG.Go(func() error {
+			return NodeStart(aCtx, runtime, currentAgentNode, nodeStartOpts)
+		})
+	}
+	if err := agentWG.Wait(); err != nil {
+		return fmt.Errorf("Failed to add one or more agents: %w", err)
 	}
 
 	/*
 	 * Auxiliary/Helper Nodes
 	 */
 
+	helperWG, hCtx := errgroup.WithContext(ctx)
 	log.Infoln("Starting helpers...")
-	failedHelpers := 0
 	for _, helperNode := range aux {
-		nodeStartOpts := k3d.NodeStartOpts{
-			NodeHooks: helperNode.HookActions,
-		}
-		if helperNode.Role == k3d.LoadBalancerRole {
-			nodeStartOpts.Wait = true
-		}
-		if err := NodeStart(ctx, runtime, helperNode, nodeStartOpts); err != nil {
-			log.Warnf("Failed to start helper %s: %+v", helperNode.Name, err)
-			failedHelpers++
-		}
+		currentHelperNode := helperNode
+
+		helperWG.Go(func() error {
+			nodeStartOpts := k3d.NodeStartOpts{
+				NodeHooks: currentHelperNode.HookActions,
+			}
+			if currentHelperNode.Role == k3d.LoadBalancerRole {
+				nodeStartOpts.Wait = true
+			}
+
+			return NodeStart(hCtx, runtime, currentHelperNode, nodeStartOpts)
+		})
 	}
 
-	if failedAgents+failedHelpers > 0 {
-		log.Warnf("%d non-critical (agent or helper) nodes failed to start. You may want to start them manually.", failedAgents+failedHelpers)
+	if err := helperWG.Wait(); err != nil {
+		return fmt.Errorf("Failed to add one or more helper nodes: %w", err)
 	}
 
 	return nil

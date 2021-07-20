@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	run "github.com/rancher/k3d/tools/cmd"
 	"github.com/rancher/k3d/tools/version"

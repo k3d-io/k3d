@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/docker/docker/client"
 )
