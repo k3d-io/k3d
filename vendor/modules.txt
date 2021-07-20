@@ -44,7 +44,7 @@ github.com/containerd/containerd/sys
 ## explicit
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/docker/cli v20.10.6+incompatible
+# github.com/docker/cli v20.10.7+incompatible
 ## explicit
 github.com/docker/cli/cli/command
 github.com/docker/cli/cli/config
@@ -84,7 +84,7 @@ github.com/docker/distribution/registry/client/transport
 github.com/docker/distribution/registry/storage/cache
 github.com/docker/distribution/registry/storage/cache/memory
 github.com/docker/distribution/uuid
-# github.com/docker/docker v20.10.6+incompatible
+# github.com/docker/docker v20.10.7+incompatible
 ## explicit
 github.com/docker/docker/api
 github.com/docker/docker/api/types
@@ -142,7 +142,7 @@ github.com/fsnotify/fsnotify
 github.com/fvbommel/sortorder
 # github.com/go-logr/logr v0.4.0
 github.com/go-logr/logr
-# github.com/go-test/deep v1.0.4
+# github.com/go-test/deep v1.0.7
 ## explicit
 github.com/go-test/deep
 # github.com/gogo/protobuf v1.3.2
@@ -211,7 +211,7 @@ github.com/mitchellh/reflectwalk
 # github.com/moby/sys/mount v0.2.0
 ## explicit
 github.com/moby/sys/mount
-# github.com/moby/sys/mountinfo v0.4.0
+# github.com/moby/sys/mountinfo v0.4.1
 github.com/moby/sys/mountinfo
 # github.com/moby/term v0.0.0-20201110203204-bea5bbe245bf
 ## explicit
@@ -229,7 +229,7 @@ github.com/opencontainers/go-digest
 # github.com/opencontainers/image-spec v1.0.1
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
-# github.com/opencontainers/runc v1.0.0-rc93
+# github.com/opencontainers/runc v1.0.1
 ## explicit
 github.com/opencontainers/runc/libcontainer/user
 # github.com/pelletier/go-toml v1.9.3
@@ -324,7 +324,7 @@ golang.org/x/oauth2/internal
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 ## explicit
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.0.0-20210616094352-59db8d763f22
+# golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
 ## explicit
 golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
