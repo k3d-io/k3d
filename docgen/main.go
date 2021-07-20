@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/rancher/k3d/v4/cmd"
 	"github.com/spf13/cobra/doc"
