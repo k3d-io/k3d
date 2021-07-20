@@ -233,7 +233,7 @@ var completionFunctions = map[string]func(io.Writer) error{
 		return nil
 	},
 	"psh":        rootCmd.GenPowerShellCompletion,
-	"powershell": rootCmd.GenPowerShellCompletion,
+	"powershell": rootCmd.GenPowerShellCompletionWithDesc,
 	"fish":       generateFishCompletion,
 }
 
@@ -243,8 +243,49 @@ func NewCmdCompletion() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "completion SHELL",
 		Short: "Generate completion scripts for [bash, zsh, fish, powershell | psh]",
-		Long:  `Generate completion scripts for [bash, zsh, fish, powershell | psh]`,
-		Args:  cobra.ExactArgs(1), // TODO: NewCmdCompletion: add support for 0 args = auto detection
+		Long: `To load completions:
+
+Bash:
+
+	$ source <(k3d completion bash)
+
+	# To load completions for each session, execute once:
+	# Linux:
+	$ k3d completion bash > /etc/bash_completion.d/k3d
+	# macOS:
+	$ k3d completion bash > /usr/local/etc/bash_completion.d/k3d
+
+Zsh:
+
+	# If shell completion is not already enabled in your environment,
+	# you will need to enable it.  You can execute the following once:
+
+	$ echo "autoload -U compinit; compinit" >> ~/.zshrc
+
+	# To load completions for each session, execute once:
+	$ k3d completion zsh > "${fpath[1]}/k3d"
+
+	# You will need to start a new shell for this setup to take effect.
+
+fish:
+
+	$ k3d completion fish | source
+
+	# To load completions for each session, execute once:
+	$ k3d completion fish > ~/.config/fish/completions/k3d.fish
+
+PowerShell:
+
+	PS> k3d completion powershell | Out-String | Invoke-Expression
+
+	# To load completions for every new session, run:
+	PS> k3d completion powershell > k3d.ps1
+	# and source this file from your PowerShell profile.
+`,
+		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
+		ArgAliases:            []string{"psh"},
+		DisableFlagsInUseLine: true,
+		Args:                  cobra.ExactValidArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if completionFunc, ok := completionFunctions[args[0]]; ok {
 				if err := completionFunc(os.Stdout); err != nil {

@@ -68,6 +68,9 @@ func NewCmdConfigInit() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&output, "output", "o", "k3d-default.yaml", "Write a default k3d config")
+	if err := cmd.MarkFlagFilename("output", "yaml", "yml"); err != nil {
+		log.Fatalf("Failed to mark flag 'output' as filename flag: %v", err)
+	}
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "Force overwrite of target file")
 
 	return cmd

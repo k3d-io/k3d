@@ -37,12 +37,12 @@ func NewCmdClusterEdit() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:               "edit NAME",
+		Use:               "edit CLUSTER",
 		Short:             "[EXPERIMENTAL] Edit cluster(s).",
 		Long:              `[EXPERIMENTAL] Edit cluster(s).`,
 		Args:              cobra.ExactArgs(1),
 		Aliases:           []string{"update"},
-		ValidArgsFunction: util.ValidArgsAvailableNodes,
+		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Run: func(cmd *cobra.Command, args []string) {
 
 			existingCluster, changeset := parseEditClusterCmd(cmd, args)

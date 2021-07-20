@@ -49,7 +49,6 @@ func NewCmdRegistry() *cobra.Command {
 	cmd.AddCommand(NewCmdRegistryStop())
 	cmd.AddCommand(NewCmdRegistryDelete())
 	cmd.AddCommand(NewCmdRegistryList())
-	// cmd.AddCommand(NewCmdRegistryConnect()) // TODO: registry connect requires reload capabilities for containerd config
 
 	// add flags
 

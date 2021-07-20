@@ -35,7 +35,7 @@ func NewCmdNodeStart() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:               "start NAME", // TODO: startNode: allow one or more names or --all
+		Use:               "start NODE", // TODO: startNode: allow one or more names or --all
 		Short:             "Start an existing k3d node",
 		Long:              `Start an existing k3d node.`,
 		ValidArgsFunction: util.ValidArgsAvailableNodes,

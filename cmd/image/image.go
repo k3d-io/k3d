@@ -31,9 +31,10 @@ func NewCmdImage() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:   "image",
-		Short: "Handle container images.",
-		Long:  `Handle container images.`,
+		Use:     "image",
+		Aliases: []string{"images"},
+		Short:   "Handle container images.",
+		Long:    `Handle container images.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
 				log.Errorln("Couldn't get help text")

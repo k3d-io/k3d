@@ -36,7 +36,7 @@ func NewCmdNodeEdit() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:               "edit NAME",
+		Use:               "edit NODE",
 		Short:             "[EXPERIMENTAL] Edit node(s).",
 		Long:              `[EXPERIMENTAL] Edit node(s).`,
 		Args:              cobra.ExactArgs(1),

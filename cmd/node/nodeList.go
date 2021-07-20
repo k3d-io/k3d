@@ -46,7 +46,7 @@ func NewCmdNodeList() *cobra.Command {
 
 	// create new command
 	cmd := &cobra.Command{
-		Use:               "list [NAME [NAME...]]",
+		Use:               "list [NODE [NODE...]]",
 		Aliases:           []string{"ls", "get"},
 		Short:             "List node(s)",
 		Long:              `List node(s).`,

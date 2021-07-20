@@ -36,8 +36,9 @@ import (
 func NewCmdConfigMigrate() *cobra.Command {
 
 	cmd := &cobra.Command{
-		Use:  "migrate INPUT OUTPUT",
-		Args: cobra.RangeArgs(1, 2),
+		Use:     "migrate INPUT [OUTPUT]",
+		Aliases: []string{"update"},
+		Args:    cobra.RangeArgs(1, 2),
 		Run: func(cmd *cobra.Command, args []string) {
 
 			configFile := args[0]

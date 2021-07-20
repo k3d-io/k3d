@@ -44,6 +44,7 @@ func NewCmdRegistryDelete() *cobra.Command {
 		Use:               "delete (NAME | --all)",
 		Short:             "Delete registry/registries.",
 		Long:              `Delete registry/registries.`,
+		Aliases:           []string{"del", "rm"},
 		ValidArgsFunction: util.ValidArgsAvailableRegistries,
 		Run: func(cmd *cobra.Command, args []string) {
 

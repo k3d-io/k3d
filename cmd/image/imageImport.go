@@ -56,7 +56,7 @@ That is, 'rancher/k3d-tools' is treated as 'rancher/k3d-tools:latest'.
 
 A file ARCHIVE always takes precedence.
 So if a file './rancher/k3d-tools' exists, k3d will try to import it instead of the IMAGE of the same name.`,
-		Aliases: []string{"images"},
+		Aliases: []string{"load"},
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			images, clusters := parseLoadImageCmd(cmd, args)
