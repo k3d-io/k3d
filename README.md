@@ -112,6 +112,8 @@ k3d is a community-driven project and so we welcome contributions of any form, b
 
 Please read our [**Contributing Guidelines**](./CONTRIBUTING.md) and the related [**Code of Conduct**](./CODE_OF_CONDUCT.md).
 
+You can find an overview of the k3d project (e.g. explanations and a repository guide) in the documentation: [k3d.io/internals/project](https://k3d.io/internals/project)
+
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
 ## Contributors ✨
