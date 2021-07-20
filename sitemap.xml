@@ -21,6 +21,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://k3d.io/internals/project/</loc>
+         <lastmod>2021-07-20</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://k3d.io/usage/commands/</loc>
          <lastmod>2021-07-20</lastmod>
          <changefreq>daily</changefreq>
