@@ -61,7 +61,7 @@ You have several options there:
 - install via [MacPorts](https://www.macports.org): `sudo port selfupdate && sudo port install k3d` (MacPorts is available for MacOS)
 - install via [AUR](https://aur.archlinux.org/) package [rancher-k3d-bin](https://aur.archlinux.org/packages/rancher-k3d-bin/): `yay -S rancher-k3d-bin`
 - grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
-- install via go: `go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
+- install via go: `go install github.com/rancher/k3d@latest` (**Note**: this will give you unreleased/bleeding-edge changes)
 - use [Chocolatey](https://chocolatey.org/): `choco install k3d` (Chocolatey package manager is available for Windows)
   - package source can be found in [erwinkersten/chocolatey-packages](https://github.com/erwinkersten/chocolatey-packages/tree/master/automatic/k3d)
 
@@ -111,6 +111,8 @@ This repository is based on [@zeerorg](https://github.com/zeerorg/)'s [zeerorg/k
 k3d is a community-driven project and so we welcome contributions of any form, be it code, logic, documentation, examples, requests, bug reports, ideas or anything else that pushes this project forward.
 
 Please read our [**Contributing Guidelines**](./CONTRIBUTING.md) and the related [**Code of Conduct**](./CODE_OF_CONDUCT.md).
+
+You can find an overview of the k3d project (e.g. explanations and a repository guide) in the documentation: [k3d.io/internals/project](https://k3d.io/internals/project)
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 

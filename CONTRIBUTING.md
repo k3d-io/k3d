@@ -7,6 +7,8 @@ We welcome everyone who likes to use and improve our software.
 
 Before starting to work with and on k3d, please read and understand our [**Code of Conduct**](./CODE_OF_CONDUCT.md).
 
+Get an Overview of the k3d project in the documentation: [k3d.io/internals/project](https://k3d.io/internals/project)
+
 Before opening an issue or a Pull-Request, please use GitHub's search function to check whether something similar is already in process and hook in there instead.
 
 ## Get Recognized
