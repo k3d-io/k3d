@@ -256,9 +256,9 @@
       },
       "examples": [
         "loadbalancer",
-        "server[*]",
+        "server:*",
         "server:0",
-        "agent[1]",
+        "agent:1",
         "all"
       ]
     }

@@ -7,7 +7,7 @@ Start an existing k3d node
 Start an existing k3d node.
 
 ```
-k3d node start NAME [flags]
+k3d node start NODE [flags]
 ```
 
 ### Options

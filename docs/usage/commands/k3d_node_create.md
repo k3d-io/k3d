@@ -20,8 +20,9 @@ k3d node create NAME [flags]
       --memory string            Memory limit imposed on the node [From docker]
       --replicas int             Number of replicas of this node specification. (default 1)
       --role string              Specify node role [server, agent] (default "agent")
+      --runtime-label strings    Specify container runtime labels in format "foo=bar"
       --timeout duration         Maximum waiting time for '--wait' before canceling/returning.
-      --wait                     Wait for the node(s) to be ready before returning.
+      --wait                     Wait for the node(s) to be ready before returning. (default true)
 ```
 
 ### Options inherited from parent commands

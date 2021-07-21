@@ -7,7 +7,7 @@ List node(s)
 List node(s).
 
 ```
-k3d node list [NAME [NAME...]] [flags]
+k3d node list [NODE [NODE...]] [flags]
 ```
 
 ### Options
