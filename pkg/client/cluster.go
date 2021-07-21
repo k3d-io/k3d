@@ -794,10 +794,10 @@ func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster
 			}
 		}
 
-		if cluster.ServerLoadBalancer.Node != nil {
+		if cluster.ServerLoadBalancer != nil && cluster.ServerLoadBalancer.Node != nil {
 			lbcfg, err := GetLoadbalancerConfig(ctx, runtime, cluster)
 			if err != nil {
-				return cluster, fmt.Errorf("error getting loadbalancer config for cluster %s: %w", cluster.Name, err)
+				log.Errorf("error getting loadbalancer config from %s: %v", cluster.ServerLoadBalancer.Node.Name, err)
 			}
 			cluster.ServerLoadBalancer.Config = &lbcfg
 		}
