@@ -64,18 +64,14 @@ image: rancher/k3s:v1.20.4-k3s1 # same as `--image rancher/k3s:v1.20.4-k3s1`
 network: my-custom-net # same as `--network my-custom-net`
 token: superSecretToken # same as `--token superSecretToken`
 volumes: # repeatable flags are represented as YAML lists
-  - volume: /my/host/path:/path/in/node # same as `--volume '/my/host/path:/path/in/node@server:0;agent[*]'`
+  - volume: /my/host/path:/path/in/node # same as `--volume '/my/host/path:/path/in/node@server:0;agent:*'`
     nodeFilters:
       - server:0
-      - agent[*]
+      - agent:*
 ports:
   - port: 8080:80 # same as `--port '8080:80@loadbalancer'`
     nodeFilters:
       - loadbalancer
-labels:
-  - label: foo=bar # same as `--label 'foo=bar@agent[1]'`
-    nodeFilters:
-      - agent[1]
 env:
   - envVar: bar=baz # same as `--env 'bar=baz@server:0'`
     nodeFilters:
@@ -101,12 +97,20 @@ options:
     extraArgs: # additional arguments passed to the `k3s server|agent` command; same as `--k3s-arg`
       - arg: --tls-san=my.host.domain
         nodeFilters:
-          - server[*]
+          - server:*
+    nodeLabels:
+      - label: foo=bar # same as `--k3s-node-label 'foo=bar@agent:1'` -> this results in a Kubernetes node label
+        nodeFilters:
+          - agent:1
   kubeconfig:
     updateDefaultKubeconfig: true # add new cluster to your default Kubeconfig; same as `--kubeconfig-update-default` (default: true)
     switchCurrentContext: true # also set current-context to the new cluster's context; same as `--kubeconfig-switch-context` (default: true)
   runtime: # runtime (docker) specific options
     gpuRequest: all # same as `--gpus all`
+    labels:
+      - label: bar=baz # same as `--runtime-label 'bar=baz@agent:1'` -> this results in a runtime (docker) container label
+        nodeFilters:
+          - agent:1
 
 ```
 
