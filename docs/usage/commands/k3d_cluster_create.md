@@ -31,20 +31,22 @@ k3d cluster create NAME [flags]
   -i, --image string                                                   Specify k3s image that you want to use for the nodes
       --k3s-arg ARG@NODEFILTER[;@NODEFILTER]                           Additional args passed to k3s command (Format: ARG@NODEFILTER[;@NODEFILTER])
                                                                         - Example: `k3d cluster create --k3s-arg "--disable=traefik@server:0"
+      --k3s-node-label KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]        Add label to k3s node (Format: KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]
+                                                                        - Example: `k3d cluster create --agents 2 --k3s-node-label "my.label@agent:0,1" --k3s-node-label "other.label=somevalue@server:0"`
       --kubeconfig-switch-context                                      Directly switch the default kubeconfig's current-context to the new cluster's context (requires --kubeconfig-update-default) (default true)
       --kubeconfig-update-default                                      Directly update the default kubeconfig with the new cluster's context (default true)
-  -l, --label KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]                 Add label to node container (Format: KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]
-                                                                        - Example: `k3d cluster create --agents 2 -l "my.label@agent:0,1" -l "other.label=somevalue@server:0"`
       --network string                                                 Join an existing network
       --no-hostip                                                      Disable the automatic injection of the Host IP as 'host.k3d.internal' into the containers and CoreDNS
       --no-image-volume                                                Disable the creation of a volume for importing images
       --no-lb                                                          Disable the creation of a LoadBalancer in front of the server nodes
       --no-rollback                                                    Disable the automatic rollback actions, if anything goes wrong
-  -p, --port [HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]   Map ports from the node containers to the host (Format: [HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER])
+  -p, --port [HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]   Map ports from the node containers (via the serverlb) to the host (Format: [HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER])
                                                                         - Example: `k3d cluster create --agents 2 -p 8080:80@agent:0 -p 8081@agent:1`
       --registry-config string                                         Specify path to an extra registries.yaml file
       --registry-create                                                Create a k3d-managed registry and connect it to the cluster
       --registry-use stringArray                                       Connect to one or more k3d-managed registries running locally
+      --runtime-label KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]         Add label to container runtime (Format: KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]
+                                                                        - Example: `k3d cluster create --agents 2 --runtime-label "my.label@agent:0,1" --runtime-label "other.label=somevalue@server:0"`
   -s, --servers int                                                    Specify how many servers you want to create
       --servers-memory string                                          Memory limit imposed on the server nodes [From docker]
       --subnet 172.28.0.0/16                                           [Experimental: IPAM] Define a subnet for the newly created container network (Example: 172.28.0.0/16)

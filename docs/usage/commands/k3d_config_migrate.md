@@ -3,7 +3,7 @@
 
 
 ```
-k3d config migrate INPUT OUTPUT [flags]
+k3d config migrate INPUT [OUTPUT] [flags]
 ```
 
 ### Options
