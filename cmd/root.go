@@ -56,51 +56,26 @@ type RootFlags struct {
 
 var flags = RootFlags{}
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "k3d",
-	Short: "https://k3d.io/ -> Run k3s in Docker!",
-	Long: `https://k3d.io/
+func NewCmdK3d() *cobra.Command {
+
+	// rootCmd represents the base command when called without any subcommands
+	rootCmd := &cobra.Command{
+		Use:   "k3d",
+		Short: "https://k3d.io/ -> Run k3s in Docker!",
+		Long: `https://k3d.io/
 k3d is a wrapper CLI that helps you to easily create k3s clusters inside docker.
 Nodes of a k3d cluster are docker containers running a k3s image.
 All Nodes of a k3d cluster are part of the same docker network.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if flags.version {
-			printVersion()
-		} else {
-			if err := cmd.Usage(); err != nil {
-				log.Fatalln(err)
+		Run: func(cmd *cobra.Command, args []string) {
+			if flags.version {
+				printVersion()
+			} else {
+				if err := cmd.Usage(); err != nil {
+					log.Fatalln(err)
+				}
 			}
-		}
-	},
-}
-
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if len(os.Args) > 1 {
-		parts := os.Args[1:]
-		// Check if it's a built-in command, else try to execute it as a plugin
-		if _, _, err := rootCmd.Find(parts); err != nil {
-			pluginFound, err := cliutil.HandlePlugin(context.Background(), parts)
-			if err != nil {
-				log.Errorf("Failed to execute plugin '%+v'", parts)
-				log.Fatalln(err)
-			} else if pluginFound {
-				os.Exit(0)
-			}
-		}
+		},
 	}
-	if err := rootCmd.Execute(); err != nil {
-		log.Fatalln(err)
-	}
-}
-
-func GetRootCmd() *cobra.Command {
-	return rootCmd
-}
-
-func init() {
 
 	rootCmd.PersistentFlags().BoolVar(&flags.debugLogging, "verbose", false, "Enable verbose output (debug logging)")
 	rootCmd.PersistentFlags().BoolVar(&flags.traceLogging, "trace", false, "Enable super verbose output (trace logging)")
@@ -110,7 +85,7 @@ func init() {
 	rootCmd.Flags().BoolVar(&flags.version, "version", false, "Show k3d and default k3s version")
 
 	// add subcommands
-	rootCmd.AddCommand(NewCmdCompletion())
+	rootCmd.AddCommand(NewCmdCompletion(rootCmd))
 	rootCmd.AddCommand(cluster.NewCmdCluster())
 	rootCmd.AddCommand(kubeconfig.NewCmdKubeconfig())
 	rootCmd.AddCommand(node.NewCmdNode())
@@ -147,6 +122,30 @@ func init() {
 
 	// Init
 	cobra.OnInitialize(initLogging, initRuntime)
+
+	return rootCmd
+}
+
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() {
+	cmd := NewCmdK3d()
+	if len(os.Args) > 1 {
+		parts := os.Args[1:]
+		// Check if it's a built-in command, else try to execute it as a plugin
+		if _, _, err := cmd.Find(parts); err != nil {
+			pluginFound, err := cliutil.HandlePlugin(context.Background(), parts)
+			if err != nil {
+				log.Errorf("Failed to execute plugin '%+v'", parts)
+				log.Fatalln(err)
+			} else if pluginFound {
+				os.Exit(0)
+			}
+		}
+	}
+	if err := cmd.Execute(); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 // initLogging initializes the logger
@@ -216,29 +215,27 @@ func printVersion() {
 	fmt.Printf("k3s version %s (default)\n", version.K3sVersion)
 }
 
-func generateFishCompletion(writer io.Writer) error {
-	return rootCmd.GenFishCompletion(writer, true)
-}
-
-// Completion
-var completionFunctions = map[string]func(io.Writer) error{
-	"bash": rootCmd.GenBashCompletion,
-	"zsh": func(writer io.Writer) error {
-		if err := rootCmd.GenZshCompletion(writer); err != nil {
-			return err
-		}
-
-		fmt.Fprintf(writer, "\n# source completion file\ncompdef _k3d k3d\n")
-
-		return nil
-	},
-	"psh":        rootCmd.GenPowerShellCompletion,
-	"powershell": rootCmd.GenPowerShellCompletionWithDesc,
-	"fish":       generateFishCompletion,
-}
-
 // NewCmdCompletion creates a new completion command
-func NewCmdCompletion() *cobra.Command {
+func NewCmdCompletion(rootCmd *cobra.Command) *cobra.Command {
+
+	completionFunctions := map[string]func(io.Writer) error{
+		"bash": rootCmd.GenBashCompletion,
+		"zsh": func(writer io.Writer) error {
+			if err := rootCmd.GenZshCompletion(writer); err != nil {
+				return err
+			}
+
+			fmt.Fprintf(writer, "\n# source completion file\ncompdef _k3d k3d\n")
+
+			return nil
+		},
+		"psh":        rootCmd.GenPowerShellCompletion,
+		"powershell": rootCmd.GenPowerShellCompletionWithDesc,
+		"fish": func(writer io.Writer) error {
+			return rootCmd.GenFishCompletion(writer, true)
+		},
+	}
+
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:   "completion SHELL",

@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	k3d := cmd.GetRootCmd()
+	k3d := cmd.NewCmdK3d()
 	k3d.DisableAutoGenTag = true
 
 	if err := doc.GenMarkdownTree(k3d, "../docs/usage/commands"); err != nil {
