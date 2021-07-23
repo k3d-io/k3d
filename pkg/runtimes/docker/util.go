@@ -174,7 +174,10 @@ func GetDockerClient() (*client.Client, error) {
 		return nil, err
 	}
 
-	err = dockerCli.Initialize(flags.NewClientOptions())
+	newClientOpts := flags.NewClientOptions()
+	newClientOpts.Common.LogLevel = log.GetLevel().String() // this is needed, as the following Initialize() call will set a new log level on the global logrus instance
+
+	err = dockerCli.Initialize(newClientOpts)
 	if err != nil {
 		return nil, err
 	}
