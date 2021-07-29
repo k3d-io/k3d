@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -390,10 +391,15 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 
 	// Set to random port if port is empty string
 	if len(exposeAPI.Binding.HostPort) == 0 {
-		exposeAPI, err = cliutil.ParsePortExposureSpec("random", k3d.DefaultAPIPort)
-		if err != nil {
-			return cfg, err
+		var freePort string
+		port, err := cliutil.GetFreePort()
+		freePort = strconv.Itoa(port)
+		if err != nil || port == 0 {
+			log.Warnf("Failed to get random free port: %+v", err)
+			log.Warnf("Falling back to internal port %s (may be blocked though)...", k3d.DefaultAPIPort)
+			freePort = k3d.DefaultAPIPort
 		}
+		exposeAPI.Binding.HostPort = freePort
 	}
 
 	cfg.ExposeAPI = conf.SimpleExposureOpts{
