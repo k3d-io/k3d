@@ -354,6 +354,23 @@ steps:
       event:
         - tag
 
+  - name: push_manifest_latest
+    image: plugins/manifest
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      target: "rancher/k3d-proxy:latest"
+      template: "rancher/k3d-proxy:latest-OS-ARCH"
+      platforms:
+        - linux/amd64
+        - linux/arm
+        - linux/arm64
+    when:
+      event:
+        - tag
+
 trigger:
   event:
     - tag
@@ -490,6 +507,23 @@ steps:
         from_secret: docker_password
       target: "rancher/k3d-tools:${DRONE_TAG}"
       template: "rancher/k3d-tools:${DRONE_TAG}-OS-ARCH"
+      platforms:
+        - linux/amd64
+        - linux/arm
+        - linux/arm64
+    when:
+      event:
+        - tag
+
+  - name: push_manifest_latest
+    image: plugins/manifest
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      target: "rancher/k3d-tools:latest"
+      template: "rancher/k3d-tools:latest-OS-ARCH"
       platforms:
         - linux/amd64
         - linux/arm
