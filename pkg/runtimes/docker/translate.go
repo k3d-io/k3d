@@ -31,10 +31,10 @@ import (
 	docker "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/pkg/types/fixes"
-	log "github.com/sirupsen/logrus"
 
 	dockercliopts "github.com/docker/cli/opts"
 	dockerunits "github.com/docker/go-units"
@@ -145,7 +145,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	if len(node.Networks) > 0 {
 		netInfo, err := GetNetwork(context.Background(), node.Networks[0]) // FIXME: only considering first network here, as that's the one k3d creates for a cluster
 		if err != nil {
-			log.Warnf("Failed to get network information: %v", err)
+			l.Log().Warnf("Failed to get network information: %v", err)
 		} else if netInfo.Driver == "host" {
 			hostConfig.NetworkMode = "host"
 		}
@@ -175,7 +175,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 
 	// first, make sure, that it's actually a k3d managed container by checking if it has all the default labels
 	for k, v := range k3d.DefaultRuntimeLabels {
-		log.Tracef("TranslateContainerDetailsToNode: Checking for default object label %s=%s on container %s", k, v, containerDetails.Name)
+		l.Log().Tracef("TranslateContainerDetailsToNode: Checking for default object label %s=%s on container %s", k, v, containerDetails.Name)
 		found := false
 		for lk, lv := range containerDetails.Config.Labels {
 			if lk == k && lv == v {
@@ -184,7 +184,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 			}
 		}
 		if !found {
-			log.Debugf("Container %s is missing default label %s=%s in label set %+v", containerDetails.Name, k, v, containerDetails.Config.Labels)
+			l.Log().Debugf("Container %s is missing default label %s=%s in label set %+v", containerDetails.Name, k, v, containerDetails.Config.Labels)
 			return nil, runtimeErr.ErrRuntimeContainerUnknown
 		}
 	}
@@ -223,7 +223,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 	if serverIsInitLabel, ok := containerDetails.Config.Labels[k3d.LabelServerIsInit]; ok {
 		if serverIsInitLabel == "true" {
 			if !clusterInitFlagSet {
-				log.Errorf("Container %s has label %s=true, but the args do not contain the --cluster-init flag", containerDetails.Name, k3d.LabelServerIsInit)
+				l.Log().Errorf("Container %s has label %s=true, but the args do not contain the --cluster-init flag", containerDetails.Name, k3d.LabelServerIsInit)
 			} else {
 				serverOpts.IsInit = true
 			}

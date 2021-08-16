@@ -25,15 +25,15 @@ package config
 import (
 	"github.com/imdario/mergo"
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 // MergeSimple merges two simple configuration files with the values of the destination one having priority
 func MergeSimple(dest, src conf.SimpleConfig) (*conf.SimpleConfig, error) {
-	log.Debugf("Merging %+v into %+v", src, dest)
+	l.Log().Debugf("Merging %+v into %+v", src, dest)
 
 	if err := mergo.Merge(&dest, src); err != nil {
-		log.Errorln("Failed to merge config")
+		l.Log().Errorln("Failed to merge config")
 
 		return nil, err
 	}

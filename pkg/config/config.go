@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 
 	"github.com/spf13/viper"
 
@@ -59,7 +59,7 @@ func FromViper(config *viper.Viper) (types.Config, error) {
 	apiVersion := strings.ToLower(config.GetString("apiversion"))
 	kind := strings.ToLower(config.GetString("kind"))
 
-	log.Tracef("Trying to read config apiVersion='%s', kind='%s'", apiVersion, kind)
+	l.Log().Tracef("Trying to read config apiVersion='%s', kind='%s'", apiVersion, kind)
 
 	switch apiVersion {
 	case "k3d.io/v1alpha2":
@@ -77,7 +77,7 @@ func FromViper(config *viper.Viper) (types.Config, error) {
 	}
 
 	if err := config.Unmarshal(&cfg); err != nil {
-		log.Errorln("Failed to unmarshal File config")
+		l.Log().Errorln("Failed to unmarshal File config")
 
 		return nil, err
 	}

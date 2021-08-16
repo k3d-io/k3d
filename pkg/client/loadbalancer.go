@@ -31,10 +31,10 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/go-test/deep"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/types"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
@@ -51,7 +51,7 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 	// update cluster details to ensure that we have the latest node list
 	cluster, err = ClusterGet(ctx, runtime, cluster)
 	if err != nil {
-		log.Errorf("Failed to update details for cluster '%s'", cluster.Name)
+		l.Log().Errorf("Failed to update details for cluster '%s'", cluster.Name)
 		return err
 	}
 
@@ -60,23 +60,23 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 		return fmt.Errorf("error getting current config from loadbalancer: %w", err)
 	}
 
-	log.Tracef("Current loadbalancer config:\n%+v", currentConfig)
+	l.Log().Tracef("Current loadbalancer config:\n%+v", currentConfig)
 
 	newLBConfig, err := LoadbalancerGenerateConfig(cluster)
 	if err != nil {
 		return fmt.Errorf("error generating new loadbalancer config: %w", err)
 	}
-	log.Tracef("New loadbalancer config:\n%+v", currentConfig)
+	l.Log().Tracef("New loadbalancer config:\n%+v", currentConfig)
 
 	if diff := deep.Equal(currentConfig, newLBConfig); diff != nil {
-		log.Debugf("Updating the loadbalancer with this diff: %+v", diff)
+		l.Log().Debugf("Updating the loadbalancer with this diff: %+v", diff)
 	}
 
 	newLbConfigYaml, err := yaml.Marshal(&newLBConfig)
 	if err != nil {
 		return fmt.Errorf("error marshalling the new loadbalancer config: %w", err)
 	}
-	log.Debugf("Writing lb config:\n%s", string(newLbConfigYaml))
+	l.Log().Debugf("Writing lb config:\n%s", string(newLbConfigYaml))
 	startTime := time.Now().Truncate(time.Second).UTC()
 	if err := runtime.WriteToNode(ctx, newLbConfigYaml, k3d.DefaultLoadbalancerConfigPath, 0744, cluster.ServerLoadBalancer.Node); err != nil {
 		return fmt.Errorf("error writing new loadbalancer config to container: %w", err)
@@ -91,18 +91,18 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 			defer failureCtxCancel()
 			err = NodeWaitForLogMessage(failureCtx, runtime, cluster.ServerLoadBalancer.Node, "host not found in upstream", startTime)
 			if err != nil {
-				log.Warnf("Failed to check if the loadbalancer was configured correctly or if it broke. Please check it manually or try again: %v", err)
+				l.Log().Warnf("Failed to check if the loadbalancer was configured correctly or if it broke. Please check it manually or try again: %v", err)
 				return ErrLBConfigFailedTest
 			} else {
-				log.Warnln("Failed to configure loadbalancer because one of the nodes seems to be down! Run `k3d node list` to see which one it could be.")
+				l.Log().Warnln("Failed to configure loadbalancer because one of the nodes seems to be down! Run `k3d node list` to see which one it could be.")
 				return ErrLBConfigHostNotFound
 			}
 		} else {
-			log.Warnf("Failed to ensure that loadbalancer was configured correctly. Please check it manually or try again: %v", err)
+			l.Log().Warnf("Failed to ensure that loadbalancer was configured correctly. Please check it manually or try again: %v", err)
 			return ErrLBConfigFailedTest
 		}
 	}
-	log.Infof("Successfully configured loadbalancer %s!", cluster.ServerLoadBalancer.Node.Name)
+	l.Log().Infof("Successfully configured loadbalancer %s!", cluster.ServerLoadBalancer.Node.Name)
 
 	time.Sleep(1 * time.Second) // waiting for a second, to avoid issues with too fast lb updates which would screw up the log waits
 

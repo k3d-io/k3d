@@ -30,10 +30,11 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/rancher/k3d/v4/pkg/config/types"
 	config "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/pkg/util"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
@@ -46,15 +47,15 @@ func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 	nodeList := cluster.Nodes
 
 	for _, portWithNodeFilters := range portsWithNodeFilters {
-		log.Tracef("inspecting port mapping for %s with nodefilters %s", portWithNodeFilters.Port, portWithNodeFilters.NodeFilters)
+		l.Log().Tracef("inspecting port mapping for %s with nodefilters %s", portWithNodeFilters.Port, portWithNodeFilters.NodeFilters)
 		if len(portWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
-			log.Infof("portmapping '%s' lacks a nodefilter, but there's more than one node: defaulting to %s", portWithNodeFilters.Port, types.DefaultTargetsNodefiltersPortMappings)
+			l.Log().Infof("portmapping '%s' lacks a nodefilter, but there's more than one node: defaulting to %s", portWithNodeFilters.Port, types.DefaultTargetsNodefiltersPortMappings)
 			portWithNodeFilters.NodeFilters = types.DefaultTargetsNodefiltersPortMappings
 		}
 
 		for _, f := range portWithNodeFilters.NodeFilters {
 			if strings.HasPrefix(f, "loadbalancer") {
-				log.Infof("portmapping '%s' targets the loadbalancer: defaulting to %s", portWithNodeFilters.Port, types.DefaultTargetsNodefiltersPortMappings)
+				l.Log().Infof("portmapping '%s' targets the loadbalancer: defaulting to %s", portWithNodeFilters.Port, types.DefaultTargetsNodefiltersPortMappings)
 				portWithNodeFilters.NodeFilters = types.DefaultTargetsNodefiltersPortMappings
 				break
 			}
@@ -100,12 +101,12 @@ func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 	}
 
 	// print generated loadbalancer config
-	if log.GetLevel() >= log.DebugLevel {
+	if l.Log().GetLevel() >= logrus.DebugLevel {
 		yamlized, err := yaml.Marshal(cluster.ServerLoadBalancer.Config)
 		if err != nil {
-			log.Errorf("error printing loadbalancer config: %v", err)
+			l.Log().Errorf("error printing loadbalancer config: %v", err)
 		} else {
-			log.Debugf("generated loadbalancer config:\n%s", string(yamlized))
+			l.Log().Debugf("generated loadbalancer config:\n%s", string(yamlized))
 		}
 	}
 	return nil

@@ -41,7 +41,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"inet.af/netaddr"
 
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 var (
@@ -118,7 +118,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		}
 		newCluster.Nodes = append(newCluster.Nodes, newCluster.ServerLoadBalancer.Node)
 	} else {
-		log.Debugln("Disabling the load balancer")
+		l.Log().Debugln("Disabling the load balancer")
 	}
 
 	/*************
@@ -297,7 +297,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		if err != nil {
 			return nil, fmt.Errorf("Failed to parse use-registry string  '%s': %+v", usereg, err)
 		}
-		log.Tracef("Parsed registry reference: %+v", reg)
+		l.Log().Tracef("Parsed registry reference: %+v", reg)
 		clusterCreateOpts.Registries.Use = append(clusterCreateOpts.Registries.Use, reg)
 	}
 
@@ -305,7 +305,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		var k3sRegistry *k3s.Registry
 
 		if strings.Contains(simpleConfig.Registries.Config, "\n") { // CASE 1: embedded registries.yaml (multiline string)
-			log.Debugf("Found multiline registries config embedded in SimpleConfig:\n%s", simpleConfig.Registries.Config)
+			l.Log().Debugf("Found multiline registries config embedded in SimpleConfig:\n%s", simpleConfig.Registries.Config)
 			if err := yaml.Unmarshal([]byte(simpleConfig.Registries.Config), &k3sRegistry); err != nil {
 				return nil, fmt.Errorf("Failed to read embedded registries config: %+v", err)
 			}
@@ -324,7 +324,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			}
 		}
 
-		log.Tracef("Registry: read config from input:\n%+v", k3sRegistry)
+		l.Log().Tracef("Registry: read config from input:\n%+v", k3sRegistry)
 		clusterCreateOpts.Registries.Config = k3sRegistry
 	}
 

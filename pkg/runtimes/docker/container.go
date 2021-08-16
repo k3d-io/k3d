@@ -33,19 +33,20 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // createContainer creates a new docker container from translated specs
 func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string) (string, error) {
 
-	log.Tracef("Creating docker container with translated config\n%+v\n", dockerNode)
+	l.Log().Tracef("Creating docker container with translated config\n%+v\n", dockerNode)
 
 	// initialize docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
+		l.Log().Errorln("Failed to create docker client")
 		return "", err
 	}
 	defer docker.Close()
@@ -57,15 +58,15 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 		if err != nil {
 			if client.IsErrNotFound(err) {
 				if err := pullImage(ctx, docker, dockerNode.ContainerConfig.Image); err != nil {
-					log.Errorf("Failed to create container '%s'", name)
+					l.Log().Errorf("Failed to create container '%s'", name)
 					return "", err
 				}
 				continue
 			}
-			log.Errorf("Failed to create container '%s'", name)
+			l.Log().Errorf("Failed to create container '%s'", name)
 			return "", err
 		}
-		log.Debugf("Created container %s (ID: %s)", name, resp.ID)
+		l.Log().Debugf("Created container %s (ID: %s)", name, resp.ID)
 		break
 	}
 
@@ -76,7 +77,7 @@ func startContainer(ctx context.Context, ID string) error {
 	// initialize docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
+		l.Log().Errorln("Failed to create docker client")
 		return err
 	}
 	defer docker.Close()
@@ -90,7 +91,7 @@ func removeContainer(ctx context.Context, ID string) error {
 	// (0) create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
+		l.Log().Errorln("Failed to create docker client")
 		return err
 	}
 	defer docker.Close()
@@ -103,11 +104,11 @@ func removeContainer(ctx context.Context, ID string) error {
 
 	// (2) remove container
 	if err := docker.ContainerRemove(ctx, ID, options); err != nil {
-		log.Errorf("Failed to delete container '%s'", ID)
+		l.Log().Errorf("Failed to delete container '%s'", ID)
 		return err
 	}
 
-	log.Infoln("Deleted", ID)
+	l.Log().Infoln("Deleted", ID)
 
 	return nil
 }
@@ -117,22 +118,22 @@ func pullImage(ctx context.Context, docker *client.Client, image string) error {
 
 	resp, err := docker.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
-		log.Errorf("Failed to pull image '%s'", image)
+		l.Log().Errorf("Failed to pull image '%s'", image)
 		return err
 	}
 	defer resp.Close()
 
-	log.Infof("Pulling image '%s'", image)
+	l.Log().Infof("Pulling image '%s'", image)
 
 	// in debug mode (--verbose flag set), output pull progress
 	var writer io.Writer = ioutil.Discard
-	if log.GetLevel() == log.DebugLevel {
+	if l.Log().GetLevel() == logrus.DebugLevel {
 		writer = os.Stdout
 	}
 	_, err = io.Copy(writer, resp)
 	if err != nil {
-		log.Warningf("Couldn't get docker output")
-		log.Warningln(err)
+		l.Log().Warningf("Couldn't get docker output")
+		l.Log().Warningln(err)
 	}
 
 	return nil
@@ -144,7 +145,7 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 	// (0) create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
+		l.Log().Errorln("Failed to create docker client")
 		return nil, err
 	}
 	defer docker.Close()
@@ -186,7 +187,7 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 func executeCheckInContainer(ctx context.Context, image string, cmd []string) (int64, error) {
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
+		l.Log().Errorln("Failed to create docker client")
 		return -1, err
 	}
 	defer docker.Close()
@@ -202,7 +203,7 @@ func executeCheckInContainer(ctx context.Context, image string, cmd []string) (i
 		Entrypoint: []string{},
 	}, nil, nil, nil, "")
 	if err != nil {
-		log.Errorf("Failed to create container from image %s with cmd %s", image, cmd)
+		l.Log().Errorf("Failed to create container from image %s with cmd %s", image, cmd)
 		return -1, err
 	}
 
@@ -215,7 +216,7 @@ func executeCheckInContainer(ctx context.Context, image string, cmd []string) (i
 	select {
 	case err := <-errCh:
 		if err != nil {
-			log.Errorf("Error while waiting for container %s to exit", resp.ID)
+			l.Log().Errorf("Error while waiting for container %s to exit", resp.ID)
 			return -1, err
 		}
 	case status := <-statusCh:
@@ -231,11 +232,11 @@ func executeCheckInContainer(ctx context.Context, image string, cmd []string) (i
 
 // CheckIfDirectoryExists checks for the existence of a given path inside the docker environment
 func CheckIfDirectoryExists(ctx context.Context, image string, dir string) (bool, error) {
-	log.Tracef("checking if dir %s exists in docker environment...", dir)
+	l.Log().Tracef("checking if dir %s exists in docker environment...", dir)
 	shellCmd := fmt.Sprintf("[ -d \"%s\" ] && exit 0 || exit 1", dir)
 	cmd := []string{"sh", "-c", shellCmd}
 	exitCode, err := executeCheckInContainer(ctx, image, cmd)
-	log.Tracef("check dir container returned %d exist code", exitCode)
+	l.Log().Tracef("check dir container returned %d exist code", exitCode)
 	return exitCode == 0, err
 
 }

@@ -27,8 +27,8 @@ import (
 	"strconv"
 	"strings"
 
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -86,7 +86,7 @@ func FilterNodesWithSuffix(nodes []*k3d.Node, nodefilters []string) (map[string]
 			return nil, err
 		}
 
-		log.Tracef("Filtered %d nodes for suffix '%s' (filter: %s)", len(filteredNodes), suffix, nf)
+		l.Log().Tracef("Filtered %d nodes for suffix '%s' (filter: %s)", len(filteredNodes), suffix, nf)
 
 		result[suffix] = append(result[suffix], filteredNodes...)
 	}
@@ -97,10 +97,10 @@ func FilterNodesWithSuffix(nodes []*k3d.Node, nodefilters []string) (map[string]
 // FilterNodes takes a string filter to return a filtered list of nodes
 func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 
-	log.Tracef("Filtering %d nodes by %s", len(nodes), filters)
+	l.Log().Tracef("Filtering %d nodes by %s", len(nodes), filters)
 
 	if len(filters) == 0 || len(filters[0]) == 0 {
-		log.Warnln("No node filter specified")
+		l.Log().Warnln("No node filter specified")
 		return nodes, nil
 	}
 
@@ -137,7 +137,7 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 		// if one of the filters is 'all', we only return this and drop all others
 		if submatches["group"] == "all" {
 			if len(filters) > 1 {
-				log.Warnf("Node filter 'all' set, but more were specified in '%+v'", filters)
+				l.Log().Warnf("Node filter 'all' set, but more were specified in '%+v'", filters)
 			}
 			return nodes, nil
 		}
@@ -243,7 +243,7 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 
 	}
 
-	log.Tracef("Filtered %d nodes (filter: %s)", len(filteredNodes), filters)
+	l.Log().Tracef("Filtered %d nodes (filter: %s)", len(filteredNodes), filters)
 
 	return filteredNodes, nil
 }

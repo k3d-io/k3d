@@ -28,21 +28,21 @@ import (
 	"os/exec"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 func (d Docker) GetDockerMachineIP() (string, error) {
 	machine := os.ExpandEnv("$DOCKER_MACHINE_NAME")
 	if machine == "" {
-		log.Tracef("Docker Machine not specified via DOCKER_MACHINE_NAME env var")
+		l.Log().Tracef("Docker Machine not specified via DOCKER_MACHINE_NAME env var")
 		return "", nil
 	}
 
-	log.Debugf("Docker Machine found: %s", machine)
+	l.Log().Debugf("Docker Machine found: %s", machine)
 	dockerMachinePath, err := exec.LookPath("docker-machine")
 	if err != nil {
 		if err == exec.ErrNotFound {
-			log.Debugf("DOCKER_MACHINE_NAME env var present, but executable docker-machine not found: %+v", err)
+			l.Log().Debugf("DOCKER_MACHINE_NAME env var present, but executable docker-machine not found: %+v", err)
 		}
 		return "", nil
 	}

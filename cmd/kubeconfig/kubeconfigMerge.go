@@ -29,13 +29,12 @@ import (
 
 	"github.com/rancher/k3d/v4/cmd/util"
 	"github.com/rancher/k3d/v4/pkg/client"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	k3dutil "github.com/rancher/k3d/v4/pkg/util"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/tools/clientcmd"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type mergeKubeconfigFlags struct {
@@ -64,14 +63,14 @@ func NewCmdKubeconfigMerge() *cobra.Command {
 			var err error
 
 			if mergeKubeconfigFlags.targetDefault && mergeKubeconfigFlags.output != "" {
-				log.Fatalln("Cannot use both '--output' and '--kubeconfig-merge-default' at the same time")
+				l.Log().Fatalln("Cannot use both '--output' and '--kubeconfig-merge-default' at the same time")
 			}
 
 			// generate list of clusters
 			if mergeKubeconfigFlags.all {
 				clusters, err = client.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
-					log.Fatalln(err)
+					l.Log().Fatalln(err)
 				}
 			} else {
 
@@ -83,7 +82,7 @@ func NewCmdKubeconfigMerge() *cobra.Command {
 				for _, clusterName := range clusternames {
 					retrievedCluster, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
 					if err != nil {
-						log.Fatalln(err)
+						l.Log().Fatalln(err)
 					}
 					clusters = append(clusters, retrievedCluster)
 				}
@@ -94,18 +93,18 @@ func NewCmdKubeconfigMerge() *cobra.Command {
 			var outputs []string
 			outputDir, err := k3dutil.GetConfigDirOrCreate()
 			if err != nil {
-				log.Errorln(err)
-				log.Fatalln("Failed to save kubeconfig to local directory")
+				l.Log().Errorln(err)
+				l.Log().Fatalln("Failed to save kubeconfig to local directory")
 			}
 			for _, c := range clusters {
-				log.Debugf("Getting kubeconfig for cluster '%s'", c.Name)
+				l.Log().Debugf("Getting kubeconfig for cluster '%s'", c.Name)
 				output := mergeKubeconfigFlags.output
 				if output == "" && !mergeKubeconfigFlags.targetDefault {
 					output = path.Join(outputDir, fmt.Sprintf("kubeconfig-%s.yaml", c.Name))
 				}
 				output, err = client.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, c, output, &writeKubeConfigOptions)
 				if err != nil {
-					log.Errorln(err)
+					l.Log().Errorln(err)
 					errorGettingKubeconfig = true
 				} else {
 					outputs = append(outputs, output)
@@ -127,7 +126,7 @@ func NewCmdKubeconfigMerge() *cobra.Command {
 	// add flags
 	cmd.Flags().StringVarP(&mergeKubeconfigFlags.output, "output", "o", "", fmt.Sprintf("Define output [ - | FILE ] (default from $KUBECONFIG or %s", clientcmd.RecommendedHomeFile))
 	if err := cmd.MarkFlagFilename("output"); err != nil {
-		log.Fatalln("Failed to mark flag --output as filename")
+		l.Log().Fatalln("Failed to mark flag --output as filename")
 	}
 	cmd.Flags().BoolVarP(&mergeKubeconfigFlags.targetDefault, "kubeconfig-merge-default", "d", false, fmt.Sprintf("Merge into the default kubeconfig ($KUBECONFIG or %s)", clientcmd.RecommendedHomeFile))
 	cmd.Flags().BoolVarP(&writeKubeConfigOptions.UpdateExisting, "update", "u", true, "Update conflicting fields in existing kubeconfig")

@@ -28,11 +28,10 @@ import (
 	"github.com/liggitt/tabwriter"
 	"github.com/rancher/k3d/v4/cmd/util"
 	"github.com/rancher/k3d/v4/pkg/client"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/spf13/cobra"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type nodeListFlags struct {
@@ -64,14 +63,14 @@ func NewCmdNodeList() *cobra.Command {
 			if len(nodes) == 0 { // Option a)  no name specified -> get all nodes
 				found, err := client.NodeList(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
-					log.Fatalln(err)
+					l.Log().Fatalln(err)
 				}
 				existingNodes = append(existingNodes, found...)
 			} else { // Option b) cluster name specified -> get specific cluster
 				for _, node := range nodes {
 					found, err := client.NodeGet(cmd.Context(), runtimes.SelectedRuntime, node)
 					if err != nil {
-						log.Fatalln(err)
+						l.Log().Fatalln(err)
 					}
 					existingNodes = append(existingNodes, found)
 				}

@@ -35,14 +35,14 @@ import (
 	"fmt"
 
 	dockerunits "github.com/docker/go-units"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 // ValidateClusterConfig checks a given cluster config for basic errors
 func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config conf.ClusterConfig) error {
 	// cluster name must be a valid host name
 	if err := k3dc.CheckName(config.Cluster.Name); err != nil {
-		log.Errorf("Provided cluster name '%s' does not match requirements", config.Cluster.Name)
+		l.Log().Errorf("Provided cluster name '%s' does not match requirements", config.Cluster.Name)
 
 		return err
 	}

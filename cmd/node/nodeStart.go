@@ -23,11 +23,10 @@ package node
 
 import (
 	"github.com/rancher/k3d/v4/cmd/util"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/spf13/cobra"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // NewCmdNodeStart returns a new cobra command
@@ -42,7 +41,7 @@ func NewCmdNodeStart() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			node := parseStartNodeCmd(cmd, args)
 			if err := runtimes.SelectedRuntime.StartNode(cmd.Context(), node); err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
 		},
 	}
@@ -55,7 +54,7 @@ func NewCmdNodeStart() *cobra.Command {
 func parseStartNodeCmd(cmd *cobra.Command, args []string) *k3d.Node {
 	// node name // TODO: startNode: allow node filters, e.g. `k3d node start mycluster@agent` to start all agent nodes of cluster 'mycluster'
 	if len(args) == 0 || len(args[0]) == 0 {
-		log.Fatalln("No node name given")
+		l.Log().Fatalln("No node name given")
 	}
 
 	return &k3d.Node{Name: args[0]}

@@ -26,20 +26,20 @@ import (
 	"net"
 
 	"github.com/docker/go-connections/nat"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 // GetFreePort tries to fetch an open port from the OS-Kernel
 func GetFreePort() (int, error) {
 	tcpAddress, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
-		log.Errorln("Failed to resolve address")
+		l.Log().Errorln("Failed to resolve address")
 		return 0, err
 	}
 
 	tcpListener, err := net.ListenTCP("tcp", tcpAddress)
 	if err != nil {
-		log.Errorln("Failed to create TCP Listener")
+		l.Log().Errorln("Failed to create TCP Listener")
 		return 0, err
 	}
 	defer tcpListener.Close()

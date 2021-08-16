@@ -25,9 +25,9 @@ import (
 	"os"
 	"strconv"
 
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/types/fixes"
-	log "github.com/sirupsen/logrus"
 )
 
 // FIXME: FixCgroupV2 - to be removed when fixed upstream
@@ -35,18 +35,18 @@ func EnableCgroupV2FixIfNeeded(runtime runtimes.Runtime) {
 	if _, isSet := os.LookupEnv(fixes.EnvFixCgroupV2); !isSet {
 		runtimeInfo, err := runtime.Info()
 		if err != nil {
-			log.Warnf("Failed to get runtime information: %+v", err)
+			l.Log().Warnf("Failed to get runtime information: %+v", err)
 			return
 		}
 		cgroupVersion, err := strconv.Atoi(runtimeInfo.CgroupVersion)
 		if err != nil {
-			log.Debugf("Failed to parse cgroupVersion: %+v", err)
+			l.Log().Debugf("Failed to parse cgroupVersion: %+v", err)
 			return
 		}
 		if cgroupVersion == 2 {
-			log.Debugf("Detected CgroupV2, enabling custom entrypoint (disable by setting %s=false)", fixes.EnvFixCgroupV2)
+			l.Log().Debugf("Detected CgroupV2, enabling custom entrypoint (disable by setting %s=false)", fixes.EnvFixCgroupV2)
 			if err := os.Setenv(fixes.EnvFixCgroupV2, "true"); err != nil {
-				log.Errorf("Detected CgroupsV2 but failed to enable k3d's hotfix (try `export %s=true`): %+v", fixes.EnvFixCgroupV2, err)
+				l.Log().Errorf("Detected CgroupsV2 but failed to enable k3d's hotfix (try `export %s=true`): %+v", fixes.EnvFixCgroupV2, err)
 			}
 		}
 	}

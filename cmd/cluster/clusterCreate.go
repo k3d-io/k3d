@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/docker/go-connections/nat"
+	"github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -41,11 +42,10 @@ import (
 	k3dCluster "github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/config"
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/version"
-
-	log "github.com/sirupsen/logrus"
 )
 
 var configFile string
@@ -76,24 +76,24 @@ func initConfig() {
 	if configFile != "" {
 
 		if _, err := os.Stat(configFile); err != nil {
-			log.Fatalf("Failed to stat config file %s: %+v", configFile, err)
+			l.Log().Fatalf("Failed to stat config file %s: %+v", configFile, err)
 		}
 
 		// create temporary file to expand environment variables in the config without writing that back to the original file
 		// we're doing it here, because this happens just before absolutely all other processing
 		tmpfile, err := os.CreateTemp(os.TempDir(), fmt.Sprintf("k3d-config-tmp-%s", filepath.Base(configFile)))
 		if err != nil {
-			log.Fatalf("error creating temp copy of configfile %s for variable expansion: %v", configFile, err)
+			l.Log().Fatalf("error creating temp copy of configfile %s for variable expansion: %v", configFile, err)
 		}
 		defer tmpfile.Close()
 
 		originalcontent, err := ioutil.ReadFile(configFile)
 		if err != nil {
-			log.Fatalf("error reading config file %s: %v", configFile, err)
+			l.Log().Fatalf("error reading config file %s: %v", configFile, err)
 		}
 		expandedcontent := os.ExpandEnv(string(originalcontent))
 		if _, err := tmpfile.WriteString(expandedcontent); err != nil {
-			log.Fatalf("error writing expanded config file contents to temp file %s: %v", tmpfile.Name(), err)
+			l.Log().Fatalf("error writing expanded config file contents to temp file %s: %v", tmpfile.Name(), err)
 		}
 
 		// use temp file with expanded variables
@@ -102,29 +102,29 @@ func initConfig() {
 		// try to read config into memory (viper map structure)
 		if err := cfgViper.ReadInConfig(); err != nil {
 			if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-				log.Fatalf("Config file %s not found: %+v", configFile, err)
+				l.Log().Fatalf("Config file %s not found: %+v", configFile, err)
 			}
 			// config file found but some other error happened
-			log.Fatalf("Failed to read config file %s: %+v", configFile, err)
+			l.Log().Fatalf("Failed to read config file %s: %+v", configFile, err)
 		}
 
 		schema, err := config.GetSchemaByVersion(cfgViper.GetString("apiVersion"))
 		if err != nil {
-			log.Fatalf("Cannot validate config file %s: %+v", configFile, err)
+			l.Log().Fatalf("Cannot validate config file %s: %+v", configFile, err)
 		}
 
 		if err := config.ValidateSchemaFile(configFile, schema); err != nil {
-			log.Fatalf("Schema Validation failed for config file %s: %+v", configFile, err)
+			l.Log().Fatalf("Schema Validation failed for config file %s: %+v", configFile, err)
 		}
 
-		log.Infof("Using config file %s (%s#%s)", configFile, strings.ToLower(cfgViper.GetString("apiVersion")), strings.ToLower(cfgViper.GetString("kind")))
+		l.Log().Infof("Using config file %s (%s#%s)", configFile, strings.ToLower(cfgViper.GetString("apiVersion")), strings.ToLower(cfgViper.GetString("kind")))
 	}
-	if log.GetLevel() >= log.DebugLevel {
+	if l.Log().GetLevel() >= logrus.DebugLevel {
 		c, _ := yaml.Marshal(cfgViper.AllSettings())
-		log.Debugf("Configuration:\n%s", c)
+		l.Log().Debugf("Configuration:\n%s", c)
 
 		c, _ = yaml.Marshal(ppViper.AllSettings())
-		log.Debugf("Additional CLI Configuration:\n%s", c)
+		l.Log().Debugf("Additional CLI Configuration:\n%s", c)
 	}
 }
 
@@ -154,27 +154,27 @@ func NewCmdClusterCreate() *cobra.Command {
 			}
 			cfg, err := config.FromViper(cfgViper)
 			if err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
 
 			if cfg.GetAPIVersion() != config.DefaultConfigApiVersion {
-				log.Warnf("Default config apiVersion is '%s', but you're using '%s': consider migrating.", config.DefaultConfigApiVersion, cfg.GetAPIVersion())
+				l.Log().Warnf("Default config apiVersion is '%s', but you're using '%s': consider migrating.", config.DefaultConfigApiVersion, cfg.GetAPIVersion())
 				cfg, err = config.Migrate(cfg, config.DefaultConfigApiVersion)
 				if err != nil {
-					log.Fatalln(err)
+					l.Log().Fatalln(err)
 				}
 			}
 
 			simpleCfg := cfg.(conf.SimpleConfig)
 
-			log.Debugf("========== Simple Config ==========\n%+v\n==========================\n", simpleCfg)
+			l.Log().Debugf("========== Simple Config ==========\n%+v\n==========================\n", simpleCfg)
 
 			simpleCfg, err = applyCLIOverrides(simpleCfg)
 			if err != nil {
-				log.Fatalf("Failed to apply CLI overrides: %+v", err)
+				l.Log().Fatalf("Failed to apply CLI overrides: %+v", err)
 			}
 
-			log.Debugf("========== Merged Simple Config ==========\n%+v\n==========================\n", simpleCfg)
+			l.Log().Debugf("========== Merged Simple Config ==========\n%+v\n==========================\n", simpleCfg)
 
 			/**************************************
 			 * Transform, Process & Validate Configuration *
@@ -187,18 +187,18 @@ func NewCmdClusterCreate() *cobra.Command {
 
 			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, simpleCfg)
 			if err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
-			log.Debugf("===== Merged Cluster Config =====\n%+v\n===== ===== =====\n", clusterConfig)
+			l.Log().Debugf("===== Merged Cluster Config =====\n%+v\n===== ===== =====\n", clusterConfig)
 
 			clusterConfig, err = config.ProcessClusterConfig(*clusterConfig)
 			if err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
-			log.Debugf("===== Processed Cluster Config =====\n%+v\n===== ===== =====\n", clusterConfig)
+			l.Log().Debugf("===== Processed Cluster Config =====\n%+v\n===== ===== =====\n", clusterConfig)
 
 			if err := config.ValidateClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *clusterConfig); err != nil {
-				log.Fatalln("Failed Cluster Configuration Validation: ", err)
+				l.Log().Fatalln("Failed Cluster Configuration Validation: ", err)
 			}
 
 			/**************************************
@@ -207,44 +207,44 @@ func NewCmdClusterCreate() *cobra.Command {
 
 			// check if a cluster with that name exists already
 			if _, err := k3dCluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster); err == nil {
-				log.Fatalf("Failed to create cluster '%s' because a cluster with that name already exists", clusterConfig.Cluster.Name)
+				l.Log().Fatalf("Failed to create cluster '%s' because a cluster with that name already exists", clusterConfig.Cluster.Name)
 			}
 
 			// create cluster
 			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig {
-				log.Debugln("'--kubeconfig-update-default set: enabling wait-for-server")
+				l.Log().Debugln("'--kubeconfig-update-default set: enabling wait-for-server")
 				clusterConfig.ClusterCreateOpts.WaitForServer = true
 			}
 			//if err := k3dCluster.ClusterCreate(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, &clusterConfig.ClusterCreateOpts); err != nil {
 			if err := k3dCluster.ClusterRun(cmd.Context(), runtimes.SelectedRuntime, clusterConfig); err != nil {
 				// rollback if creation failed
-				log.Errorln(err)
+				l.Log().Errorln(err)
 				if simpleCfg.Options.K3dOptions.NoRollback { // TODO: move rollback mechanics to pkg/
-					log.Fatalln("Cluster creation FAILED, rollback deactivated.")
+					l.Log().Fatalln("Cluster creation FAILED, rollback deactivated.")
 				}
 				// rollback if creation failed
-				log.Errorln("Failed to create cluster >>> Rolling Back")
+				l.Log().Errorln("Failed to create cluster >>> Rolling Back")
 				if err := k3dCluster.ClusterDelete(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, k3d.ClusterDeleteOpts{SkipRegistryCheck: true}); err != nil {
-					log.Errorln(err)
-					log.Fatalln("Cluster creation FAILED, also FAILED to rollback changes!")
+					l.Log().Errorln(err)
+					l.Log().Fatalln("Cluster creation FAILED, also FAILED to rollback changes!")
 				}
-				log.Fatalln("Cluster creation FAILED, all changes have been rolled back!")
+				l.Log().Fatalln("Cluster creation FAILED, all changes have been rolled back!")
 			}
-			log.Infof("Cluster '%s' created successfully!", clusterConfig.Cluster.Name)
+			l.Log().Infof("Cluster '%s' created successfully!", clusterConfig.Cluster.Name)
 
 			/**************
 			 * Kubeconfig *
 			 **************/
 
 			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig && clusterConfig.KubeconfigOpts.SwitchCurrentContext {
-				log.Infoln("--kubeconfig-update-default=false --> sets --kubeconfig-switch-context=false")
+				l.Log().Infoln("--kubeconfig-update-default=false --> sets --kubeconfig-switch-context=false")
 				clusterConfig.KubeconfigOpts.SwitchCurrentContext = false
 			}
 
 			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig {
-				log.Debugf("Updating default kubeconfig with a new context for cluster %s", clusterConfig.Cluster.Name)
+				l.Log().Debugf("Updating default kubeconfig with a new context for cluster %s", clusterConfig.Cluster.Name)
 				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: simpleCfg.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
-					log.Warningln(err)
+					l.Log().Warningln(err)
 				}
 			}
 
@@ -253,7 +253,7 @@ func NewCmdClusterCreate() *cobra.Command {
 			 *****************/
 
 			// print information on how to use the cluster with kubectl
-			log.Infoln("You can now use it like this:")
+			l.Log().Infoln("You can now use it like this:")
 			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig && !clusterConfig.KubeconfigOpts.SwitchCurrentContext {
 				fmt.Printf("kubectl config use-context %s\n", fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, clusterConfig.Cluster.Name))
 			} else if !clusterConfig.KubeconfigOpts.SwitchCurrentContext {
@@ -273,7 +273,7 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	cmd.Flags().StringVarP(&configFile, "config", "c", "", "Path of a config file to use")
 	if err := cmd.MarkFlagFilename("config", "yaml", "yml"); err != nil {
-		log.Fatalln("Failed to mark flag 'config' as filename flag")
+		l.Log().Fatalln("Failed to mark flag 'config' as filename flag")
 	}
 
 	/***********************
@@ -388,7 +388,7 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().String("registry-config", "", "Specify path to an extra registries.yaml file")
 	_ = cfgViper.BindPFlag("registries.config", cmd.Flags().Lookup("registry-config"))
 	if err := cmd.MarkFlagFilename("registry-config", "yaml", "yml"); err != nil {
-		log.Fatalln("Failed to mark flag 'config' as filename flag")
+		l.Log().Fatalln("Failed to mark flag 'config' as filename flag")
 	}
 
 	/* Subcommands */
@@ -424,7 +424,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	// Overwrite if cli arg is set
 	if ppViper.IsSet("cli.api-port") {
 		if cfg.ExposeAPI.HostPort != "" {
-			log.Debugf("Overriding pre-defined kubeAPI Exposure Spec %+v with CLI argument %s", cfg.ExposeAPI, ppViper.GetString("cli.api-port"))
+			l.Log().Debugf("Overriding pre-defined kubeAPI Exposure Spec %+v with CLI argument %s", cfg.ExposeAPI, ppViper.GetString("cli.api-port"))
 		}
 		exposeAPI, err = cliutil.ParsePortExposureSpec(ppViper.GetString("cli.api-port"), k3d.DefaultAPIPort)
 		if err != nil {
@@ -454,11 +454,11 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		// split node filter from the specified volume
 		volume, filters, err := cliutil.SplitFiltersFromFlag(volumeFlag)
 		if err != nil {
-			log.Fatalln(err)
+			l.Log().Fatalln(err)
 		}
 
 		if strings.Contains(volume, k3d.DefaultRegistriesFilePath) && (cfg.Registries.Create || cfg.Registries.Config != "" || len(cfg.Registries.Use) != 0) {
-			log.Warnf("Seems like you're mounting a file at '%s' while also using a referenced registries config or k3d-managed registries: Your mounted file will probably be overwritten!", k3d.DefaultRegistriesFilePath)
+			l.Log().Warnf("Seems like you're mounting a file at '%s' while also using a referenced registries config or k3d-managed registries: Your mounted file will probably be overwritten!", k3d.DefaultRegistriesFilePath)
 		}
 
 		// create new entry or append filter to existing entry
@@ -476,7 +476,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		})
 	}
 
-	log.Tracef("VolumeFilterMap: %+v", volumeFilterMap)
+	l.Log().Tracef("VolumeFilterMap: %+v", volumeFilterMap)
 
 	// -> PORTS
 	portFilterMap := make(map[string][]string, 1)
@@ -484,12 +484,12 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		// split node filter from the specified volume
 		portmap, filters, err := cliutil.SplitFiltersFromFlag(portFlag)
 		if err != nil {
-			log.Fatalln(err)
+			l.Log().Fatalln(err)
 		}
 
 		// create new entry or append filter to existing entry
 		if _, exists := portFilterMap[portmap]; exists {
-			log.Fatalln("Same Portmapping can not be used for multiple nodes")
+			l.Log().Fatalln("Same Portmapping can not be used for multiple nodes")
 		} else {
 			portFilterMap[portmap] = filters
 		}
@@ -502,7 +502,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		})
 	}
 
-	log.Tracef("PortFilterMap: %+v", portFilterMap)
+	l.Log().Tracef("PortFilterMap: %+v", portFilterMap)
 
 	// --k3s-node-label
 	// k3sNodeLabelFilterMap will add k3s node label to applied node filters
@@ -512,7 +512,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		// split node filter from the specified label
 		label, nodeFilters, err := cliutil.SplitFiltersFromFlag(labelFlag)
 		if err != nil {
-			log.Fatalln(err)
+			l.Log().Fatalln(err)
 		}
 
 		// create new entry or append filter to existing entry
@@ -530,7 +530,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		})
 	}
 
-	log.Tracef("K3sNodeLabelFilterMap: %+v", k3sNodeLabelFilterMap)
+	l.Log().Tracef("K3sNodeLabelFilterMap: %+v", k3sNodeLabelFilterMap)
 
 	// --runtime-label
 	// runtimeLabelFilterMap will add container runtime label to applied node filters
@@ -540,7 +540,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		// split node filter from the specified label
 		label, nodeFilters, err := cliutil.SplitFiltersFromFlag(labelFlag)
 		if err != nil {
-			log.Fatalln(err)
+			l.Log().Fatalln(err)
 		}
 
 		cliutil.ValidateRuntimeLabelKey(strings.Split(label, "=")[0])
@@ -560,7 +560,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		})
 	}
 
-	log.Tracef("RuntimeLabelFilterMap: %+v", runtimeLabelFilterMap)
+	l.Log().Tracef("RuntimeLabelFilterMap: %+v", runtimeLabelFilterMap)
 
 	// --env
 	// envFilterMap will add container env vars to applied node filters
@@ -570,7 +570,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		// split node filter from the specified env var
 		env, filters, err := cliutil.SplitFiltersFromFlag(envFlag)
 		if err != nil {
-			log.Fatalln(err)
+			l.Log().Fatalln(err)
 		}
 
 		// create new entry or append filter to existing entry
@@ -588,7 +588,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		})
 	}
 
-	log.Tracef("EnvFilterMap: %+v", envFilterMap)
+	l.Log().Tracef("EnvFilterMap: %+v", envFilterMap)
 
 	// --k3s-arg
 	argFilterMap := make(map[string][]string, 1)
@@ -597,7 +597,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		// split node filter from the specified arg
 		arg, filters, err := cliutil.SplitFiltersFromFlag(argFlag)
 		if err != nil {
-			log.Fatalln(err)
+			l.Log().Fatalln(err)
 		}
 
 		// create new entry or append filter to existing entry

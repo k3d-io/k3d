@@ -24,12 +24,12 @@ package util
 import (
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 // validateRuntimeLabelKey validates a given label key is not reserved for internal k3d usage
 func ValidateRuntimeLabelKey(labelKey string) {
 	if strings.HasPrefix(labelKey, "k3s.") || strings.HasPrefix(labelKey, "k3d.") || labelKey == "app" {
-		log.Fatalf("runtime label \"%s\" is reserved for internal usage", labelKey)
+		l.Log().Fatalf("runtime label \"%s\" is reserved for internal usage", labelKey)
 	}
 }

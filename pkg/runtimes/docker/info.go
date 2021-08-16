@@ -26,15 +26,15 @@ import (
 	"context"
 	"strings"
 
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	runtimeTypes "github.com/rancher/k3d/v4/pkg/runtimes/types"
-	log "github.com/sirupsen/logrus"
 )
 
 func (d Docker) Info() (*runtimeTypes.RuntimeInfo, error) {
 	// create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
+		l.Log().Errorln("Failed to create docker client")
 		return nil, err
 	}
 	defer docker.Close()

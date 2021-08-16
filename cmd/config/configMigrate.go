@@ -26,7 +26,7 @@ import (
 	"strings"
 
 	"github.com/rancher/k3d/v4/pkg/config"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
@@ -44,7 +44,7 @@ func NewCmdConfigMigrate() *cobra.Command {
 			configFile := args[0]
 
 			if _, err := os.Stat(configFile); err != nil {
-				log.Fatalf("Failed to stat config file %s: %+v", configFile, err)
+				l.Log().Fatalf("Failed to stat config file %s: %+v", configFile, err)
 			}
 
 			cfgViper := viper.New()
@@ -55,38 +55,38 @@ func NewCmdConfigMigrate() *cobra.Command {
 			// try to read config into memory (viper map structure)
 			if err := cfgViper.ReadInConfig(); err != nil {
 				if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-					log.Fatalf("Config file %s not found: %+v", configFile, err)
+					l.Log().Fatalf("Config file %s not found: %+v", configFile, err)
 				}
 				// config file found but some other error happened
-				log.Fatalf("Failed to read config file %s: %+v", configFile, err)
+				l.Log().Fatalf("Failed to read config file %s: %+v", configFile, err)
 			}
 
 			schema, err := config.GetSchemaByVersion(cfgViper.GetString("apiVersion"))
 			if err != nil {
-				log.Fatalf("Cannot validate config file %s: %+v", configFile, err)
+				l.Log().Fatalf("Cannot validate config file %s: %+v", configFile, err)
 			}
 
 			if err := config.ValidateSchemaFile(configFile, schema); err != nil {
-				log.Fatalf("Schema Validation failed for config file %s: %+v", configFile, err)
+				l.Log().Fatalf("Schema Validation failed for config file %s: %+v", configFile, err)
 			}
 
-			log.Infof("Using config file %s (%s#%s)", cfgViper.ConfigFileUsed(), strings.ToLower(cfgViper.GetString("apiVersion")), strings.ToLower(cfgViper.GetString("kind")))
+			l.Log().Infof("Using config file %s (%s#%s)", cfgViper.ConfigFileUsed(), strings.ToLower(cfgViper.GetString("apiVersion")), strings.ToLower(cfgViper.GetString("kind")))
 
 			cfg, err := config.FromViper(cfgViper)
 			if err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
 
 			if cfg.GetAPIVersion() != config.DefaultConfigApiVersion {
 				cfg, err = config.Migrate(cfg, config.DefaultConfigApiVersion)
 				if err != nil {
-					log.Fatalln(err)
+					l.Log().Fatalln(err)
 				}
 			}
 
 			yamlout, err := yaml.Marshal(cfg)
 			if err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
 
 			output := "-"
@@ -97,11 +97,11 @@ func NewCmdConfigMigrate() *cobra.Command {
 
 			if output == "-" {
 				if _, err := os.Stdout.Write(yamlout); err != nil {
-					log.Fatalln(err)
+					l.Log().Fatalln(err)
 				}
 			} else {
 				if err := os.WriteFile(output, yamlout, os.ModeAppend); err != nil {
-					log.Fatalln(err)
+					l.Log().Fatalln(err)
 				}
 			}
 

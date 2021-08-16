@@ -28,7 +28,7 @@ import (
 	"strings"
 
 	dockerunits "github.com/docker/go-units"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 const (
@@ -64,7 +64,7 @@ func GetNodeFakerDirOrCreate(name string) (string, error) {
 
 	// create directories if necessary
 	if err := createDirIfNotExists(fakeDir); err != nil {
-		log.Errorf("Failed to create fake files path '%s'", fakeDir)
+		l.Log().Errorf("Failed to create fake files path '%s'", fakeDir)
 		return "", err
 	}
 
@@ -112,7 +112,7 @@ func MakeFakeEdac(nodeName string) (string, error) {
 	edacPath := path.Join(dir, "edac")
 	// create directories if necessary
 	if err := createDirIfNotExists(edacPath); err != nil {
-		log.Errorf("Failed to create fake edac path '%s'", edacPath)
+		l.Log().Errorf("Failed to create fake edac path '%s'", edacPath)
 		return "", err
 	}
 

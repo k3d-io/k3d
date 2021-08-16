@@ -25,7 +25,7 @@ import (
 	"os"
 
 	"github.com/heroku/docker-registry-client/registry"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 // Version is the string that contains version
@@ -48,7 +48,7 @@ func GetVersion() string {
 // GetHelperImageVersion returns the CLI version or 'latest'
 func GetHelperImageVersion() string {
 	if tag := os.Getenv("K3D_HELPER_IMAGE_TAG"); tag != "" {
-		log.Infoln("Helper image tag set from env var")
+		l.Log().Infoln("Helper image tag set from env var")
 		return tag
 	}
 	if len(HelperVersionOverride) > 0 {
@@ -65,7 +65,7 @@ func GetK3sVersion(latest bool) string {
 	if latest {
 		version, err := fetchLatestK3sVersion()
 		if err != nil || version == "" {
-			log.Warnln("Failed to fetch latest K3s version from DockerHub, falling back to hardcoded version.")
+			l.Log().Warnln("Failed to fetch latest K3s version from DockerHub, falling back to hardcoded version.")
 			return K3sVersion
 		}
 		return version
@@ -92,8 +92,8 @@ func fetchLatestK3sVersion() (string, error) {
 		return "", err
 	}
 
-	log.Debugln("Fetched the following tags for rancher/k3s from DockerHub:")
-	log.Debugln(tags)
+	l.Log().Debugln("Fetched the following tags for rancher/k3s from DockerHub:")
+	l.Log().Debugln(tags)
 
 	return "sampleTag", nil
 

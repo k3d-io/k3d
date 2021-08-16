@@ -26,7 +26,7 @@ import (
 	"net/url"
 	"os"
 
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 type Docker struct{}
@@ -43,7 +43,7 @@ func (d Docker) GetHost() string {
 	if err != nil {
 		return ""
 	}
-	log.Debugf("DockerHost: %s", url.Host)
+	l.Log().Debugf("DockerHost: %s", url.Host)
 	return url.Host
 }
 

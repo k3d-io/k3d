@@ -29,7 +29,7 @@ import (
 
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 // ValidateVolumeMount checks, if the source of volume mounts exists and if the destination is an absolute path
@@ -78,7 +78,7 @@ func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) error {
 		}
 		if !isNamedVolume {
 			if _, err := os.Stat(src); err != nil {
-				log.Warnf("Failed to stat file/directory/named volume that you're trying to mount: '%s' in '%s' -> Please make sure it exists", src, volumeMount)
+				l.Log().Warnf("Failed to stat file/directory/named volume that you're trying to mount: '%s' in '%s' -> Please make sure it exists", src, volumeMount)
 			}
 		}
 	}

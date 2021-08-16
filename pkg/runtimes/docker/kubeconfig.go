@@ -26,15 +26,15 @@ import (
 	"context"
 	"io"
 
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
 )
 
 // GetKubeconfig grabs the kubeconfig from inside a k3d node
 func (d Docker) GetKubeconfig(ctx context.Context, node *k3d.Node) (io.ReadCloser, error) {
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
+		l.Log().Errorln("Failed to create docker client")
 		return nil, err
 	}
 	defer docker.Close()
@@ -44,11 +44,11 @@ func (d Docker) GetKubeconfig(ctx context.Context, node *k3d.Node) (io.ReadClose
 		return nil, err
 	}
 
-	log.Tracef("Container Details: %+v", container)
+	l.Log().Tracef("Container Details: %+v", container)
 
 	reader, _, err := docker.CopyFromContainer(ctx, container.ID, "/output/kubeconfig.yaml")
 	if err != nil {
-		log.Errorf("Failed to copy from container '%s'", container.ID)
+		l.Log().Errorf("Failed to copy from container '%s'", container.ID)
 		return nil, err
 	}
 
