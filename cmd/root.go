@@ -38,6 +38,7 @@ import (
 	"github.com/rancher/k3d/v4/cmd/image"
 	"github.com/rancher/k3d/v4/cmd/kubeconfig"
 	"github.com/rancher/k3d/v4/cmd/node"
+	"github.com/rancher/k3d/v4/cmd/plugin"
 	"github.com/rancher/k3d/v4/cmd/registry"
 	cliutil "github.com/rancher/k3d/v4/cmd/util"
 	l "github.com/rancher/k3d/v4/pkg/logger"
@@ -94,6 +95,7 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 	rootCmd.AddCommand(cfg.NewCmdConfig())
 	rootCmd.AddCommand(registry.NewCmdRegistry())
 	rootCmd.AddCommand(debug.NewCmdDebug())
+	rootCmd.AddCommand(plugin.NewCmdPlugin())
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
