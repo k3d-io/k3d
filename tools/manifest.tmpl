@@ -1,4 +1,4 @@
-image: rancher/k3d-tools:{{#if build.tag}}{{build.tag}}{{else}}latest{{/if}}
+image: rancher/k3d-tools:{{#if build.tag}}{{trimPrefix "v" build.tag}}{{else}}latest{{/if}}
 {{#if build.tags}}
 tags:
 {{#each build.tags}}
@@ -6,21 +6,21 @@ tags:
 {{/each}}
 {{/if}}
 manifests:
-  - image: rancher/k3d-tools:{{#if build.tag}}{{build.tag}}-{{/if}}linux-amd64
+  - image: rancher/k3d-tools:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}linux-amd64
     platform:
       architecture: amd64
       os: linux
-  - image: rancher/k3d-tools:{{#if build.tag}}{{build.tag}}-{{/if}}linux-arm64
+  - image: rancher/k3d-tools:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}linux-arm64
     platform:
       variant: v8
       architecture: arm64
       os: linux
-  - image: rancher/k3d-tools:{{#if build.tag}}{{build.tag}}-{{/if}}linux-arm
+  - image: rancher/k3d-tools:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}linux-arm
     platform:
       variant: v7
       architecture: arm
       os: linux
-  - image: rancher/k3d-tools:{{#if build.tag}}{{build.tag}}-{{/if}}linux-arm
+  - image: rancher/k3d-tools:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}linux-arm
     platform:
       variant: v6
       architecture: arm
