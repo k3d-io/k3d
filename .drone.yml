@@ -216,7 +216,7 @@ steps:
     settings:
       repo: rancher/k3d
       auto_tag: true
-      auto_tag_suffix: linux-amd64
+      auto_tag_suffix: dind-linux-amd64
       dockerfile: Dockerfile
       target: dind
       context: .
@@ -277,42 +277,6 @@ platform:
   arch: arm
 
 steps:
-  - name: build_push_binary
-    environment:
-      DOCKER_BUILDKIT: "1"
-    image: plugins/docker
-    settings:
-      repo: rancher/k3d
-      auto_tag: true
-      auto_tag_suffix: linux-arm
-      dockerfile: Dockerfile
-      target: binary-only
-      context: .
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      build_args:
-        - GIT_TAG_OVERRIDE=${DRONE_TAG}
-
-  - name: build_push_dind
-    image: plugins/docker
-    environment:
-      DOCKER_BUILDKIT: "1"
-    settings:
-      repo: rancher/k3d
-      auto_tag: true
-      auto_tag_suffix: linux-arm64
-      dockerfile: Dockerfile
-      target: dind
-      context: .
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      build_args:
-        - GIT_TAG_OVERRIDE=${DRONE_TAG}
-        - ARCH=arm
 
   - name: build_push_proxy
     image: plugins/docker
@@ -391,7 +355,7 @@ steps:
     settings:
       repo: rancher/k3d
       auto_tag: true
-      auto_tag_suffix: linux-arm64
+      auto_tag_suffix: dind-linux-arm64
       dockerfile: Dockerfile
       target: dind
       context: .
@@ -462,7 +426,7 @@ steps:
         from_secret: docker_password
       spec: manifest.tmpl
       auto_tag: true
-      ignore_missing: false
+      ignore_missing: true # expected, as we dropped arm due to missing base image for that arch
 
   - name: push_manifest_dind
     image: plugins/manifest
@@ -473,7 +437,7 @@ steps:
         from_secret: docker_password
       spec: dind-manifest.tmpl
       auto_tag: true
-      ignore_missing: false
+      ignore_missing: true # expected, as we dropped arm due to missing base image for that arch
 
   - name: push_manifest_proxy
     image: plugins/manifest
