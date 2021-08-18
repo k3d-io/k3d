@@ -670,7 +670,7 @@ spec:
                   x-kubernetes-int-or-string: true
                 type: array
               logFilePath:
-                description: 'LogFilePath is the full path to the Felix l.Log(). Set to
+                description: 'LogFilePath is the full path to the Felix log. Set to
                   none to disable file logging. [Default: /var/log/calico/felix.log]'
                 type: string
               logPrefix:
