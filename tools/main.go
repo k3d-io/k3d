@@ -57,6 +57,6 @@ func main() {
 	// run the whole thing
 	err := app.Run(os.Args)
 	if err != nil {
-		l.Log().Fatal(err)
+		log.Fatal(err)
 	}
 }
