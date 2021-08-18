@@ -23,7 +23,12 @@ THE SOFTWARE.
 package tools
 
 import (
+	"context"
+	"io/ioutil"
+	"os"
 	"testing"
+
+	"github.com/go-test/deep"
 )
 
 func Test_findRuntimeImage(T *testing.T) {
@@ -169,4 +174,45 @@ func Test_findRuntimeImage(T *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_findImages(t *testing.T) {
+	// given
+	tarImage, err := ioutil.TempFile("", "images.tgz")
+	if err != nil {
+		t.Fatal("Failed to create temporary file")
+	}
+	defer os.Remove(tarImage.Name())
+
+	tarImages := []string{tarImage.Name()}
+	runtimeImages := []string{
+		"alpine:version",
+		"busybox:latest",
+	}
+	runtime := &FakeRuntimeImageGetter{runtimeImages: runtimeImages}
+
+	requestedImages := append(runtimeImages, tarImages...)
+
+	// when
+	foundRuntimeImages, foundTarImages, err := findImages(context.Background(), runtime, requestedImages)
+
+	// then
+	if err != nil {
+		t.Errorf("Got unexpected error %v", err)
+	}
+
+	if diff := deep.Equal(foundRuntimeImages, runtimeImages); diff != nil {
+		t.Errorf("Found runtime images\n%+v\ndoes not match expected runtime images\n%+v\nDiff:\n%+v", foundRuntimeImages, runtimeImages, diff)
+	}
+	if diff := deep.Equal(foundTarImages, tarImages); diff != nil {
+		t.Errorf("Found tar images\n%+v\ndoes not match expected tar images\n%+v\nDiff:\n%+v", foundTarImages, runtimeImages, diff)
+	}
+}
+
+type FakeRuntimeImageGetter struct {
+	runtimeImages []string
+}
+
+func (f *FakeRuntimeImageGetter) GetImages(_ context.Context) ([]string, error) {
+	return f.runtimeImages, nil
 }
