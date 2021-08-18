@@ -1,0 +1,27 @@
+image: rancher/k3d:{{#if build.tag}}{{build.tag}}{{else}}latest{{/if}}dind
+{{#if build.tags}}
+tags:
+{{#each build.tags}}
+  - {{this}}
+{{/each}}
+{{/if}}
+manifests:
+  - image: rancher/k3d:{{#if build.tag}}{{build.tag}}-{{/if}}dind-linux-amd64
+    platform:
+      architecture: amd64
+      os: linux
+  - image: rancher/k3d:{{#if build.tag}}{{build.tag}}-{{/if}}dind-linux-arm64
+    platform:
+      variant: v8
+      architecture: arm64
+      os: linux
+  - image: rancher/k3d:{{#if build.tag}}{{build.tag}}-{{/if}}dind-linux-arm
+    platform:
+      variant: v7
+      architecture: arm
+      os: linux
+  - image: rancher/k3d:{{#if build.tag}}{{build.tag}}-{{/if}}dind-linux-arm
+    platform:
+      variant: v6
+      architecture: arm
+      os: linux

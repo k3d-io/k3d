@@ -103,58 +103,6 @@ steps:
           - "refs/tags/*test*"
           - "refs/tags/*dev*"
 
-  - name: docker_build_push_dind
-    image: plugins/docker
-    environment:
-      DOCKER_BUILDKIT: "1"
-    settings:
-      repo: rancher/k3d
-      tags:
-        - latest-dind
-        - "${DRONE_TAG}-dind"
-      dockerfile: Dockerfile
-      target: dind
-      context: .
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      build_args:
-        - GIT_TAG_OVERRIDE=${DRONE_TAG}
-    depends_on:
-      - lint
-      - test
-      - build
-    when:
-      event:
-        - tag
-
-  - name: docker_build_push_binary
-    environment:
-      DOCKER_BUILDKIT: "1"
-    image: plugins/docker
-    settings:
-      repo: rancher/k3d
-      tags:
-        - latest
-        - "${DRONE_TAG}"
-      dockerfile: Dockerfile
-      target: binary-only
-      context: .
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      build_args:
-        - GIT_TAG_OVERRIDE=${DRONE_TAG}
-    depends_on:
-      - lint
-      - test
-      - build
-    when:
-      event:
-        - tag
-
 services:
   # Starting the docker service to be used by dind
   - name: docker
@@ -215,61 +163,163 @@ trigger:
     - main
 
 ---
-#####################
-##### k3d-proxy #####
-#####################
+###########################
+###### Docker Images ######
+###########################
+#
+# +++ Docker Images +++
+# Tagged using the auto_tag feature of the docker plugin
+# See http://plugins.drone.io/drone-plugins/drone-docker/#autotag
+# > if event type is `tag`
+# > > 1.0.0 produces docker tags 1, 1.0, 1.0.0
+# > > 1.0.0-rc.1 produces docker tags 1.0.0-rc.1
+# > if event type is `push` and target branch == default branch (main)
+# > > tag `latest`
+
+
+################################
+##### Docker Images: amd64 #####
+################################
 
 kind: pipeline
 type: docker
-name: proxy_linux_amd64
+name: linux_amd64
 
 platform:
   os: linux
   arch: amd64
 
 steps:
-  - name: build_push
+
+  - name: build_push_binary
+    environment:
+      DOCKER_BUILDKIT: "1"
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d
+      auto_tag: true
+      auto_tag_suffix: linux-amd64
+      dockerfile: Dockerfile
+      target: binary-only
+      context: .
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      build_args:
+        - GIT_TAG_OVERRIDE=${DRONE_TAG}
+
+  - name: build_push_dind
+    image: plugins/docker
+    environment:
+      DOCKER_BUILDKIT: "1"
+    settings:
+      repo: rancher/k3d
+      auto_tag: true
+      auto_tag_suffix: linux-amd64
+      dockerfile: Dockerfile
+      target: dind
+      context: .
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      build_args:
+        - GIT_TAG_OVERRIDE=${DRONE_TAG}
+        - ARCH=amd64
+
+  - name: build_push_proxy
     image: plugins/docker
     settings:
       repo: rancher/k3d-proxy
-      tags:
-        - latest-linux-amd64
-        - "${DRONE_TAG}-linux-amd64"
+      auto_tag: true
+      auto_tag_suffix: linux-amd64
       dockerfile: proxy/Dockerfile
       context: proxy/
       username:
         from_secret: docker_username
       password:
         from_secret: docker_password
-    when:
-      event:
-        - tag
+
+  - name: build_push_tools
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d-tools
+      auto_tag: true
+      auto_tag_suffix: linux-amd64
+      dockerfile: tools/Dockerfile
+      context: tools/
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
 
 trigger:
   event:
-    - tag
+    - tag # see note at the start of the "Docker Images" section: creates SemVer tagged images using the `auto_tag` option of the docker plugin
+    - push # `auto_tag` option only creates the `latest` tag if target branch is default branch (i.e. `main`)
 
 depends_on:
   - main
 
 ---
 
+################################
+##### Docker Images: arm #####
+################################
+
 kind: pipeline
 type: docker
-name: proxy_linux_arm
+name: linux_arm
 
 platform:
   os: linux
   arch: arm
 
 steps:
-  - name: build_push
+  - name: build_push_binary
+    environment:
+      DOCKER_BUILDKIT: "1"
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d
+      auto_tag: true
+      auto_tag_suffix: linux-arm
+      dockerfile: Dockerfile
+      target: binary-only
+      context: .
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      build_args:
+        - GIT_TAG_OVERRIDE=${DRONE_TAG}
+
+  - name: build_push_dind
+    image: plugins/docker
+    environment:
+      DOCKER_BUILDKIT: "1"
+    settings:
+      repo: rancher/k3d
+      auto_tag: true
+      auto_tag_suffix: linux-arm64
+      dockerfile: Dockerfile
+      target: dind
+      context: .
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      build_args:
+        - GIT_TAG_OVERRIDE=${DRONE_TAG}
+        - ARCH=arm
+
+  - name: build_push_proxy
     image: plugins/docker
     settings:
       repo: rancher/k3d-proxy
-      tags:
-        - latest-linux-arm
-        - "${DRONE_TAG}-linux-arm"
+      auto_tag: true
+      auto_tag_suffix: linux-arm
       dockerfile: proxy/Dockerfile
       context: proxy/
       username:
@@ -278,35 +328,87 @@ steps:
         from_secret: docker_password
       build_args:
         - ARCH=arm
-    when:
-      event:
-        - tag
+
+  - name: build_push_tools
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d-tools
+      auto_tag: true
+      auto_tag_suffix: linux-arm
+      dockerfile: tools/Dockerfile
+      context: tools/
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
 
 trigger:
   event:
-    - tag
+    - tag # see note at the start of the "Docker Images" section: creates SemVer tagged images using the `auto_tag` option of the docker plugin
+    - push # `auto_tag` option only creates the `latest` tag if target branch is default branch (i.e. `main`)
 
 depends_on:
   - main
 
 ---
 
+################################
+##### Docker Images: arm64 #####
+################################
+
 kind: pipeline
 type: docker
-name: proxy_linux_arm64
+name: linux_arm64
 
 platform:
   os: linux
   arch: arm64
 
 steps:
-  - name: build_push
+
+  - name: build_push_binary
+    environment:
+      DOCKER_BUILDKIT: "1"
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d
+      auto_tag: true
+      auto_tag_suffix: linux-arm64
+      dockerfile: Dockerfile
+      target: binary-only
+      context: .
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      build_args:
+        - GIT_TAG_OVERRIDE=${DRONE_TAG}
+
+  - name: build_push_dind
+    image: plugins/docker
+    environment:
+      DOCKER_BUILDKIT: "1"
+    settings:
+      repo: rancher/k3d
+      auto_tag: true
+      auto_tag_suffix: linux-arm64
+      dockerfile: Dockerfile
+      target: dind
+      context: .
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      build_args:
+        - GIT_TAG_OVERRIDE=${DRONE_TAG}
+        - ARCH=arm64
+
+  - name: build_push_proxy
     image: plugins/docker
     settings:
       repo: rancher/k3d-proxy
-      tags:
-        - latest-linux-arm64
-        - "${DRONE_TAG}-linux-arm64"
+      auto_tag: true
+      auto_tag_suffix: linux-arm64
       dockerfile: proxy/Dockerfile
       context: proxy/
       username:
@@ -315,195 +417,94 @@ steps:
         from_secret: docker_password
       build_args:
         - ARCH=arm64
-    when:
-      event:
-        - tag
+
+  - name: build_push_tools
+    image: plugins/docker
+    settings:
+      repo: rancher/k3d-tools
+      auto_tag: true
+      auto_tag_suffix: linux-arm64
+      dockerfile: tools/Dockerfile
+      context: tools/
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
 
 trigger:
   event:
-    - tag
+    - tag # see note at the start of the "Docker Images" section: creates SemVer tagged images using the `auto_tag` option of the docker plugin
+    - push # `auto_tag` option only creates the `latest` tag if target branch is default branch (i.e. `main`)
 
 depends_on:
   - main
 
 ---
 
+##############################
+###### Docker Manifests ######
+##############################
 kind: pipeline
 type: docker
-name: proxy_manifest
+name: manifests
 
 platform:
   os: linux
   arch: amd64
 
 steps:
-  - name: push_manifest
+  - name: push_manifest_binary
     image: plugins/manifest
     settings:
       username:
         from_secret: docker_username
       password:
         from_secret: docker_password
-      target: "rancher/k3d-proxy:${DRONE_TAG}"
-      template: "rancher/k3d-proxy:${DRONE_TAG}-OS-ARCH"
-      platforms:
-        - linux/amd64
-        - linux/arm
-        - linux/arm64
-    when:
-      event:
-        - tag
+      spec: manifest.tmpl
+      auto_tag: true
+      ignore_missing: false
 
-trigger:
-  event:
-    - tag
-
-depends_on:
-  - main
-  - proxy_linux_amd64
-  - proxy_linux_arm
-  - proxy_linux_arm64
-
----
-#####################
-##### k3d-tools #####
-#####################
-
-kind: pipeline
-type: docker
-name: tools_linux_amd64
-
-platform:
-  os: linux
-  arch: amd64
-
-steps:
-  - name: build_push
-    image: plugins/docker
-    settings:
-      repo: rancher/k3d-tools
-      tags:
-        - latest-linux-amd64
-        - "${DRONE_TAG}-linux-amd64"
-      dockerfile: tools/Dockerfile
-      context: tools/
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-    when:
-      event:
-        - tag
-
-trigger:
-  event:
-    - tag
-
-depends_on:
-  - main
-
----
-
-kind: pipeline
-type: docker
-name: tools_linux_arm
-
-platform:
-  os: linux
-  arch: arm
-
-steps:
-  - name: build_push
-    image: plugins/docker
-    settings:
-      repo: rancher/k3d-tools
-      tags:
-        - latest-linux-arm
-        - "${DRONE_TAG}-linux-arm"
-      dockerfile: tools/Dockerfile
-      context: tools/
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-    when:
-      event:
-        - tag
-
-trigger:
-  event:
-    - tag
-
-depends_on:
-  - main
----
-
-kind: pipeline
-type: docker
-name: tools_linux_arm64
-
-platform:
-  os: linux
-  arch: arm64
-
-steps:
-  - name: build_push
-    image: plugins/docker
-    settings:
-      repo: rancher/k3d-tools
-      tags:
-        - latest-linux-arm64
-        - "${DRONE_TAG}-linux-arm64"
-      dockerfile: tools/Dockerfile
-      context: tools/
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-    when:
-      event:
-        - tag
-
-trigger:
-  event:
-    - tag
-
-depends_on:
-  - main
----
-
-kind: pipeline
-type: docker
-name: tools_manifest
-
-platform:
-  os: linux
-  arch: amd64
-
-steps:
-  - name: push_manifest
+  - name: push_manifest_dind
     image: plugins/manifest
     settings:
       username:
         from_secret: docker_username
       password:
         from_secret: docker_password
-      target: "rancher/k3d-tools:${DRONE_TAG}"
-      template: "rancher/k3d-tools:${DRONE_TAG}-OS-ARCH"
-      platforms:
-        - linux/amd64
-        - linux/arm
-        - linux/arm64
-    when:
-      event:
-        - tag
+      spec: dind-manifest.tmpl
+      auto_tag: true
+      ignore_missing: false
+
+  - name: push_manifest_proxy
+    image: plugins/manifest
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      spec: proxy/manifest.tmpl
+      auto_tag: true
+      ignore_missing: false
+
+  - name: push_manifest_tools
+    image: plugins/manifest
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      spec: tools/manifest.tmpl
+      auto_tag: true
+      ignore_missing: false
 
 trigger:
   event:
-    - tag
+    - tag # see note at the start of the "Docker Images" section: creates SemVer tagged images using the `auto_tag` option of the manifest plugin
+    - push # `auto_tag` option only creates the `latest` tag if target branch is default branch (i.e. `main`)
 
 depends_on:
   - main
-  - tools_linux_amd64
-  - tools_linux_arm
-  - tools_linux_arm64
+  - linux_amd64
+  - linux_arm
+  - linux_arm64
+
