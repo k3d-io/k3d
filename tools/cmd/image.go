@@ -44,7 +44,7 @@ func imageSave(images []string, dest, clusterName string) error {
 		return fmt.Errorf("ERROR: couldn't save image stream to tarfile\n%+v", err)
 	}
 
-	l.Log().Printf("INFO: saved images %s to [%s]", images, tarFileName)
+	log.Printf("INFO: saved images %s to [%s]", images, tarFileName)
 
 	return nil
 }
