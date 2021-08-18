@@ -67,7 +67,7 @@ func GetPluginDirOrCreate() (string, error) {
 	pluginDir := path.Join(configDir, "plugins")
 	// create directories if necessary
 	if err := createDirIfNotExists(pluginDir); err != nil {
-		log.Errorf("Failed to create config path '%s'", pluginDir)
+		l.Log().Errorf("Failed to create config path '%s'", pluginDir)
 		return "", err
 	}
 

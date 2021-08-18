@@ -27,8 +27,8 @@ import (
 	"strings"
 
 	"github.com/rancher/k3d/v4/cmd/util"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	utils "github.com/rancher/k3d/v4/pkg/util"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -64,7 +64,7 @@ func NewCmdPluginInstall() *cobra.Command {
 			// Get the path of the plugin folder
 			pluginDir, err := utils.GetPluginDirOrCreate()
 			if err != nil {
-				log.Fatal(err)
+				l.Log().Fatal(err)
 			}
 
 			// Get the plugin path
@@ -72,19 +72,19 @@ func NewCmdPluginInstall() *cobra.Command {
 			pluginPath := path.Join(pluginDir, pluginName)
 
 			// Download the plugin
-			log.Infof("Installing plugin %s", pluginName)
+			l.Log().Infof("Installing plugin %s", pluginName)
 			err = util.DownloadPlugin(repoName, pluginVersion, pluginPath)
 			if err != nil {
-				log.Errorf("Unable to download %s@%s", repoName, pluginVersion)
-				log.Fatal(err)
+				l.Log().Errorf("Unable to download %s@%s", repoName, pluginVersion)
+				l.Log().Fatal(err)
 			}
 
-			log.Debug("Changing file permissions")
+			l.Log().Debug("Changing file permissions")
 			if err = os.Chmod(pluginPath, 0744); err != nil {
-				log.Errorf("Error while changing file permissions: %s", err)
+				l.Log().Errorf("Error while changing file permissions: %s", err)
 			}
 
-			log.Infof("Plugin %s installed successfully", pluginName)
+			l.Log().Infof("Plugin %s installed successfully", pluginName)
 		},
 	}
 

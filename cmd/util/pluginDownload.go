@@ -32,7 +32,7 @@ import (
 	"runtime"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 // ReleaseAsset maps a single asset in a GitHub Release
@@ -124,7 +124,7 @@ func DownloadPlugin(githubRepository, tag, pluginPath string) error {
 	// Fetch info about the specified release
 	release, err := fetchRelease(githubRepository, tag)
 	if err != nil {
-		log.Error(err)
+		l.Log().Error(err)
 		return errors.New("error while fetching releases")
 	}
 
