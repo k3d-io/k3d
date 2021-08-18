@@ -29,10 +29,10 @@ import (
 	"regexp"
 	"runtime"
 
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	rt "github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/pkg/util"
-	log "github.com/sirupsen/logrus"
 )
 
 var nsLookupAddressRegexp = regexp.MustCompile(`^Address:\s+(?P<ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$`)
@@ -44,7 +44,7 @@ func GetHostIP(ctx context.Context, rtime rt.Runtime, cluster *k3d.Cluster) (net
 	// Docker Runtime
 	if rtime == rt.Docker {
 
-		log.Tracef("Runtime GOOS: %s", runtime.GOOS)
+		l.Log().Tracef("Runtime GOOS: %s", runtime.GOOS)
 
 		// "native" Docker on Linux
 		if runtime.GOOS == "linux" {
@@ -94,28 +94,28 @@ func resolveHostnameFromInside(ctx context.Context, rtime rt.Runtime, node *k3d.
 		return nil, fmt.Errorf("Failed to scan logs for host IP: Could not create scanner from logreader")
 	}
 	if scanner != nil && execErr != nil {
-		log.Debugln("Exec Process Failed, but we still got logs, so we're at least trying to get the IP from there...")
-		log.Tracef("-> Exec Process Error was: %+v", execErr)
+		l.Log().Debugln("Exec Process Failed, but we still got logs, so we're at least trying to get the IP from there...")
+		l.Log().Tracef("-> Exec Process Error was: %+v", execErr)
 	}
 	for scanner.Scan() {
-		log.Tracef("Scanning Log Line '%s'", scanner.Text())
+		l.Log().Tracef("Scanning Log Line '%s'", scanner.Text())
 		match := nsLookupAddressRegexp.FindStringSubmatch(scanner.Text())
 		if len(match) == 0 {
 			continue
 		}
-		log.Tracef("-> Match(es): '%+v'", match)
+		l.Log().Tracef("-> Match(es): '%+v'", match)
 		submatches = util.MapSubexpNames(nsLookupAddressRegexp.SubexpNames(), match)
-		log.Tracef(" -> Submatch(es): %+v", submatches)
+		l.Log().Tracef(" -> Submatch(es): %+v", submatches)
 		break
 	}
 	if _, ok := submatches["ip"]; !ok {
 		if execErr != nil {
-			log.Errorln(execErr)
+			l.Log().Errorln(execErr)
 		}
 		return nil, fmt.Errorf("Failed to read address for '%s' from nslookup response", hostname)
 	}
 
-	log.Debugf("Hostname '%s' -> Address '%s'", hostname, submatches["ip"])
+	l.Log().Debugf("Hostname '%s' -> Address '%s'", hostname, submatches["ip"])
 
 	return net.ParseIP(submatches["ip"]), nil
 

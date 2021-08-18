@@ -25,9 +25,9 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/rancher/k3d/v4/cmd/util"
 	"github.com/rancher/k3d/v4/pkg/client"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -46,13 +46,13 @@ func NewCmdNodeEdit() *cobra.Command {
 
 			existingNode, changeset := parseEditNodeCmd(cmd, args)
 
-			log.Debugf("===== Current =====\n%+v\n===== Changeset =====\n%+v\n", existingNode, changeset)
+			l.Log().Debugf("===== Current =====\n%+v\n===== Changeset =====\n%+v\n", existingNode, changeset)
 
 			if err := client.NodeEdit(cmd.Context(), runtimes.SelectedRuntime, existingNode, changeset); err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
 
-			log.Infof("Successfully updated %s", existingNode.Name)
+			l.Log().Infof("Successfully updated %s", existingNode.Name)
 
 		},
 	}
@@ -71,16 +71,16 @@ func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *k3d.Node) 
 
 	existingNode, err := client.NodeGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Node{Name: args[0]})
 	if err != nil {
-		log.Fatalln(err)
+		l.Log().Fatalln(err)
 	}
 
 	if existingNode == nil {
-		log.Infof("Node %s not found", args[0])
+		l.Log().Infof("Node %s not found", args[0])
 		return nil, nil
 	}
 
 	if existingNode.Role != k3d.LoadBalancerRole {
-		log.Fatalln("Currently only the loadbalancer can be updated!")
+		l.Log().Fatalln("Currently only the loadbalancer can be updated!")
 	}
 
 	changeset := &k3d.Node{}
@@ -90,7 +90,7 @@ func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *k3d.Node) 
 	 */
 	portFlags, err := cmd.Flags().GetStringArray("port-add")
 	if err != nil {
-		log.Errorln(err)
+		l.Log().Errorln(err)
 		return nil, nil
 	}
 
@@ -101,7 +101,7 @@ func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *k3d.Node) 
 
 		portmappings, err := nat.ParsePortSpec(flag)
 		if err != nil {
-			log.Fatalf("Failed to parse port spec '%s': %+v", flag, err)
+			l.Log().Fatalf("Failed to parse port spec '%s': %+v", flag, err)
 		}
 
 		for _, pm := range portmappings {

@@ -24,7 +24,7 @@ package registry
 import (
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
@@ -75,12 +75,12 @@ func NewCmdRegistryCreate() *cobra.Command {
 			reg, clusters := parseCreateRegistryCmd(cmd, args, flags, ppFlags)
 			regNode, err := client.RegistryRun(cmd.Context(), runtimes.SelectedRuntime, reg)
 			if err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
 			if err := client.RegistryConnectClusters(cmd.Context(), runtimes.SelectedRuntime, regNode, clusters); err != nil {
-				log.Errorln(err)
+				l.Log().Errorln(err)
 			}
-			log.Infof("Successfully created registry '%s'", reg.Host)
+			l.Log().Infof("Successfully created registry '%s'", reg.Host)
 			regString := fmt.Sprintf("%s:%s", reg.Host, reg.ExposureOpts.Binding.HostPort)
 			if !flags.NoHelp {
 				fmt.Println(fmt.Sprintf(helptext, regString, regString, regString, regString))
@@ -93,10 +93,10 @@ func NewCmdRegistryCreate() *cobra.Command {
 	// TODO: connecting to clusters requires non-existing config reload functionality in containerd
 	cmd.Flags().StringArrayVarP(&ppFlags.Clusters, "cluster", "c", nil, "[NotReady] Select the cluster(s) that the registry shall connect to.")
 	if err := cmd.RegisterFlagCompletionFunc("cluster", cliutil.ValidArgsAvailableClusters); err != nil {
-		log.Fatalln("Failed to register flag completion for '--cluster'", err)
+		l.Log().Fatalln("Failed to register flag completion for '--cluster'", err)
 	}
 	if err := cmd.Flags().MarkHidden("cluster"); err != nil {
-		log.Fatalln("Failed to hide --cluster flag on registry create command")
+		l.Log().Fatalln("Failed to hide --cluster flag on registry create command")
 	}
 
 	cmd.Flags().StringVarP(&flags.Image, "image", "i", fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag), "Specify image used for the registry")
@@ -125,8 +125,8 @@ func parseCreateRegistryCmd(cmd *cobra.Command, args []string, flags *regCreateF
 	// --port
 	exposePort, err := cliutil.ParsePortExposureSpec(ppFlags.Port, k3d.DefaultRegistryPort)
 	if err != nil {
-		log.Errorln("Failed to parse registry port")
-		log.Fatalln(err)
+		l.Log().Errorln("Failed to parse registry port")
+		l.Log().Fatalln(err)
 	}
 
 	// set the name for the registry node

@@ -26,9 +26,8 @@ import (
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/spf13/cobra"
 
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // NewCmdNodeStop returns a new cobra command
@@ -43,7 +42,7 @@ func NewCmdNodeStop() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			node := parseStopNodeCmd(cmd, args)
 			if err := runtimes.SelectedRuntime.StopNode(cmd.Context(), node); err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
 		},
 	}
@@ -56,7 +55,7 @@ func NewCmdNodeStop() *cobra.Command {
 func parseStopNodeCmd(cmd *cobra.Command, args []string) *k3d.Node {
 	// node name // TODO: allow node filters, e.g. `k3d node stop mycluster@agent` to stop all agent nodes of cluster 'mycluster'
 	if len(args) == 0 || len(args[0]) == 0 {
-		log.Fatalln("No node name given")
+		l.Log().Fatalln("No node name given")
 	}
 
 	return &k3d.Node{Name: args[0]}

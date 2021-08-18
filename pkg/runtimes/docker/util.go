@@ -37,9 +37,9 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/pkg/errors"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	runtimeErrors "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
 )
 
 // GetDefaultObjectLabelsFilter returns docker type filters created from k3d labels
@@ -57,27 +57,27 @@ func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k
 	// create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
+		l.Log().Errorln("Failed to create docker client")
 		return err
 	}
 	defer docker.Close()
 
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
-		log.Errorf("Failed to find container for target node '%s'", node.Name)
+		l.Log().Errorf("Failed to find container for target node '%s'", node.Name)
 		return err
 	}
 
 	// source: docker/cli/cli/command/container/cp
 	srcInfo, err := archive.CopyInfoSourcePath(src, false)
 	if err != nil {
-		log.Errorln("Failed to copy info source path")
+		l.Log().Errorln("Failed to copy info source path")
 		return err
 	}
 
 	srcArchive, err := archive.TarResource(srcInfo)
 	if err != nil {
-		log.Errorln("Failed to create tar resource")
+		l.Log().Errorln("Failed to create tar resource")
 		return err
 	}
 	defer srcArchive.Close()
@@ -90,7 +90,7 @@ func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k
 
 	destDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, destInfo)
 	if err != nil {
-		log.Errorln("Failed to prepare archive")
+		l.Log().Errorln("Failed to prepare archive")
 		return err
 	}
 	defer preparedArchive.Close()
@@ -109,7 +109,7 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, mo
 	// create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
+		l.Log().Errorln("Failed to create docker client")
 		return err
 	}
 	defer docker.Close()
@@ -132,7 +132,7 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, mo
 	}
 
 	if err := tarWriter.Close(); err != nil {
-		log.Debugf("Failed to close tar writer: %+v", err)
+		l.Log().Debugf("Failed to close tar writer: %+v", err)
 	}
 
 	tarBytes := bytes.NewReader(buf.Bytes())
@@ -145,7 +145,7 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, mo
 
 // ReadFromNode reads from a given filepath inside the node container
 func (d Docker) ReadFromNode(ctx context.Context, path string, node *k3d.Node) (io.ReadCloser, error) {
-	log.Tracef("Reading path %s from node %s...", path, node.Name)
+	l.Log().Tracef("Reading path %s from node %s...", path, node.Name)
 	nodeContainer, err := getNodeContainer(ctx, node)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to find container for node '%s': %+v", node.Name, err)
@@ -175,7 +175,7 @@ func GetDockerClient() (*client.Client, error) {
 	}
 
 	newClientOpts := flags.NewClientOptions()
-	newClientOpts.Common.LogLevel = log.GetLevel().String() // this is needed, as the following Initialize() call will set a new log level on the global logrus instance
+	newClientOpts.Common.LogLevel = l.Log().GetLevel().String() // this is needed, as the following Initialize() call will set a new log level on the global logrus instance
 
 	err = dockerCli.Initialize(newClientOpts)
 	if err != nil {

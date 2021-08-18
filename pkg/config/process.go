@@ -24,7 +24,7 @@ package config
 
 import (
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 // ProcessClusterConfig applies processing to the config sanitizing it and doing
@@ -32,10 +32,10 @@ import (
 func ProcessClusterConfig(clusterConfig conf.ClusterConfig) (*conf.ClusterConfig, error) {
 	cluster := clusterConfig.Cluster
 	if cluster.Network.Name == "host" {
-		log.Infoln("Hostnetwork selected - disabling injection of docker host into the cluster, server load balancer and setting the api port to the k3s default")
+		l.Log().Infoln("Hostnetwork selected - disabling injection of docker host into the cluster, server load balancer and setting the api port to the k3s default")
 		// if network is set to host, exposed api port must be the one imposed by k3s
 		k3sPort := cluster.KubeAPI.Port.Port()
-		log.Debugf("Host network was chosen, changing provided/random api port to k3s:%s", k3sPort)
+		l.Log().Debugf("Host network was chosen, changing provided/random api port to k3s:%s", k3sPort)
 		cluster.KubeAPI.PortMapping.Binding.HostPort = k3sPort
 
 		// if network is host, dont inject docker host into the cluster

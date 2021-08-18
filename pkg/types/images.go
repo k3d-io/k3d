@@ -25,8 +25,8 @@ import (
 	"fmt"
 	"os"
 
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/version"
-	log "github.com/sirupsen/logrus"
 )
 
 // DefaultK3sImageRepo specifies the default image repository for the used k3s image
@@ -46,7 +46,7 @@ const DefaultRegistryImageTag = "2"
 
 func GetLoadbalancerImage() string {
 	if img := os.Getenv("K3D_IMAGE_LOADBALANCER"); img != "" {
-		log.Infof("Loadbalancer image set from env var $K3D_IMAGE_LOADBALANCER: %s", img)
+		l.Log().Infof("Loadbalancer image set from env var $K3D_IMAGE_LOADBALANCER: %s", img)
 		return img
 	}
 
@@ -55,7 +55,7 @@ func GetLoadbalancerImage() string {
 
 func GetToolsImage() string {
 	if img := os.Getenv("K3D_IMAGE_TOOLS"); img != "" {
-		log.Infof("Tools image set from env var $K3D_IMAGE_TOOLS: %s", img)
+		l.Log().Infof("Tools image set from env var $K3D_IMAGE_TOOLS: %s", img)
 		return img
 	}
 

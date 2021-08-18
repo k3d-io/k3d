@@ -26,9 +26,9 @@ import (
 	cliutil "github.com/rancher/k3d/v4/cmd/util"
 	"github.com/rancher/k3d/v4/pkg/client"
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -47,13 +47,13 @@ func NewCmdClusterEdit() *cobra.Command {
 
 			existingCluster, changeset := parseEditClusterCmd(cmd, args)
 
-			log.Debugf("===== Current =====\n%+v\n===== Changeset =====\n%+v\n", existingCluster, changeset)
+			l.Log().Debugf("===== Current =====\n%+v\n===== Changeset =====\n%+v\n", existingCluster, changeset)
 
 			if err := client.ClusterEditChangesetSimple(cmd.Context(), runtimes.SelectedRuntime, existingCluster, changeset); err != nil {
-				log.Fatalf("Failed to update the cluster: %v", err)
+				l.Log().Fatalf("Failed to update the cluster: %v", err)
 			}
 
-			log.Infof("Successfully updated %s", existingCluster.Name)
+			l.Log().Infof("Successfully updated %s", existingCluster.Name)
 
 		},
 	}
@@ -72,11 +72,11 @@ func parseEditClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, *conf
 
 	existingCluster, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: args[0]})
 	if err != nil {
-		log.Fatalln(err)
+		l.Log().Fatalln(err)
 	}
 
 	if existingCluster == nil {
-		log.Infof("Cluster %s not found", args[0])
+		l.Log().Infof("Cluster %s not found", args[0])
 		return nil, nil
 	}
 
@@ -87,7 +87,7 @@ func parseEditClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, *conf
 	 */
 	portFlags, err := cmd.Flags().GetStringArray("port-add")
 	if err != nil {
-		log.Errorln(err)
+		l.Log().Errorln(err)
 		return nil, nil
 	}
 
@@ -100,12 +100,12 @@ func parseEditClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, *conf
 		// split node filter from the specified volume
 		portmap, filters, err := cliutil.SplitFiltersFromFlag(portFlag)
 		if err != nil {
-			log.Fatalln(err)
+			l.Log().Fatalln(err)
 		}
 
 		// create new entry or append filter to existing entry
 		if _, exists := portFilterMap[portmap]; exists {
-			log.Fatalln("Same Portmapping can not be used for multiple nodes")
+			l.Log().Fatalln("Same Portmapping can not be used for multiple nodes")
 		} else {
 			portFilterMap[portmap] = filters
 		}
@@ -118,7 +118,7 @@ func parseEditClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, *conf
 		})
 	}
 
-	log.Tracef("PortFilterMap: %+v", portFilterMap)
+	l.Log().Tracef("PortFilterMap: %+v", portFilterMap)
 
 	return existingCluster, &changeset
 }

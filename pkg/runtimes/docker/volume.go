@@ -27,8 +27,8 @@ import (
 
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/volume"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
 )
 
 // CreateVolume creates a new named volume
@@ -36,7 +36,7 @@ func (d Docker) CreateVolume(ctx context.Context, name string, labels map[string
 	// (0) create new docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
+		l.Log().Errorln("Failed to create docker client")
 		return err
 	}
 	defer docker.Close()
@@ -58,10 +58,10 @@ func (d Docker) CreateVolume(ctx context.Context, name string, labels map[string
 
 	vol, err := docker.VolumeCreate(ctx, volumeCreateOptions)
 	if err != nil {
-		log.Errorf("Failed to create volume '%s'", name)
+		l.Log().Errorf("Failed to create volume '%s'", name)
 		return err
 	}
-	log.Infof("Created volume '%s'", vol.Name)
+	l.Log().Infof("Created volume '%s'", vol.Name)
 	return nil
 }
 
@@ -70,7 +70,7 @@ func (d Docker) DeleteVolume(ctx context.Context, name string) error {
 	// (0) create new docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
+		l.Log().Errorln("Failed to create docker client")
 		return err
 	}
 	defer docker.Close()
@@ -78,21 +78,21 @@ func (d Docker) DeleteVolume(ctx context.Context, name string) error {
 	// get volume and delete it
 	vol, err := docker.VolumeInspect(ctx, name)
 	if err != nil {
-		log.Errorf("Failed to find volume '%s'", name)
+		l.Log().Errorf("Failed to find volume '%s'", name)
 		return err
 	}
 
 	// check if volume is still in use
 	if vol.UsageData != nil {
 		if vol.UsageData.RefCount > 0 {
-			log.Errorf("Failed to delete volume '%s'", vol.Name)
+			l.Log().Errorf("Failed to delete volume '%s'", vol.Name)
 			return fmt.Errorf("Volume '%s' is still referenced by %d containers", name, vol.UsageData.RefCount)
 		}
 	}
 
 	// remove volume
 	if err := docker.VolumeRemove(ctx, name, true); err != nil {
-		log.Errorf("Failed to delete volume '%s'", name)
+		l.Log().Errorf("Failed to delete volume '%s'", name)
 		return err
 	}
 
@@ -105,7 +105,7 @@ func (d Docker) GetVolume(name string) (string, error) {
 	ctx := context.Background()
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
+		l.Log().Errorln("Failed to create docker client")
 		return "", err
 	}
 	defer docker.Close()

@@ -27,7 +27,7 @@ import (
 
 	configtypes "github.com/rancher/k3d/v4/pkg/config/types"
 	"github.com/rancher/k3d/v4/pkg/config/v1alpha2"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 var Migrations = map[string]func(configtypes.Config) (configtypes.Config, error){
@@ -35,7 +35,7 @@ var Migrations = map[string]func(configtypes.Config) (configtypes.Config, error)
 }
 
 func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
-	log.Debugln("Migrating v1alpha2 to v1alpha3")
+	l.Log().Debugln("Migrating v1alpha2 to v1alpha3")
 
 	injson, err := json.Marshal(input)
 	if err != nil {
@@ -80,13 +80,13 @@ func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
 
 		cfg.APIVersion = ApiVersion
 
-		log.Debugf("Migrated config: %+v", cfg)
+		l.Log().Debugf("Migrated config: %+v", cfg)
 
 		return cfg, nil
 
 	}
 
-	log.Debugf("No migration needed for %s#%s -> %s#%s", input.GetAPIVersion(), input.GetKind(), ApiVersion, input.GetKind())
+	l.Log().Debugf("No migration needed for %s#%s -> %s#%s", input.GetAPIVersion(), input.GetKind(), ApiVersion, input.GetKind())
 
 	return input, nil
 

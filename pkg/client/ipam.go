@@ -24,9 +24,9 @@ package client
 import (
 	"context"
 
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	k3drt "github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
 	"inet.af/netaddr"
 )
 
@@ -53,7 +53,7 @@ func GetIP(ctx context.Context, runtime k3drt.Runtime, network *k3d.ClusterNetwo
 
 	ip := ipset.Ranges()[0].From
 
-	log.Debugf("Found free IP %s in network %s", ip.String(), network.Name)
+	l.Log().Debugf("Found free IP %s in network %s", ip.String(), network.Name)
 
 	return ip, nil
 }

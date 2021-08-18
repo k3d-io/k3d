@@ -24,9 +24,9 @@ package registry
 import (
 	"github.com/rancher/k3d/v4/cmd/util"
 	"github.com/rancher/k3d/v4/pkg/client"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -51,11 +51,11 @@ func NewCmdRegistryDelete() *cobra.Command {
 			nodes := parseRegistryDeleteCmd(cmd, args, &flags)
 
 			if len(nodes) == 0 {
-				log.Infoln("No registries found")
+				l.Log().Infoln("No registries found")
 			} else {
 				for _, node := range nodes {
 					if err := client.NodeDelete(cmd.Context(), runtimes.SelectedRuntime, node, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
-						log.Fatalln(err)
+						l.Log().Fatalln(err)
 					}
 				}
 			}
@@ -80,18 +80,18 @@ func parseRegistryDeleteCmd(cmd *cobra.Command, args []string, flags *registryDe
 	if flags.All {
 		nodes, err = client.NodeList(cmd.Context(), runtimes.SelectedRuntime)
 		if err != nil {
-			log.Fatalln(err)
+			l.Log().Fatalln(err)
 		}
 	}
 
 	if !flags.All && len(args) < 1 {
-		log.Fatalln("Expecting at least one registry name if `--all` is not set")
+		l.Log().Fatalln("Expecting at least one registry name if `--all` is not set")
 	}
 
 	for _, name := range args {
 		node, err := client.NodeGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Node{Name: name})
 		if err != nil {
-			log.Fatalln(err)
+			l.Log().Fatalln(err)
 		}
 		nodes = append(nodes, node)
 	}

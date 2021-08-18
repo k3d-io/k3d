@@ -32,10 +32,10 @@ import (
 	"github.com/rancher/k3d/v4/cmd/util"
 	cliutil "github.com/rancher/k3d/v4/cmd/util"
 	k3dc "github.com/rancher/k3d/v4/pkg/client"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/version"
-	log "github.com/sirupsen/logrus"
 )
 
 // NewCmdNodeCreate returns a new cobra command
@@ -52,10 +52,10 @@ func NewCmdNodeCreate() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			nodes, cluster := parseCreateNodeCmd(cmd, args)
 			if err := k3dc.NodeAddToClusterMulti(cmd.Context(), runtimes.SelectedRuntime, nodes, cluster, createNodeOpts); err != nil {
-				log.Errorf("Failed to add nodes to cluster '%s'", cluster.Name)
-				log.Fatalln(err)
+				l.Log().Errorf("Failed to add nodes to cluster '%s'", cluster.Name)
+				l.Log().Fatalln(err)
 			}
-			log.Infof("Successfully created %d node(s)!", len(nodes))
+			l.Log().Infof("Successfully created %d node(s)!", len(nodes))
 		},
 	}
 
@@ -63,11 +63,11 @@ func NewCmdNodeCreate() *cobra.Command {
 	cmd.Flags().Int("replicas", 1, "Number of replicas of this node specification.")
 	cmd.Flags().String("role", string(k3d.AgentRole), "Specify node role [server, agent]")
 	if err := cmd.RegisterFlagCompletionFunc("role", util.ValidArgsNodeRoles); err != nil {
-		log.Fatalln("Failed to register flag completion for '--role'", err)
+		l.Log().Fatalln("Failed to register flag completion for '--role'", err)
 	}
 	cmd.Flags().StringP("cluster", "c", k3d.DefaultClusterName, "Select the cluster that the node shall connect to.")
 	if err := cmd.RegisterFlagCompletionFunc("cluster", util.ValidArgsAvailableClusters); err != nil {
-		log.Fatalln("Failed to register flag completion for '--cluster'", err)
+		l.Log().Fatalln("Failed to register flag completion for '--cluster'", err)
 	}
 
 	cmd.Flags().StringP("image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)), "Specify k3s image used for the node(s)")
@@ -89,32 +89,32 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 	// --replicas
 	replicas, err := cmd.Flags().GetInt("replicas")
 	if err != nil {
-		log.Errorln("No replica count specified")
-		log.Fatalln(err)
+		l.Log().Errorln("No replica count specified")
+		l.Log().Fatalln(err)
 	}
 
 	// --role
 	roleStr, err := cmd.Flags().GetString("role")
 	if err != nil {
-		log.Errorln("No node role specified")
-		log.Fatalln(err)
+		l.Log().Errorln("No node role specified")
+		l.Log().Fatalln(err)
 	}
 	if _, ok := k3d.NodeRoles[roleStr]; !ok {
-		log.Fatalf("Unknown node role '%s'\n", roleStr)
+		l.Log().Fatalf("Unknown node role '%s'\n", roleStr)
 	}
 	role := k3d.NodeRoles[roleStr]
 
 	// --image
 	image, err := cmd.Flags().GetString("image")
 	if err != nil {
-		log.Errorln("No image specified")
-		log.Fatalln(err)
+		l.Log().Errorln("No image specified")
+		l.Log().Fatalln(err)
 	}
 
 	// --cluster
 	clusterName, err := cmd.Flags().GetString("cluster")
 	if err != nil {
-		log.Fatalln(err)
+		l.Log().Fatalln(err)
 	}
 	cluster := &k3d.Cluster{
 		Name: clusterName,
@@ -123,25 +123,25 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 	// --memory
 	memory, err := cmd.Flags().GetString("memory")
 	if err != nil {
-		log.Errorln("No memory specified")
-		log.Fatalln(err)
+		l.Log().Errorln("No memory specified")
+		l.Log().Fatalln(err)
 	}
 	if _, err := dockerunits.RAMInBytes(memory); memory != "" && err != nil {
-		log.Errorf("Provided memory limit value is invalid")
+		l.Log().Errorf("Provided memory limit value is invalid")
 	}
 
 	// --runtime-label
 	runtimeLabelsFlag, err := cmd.Flags().GetStringSlice("runtime-label")
 	if err != nil {
-		log.Errorln("No runtime-label specified")
-		log.Fatalln(err)
+		l.Log().Errorln("No runtime-label specified")
+		l.Log().Fatalln(err)
 	}
 
 	runtimeLabels := make(map[string]string, len(runtimeLabelsFlag)+1)
 	for _, label := range runtimeLabelsFlag {
 		labelSplitted := strings.Split(label, "=")
 		if len(labelSplitted) != 2 {
-			log.Fatalf("unknown runtime-label format format: %s, use format \"foo=bar\"", label)
+			l.Log().Fatalf("unknown runtime-label format format: %s, use format \"foo=bar\"", label)
 		}
 		cliutil.ValidateRuntimeLabelKey(labelSplitted[0])
 		runtimeLabels[labelSplitted[0]] = labelSplitted[1]
@@ -153,15 +153,15 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, *k3d.Cl
 	// --k3s-node-label
 	k3sNodeLabelsFlag, err := cmd.Flags().GetStringSlice("k3s-node-label")
 	if err != nil {
-		log.Errorln("No k3s-node-label specified")
-		log.Fatalln(err)
+		l.Log().Errorln("No k3s-node-label specified")
+		l.Log().Fatalln(err)
 	}
 
 	k3sNodeLabels := make(map[string]string, len(k3sNodeLabelsFlag))
 	for _, label := range k3sNodeLabelsFlag {
 		labelSplitted := strings.Split(label, "=")
 		if len(labelSplitted) != 2 {
-			log.Fatalf("unknown k3s-node-label format format: %s, use format \"foo=bar\"", label)
+			l.Log().Fatalf("unknown k3s-node-label format format: %s, use format \"foo=bar\"", label)
 		}
 		k3sNodeLabels[labelSplitted[0]] = labelSplitted[1]
 	}

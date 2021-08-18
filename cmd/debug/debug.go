@@ -26,9 +26,9 @@ import (
 
 	"github.com/rancher/k3d/v4/cmd/util"
 	"github.com/rancher/k3d/v4/pkg/client"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
@@ -42,8 +42,8 @@ func NewCmdDebug() *cobra.Command {
 		Long:   `Debug k3d cluster(s)`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
-				log.Errorln("Couldn't get help text")
-				log.Fatalln(err)
+				l.Log().Errorln("Couldn't get help text")
+				l.Log().Fatalln(err)
 			}
 		},
 	}
@@ -61,8 +61,8 @@ func NewCmdDebugLoadbalancer() *cobra.Command {
 		Long:    `Debug the loadbalancer`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
-				log.Errorln("Couldn't get help text")
-				log.Fatalln(err)
+				l.Log().Errorln("Couldn't get help text")
+				l.Log().Fatalln(err)
 			}
 		},
 	}
@@ -74,16 +74,16 @@ func NewCmdDebugLoadbalancer() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &types.Cluster{Name: args[0]})
 			if err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
 
 			lbconf, err := client.GetLoadbalancerConfig(cmd.Context(), runtimes.SelectedRuntime, c)
 			if err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
 			yamlized, err := yaml.Marshal(lbconf)
 			if err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
 			fmt.Println(string(yamlized))
 		},

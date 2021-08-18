@@ -40,9 +40,10 @@ import (
 	"github.com/rancher/k3d/v4/cmd/node"
 	"github.com/rancher/k3d/v4/cmd/registry"
 	cliutil "github.com/rancher/k3d/v4/cmd/util"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/version"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
 )
 
@@ -71,7 +72,7 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 				printVersion()
 			} else {
 				if err := cmd.Usage(); err != nil {
-					log.Fatalln(err)
+					l.Log().Fatalln(err)
 				}
 			}
 		},
@@ -110,11 +111,11 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			info, err := runtimes.SelectedRuntime.Info()
 			if err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
 			err = yaml.NewEncoder(os.Stdout).Encode(info)
 			if err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
 		},
 		Hidden: true,
@@ -136,58 +137,58 @@ func Execute() {
 		if _, _, err := cmd.Find(parts); err != nil {
 			pluginFound, err := cliutil.HandlePlugin(context.Background(), parts)
 			if err != nil {
-				log.Errorf("Failed to execute plugin '%+v'", parts)
-				log.Fatalln(err)
+				l.Log().Errorf("Failed to execute plugin '%+v'", parts)
+				l.Log().Fatalln(err)
 			} else if pluginFound {
 				os.Exit(0)
 			}
 		}
 	}
 	if err := cmd.Execute(); err != nil {
-		log.Fatalln(err)
+		l.Log().Fatalln(err)
 	}
 }
 
 // initLogging initializes the logger
 func initLogging() {
 	if flags.traceLogging {
-		log.SetLevel(log.TraceLevel)
+		l.Log().SetLevel(logrus.TraceLevel)
 	} else if flags.debugLogging {
-		log.SetLevel(log.DebugLevel)
+		l.Log().SetLevel(logrus.DebugLevel)
 	} else {
 		switch logLevel := strings.ToUpper(os.Getenv("LOG_LEVEL")); logLevel {
 		case "TRACE":
-			log.SetLevel(log.TraceLevel)
+			l.Log().SetLevel(logrus.TraceLevel)
 		case "DEBUG":
-			log.SetLevel(log.DebugLevel)
+			l.Log().SetLevel(logrus.DebugLevel)
 		case "WARN":
-			log.SetLevel(log.WarnLevel)
+			l.Log().SetLevel(logrus.WarnLevel)
 		case "ERROR":
-			log.SetLevel(log.ErrorLevel)
+			l.Log().SetLevel(logrus.ErrorLevel)
 		default:
-			log.SetLevel(log.InfoLevel)
+			l.Log().SetLevel(logrus.InfoLevel)
 		}
 	}
-	log.SetOutput(ioutil.Discard)
-	log.AddHook(&writer.Hook{
+	l.Log().SetOutput(ioutil.Discard)
+	l.Log().AddHook(&writer.Hook{
 		Writer: os.Stderr,
-		LogLevels: []log.Level{
-			log.PanicLevel,
-			log.FatalLevel,
-			log.ErrorLevel,
-			log.WarnLevel,
+		LogLevels: []logrus.Level{
+			logrus.PanicLevel,
+			logrus.FatalLevel,
+			logrus.ErrorLevel,
+			logrus.WarnLevel,
 		},
 	})
-	log.AddHook(&writer.Hook{
+	l.Log().AddHook(&writer.Hook{
 		Writer: os.Stdout,
-		LogLevels: []log.Level{
-			log.InfoLevel,
-			log.DebugLevel,
-			log.TraceLevel,
+		LogLevels: []logrus.Level{
+			logrus.InfoLevel,
+			logrus.DebugLevel,
+			logrus.TraceLevel,
 		},
 	})
 
-	formatter := &log.TextFormatter{
+	formatter := &logrus.TextFormatter{
 		ForceColors: true,
 	}
 
@@ -195,18 +196,18 @@ func initLogging() {
 		formatter.FullTimestamp = true
 	}
 
-	log.SetFormatter(formatter)
+	l.Log().SetFormatter(formatter)
 
 }
 
 func initRuntime() {
 	runtime, err := runtimes.GetRuntime("docker")
 	if err != nil {
-		log.Fatalln(err)
+		l.Log().Fatalln(err)
 	}
 	runtimes.SelectedRuntime = runtime
 	if rtinfo, err := runtime.Info(); err == nil {
-		log.Debugf("Runtime Info:\n%+v", rtinfo)
+		l.Log().Debugf("Runtime Info:\n%+v", rtinfo)
 	}
 }
 
@@ -286,11 +287,11 @@ PowerShell:
 		Run: func(cmd *cobra.Command, args []string) {
 			if completionFunc, ok := completionFunctions[args[0]]; ok {
 				if err := completionFunc(os.Stdout); err != nil {
-					log.Fatalf("Failed to generate completion script for shell '%s'", args[0])
+					l.Log().Fatalf("Failed to generate completion script for shell '%s'", args[0])
 				}
 				return
 			}
-			log.Fatalf("Shell '%s' not supported for completion", args[0])
+			l.Log().Fatalf("Shell '%s' not supported for completion", args[0])
 		},
 	}
 	return cmd

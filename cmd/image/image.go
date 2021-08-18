@@ -22,7 +22,7 @@ THE SOFTWARE.
 package image
 
 import (
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -37,8 +37,8 @@ func NewCmdImage() *cobra.Command {
 		Long:    `Handle container images.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
-				log.Errorln("Couldn't get help text")
-				log.Fatalln(err)
+				l.Log().Errorln("Couldn't get help text")
+				l.Log().Fatalln(err)
 			}
 		},
 	}
