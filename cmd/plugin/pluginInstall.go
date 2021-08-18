@@ -22,11 +22,33 @@ THE SOFTWARE.
 package plugin
 
 import (
+	"os"
+	"path"
+	"strings"
+
+	"github.com/rancher/k3d/v4/cmd/util"
+	utils "github.com/rancher/k3d/v4/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-// NewCmdPlugin returns a new cobra command
+// parsePlugin parses the plugin name to extract the name and the version.
+// If no version is specified, latest will be returned.
+//
+// parsePlugin expects plugin to be formatted as user/repo@version
+func parsePlugin(plugin string) (string, string) {
+	parsed := strings.Split(plugin, "@")
+	name := parsed[0]
+
+	// Version is not specified, using latest
+	if len(parsed) == 1 {
+		return name, "latest"
+	}
+	// Version in specified, returning it
+	return name, parsed[1]
+}
+
+// NewCmdPluginInstall returns a new cobra command
 func NewCmdPluginInstall() *cobra.Command {
 
 	// create new cobra command
@@ -34,12 +56,35 @@ func NewCmdPluginInstall() *cobra.Command {
 		Use:   "install PLUGIN",
 		Short: "Install a plugin",
 		Long:  `Install a plugin`,
-		Args:  cobra.RangeArgs(0, 1),
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := cmd.Help(); err != nil {
-				log.Errorln("Couldn't get help text")
-				log.Fatalln(err)
+			// Parse plugin name and version
+			repoName, pluginVersion := parsePlugin(args[0])
+
+			// Get the path of the plugin folder
+			pluginDir, err := utils.GetPluginDirOrCreate()
+			if err != nil {
+				log.Fatal(err)
 			}
+
+			// Get the plugin path
+			pluginName := strings.Split(repoName, "/")[1]
+			pluginPath := path.Join(pluginDir, pluginName)
+
+			// Download the plugin
+			log.Infof("Installing plugin %s", pluginName)
+			err = util.DownloadPlugin(repoName, pluginVersion, pluginPath)
+			if err != nil {
+				log.Errorf("Unable to download %s@%s", repoName, pluginVersion)
+				log.Fatal(err)
+			}
+
+			log.Debug("Changing file permissions")
+			if err = os.Chmod(pluginPath, 0744); err != nil {
+				log.Errorf("Error while changing file permissions: %s", err)
+			}
+
+			log.Infof("Plugin %s installed successfully", pluginName)
 		},
 	}
 

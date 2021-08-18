@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewCmdPlugin returns a new cobra command
+// NewCmdPluginRemove returns a new cobra command
 func NewCmdPluginRemove() *cobra.Command {
 
 	// create new cobra command

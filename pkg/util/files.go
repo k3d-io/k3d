@@ -57,3 +57,19 @@ func createDirIfNotExists(path string) error {
 	}
 	return nil
 }
+
+func GetPluginDirOrCreate() (string, error) {
+	configDir, err := GetConfigDirOrCreate()
+	if err != nil {
+		return "", nil
+	}
+
+	pluginDir := path.Join(configDir, "plugins")
+	// create directories if necessary
+	if err := createDirIfNotExists(pluginDir); err != nil {
+		log.Errorf("Failed to create config path '%s'", pluginDir)
+		return "", err
+	}
+
+	return pluginDir, nil
+}
