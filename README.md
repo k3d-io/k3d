@@ -9,7 +9,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d?style=flat-square)](https://goreportcard.com/report/github.com/rancher/k3d)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-12-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-13-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
@@ -61,7 +61,7 @@ You have several options there:
 - install via [MacPorts](https://www.macports.org): `sudo port selfupdate && sudo port install k3d` (MacPorts is available for MacOS)
 - install via [AUR](https://aur.archlinux.org/) package [rancher-k3d-bin](https://aur.archlinux.org/packages/rancher-k3d-bin/): `yay -S rancher-k3d-bin`
 - grab a release from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself.
-- install via go: `go install github.com/rancher/k3d` (**Note**: this will give you unreleased/bleeding-edge changes)
+- install via go: `go install github.com/rancher/k3d@latest` (**Note**: this will give you unreleased/bleeding-edge changes)
 - use [Chocolatey](https://chocolatey.org/): `choco install k3d` (Chocolatey package manager is available for Windows)
   - package source can be found in [erwinkersten/chocolatey-packages](https://github.com/erwinkersten/chocolatey-packages/tree/master/automatic/k3d)
 
@@ -112,6 +112,8 @@ k3d is a community-driven project and so we welcome contributions of any form, b
 
 Please read our [**Contributing Guidelines**](./CONTRIBUTING.md) and the related [**Code of Conduct**](./CODE_OF_CONDUCT.md).
 
+You can find an overview of the k3d project (e.g. explanations and a repository guide) in the documentation: [k3d.io/internals/project](https://k3d.io/internals/project)
+
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
 ## Contributors ✨
@@ -137,6 +139,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://wsl.dev"><img src="https://avatars2.githubusercontent.com/u/905874?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Nuno do Carmo</b></sub></a><br /><a href="#content-nunix" title="Content">🖋</a> <a href="#tutorial-nunix" title="Tutorials">✅</a> <a href="#question-nunix" title="Answering Questions">💬</a></td>
     <td align="center"><a href="https://github.com/erwinkersten"><img src="https://avatars0.githubusercontent.com/u/4391121?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Erwin Kersten</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=erwinkersten" title="Documentation">📖</a></td>
     <td align="center"><a href="http://www.alexsears.com"><img src="https://avatars.githubusercontent.com/u/3712883?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alex Sears</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=searsaw" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://shanduur.github.io"><img src="https://avatars.githubusercontent.com/u/32583062?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Mateusz Urbanek</b></sub></a><br /><a href="https://github.com/rancher/k3d/commits?author=Shanduur" title="Code">💻</a></td>
   </tr>
 </table>
 

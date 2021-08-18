@@ -178,7 +178,11 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 }
 
-func findImages(ctx context.Context, runtime runtimes.Runtime, requestedImages []string) (imagesFromRuntime, imagesFromTar []string, err error) {
+type runtimeImageGetter interface {
+	GetImages(context.Context) ([]string, error)
+}
+
+func findImages(ctx context.Context, runtime runtimeImageGetter, requestedImages []string) (imagesFromRuntime, imagesFromTar []string, err error) {
 	runtimeImages, err := runtime.GetImages(ctx)
 	if err != nil {
 		log.Errorln("Failed to fetch list of existing images from runtime")
@@ -189,14 +193,14 @@ func findImages(ctx context.Context, runtime runtimes.Runtime, requestedImages [
 		if isFile(requestedImage) {
 			imagesFromTar = append(imagesFromTar, requestedImage)
 			log.Debugf("Selected image '%s' is a file", requestedImage)
-			break
+			continue
 		}
 
 		runtimeImage, found := findRuntimeImage(requestedImage, runtimeImages)
 		if found {
 			imagesFromRuntime = append(imagesFromRuntime, runtimeImage)
 			log.Debugf("Selected image '%s' (found as '%s') in runtime", requestedImage, runtimeImage)
-			break
+			continue
 		}
 
 		log.Warnf("Image '%s' is not a file and couldn't be found in the container runtime", requestedImage)

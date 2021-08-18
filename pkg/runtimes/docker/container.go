@@ -191,22 +191,31 @@ func executeCheckInContainer(ctx context.Context, image string, cmd []string) (i
 	}
 	defer docker.Close()
 
-	if err = pullImage(ctx, docker, image); err != nil {
-		return -1, err
-	}
-
-	resp, err := docker.ContainerCreate(ctx, &container.Config{
-		Image:      image,
-		Cmd:        cmd,
-		Tty:        false,
-		Entrypoint: []string{},
-	}, nil, nil, nil, "")
-	if err != nil {
-		log.Errorf("Failed to create container from image %s with cmd %s", image, cmd)
-		return -1, err
+	// create container
+	var resp container.ContainerCreateCreatedBody
+	for {
+		resp, err = docker.ContainerCreate(ctx, &container.Config{
+			Image:      image,
+			Cmd:        cmd,
+			Tty:        false,
+			Entrypoint: []string{},
+		}, nil, nil, nil, "")
+		if err != nil {
+			if client.IsErrNotFound(err) {
+				if err := pullImage(ctx, docker, image); err != nil {
+					log.Errorf("Failed to create container from image %s with cmd %s", image, cmd)
+					return -1, err
+				}
+				continue
+			}
+			log.Errorf("Failed to create container from image %s with cmd %s", image, cmd)
+			return -1, err
+		}
+		break
 	}
 
 	if err = startContainer(ctx, resp.ID); err != nil {
+		log.Errorf("Failed to start container from image %s with cmd %s", image, cmd)
 		return -1, err
 	}
 
