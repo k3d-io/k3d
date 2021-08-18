@@ -121,6 +121,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "Shanduur",
+      "name": "Mateusz Urbanek",
+      "avatar_url": "https://avatars.githubusercontent.com/u/32583062?v=4",
+      "profile": "http://shanduur.github.io",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
