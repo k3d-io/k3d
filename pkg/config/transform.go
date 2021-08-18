@@ -142,7 +142,9 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 		newCluster.Nodes = append(newCluster.Nodes, &serverNode)
 
-		newCluster.ServerLoadBalancer.Config.Ports[fmt.Sprintf("%s.tcp", k3d.DefaultAPIPort)] = append(newCluster.ServerLoadBalancer.Config.Ports[fmt.Sprintf("%s.tcp", k3d.DefaultAPIPort)], serverNode.Name)
+		if !simpleConfig.Options.K3dOptions.DisableLoadbalancer {
+			newCluster.ServerLoadBalancer.Config.Ports[fmt.Sprintf("%s.tcp", k3d.DefaultAPIPort)] = append(newCluster.ServerLoadBalancer.Config.Ports[fmt.Sprintf("%s.tcp", k3d.DefaultAPIPort)], serverNode.Name)
+		}
 	}
 
 	for i := 0; i < simpleConfig.Agents; i++ {
