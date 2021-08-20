@@ -55,8 +55,19 @@ func NewCmdPluginInstall() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install PLUGIN",
 		Short: "Install a plugin",
-		Long:  `Install a plugin`,
-		Args:  cobra.ExactArgs(1),
+		Long: `Install a plugin
+
+Examples:
+  To install one plugin, run:
+    k3d plugin install user/plugin
+
+  To install the specific version of a plugin, use:
+    k3d plugin install user/plugin@v0.0.1
+
+Remarks:
+  If a plugin is already installed, it will be overridden.
+`,
+		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			// Parse plugin name and version
 			repoName, pluginVersion := parsePlugin(args[0])
