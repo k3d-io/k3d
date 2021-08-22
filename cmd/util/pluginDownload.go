@@ -89,19 +89,20 @@ func (ra *ReleaseAsset) download(destinationPath string) error {
 	return nil
 }
 
-func pluginUrl(repo, tag string) string {
+// getUrl returns the http url for downloading the given plugin from GitHub Releases
+func getUrl(plugin Plugin) string {
 	url := "https://api.github.com/repos/%s/releases/tags/%s"
 
-	if tag == "latest" {
+	if plugin.Version == "latest" {
 		url = "https://api.github.com/repos/%s/releases/%s"
 	}
-	return fmt.Sprintf(url, repo, tag)
+	return fmt.Sprintf(url, plugin.Repository, plugin.Version)
 }
 
 // fetchRelease fetches the latest release of a GitHub Release.
 // githubRepository has to be formatted as username/repository.
-func fetchRelease(githubRepository, tag string) (*ReleaseResponse, error) {
-	var apiUrl = pluginUrl(githubRepository, tag)
+func fetchRelease(plugin Plugin) (*ReleaseResponse, error) {
+	var apiUrl = getUrl(plugin)
 
 	response, err := http.Get(apiUrl)
 	if err != nil {
@@ -120,25 +121,25 @@ func fetchRelease(githubRepository, tag string) (*ReleaseResponse, error) {
 
 // DownloadPlugin downloads the tag release of
 // githubRepository's repo and save it in filepath
-func DownloadPlugin(githubRepository, tag, pluginPath string) error {
+func DownloadPlugin(plugin Plugin, pluginPath string) error {
 	// Fetch info about the specified release
-	release, err := fetchRelease(githubRepository, tag)
+	release, err := fetchRelease(plugin)
 	if err != nil {
 		l.Log().Error(err)
-		return errors.New("error while fetching releases")
+		return errors.New("Error while fetching releases")
 	}
 
 	// Make sure response is not empty
 	// An empty response means that the given release does not exist
 	// Reflect is used since release is a pointer to a struct
 	if reflect.DeepEqual(release, &ReleaseResponse{}) {
-		return errors.New("unable to fetch specified release tag. Make sure it exists")
+		return errors.New("Unable to fetch specified release tag. Make sure it exists")
 	}
 
 	// Get the URL to download the plugin
 	asset := release.findCompatibleAsset()
 	if asset == nil {
-		return errors.New("plugin not found. Make sure it exists")
+		return errors.New("Plugin not found. Make sure it exists")
 	}
 
 	// Download the plugin
