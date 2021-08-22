@@ -22,6 +22,7 @@ THE SOFTWARE.
 package plugin
 
 import (
+	"log"
 	"os"
 	"path"
 
@@ -36,7 +37,7 @@ func NewCmdPluginInstall() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:   "install PLUGIN",
+		Use:   "install PLUGIN [PLUGIN...]",
 		Short: "Install a plugin",
 		Long: `Install a plugin
 
@@ -50,11 +51,16 @@ Examples:
 Remarks:
   If a plugin is already installed, it will be overridden.
 `,
-		Args: cobra.ExactArgs(1),
+		Args: cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			plugin, err := util.NewPlugin(args[0])
-			if err != nil {
-				l.Log().Fatal(err)
+			// Create a plugin slice given their name
+			var plugins = make([]*util.Plugin, len(args))
+			for index, pluginName := range args {
+				plugin, err := util.NewPlugin(pluginName)
+				if err != nil {
+					log.Fatal(err)
+				}
+				plugins[index] = plugin
 			}
 
 			// Get the path of the plugin folder
@@ -63,23 +69,26 @@ Remarks:
 				l.Log().Fatal(err)
 			}
 
-			// Get the plugin path
-			pluginPath := path.Join(pluginDir, plugin.Name)
+			// Install all plugins
+			for _, plugin := range plugins {
+				// Get the plugin path
+				pluginPath := path.Join(pluginDir, plugin.Name)
 
-			// Download the plugin
-			l.Log().Infof("Installing plugin %s", plugin.Name)
-			err = util.DownloadPlugin(*plugin, pluginPath)
-			if err != nil {
-				l.Log().Errorf("Unable to download %s@%s", plugin.Name, plugin.Version)
-				l.Log().Fatal(err)
+				// Download the plugin
+				l.Log().Infof("Installing plugin %s", plugin.Name)
+				err = util.DownloadPlugin(*plugin, pluginPath)
+				if err != nil {
+					l.Log().Errorf("Unable to download %s@%s", plugin.Name, plugin.Version)
+					l.Log().Fatal(err)
+				}
+
+				l.Log().Debug("Changing file permissions")
+				if err = os.Chmod(pluginPath, 0744); err != nil {
+					l.Log().Errorf("Error while changing file permissions: %s", err)
+				}
+
+				l.Log().Infof("Plugin %s installed successfully", plugin.Name)
 			}
-
-			l.Log().Debug("Changing file permissions")
-			if err = os.Chmod(pluginPath, 0744); err != nil {
-				l.Log().Errorf("Error while changing file permissions: %s", err)
-			}
-
-			l.Log().Infof("Plugin %s installed successfully", plugin.Name)
 		},
 	}
 

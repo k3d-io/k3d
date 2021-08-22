@@ -43,10 +43,9 @@ func NewPlugin(plugin string) (*Plugin, error) {
 func parseName(repository string) (string, error) {
 	splitted := strings.Split(repository, "/")
 
-	// A plugin name must be in owner/pluginName,
-	// if no "/" cannot be found so it isn't in the right format
+	// A plugin name must be formatted as owner/pluginName
 	if len(splitted) != 2 {
-		return "", errors.New("error parsing the plugin name, it should be formatted as owner/repository")
+		return "", errors.New("Error parsing the plugin name, it should be formatted as owner/repository")
 	}
 
 	return splitted[1], nil
