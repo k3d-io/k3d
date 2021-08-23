@@ -963,6 +963,34 @@ func SortClusters(clusters []*k3d.Cluster) []*k3d.Cluster {
 	return clusters
 }
 
+// corednsAddHost adds a host entry to the CoreDNS configmap if it doesn't exist (a host entry is a single line of the form "IP HOST")
+func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, hostsEntry string) error {
+	patchCmd := `patch=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s+host\.k3d\.internal$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | busybox xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$patch"`
+	successInjectCoreDNSEntry := false
+	for _, node := range cluster.Nodes {
+		if node.Role == k3d.AgentRole || node.Role == k3d.ServerRole {
+			logreader, err := runtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", patchCmd})
+			if err == nil {
+				successInjectCoreDNSEntry = true
+				break
+			} else {
+				msg := fmt.Sprintf("error patching the CoreDNS ConfigMap to include entry '%s': %+v", hostsEntry, err)
+				readlogs, err := ioutil.ReadAll(logreader)
+				if err != nil {
+					l.Log().Debugf("error reading the logs from failed CoreDNS patch exec process in node %s: %v", node.Name, err)
+				} else {
+					msg += fmt.Sprintf("\nLogs: %s", string(readlogs))
+				}
+				l.Log().Debugln(msg)
+			}
+		}
+	}
+	if !successInjectCoreDNSEntry {
+		return fmt.Errorf("Failed to patch CoreDNS ConfigMap to include entry '%s' (see debug logs)", hostsEntry)
+	}
+	return nil
+}
+
 // prepInjectHostIP adds /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
 func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) {
 	l.Log().Infoln("(Optional) Trying to get IP of the docker host and inject it into the cluster as 'host.k3d.internal' for easy access")
@@ -971,7 +999,6 @@ func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.C
 		l.Log().Warnf("Failed to get HostIP: %+v", err)
 	}
 	if hostIP != nil {
-		hostRecordSuccessMessage := ""
 		etcHostsFailureCount := 0
 		hostsEntry := fmt.Sprintf("%s %s", hostIP, k3d.DefaultK3dInternalHostRecord)
 		l.Log().Debugf("Adding extra host entry '%s'...", hostsEntry)
@@ -982,40 +1009,14 @@ func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.C
 			}
 		}
 		if etcHostsFailureCount < len(cluster.Nodes) {
-			hostRecordSuccessMessage += fmt.Sprintf("Successfully added host record to /etc/hosts in %d/%d nodes", (len(cluster.Nodes) - etcHostsFailureCount), len(cluster.Nodes))
+			l.Log().Debugf("Successfully added host record \"%s\" to /etc/hosts in %d/%d nodes", hostsEntry, (len(cluster.Nodes) - etcHostsFailureCount), len(cluster.Nodes))
 		}
 
-		patchCmd := `patch=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s+host\.k3d\.internal$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | busybox xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$patch"`
-		successInjectCoreDNSEntry := false
-		for _, node := range cluster.Nodes {
-
-			if node.Role == k3d.AgentRole || node.Role == k3d.ServerRole {
-				logreader, err := runtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", patchCmd})
-				if err == nil {
-					successInjectCoreDNSEntry = true
-					break
-				} else {
-					msg := fmt.Sprintf("error patching the CoreDNS ConfigMap to include entry '%s': %+v", hostsEntry, err)
-					readlogs, err := ioutil.ReadAll(logreader)
-					if err != nil {
-						l.Log().Debugf("error reading the logs from failed CoreDNS patch exec process in node %s: %v", node.Name, err)
-					} else {
-						msg += fmt.Sprintf("\nLogs: %s", string(readlogs))
-					}
-					l.Log().Debugln(msg)
-				}
-			}
+		err := corednsAddHost(ctx, runtime, cluster, hostsEntry)
+		if err != nil {
+			l.Log().Warnln(err)
 		}
-		if successInjectCoreDNSEntry == false {
-			l.Log().Warnf("Failed to patch CoreDNS ConfigMap to include entry '%s' (see debug logs)", hostsEntry)
-		} else {
-			hostRecordSuccessMessage += " and to the CoreDNS ConfigMap"
-		}
-
-		if hostRecordSuccessMessage != "" {
-			l.Log().Infoln(hostRecordSuccessMessage)
-		}
-
+		l.Log().Debugf("Successfully added host record \"%s\" to the CoreDNS configmap ", hostsEntry)
 	}
 }
 
