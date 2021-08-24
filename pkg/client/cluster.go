@@ -96,7 +96,9 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 
 	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
 	if !clusterConfig.ClusterCreateOpts.PrepDisableHostIPInjection {
-		prepInjectHostIP(ctx, runtime, &clusterConfig.Cluster)
+		if err := prepInjectHostIP(ctx, runtime, &clusterConfig.Cluster); err != nil {
+			return err
+		}
 	}
 
 	// create the registry hosting configmap
@@ -107,16 +109,8 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 	}
 
 	// create host records in CoreDNS for external registries
-	net, err := runtime.GetNetwork(ctx, &clusterConfig.Cluster.Network)
-	if err != nil {
-		return fmt.Errorf("failed to get cluster network %s to inject host records into CoreDNS: %v", clusterConfig.Cluster.Network.Name, err)
-	}
-	l.Log().Debugf("Adding %d network members to coredns", len(net.Members))
-	for _, member := range net.Members {
-		hostsEntry := fmt.Sprintf("%s %s", member.IP.String(), member.Name)
-		if err := corednsAddHost(ctx, runtime, &clusterConfig.Cluster, member.IP.String(), member.Name); err != nil {
-			return fmt.Errorf("failed to add host entry \"%s\" into CoreDNS: %v", hostsEntry, err)
-		}
+	if err := prepCoreDNSInjectNetworkMembers(ctx, runtime, &clusterConfig.Cluster); err != nil {
+		return err
 	}
 
 	return nil
@@ -1006,32 +1000,45 @@ func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clu
 }
 
 // prepInjectHostIP adds /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
-func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) {
-	l.Log().Infoln("(Optional) Trying to get IP of the docker host and inject it into the cluster as 'host.k3d.internal' for easy access")
+func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+	l.Log().Infoln("Trying to get IP of the docker host and inject it into the cluster as 'host.k3d.internal' for easy access")
 	hostIP, err := GetHostIP(ctx, runtime, cluster)
 	if err != nil {
-		l.Log().Warnf("Failed to get HostIP: %+v", err)
+		l.Log().Warnf("Failed to get HostIP to inject as host.k3d.internal: %+v", err)
+		return nil
 	}
 	if hostIP != nil {
-		etcHostsFailureCount := 0
 		hostsEntry := fmt.Sprintf("%s %s", hostIP.String(), k3d.DefaultK3dInternalHostRecord)
 		l.Log().Debugf("Adding extra host entry '%s'...", hostsEntry)
 		for _, node := range cluster.Nodes {
 			if err := runtime.ExecInNode(ctx, node, []string{"sh", "-c", fmt.Sprintf("echo '%s' >> /etc/hosts", hostsEntry)}); err != nil {
-				l.Log().Warnf("Failed to add extra entry '%s' to /etc/hosts in node '%s'", hostsEntry, node.Name)
-				etcHostsFailureCount++
+				return fmt.Errorf("failed to add extra entry '%s' to /etc/hosts in node '%s': %w", hostsEntry, node.Name, err)
 			}
 		}
-		if etcHostsFailureCount < len(cluster.Nodes) {
-			l.Log().Debugf("Successfully added host record \"%s\" to /etc/hosts in %d/%d nodes", hostsEntry, (len(cluster.Nodes) - etcHostsFailureCount), len(cluster.Nodes))
-		}
+		l.Log().Debugf("Successfully added host record \"%s\" to /etc/hosts in all nodes", hostsEntry)
 
 		err := corednsAddHost(ctx, runtime, cluster, hostIP.String(), k3d.DefaultK3dInternalHostRecord)
 		if err != nil {
-			l.Log().Warnln(err)
+			return fmt.Errorf("failed to inject host record \"%s\" into CoreDNS ConfigMap: %w", hostsEntry, err)
 		}
-		l.Log().Debugf("Successfully added host record \"%s\" to the CoreDNS configmap ", hostsEntry)
+		l.Log().Debugf("Successfully added host record \"%s\" to the CoreDNS ConfigMap ", hostsEntry)
 	}
+	return nil
+}
+
+func prepCoreDNSInjectNetworkMembers(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+	net, err := runtime.GetNetwork(ctx, &cluster.Network)
+	if err != nil {
+		return fmt.Errorf("failed to get cluster network %s to inject host records into CoreDNS: %v", cluster.Network.Name, err)
+	}
+	l.Log().Debugf("Adding %d network members to coredns", len(net.Members))
+	for _, member := range net.Members {
+		hostsEntry := fmt.Sprintf("%s %s", member.IP.String(), member.Name)
+		if err := corednsAddHost(ctx, runtime, cluster, member.IP.String(), member.Name); err != nil {
+			return fmt.Errorf("failed to add host entry \"%s\" into CoreDNS: %v", hostsEntry, err)
+		}
+	}
+	return nil
 }
 
 func prepCreateLocalRegistryHostingConfigMap(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
