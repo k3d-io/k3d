@@ -324,24 +324,9 @@ kind: pipeline
 type: docker
 name: linux_arm64
 
-  - name: build_push_dind
-    image: plugins/docker
-    environment:
-      DOCKER_BUILDKIT: "1"
-    settings:
-      repo: rancher/k3d
-      auto_tag: true
-      auto_tag_suffix: linux-arm64
-      dockerfile: Dockerfile
-      target: dind
-      context: .
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      build_args:
-        - GIT_TAG_OVERRIDE=${DRONE_TAG}
-        - ARCH=arm
+platform:
+  os: linux
+  arch: arm64
 
 steps:
 
