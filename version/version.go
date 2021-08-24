@@ -23,6 +23,7 @@ package version
 
 import (
 	"os"
+	"strings"
 
 	"github.com/heroku/docker-registry-client/registry"
 	l "github.com/rancher/k3d/v4/pkg/logger"
@@ -57,7 +58,7 @@ func GetHelperImageVersion() string {
 	if len(Version) == 0 {
 		return "latest"
 	}
-	return Version
+	return strings.TrimPrefix(Version, "v")
 }
 
 // GetK3sVersion returns the version string for K3s
