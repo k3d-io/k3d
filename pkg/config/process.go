@@ -38,9 +38,6 @@ func ProcessClusterConfig(clusterConfig conf.ClusterConfig) (*conf.ClusterConfig
 		l.Log().Debugf("Host network was chosen, changing provided/random api port to k3s:%s", k3sPort)
 		cluster.KubeAPI.PortMapping.Binding.HostPort = k3sPort
 
-		// if network is host, dont inject docker host into the cluster
-		clusterConfig.ClusterCreateOpts.PrepDisableHostIPInjection = true
-
 		// if network is host, disable load balancer
 		// serverlb not supported in hostnetwork mode due to port collisions with server node
 		clusterConfig.ClusterCreateOpts.DisableLoadBalancer = true

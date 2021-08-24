@@ -92,7 +92,6 @@ options:
     disableLoadbalancer: false # same as `--no-lb`
     disableImageVolume: false # same as `--no-image-volume`
     disableRollback: false # same as `--no-Rollback`
-    disableHostIPInjection: false # same as `--no-hostip`
   k3s: # options passed on to K3s itself
     extraArgs: # additional arguments passed to the `k3s server|agent` command; same as `--k3s-arg`
       - arg: --tls-san=my.host.domain

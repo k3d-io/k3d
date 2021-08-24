@@ -69,6 +69,10 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 		return nil, err
 	}
 
+	if len(networkList) == 0 {
+		return nil, runtimeErr.ErrRuntimeNetworkNotExists
+	}
+
 	targetNetwork, err := docker.NetworkInspect(ctx, networkList[0].ID, types.NetworkInspectOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to inspect network %s: %w", networkList[0].Name, err)

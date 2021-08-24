@@ -90,27 +90,11 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 	 * Additional Cluster Preparation *
 	 **********************************/
 
-	/*
-	 * Networking Magic
-	 */
-
-	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
-	if !clusterConfig.ClusterCreateOpts.PrepDisableHostIPInjection {
-		if err := prepInjectHostIP(ctx, runtime, &clusterConfig.Cluster); err != nil {
-			return err
-		}
-	}
-
 	// create the registry hosting configmap
 	if len(clusterConfig.ClusterCreateOpts.Registries.Use) > 0 {
 		if err := prepCreateLocalRegistryHostingConfigMap(ctx, runtime, &clusterConfig.Cluster); err != nil {
 			l.Log().Warnf("Failed to create LocalRegistryHosting ConfigMap: %+v", err)
 		}
-	}
-
-	// create host records in CoreDNS for external registries
-	if err := prepCoreDNSInjectNetworkMembers(ctx, runtime, &clusterConfig.Cluster); err != nil {
-		return err
 	}
 
 	return nil
@@ -940,6 +924,22 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		return fmt.Errorf("Failed to add one or more helper nodes: %w", err)
 	}
 
+	/*
+	 * Additional Cluster Preparation
+	 */
+
+	/*** DNS ***/
+
+	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
+	if err := prepInjectHostIP(ctx, runtime, cluster); err != nil {
+		return err
+	}
+
+	// create host records in CoreDNS for external registries
+	if err := prepCoreDNSInjectNetworkMembers(ctx, runtime, cluster); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -1001,6 +1001,10 @@ func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clu
 
 // prepInjectHostIP adds /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
 func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+	if cluster.Network.Name == "host" {
+		l.Log().Tracef("Not injecting hostIP as clusternetwork is 'host'")
+		return nil
+	}
 	l.Log().Infoln("Trying to get IP of the docker host and inject it into the cluster as 'host.k3d.internal' for easy access")
 	hostIP, err := GetHostIP(ctx, runtime, cluster)
 	if err != nil {

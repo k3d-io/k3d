@@ -137,10 +137,6 @@
             "disableRollback": {
               "type": "boolean",
               "default": false
-            },
-            "disableHostIPInjection": {
-              "type": "boolean",
-              "default": false
             }
           },
           "additionalProperties": false
