@@ -55,7 +55,6 @@ func TestProcessClusterConfig(t *testing.T) {
 
 	clusterCfg, err = ProcessClusterConfig(*clusterCfg)
 	assert.Assert(t, clusterCfg.ClusterCreateOpts.DisableLoadBalancer == false, "The load balancer should be enabled")
-	assert.Assert(t, clusterCfg.ClusterCreateOpts.PrepDisableHostIPInjection == false, "The host ip injection should be enabled")
 
 	t.Logf("\n===== Resulting Cluster Config (non-host network) =====\n%+v\n===============\n", clusterCfg)
 
@@ -64,7 +63,6 @@ func TestProcessClusterConfig(t *testing.T) {
 	clusterCfg.Cluster.Network.Name = "host"
 	clusterCfg, err = ProcessClusterConfig(*clusterCfg)
 	assert.Assert(t, clusterCfg.ClusterCreateOpts.DisableLoadBalancer == true, "The load balancer should be disabled")
-	assert.Assert(t, clusterCfg.ClusterCreateOpts.PrepDisableHostIPInjection == true, "The host ip injection should be disabled")
 
 	t.Logf("\n===== Resulting Cluster Config (host network) =====\n%+v\n===============\n", clusterCfg)
 

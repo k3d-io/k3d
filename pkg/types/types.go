@@ -164,18 +164,17 @@ var DoNotCopyServerFlags = []string{
 
 // ClusterCreateOpts describe a set of options one can set when creating a cluster
 type ClusterCreateOpts struct {
-	PrepDisableHostIPInjection bool              `yaml:"prepDisableHostIPInjection" json:"prepDisableHostIPInjection,omitempty"`
-	DisableImageVolume         bool              `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
-	WaitForServer              bool              `yaml:"waitForServer" json:"waitForServer,omitempty"`
-	Timeout                    time.Duration     `yaml:"timeout" json:"timeout,omitempty"`
-	DisableLoadBalancer        bool              `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
-	GPURequest                 string            `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
-	ServersMemory              string            `yaml:"serversMemory" json:"serversMemory,omitempty"`
-	AgentsMemory               string            `yaml:"agentsMemory" json:"agentsMemory,omitempty"`
-	NodeHooks                  []NodeHook        `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
-	GlobalLabels               map[string]string `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
-	GlobalEnv                  []string          `yaml:"globalEnv,omitempty" json:"globalEnv,omitempty"`
-	Registries                 struct {
+	DisableImageVolume  bool              `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
+	WaitForServer       bool              `yaml:"waitForServer" json:"waitForServer,omitempty"`
+	Timeout             time.Duration     `yaml:"timeout" json:"timeout,omitempty"`
+	DisableLoadBalancer bool              `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
+	GPURequest          string            `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
+	ServersMemory       string            `yaml:"serversMemory" json:"serversMemory,omitempty"`
+	AgentsMemory        string            `yaml:"agentsMemory" json:"agentsMemory,omitempty"`
+	NodeHooks           []NodeHook        `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	GlobalLabels        map[string]string `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
+	GlobalEnv           []string          `yaml:"globalEnv,omitempty" json:"globalEnv,omitempty"`
+	Registries          struct {
 		Create *Registry     `yaml:"create,omitempty" json:"create,omitempty"`
 		Use    []*Registry   `yaml:"use,omitempty" json:"use,omitempty"`
 		Config *k3s.Registry `yaml:"config,omitempty" json:"config,omitempty"` // registries.yaml (k3s config for containerd registry override)
@@ -246,12 +245,18 @@ type IPAM struct {
 	Managed  bool             // IPAM is done by k3d
 }
 
+type NetworkMember struct {
+	Name string
+	IP   netaddr.IP
+}
+
 // ClusterNetwork describes a network which a cluster is running in
 type ClusterNetwork struct {
 	Name     string `yaml:"name" json:"name,omitempty"`
 	ID       string `yaml:"id" json:"id"` // may be the same as name, but e.g. docker only differentiates by random ID, not by name
 	External bool   `yaml:"external" json:"isExternal,omitempty"`
 	IPAM     IPAM   `yaml:"ipam" json:"ipam,omitempty"`
+	Members  []*NetworkMember
 }
 
 // Cluster describes a k3d cluster
@@ -323,7 +328,7 @@ type Node struct {
 	GPURequest    string            // filled automatically
 	Memory        string            // filled automatically
 	State         NodeState         // filled automatically
-	IP            NodeIP            // filled automatically
+	IP            NodeIP            // filled automatically -> refers solely to the cluster network
 	HookActions   []NodeHook        `yaml:"hooks" json:"hooks,omitempty"`
 }
 

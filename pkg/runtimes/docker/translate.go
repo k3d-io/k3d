@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/containerd/containerd/log"
 	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -35,6 +36,7 @@ import (
 	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 	"github.com/rancher/k3d/v4/pkg/types/fixes"
+	"inet.af/netaddr"
 
 	dockercliopts "github.com/docker/cli/opts"
 	dockerunits "github.com/docker/go-units"
@@ -263,6 +265,41 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		memoryStr = ""
 	}
 
+	// IP
+	var nodeIP k3d.NodeIP
+	var clusterNet *network.EndpointSettings
+	if netLabel, ok := labels[k3d.LabelNetwork]; ok {
+		for netName, net := range containerDetails.NetworkSettings.Networks {
+			if netName == netLabel {
+				clusterNet = net
+			}
+		}
+	} else {
+		l.Log().Debugf("no netlabel present on container %s", containerDetails.Name)
+	}
+	if clusterNet != nil {
+		parsedIP, err := netaddr.ParseIP(clusterNet.IPAddress)
+		if err != nil {
+			if nodeState.Running {
+				return nil, fmt.Errorf("failed to parse IP '%s' for container '%s': %s\nStatus: %v\n%+v", clusterNet.IPAddress, containerDetails.Name, err, nodeState.Status, containerDetails.NetworkSettings)
+			} else {
+				log.L.Debugf("failed to parse IP '%s' for container '%s', likely because it's not running: %v", clusterNet.IPAddress, containerDetails.Name, err)
+			}
+		}
+		isStaticIP := false
+		if staticIPLabel, ok := labels[k3d.LabelNodeStaticIP]; ok && staticIPLabel != "" {
+			isStaticIP = true
+		}
+		if !parsedIP.IsZero() {
+			nodeIP = k3d.NodeIP{
+				IP:     parsedIP,
+				Static: isStaticIP,
+			}
+		}
+	} else {
+		l.Log().Debugf("failed to get IP for container %s as we couldn't find the cluster network", containerDetails.Name)
+	}
+
 	node := &k3d.Node{
 		Name:          strings.TrimPrefix(containerDetails.Name, "/"), // container name with leading '/' cut off
 		Role:          k3d.NodeRoles[containerDetails.Config.Labels[k3d.LabelRole]],
@@ -280,6 +317,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		AgentOpts:     k3d.AgentOpts{},
 		State:         nodeState,
 		Memory:        memoryStr,
+		IP:            nodeIP, // only valid for the cluster network
 	}
 	return node, nil
 }
