@@ -246,12 +246,18 @@ type IPAM struct {
 	Managed  bool             // IPAM is done by k3d
 }
 
+type NetworkMember struct {
+	Name string
+	IP   netaddr.IP
+}
+
 // ClusterNetwork describes a network which a cluster is running in
 type ClusterNetwork struct {
 	Name     string `yaml:"name" json:"name,omitempty"`
 	ID       string `yaml:"id" json:"id"` // may be the same as name, but e.g. docker only differentiates by random ID, not by name
 	External bool   `yaml:"external" json:"isExternal,omitempty"`
 	IPAM     IPAM   `yaml:"ipam" json:"ipam,omitempty"`
+	Members  []*NetworkMember
 }
 
 // Cluster describes a k3d cluster
@@ -323,7 +329,7 @@ type Node struct {
 	GPURequest    string            // filled automatically
 	Memory        string            // filled automatically
 	State         NodeState         // filled automatically
-	IP            NodeIP            // filled automatically
+	IP            NodeIP            // filled automatically -> refers solely to the cluster network
 	HookActions   []NodeHook        `yaml:"hooks" json:"hooks,omitempty"`
 }
 

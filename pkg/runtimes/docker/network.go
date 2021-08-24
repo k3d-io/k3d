@@ -69,29 +69,31 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 		return nil, err
 	}
 
-	if len(networkList) == 0 {
-		return nil, runtimeErr.ErrRuntimeNetworkNotExists
+	targetNetwork, err := docker.NetworkInspect(ctx, networkList[0].ID, types.NetworkInspectOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to inspect network %s: %w", networkList[0].Name, err)
 	}
+	l.Log().Debugf("Found network %+v", targetNetwork)
 
 	network := &k3d.ClusterNetwork{
-		Name: networkList[0].Name,
-		ID:   networkList[0].ID,
+		Name: targetNetwork.Name,
+		ID:   targetNetwork.ID,
 	}
 
 	// for networks that have an IPAM config, we inspect that as well (e.g. "host" network doesn't have it)
-	if len(networkList[0].IPAM.Config) > 0 {
-		network.IPAM, err = d.parseIPAM(networkList[0].IPAM.Config[0])
+	if len(targetNetwork.IPAM.Config) > 0 {
+		network.IPAM, err = d.parseIPAM(targetNetwork.IPAM.Config[0])
 		if err != nil {
 			return nil, err
 		}
 
-		for _, container := range networkList[0].Containers {
+		for _, container := range targetNetwork.Containers {
 			if container.IPv4Address != "" {
-				ip, err := netaddr.ParseIP(container.IPv4Address)
+				prefix, err := netaddr.ParseIPPrefix(container.IPv4Address)
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("failed to parse IP of container %s: %w", container.Name, err)
 				}
-				network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, ip)
+				network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, prefix.IP)
 			}
 		}
 
@@ -103,6 +105,17 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 		}
 	} else {
 		l.Log().Debugf("Network %s does not have an IPAM config", network.Name)
+	}
+
+	for _, container := range targetNetwork.Containers {
+		prefix, err := netaddr.ParseIPPrefix(container.IPv4Address)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse IP Prefix of network \"%s\"'s member %s: %v", network.Name, container.Name, err)
+		}
+		network.Members = append(network.Members, &k3d.NetworkMember{
+			Name: container.Name,
+			IP:   prefix.IP,
+		})
 	}
 
 	// Only one Network allowed, but some functions don't care about this, so they can ignore the error and just use the first one returned

@@ -106,6 +106,19 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 		}
 	}
 
+	// create host records in CoreDNS for external registries
+	net, err := runtime.GetNetwork(ctx, &clusterConfig.Cluster.Network)
+	if err != nil {
+		return fmt.Errorf("failed to get cluster network %s to inject host records into CoreDNS: %v", clusterConfig.Cluster.Network.Name, err)
+	}
+	l.Log().Debugf("Adding %d network members to coredns", len(net.Members))
+	for _, member := range net.Members {
+		hostsEntry := fmt.Sprintf("%s %s", member.IP.String(), member.Name)
+		if err := corednsAddHost(ctx, runtime, &clusterConfig.Cluster, member.IP.String(), member.Name); err != nil {
+			return fmt.Errorf("failed to add host entry \"%s\" into CoreDNS: %v", hostsEntry, err)
+		}
+	}
+
 	return nil
 }
 
@@ -964,8 +977,9 @@ func SortClusters(clusters []*k3d.Cluster) []*k3d.Cluster {
 }
 
 // corednsAddHost adds a host entry to the CoreDNS configmap if it doesn't exist (a host entry is a single line of the form "IP HOST")
-func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, hostsEntry string) error {
-	patchCmd := `patch=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s+host\.k3d\.internal$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | busybox xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$patch"`
+func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, ip string, name string) error {
+	hostsEntry := fmt.Sprintf("%s %s", ip, name)
+	patchCmd := `patch=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s` + name + `$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | busybox xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$patch"`
 	successInjectCoreDNSEntry := false
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.AgentRole || node.Role == k3d.ServerRole {
@@ -1000,7 +1014,7 @@ func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.C
 	}
 	if hostIP != nil {
 		etcHostsFailureCount := 0
-		hostsEntry := fmt.Sprintf("%s %s", hostIP, k3d.DefaultK3dInternalHostRecord)
+		hostsEntry := fmt.Sprintf("%s %s", hostIP.String(), k3d.DefaultK3dInternalHostRecord)
 		l.Log().Debugf("Adding extra host entry '%s'...", hostsEntry)
 		for _, node := range cluster.Nodes {
 			if err := runtime.ExecInNode(ctx, node, []string{"sh", "-c", fmt.Sprintf("echo '%s' >> /etc/hosts", hostsEntry)}); err != nil {
@@ -1012,7 +1026,7 @@ func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.C
 			l.Log().Debugf("Successfully added host record \"%s\" to /etc/hosts in %d/%d nodes", hostsEntry, (len(cluster.Nodes) - etcHostsFailureCount), len(cluster.Nodes))
 		}
 
-		err := corednsAddHost(ctx, runtime, cluster, hostsEntry)
+		err := corednsAddHost(ctx, runtime, cluster, hostIP.String(), k3d.DefaultK3dInternalHostRecord)
 		if err != nil {
 			l.Log().Warnln(err)
 		}
