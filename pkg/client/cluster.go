@@ -940,6 +940,36 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		return err
 	}
 
+	// network magic
+	dockerDNSIP := "127.0.0.11"
+	hostIP, err := GetHostIP(ctx, runtime, cluster)
+	if err != nil {
+		l.Log().Warnf("Failed to get HostIP to inject as host.k3d.internal: %+v", err)
+		return nil
+	}
+	cmd := `iptables-save \
+	| sed \
+		-e "s/-d ` + dockerDNSIP + `/-d ` + hostIP.String() + `/g" \
+		-e 's/-A OUTPUT \(.*\) -j DOCKER_OUTPUT/\0\n-A PREROUTING \1 -j DOCKER_OUTPUT/' \
+		-e "s/--to-source :53/--to-source ` + hostIP.String() + `:53/g"\
+	| iptables-restore
+cp /etc/resolv.conf /etc/resolv.conf.original
+sed -e "s/` + dockerDNSIP + `/` + hostIP.String() + `/g" /etc/resolv.conf.original >/etc/resolv.conf
+`
+	for _, node := range cluster.Nodes {
+		logreader, err := runtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", cmd})
+		if err != nil {
+			msg := fmt.Sprintf("error applying network magic: %+v", err)
+			readlogs, err := ioutil.ReadAll(logreader)
+			if err != nil {
+				l.Log().Errorf("error reading the logs from failed network magic exec process in node %s: %v", node.Name, err)
+			} else {
+				msg += fmt.Sprintf("\nLogs: %s", string(readlogs))
+			}
+			return fmt.Errorf(msg)
+		}
+	}
+
 	return nil
 }
 
