@@ -57,7 +57,13 @@ func GetHostIP(ctx context.Context, rtime rt.Runtime, cluster *k3d.Cluster) (net
 
 		// Docker (for Desktop) on MacOS or Windows
 		if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-			ip, err := resolveHostnameFromInside(ctx, rtime, cluster.Nodes[0], "host.docker.internal")
+
+			toolsNode, err := EnsureToolsNode(ctx, rtime, cluster)
+			if err != nil {
+				return nil, err
+			}
+
+			ip, err := resolveHostnameFromInside(ctx, rtime, toolsNode, "host.docker.internal")
 			if err != nil {
 				return nil, err
 			}

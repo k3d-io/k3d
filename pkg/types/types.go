@@ -24,6 +24,7 @@ package types
 import (
 	"context"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/docker/go-connections/nat"
@@ -198,9 +199,10 @@ const (
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
 type ClusterStartOpts struct {
-	WaitForServer bool
-	Timeout       time.Duration
-	NodeHooks     []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	WaitForServer   bool
+	Timeout         time.Duration
+	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	EnvironmentInfo *EnvironmentInfo
 }
 
 // ClusterDeleteOpts describe a set of options one can set when deleting a cluster
@@ -210,9 +212,10 @@ type ClusterDeleteOpts struct {
 
 // NodeCreateOpts describes a set of options one can set when creating a new node
 type NodeCreateOpts struct {
-	Wait      bool
-	Timeout   time.Duration
-	NodeHooks []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	Wait            bool
+	Timeout         time.Duration
+	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	EnvironmentInfo *EnvironmentInfo
 }
 
 // NodeStartOpts describes a set of options one can set when (re-)starting a node
@@ -221,6 +224,7 @@ type NodeStartOpts struct {
 	Timeout         time.Duration
 	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 	ReadyLogMessage string
+	EnvironmentInfo *EnvironmentInfo
 }
 
 // NodeDeleteOpts describes a set of options one can set when deleting a node
@@ -407,4 +411,8 @@ type RegistryExternal struct {
 	Protocol string `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
 	Host     string `yaml:"host" json:"host"`
 	Port     string `yaml:"port" json:"port"`
+}
+
+type EnvironmentInfo struct {
+	HostGateway net.IP
 }

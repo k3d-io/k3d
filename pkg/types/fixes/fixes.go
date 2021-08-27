@@ -37,16 +37,40 @@ import (
  * FIXME: FixCgroupV2 - to be removed when fixed upstream
  */
 
-// EnvFixCgroupV2 is the environment variable that k3d will check for to enable/disable the cgroupv2 workaround
-const EnvFixCgroupV2 = "K3D_FIX_CGROUPV2"
+type K3DFixEnv string
 
-//go:embed assets/cgroupv2-entrypoint.sh
+const (
+	EnvFixCgroupV2 K3DFixEnv = "K3D_FIX_CGROUPV2" // EnvFixCgroupV2 is the environment variable that k3d will check for to enable/disable the cgroupv2 workaround
+	EnvFixDNS      K3DFixEnv = "K3D_FIX_DNS"      // EnvFixDNS is the environment variable that check for to enable/disable the application of network magic related to DNS
+)
+
+var FixEnvs []K3DFixEnv = []K3DFixEnv{
+	EnvFixCgroupV2,
+	EnvFixDNS,
+}
+
+//go:embed assets/k3d-entrypoint-cgroupv2.sh
 var CgroupV2Entrypoint []byte
 
-func FixCgroupV2Enabled() bool {
-	enabled, err := strconv.ParseBool(os.Getenv(EnvFixCgroupV2))
+//go:embed assets/k3d-entrypoint-dns.sh
+var DNSMagicEntrypoint []byte
+
+//go:embed assets/k3d-entrypoint.sh
+var K3DEntrypoint []byte
+
+func FixEnabled(fixenv K3DFixEnv) bool {
+	enabled, err := strconv.ParseBool(os.Getenv(string(fixenv)))
 	if err != nil {
 		return false
 	}
 	return enabled
+}
+
+func FixEnabledAny() bool {
+	for _, fixenv := range FixEnvs {
+		if FixEnabled(fixenv) {
+			return true
+		}
+	}
+	return false
 }
