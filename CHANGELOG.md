@@ -60,6 +60,27 @@
 - tests/e2e: add tests for v1alpha2 to v1alpha3 migration
 - docs: use v1alpha3 config version
 
+## v4.4.8
+
+## Enhancements
+
+- Improved DroneCI Pipeline for Multiarch Images and SemVer Tags (#712)
+  - **Important**: New images will not have the `v` prefix in the tag anymore!
+    - but now real releases will use the "hierarchical" SemVer tags, so you could e.g. subscribe to rancher/k3d-proxy:4 to get v4.x.x images for the proxy container
+
+## Fixes
+
+- clusterCreate: do not override hostIP if hostPort is missing (#693, @lukaszo)
+- imageImport: import all listed images, not only the first one (#701, @mszostok)
+- clusterCreate: when memory constraints are set, only pull the image used for checking the edac folder, if it's not present on the machine
+- fix: update k3d-tools dependencies and use API Version Negotiation, so it still works with older versions of the Docker Engine (#679)
+
+### Misc
+
+- install script: add darwin/arm64 support (#676, @colelawrence)
+- docs: fix go install command (#677, @Rots)
+- docs: add project overview (<https://k3d.io/internals/project/>) (#680)
+
 ## v4.4.7
 
 ### Features / Enhancements

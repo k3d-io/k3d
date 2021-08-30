@@ -1,4 +1,4 @@
-image: rancher/k3d:{{#if build.tag}}{{trimPrefix "v" build.tag}}{{else}}latest{{/if}}dind
+image: rancher/k3d:{{#if build.tag}}{{trimPrefix "v" build.tag}}{{else}}latest{{/if}}-dind
 {{#if build.tags}}
 tags:
 {{#each build.tags}}
