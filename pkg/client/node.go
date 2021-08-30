@@ -56,8 +56,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	targetClusterName := cluster.Name
 	cluster, err := ClusterGet(ctx, runtime, cluster)
 	if err != nil {
-		l.Log().Errorf("Failed to find specified cluster '%s'", targetClusterName)
-		return err
+		return fmt.Errorf("Failed to find specified cluster '%s': %w", targetClusterName, err)
 	}
 
 	// network
@@ -159,8 +158,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 
 	// merge node config of new node into existing node config
 	if err := mergo.MergeWithOverwrite(srcNode, *node); err != nil {
-		l.Log().Errorln("Failed to merge new node config into existing node config")
-		return err
+		return fmt.Errorf("failed to merge new node config into existing node config: %w", err)
 	}
 
 	node = srcNode
@@ -203,7 +201,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	node.State.Status = ""
 
 	if err := NodeRun(ctx, runtime, node, createNodeOpts); err != nil {
-		return err
+		return fmt.Errorf("failed to run node '%s': %w", node.Name, err)
 	}
 
 	// if it's a server node, then update the loadbalancer configuration
@@ -280,7 +278,7 @@ func NodeCreateMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d
 // NodeRun creates and starts a node
 func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeCreateOpts k3d.NodeCreateOpts) error {
 	if err := NodeCreate(ctx, runtime, node, nodeCreateOpts); err != nil {
-		return err
+		return fmt.Errorf("failed to create node '%s': %w", node.Name, err)
 	}
 
 	if err := NodeStart(ctx, runtime, node, &k3d.NodeStartOpts{
@@ -289,7 +287,7 @@ func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, node
 		NodeHooks:       nodeCreateOpts.NodeHooks,
 		EnvironmentInfo: nodeCreateOpts.EnvironmentInfo,
 	}); err != nil {
-		return err
+		return fmt.Errorf("failed to start node '%s': %w", node.Name, err)
 	}
 
 	return nil
@@ -305,7 +303,7 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 	}
 
 	if err := enableFixes(ctx, runtime, node, nodeStartOpts); err != nil {
-		return err
+		return fmt.Errorf("failed to enable k3d fixes: %w", err)
 	}
 
 	startTime := time.Now()
@@ -325,8 +323,7 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 	l.Log().Tracef("Starting node '%s'", node.Name)
 
 	if err := runtime.StartNode(ctx, node); err != nil {
-		l.Log().Errorf("Failed to start node '%s'", node.Name)
-		return err
+		return fmt.Errorf("runtime failed to start node '%s': %w", node.Name, err)
 	}
 
 	if node.State.Started != "" {
@@ -453,11 +450,11 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 	// specify options depending on node role
 	if node.Role == k3d.AgentRole { // TODO: check here AND in CLI or only here?
 		if err := patchAgentSpec(node); err != nil {
-			return err
+			return fmt.Errorf("failed to patch agent spec on node %s: %w", node.Name, err)
 		}
 	} else if node.Role == k3d.ServerRole {
 		if err := patchServerSpec(node, runtime); err != nil {
-			return err
+			return fmt.Errorf("failed to patch server spec on node %s: %w", node.Name, err)
 		}
 	}
 
@@ -496,7 +493,7 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 	 * CREATION
 	 */
 	if err := runtime.CreateNode(ctx, node); err != nil {
-		return err
+		return fmt.Errorf("runtime failed to create node '%s': %w", node.Name, err)
 	}
 
 	return nil
@@ -524,15 +521,14 @@ func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, o
 	if !opts.SkipLBUpdate && (node.Role == k3d.ServerRole || node.Role == k3d.AgentRole) {
 		cluster, err := ClusterGet(ctx, runtime, &k3d.Cluster{Name: node.RuntimeLabels[k3d.LabelClusterName]})
 		if err != nil {
-			l.Log().Errorf("Failed to find cluster for node '%s'", node.Name)
-			return err
+			return fmt.Errorf("failed fo find cluster for node '%s': %w", node.Name, err)
 		}
 
 		// if it's a server node, then update the loadbalancer configuration
 		if node.Role == k3d.ServerRole {
 			if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
 				if !errors.Is(err, ErrLBConfigHostNotFound) {
-					return fmt.Errorf("Failed to update cluster loadbalancer: %w", err)
+					return fmt.Errorf("failed to update cluster loadbalancer: %w", err)
 				}
 			}
 		}
@@ -583,8 +579,7 @@ func patchServerSpec(node *k3d.Node, runtime runtimes.Runtime) error {
 func NodeList(ctx context.Context, runtime runtimes.Runtime) ([]*k3d.Node, error) {
 	nodes, err := runtime.GetNodesByLabel(ctx, k3d.DefaultRuntimeLabels)
 	if err != nil {
-		l.Log().Errorln("Failed to get nodes")
-		return nil, err
+		return nil, fmt.Errorf("failed to list nodes: %w", err)
 	}
 
 	return nodes, nil
@@ -595,8 +590,7 @@ func NodeGet(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3
 	// get node
 	node, err := runtime.GetNode(ctx, node)
 	if err != nil {
-		l.Log().Errorf("Failed to get node '%s'", node.Name)
-		return nil, err
+		return nil, fmt.Errorf("failed to get node '%s': %w", node.Name, err)
 	}
 
 	return node, nil
@@ -706,7 +700,7 @@ func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, chang
 
 	result, err := CopyNode(ctx, existingNode, CopyNodeOpts{keepState: false})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to copy node %s: %w", existingNode.Name, err)
 	}
 
 	/*
@@ -751,7 +745,7 @@ func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, chang
 		// prepare to write config to lb container
 		configyaml, err := yaml.Marshal(lbConfig)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to marshal loadbalancer config: %w", err)
 		}
 
 		writeLbConfigAction := k3d.NodeHook{
@@ -778,7 +772,7 @@ func NodeReplace(ctx context.Context, runtime runtimes.Runtime, old, new *k3d.No
 	oldNameOriginal := old.Name
 	l.Log().Infof("Renaming existing node %s to %s...", old.Name, oldNameTemp)
 	if err := runtime.RenameNode(ctx, old, oldNameTemp); err != nil {
-		return err
+		return fmt.Errorf("runtime failed to rename node '%s': %w", old.Name, err)
 	}
 	old.Name = oldNameTemp
 
@@ -794,7 +788,7 @@ func NodeReplace(ctx context.Context, runtime runtimes.Runtime, old, new *k3d.No
 	// stop existing/old node
 	l.Log().Infof("Stopping existing node %s...", old.Name)
 	if err := runtime.StopNode(ctx, old); err != nil {
-		return err
+		return fmt.Errorf("runtime failed to stop node '%s': %w", old.Name, err)
 	}
 
 	// start new node
@@ -816,7 +810,7 @@ func NodeReplace(ctx context.Context, runtime runtimes.Runtime, old, new *k3d.No
 	// cleanup: delete old node
 	l.Log().Infof("Deleting old node %s...", old.Name)
 	if err := NodeDelete(ctx, runtime, old, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
-		return err
+		return fmt.Errorf("failed to delete old node '%s': %w", old.Name, err)
 	}
 
 	// done
@@ -831,7 +825,7 @@ func CopyNode(ctx context.Context, src *k3d.Node, opts CopyNodeOpts) (*k3d.Node,
 
 	targetCopy, err := copystruct.Copy(src)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to copy node struct: %w", err)
 	}
 
 	result := targetCopy.(*k3d.Node)
@@ -841,5 +835,5 @@ func CopyNode(ctx context.Context, src *k3d.Node, opts CopyNodeOpts) (*k3d.Node,
 		result.State = k3d.NodeState{}
 	}
 
-	return result, err
+	return result, nil
 }

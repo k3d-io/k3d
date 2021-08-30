@@ -24,6 +24,7 @@ package docker
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	l "github.com/rancher/k3d/v4/pkg/logger"
@@ -34,22 +35,20 @@ import (
 func (d Docker) GetKubeconfig(ctx context.Context, node *k3d.Node) (io.ReadCloser, error) {
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return nil, err
+		return nil, fmt.Errorf("failed to create docker client: %w", err)
 	}
 	defer docker.Close()
 
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("docker failed to get container for node '%s': %w", node.Name, err)
 	}
 
 	l.Log().Tracef("Container Details: %+v", container)
 
 	reader, _, err := docker.CopyFromContainer(ctx, container.ID, "/output/kubeconfig.yaml")
 	if err != nil {
-		l.Log().Errorf("Failed to copy from container '%s'", container.ID)
-		return nil, err
+		return nil, fmt.Errorf("docker failed to copy path '/output/kubeconfig.yaml' from container '%s': %w", container.ID, err)
 	}
 
 	return reader, nil

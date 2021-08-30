@@ -23,6 +23,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 
 	l "github.com/rancher/k3d/v4/pkg/logger"
 	k3drt "github.com/rancher/k3d/v4/pkg/runtimes"
@@ -30,11 +31,12 @@ import (
 	"inet.af/netaddr"
 )
 
+// GetIP checks a given network for a free IP and returns it, if possible
 func GetIP(ctx context.Context, runtime k3drt.Runtime, network *k3d.ClusterNetwork) (netaddr.IP, error) {
 
 	network, err := runtime.GetNetwork(ctx, network)
 	if err != nil {
-		return netaddr.IP{}, err
+		return netaddr.IP{}, fmt.Errorf("runtime failed to get network '%s': %w", network.Name, err)
 	}
 
 	var ipsetbuilder netaddr.IPSetBuilder

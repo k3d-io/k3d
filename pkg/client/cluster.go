@@ -72,11 +72,11 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 	 */
 	_, err := EnsureToolsNode(ctx, runtime, &clusterConfig.Cluster)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to ensure k3d-tools node: %w", err)
 	}
 	envInfo, err := GatherEnvironmentInfo(ctx, runtime, &clusterConfig.Cluster)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to gather environment information used for cluster creation: %w", err)
 	}
 
 	/*
@@ -155,7 +155,7 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 		}
 		regFromNode, err := RegistryFromNode(regNode)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to translate node to registry spec: %w", err)
 		}
 		*reg = *regFromNode
 	}
@@ -273,8 +273,7 @@ func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d
 	// create cluster network or use an existing one
 	network, networkExists, err := runtime.CreateNetworkIfNotPresent(ctx, &cluster.Network)
 	if err != nil {
-		l.Log().Errorln("Failed to create cluster network")
-		return err
+		return fmt.Errorf("failed to create cluster network: %w", err)
 	}
 	cluster.Network = *network
 	clusterCreateOpts.GlobalLabels[k3d.LabelNetworkID] = network.ID
@@ -296,8 +295,7 @@ func ClusterPrepImageVolume(ctx context.Context, runtime k3drt.Runtime, cluster 
 	 */
 	imageVolumeName := fmt.Sprintf("%s-%s-images", k3d.DefaultObjectNamePrefix, cluster.Name)
 	if err := runtime.CreateVolume(ctx, imageVolumeName, map[string]string{k3d.LabelClusterName: cluster.Name}); err != nil {
-		l.Log().Errorf("Failed to create image volume '%s' for cluster '%s'", imageVolumeName, cluster.Name)
-		return err
+		return fmt.Errorf("failed to create image volume '%s' for cluster '%s': %w", imageVolumeName, cluster.Name, err)
 	}
 
 	clusterCreateOpts.GlobalLabels[k3d.LabelImageVolume] = imageVolumeName
@@ -400,7 +398,7 @@ ClusterCreatOpts:
 			if cluster.Network.IPAM.Managed {
 				ip, err := GetIP(ctx, runtime, &cluster.Network)
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to find free IP in network %s: %w", cluster.Network.Name, err)
 				}
 				cluster.Network.IPAM.IPsUsed = append(cluster.Network.IPAM.IPsUsed, ip) // make sure that we're not reusing the same IP next time
 				node.IP.Static = true
@@ -427,8 +425,7 @@ ClusterCreatOpts:
 		// create node
 		l.Log().Infof("Creating node '%s'", node.Name)
 		if err := NodeCreate(clusterCreateCtx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
-			l.Log().Errorln("Failed to create node")
-			return err
+			return fmt.Errorf("failed to create node: %w", err)
 		}
 		l.Log().Debugf("Created node '%s'", node.Name)
 
@@ -458,7 +455,7 @@ ClusterCreatOpts:
 		}
 
 		if err := nodeSetup(cluster.InitNode); err != nil {
-			return err
+			return fmt.Errorf("failed init node setup: %w", err)
 		}
 		serverCount++
 
@@ -486,7 +483,7 @@ ClusterCreatOpts:
 		}
 		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
 			if err := nodeSetup(node); err != nil {
-				return err
+				return fmt.Errorf("failed setup of server/agent node %s: %w", node.Name, err)
 			}
 		}
 	}
@@ -504,7 +501,7 @@ ClusterCreatOpts:
 		if cluster.ServerLoadBalancer == nil {
 			lbNode, err := LoadbalancerPrepare(ctx, runtime, cluster, &k3d.LoadbalancerCreateOpts{Labels: clusterCreateOpts.GlobalLabels})
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to prepare loadbalancer: %w", err)
 			}
 			cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
 		}
@@ -522,7 +519,7 @@ ClusterCreatOpts:
 		// prepare to write config to lb container
 		configyaml, err := yaml.Marshal(cluster.ServerLoadBalancer.Config)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to marshal loadbalancer config: %w", err)
 		}
 
 		writeLbConfigAction := k3d.NodeHook{
@@ -542,7 +539,6 @@ ClusterCreatOpts:
 			return fmt.Errorf("error creating loadbalancer: %v", err)
 		}
 		l.Log().Debugf("Created loadbalancer '%s'", cluster.ServerLoadBalancer.Node.Name)
-		return err
 	}
 
 	return nil
@@ -554,7 +550,7 @@ func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	l.Log().Infof("Deleting cluster '%s'", cluster.Name)
 	cluster, err := ClusterGet(ctx, runtime, cluster)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster %s: %w", cluster.Name, err)
 	}
 	l.Log().Debugf("Cluster Details: %+v", cluster)
 
@@ -656,8 +652,7 @@ func ClusterList(ctx context.Context, runtime k3drt.Runtime) ([]*k3d.Cluster, er
 	l.Log().Traceln("Listing Clusters...")
 	nodes, err := runtime.GetNodesByLabel(ctx, k3d.DefaultRuntimeLabels)
 	if err != nil {
-		l.Log().Errorln("Failed to get clusters")
-		return nil, err
+		return nil, fmt.Errorf("runtime failed to list nodes: %w", err)
 	}
 
 	l.Log().Debugf("Found %d nodes", len(nodes))
@@ -804,8 +799,7 @@ func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster
 	}
 
 	if err := populateClusterFieldsFromLabels(cluster); err != nil {
-		l.Log().Warnf("Failed to populate cluster fields from node labels")
-		l.Log().Warnln(err)
+		l.Log().Warnf("Failed to populate cluster fields from node labels: %v", err)
 	}
 
 	return cluster, nil
@@ -943,12 +937,12 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 
 	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
 	if err := prepInjectHostIP(ctx, runtime, cluster); err != nil {
-		return err
+		return fmt.Errorf("failed to inject host IP: %w", err)
 	}
 
 	// create host records in CoreDNS for external registries
 	if err := prepCoreDNSInjectNetworkMembers(ctx, runtime, cluster); err != nil {
-		return err
+		return fmt.Errorf("failed to patch CoreDNS with network members: %w", err)
 	}
 
 	return nil
@@ -970,6 +964,8 @@ func ClusterStop(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluste
 	if failed > 0 {
 		return fmt.Errorf("Failed to stop %d nodes: Try to stop them manually", failed)
 	}
+
+	l.Log().Infof("Stopped cluster '%s'", cluster.Name)
 	return nil
 }
 
@@ -1107,7 +1103,7 @@ func ClusterEditChangesetSimple(ctx context.Context, runtime k3drt.Runtime, clus
 		for _, portWithNodeFilters := range changeset.Ports {
 			filteredNodes, err := util.FilterNodesWithSuffix(nodeList, portWithNodeFilters.NodeFilters)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to filter nodes: %w", err)
 			}
 
 			for suffix := range filteredNodes {
@@ -1132,7 +1128,7 @@ func ClusterEditChangesetSimple(ctx context.Context, runtime k3drt.Runtime, clus
 	// prepare to write config to lb container
 	configyaml, err := yaml.Marshal(lbChangeset.Config)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal loadbalancer config changeset: %w", err)
 	}
 	writeLbConfigAction := k3d.NodeHook{
 		Stage: k3d.LifecycleStagePreStart,

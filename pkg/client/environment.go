@@ -23,6 +23,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 
@@ -34,7 +35,7 @@ func GatherEnvironmentInfo(ctx context.Context, runtime runtimes.Runtime, cluste
 
 	hostIP, err := GetHostIP(ctx, runtime, cluster)
 	if err != nil {
-		return envInfo, err
+		return envInfo, fmt.Errorf("failed to get host IP: %w", err)
 	}
 
 	envInfo.HostGateway = hostIP

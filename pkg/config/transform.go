@@ -167,7 +167,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	for _, volumeWithNodeFilters := range simpleConfig.Volumes {
 		nodes, err := util.FilterNodes(nodeList, volumeWithNodeFilters.NodeFilters)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to filter nodes for volume mapping '%s': %w", volumeWithNodeFilters.Volume, err)
 		}
 
 		for _, node := range nodes {
@@ -177,18 +177,18 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 	// -> PORTS
 	if err := client.TransformPorts(ctx, runtime, &newCluster, simpleConfig.Ports); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to transform ports: %w", err)
 	}
 
 	// -> K3S NODE LABELS
 	for _, k3sNodeLabelWithNodeFilters := range simpleConfig.Options.K3sOptions.NodeLabels {
 		if len(k3sNodeLabelWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
-			return nil, fmt.Errorf("K3sNodeLabelmapping '%s' lacks a node filter, but there's more than one node", k3sNodeLabelWithNodeFilters.Label)
+			return nil, fmt.Errorf("k3s node label mapping '%s' lacks a node filter, but there's more than one node", k3sNodeLabelWithNodeFilters.Label)
 		}
 
 		nodes, err := util.FilterNodes(nodeList, k3sNodeLabelWithNodeFilters.NodeFilters)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to filter nodes for k3s node label mapping '%s': %w", k3sNodeLabelWithNodeFilters.Label, err)
 		}
 
 		for _, node := range nodes {
@@ -209,7 +209,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 		nodes, err := util.FilterNodes(nodeList, runtimeLabelWithNodeFilters.NodeFilters)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to filter nodes for runtime label mapping '%s': %w", runtimeLabelWithNodeFilters.Label, err)
 		}
 
 		for _, node := range nodes {
@@ -232,7 +232,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 		nodes, err := util.FilterNodes(nodeList, envVarWithNodeFilters.NodeFilters)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to filter nodes for environment variable config '%s': %w", envVarWithNodeFilters.EnvVar, err)
 		}
 
 		for _, node := range nodes {
@@ -248,7 +248,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 		nodes, err := util.FilterNodes(nodeList, argWithNodeFilters.NodeFilters)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to filter nodes for k3s extra args config '%s': %w", argWithNodeFilters.Arg, err)
 		}
 
 		for _, node := range nodes {
@@ -283,7 +283,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	if simpleConfig.Registries.Create {
 		regPort, err := cliutil.ParsePortExposureSpec("random", k3d.DefaultRegistryPort)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to get port for registry: %+v", err)
+			return nil, fmt.Errorf("failed to get port for registry: %w", err)
 		}
 		clusterCreateOpts.Registries.Create = &k3d.Registry{
 			ClusterRef:   newCluster.Name,
@@ -296,7 +296,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	for _, usereg := range simpleConfig.Registries.Use {
 		reg, err := util.ParseRegistryRef(usereg)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to parse use-registry string  '%s': %+v", usereg, err)
+			return nil, fmt.Errorf("failed to parse use-registry string  '%s': %w", usereg, err)
 		}
 		l.Log().Tracef("Parsed registry reference: %+v", reg)
 		clusterCreateOpts.Registries.Use = append(clusterCreateOpts.Registries.Use, reg)
@@ -308,20 +308,20 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		if strings.Contains(simpleConfig.Registries.Config, "\n") { // CASE 1: embedded registries.yaml (multiline string)
 			l.Log().Debugf("Found multiline registries config embedded in SimpleConfig:\n%s", simpleConfig.Registries.Config)
 			if err := yaml.Unmarshal([]byte(simpleConfig.Registries.Config), &k3sRegistry); err != nil {
-				return nil, fmt.Errorf("Failed to read embedded registries config: %+v", err)
+				return nil, fmt.Errorf("failed to read embedded registries config: %w", err)
 			}
 		} else { // CASE 2: registries.yaml file referenced by path (single line)
 			registryConfigFile, err := os.Open(simpleConfig.Registries.Config)
 			if err != nil {
-				return nil, fmt.Errorf("Failed to open registry config file at %s: %+v", simpleConfig.Registries.Config, err)
+				return nil, fmt.Errorf("failed to open registry config file at %s: %w", simpleConfig.Registries.Config, err)
 			}
 			configBytes, err := ioutil.ReadAll(registryConfigFile)
 			if err != nil {
-				return nil, fmt.Errorf("Failed to read registry config file at %s: %+v", registryConfigFile.Name(), err)
+				return nil, fmt.Errorf("failed to read registry config file at %s: %w", registryConfigFile.Name(), err)
 			}
 
 			if err := yaml.Unmarshal(configBytes, &k3sRegistry); err != nil {
-				return nil, fmt.Errorf("Failed to read registry configuration: %+v", err)
+				return nil, fmt.Errorf("failed to read registry configuration: %w", err)
 			}
 		}
 

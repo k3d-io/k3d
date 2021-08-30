@@ -73,13 +73,11 @@ func FromViper(config *viper.Viper) (types.Config, error) {
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse config '%s': %w'", config.ConfigFileUsed(), err)
 	}
 
 	if err := config.Unmarshal(&cfg); err != nil {
-		l.Log().Errorln("Failed to unmarshal File config")
-
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal config file '%s': %w", config.ConfigFileUsed(), err)
 	}
 
 	return cfg, nil

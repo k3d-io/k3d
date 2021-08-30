@@ -81,7 +81,7 @@ func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 				}
 				for _, pm := range portmappings {
 					if err := loadbalancerAddPortConfigs(cluster.ServerLoadBalancer, pm, nodes); err != nil {
-						return err
+						return fmt.Errorf("error adding port config to loadbalancer: %w", err)
 					}
 				}
 			} else if suffix == "direct" {

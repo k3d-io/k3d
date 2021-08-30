@@ -22,6 +22,7 @@ THE SOFTWARE.
 package version
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -85,12 +86,12 @@ func fetchLatestK3sVersion() (string, error) {
 
 	hub, err := registry.New(url, username, password)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create new registry instance from URL '%s': %w", url, err)
 	}
 
 	tags, err := hub.Tags(repository)
 	if err != nil || len(tags) == 0 {
-		return "", err
+		return "", fmt.Errorf("failed to list tags from repository with URL '%s': %w", url, err)
 	}
 
 	l.Log().Debugln("Fetched the following tags for rancher/k3s from DockerHub:")

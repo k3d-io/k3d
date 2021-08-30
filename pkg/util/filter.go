@@ -83,7 +83,7 @@ func FilterNodesWithSuffix(nodes []*k3d.Node, nodefilters []string) (map[string]
 
 		filteredNodes, err := FilterNodes(nodes, []string{nf})
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to filder nodes by filter '%s': %w", nf, err)
 		}
 
 		l.Log().Tracef("Filtered %d nodes for suffix '%s' (filter: %s)", len(filteredNodes), suffix, nf)

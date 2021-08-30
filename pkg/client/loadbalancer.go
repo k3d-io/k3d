@@ -51,8 +51,7 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 	// update cluster details to ensure that we have the latest node list
 	cluster, err = ClusterGet(ctx, runtime, cluster)
 	if err != nil {
-		l.Log().Errorf("Failed to update details for cluster '%s'", cluster.Name)
-		return err
+		return fmt.Errorf("failed to update details for cluster '%s': %w", cluster.Name, err)
 	}
 
 	currentConfig, err := GetLoadbalancerConfig(ctx, runtime, cluster)
@@ -120,7 +119,7 @@ func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 				var err error
 				cluster.ServerLoadBalancer.Node, err = NodeGet(ctx, runtime, node)
 				if err != nil {
-					return cfg, err
+					return cfg, fmt.Errorf("failed to get loadbalancer node '%s': %w", node.Name, err)
 				}
 			}
 		}
@@ -128,13 +127,13 @@ func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 
 	reader, err := runtime.ReadFromNode(ctx, types.DefaultLoadbalancerConfigPath, cluster.ServerLoadBalancer.Node)
 	if err != nil {
-		return cfg, err
+		return cfg, fmt.Errorf("runtime failed to read loadbalancer config '%s' from node '%s': %w", types.DefaultLoadbalancerConfigPath, cluster.ServerLoadBalancer.Node.Name, err)
 	}
 	defer reader.Close()
 
 	file, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return cfg, err
+		return cfg, fmt.Errorf("failed to read loadbalancer config file: %w", err)
 	}
 
 	file = bytes.Trim(file[512:], "\x00") // trim control characters, etc.
@@ -213,7 +212,7 @@ func loadbalancerAddPortConfigs(loadbalancer *k3d.Loadbalancer, portmapping nat.
 	nodenames := []string{}
 	for _, node := range targetNodes {
 		if node.Role == k3d.LoadBalancerRole {
-			return fmt.Errorf("error adding port config to loadbalancer: cannot add port config referencing the loadbalancer itself (loop)")
+			return fmt.Errorf("cannot add port config referencing the loadbalancer itself (loop)")
 		}
 		nodenames = append(nodenames, node.Name)
 	}

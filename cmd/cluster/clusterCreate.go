@@ -426,7 +426,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		}
 		exposeAPI, err = cliutil.ParsePortExposureSpec(ppViper.GetString("cli.api-port"), k3d.DefaultAPIPort)
 		if err != nil {
-			return cfg, err
+			return cfg, fmt.Errorf("failed to parse API Port spec: %w", err)
 		}
 	}
 

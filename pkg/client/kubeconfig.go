@@ -53,14 +53,14 @@ func KubeconfigGetWrite(ctx context.Context, runtime runtimes.Runtime, cluster *
 	// get kubeconfig from cluster node
 	kubeconfig, err := KubeconfigGet(ctx, runtime, cluster)
 	if err != nil {
-		return output, err
+		return output, fmt.Errorf("failed to get kubeconfig for cluster '%s': %w", cluster.Name, err)
 	}
 
 	// empty output parameter = write to default
 	if output == "" {
 		output, err = KubeconfigGetDefaultPath()
 		if err != nil {
-			return output, err
+			return output, fmt.Errorf("failed to get default kubeconfig path: %w", err)
 		}
 	}
 
@@ -82,15 +82,13 @@ func KubeconfigGetWrite(ctx context.Context, runtime runtimes.Runtime, cluster *
 
 				// create directory path
 				if err := os.MkdirAll(filepath.Dir(output), 0755); err != nil {
-					l.Log().Errorf("Failed to create output directory '%s'", filepath.Dir(output))
-					return output, err
+					return output, fmt.Errorf("failed to create output directory '%s': %w", filepath.Dir(output), err)
 				}
 
 				// try create output file
 				f, err := os.Create(output)
 				if err != nil {
-					l.Log().Errorf("Failed to create output file '%s'", output)
-					return output, err
+					return output, fmt.Errorf("failed to create output file '%s': %w", output, err)
 				}
 				f.Close()
 
@@ -98,8 +96,7 @@ func KubeconfigGetWrite(ctx context.Context, runtime runtimes.Runtime, cluster *
 				firstRun = false
 				continue
 			}
-			l.Log().Errorf("Failed to open output file '%s' or it's not a KubeConfig", output)
-			return output, err
+			return output, fmt.Errorf("failed to open output file '%s' or it's not a kubeconfig: %w", output, err)
 		}
 		break
 	}
@@ -117,11 +114,10 @@ func KubeconfigGet(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.C
 	// TODO: getKubeconfig: we should make sure, that the server node we're trying to fetch from is actually running
 	serverNodes, err := runtime.GetNodesByLabel(ctx, map[string]string{k3d.LabelClusterName: cluster.Name, k3d.LabelRole: string(k3d.ServerRole)})
 	if err != nil {
-		l.Log().Errorln("Failed to get server nodes")
-		return nil, err
+		return nil, fmt.Errorf("runtime failed to get server nodes for cluster '%s': %w", cluster.Name, err)
 	}
 	if len(serverNodes) == 0 {
-		return nil, fmt.Errorf("Didn't find any server node")
+		return nil, fmt.Errorf("didn't find any server node for cluster '%s'", cluster.Name)
 	}
 
 	// prefer a server node, which actually has the port exposed
@@ -147,15 +143,13 @@ func KubeconfigGet(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.C
 	// get the kubeconfig from the first server node
 	reader, err := runtime.GetKubeconfig(ctx, chosenServer)
 	if err != nil {
-		l.Log().Errorf("Failed to get kubeconfig from node '%s'", chosenServer.Name)
-		return nil, err
+		return nil, fmt.Errorf("runtime failed to pull kubeconfig from node '%s': %w", chosenServer.Name, err)
 	}
 	defer reader.Close()
 
 	readBytes, err := ioutil.ReadAll(reader)
 	if err != nil {
-		l.Log().Errorln("Couldn't read kubeconfig file")
-		return nil, err
+		return nil, fmt.Errorf("failed to read kubeconfig file: %w", err)
 	}
 
 	// drop the first 512 bytes which contain file metadata/control characters
@@ -167,8 +161,7 @@ func KubeconfigGet(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.C
 	 */
 	kc, err := clientcmd.Load(trimBytes)
 	if err != nil {
-		l.Log().Errorln("Failed to parse the KubeConfig")
-		return nil, err
+		return nil, fmt.Errorf("failed to parse kubeconfig: %w", err)
 	}
 
 	// update the server URL
@@ -212,22 +205,19 @@ func KubeconfigWriteToPath(ctx context.Context, kubeconfig *clientcmdapi.Config,
 	} else {
 		output, err = os.Create(path)
 		if err != nil {
-			l.Log().Errorf("Failed to create file '%s'", path)
-			return err
+			return fmt.Errorf("failed to create file '%s': %w", path, err)
 		}
 		defer output.Close()
 	}
 
 	kubeconfigBytes, err := clientcmd.Write(*kubeconfig)
 	if err != nil {
-		l.Log().Errorln("Failed to write KubeConfig")
-		return err
+		return fmt.Errorf("failed to write kubeconfig: %w", err)
 	}
 
 	_, err = output.Write(kubeconfigBytes)
 	if err != nil {
-		l.Log().Errorf("Failed to write to file '%s'", output.Name())
-		return err
+		return fmt.Errorf("failed to write file '%s': %w", output.Name(), err)
 	}
 
 	l.Log().Debugf("Wrote kubeconfig to '%s'", output.Name())
@@ -285,14 +275,12 @@ func KubeconfigMerge(ctx context.Context, newKubeConfig *clientcmdapi.Config, ex
 func KubeconfigWrite(ctx context.Context, kubeconfig *clientcmdapi.Config, path string) error {
 	tempPath := fmt.Sprintf("%s.k3d_%s", path, time.Now().Format("20060102_150405.000000"))
 	if err := clientcmd.WriteToFile(*kubeconfig, tempPath); err != nil {
-		l.Log().Errorf("Failed to write merged kubeconfig to temporary file '%s'", tempPath)
-		return err
+		return fmt.Errorf("failed to write merged kubeconfig to temporary file '%s': %w", tempPath, err)
 	}
 
 	// Move temporary file over existing KubeConfig
 	if err := os.Rename(tempPath, path); err != nil {
-		l.Log().Errorf("Failed to overwrite existing KubeConfig '%s' with new KubeConfig '%s'", path, tempPath)
-		return err
+		return fmt.Errorf("failed to overwrite existing KubeConfig '%s' with new kubeconfig '%s': %w", path, tempPath, err)
 	}
 
 	l.Log().Debugf("Wrote kubeconfig to '%s'", path)
@@ -304,7 +292,7 @@ func KubeconfigWrite(ctx context.Context, kubeconfig *clientcmdapi.Config, path 
 func KubeconfigGetDefaultFile() (*clientcmdapi.Config, error) {
 	path, err := KubeconfigGetDefaultPath()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get default kubeconfig path: %w", err)
 	}
 	l.Log().Debugf("Using default kubeconfig '%s'", path)
 	return clientcmd.LoadFromFile(path)
@@ -314,7 +302,7 @@ func KubeconfigGetDefaultFile() (*clientcmdapi.Config, error) {
 func KubeconfigGetDefaultPath() (string, error) {
 	defaultKubeConfigLoadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	if len(defaultKubeConfigLoadingRules.GetLoadingPrecedence()) > 1 {
-		return "", fmt.Errorf("Multiple kubeconfigs specified via KUBECONFIG env var: Please reduce to one entry, unset KUBECONFIG or explicitly choose an output")
+		return "", fmt.Errorf("multiple kubeconfigs specified via KUBECONFIG env var: Please reduce to one entry, unset KUBECONFIG or explicitly choose an output")
 	}
 	return defaultKubeConfigLoadingRules.GetDefaultFilename(), nil
 }
@@ -323,11 +311,11 @@ func KubeconfigGetDefaultPath() (string, error) {
 func KubeconfigRemoveClusterFromDefaultConfig(ctx context.Context, cluster *k3d.Cluster) error {
 	defaultKubeConfigPath, err := KubeconfigGetDefaultPath()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get default kubeconfig path: %w", err)
 	}
 	kubeconfig, err := KubeconfigGetDefaultFile()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get default kubeconfig file: %w", err)
 	}
 	kubeconfig = KubeconfigRemoveCluster(ctx, cluster, kubeconfig)
 	return KubeconfigWrite(ctx, kubeconfig, defaultKubeConfigPath)

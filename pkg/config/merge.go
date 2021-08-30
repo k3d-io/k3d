@@ -23,6 +23,8 @@ THE SOFTWARE.
 package config
 
 import (
+	"fmt"
+
 	"github.com/imdario/mergo"
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
 	l "github.com/rancher/k3d/v4/pkg/logger"
@@ -33,9 +35,8 @@ func MergeSimple(dest, src conf.SimpleConfig) (*conf.SimpleConfig, error) {
 	l.Log().Debugf("Merging %+v into %+v", src, dest)
 
 	if err := mergo.Merge(&dest, src); err != nil {
-		l.Log().Errorln("Failed to merge config")
 
-		return nil, err
+		return nil, fmt.Errorf("failed to merge configs: %w", err)
 	}
 
 	return &dest, nil
