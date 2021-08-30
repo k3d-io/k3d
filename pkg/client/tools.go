@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package tools
+package client
 
 import (
 	"context"
@@ -31,11 +31,9 @@ import (
 	"sync"
 	"time"
 
-	k3dc "github.com/rancher/k3d/v4/pkg/client"
 	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
-	"github.com/rancher/k3d/v4/version"
 )
 
 // ImageImportIntoClusterMulti starts up a k3d tools container for the selected cluster and uses it to export
@@ -51,53 +49,10 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 		return fmt.Errorf("No valid images specified")
 	}
 
-	cluster, err = k3dc.ClusterGet(ctx, runtime, cluster)
-	if err != nil {
-		l.Log().Errorf("Failed to find the specified cluster")
-		return err
-	}
-
-	if cluster.Network.Name == "" {
-		return fmt.Errorf("Failed to get network for cluster '%s'", cluster.Name)
-	}
-
-	var imageVolume string
-	var ok bool
-	for _, node := range cluster.Nodes {
-		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
-			if imageVolume, ok = node.RuntimeLabels[k3d.LabelImageVolume]; ok {
-				break
-			}
-		}
-	}
-	if imageVolume == "" {
-		return fmt.Errorf("Failed to find image volume for cluster '%s'", cluster.Name)
-	}
-
-	l.Log().Debugf("Attaching to cluster's image volume '%s'", imageVolume)
-
 	// create tools node to export images
-	var toolsNode *k3d.Node
-	toolsNode, err = runtime.GetNode(ctx, &k3d.Node{Name: fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name)})
-	if err != nil || toolsNode == nil {
-		l.Log().Infoln("Starting new tools node...")
-		toolsNode, err = runToolsNode( // TODO: re-use existing container
-			ctx,
-			runtime,
-			cluster,
-			cluster.Network.Name,
-			[]string{
-				fmt.Sprintf("%s:%s", imageVolume, k3d.DefaultImageVolumeMountPath),
-				fmt.Sprintf("%s:%s", runtime.GetRuntimePath(), runtime.GetRuntimePath()),
-			})
-		if err != nil {
-			l.Log().Errorf("Failed to run tools container for cluster '%s'", cluster.Name)
-		}
-	} else if !toolsNode.State.Running {
-		l.Log().Infof("Starting existing tools node %s...", toolsNode.Name)
-		if err := runtime.StartNode(ctx, toolsNode); err != nil {
-			return fmt.Errorf("error starting existing tools node %s: %v", toolsNode.Name, err)
-		}
+	toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
+	if err != nil {
+		return err
 	}
 
 	/* TODO:
@@ -288,7 +243,7 @@ func runToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cl
 	}
 	node := &k3d.Node{
 		Name:          fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name),
-		Image:         fmt.Sprintf("%s:%s", k3d.DefaultToolsImageRepo, version.GetHelperImageVersion()),
+		Image:         k3d.GetToolsImage(),
 		Role:          k3d.NoRole,
 		Volumes:       volumes,
 		Networks:      []string{network},
@@ -297,10 +252,65 @@ func runToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cl
 		RuntimeLabels: k3d.DefaultRuntimeLabels,
 	}
 	node.RuntimeLabels[k3d.LabelClusterName] = cluster.Name
-	if err := k3dc.NodeRun(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
+	if err := NodeRun(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {
 		l.Log().Errorf("Failed to create tools container for cluster '%s'", cluster.Name)
 		return node, err
 	}
 
 	return node, nil
+}
+
+func EnsureToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*k3d.Node, error) {
+	var err error
+
+	cluster, err = ClusterGet(ctx, runtime, cluster)
+	if err != nil {
+		l.Log().Errorf("Failed to find the specified cluster")
+		return nil, err
+	}
+
+	if cluster.Network.Name == "" {
+		return nil, fmt.Errorf("Failed to get network for cluster '%s'", cluster.Name)
+	}
+
+	var imageVolume string
+	var ok bool
+	for _, node := range cluster.Nodes {
+		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
+			if imageVolume, ok = node.RuntimeLabels[k3d.LabelImageVolume]; ok {
+				break
+			}
+		}
+	}
+	if imageVolume == "" {
+		return nil, fmt.Errorf("Failed to find image volume for cluster '%s'", cluster.Name)
+	}
+
+	l.Log().Debugf("Attaching to cluster's image volume '%s'", imageVolume)
+
+	var toolsNode *k3d.Node
+	toolsNode, err = runtime.GetNode(ctx, &k3d.Node{Name: fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name)})
+	if err != nil || toolsNode == nil {
+		l.Log().Infoln("Starting new tools node...")
+		toolsNode, err = runToolsNode(
+			ctx,
+			runtime,
+			cluster,
+			cluster.Network.Name,
+			[]string{
+				fmt.Sprintf("%s:%s", imageVolume, k3d.DefaultImageVolumeMountPath),
+				fmt.Sprintf("%s:%s", runtime.GetRuntimePath(), runtime.GetRuntimePath()),
+			})
+		if err != nil {
+			l.Log().Errorf("Failed to run tools container for cluster '%s'", cluster.Name)
+		}
+	} else if !toolsNode.State.Running {
+		l.Log().Infof("Starting existing tools node %s...", toolsNode.Name)
+		if err := runtime.StartNode(ctx, toolsNode); err != nil {
+			return nil, fmt.Errorf("error starting existing tools node %s: %v", toolsNode.Name, err)
+		}
+	}
+
+	return toolsNode, err
+
 }

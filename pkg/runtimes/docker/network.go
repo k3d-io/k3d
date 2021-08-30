@@ -163,6 +163,10 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 
 	// (3) Create a new network
 	netCreateOpts := types.NetworkCreate{
+		Driver: "bridge",
+		Options: map[string]string{
+			"com.docker.network.bridge.enable_ip_masquerade": "true",
+		},
 		CheckDuplicate: true,
 		Labels:         k3d.DefaultRuntimeLabels,
 	}

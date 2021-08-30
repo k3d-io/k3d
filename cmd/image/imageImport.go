@@ -27,9 +27,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/rancher/k3d/v4/cmd/util"
+	"github.com/rancher/k3d/v4/pkg/client"
 	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
-	"github.com/rancher/k3d/v4/pkg/tools"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
 
@@ -63,7 +63,7 @@ So if a file './rancher/k3d-tools' exists, k3d will try to import it instead of 
 			errOccured := false
 			for _, cluster := range clusters {
 				l.Log().Infof("Importing image(s) into cluster '%s'", cluster.Name)
-				if err := tools.ImageImportIntoClusterMulti(cmd.Context(), runtimes.SelectedRuntime, images, &cluster, loadImageOpts); err != nil {
+				if err := client.ImageImportIntoClusterMulti(cmd.Context(), runtimes.SelectedRuntime, images, &cluster, loadImageOpts); err != nil {
 					l.Log().Errorf("Failed to import image(s) into cluster '%s': %+v", cluster.Name, err)
 					errOccured = true
 				}

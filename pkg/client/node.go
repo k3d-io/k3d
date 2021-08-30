@@ -283,10 +283,11 @@ func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, node
 		return err
 	}
 
-	if err := NodeStart(ctx, runtime, node, k3d.NodeStartOpts{
-		Wait:      nodeCreateOpts.Wait,
-		Timeout:   nodeCreateOpts.Timeout,
-		NodeHooks: nodeCreateOpts.NodeHooks,
+	if err := NodeStart(ctx, runtime, node, &k3d.NodeStartOpts{
+		Wait:            nodeCreateOpts.Wait,
+		Timeout:         nodeCreateOpts.Timeout,
+		NodeHooks:       nodeCreateOpts.NodeHooks,
+		EnvironmentInfo: nodeCreateOpts.EnvironmentInfo,
 	}); err != nil {
 		return err
 	}
@@ -295,7 +296,7 @@ func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, node
 }
 
 // NodeStart starts an existing node
-func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeStartOpts k3d.NodeStartOpts) error {
+func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeStartOpts *k3d.NodeStartOpts) error {
 
 	// return early, if the node is already running
 	if node.State.Running {
@@ -303,25 +304,8 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 		return nil
 	}
 
-	// FIXME: FixCgroupV2 - to be removed when fixed upstream
-	if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
-		EnableCgroupV2FixIfNeeded(runtime)
-		if fixes.FixCgroupV2Enabled() {
-
-			if nodeStartOpts.NodeHooks == nil {
-				nodeStartOpts.NodeHooks = []k3d.NodeHook{}
-			}
-
-			nodeStartOpts.NodeHooks = append(nodeStartOpts.NodeHooks, k3d.NodeHook{
-				Stage: k3d.LifecycleStagePreStart,
-				Action: actions.WriteFileAction{
-					Runtime: runtime,
-					Content: fixes.CgroupV2Entrypoint,
-					Dest:    "/bin/entrypoint.sh",
-					Mode:    0744,
-				},
-			})
-		}
+	if err := enableFixes(ctx, runtime, node, nodeStartOpts); err != nil {
+		return err
 	}
 
 	startTime := time.Now()
@@ -368,6 +352,79 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 		}
 	}
 
+	return nil
+}
+
+func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeStartOpts *k3d.NodeStartOpts) error {
+
+	if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
+
+		// FIXME: FixCgroupV2 - to be removed when fixed upstream
+		// auto-enable, if needed
+		EnableCgroupV2FixIfNeeded(runtime)
+
+		// early exit if we don't need any fix
+		if !fixes.FixEnabledAny() {
+			l.Log().Debugln("No fix enabled.")
+			return nil
+		}
+
+		// ensure nodehook list
+		if nodeStartOpts.NodeHooks == nil {
+			nodeStartOpts.NodeHooks = []k3d.NodeHook{}
+		}
+
+		// write umbrella entrypoint
+		nodeStartOpts.NodeHooks = append(nodeStartOpts.NodeHooks, k3d.NodeHook{
+			Stage: k3d.LifecycleStagePreStart,
+			Action: actions.WriteFileAction{
+				Runtime: runtime,
+				Content: fixes.K3DEntrypoint,
+				Dest:    "/bin/k3d-entrypoint.sh",
+				Mode:    0744,
+			},
+		})
+
+		// DNS Fix
+		if fixes.FixEnabled(fixes.EnvFixDNS) {
+			l.Log().Debugf("ENABLING DNS MAGIC!!!")
+
+			if nodeStartOpts.EnvironmentInfo == nil || nodeStartOpts.EnvironmentInfo.HostGateway == nil {
+				return fmt.Errorf("Cannot enable DNS fix, as Host Gateway IP is missing!")
+			}
+
+			data := []byte(strings.ReplaceAll(string(fixes.DNSMagicEntrypoint), "GATEWAY_IP", nodeStartOpts.EnvironmentInfo.HostGateway.String()))
+
+			nodeStartOpts.NodeHooks = append(nodeStartOpts.NodeHooks, k3d.NodeHook{
+				Stage: k3d.LifecycleStagePreStart,
+				Action: actions.WriteFileAction{
+					Runtime: runtime,
+					Content: data,
+					Dest:    "/bin/k3d-entrypoint-dns.sh",
+					Mode:    0744,
+				},
+			})
+		}
+
+		// CGroupsV2Fix
+		if fixes.FixEnabled(fixes.EnvFixCgroupV2) {
+			l.Log().Debugf("ENABLING CGROUPSV2 MAGIC!!!")
+
+			if nodeStartOpts.NodeHooks == nil {
+				nodeStartOpts.NodeHooks = []k3d.NodeHook{}
+			}
+
+			nodeStartOpts.NodeHooks = append(nodeStartOpts.NodeHooks, k3d.NodeHook{
+				Stage: k3d.LifecycleStagePreStart,
+				Action: actions.WriteFileAction{
+					Runtime: runtime,
+					Content: fixes.CgroupV2Entrypoint,
+					Dest:    "/bin/k3d-entrypoint-cgroupv2.sh",
+					Mode:    0744,
+				},
+			})
+		}
+	}
 	return nil
 }
 
@@ -742,7 +799,7 @@ func NodeReplace(ctx context.Context, runtime runtimes.Runtime, old, new *k3d.No
 
 	// start new node
 	l.Log().Infof("Starting new node %s...", new.Name)
-	if err := NodeStart(ctx, runtime, new, k3d.NodeStartOpts{Wait: true, NodeHooks: new.HookActions}); err != nil {
+	if err := NodeStart(ctx, runtime, new, &k3d.NodeStartOpts{Wait: true, NodeHooks: new.HookActions}); err != nil {
 		if err := NodeDelete(ctx, runtime, new, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
 			return fmt.Errorf("Failed to start new node. Also failed to rollback: %+v", err)
 		}
@@ -750,7 +807,7 @@ func NodeReplace(ctx context.Context, runtime runtimes.Runtime, old, new *k3d.No
 			return fmt.Errorf("Failed to start new node. Also failed to rename %s back to %s: %+v", old.Name, oldNameOriginal, err)
 		}
 		old.Name = oldNameOriginal
-		if err := NodeStart(ctx, runtime, old, k3d.NodeStartOpts{Wait: true}); err != nil {
+		if err := NodeStart(ctx, runtime, old, &k3d.NodeStartOpts{Wait: true}); err != nil {
 			return fmt.Errorf("Failed to start new node. Also failed to restart old node: %+v", err)
 		}
 		return fmt.Errorf("Failed to start new node. Rolled back: %+v", err)

@@ -70,15 +70,23 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 	/*
 	 * Step 2: Pre-Start Configuration
 	 */
-	// TODO: ClusterRun: add cluster configuration step here
+	_, err := EnsureToolsNode(ctx, runtime, &clusterConfig.Cluster)
+	if err != nil {
+		return err
+	}
+	envInfo, err := GatherEnvironmentInfo(ctx, runtime, &clusterConfig.Cluster)
+	if err != nil {
+		return err
+	}
 
 	/*
 	 * Step 3: Start Containers
 	 */
 	if err := ClusterStart(ctx, runtime, &clusterConfig.Cluster, k3d.ClusterStartOpts{
-		WaitForServer: clusterConfig.ClusterCreateOpts.WaitForServer,
-		Timeout:       clusterConfig.ClusterCreateOpts.Timeout, // TODO: here we should consider the time used so far
-		NodeHooks:     clusterConfig.ClusterCreateOpts.NodeHooks,
+		WaitForServer:   clusterConfig.ClusterCreateOpts.WaitForServer,
+		Timeout:         clusterConfig.ClusterCreateOpts.Timeout, // TODO: here we should consider the time used so far
+		NodeHooks:       clusterConfig.ClusterCreateOpts.NodeHooks,
+		EnvironmentInfo: envInfo,
 	}); err != nil {
 		return fmt.Errorf("Failed Cluster Start: %+v", err)
 	}
@@ -859,10 +867,11 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	 */
 	if initNode != nil {
 		l.Log().Infoln("Starting the initializing server...")
-		if err := NodeStart(ctx, runtime, initNode, k3d.NodeStartOpts{
+		if err := NodeStart(ctx, runtime, initNode, &k3d.NodeStartOpts{
 			Wait:            true, // always wait for the init node
 			NodeHooks:       startClusterOpts.NodeHooks,
 			ReadyLogMessage: "Running kube-apiserver", // initNode means, that we're using etcd -> this will need quorum, so "k3s is up and running" won't happen right now
+			EnvironmentInfo: startClusterOpts.EnvironmentInfo,
 		}); err != nil {
 			return fmt.Errorf("Failed to start initializing server node: %+v", err)
 		}
@@ -872,9 +881,10 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	 * Server Nodes
 	 */
 	l.Log().Infoln("Starting servers...")
-	nodeStartOpts := k3d.NodeStartOpts{
-		Wait:      true,
-		NodeHooks: startClusterOpts.NodeHooks,
+	nodeStartOpts := &k3d.NodeStartOpts{
+		Wait:            true,
+		NodeHooks:       startClusterOpts.NodeHooks,
+		EnvironmentInfo: startClusterOpts.EnvironmentInfo,
 	}
 	for _, serverNode := range servers {
 		if err := NodeStart(ctx, runtime, serverNode, nodeStartOpts); err != nil {
@@ -909,8 +919,9 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		currentHelperNode := helperNode
 
 		helperWG.Go(func() error {
-			nodeStartOpts := k3d.NodeStartOpts{
-				NodeHooks: currentHelperNode.HookActions,
+			nodeStartOpts := &k3d.NodeStartOpts{
+				NodeHooks:       currentHelperNode.HookActions,
+				EnvironmentInfo: startClusterOpts.EnvironmentInfo,
 			}
 			if currentHelperNode.Role == k3d.LoadBalancerRole {
 				nodeStartOpts.Wait = true

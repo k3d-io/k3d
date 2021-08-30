@@ -22,32 +22,23 @@ THE SOFTWARE.
 package client
 
 import (
-	"os"
-	"strconv"
+	"context"
 
-	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
-	"github.com/rancher/k3d/v4/pkg/types/fixes"
+
+	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
 
-// FIXME: FixCgroupV2 - to be removed when fixed upstream
-func EnableCgroupV2FixIfNeeded(runtime runtimes.Runtime) {
-	if _, isSet := os.LookupEnv(string(fixes.EnvFixCgroupV2)); !isSet {
-		runtimeInfo, err := runtime.Info()
-		if err != nil {
-			l.Log().Warnf("Failed to get runtime information: %+v", err)
-			return
-		}
-		cgroupVersion, err := strconv.Atoi(runtimeInfo.CgroupVersion)
-		if err != nil {
-			l.Log().Debugf("Failed to parse cgroupVersion: %+v", err)
-			return
-		}
-		if cgroupVersion == 2 {
-			l.Log().Debugf("Detected CgroupV2, enabling custom entrypoint (disable by setting %s=false)", fixes.EnvFixCgroupV2)
-			if err := os.Setenv(string(fixes.EnvFixCgroupV2), "true"); err != nil {
-				l.Log().Errorf("Detected CgroupsV2 but failed to enable k3d's hotfix (try `export %s=true`): %+v", fixes.EnvFixCgroupV2, err)
-			}
-		}
+func GatherEnvironmentInfo(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*k3d.EnvironmentInfo, error) {
+	envInfo := &k3d.EnvironmentInfo{}
+
+	hostIP, err := GetHostIP(ctx, runtime, cluster)
+	if err != nil {
+		return envInfo, err
 	}
+
+	envInfo.HostGateway = hostIP
+
+	return envInfo, nil
+
 }

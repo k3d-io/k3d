@@ -58,10 +58,10 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 
 	/* Command & Arguments */
 	// FIXME: FixCgroupV2 - to be removed when fixed upstream
-	if fixes.FixCgroupV2Enabled() {
+	if fixes.FixEnabledAny() {
 		if node.Role == k3d.AgentRole || node.Role == k3d.ServerRole {
 			containerConfig.Entrypoint = []string{
-				"/bin/entrypoint.sh",
+				"/bin/k3d-entrypoint.sh",
 			}
 		}
 	}
