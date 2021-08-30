@@ -22,6 +22,7 @@ THE SOFTWARE.
 package plugin
 
 import (
+	"bufio"
 	"log"
 	"os"
 	"path"
@@ -30,6 +31,7 @@ import (
 	l "github.com/rancher/k3d/v4/pkg/logger"
 	utils "github.com/rancher/k3d/v4/pkg/util"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 )
 
 // NewCmdPluginInstall returns a new cobra command
@@ -48,20 +50,17 @@ Examples:
   To install the specific version of a plugin, use:
     k3d plugin install user/plugin@v0.0.1
 
+  If you have a list of plugins in a file, run:
+    k3d plugin install < plugins.txt
+
 Remarks:
   If a plugin is already installed, it will be overridden.
 `,
-		Args: cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			// Create a plugin slice given their name
-			var plugins = make([]*util.Plugin, len(args))
-			for index, pluginName := range args {
-				plugin, err := util.NewPlugin(pluginName)
-				if err != nil {
-					log.Fatal(err)
-				}
-				plugins[index] = plugin
-			}
+			warnIfNotATerminal()
+			printHelpIfNoArgs(cmd, args)
+
+			plugins := getPlugins(args)
 
 			// Get the path of the plugin folder
 			pluginDir, err := utils.GetPluginDirOrCreate()
@@ -98,4 +97,65 @@ Remarks:
 
 	// done
 	return cmd
+}
+
+// getPlugins reads plugins from the stdin if it is a file descriptor
+// or from command args
+func getPlugins(pluginNames []string) []*util.Plugin {
+	// Ignore args if adding plugins using stdin
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		pluginNames = readPluginsFromStdin()
+	}
+	plugins := parsePlugins(pluginNames)
+
+	return plugins
+}
+
+// parsePlugins reads a list of plugin names and returns the list of corresponding Plugins
+func parsePlugins(pluginNames []string) []*util.Plugin {
+	var plugins = make([]*util.Plugin, len(pluginNames))
+
+	// Read plugins from args
+	for index, pluginName := range pluginNames {
+		plugin, err := util.NewPlugin(pluginName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		plugins[index] = plugin
+	}
+
+	return plugins
+}
+
+// readPluginsFromStdin reads plugin names from os.Stdin.
+// Returns the list of plugin names.
+func readPluginsFromStdin() []string {
+	var pluginNames []string
+
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Split(bufio.ScanLines)
+	for scanner.Scan() {
+		if pluginName := scanner.Text(); pluginName != "" {
+			pluginNames = append(pluginNames, pluginName)
+		}
+	}
+
+	return pluginNames
+}
+
+// Log a warning if the stdin is not a terminal
+func warnIfNotATerminal() {
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		l.Log().Warn("Stdin detected")
+	}
+}
+
+// Show help and exit if k3d is launched in a terminal and there are 0 args
+func printHelpIfNoArgs(cmd *cobra.Command, args []string) {
+	if term.IsTerminal(int(os.Stdin.Fd())) && len(args) == 0 {
+		if err := cmd.Help(); err != nil {
+			l.Log().Errorln("Couldn't get help text")
+			l.Log().Fatalln(err)
+		}
+	}
 }
