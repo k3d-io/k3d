@@ -33,7 +33,7 @@ func (d Docker) GetHostIP(ctx context.Context, network string) (net.IP, error) {
 	if runtime.GOOS == "linux" {
 		ip, err := GetGatewayIP(ctx, network)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get gateway IP of docker network '%s': %w", network, err)
 		}
 		return ip, nil
 	}

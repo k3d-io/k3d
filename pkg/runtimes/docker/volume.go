@@ -36,8 +36,7 @@ func (d Docker) CreateVolume(ctx context.Context, name string, labels map[string
 	// (0) create new docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return err
+		return fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
@@ -58,8 +57,7 @@ func (d Docker) CreateVolume(ctx context.Context, name string, labels map[string
 
 	vol, err := docker.VolumeCreate(ctx, volumeCreateOptions)
 	if err != nil {
-		l.Log().Errorf("Failed to create volume '%s'", name)
-		return err
+		return fmt.Errorf("failed to create volume '%s': %w", name, err)
 	}
 	l.Log().Infof("Created volume '%s'", vol.Name)
 	return nil
@@ -70,30 +68,26 @@ func (d Docker) DeleteVolume(ctx context.Context, name string) error {
 	// (0) create new docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return err
+		return fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
 	// get volume and delete it
 	vol, err := docker.VolumeInspect(ctx, name)
 	if err != nil {
-		l.Log().Errorf("Failed to find volume '%s'", name)
-		return err
+		return fmt.Errorf("failed to find volume '%s': %w", name, err)
 	}
 
 	// check if volume is still in use
 	if vol.UsageData != nil {
 		if vol.UsageData.RefCount > 0 {
-			l.Log().Errorf("Failed to delete volume '%s'", vol.Name)
-			return fmt.Errorf("Volume '%s' is still referenced by %d containers", name, vol.UsageData.RefCount)
+			return fmt.Errorf("failed to delete volume '%s' as it is still referenced by %d containers", name, vol.UsageData.RefCount)
 		}
 	}
 
 	// remove volume
 	if err := docker.VolumeRemove(ctx, name, true); err != nil {
-		l.Log().Errorf("Failed to delete volume '%s'", name)
-		return err
+		return fmt.Errorf("docker failed to delete volume '%s': %w", name, err)
 	}
 
 	return nil
@@ -105,8 +99,7 @@ func (d Docker) GetVolume(name string) (string, error) {
 	ctx := context.Background()
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return "", err
+		return "", fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
@@ -114,10 +107,10 @@ func (d Docker) GetVolume(name string) (string, error) {
 	filters.Add("name", fmt.Sprintf("^%s$", name))
 	volumeList, err := docker.VolumeList(ctx, filters)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("docker failed to list volumes: %w", err)
 	}
 	if len(volumeList.Volumes) < 1 {
-		return "", fmt.Errorf("Failed to find named volume '%s'", name)
+		return "", fmt.Errorf("failed to find named volume '%s'", name)
 	}
 
 	return volumeList.Volumes[0].Name, nil

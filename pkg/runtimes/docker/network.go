@@ -43,13 +43,12 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 	// (0) create new docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return nil, err
+		return nil, fmt.Errorf("failed to create docker client: %w", err)
 	}
 	defer docker.Close()
 
 	if searchNet.ID == "" && searchNet.Name == "" {
-		return nil, fmt.Errorf("need one of name, id to get network")
+		return nil, fmt.Errorf("failed to get network, because neither name nor ID was provided")
 	}
 	// configure list filters
 	filter := filters.NewArgs()
@@ -65,8 +64,7 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 		Filters: filter,
 	})
 	if err != nil {
-		l.Log().Errorln("Failed to list docker networks")
-		return nil, err
+		return nil, fmt.Errorf("docker failed to list networks: %w", err)
 	}
 
 	if len(networkList) == 0 {
@@ -75,7 +73,7 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 
 	targetNetwork, err := docker.NetworkInspect(ctx, networkList[0].ID, types.NetworkInspectOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to inspect network %s: %w", networkList[0].Name, err)
+		return nil, fmt.Errorf("docker failed to inspect network %s: %w", networkList[0].Name, err)
 	}
 	l.Log().Debugf("Found network %+v", targetNetwork)
 
@@ -88,7 +86,7 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 	if len(targetNetwork.IPAM.Config) > 0 {
 		network.IPAM, err = d.parseIPAM(targetNetwork.IPAM.Config[0])
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to parse IPAM config: %w", err)
 		}
 
 		for _, container := range targetNetwork.Containers {
@@ -138,8 +136,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 	// (0) create new docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return nil, false, err
+		return nil, false, fmt.Errorf("failed to create docker client: %w", err)
 	}
 	defer docker.Close()
 
@@ -147,8 +144,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 	if err != nil {
 		if err != runtimeErr.ErrRuntimeNetworkNotExists {
 			if existingNet == nil {
-				l.Log().Errorln("Failed to check for duplicate networks")
-				return nil, false, err
+				return nil, false, fmt.Errorf("failed to check for duplicate docker networks: %w", err)
 			} else if err == runtimeErr.ErrRuntimeNetworkMultiSameName {
 				l.Log().Warnf("%+v, returning the first one: %s (%s)", err, existingNet.Name, existingNet.ID)
 				return existingNet, true, nil
@@ -176,7 +172,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 		l.Log().Traceln("No subnet prefix given, but network should be managed: Trying to get a free subnet prefix...")
 		freeSubnetPrefix, err := d.getFreeSubnetPrefix(ctx)
 		if err != nil {
-			return nil, false, err
+			return nil, false, fmt.Errorf("failed to get free subnet prefix: %w", err)
 		}
 		inNet.IPAM.IPPrefix = freeSubnetPrefix
 	}
@@ -195,20 +191,18 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 
 	newNet, err := docker.NetworkCreate(ctx, inNet.Name, netCreateOpts)
 	if err != nil {
-		l.Log().Errorln("Failed to create new network")
-		return nil, false, err
+		return nil, false, fmt.Errorf("docker failed to create new network '%s': %w", inNet.Name, err)
 	}
 
 	networkDetails, err := docker.NetworkInspect(ctx, newNet.ID, types.NetworkInspectOptions{})
 	if err != nil {
-		l.Log().Errorln("Failed to inspect newly created network")
-		return nil, false, err
+		return nil, false, fmt.Errorf("docker failed to inspect newly created network '%s': %w", newNet.ID, err)
 	}
 
 	l.Log().Infof("Created network '%s' (%s)", inNet.Name, networkDetails.ID)
 	prefix, err := netaddr.ParseIPPrefix(networkDetails.IPAM.Config[0].Subnet)
 	if err != nil {
-		return nil, false, err
+		return nil, false, fmt.Errorf("failed to parse IP Prefix of newly created network '%s': %w", newNet.ID, err)
 	}
 
 	newClusterNet := &k3d.ClusterNetwork{Name: inNet.Name, ID: networkDetails.ID, IPAM: k3d.IPAM{IPPrefix: prefix}}
@@ -225,8 +219,7 @@ func (d Docker) DeleteNetwork(ctx context.Context, ID string) error {
 	// (0) create new docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return err
+		return fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
@@ -235,7 +228,7 @@ func (d Docker) DeleteNetwork(ctx context.Context, ID string) error {
 		if strings.HasSuffix(err.Error(), "active endpoints") {
 			return runtimeErr.ErrRuntimeNetworkNotEmpty
 		}
-		return err
+		return fmt.Errorf("docker failed to remove network '%s': %w", ID, err)
 	}
 	return nil
 }
@@ -244,8 +237,7 @@ func (d Docker) DeleteNetwork(ctx context.Context, ID string) error {
 func GetNetwork(ctx context.Context, ID string) (types.NetworkResource, error) {
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return types.NetworkResource{}, err
+		return types.NetworkResource{}, fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 	return docker.NetworkInspect(ctx, ID, types.NetworkInspectOptions{})
@@ -255,8 +247,7 @@ func GetNetwork(ctx context.Context, ID string) (types.NetworkResource, error) {
 func GetGatewayIP(ctx context.Context, network string) (net.IP, error) {
 	bridgeNetwork, err := GetNetwork(ctx, network)
 	if err != nil {
-		l.Log().Errorf("Failed to get bridge network with name '%s'", network)
-		return nil, err
+		return nil, fmt.Errorf("failed to get bridge network with name '%s': %w", network, err)
 	}
 
 	if len(bridgeNetwork.IPAM.Config) > 0 {
@@ -279,22 +270,20 @@ func (d Docker) ConnectNodeToNetwork(ctx context.Context, node *k3d.Node, networ
 	// get container
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get container for node '%s': %w", node.Name, err)
 	}
 
 	// get docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return err
+		return fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
 	// get network
 	networkResource, err := GetNetwork(ctx, networkName)
 	if err != nil {
-		l.Log().Errorf("Failed to get network '%s'", networkName)
-		return err
+		return fmt.Errorf("failed to get network '%s': %w", networkName, err)
 	}
 
 	// connect container to network
@@ -307,22 +296,20 @@ func (d Docker) DisconnectNodeFromNetwork(ctx context.Context, node *k3d.Node, n
 	// get container
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get container for node '%s': %w", node.Name, err)
 	}
 
 	// get docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return err
+		return fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
 	// get network
 	networkResource, err := GetNetwork(ctx, networkName)
 	if err != nil {
-		l.Log().Errorf("Failed to get network '%s'", networkName)
-		return err
+		return fmt.Errorf("failed to get network '%s': %w", networkName, err)
 	}
 
 	return docker.NetworkDisconnect(ctx, networkResource.ID, container.ID, true)

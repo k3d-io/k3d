@@ -46,8 +46,7 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 	// initialize docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return "", err
+		return "", fmt.Errorf("failed to create docker client: %w", err)
 	}
 	defer docker.Close()
 
@@ -58,13 +57,11 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 		if err != nil {
 			if client.IsErrNotFound(err) {
 				if err := pullImage(ctx, docker, dockerNode.ContainerConfig.Image); err != nil {
-					l.Log().Errorf("Failed to create container '%s'", name)
-					return "", err
+					return "", fmt.Errorf("docker failed to pull image '%s': %w", dockerNode.ContainerConfig.Image, err)
 				}
 				continue
 			}
-			l.Log().Errorf("Failed to create container '%s'", name)
-			return "", err
+			return "", fmt.Errorf("docker failed to create container '%s': %w", name, err)
 		}
 		l.Log().Debugf("Created container %s (ID: %s)", name, resp.ID)
 		break
@@ -77,8 +74,7 @@ func startContainer(ctx context.Context, ID string) error {
 	// initialize docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return err
+		return fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
@@ -91,8 +87,7 @@ func removeContainer(ctx context.Context, ID string) error {
 	// (0) create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return err
+		return fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
@@ -104,8 +99,7 @@ func removeContainer(ctx context.Context, ID string) error {
 
 	// (2) remove container
 	if err := docker.ContainerRemove(ctx, ID, options); err != nil {
-		l.Log().Errorf("Failed to delete container '%s'", ID)
-		return err
+		return fmt.Errorf("docker failed to remove the container '%s': %w", ID, err)
 	}
 
 	l.Log().Infoln("Deleted", ID)
@@ -118,8 +112,7 @@ func pullImage(ctx context.Context, docker *client.Client, image string) error {
 
 	resp, err := docker.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
-		l.Log().Errorf("Failed to pull image '%s'", image)
-		return err
+		return fmt.Errorf("docker failed to pull the image '%s': %w", image, err)
 	}
 	defer resp.Close()
 
@@ -132,8 +125,7 @@ func pullImage(ctx context.Context, docker *client.Client, image string) error {
 	}
 	_, err = io.Copy(writer, resp)
 	if err != nil {
-		l.Log().Warningf("Couldn't get docker output")
-		l.Log().Warningln(err)
+		l.Log().Warnf("Couldn't get docker output: %v", err)
 	}
 
 	return nil
@@ -145,8 +137,7 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 	// (0) create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return nil, err
+		return nil, fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
@@ -187,8 +178,7 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 func executeCheckInContainer(ctx context.Context, image string, cmd []string) (int64, error) {
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return -1, err
+		return -1, fmt.Errorf("failed to create docker client: %w", err)
 	}
 	defer docker.Close()
 
@@ -204,20 +194,17 @@ func executeCheckInContainer(ctx context.Context, image string, cmd []string) (i
 		if err != nil {
 			if client.IsErrNotFound(err) {
 				if err := pullImage(ctx, docker, image); err != nil {
-					l.Log().Errorf("Failed to create container from image %s with cmd %s", image, cmd)
-					return -1, err
+					return -1, fmt.Errorf("docker failed to pull image '%s': %w", image, err)
 				}
 				continue
 			}
-			l.Log().Errorf("Failed to create container from image %s with cmd %s", image, cmd)
-			return -1, err
+			return -1, fmt.Errorf("docker failed to create container from image '%s' with cmd '%s': %w", image, cmd, err)
 		}
 		break
 	}
 
 	if err = startContainer(ctx, resp.ID); err != nil {
-		l.Log().Errorf("Failed to start container from image %s with cmd %s", image, cmd)
-		return -1, err
+		return -1, fmt.Errorf("docker failed to start container from image '%s' with cmd '%s': %w", image, cmd, err)
 	}
 
 	exitCode := -1
@@ -225,15 +212,14 @@ func executeCheckInContainer(ctx context.Context, image string, cmd []string) (i
 	select {
 	case err := <-errCh:
 		if err != nil {
-			l.Log().Errorf("Error while waiting for container %s to exit", resp.ID)
-			return -1, err
+			return -1, fmt.Errorf("docker error while waiting for container '%s' to exit: %w", resp.ID, err)
 		}
 	case status := <-statusCh:
 		exitCode = int(status.StatusCode)
 	}
 
 	if err = removeContainer(ctx, resp.ID); err != nil {
-		return -1, err
+		return -1, fmt.Errorf("docker failed to remove container '%s': %w", resp.ID, err)
 	}
 
 	return int64(exitCode), nil
@@ -246,6 +232,5 @@ func CheckIfDirectoryExists(ctx context.Context, image string, dir string) (bool
 	cmd := []string{"sh", "-c", shellCmd}
 	exitCode, err := executeCheckInContainer(ctx, image, cmd)
 	l.Log().Tracef("check dir container returned %d exist code", exitCode)
-	return exitCode == 0, err
-
+	return exitCode == 0, fmt.Errorf("error executing check command '%s' in container with image '%s': %w", cmd, image, err)
 }

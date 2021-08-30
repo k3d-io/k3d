@@ -73,7 +73,7 @@ func ValidateSchema(content map[string]interface{}, schemaJSON []byte) error {
 
 	result, err := gojsonschema.Validate(schemaLoader, configLoader)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to validate config: %w", err)
 	}
 
 	l.Log().Debugf("JSON Schema Validation Result: %+v", result)

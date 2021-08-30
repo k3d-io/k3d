@@ -98,7 +98,7 @@ func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) (string, 
 func verifyNamedVolume(runtime runtimes.Runtime, volumeName string) error {
 	volumeName, err := runtime.GetVolume(volumeName)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to verify named volume: %w", err)
 	}
 	if volumeName == "" {
 		return fmt.Errorf("Failed to find named volume '%s'", volumeName)

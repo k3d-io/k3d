@@ -22,11 +22,11 @@ THE SOFTWARE.
 package util
 
 import (
+	"fmt"
 	"os"
 	"path"
 
 	homedir "github.com/mitchellh/go-homedir"
-	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 // GetConfigDirOrCreate will return the base path of the k3d config directory or create it if it doesn't exist yet
@@ -36,15 +36,13 @@ func GetConfigDirOrCreate() (string, error) {
 	// build the path
 	homeDir, err := homedir.Dir()
 	if err != nil {
-		l.Log().Errorln("Failed to get user's home directory")
-		return "", err
+		return "", fmt.Errorf("failed to get user's home directory: %w", err)
 	}
 	configDir := path.Join(homeDir, ".k3d")
 
 	// create directories if necessary
 	if err := createDirIfNotExists(configDir); err != nil {
-		l.Log().Errorf("Failed to create config path '%s'", configDir)
-		return "", err
+		return "", fmt.Errorf("failed to create config directory '%s': %w", configDir, err)
 	}
 
 	return configDir, nil

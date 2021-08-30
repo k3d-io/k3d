@@ -23,9 +23,9 @@ package docker
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/docker/docker/api/types"
-	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 // GetImages returns a list of images present in the runtime
@@ -33,15 +33,13 @@ func (d Docker) GetImages(ctx context.Context) ([]string, error) {
 	// create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return nil, err
+		return nil, fmt.Errorf("failed to create docker client: %w", err)
 	}
 	defer docker.Close()
 
 	imageSummary, err := docker.ImageList(ctx, types.ImageListOptions{All: true})
 	if err != nil {
-		l.Log().Errorln("Failed to list available docker images")
-		return nil, err
+		return nil, fmt.Errorf("docker failed to list images: %w", err)
 	}
 
 	var images []string

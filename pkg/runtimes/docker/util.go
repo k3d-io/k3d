@@ -57,28 +57,24 @@ func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k
 	// create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return err
+		return fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
-		l.Log().Errorf("Failed to find container for target node '%s'", node.Name)
-		return err
+		return fmt.Errorf("failed to find container for target node '%s': %w", node.Name, err)
 	}
 
 	// source: docker/cli/cli/command/container/cp
 	srcInfo, err := archive.CopyInfoSourcePath(src, false)
 	if err != nil {
-		l.Log().Errorln("Failed to copy info source path")
-		return err
+		return fmt.Errorf("failed to copy info source path: %w", err)
 	}
 
 	srcArchive, err := archive.TarResource(srcInfo)
 	if err != nil {
-		l.Log().Errorln("Failed to create tar resource")
-		return err
+		return fmt.Errorf("failed to create tar resource: %w", err)
 	}
 	defer srcArchive.Close()
 
@@ -90,8 +86,7 @@ func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k
 
 	destDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, destInfo)
 	if err != nil {
-		l.Log().Errorln("Failed to prepare archive")
-		return err
+		return fmt.Errorf("failed to prepare archive: %w", err)
 	}
 	defer preparedArchive.Close()
 
@@ -109,8 +104,7 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, mo
 	// create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		l.Log().Errorln("Failed to create docker client")
-		return err
+		return fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
@@ -148,12 +142,12 @@ func (d Docker) ReadFromNode(ctx context.Context, path string, node *k3d.Node) (
 	l.Log().Tracef("Reading path %s from node %s...", path, node.Name)
 	nodeContainer, err := getNodeContainer(ctx, node)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to find container for node '%s': %+v", node.Name, err)
+		return nil, fmt.Errorf("failed to find container for node '%s': %w", node.Name, err)
 	}
 
 	docker, err := GetDockerClient()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get docker client: %w", err)
 	}
 
 	reader, _, err := docker.CopyFromContainer(ctx, nodeContainer.ID, path)
@@ -161,7 +155,7 @@ func (d Docker) ReadFromNode(ctx context.Context, path string, node *k3d.Node) (
 		if client.IsErrNotFound(err) {
 			return nil, errors.Wrap(runtimeErrors.ErrRuntimeFileNotFound, err.Error())
 		}
-		return nil, err
+		return nil, fmt.Errorf("failed to copy path '%s' from container '%s': %w", path, nodeContainer.ID, err)
 	}
 
 	return reader, err
@@ -171,7 +165,7 @@ func (d Docker) ReadFromNode(ctx context.Context, path string, node *k3d.Node) (
 func GetDockerClient() (*client.Client, error) {
 	dockerCli, err := command.NewDockerCli(command.WithStandardStreams())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create new docker CLI with standard streams: %w", err)
 	}
 
 	newClientOpts := flags.NewClientOptions()
@@ -179,7 +173,7 @@ func GetDockerClient() (*client.Client, error) {
 
 	err = dockerCli.Initialize(newClientOpts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to initialize docker CLI: %w", err)
 	}
 
 	// check for TLS Files used for protected connections
@@ -187,7 +181,7 @@ func GetDockerClient() (*client.Client, error) {
 	storageInfo := dockerCli.ContextStore().GetStorageInfo(currentContext)
 	tlsFilesMap, err := dockerCli.ContextStore().ListTLSFiles(currentContext)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("docker CLI failed to list TLS files for context '%s': %w", currentContext, err)
 	}
 	endpointDriver := "docker"
 	tlsFiles := tlsFilesMap[endpointDriver]
@@ -198,7 +192,7 @@ func GetDockerClient() (*client.Client, error) {
 	if ep.Host != "" {
 		clientopts, err := ep.ClientOpts()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get client opts for docker endpoint: %w", err)
 		}
 		headers := make(map[string]string, 1)
 		headers["User-Agent"] = command.UserAgent()

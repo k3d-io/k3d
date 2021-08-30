@@ -93,7 +93,7 @@ func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureO
 
 	portMapping, err := nat.ParsePortSpec(realPortString)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to parse port spec for Port Exposure '%s': %+v", realPortString, err)
+		return nil, fmt.Errorf("failed to parse port spec for Port Exposure '%s': %+v", realPortString, err)
 	}
 
 	api.Port = portMapping[0].Port // there can be only one due to our regexp
@@ -112,14 +112,12 @@ func ValidatePortMap(portmap string) (string, error) {
 func GetFreePort() (int, error) {
 	tcpAddress, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
-		l.Log().Errorln("Failed to resolve address")
-		return 0, err
+		return 0, fmt.Errorf("failed to resolve address 'localhost:0': %w", err)
 	}
 
 	tcpListener, err := net.ListenTCP("tcp", tcpAddress)
 	if err != nil {
-		l.Log().Errorln("Failed to create TCP Listener")
-		return 0, err
+		return 0, fmt.Errorf("failed to create tcp listener: %w", err)
 	}
 	defer tcpListener.Close()
 

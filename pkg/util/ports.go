@@ -23,24 +23,22 @@ THE SOFTWARE.
 package util
 
 import (
+	"fmt"
 	"net"
 
 	"github.com/docker/go-connections/nat"
-	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 // GetFreePort tries to fetch an open port from the OS-Kernel
 func GetFreePort() (int, error) {
 	tcpAddress, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
-		l.Log().Errorln("Failed to resolve address")
-		return 0, err
+		return 0, fmt.Errorf("failed to resolve address 'localhost:0': %w", err)
 	}
 
 	tcpListener, err := net.ListenTCP("tcp", tcpAddress)
 	if err != nil {
-		l.Log().Errorln("Failed to create TCP Listener")
-		return 0, err
+		return 0, fmt.Errorf("failed to create tcp listener: %w", err)
 	}
 	defer tcpListener.Close()
 

@@ -47,7 +47,7 @@ func RegistryRun(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registr
 		return nil, fmt.Errorf("Failed to start registry: %+v", err)
 	}
 
-	return regNode, err
+	return regNode, nil
 }
 
 // RegistryCreate creates a registry node
@@ -99,8 +99,7 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 	// create the registry node
 	l.Log().Infof("Creating node '%s'", registryNode.Name)
 	if err := NodeCreate(ctx, runtime, registryNode, k3d.NodeCreateOpts{}); err != nil {
-		l.Log().Errorln("Failed to create registry node")
-		return nil, err
+		return nil, fmt.Errorf("failed to create registry node '%s': %w", registryNode.Name, err)
 	}
 
 	l.Log().Infof("Successfully created registry '%s'", registryNode.Name)
@@ -115,8 +114,7 @@ func RegistryConnectClusters(ctx context.Context, runtime runtimes.Runtime, regi
 	// find registry node
 	registryNode, err := NodeGet(ctx, runtime, registryNode)
 	if err != nil {
-		l.Log().Errorf("Failed to find registry node '%s'", registryNode.Name)
-		return err
+		return fmt.Errorf("Failed to find registry node '%s': %w", registryNode.Name, err)
 	}
 
 	// get cluster details and connect
@@ -148,8 +146,7 @@ func RegistryConnectNetworks(ctx context.Context, runtime runtimes.Runtime, regi
 	// find registry node
 	registryNode, err := NodeGet(ctx, runtime, registryNode)
 	if err != nil {
-		l.Log().Errorf("Failed to find registry node '%s'", registryNode.Name)
-		return err
+		return fmt.Errorf("Failed to find registry node '%s': %w", registryNode.Name, err)
 	}
 
 	// get cluster details and connect
@@ -317,7 +314,7 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runt
 		},
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal LocalRegistryHosting configmap data: %w", err)
 	}
 
 	cm := configmap{
@@ -334,7 +331,7 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runt
 
 	cmYaml, err := yaml.Marshal(cm)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal LocalRegistryHosting configmap: %w", err)
 	}
 
 	l.Log().Tracef("LocalRegistryHostingConfigMapYaml: %s", string(cmYaml))
@@ -345,7 +342,7 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runt
 // RegistryMergeConfig merges a source registry config into an existing dest registry cofnig
 func RegistryMergeConfig(ctx context.Context, dest, src *k3s.Registry) error {
 	if err := mergo.MergeWithOverwrite(dest, src); err != nil {
-		return fmt.Errorf("Failed to merge registry configs: %+v", err)
+		return fmt.Errorf("failed to merge registry configs: %w", err)
 	}
 	return nil
 }

@@ -50,7 +50,7 @@ func GetHostIP(ctx context.Context, rtime rt.Runtime, cluster *k3d.Cluster) (net
 		if runtime.GOOS == "linux" {
 			ip, err := rtime.GetHostIP(ctx, cluster.Network.Name)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("runtime failed to get host IP: %w", err)
 			}
 			return ip, nil
 		}
@@ -60,12 +60,12 @@ func GetHostIP(ctx context.Context, rtime rt.Runtime, cluster *k3d.Cluster) (net
 
 			toolsNode, err := EnsureToolsNode(ctx, rtime, cluster)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to ensure that k3d-tools node is running to get host IP :%w", err)
 			}
 
 			ip, err := resolveHostnameFromInside(ctx, rtime, toolsNode, "host.docker.internal")
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to resolve 'host.docker.internal' from inside the k3d-tools node: %w", err)
 			}
 			return ip, nil
 		}
