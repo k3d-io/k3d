@@ -875,13 +875,12 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	 * Server Nodes
 	 */
 	l.Log().Infoln("Starting servers...")
-	nodeStartOpts := &k3d.NodeStartOpts{
-		Wait:            true,
-		NodeHooks:       startClusterOpts.NodeHooks,
-		EnvironmentInfo: startClusterOpts.EnvironmentInfo,
-	}
 	for _, serverNode := range servers {
-		if err := NodeStart(ctx, runtime, serverNode, nodeStartOpts); err != nil {
+		if err := NodeStart(ctx, runtime, serverNode, &k3d.NodeStartOpts{
+			Wait:            true,
+			NodeHooks:       startClusterOpts.NodeHooks,
+			EnvironmentInfo: startClusterOpts.EnvironmentInfo,
+		}); err != nil {
 			return fmt.Errorf("Failed to start server %s: %+v", serverNode.Name, err)
 		}
 	}
@@ -896,7 +895,11 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	for _, agentNode := range agents {
 		currentAgentNode := agentNode
 		agentWG.Go(func() error {
-			return NodeStart(aCtx, runtime, currentAgentNode, nodeStartOpts)
+			return NodeStart(aCtx, runtime, currentAgentNode, &k3d.NodeStartOpts{
+				Wait:            true,
+				NodeHooks:       startClusterOpts.NodeHooks,
+				EnvironmentInfo: startClusterOpts.EnvironmentInfo,
+			})
 		})
 	}
 	if err := agentWG.Wait(); err != nil {
