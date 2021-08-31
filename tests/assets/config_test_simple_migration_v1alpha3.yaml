@@ -6,7 +6,7 @@ agents: 2
 kubeAPI:
   hostIP: "0.0.0.0"
   hostPort: "6446"
-image: rancher/k3s:latest
+#image: rancher/k3s:latest
 volumes:
   - volume: /my/path:/some/path
     nodeFilters:

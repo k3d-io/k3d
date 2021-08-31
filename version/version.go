@@ -37,7 +37,7 @@ var Version string
 var HelperVersionOverride string
 
 // K3sVersion should contain the latest version tag of k3s (hardcoded at build time)
-var K3sVersion = "v1.20.0-k3s2"
+var K3sVersion = "v1.21.4-k3s2"
 
 // GetVersion returns the version for cli, it gets it from "git describe --tags" or returns "dev" when doing simple go build
 func GetVersion() string {
