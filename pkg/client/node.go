@@ -465,24 +465,24 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 		} else {
 			memory, err := dockerunits.RAMInBytes(node.Memory)
 			if err != nil {
-				return fmt.Errorf("Invalid memory limit format: %+v", err)
+				return fmt.Errorf("invalid memory limit format: %w", err)
 			}
 			// mount fake meminfo as readonly
 			fakemempath, err := util.MakeFakeMeminfo(memory, node.Name)
 			if err != nil {
-				return fmt.Errorf("Failed to create fake meminfo: %+v", err)
+				return fmt.Errorf("failed to create fake meminfo: %w", err)
 			}
 			node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s:ro", fakemempath, util.MemInfoPath))
 			// mount empty edac folder, but only if it exists
 			exists, err := docker.CheckIfDirectoryExists(ctx, node.Image, util.EdacFolderPath)
 			if err != nil {
-				return fmt.Errorf("Failed to check for the existence of edac folder: %+v", err)
+				return fmt.Errorf("failed to check for the existence of edac folder: %w", err)
 			}
 			if exists {
 				l.Log().Debugln("Found edac folder")
 				fakeedacpath, err := util.MakeFakeEdac(node.Name)
 				if err != nil {
-					return fmt.Errorf("Failed to create fake edac: %+v", err)
+					return fmt.Errorf("failed to create fake edac: %w", err)
 				}
 				node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s:ro", fakeedacpath, util.EdacFolderPath))
 			}

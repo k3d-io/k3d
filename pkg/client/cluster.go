@@ -546,7 +546,7 @@ func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	l.Log().Infof("Deleting cluster '%s'", cluster.Name)
 	cluster, err := ClusterGet(ctx, runtime, cluster)
 	if err != nil {
-		return fmt.Errorf("failed to get cluster %s: %w", cluster.Name, err)
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 	l.Log().Debugf("Cluster Details: %+v", cluster)
 

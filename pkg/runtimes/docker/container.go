@@ -231,6 +231,6 @@ func CheckIfDirectoryExists(ctx context.Context, image string, dir string) (bool
 	shellCmd := fmt.Sprintf("[ -d \"%s\" ] && exit 0 || exit 1", dir)
 	cmd := []string{"sh", "-c", shellCmd}
 	exitCode, err := executeCheckInContainer(ctx, image, cmd)
-	l.Log().Tracef("check dir container returned %d exist code", exitCode)
-	return exitCode == 0, fmt.Errorf("error executing check command '%s' in container with image '%s': %w", cmd, image, err)
+	l.Log().Tracef("check dir container returned %d exit code", exitCode)
+	return exitCode == 0, err
 }
