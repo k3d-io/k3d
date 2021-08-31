@@ -280,10 +280,10 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 	if clusterNet != nil {
 		parsedIP, err := netaddr.ParseIP(clusterNet.IPAddress)
 		if err != nil {
-			if nodeState.Running && nodeState.Status != "restarting" {
+			if nodeState.Running && nodeState.Status != "restarting" { // if the container is not running or currently restarting, it won't have an IP, so we don't error in that case
 				return nil, fmt.Errorf("failed to parse IP '%s' for container '%s': %s\nStatus: %v\n%+v", clusterNet.IPAddress, containerDetails.Name, err, nodeState.Status, containerDetails.NetworkSettings)
 			} else {
-				log.L.Debugf("failed to parse IP '%s' for container '%s', likely because it's not running (or restarting): %v", clusterNet.IPAddress, containerDetails.Name, err)
+				log.L.Tracef("failed to parse IP '%s' for container '%s', likely because it's not running (or restarting): %v", clusterNet.IPAddress, containerDetails.Name, err)
 			}
 		}
 		isStaticIP := false
