@@ -70,10 +70,6 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 	/*
 	 * Step 2: Pre-Start Configuration
 	 */
-	_, err := EnsureToolsNode(ctx, runtime, &clusterConfig.Cluster)
-	if err != nil {
-		return fmt.Errorf("failed to ensure k3d-tools node: %w", err)
-	}
 	envInfo, err := GatherEnvironmentInfo(ctx, runtime, &clusterConfig.Cluster)
 	if err != nil {
 		return fmt.Errorf("failed to gather environment information used for cluster creation: %w", err)

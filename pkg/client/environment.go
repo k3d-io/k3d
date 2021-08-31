@@ -25,12 +25,20 @@ import (
 	"context"
 	"fmt"
 
+	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 
 	k3d "github.com/rancher/k3d/v4/pkg/types"
 )
 
 func GatherEnvironmentInfo(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*k3d.EnvironmentInfo, error) {
+	l.Log().Infof("Using the k3d-tools node to gather environment information")
+	toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
+	if err != nil {
+		return nil, err
+	}
+	defer NodeDelete(ctx, runtime, toolsNode, k3d.NodeDeleteOpts{SkipLBUpdate: true})
+
 	envInfo := &k3d.EnvironmentInfo{}
 
 	hostIP, err := GetHostIP(ctx, runtime, cluster)
