@@ -27,6 +27,7 @@ import (
 	"path"
 
 	homedir "github.com/mitchellh/go-homedir"
+	l "github.com/rancher/k3d/v4/pkg/logger"
 )
 
 // GetConfigDirOrCreate will return the base path of the k3d config directory or create it if it doesn't exist yet
