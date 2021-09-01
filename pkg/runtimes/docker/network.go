@@ -204,7 +204,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 		return nil, false, fmt.Errorf("docker failed to inspect newly created network '%s': %w", newNet.ID, err)
 	}
 
-	l.Log().Infof("Created network '%s' (%s)", inNet.Name, networkDetails.ID)
+	l.Log().Infof("Created network '%s'", inNet.Name)
 	prefix, err := netaddr.ParseIPPrefix(networkDetails.IPAM.Config[0].Subnet)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to parse IP Prefix of newly created network '%s': %w", newNet.ID, err)

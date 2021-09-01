@@ -53,13 +53,14 @@ info "Ensuring that k3s node labels have been set as stated in the config"
 k3s_assert_node_label "k3d-$clustername-server-0" "foo=bar" || failed "Expected label 'foo=bar' not present on node k3d-$clustername-server-0"
 
 ## Registry Node
+registryname="registry.localhost"
 info "Ensuring, that we have a registry node present"
-$EXE node list "k3d-$clustername-registry" || failed "Expected k3d-$clustername-registry to be present"
+$EXE node list "$registryname" || failed "Expected registry node $registryname to be present"
 
 ## merged registries.yaml
 info "Ensuring, that the registries.yaml file contains both registries"
 exec_in_node "k3d-$clustername-server-0" "cat /etc/rancher/k3s/registries.yaml" | grep -qi "my.company.registry"  || failed "Expected 'my.company.registry' to be in the /etc/rancher/k3s/registries.yaml"
-exec_in_node "k3d-$clustername-server-0" "cat /etc/rancher/k3s/registries.yaml" | grep -qi "k3d-$clustername-registry" || failed "Expected 'k3d-$clustername-registry' to be in the /etc/rancher/k3s/registries.yaml"
+exec_in_node "k3d-$clustername-server-0" "cat /etc/rancher/k3s/registries.yaml" | grep -qi "$registryname" || failed "Expected '$registryname' to be in the /etc/rancher/k3s/registries.yaml"
 
 # Cleanup
 

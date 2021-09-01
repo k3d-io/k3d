@@ -77,7 +77,8 @@ env:
     nodeFilters:
       - server:0
 registries: # define how registries should be created or used
-  create: true # creates a default registry to be used with the cluster; same as `--registry-create`
+  create:
+    name: registry.localhost # creates a default registry to be used with the cluster; same as `--registry-create registry.localhost`
   use:
     - k3d-myotherregistry:5000 # some other k3d-managed registry; same as `--registry-use 'k3d-myotherregistry:5000'`
   config: | # define contents of the `registries.yaml` file (or reference a file); same as `--registry-config /path/to/config.yaml`

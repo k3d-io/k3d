@@ -240,7 +240,55 @@
       }
     },
     "registries": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "create": {
+          "type": "object",
+          "description": "Create a new container image registry alongside the cluster.",
+          "properties": {
+            "name": {
+              "type": "string",
+              "examples": [
+                "myregistry",
+                "registry.localhost"
+              ]
+            },
+            "host": {
+              "type": "string",
+              "examples": [
+                "0.0.0.0",
+                "localhost",
+                "127.0.0.1"
+              ],
+              "default": "0.0.0.0"
+            },
+            "hostPort": {
+              "type": "string",
+              "examples": [
+                "5000",
+                "2345"
+              ],
+              "default": "random"
+            }
+          },
+          "additionalProperties": false
+        },
+        "use": {
+          "type": "array",
+          "description": "Connect another container image registry to the cluster.",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            "otherregistry:5000"
+          ]
+        },
+        "config": {
+          "type": "string",
+          "description": "Reference a K3s registry configuration file or at it's contents here."
+        },
+        "additionalProperties": false
+      }
     }
   },
   "additionalProperties": false,

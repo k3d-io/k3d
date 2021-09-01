@@ -24,10 +24,12 @@ package v1alpha3
 
 import (
 	"encoding/json"
+	"fmt"
 
 	configtypes "github.com/rancher/k3d/v5/pkg/config/types"
 	"github.com/rancher/k3d/v5/pkg/config/v1alpha2"
 	l "github.com/rancher/k3d/v5/pkg/logger"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 )
 
 var Migrations = map[string]func(configtypes.Config) (configtypes.Config, error){
@@ -43,9 +45,18 @@ func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
 	}
 
 	if input.GetKind() == "Simple" {
-		cfg := SimpleConfig{}
+		cfgIntermediate := SimpleConfigIntermediateV1alpha2{}
 
-		if err := json.Unmarshal(injson, &cfg); err != nil {
+		if err := json.Unmarshal(injson, &cfgIntermediate); err != nil {
+			return nil, err
+		}
+
+		intermediateJSON, err := json.Marshal(cfgIntermediate)
+		if err != nil {
+			return nil, err
+		}
+		cfg := SimpleConfig{}
+		if err := json.Unmarshal(intermediateJSON, &cfg); err != nil {
 			return nil, err
 		}
 
@@ -76,6 +87,14 @@ func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
 					"agent:*",
 				},
 			})
+		}
+
+		if input.(v1alpha2.SimpleConfig).Registries.Create {
+			cfg.Registries.Create = &SimpleConfigRegistryCreateConfig{
+				Name:     fmt.Sprintf("%s-%s-registry", k3d.DefaultObjectNamePrefix, cfg.Name),
+				Host:     "0.0.0.0",
+				HostPort: "random",
+			}
 		}
 
 		cfg.APIVersion = ApiVersion

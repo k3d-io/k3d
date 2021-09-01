@@ -284,14 +284,31 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	/*
 	 * Registries
 	 */
-	if simpleConfig.Registries.Create {
-		regPort, err := cliutil.ParsePortExposureSpec("random", k3d.DefaultRegistryPort)
+	if simpleConfig.Registries.Create != nil {
+
+		epSpecHost := "0.0.0.0"
+		epSpecPort := "random"
+
+		if simpleConfig.Registries.Create.HostPort != "" {
+			epSpecPort = simpleConfig.Registries.Create.HostPort
+		}
+		if simpleConfig.Registries.Create.Host != "" {
+			epSpecHost = simpleConfig.Registries.Create.Host
+		}
+
+		regPort, err := cliutil.ParsePortExposureSpec(fmt.Sprintf("%s:%s", epSpecHost, epSpecPort), k3d.DefaultRegistryPort)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get port for registry: %w", err)
 		}
+
+		regName := fmt.Sprintf("%s-%s-registry", k3d.DefaultObjectNamePrefix, newCluster.Name)
+		if simpleConfig.Registries.Create.Name != "" {
+			regName = simpleConfig.Registries.Create.Name
+		}
+
 		clusterCreateOpts.Registries.Create = &k3d.Registry{
 			ClusterRef:   newCluster.Name,
-			Host:         fmt.Sprintf("%s-%s-registry", k3d.DefaultObjectNamePrefix, newCluster.Name),
+			Host:         regName,
 			Image:        fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag),
 			ExposureOpts: *regPort,
 		}

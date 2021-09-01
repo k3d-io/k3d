@@ -23,7 +23,10 @@ env:
     nodeFilters:
       - all
 registries:
-  create: true
+  create:
+    name: k3d-test-registry
+    host: "0.0.0.0"
+    hostPort: random
   use: []
   config: |
     mirrors:
