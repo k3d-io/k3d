@@ -71,6 +71,11 @@ plugins:
       type: date
   - awesome-pages # https://squidfunk.github.io/mkdocs-material/plugins/awesome-pages/
   - include-markdown # https://github.com/mondeja/mkdocs-include-markdown-plugin
+  - mike: # Versioned Docs: https://github.com/jimporter/mike
+      version_selector: true   # set to false to leave out the version selector
+      css_dir: static/css             # the directory to put the version selector's CSS
+      javascript_dir: static/js       # the directory to put the version selector's JS
+      canonical_version: null  # the version for <link rel="canonical">; `null` uses the version specified via `mike deploy`
 
 # Other Settings
 strict: true # halt processing when a warning is raised
