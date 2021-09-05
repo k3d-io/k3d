@@ -44,12 +44,12 @@ kubectl get configmap -n kube-public local-registry-hosting -o go-template='{{in
 info "Pushing an image to the registry..."
 registryPort=$(docker inspect $registryname | jq '.[0].NetworkSettings.Ports["5000/tcp"][0].HostPort' | sed -E 's/"//g')
 docker pull alpine:latest > /dev/null
-docker tag alpine:latest $registryname:"$registryPort"/alpine:local > /dev/null
-docker push $registryname:"$registryPort"/alpine:local || failed "Failed to push image to managed registry"
+docker tag alpine:latest "localhost:$registryPort/alpine:local" > /dev/null
+docker push "localhost:$registryPort/alpine:local" || failed "Failed to push image to managed registry"
 
 # 4. use imported image
 info "Spawning a pod using the pushed image..."
-kubectl run --image $registryname:"$registryPort"/alpine:local testimage --command -- tail -f /dev/null
+kubectl run --image "$registryname:$registryPort/alpine:local" testimage --command -- tail -f /dev/null
 info "Waiting for a bit for the pod to start..."
 sleep 5
 

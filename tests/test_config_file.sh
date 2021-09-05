@@ -21,7 +21,7 @@ configfileoriginal="$CURR_DIR/assets/config_test_simple.yaml"
 configfile="/tmp/config_test_simple-tmp_$(date -u +'%Y%m%dT%H%M%SZ').yaml"
 clustername="configtest"
 
-sed -E "s/name:.+/name: $clustername/g" < "$configfileoriginal" > "$configfile" # replace cluster name in config file so we can use it in this script without running into override issues
+sed -E "s/^name:.+/name: $clustername/g" < "$configfileoriginal" > "$configfile" # replace cluster name in config file so we can use it in this script without running into override issues
 
 highlight "[START] ConfigTest $EXTRA_TITLE"
 
