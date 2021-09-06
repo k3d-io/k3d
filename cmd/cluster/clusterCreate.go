@@ -24,9 +24,7 @@ package cluster
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -40,6 +38,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	cliutil "github.com/rancher/k3d/v4/cmd/util"
+	cliconfig "github.com/rancher/k3d/v4/cmd/util/config"
 	k3dCluster "github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/config"
 	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
@@ -59,74 +58,30 @@ Every cluster will consist of one or more containers:
 	- (optionally) 1 (or more) agent node containers (k3s)
 `
 
-var cfgViper = viper.New()
-var ppViper = viper.New()
+/*
+ * Viper for configuration handling
+ * we use two different instances of Viper here to handle
+ * - cfgViper: "static" configuration
+ * - ppViper: "pre-processed" configuration, where CLI input has to be pre-processed
+ *             to be treated as part of the SImpleConfig
+ */
+var (
+	cfgViper = viper.New()
+	ppViper  = viper.New()
+)
 
-func initConfig() {
+func initConfig() error {
 
 	// Viper for pre-processed config options
 	ppViper.SetEnvPrefix("K3D")
 
-	// viper for the general config (file, env and non pre-processed flags)
-	cfgViper.SetEnvPrefix("K3D")
-	cfgViper.AutomaticEnv()
-
-	cfgViper.SetConfigType("yaml")
-
-	// Set config file, if specified
-	if configFile != "" {
-
-		if _, err := os.Stat(configFile); err != nil {
-			l.Log().Fatalf("Failed to stat config file %s: %+v", configFile, err)
-		}
-
-		// create temporary file to expand environment variables in the config without writing that back to the original file
-		// we're doing it here, because this happens just before absolutely all other processing
-		tmpfile, err := os.CreateTemp(os.TempDir(), fmt.Sprintf("k3d-config-tmp-%s", filepath.Base(configFile)))
-		if err != nil {
-			l.Log().Fatalf("error creating temp copy of configfile %s for variable expansion: %v", configFile, err)
-		}
-		defer tmpfile.Close()
-
-		originalcontent, err := ioutil.ReadFile(configFile)
-		if err != nil {
-			l.Log().Fatalf("error reading config file %s: %v", configFile, err)
-		}
-		expandedcontent := os.ExpandEnv(string(originalcontent))
-		if _, err := tmpfile.WriteString(expandedcontent); err != nil {
-			l.Log().Fatalf("error writing expanded config file contents to temp file %s: %v", tmpfile.Name(), err)
-		}
-
-		// use temp file with expanded variables
-		cfgViper.SetConfigFile(tmpfile.Name())
-
-		// try to read config into memory (viper map structure)
-		if err := cfgViper.ReadInConfig(); err != nil {
-			if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-				l.Log().Fatalf("Config file %s not found: %+v", configFile, err)
-			}
-			// config file found but some other error happened
-			l.Log().Fatalf("Failed to read config file %s: %+v", configFile, err)
-		}
-
-		schema, err := config.GetSchemaByVersion(cfgViper.GetString("apiVersion"))
-		if err != nil {
-			l.Log().Fatalf("Cannot validate config file %s: %+v", configFile, err)
-		}
-
-		if err := config.ValidateSchemaFile(configFile, schema); err != nil {
-			l.Log().Fatalf("Schema Validation failed for config file %s: %+v", configFile, err)
-		}
-
-		l.Log().Infof("Using config file %s (%s#%s)", configFile, strings.ToLower(cfgViper.GetString("apiVersion")), strings.ToLower(cfgViper.GetString("kind")))
-	}
 	if l.Log().GetLevel() >= logrus.DebugLevel {
-		c, _ := yaml.Marshal(cfgViper.AllSettings())
-		l.Log().Debugf("Configuration:\n%s", c)
 
-		c, _ = yaml.Marshal(ppViper.AllSettings())
+		c, _ := yaml.Marshal(ppViper.AllSettings())
 		l.Log().Debugf("Additional CLI Configuration:\n%s", c)
 	}
+
+	return cliconfig.InitViperWithConfigFile(cfgViper, configFile)
 }
 
 // NewCmdClusterCreate returns a new cobra command
@@ -139,8 +94,7 @@ func NewCmdClusterCreate() *cobra.Command {
 		Long:  clusterCreateDescription,
 		Args:  cobra.RangeArgs(0, 1), // exactly one cluster name can be set (default: k3d.DefaultClusterName)
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			initConfig()
-			return nil
+			return initConfig()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 

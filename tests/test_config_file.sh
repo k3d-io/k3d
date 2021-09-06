@@ -17,13 +17,16 @@ fi
 
 export CURRENT_STAGE="Test | config-file | $K3S_IMAGE_TAG"
 
-
+configfileoriginal="$CURR_DIR/assets/config_test_simple.yaml"
+configfile="/tmp/config_test_simple-tmp_$(date -u +'%Y%m%dT%H%M%SZ').yaml"
 clustername="configtest"
+
+sed -E "s/name:.+/name: $clustername/g" < "$configfileoriginal" > "$configfile" # replace cluster name in config file so we can use it in this script without running into override issues
 
 highlight "[START] ConfigTest $EXTRA_TITLE"
 
 info "Creating cluster $clustername..."
-$EXE cluster create "$clustername" --config "$CURR_DIR/assets/config_test_simple.yaml" $EXTRA_FLAG || failed "could not create cluster $clustername $EXTRA_TITLE"
+$EXE cluster create "$clustername" --config "$configfile" $EXTRA_FLAG || failed "could not create cluster $clustername $EXTRA_TITLE"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
 sleep 5
@@ -60,8 +63,10 @@ exec_in_node "k3d-$clustername-server-0" "cat /etc/rancher/k3s/registries.yaml" 
 
 # Cleanup
 
-info "Deleting cluster $clustername..."
-$EXE cluster delete "$clustername" || failed "could not delete the cluster $clustername"
+info "Deleting cluster $clustername (using config file)..."
+$EXE cluster delete --config "$configfile" || failed "could not delete the cluster $clustername"
+
+rm "$configfile"
 
 highlight "[DONE] ConfigTest $EXTRA_TITLE"
 
