@@ -157,6 +157,11 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 		return existingNet, true, nil
 	}
 
+	labels := make(map[string]string, 0)
+	for k, v := range k3d.DefaultRuntimeLabels {
+		labels[k] = v
+	}
+
 	// (3) Create a new network
 	netCreateOpts := types.NetworkCreate{
 		Driver: "bridge",
@@ -164,7 +169,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 			"com.docker.network.bridge.enable_ip_masquerade": "true",
 		},
 		CheckDuplicate: true,
-		Labels:         k3d.DefaultRuntimeLabels,
+		Labels:         labels,
 	}
 
 	// we want a managed (user-defined) network, but user didn't specify a subnet, so we try to auto-generate one

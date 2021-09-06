@@ -53,7 +53,7 @@ func NewCmdNodeCreate() *cobra.Command {
 			nodes, clusterName := parseCreateNodeCmd(cmd, args)
 			if strings.HasPrefix(clusterName, "https://") {
 				l.Log().Infof("Adding %d node(s) to the remote cluster '%s'...", len(nodes), clusterName)
-				if err := k3dc.NodeAddToClusterMultiRemote(cmd.Context(), runtimes.SelectedRuntime, clusterName, createNodeOpts); err != nil {
+				if err := k3dc.NodeAddToClusterMultiRemote(cmd.Context(), runtimes.SelectedRuntime, nodes, clusterName, createNodeOpts); err != nil {
 					l.Log().Fatalf("failed to add %d node(s) to the remote cluster '%s': %v", len(nodes), clusterName, err)
 				}
 			} else {
@@ -86,7 +86,9 @@ func NewCmdNodeCreate() *cobra.Command {
 	cmd.Flags().StringSliceP("runtime-label", "", []string{}, "Specify container runtime labels in format \"foo=bar\"")
 	cmd.Flags().StringSliceP("k3s-node-label", "", []string{}, "Specify k3s node labels in format \"foo=bar\"")
 
-	cmd.Flags().StringArrayP("network", "n", []string{}, "Add node to (another) runtime network")
+	cmd.Flags().StringSliceP("network", "n", []string{}, "Add node to (another) runtime network")
+
+	cmd.Flags().StringVarP(&createNodeOpts.ClusterToken, "token", "t", "", "Override cluster token (required when connecting to an external cluster)")
 
 	// done
 	return cmd
@@ -173,6 +175,10 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string)
 	}
 
 	// --network
+	networks, err := cmd.Flags().GetStringSlice("network")
+	if err != nil {
+		l.Log().Fatalf("failed to get --network string slice flag: %v", err)
+	}
 
 	// generate list of nodes
 	nodes := []*k3d.Node{}
@@ -185,6 +191,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string)
 			RuntimeLabels: runtimeLabels,
 			Restart:       true,
 			Memory:        memory,
+			Networks:      networks,
 		}
 		nodes = append(nodes, node)
 	}

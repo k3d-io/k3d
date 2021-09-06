@@ -59,8 +59,12 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		return fmt.Errorf("Failed to find specified cluster '%s': %w", targetClusterName, err)
 	}
 
-	// network
-	node.Networks = []string{cluster.Network.Name}
+	// networks: ensure that cluster network is on index 0
+	networks := []string{cluster.Network.Name}
+	if node.Networks != nil {
+		networks = append(networks, node.Networks...)
+	}
+	node.Networks = networks
 
 	// skeleton
 	if node.RuntimeLabels == nil {
@@ -165,19 +169,27 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 
 	l.Log().Tracef("Resulting node %+v", node)
 
-	k3sURLFound := false
-	for _, envVar := range node.Env {
-		if strings.HasPrefix(envVar, "K3S_URL") {
-			k3sURLFound = true
-			break
+	k3sURLEnvFound := false
+	k3sTokenEnvFoundIndex := -1
+	for index, envVar := range node.Env {
+		if strings.HasPrefix(envVar, k3d.K3sEnvClusterConnectURL) {
+			k3sURLEnvFound = true
+		}
+		if strings.HasPrefix(envVar, k3d.K3sEnvClusterToken) {
+			k3sTokenEnvFoundIndex = index
 		}
 	}
-	if !k3sURLFound {
+	if !k3sURLEnvFound {
 		if url, ok := node.RuntimeLabels[k3d.LabelClusterURL]; ok {
-			node.Env = append(node.Env, fmt.Sprintf("K3S_URL=%s", url))
+			node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3d.K3sEnvClusterConnectURL, url))
 		} else {
 			l.Log().Warnln("Failed to find K3S_URL value!")
 		}
+	}
+	if k3sTokenEnvFoundIndex != -1 && createNodeOpts.ClusterToken != "" {
+		l.Log().Debugln("Overriding copied cluster token with value from nodeCreateOpts...")
+		node.Env[k3sTokenEnvFoundIndex] = fmt.Sprintf("%s=%s", k3d.K3sEnvClusterToken, createNodeOpts.ClusterToken)
+		node.RuntimeLabels[k3d.LabelClusterToken] = createNodeOpts.ClusterToken
 	}
 
 	// add node actions
@@ -218,6 +230,29 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 }
 
 func NodeAddToClusterRemote(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, clusterRef string, createNodeOpts k3d.NodeCreateOpts) error {
+	// runtime labels
+	if node.RuntimeLabels == nil {
+		node.RuntimeLabels = map[string]string{}
+	}
+
+	node.FillRuntimeLabels()
+
+	node.RuntimeLabels[k3d.LabelClusterName] = clusterRef
+	node.RuntimeLabels[k3d.LabelClusterURL] = clusterRef
+	node.RuntimeLabels[k3d.LabelClusterExternal] = "true"
+	node.RuntimeLabels[k3d.LabelClusterToken] = createNodeOpts.ClusterToken
+
+	if node.Env == nil {
+		node.Env = []string{}
+	}
+
+	node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3d.K3sEnvClusterConnectURL, clusterRef))
+	node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3d.K3sEnvClusterToken, createNodeOpts.ClusterToken))
+
+	if err := NodeRun(ctx, runtime, node, createNodeOpts); err != nil {
+		return fmt.Errorf("failed to run node '%s': %w", node.Name, err)
+	}
+
 	return nil
 }
 

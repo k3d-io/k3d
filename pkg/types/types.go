@@ -106,6 +106,7 @@ const (
 	LabelClusterName          string = "k3d.cluster"
 	LabelClusterURL           string = "k3d.cluster.url"
 	LabelClusterToken         string = "k3d.cluster.token"
+	LabelClusterExternal      string = "k3d.cluster.external"
 	LabelImageVolume          string = "k3d.cluster.imageVolume"
 	LabelNetworkExternal      string = "k3d.cluster.network.external"
 	LabelNetwork              string = "k3d.cluster.network"
@@ -137,8 +138,15 @@ var DefaultTmpfsMounts = []string{
 
 // DefaultNodeEnv defines some default environment variables that should be set on every node
 var DefaultNodeEnv = []string{
-	"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml",
+	fmt.Sprintf("%s=/output/kubeconfig.yaml", K3sEnvKubeconfigOutput),
 }
+
+// k3s environment variables
+const (
+	K3sEnvClusterToken      string = "K3S_TOKEN"
+	K3sEnvClusterConnectURL string = "K3S_URL"
+	K3sEnvKubeconfigOutput  string = "K3S_KUBECONFIG_OUTPUT"
+)
 
 // DefaultK3dInternalHostRecord defines the default /etc/hosts entry for the k3d host
 const DefaultK3dInternalHostRecord = "host.k3d.internal"
@@ -216,6 +224,7 @@ type NodeCreateOpts struct {
 	Timeout         time.Duration
 	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 	EnvironmentInfo *EnvironmentInfo
+	ClusterToken    string
 }
 
 // NodeStartOpts describes a set of options one can set when (re-)starting a node
