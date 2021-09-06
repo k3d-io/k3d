@@ -163,7 +163,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 
 	node = srcNode
 
-	l.Log().Debugf("Resulting node %+v", node)
+	l.Log().Tracef("Resulting node %+v", node)
 
 	k3sURLFound := false
 	for _, envVar := range node.Env {
@@ -217,6 +217,10 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	return nil
 }
 
+func NodeAddToClusterRemote(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, clusterRef string, createNodeOpts k3d.NodeCreateOpts) error {
+	return nil
+}
+
 // NodeAddToClusterMulti adds multiple nodes to a chosen cluster
 func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d.Node, cluster *k3d.Cluster, createNodeOpts k3d.NodeCreateOpts) error {
 	if createNodeOpts.Timeout > 0*time.Second {
@@ -233,7 +237,28 @@ func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes 
 		})
 	}
 	if err := nodeWaitGroup.Wait(); err != nil {
-		return fmt.Errorf("Failed to add one or more nodes: %w", err)
+		return fmt.Errorf("failed to add one or more nodes: %w", err)
+	}
+
+	return nil
+}
+
+func NodeAddToClusterMultiRemote(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d.Node, clusterRef string, createNodeOpts k3d.NodeCreateOpts) error {
+	if createNodeOpts.Timeout > 0*time.Second {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, createNodeOpts.Timeout)
+		defer cancel()
+	}
+
+	nodeWaitGroup, ctx := errgroup.WithContext(ctx)
+	for _, node := range nodes {
+		currentNode := node
+		nodeWaitGroup.Go(func() error {
+			return NodeAddToClusterRemote(ctx, runtime, currentNode, clusterRef, createNodeOpts)
+		})
+	}
+	if err := nodeWaitGroup.Wait(); err != nil {
+		return fmt.Errorf("failed to add one or more nodes: %w", err)
 	}
 
 	return nil
