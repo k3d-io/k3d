@@ -495,6 +495,7 @@ ClusterCreatOpts:
 	// *** ServerLoadBalancer ***
 	if !clusterCreateOpts.DisableLoadBalancer {
 		if cluster.ServerLoadBalancer == nil {
+			l.Log().Infof("No loadbalancer specified, creating a default one...")
 			lbNode, err := LoadbalancerPrepare(ctx, runtime, cluster, &k3d.LoadbalancerCreateOpts{Labels: clusterCreateOpts.GlobalLabels})
 			if err != nil {
 				return fmt.Errorf("failed to prepare loadbalancer: %w", err)

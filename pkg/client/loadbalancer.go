@@ -27,14 +27,17 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/docker/go-connections/nat"
 	"github.com/go-test/deep"
+	"github.com/imdario/mergo"
 	l "github.com/rancher/k3d/v4/pkg/logger"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/types"
 	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 )
 
@@ -189,6 +192,22 @@ func LoadbalancerPrepare(ctx context.Context, runtime runtimes.Runtime, cluster 
 	if cluster.ServerLoadBalancer.Config == nil {
 		cluster.ServerLoadBalancer.Config = &k3d.LoadbalancerConfig{
 			Ports: map[string][]string{},
+		}
+	}
+
+	if opts != nil && opts.ConfigOverrides != nil && len(opts.ConfigOverrides) > 0 {
+		tmpViper := viper.New()
+		for _, override := range opts.ConfigOverrides {
+			kv := strings.SplitN(override, "=", 2)
+			l.Log().Tracef("Overriding LB config with %s...", kv)
+			tmpViper.Set(kv[0], kv[1])
+		}
+		lbConfigOverride := &k3d.LoadbalancerConfig{}
+		if err := tmpViper.Unmarshal(lbConfigOverride); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal loadbalancer config override into loadbalancer config: %w", err)
+		}
+		if err := mergo.MergeWithOverwrite(cluster.ServerLoadBalancer.Config, lbConfigOverride); err != nil {
+			return nil, fmt.Errorf("failed to override loadbalancer config: %w", err)
 		}
 	}
 

@@ -33,7 +33,7 @@ stream {
   server {
     listen        {{ $port }} {{- if (eq $protocol "udp") }} udp{{- end -}};
     proxy_pass    {{ $upstream }};
-    proxy_timeout 600;
+    proxy_timeout {{ getv "/settings/defaultProxyTimeout" "600" }};
     proxy_connect_timeout 2s;
   }
 
