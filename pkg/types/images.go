@@ -25,8 +25,8 @@ import (
 	"fmt"
 	"os"
 
-	l "github.com/rancher/k3d/v4/pkg/logger"
-	"github.com/rancher/k3d/v4/version"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/rancher/k3d/v5/version"
 )
 
 // DefaultK3sImageRepo specifies the default image repository for the used k3s image

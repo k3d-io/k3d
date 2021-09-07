@@ -25,9 +25,9 @@ package v1alpha3
 import (
 	"encoding/json"
 
-	configtypes "github.com/rancher/k3d/v4/pkg/config/types"
-	"github.com/rancher/k3d/v4/pkg/config/v1alpha2"
-	l "github.com/rancher/k3d/v4/pkg/logger"
+	configtypes "github.com/rancher/k3d/v5/pkg/config/types"
+	"github.com/rancher/k3d/v5/pkg/config/v1alpha2"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
 var Migrations = map[string]func(configtypes.Config) (configtypes.Config, error){

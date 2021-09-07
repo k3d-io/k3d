@@ -23,8 +23,8 @@ THE SOFTWARE.
 package config
 
 import (
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
-	l "github.com/rancher/k3d/v4/pkg/logger"
+	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
 // ProcessClusterConfig applies processing to the config sanitizing it and doing

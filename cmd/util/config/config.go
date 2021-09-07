@@ -28,8 +28,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rancher/k3d/v4/pkg/config"
-	l "github.com/rancher/k3d/v4/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/config"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"

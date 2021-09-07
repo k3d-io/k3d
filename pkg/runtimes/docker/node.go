@@ -33,9 +33,9 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
-	l "github.com/rancher/k3d/v4/pkg/logger"
-	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	runtimeErr "github.com/rancher/k3d/v5/pkg/runtimes/errors"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 )
 
 // CreateNode creates a new container

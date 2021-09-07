@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/rancher/k3d?style=flat-square)](./LICENSE.md)
 ![Downloads](https://img.shields.io/github/downloads/rancher/k3d/total.svg?style=flat-square)
 
-[![Go Module](https://img.shields.io/badge/Go%20Module-github.com%2Francher%2Fk3d%2Fv4-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/rancher/k3d/v4)
+[![Go Module](https://img.shields.io/badge/Go%20Module-github.com%2Francher%2Fk3d%2Fv4-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/rancher/k3d/v5)
 [![Go version](https://img.shields.io/github/go-mod/go-version/rancher/k3d?logo=go&logoColor=white&style=flat-square)](./go.mod)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d?style=flat-square)](https://goreportcard.com/report/github.com/rancher/k3d)
 
@@ -69,7 +69,7 @@ or...
 
 ## Build
 
-1. Clone this repo, e.g. via `git clone git@github.com:rancher/k3d.git` or `go get github.com/rancher/k3d/v4@main`
+1. Clone this repo, e.g. via `git clone git@github.com:rancher/k3d.git` or `go get github.com/rancher/k3d/v5@main`
 2. Inside the repo run
    - 'make install-tools' to make sure required go packages are installed
 3. Inside the repo run one of the following commands

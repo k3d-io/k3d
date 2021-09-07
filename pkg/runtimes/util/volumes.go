@@ -27,9 +27,9 @@ import (
 	rt "runtime"
 	"strings"
 
-	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
 
-	l "github.com/rancher/k3d/v4/pkg/logger"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
 // ValidateVolumeMount checks, if the source of volume mounts exists and if the destination is an absolute path

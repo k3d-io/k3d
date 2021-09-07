@@ -24,11 +24,11 @@ package debug
 import (
 	"fmt"
 
-	"github.com/rancher/k3d/v4/cmd/util"
-	"github.com/rancher/k3d/v4/pkg/client"
-	l "github.com/rancher/k3d/v4/pkg/logger"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	"github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v5/cmd/util"
+	"github.com/rancher/k3d/v5/pkg/client"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	"github.com/rancher/k3d/v5/pkg/types"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/rancher/k3d/v4/cmd"
-	l "github.com/rancher/k3d/v4/pkg/logger"
+	"github.com/rancher/k3d/v5/cmd"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/spf13/cobra/doc"
 )
 

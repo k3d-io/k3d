@@ -25,10 +25,10 @@ import (
 	"context"
 	"strings"
 
-	k3dcluster "github.com/rancher/k3d/v4/pkg/client"
-	l "github.com/rancher/k3d/v4/pkg/logger"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
+	k3dcluster "github.com/rancher/k3d/v5/pkg/client"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/spf13/cobra"
 )
 

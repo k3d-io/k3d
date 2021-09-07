@@ -30,18 +30,18 @@ import (
 	"strings"
 
 	"github.com/docker/go-connections/nat"
-	cliutil "github.com/rancher/k3d/v4/cmd/util" // TODO: move parseapiport to pkg
-	"github.com/rancher/k3d/v4/pkg/client"
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	"github.com/rancher/k3d/v4/pkg/types/k3s"
-	"github.com/rancher/k3d/v4/pkg/util"
-	"github.com/rancher/k3d/v4/version"
+	cliutil "github.com/rancher/k3d/v5/cmd/util" // TODO: move parseapiport to pkg
+	"github.com/rancher/k3d/v5/pkg/client"
+	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/types/k3s"
+	"github.com/rancher/k3d/v5/pkg/util"
+	"github.com/rancher/k3d/v5/version"
 	"gopkg.in/yaml.v2"
 	"inet.af/netaddr"
 
-	l "github.com/rancher/k3d/v4/pkg/logger"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
 var (

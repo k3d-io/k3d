@@ -9,7 +9,7 @@ require (
 	github.com/containerd/continuity v0.0.0-20210315143101-93e15499afd5 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/rancher/k3d/v4 v4.4.7-0.20210709062205-c5f7884f7870
+	github.com/rancher/k3d/v5 v4.4.7-0.20210709062205-c5f7884f7870
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
 	golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1 // indirect
@@ -19,4 +19,4 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.1 // indirect
 )
 
-replace github.com/rancher/k3d/v4 => /PATH/TO/YOUR/REPO/DIRECTORY
+replace github.com/rancher/k3d/v5 => /PATH/TO/YOUR/REPO/DIRECTORY

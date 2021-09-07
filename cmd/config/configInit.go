@@ -25,8 +25,8 @@ import (
 	"fmt"
 	"os"
 
-	config "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
-	l "github.com/rancher/k3d/v4/pkg/logger"
+	config "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/spf13/cobra"
 )
 

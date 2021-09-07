@@ -25,8 +25,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rancher/k3d/v4/pkg/config"
-	l "github.com/rancher/k3d/v4/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/config"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
