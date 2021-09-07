@@ -48,12 +48,15 @@ func GetIP(ctx context.Context, runtime k3drt.Runtime, network *k3d.ClusterNetwo
 	}
 
 	// exclude first and last address
-	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().From)
-	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().To)
+	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().From())
+	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().To())
 
-	ipset := ipsetbuilder.IPSet()
+	ipset, err := ipsetbuilder.IPSet()
+	if err != nil {
+		return netaddr.IP{}, err
+	}
 
-	ip := ipset.Ranges()[0].From
+	ip := ipset.Ranges()[0].From()
 
 	l.Log().Debugf("Found free IP %s in network %s", ip.String(), network.Name)
 

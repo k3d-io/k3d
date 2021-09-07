@@ -4,7 +4,12 @@
 
 package netaddr
 
-import "sort"
+import (
+	"fmt"
+	"runtime"
+	"sort"
+	"strings"
+)
 
 // IPSetBuilder builds an immutable IPSet.
 //
@@ -14,12 +19,18 @@ import "sort"
 // Removals only affect the current membership of the set, so in
 // general Adds should be called first. Input ranges may overlap in
 // any way.
+//
+// Most IPSetBuilder methods do not return errors.
+// Instead, errors are accumulated and reported by IPSetBuilder.IPSet.
 type IPSetBuilder struct {
 	// in are the ranges in the set.
 	in []IPRange
 
 	// out are the ranges to be removed from 'in'.
 	out []IPRange
+
+	// errs are errors accumulated during construction.
+	errs multiErr
 }
 
 // normalize normalizes s: s.in becomes the minimal sorted list of
@@ -53,7 +64,7 @@ func (s *IPSetBuilder) normalize() {
 		}
 
 		switch {
-		case !rout.Valid() || !rin.Valid():
+		case !rout.IsValid() || !rin.IsValid():
 			// mergeIPRanges should have prevented invalid ranges from
 			// sneaking in.
 			panic("invalid IPRanges during Ranges merge")
@@ -95,10 +106,10 @@ func (s *IPSetBuilder) normalize() {
 			// f-------------t
 			//    f------t
 			//       out
-			min = append(min, IPRange{From: rin.From, To: rout.From.Prior()})
+			min = append(min, IPRange{from: rin.from, to: rout.from.Prior()})
 			// Adjust in[0], not ir, because we want to consider the
 			// mutated range on the next iteration.
-			in[0].From = rout.To.Next()
+			in[0].from = rout.to.Next()
 			out = out[1:]
 			if debug {
 				debugf("out inside in; split in, append first in, drop out, adjust second in")
@@ -111,7 +122,7 @@ func (s *IPSetBuilder) normalize() {
 			// f------t
 			//    f------t
 			//       in
-			in[0].From = rout.To.Next()
+			in[0].from = rout.to.Next()
 			// Can't move ir onto min yet, another later out might
 			// trim it further. Just discard or and continue.
 			out = out[1:]
@@ -125,7 +136,7 @@ func (s *IPSetBuilder) normalize() {
 			//        f------t
 			//    f------t
 			//       in
-			min = append(min, IPRange{From: rin.From, To: rout.From.Prior()})
+			min = append(min, IPRange{from: rin.from, to: rout.from.Prior()})
 			in = in[1:]
 			if debug {
 				debugf("merge out cuts end of in; append shortened in")
@@ -157,16 +168,41 @@ func (s *IPSetBuilder) Clone() *IPSetBuilder {
 	}
 }
 
+func (s *IPSetBuilder) addError(msg string, args ...interface{}) {
+	se := new(stacktraceErr)
+	// Skip three frames: runtime.Callers, addError, and the IPSetBuilder
+	// method that called addError (such as IPSetBuilder.Add).
+	// The resulting stack trace ends at the line in the user's
+	// code where they called into netaddr.
+	n := runtime.Callers(3, se.pcs[:])
+	se.at = se.pcs[:n]
+	se.err = fmt.Errorf(msg, args...)
+	s.errs = append(s.errs, se)
+}
+
 // Add adds ip to s.
-func (s *IPSetBuilder) Add(ip IP) { s.AddRange(IPRange{ip, ip}) }
+func (s *IPSetBuilder) Add(ip IP) {
+	if ip.IsZero() {
+		s.addError("Add(IP{})")
+		return
+	}
+	s.AddRange(IPRangeFrom(ip, ip))
+}
 
 // AddPrefix adds all IPs in p to s.
-func (s *IPSetBuilder) AddPrefix(p IPPrefix) { s.AddRange(p.Range()) }
+func (s *IPSetBuilder) AddPrefix(p IPPrefix) {
+	if r := p.Range(); r.IsValid() {
+		s.AddRange(r)
+	} else {
+		s.addError("AddPrefix(%v/%v)", p.IP(), p.Bits())
+	}
+}
 
 // AddRange adds r to s.
 // If r is not Valid, AddRange does nothing.
 func (s *IPSetBuilder) AddRange(r IPRange) {
-	if !r.Valid() {
+	if !r.IsValid() {
+		s.addError("AddRange(%v-%v)", r.From(), r.To())
 		return
 	}
 	// If there are any removals (s.out), then we need to compact the set
@@ -179,26 +215,46 @@ func (s *IPSetBuilder) AddRange(r IPRange) {
 
 // AddSet adds all IPs in b to s.
 func (s *IPSetBuilder) AddSet(b *IPSet) {
+	if b == nil {
+		return
+	}
 	for _, r := range b.rr {
 		s.AddRange(r)
 	}
 }
 
 // Remove removes ip from s.
-func (s *IPSetBuilder) Remove(ip IP) { s.RemoveRange(IPRange{ip, ip}) }
+func (s *IPSetBuilder) Remove(ip IP) {
+	if ip.IsZero() {
+		s.addError("Remove(IP{})")
+	} else {
+		s.RemoveRange(IPRangeFrom(ip, ip))
+	}
+}
 
 // RemovePrefix removes all IPs in p from s.
-func (s *IPSetBuilder) RemovePrefix(p IPPrefix) { s.RemoveRange(p.Range()) }
+func (s *IPSetBuilder) RemovePrefix(p IPPrefix) {
+	if r := p.Range(); r.IsValid() {
+		s.RemoveRange(r)
+	} else {
+		s.addError("RemovePrefix(%v/%v)", p.IP(), p.Bits())
+	}
+}
 
 // RemoveRange removes all IPs in r from s.
 func (s *IPSetBuilder) RemoveRange(r IPRange) {
-	if r.Valid() {
+	if r.IsValid() {
 		s.out = append(s.out, r)
+	} else {
+		s.addError("RemoveRange(%v-%v)", r.From(), r.To())
 	}
 }
 
 // RemoveSet removes all IPs in o from s.
 func (s *IPSetBuilder) RemoveSet(b *IPSet) {
+	if b == nil {
+		return
+	}
 	for _, r := range b.rr {
 		s.RemoveRange(r)
 	}
@@ -218,8 +274,8 @@ func (s *IPSetBuilder) Complement() {
 	s.normalize()
 	s.out = s.in
 	s.in = []IPRange{
-		IPPrefix{IP: IPv4(0, 0, 0, 0), Bits: 0}.Range(),
-		IPPrefix{IP: IPv6Unspecified(), Bits: 0}.Range(),
+		IPPrefix{ip: IPv4(0, 0, 0, 0), bits: 0}.Range(),
+		IPPrefix{ip: IPv6Unspecified(), bits: 0}.Range(),
 	}
 }
 
@@ -236,12 +292,29 @@ func discardf(format string, args ...interface{}) {}
 // debugf is reassigned by tests.
 var debugf = discardf
 
-// IPSet returns an immutable IPSet representing the current state of
-// s. The builder remains usable after calling IPSet.
-func (s *IPSetBuilder) IPSet() *IPSet {
+// IPSet returns an immutable IPSet representing the current state of s.
+//
+// Most IPSetBuilder methods do not return errors.
+// Rather, the builder ignores any invalid inputs (such as an invalid IPPrefix),
+// and accumulates a list of any such errors that it encountered.
+//
+// IPSet also reports any such accumulated errors.
+// Even if the returned error is non-nil, the returned IPSet is usable
+// and contains all modifications made with valid inputs.
+//
+// The builder remains usable after calling IPSet.
+// Calling IPSet clears any accumulated errors.
+func (s *IPSetBuilder) IPSet() (*IPSet, error) {
 	s.normalize()
-	return &IPSet{
+	ret := &IPSet{
 		rr: append([]IPRange{}, s.in...),
+	}
+	if len(s.errs) == 0 {
+		return ret, nil
+	} else {
+		errs := s.errs
+		s.errs = nil
+		return ret, errs
 	}
 }
 
@@ -290,11 +363,16 @@ func (s *IPSet) Equal(o *IPSet) bool {
 }
 
 // Contains reports whether ip is in s.
+// If ip has an IPv6 zone, Contains returns false,
+// because IPSets do not track zones.
 func (s *IPSet) Contains(ip IP) bool {
+	if ip.hasZone() {
+		return false
+	}
 	// TODO: data structure permitting more efficient lookups:
 	// https://github.com/inetaf/netaddr/issues/139
 	i := sort.Search(len(s.rr), func(i int) bool {
-		return ip.Less(s.rr[i].From)
+		return ip.Less(s.rr[i].from)
 	})
 	if i == 0 {
 		return false
@@ -356,12 +434,12 @@ func (s *IPSet) RemoveFreePrefix(bitLen uint8) (p IPPrefix, newSet *IPSet, ok bo
 	var bestFit IPPrefix
 	for _, r := range s.rr {
 		for _, prefix := range r.Prefixes() {
-			if prefix.Bits > bitLen {
+			if prefix.bits > bitLen {
 				continue
 			}
-			if bestFit.IP.IsZero() || prefix.Bits > bestFit.Bits {
+			if bestFit.ip.IsZero() || prefix.bits > bestFit.bits {
 				bestFit = prefix
-				if bestFit.Bits == bitLen {
+				if bestFit.bits == bitLen {
 					// exact match, done.
 					break
 				}
@@ -369,14 +447,51 @@ func (s *IPSet) RemoveFreePrefix(bitLen uint8) (p IPPrefix, newSet *IPSet, ok bo
 		}
 	}
 
-	if bestFit.IP.IsZero() {
+	if bestFit.ip.IsZero() {
 		return IPPrefix{}, s, false
 	}
 
-	prefix := IPPrefix{IP: bestFit.IP, Bits: bitLen}
+	prefix := IPPrefix{ip: bestFit.ip, bits: bitLen}
 
 	var b IPSetBuilder
 	b.AddSet(s)
 	b.RemovePrefix(prefix)
-	return prefix, b.IPSet(), true
+	newSet, _ = b.IPSet()
+	return prefix, newSet, true
+}
+
+type multiErr []error
+
+func (e multiErr) Error() string {
+	var ret []string
+	for _, err := range e {
+		ret = append(ret, err.Error())
+	}
+	return strings.Join(ret, "; ")
+}
+
+// A stacktraceErr combines an error with a stack trace.
+type stacktraceErr struct {
+	pcs [16]uintptr // preallocated array of PCs
+	at  []uintptr   // stack trace whence the error
+	err error       // underlying error
+}
+
+func (e *stacktraceErr) Error() string {
+	frames := runtime.CallersFrames(e.at)
+	buf := new(strings.Builder)
+	buf.WriteString(e.err.Error())
+	buf.WriteString(" @ ")
+	for {
+		frame, more := frames.Next()
+		if !more {
+			break
+		}
+		fmt.Fprintf(buf, "%s:%d ", frame.File, frame.Line)
+	}
+	return strings.TrimSpace(buf.String())
+}
+
+func (e *stacktraceErr) Unwrap() error {
+	return e.err
 }

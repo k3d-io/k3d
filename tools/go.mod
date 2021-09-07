@@ -1,6 +1,6 @@
 module github.com/rancher/k3d/tools
 
-go 1.16
+go 1.17
 
 require (
 	github.com/Microsoft/go-winio v0.4.12 // indirect
@@ -15,10 +15,18 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
-	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/sirupsen/logrus v1.8.1
 	github.com/urfave/cli v1.20.0
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
 	google.golang.org/grpc v1.36.0 // indirect
 	gotest.tools/v3 v3.0.3 // indirect
+)
+
+require (
+	github.com/golang/protobuf v1.4.2 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
+	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
+	google.golang.org/protobuf v1.25.0 // indirect
 )

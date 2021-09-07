@@ -10,6 +10,11 @@
 // Notably, this package's IP type takes less memory, is immutable,
 // comparable (supports == and being a map key), and more. See
 // https://github.com/inetaf/netaddr for background.
+//
+// IPv6 Zones
+//
+// IP and IPPort are the only types in this package that support IPv6
+// zones. Other types silently drop any passed-in zones.
 package netaddr // import "inet.af/netaddr"
 
 import (
@@ -119,6 +124,12 @@ func ipv6Slice(addr []byte) IP {
 // It is equivalent to calling IPv6Raw(addr).Unmap().
 func IPFrom16(addr [16]byte) IP {
 	return IPv6Raw(addr).Unmap()
+}
+
+// IPFrom4 returns the IPv4 address given by the bytes in addr.
+// It is equivalent to calling IPv4(addr[0], addr[1], addr[2], addr[3]).
+func IPFrom4(addr [4]byte) IP {
+	return IPv4(addr[0], addr[1], addr[2], addr[3])
 }
 
 // ParseIP parses s as an IP address, returning the result. The string
@@ -382,6 +393,8 @@ func (ip IP) v6(i uint8) uint8 {
 	return uint8(*(ip.addr.halves()[(i/8)%2]) >> ((7 - i%8) * 8))
 }
 
+// v6u16 returns the i'th 16-bit word of ip. If ip is an IPv4 address,
+// this accesses the IPv4-mapped IPv6 address form of the IP.
 func (ip IP) v6u16(i uint8) uint16 {
 	return uint16(*(ip.addr.halves()[(i/4)%2]) >> ((3 - i%4) * 16))
 }
@@ -389,12 +402,19 @@ func (ip IP) v6u16(i uint8) uint16 {
 // IsZero reports whether ip is the zero value of the IP type.
 // The zero value is not a valid IP address of any type.
 //
-// Note that "0.0.0.0" and "::" are not the zero value.
+// Note that "0.0.0.0" and "::" are not the zero value. Use IsUnspecified to
+// check for these values instead.
 func (ip IP) IsZero() bool {
 	// Faster than comparing ip == IP{}, but effectively equivalent,
 	// as there's no way to make an IP with a nil z from this package.
 	return ip.z == z0
 }
+
+// IsValid whether the IP is an initialized value and not the IP
+// type's zero value.
+//
+// Note that both "0.0.0.0" and "::" are valid, non-zero values.
+func (ip IP) IsValid() bool { return ip.z != z0 }
 
 // BitLen returns the number of bits in the IP address:
 // 32 for IPv4 or 128 for IPv6.
@@ -528,14 +548,33 @@ func (ip IP) WithZone(zone string) IP {
 	return ip
 }
 
+// noZone unconditionally strips the zone from IP.
+// It's similar to WithZone, but small enough to be inlinable.
+func (ip IP) withoutZone() IP {
+	if !ip.Is6() {
+		return ip
+	}
+	ip.z = z6noz
+	return ip
+}
+
+// hasZone reports whether IP has an IPv6 zone.
+func (ip IP) hasZone() bool {
+	return ip.z != z0 && ip.z != z4 && ip.z != z6noz
+}
+
 // IsLinkLocalUnicast reports whether ip is a link-local unicast address.
 // If ip is the zero value, it will return false.
 func (ip IP) IsLinkLocalUnicast() bool {
+	// Dynamic Configuration of IPv4 Link-Local Addresses
+	// https://datatracker.ietf.org/doc/html/rfc3927#section-2.1
 	if ip.Is4() {
 		return ip.v4(0) == 169 && ip.v4(1) == 254
 	}
+	// IP Version 6 Addressing Architecture (2.4 Address Type Identification)
+	// https://datatracker.ietf.org/doc/html/rfc4291#section-2.4
 	if ip.Is6() {
-		return ip.v6u16(0) == 0xfe80
+		return ip.v6u16(0)&0xffc0 == 0xfe80
 	}
 	return false // zero value
 }
@@ -543,9 +582,13 @@ func (ip IP) IsLinkLocalUnicast() bool {
 // IsLoopback reports whether ip is a loopback address. If ip is the zero value,
 // it will return false.
 func (ip IP) IsLoopback() bool {
+	// Requirements for Internet Hosts -- Communication Layers (3.2.1.3 Addressing)
+	// https://datatracker.ietf.org/doc/html/rfc1122#section-3.2.1.3
 	if ip.Is4() {
 		return ip.v4(0) == 127
 	}
+	// IP Version 6 Addressing Architecture (2.4 Address Type Identification)
+	// https://datatracker.ietf.org/doc/html/rfc4291#section-2.4
 	if ip.Is6() {
 		return ip.addr.hi == 0 && ip.addr.lo == 1
 	}
@@ -555,9 +598,13 @@ func (ip IP) IsLoopback() bool {
 // IsMulticast reports whether ip is a multicast address. If ip is the zero
 // value, it will return false.
 func (ip IP) IsMulticast() bool {
+	// Host Extensions for IP Multicasting (4. HOST GROUP ADDRESSES)
+	// https://datatracker.ietf.org/doc/html/rfc1112#section-4
 	if ip.Is4() {
 		return ip.v4(0)&0xf0 == 0xe0
 	}
+	// IP Version 6 Addressing Architecture (2.4 Address Type Identification)
+	// https://datatracker.ietf.org/doc/html/rfc4291#section-2.4
 	if ip.Is6() {
 		return ip.addr.hi>>(64-8) == 0xff // ip.v6(0) == 0xff
 	}
@@ -568,6 +615,8 @@ func (ip IP) IsMulticast() bool {
 // multicast address. If ip is the zero value or an IPv4 address, it will return
 // false.
 func (ip IP) IsInterfaceLocalMulticast() bool {
+	// IPv6 Addressing Architecture (2.7.1. Pre-Defined Multicast Addresses)
+	// https://datatracker.ietf.org/doc/html/rfc4291#section-2.7.1
 	if ip.Is6() {
 		return ip.v6u16(0)&0xff0f == 0xff01
 	}
@@ -577,13 +626,76 @@ func (ip IP) IsInterfaceLocalMulticast() bool {
 // IsLinkLocalMulticast reports whether ip is a link-local multicast address.
 // If ip is the zero value, it will return false.
 func (ip IP) IsLinkLocalMulticast() bool {
+	// IPv4 Multicast Guidelines (4. Local Network Control Block (224.0.0/24))
+	// https://datatracker.ietf.org/doc/html/rfc5771#section-4
 	if ip.Is4() {
 		return ip.v4(0) == 224 && ip.v4(1) == 0 && ip.v4(2) == 0
 	}
+	// IPv6 Addressing Architecture (2.7.1. Pre-Defined Multicast Addresses)
+	// https://datatracker.ietf.org/doc/html/rfc4291#section-2.7.1
 	if ip.Is6() {
 		return ip.v6u16(0)&0xff0f == 0xff02
 	}
 	return false // zero value
+}
+
+// IsGlobalUnicast reports whether ip is a global unicast address.
+//
+// It returns true for IPv6 addresses which fall outside of the current
+// IANA-allocated 2000::/3 global unicast space, with the exception of the
+// link-local address space. It also returns true even if ip is in the IPv4
+// private address space or IPv6 unique local address space. If ip is the zero
+// value, it will return false.
+//
+// For reference, see RFC 1122, RFC 4291, and RFC 4632.
+func (ip IP) IsGlobalUnicast() bool {
+	if ip.z == z0 {
+		// Invalid or zero-value.
+		return false
+	}
+
+	// Match the stdlib's IsGlobalUnicast logic. Notably private IPv4 addresses
+	// and ULA IPv6 addresses are still considered "global unicast".
+	if ip.Is4() && (ip == IPv4(0, 0, 0, 0) || ip == IPv4(255, 255, 255, 255)) {
+		return false
+	}
+
+	return ip != IPv6Unspecified() &&
+		!ip.IsLoopback() &&
+		!ip.IsMulticast() &&
+		!ip.IsLinkLocalUnicast()
+}
+
+// IsPrivate reports whether ip is a private address, according to RFC 1918
+// (IPv4 addresses) and RFC 4193 (IPv6 addresses). That is, it reports whether
+// ip is in 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, or fc00::/7. This is the
+// same as the standard library's net.IP.IsPrivate.
+func (ip IP) IsPrivate() bool {
+	// Match the stdlib's IsPrivate logic.
+	if ip.Is4() {
+		// RFC 1918 allocates 10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16 as
+		// private IPv4 address subnets.
+		return ip.v4(0) == 10 ||
+			(ip.v4(0) == 172 && ip.v4(1)&0xf0 == 16) ||
+			(ip.v4(0) == 192 && ip.v4(1) == 168)
+	}
+
+	if ip.Is6() {
+		// RFC 4193 allocates fc00::/7 as the unique local unicast IPv6 address
+		// subnet.
+		return ip.v6(0)&0xfe == 0xfc
+	}
+
+	return false // zero value
+}
+
+// IsUnspecified reports whether ip is an unspecified address, either the IPv4
+// address "0.0.0.0" or the IPv6 address "::".
+//
+// Note that the IP zero value is not an unspecified address. Use IsZero to
+// check for the zero value instead.
+func (ip IP) IsUnspecified() bool {
+	return ip == IPv4(0, 0, 0, 0) || ip == IPv6Unspecified()
 }
 
 // Prefix applies a CIDR mask of leading bits to IP, producing an IPPrefix
@@ -606,14 +718,14 @@ func (ip IP) Prefix(bits uint8) (IPPrefix, error) {
 		}
 	}
 	ip.addr = ip.addr.and(mask6[effectiveBits])
-	return IPPrefix{ip, bits}, nil
+	return IPPrefixFrom(ip, bits), nil
 }
 
 // Netmask applies a bit mask to IP, producing an IPPrefix. If IP is the
 // zero value, a zero-value IPPrefix and a nil error are returned. If the
 // netmask length is not 4 for IPv4 or 16 for IPv6, an error is
 // returned. If the netmask is non-contiguous, an error is returned.
-func (ip *IP) Netmask(mask []byte) (IPPrefix, error) {
+func (ip IP) Netmask(mask []byte) (IPPrefix, error) {
 	l := len(mask)
 
 	switch ip.z {
@@ -664,6 +776,38 @@ func (ip IP) As4() [4]byte {
 	panic("As4 called on IPv6 address")
 }
 
+// Next returns the IP following ip.
+// If there is none, it returns the IP zero value.
+func (ip IP) Next() IP {
+	ip.addr = ip.addr.addOne()
+	if ip.Is4() {
+		if uint32(ip.addr.lo) == 0 {
+			// Overflowed.
+			return IP{}
+		}
+	} else {
+		if ip.addr.isZero() {
+			// Overflowed
+			return IP{}
+		}
+	}
+	return ip
+}
+
+// Prior returns the IP before ip.
+// If there is none, it returns the IP zero value.
+func (ip IP) Prior() IP {
+	if ip.Is4() {
+		if uint32(ip.addr.lo) == 0 {
+			return IP{}
+		}
+	} else if ip.addr.isZero() {
+		return IP{}
+	}
+	ip.addr = ip.addr.subOne()
+	return ip
+}
+
 // String returns the string form of the IP address ip.
 // It returns one of 4 forms:
 //
@@ -677,11 +821,25 @@ func (ip IP) As4() [4]byte {
 func (ip IP) String() string {
 	switch ip.z {
 	case z0:
-		return "invalid IP"
+		return "zero IP"
 	case z4:
 		return ip.string4()
 	default:
 		return ip.string6()
+	}
+}
+
+// AppendTo appends a text encoding of ip,
+// as generated by MarshalText,
+// to b and returns the extended buffer.
+func (ip IP) AppendTo(b []byte) []byte {
+	switch ip.z {
+	case z0:
+		return b
+	case z4:
+		return ip.appendTo4(b)
+	default:
+		return ip.appendTo6(b)
 	}
 }
 
@@ -720,9 +878,19 @@ func appendHex(b []byte, x uint16) []byte {
 	return append(b, digits[x&0xf])
 }
 
+// appendHexPad appends the fully padded hex string representation of x to b.
+func appendHexPad(b []byte, x uint16) []byte {
+	return append(b, digits[x>>12], digits[x>>8&0xf], digits[x>>4&0xf], digits[x&0xf])
+}
+
 func (ip IP) string4() string {
 	const max = len("255.255.255.255")
 	ret := make([]byte, 0, max)
+	ret = ip.appendTo4(ret)
+	return string(ret)
+}
+
+func (ip IP) appendTo4(ret []byte) []byte {
 	ret = appendDecimal(ret, ip.v4(0))
 	ret = append(ret, '.')
 	ret = appendDecimal(ret, ip.v4(1))
@@ -730,7 +898,7 @@ func (ip IP) string4() string {
 	ret = appendDecimal(ret, ip.v4(2))
 	ret = append(ret, '.')
 	ret = appendDecimal(ret, ip.v4(3))
-	return string(ret)
+	return ret
 }
 
 // string6 formats ip in IPv6 textual representation. It follows the
@@ -739,6 +907,20 @@ func (ip IP) string4() string {
 // zeros, use :: to elide the longest run of zeros, and don't use ::
 // to compact a single zero field.
 func (ip IP) string6() string {
+	// Use a zone with a "plausibly long" name, so that most zone-ful
+	// IP addresses won't require additional allocation.
+	//
+	// The compiler does a cool optimization here, where ret ends up
+	// stack-allocated and so the only allocation this function does
+	// is to construct the returned string. As such, it's okay to be a
+	// bit greedy here, size-wise.
+	const max = len("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff%enp5s0")
+	ret := make([]byte, 0, max)
+	ret = ip.appendTo6(ret)
+	return string(ret)
+}
+
+func (ip IP) appendTo6(ret []byte) []byte {
 	zeroStart, zeroEnd := uint8(255), uint8(255)
 	for i := uint8(0); i < 8; i++ {
 		j := i
@@ -750,15 +932,6 @@ func (ip IP) string6() string {
 		}
 	}
 
-	// Use a zone with a "plausibly long" name, so that most zone-ful
-	// IP addresses won't require additional allocation.
-	//
-	// The compiler does a cool optimization here, where ret ends up
-	// stack-allocated and so the only allocation this function does
-	// is to construct the returned string. As such, it's okay to be a
-	// bit greedy here, size-wise.
-	const max = len("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff%enp5s0")
-	ret := make([]byte, 0, max)
 	for i := uint8(0); i < 8; i++ {
 		if i == zeroStart {
 			ret = append(ret, ':', ':')
@@ -777,6 +950,34 @@ func (ip IP) string6() string {
 		ret = append(ret, '%')
 		ret = append(ret, ip.Zone()...)
 	}
+	return ret
+}
+
+// StringExpanded is like String but IPv6 addresses are expanded with leading
+// zeroes and no "::" compression. For example, "2001:db8::1" becomes
+// "2001:0db8:0000:0000:0000:0000:0000:0001".
+func (ip IP) StringExpanded() string {
+	switch ip.z {
+	case z0, z4:
+		return ip.String()
+	}
+
+	const size = len("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")
+	ret := make([]byte, 0, size)
+	for i := uint8(0); i < 8; i++ {
+		if i > 0 {
+			ret = append(ret, ':')
+		}
+
+		ret = appendHexPad(ret, ip.v6u16(i))
+	}
+
+	if ip.z != z6noz {
+		// The addition of a zone will cause a second allocation, but when there
+		// is no zone the ret slice will be stack allocated.
+		ret = append(ret, '%')
+		ret = append(ret, ip.Zone()...)
+	}
 	return string(ret)
 }
 
@@ -784,10 +985,18 @@ func (ip IP) string6() string {
 // The encoding is the same as returned by String, with one exception:
 // If ip is the zero value, the encoding is the empty string.
 func (ip IP) MarshalText() ([]byte, error) {
-	if ip.z == z0 {
+	switch ip.z {
+	case z0:
 		return []byte(""), nil
+	case z4:
+		max := len("255.255.255.255")
+		b := make([]byte, 0, max)
+		return ip.appendTo4(b), nil
+	default:
+		max := len("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff%enp5s0")
+		b := make([]byte, 0, max)
+		return ip.appendTo6(b), nil
 	}
-	return []byte(ip.String()), nil
 }
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
@@ -795,7 +1004,7 @@ func (ip IP) MarshalText() ([]byte, error) {
 // It returns an error if *ip is not the IP zero value.
 func (ip *IP) UnmarshalText(text []byte) error {
 	if ip.z != z0 {
-		return errors.New("netaddr: refusing to Unmarshal into non-zero IP")
+		return errors.New("refusing to Unmarshal into non-zero IP")
 	}
 	if len(text) == 0 {
 		return nil
@@ -807,22 +1016,26 @@ func (ip *IP) UnmarshalText(text []byte) error {
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface.
 func (ip IP) MarshalBinary() ([]byte, error) {
-	if ip.Is4() {
+	switch ip.z {
+	case z0:
+		return nil, nil
+	case z4:
 		b := ip.As4()
 		return b[:], nil
+	default:
+		b16 := ip.As16()
+		b := b16[:]
+		if z := ip.Zone(); z != "" {
+			b = append(b, []byte(z)...)
+		}
+		return b, nil
 	}
-	b16 := ip.As16()
-	b := b16[:]
-	if z := ip.Zone(); z != "" {
-		b = append(b, []byte(z)...)
-	}
-	return b, nil
 }
 
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
 func (ip *IP) UnmarshalBinary(b []byte) error {
 	if ip.z != z0 {
-		return errors.New("netaddr: refusing to Unmarshal into non-zero IP")
+		return errors.New("refusing to Unmarshal into non-zero IP")
 	}
 	n := len(b)
 	switch {
@@ -838,16 +1051,30 @@ func (ip *IP) UnmarshalBinary(b []byte) error {
 		*ip = ipv6Slice(b[:16]).WithZone(string(b[16:]))
 		return nil
 	}
-	return fmt.Errorf("netaddr: unexpected ip size: %v", len(b))
+	return fmt.Errorf("unexpected ip size: %v", len(b))
 }
 
-// IPPort is an IP & port number.
-//
-// It's meant to be used as a value type.
+// IPPort is an IP and a port number.
 type IPPort struct {
-	IP   IP
-	Port uint16
+	ip   IP
+	port uint16
 }
+
+// IPPortFrom returns an IPPort with IP ip and port port.
+// It does not allocate.
+func IPPortFrom(ip IP, port uint16) IPPort { return IPPort{ip: ip, port: port} }
+
+// WithIP returns an IPPort with IP ip and port p.Port().
+func (p IPPort) WithIP(ip IP) IPPort { return IPPort{ip: ip, port: p.port} }
+
+// WithIP returns an IPPort with IP p.IP() and port port.
+func (p IPPort) WithPort(port uint16) IPPort { return IPPort{ip: p.ip, port: port} }
+
+// IP returns p's IP.
+func (p IPPort) IP() IP { return p.ip }
+
+// Port returns p's port.
+func (p IPPort) Port() uint16 { return p.port }
 
 // splitIPPort splits s into an IP address string and a port
 // string. It splits strings shaped like "foo:bar" or "[foo]:bar",
@@ -891,14 +1118,14 @@ func ParseIPPort(s string) (IPPort, error) {
 	if err != nil {
 		return ipp, fmt.Errorf("invalid port %q parsing %q", port, s)
 	}
-	ipp.Port = uint16(port16)
-	ipp.IP, err = ParseIP(ip)
+	ipp.port = uint16(port16)
+	ipp.ip, err = ParseIP(ip)
 	if err != nil {
 		return IPPort{}, err
 	}
-	if v6 && ipp.IP.Is4() {
+	if v6 && ipp.ip.Is4() {
 		return IPPort{}, fmt.Errorf("invalid ip:port %q, square brackets can only be used with IPv6 addresses", s)
-	} else if !v6 && ipp.IP.Is6() {
+	} else if !v6 && ipp.ip.Is6() {
 		return IPPort{}, fmt.Errorf("invalid ip:port %q, IPv6 addresses must be surrounded by square brackets", s)
 	}
 	return ipp, nil
@@ -917,23 +1144,63 @@ func MustParseIPPort(s string) IPPort {
 // IsZero reports whether p is its zero value.
 func (p IPPort) IsZero() bool { return p == IPPort{} }
 
+// IsValid reports whether p.IP() is valid.
+// All ports are valid, including zero.
+func (p IPPort) IsValid() bool { return p.ip.IsValid() }
+
+// Valid reports whether p.IP() is valid.
+// All ports are valid, including zero.
+//
+// Deprecated: use the correctly named and identical IsValid method instead.
+func (p IPPort) Valid() bool { return p.IsValid() }
+
 func (p IPPort) String() string {
-	if p.IP.z == z4 {
-		a := p.IP.As4()
-		return fmt.Sprintf("%d.%d.%d.%d:%d", a[0], a[1], a[2], a[3], p.Port)
+	switch p.ip.z {
+	case z0:
+		return "invalid IPPort"
+	case z4:
+		a := p.ip.As4()
+		return fmt.Sprintf("%d.%d.%d.%d:%d", a[0], a[1], a[2], a[3], p.port)
+	default:
+		// TODO: this could be more efficient allocation-wise:
+		return net.JoinHostPort(p.ip.String(), strconv.Itoa(int(p.port)))
 	}
-	// TODO: this could be more efficient allocation-wise:
-	return net.JoinHostPort(p.IP.String(), strconv.Itoa(int(p.Port)))
+}
+
+// AppendTo appends a text encoding of p,
+// as generated by MarshalText,
+// to b and returns the extended buffer.
+func (p IPPort) AppendTo(b []byte) []byte {
+	switch p.ip.z {
+	case z0:
+		return b
+	case z4:
+		b = p.ip.appendTo4(b)
+	default:
+		b = append(b, '[')
+		b = p.ip.appendTo6(b)
+		b = append(b, ']')
+	}
+	b = append(b, ':')
+	b = strconv.AppendInt(b, int64(p.port), 10)
+	return b
 }
 
 // MarshalText implements the encoding.TextMarshaler interface. The
 // encoding is the same as returned by String, with one exception: if
-// p.IP is the zero value, the encoding is the empty string.
+// p.IP() is the zero value, the encoding is the empty string.
 func (p IPPort) MarshalText() ([]byte, error) {
-	if p.IP.z == z0 {
-		return []byte(""), nil
+	var max int
+	switch p.ip.z {
+	case z0:
+	case z4:
+		max = len("255.255.255.255:65535")
+	default:
+		max = len("[ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff%enp5s0]:65535")
 	}
-	return []byte(p.String()), nil
+	b := make([]byte, 0, max)
+	b = p.AppendTo(b)
+	return b, nil
 }
 
 // UnmarshalText implements the encoding.TextUnmarshaler
@@ -941,8 +1208,8 @@ func (p IPPort) MarshalText() ([]byte, error) {
 // ParseIPPort. It returns an error if *p is not the IPPort zero
 // value.
 func (p *IPPort) UnmarshalText(text []byte) error {
-	if p.IP.z != z0 || p.Port != 0 {
-		return errors.New("netaddr: refusing to UnmarshalText into non-zero IP")
+	if p.ip.z != z0 || p.port != 0 {
+		return errors.New("refusing to Unmarshal into non-zero IPPort")
 	}
 	if len(text) == 0 {
 		return nil
@@ -967,20 +1234,20 @@ func FromStdAddr(stdIP net.IP, port int, zone string) (_ IPPort, ok bool) {
 		}
 		ip = ip.WithZone(zone)
 	}
-	return IPPort{IP: ip, Port: uint16(port)}, true
+	return IPPort{ip: ip, port: uint16(port)}, true
 }
 
 // UDPAddr returns a standard library net.UDPAddr from p.
-// The returned value is always non-nil. If p.IP is the zero
+// The returned value is always non-nil. If p.IP() is the zero
 // value, then UDPAddr.IP is nil.
 //
 // UDPAddr necessarily does two allocations. If you have an existing
 // UDPAddr already allocated, see UDPAddrAt.
 func (p IPPort) UDPAddr() *net.UDPAddr {
 	ret := &net.UDPAddr{
-		Port: int(p.Port),
+		Port: int(p.port),
 	}
-	ret.IP, ret.Zone = p.IP.ipZone(nil)
+	ret.IP, ret.Zone = p.ip.ipZone(nil)
 	return ret
 }
 
@@ -989,41 +1256,62 @@ func (p IPPort) UDPAddr() *net.UDPAddr {
 // allocation-free. It returns at to facilitate using this method as a
 // wrapper.
 func (p IPPort) UDPAddrAt(at *net.UDPAddr) *net.UDPAddr {
-	at.Port = int(p.Port)
-	at.IP, at.Zone = p.IP.ipZone(at.IP)
+	at.Port = int(p.port)
+	at.IP, at.Zone = p.ip.ipZone(at.IP)
 	return at
 }
 
 // TCPAddr returns a standard library net.TCPAddr from p.
-// The returned value is always non-nil. If p.IP is the zero
+// The returned value is always non-nil. If p.IP() is the zero
 // value, then TCPAddr.IP is nil.
 func (p IPPort) TCPAddr() *net.TCPAddr {
-	ip, zone := p.IP.ipZone(nil)
+	ip, zone := p.ip.ipZone(nil)
 	return &net.TCPAddr{
 		IP:   ip,
-		Port: int(p.Port),
+		Port: int(p.port),
 		Zone: zone,
 	}
 }
 
 // IPPrefix is an IP address prefix (CIDR) representing an IP network.
 //
-// The first Bits of IP are specified, the remaining bits match any address.
-// The range of Bits is [0,32] for IPv4 or [0,128] for IPv6.
+// The first Bits() of IP() are specified. The remaining bits match any address.
+// The range of Bits() is [0,32] for IPv4 or [0,128] for IPv6.
 type IPPrefix struct {
-	IP   IP
-	Bits uint8
+	ip   IP
+	bits uint8
 }
 
-// Valid reports whether whether p.Bits has a valid range for p.IP.
-// If p.IP is zero, Valid returns false.
-func (p IPPrefix) Valid() bool { return !p.IP.IsZero() && p.Bits <= p.IP.BitLen() }
+// IPPrefixFrom returns an IPPrefix with IP ip and port port.
+// It does not allocate.
+func IPPrefixFrom(ip IP, bits uint8) IPPrefix {
+	return IPPrefix{
+		ip:   ip.withoutZone(),
+		bits: bits,
+	}
+}
+
+// IP returns p's IP.
+func (p IPPrefix) IP() IP { return p.ip }
+
+// Bits returns p's prefix length.
+func (p IPPrefix) Bits() uint8 { return p.bits }
+
+// IsValid reports whether whether p.Bits() has a valid range for p.IP().
+// If p.IP() is zero, Valid returns false.
+func (p IPPrefix) IsValid() bool { return !p.ip.IsZero() && p.bits <= p.ip.BitLen() }
+
+// Valid reports whether whether p.Bits() has a valid range for p.IP().
+// If p.IP() is zero, Valid returns false.
+//
+// Deprecated: use the correctly named and identical IsValid method instead.
+func (p IPPrefix) Valid() bool { return p.IsValid() }
 
 // IsZero reports whether p is its zero value.
 func (p IPPrefix) IsZero() bool { return p == IPPrefix{} }
 
 // IsSingleIP reports whether p contains exactly one IP.
-func (p IPPrefix) IsSingleIP() bool { return p.Bits != 0 && p.Bits == p.IP.BitLen() }
+func (p IPPrefix) IsSingleIP() bool { return p.bits != 0 && p.bits == p.ip.BitLen() }
 
 // FromStdIPNet returns an IPPrefix from the standard library's IPNet type.
 // If std is invalid, ok is false.
@@ -1045,8 +1333,8 @@ func FromStdIPNet(std *net.IPNet) (prefix IPPrefix, ok bool) {
 	}
 
 	return IPPrefix{
-		IP:   ip,
-		Bits: uint8(ones),
+		ip:   ip,
+		bits: uint8(ones),
 	}, true
 }
 
@@ -1056,7 +1344,7 @@ func FromStdIPNet(std *net.IPNet) (prefix IPPrefix, ok bool) {
 //
 // Note that masked address bits are not zeroed. Use Masked for that.
 func ParseIPPrefix(s string) (IPPrefix, error) {
-	i := strings.IndexByte(s, '/')
+	i := strings.LastIndexByte(s, '/')
 	if i < 0 {
 		return IPPrefix{}, fmt.Errorf("netaddr.ParseIPPrefix(%q): no '/'", s)
 	}
@@ -1076,10 +1364,7 @@ func ParseIPPrefix(s string) (IPPrefix, error) {
 	if bits < 0 || bits > maxBits {
 		return IPPrefix{}, fmt.Errorf("netaddr.ParseIPPrefix(%q): prefix length out of range", s)
 	}
-	return IPPrefix{
-		IP:   ip,
-		Bits: uint8(bits),
-	}, nil
+	return IPPrefixFrom(ip, uint8(bits)), nil
 }
 
 // MustParseIPPrefix calls ParseIPPrefix(s) and panics on error.
@@ -1092,10 +1377,10 @@ func MustParseIPPrefix(s string) IPPrefix {
 	return ip
 }
 
-// Masked returns p in its canonical form, with bits of p.IP not in p.Bits masked off.
+// Masked returns p in its canonical form, with bits of p.IP() not in p.Bits() masked off.
 // If p is zero or otherwise invalid, Masked returns the zero value.
 func (p IPPrefix) Masked() IPPrefix {
-	if m, err := p.IP.Prefix(p.Bits); err == nil {
+	if m, err := p.ip.Prefix(p.bits); err == nil {
 		return m
 	}
 	return IPPrefix{}
@@ -1109,20 +1394,20 @@ func (p IPPrefix) Range() IPRange {
 	if p.IsZero() {
 		return IPRange{}
 	}
-	return IPRange{From: p.IP, To: p.lastIP()}
+	return IPRangeFrom(p.ip, p.lastIP())
 }
 
 // IPNet returns the net.IPNet representation of an IPPrefix.
 // The returned value is always non-nil.
 // Any zone identifier is dropped in the conversion.
 func (p IPPrefix) IPNet() *net.IPNet {
-	if !p.Valid() {
+	if !p.IsValid() {
 		return &net.IPNet{}
 	}
-	stdIP, _ := p.IP.ipZone(nil)
+	stdIP, _ := p.ip.ipZone(nil)
 	return &net.IPNet{
 		IP:   stdIP,
-		Mask: net.CIDRMask(int(p.Bits), int(p.IP.BitLen())),
+		Mask: net.CIDRMask(int(p.bits), int(p.ip.BitLen())),
 	}
 }
 
@@ -1131,11 +1416,13 @@ func (p IPPrefix) IPNet() *net.IPNet {
 // An IPv4 address will not match an IPv6 prefix.
 // A v6-mapped IPv6 address will not match an IPv4 prefix.
 // A zero-value IP will not match any prefix.
+// If ip has an IPv6 zone, Contains returns false,
+// because IPPrefixes strip zones.
 func (p IPPrefix) Contains(ip IP) bool {
-	if !p.Valid() {
+	if !p.IsValid() || ip.hasZone() {
 		return false
 	}
-	if f1, f2 := p.IP.BitLen(), ip.BitLen(); f1 == 0 || f2 == 0 || f1 != f2 {
+	if f1, f2 := p.ip.BitLen(), ip.BitLen(); f1 == 0 || f2 == 0 || f1 != f2 {
 		return false
 	}
 	if ip.Is4() {
@@ -1143,16 +1430,16 @@ func (p IPPrefix) Contains(ip IP) bool {
 		// Shift away the number of bits we don't care about.
 		// Shifts in Go are more efficient if the compiler can prove
 		// that the shift amount is smaller than the width of the shifted type (64 here).
-		// We know that p.Bits is in the range 0..32 because p is Valid;
+		// We know that p.bits is in the range 0..32 because p is Valid;
 		// the compiler doesn't know that, so mask with 63 to help it.
 		// Now truncate to 32 bits, because this is IPv4.
 		// If all the bits we care about are equal, the result will be zero.
-		return uint32((ip.addr.lo^p.IP.addr.lo)>>((32-p.Bits)&63)) == 0
+		return uint32((ip.addr.lo^p.ip.addr.lo)>>((32-p.bits)&63)) == 0
 	} else {
 		// xor the IP addresses together.
 		// Mask away the bits we don't care about.
 		// If all the bits we care about are equal, the result will be zero.
-		return ip.addr.xor(p.IP.addr).and(mask6[p.Bits]).isZero()
+		return ip.addr.xor(p.ip.addr).and(mask6[p.bits]).isZero()
 	}
 }
 
@@ -1164,20 +1451,20 @@ func (p IPPrefix) Contains(ip IP) bool {
 //
 // If either has a Bits of zero, it returns true.
 func (p IPPrefix) Overlaps(o IPPrefix) bool {
-	if !p.Valid() || !o.Valid() {
+	if !p.IsValid() || !o.IsValid() {
 		return false
 	}
 	if p == o {
 		return true
 	}
-	if p.IP.Is4() != o.IP.Is4() {
+	if p.ip.Is4() != o.ip.Is4() {
 		return false
 	}
 	var minBits uint8
-	if p.Bits < o.Bits {
-		minBits = p.Bits
+	if p.bits < o.bits {
+		minBits = p.bits
 	} else {
-		minBits = o.Bits
+		minBits = o.bits
 	}
 	if minBits == 0 {
 		return true
@@ -1187,24 +1474,53 @@ func (p IPPrefix) Overlaps(o IPPrefix) bool {
 	// so the Prefix call on the one that's already minBits serves to zero
 	// out any remaining bits in IP.
 	var err error
-	if p, err = p.IP.Prefix(minBits); err != nil {
+	if p, err = p.ip.Prefix(minBits); err != nil {
 		return false
 	}
-	if o, err = o.IP.Prefix(minBits); err != nil {
+	if o, err = o.ip.Prefix(minBits); err != nil {
 		return false
 	}
-	return p.IP == o.IP
+	return p.ip == o.ip
+}
+
+// AppendTo appends a text encoding of p,
+// as generated by MarshalText,
+// to b and returns the extended buffer.
+func (p IPPrefix) AppendTo(b []byte) []byte {
+	if p.IsZero() {
+		return b
+	}
+	if !p.IsValid() {
+		return append(b, "invalid IPPrefix"...)
+	}
+
+	// p.IP is non-zero, because p is valid.
+	if p.ip.z == z4 {
+		b = p.ip.appendTo4(b)
+	} else {
+		b = p.ip.appendTo6(b)
+	}
+
+	b = append(b, '/')
+	b = appendDecimal(b, p.bits)
+	return b
 }
 
 // MarshalText implements the encoding.TextMarshaler interface,
 // The encoding is the same as returned by String, with one exception:
 // If p is the zero value, the encoding is the empty string.
 func (p IPPrefix) MarshalText() ([]byte, error) {
-	if p == (IPPrefix{}) {
-		return []byte(""), nil
+	var max int
+	switch p.ip.z {
+	case z0:
+	case z4:
+		max = len("255.255.255.255/32")
+	default:
+		max = len("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff%enp5s0/128")
 	}
-
-	return []byte(p.String()), nil
+	b := make([]byte, 0, max)
+	b = p.AppendTo(b)
+	return b, nil
 }
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
@@ -1212,13 +1528,11 @@ func (p IPPrefix) MarshalText() ([]byte, error) {
 // It returns an error if *p is not the IPPrefix zero value.
 func (p *IPPrefix) UnmarshalText(text []byte) error {
 	if *p != (IPPrefix{}) {
-		return errors.New("netaddr: refusing to Unmarshal into non-zero IPPrefix")
+		return errors.New("refusing to Unmarshal into non-zero IPPrefix")
 	}
-
 	if len(text) == 0 {
 		return nil
 	}
-
 	var err error
 	*p, err = ParseIPPrefix(string(text))
 	return err
@@ -1226,29 +1540,32 @@ func (p *IPPrefix) UnmarshalText(text []byte) error {
 
 // String returns the CIDR notation of p: "<ip>/<bits>".
 func (p IPPrefix) String() string {
-	if !p.Valid() {
-		return "invalid IP prefix"
+	if p.IsZero() {
+		return "zero IPPrefix"
 	}
-	return fmt.Sprintf("%s/%d", p.IP, p.Bits)
+	if !p.IsValid() {
+		return "invalid IPPrefix"
+	}
+	return fmt.Sprintf("%s/%d", p.ip, p.bits)
 }
 
 // lastIP returns the last IP in the prefix.
 func (p IPPrefix) lastIP() IP {
-	if !p.Valid() {
+	if !p.IsValid() {
 		return IP{}
 	}
-	a16 := p.IP.As16()
+	a16 := p.ip.As16()
 	var off uint8
 	var bits uint8 = 128
-	if p.IP.Is4() {
+	if p.ip.Is4() {
 		off = 12
 		bits = 32
 	}
-	for b := p.Bits; b < bits; b++ {
+	for b := p.bits; b < bits; b++ {
 		byteNum, bitInByte := b/8, 7-(b%8)
 		a16[off+byteNum] |= 1 << uint(bitInByte)
 	}
-	if p.IP.Is4() {
+	if p.ip.Is4() {
 		return IPFrom16(a16)
 	} else {
 		return IPv6Raw(a16) // doesn't unmap
@@ -1258,20 +1575,35 @@ func (p IPPrefix) lastIP() IP {
 // IPRange represents an inclusive range of IP addresses
 // from the same address family.
 //
-// The From and To IPs are inclusive bounds, both included in the
+// The From() and To() IPs are inclusive bounds, both included in the
 // range.
 //
-// To be valid, the From and To values be non-zero, have matching
-// address families (IPv4 vs IPv6), be in the same IPv6 zone (if any),
-// and From must be less than or equal to To.
+// To be valid, the From() and To() values must be non-zero, have matching
+// address families (IPv4 vs IPv6), and From() must be less than or equal to To().
+// IPv6 zones are stripped out and ignored.
 // An invalid range may be ignored.
 type IPRange struct {
-	// From is the initial IP address in the range.
-	From IP
+	// from is the initial IP address in the range.
+	from IP
 
-	// To is the final IP address in the range.
-	To IP
+	// to is the final IP address in the range.
+	to IP
 }
+
+// IPRangeFrom returns an IPRange from from to to.
+// It does not allocate.
+func IPRangeFrom(from, to IP) IPRange {
+	return IPRange{
+		from: from.withoutZone(),
+		to:   to.withoutZone(),
+	}
+}
+
+// From returns the lower bound of r.
+func (r IPRange) From() IP { return r.from }
+
+// To returns the upper bound of r.
+func (r IPRange) To() IP { return r.to }
 
 // ParseIPRange parses a range out of two IPs separated by a hyphen.
 //
@@ -1284,18 +1616,30 @@ func ParseIPRange(s string) (IPRange, error) {
 	}
 	from, to := s[:h], s[h+1:]
 	var err error
-	r.From, err = ParseIP(from)
+	r.from, err = ParseIP(from)
 	if err != nil {
 		return r, fmt.Errorf("invalid From IP %q in range %q", from, s)
 	}
-	r.To, err = ParseIP(to)
+	r.from = r.from.withoutZone()
+	r.to, err = ParseIP(to)
 	if err != nil {
 		return r, fmt.Errorf("invalid To IP %q in range %q", to, s)
 	}
-	if !r.Valid() {
-		return r, fmt.Errorf("range %v to %v not valid", r.From, r.To)
+	r.to = r.to.withoutZone()
+	if !r.IsValid() {
+		return r, fmt.Errorf("range %v to %v not valid", r.from, r.to)
 	}
 	return r, nil
+}
+
+// MustParseIPRange calls ParseIPRange(s) and panics on error.
+// It is intended for use in tests with hard-coded strings.
+func MustParseIPRange(s string) IPRange {
+	r, err := ParseIPRange(s)
+	if err != nil {
+		panic(err)
+	}
+	return r
 }
 
 // String returns a string representation of the range.
@@ -1304,74 +1648,135 @@ func ParseIPRange(s string) (IPRange, error) {
 // separating the IPs, the same format recognized by
 // ParseIPRange.
 func (r IPRange) String() string {
-	if r.Valid() {
-		return fmt.Sprintf("%s-%s", r.From, r.To)
+	if r.IsValid() {
+		return fmt.Sprintf("%s-%s", r.from, r.to)
 	}
-	if r.From.IsZero() || r.To.IsZero() {
+	if r.from.IsZero() || r.to.IsZero() {
 		return "zero IPRange"
 	}
 	return "invalid IPRange"
 }
 
-// Valid reports whether r.From and r.To are both non-zero and obey
-// the documented requirements: address families match, same IPv6
-// zone, and From is less than or equal to To.
-func (r IPRange) Valid() bool {
-	return !r.From.IsZero() &&
-		r.From.z == r.To.z &&
-		!r.To.Less(r.From)
+// AppendTo appends a text encoding of r,
+// as generated by MarshalText,
+// to b and returns the extended buffer.
+func (r IPRange) AppendTo(b []byte) []byte {
+	if r.IsZero() {
+		return b
+	}
+	b = r.from.AppendTo(b)
+	b = append(b, '-')
+	b = r.to.AppendTo(b)
+	return b
 }
+
+// MarshalText implements the encoding.TextMarshaler interface,
+// The encoding is the same as returned by String, with one exception:
+// If ip is the zero value, the encoding is the empty string.
+func (r IPRange) MarshalText() ([]byte, error) {
+	if r.IsZero() {
+		return []byte(""), nil
+	}
+	var max int
+	if r.from.z == z4 {
+		max = len("255.255.255.255-255.255.255.255")
+	} else {
+		max = len("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")
+	}
+	b := make([]byte, 0, max)
+	return r.AppendTo(b), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+// The IP range is expected in a form accepted by ParseIPRange.
+// It returns an error if *r is not the IPRange zero value.
+func (r *IPRange) UnmarshalText(text []byte) error {
+	if *r != (IPRange{}) {
+		return errors.New("refusing to Unmarshal into non-zero IPRange")
+	}
+	if len(text) == 0 {
+		return nil
+	}
+	var err error
+	*r, err = ParseIPRange(string(text))
+	return err
+}
+
+// IsZero reports whether r is the zero value of the IPRange type.
+func (r IPRange) IsZero() bool {
+	return r == IPRange{}
+}
+
+// IsValid reports whether r.From() and r.To() are both non-zero and
+// obey the documented requirements: address families match, and From
+// is less than or equal to To.
+func (r IPRange) IsValid() bool {
+	return !r.from.IsZero() &&
+		r.from.z == r.to.z &&
+		!r.to.Less(r.from)
+}
+
+// Valid reports whether r.From() and r.To() are both non-zero and
+// obey the documented requirements: address families match, and From
+// is less than or equal to To.
+//
+// Deprecated: use the correctly named and identical IsValid method instead.
+func (r IPRange) Valid() bool { return r.IsValid() }
 
 // Contains reports whether the range r includes addr.
 //
 // An invalid range always reports false.
+//
+// If ip has an IPv6 zone, Contains returns false,
+// because IPPrefixes strip zones.
 func (r IPRange) Contains(addr IP) bool {
-	return r.Valid() && r.contains(addr)
+	return r.IsValid() && !addr.hasZone() && r.contains(addr)
 }
 
-// contains is like Contains, but without the validity check. For internal use.
+// contains is like Contains, but without the validity check.
+// addr must not have a zone.
 func (r IPRange) contains(addr IP) bool {
-	return r.From.Compare(addr) <= 0 && r.To.Compare(addr) >= 0
+	return r.from.Compare(addr) <= 0 && r.to.Compare(addr) >= 0
 }
 
-// less returns whether r is "before" other. It is before if r.From is
-// before other.From, or if they're equal, the shorter range is
-// before.
+// less reports whether r is "before" other. It is before if r.From()
+// is before other.From(). If they're equal, then the larger range
+// (higher To()) comes first.
 func (r IPRange) less(other IPRange) bool {
-	if cmp := r.From.Compare(other.From); cmp != 0 {
+	if cmp := r.from.Compare(other.from); cmp != 0 {
 		return cmp < 0
 	}
-	return r.To.Less(other.To)
+	return other.to.Less(r.to)
 }
 
 // entirelyBefore returns whether r lies entirely before other in IP
 // space.
 func (r IPRange) entirelyBefore(other IPRange) bool {
-	return r.To.Less(other.From)
+	return r.to.Less(other.from)
 }
 
 // entirelyWithin returns whether r is entirely contained within
 // other.
 func (r IPRange) coveredBy(other IPRange) bool {
-	return other.From.lessOrEq(r.From) && r.To.lessOrEq(other.To)
+	return other.from.lessOrEq(r.from) && r.to.lessOrEq(other.to)
 }
 
 // inMiddleOf returns whether r is inside other, but not touching the
 // edges of other.
 func (r IPRange) inMiddleOf(other IPRange) bool {
-	return other.From.Less(r.From) && r.To.Less(other.To)
+	return other.from.Less(r.from) && r.to.Less(other.to)
 }
 
 // overlapsStartOf returns whether r entirely overlaps the start of
 // other, but not all of other.
 func (r IPRange) overlapsStartOf(other IPRange) bool {
-	return r.From.lessOrEq(other.From) && r.To.Less(other.To)
+	return r.from.lessOrEq(other.from) && r.to.Less(other.to)
 }
 
 // overlapsEndOf returns whether r entirely overlaps the end of
 // other, but not all of other.
 func (r IPRange) overlapsEndOf(other IPRange) bool {
-	return other.From.Less(r.From) && other.To.lessOrEq(r.To)
+	return other.from.Less(r.from) && other.to.lessOrEq(r.to)
 }
 
 // mergeIPRanges returns the minimum and sorted set of IP ranges that
@@ -1392,31 +1797,31 @@ func mergeIPRanges(rr []IPRange) (out []IPRange, valid bool) {
 	for _, r := range rr[1:] {
 		prev := &out[len(out)-1]
 		switch {
-		case !r.Valid():
+		case !r.IsValid():
 			// Invalid ranges make no sense to merge, refuse to
 			// perform.
 			return nil, false
-		case prev.To.Next() == r.From:
+		case prev.to.Next() == r.from:
 			// prev and r touch, merge them.
 			//
 			//   prev     r
 			// f------tf-----t
-			prev.To = r.To
-		case prev.To.Less(r.From):
+			prev.to = r.to
+		case prev.to.Less(r.from):
 			// No overlap and not adjacent (per previous case), no
 			// merging possible.
 			//
 			//   prev       r
 			// f------t  f-----t
 			out = append(out, r)
-		case prev.To.Less(r.To):
+		case prev.to.Less(r.to):
 			// Partial overlap, update prev
 			//
 			//   prev
 			// f------t
 			//     f-----t
 			//        r
-			prev.To = r.To
+			prev.to = r.to
 		default:
 			// r entirely contained in prev, nothing to do.
 			//
@@ -1434,10 +1839,10 @@ func mergeIPRanges(rr []IPRange) (out []IPRange, valid bool) {
 // If p and o are of different address families or either are invalid,
 // it reports false.
 func (r IPRange) Overlaps(o IPRange) bool {
-	return r.Valid() &&
-		o.Valid() &&
-		r.From.Compare(o.To) <= 0 &&
-		o.From.Compare(r.To) <= 0
+	return r.IsValid() &&
+		o.IsValid() &&
+		r.from.Compare(o.to) <= 0 &&
+		o.from.Compare(r.to) <= 0
 }
 
 // prefixMaker returns a address-family-corrected IPPrefix from a and bits,
@@ -1458,15 +1863,15 @@ func (r IPRange) Prefixes() []IPPrefix {
 // AppendPrefixes is an append version of IPRange.Prefixes. It appends
 // the IPPrefix entries that cover r to dst.
 func (r IPRange) AppendPrefixes(dst []IPPrefix) []IPPrefix {
-	if !r.Valid() {
+	if !r.IsValid() {
 		return nil
 	}
-	return appendRangePrefixes(dst, r.prefixFrom128AndBits, r.From.addr, r.To.addr)
+	return appendRangePrefixes(dst, r.prefixFrom128AndBits, r.from.addr, r.to.addr)
 }
 
 func (r IPRange) prefixFrom128AndBits(a uint128, bits uint8) IPPrefix {
-	ip := IP{addr: a, z: r.From.z}
-	if r.From.Is4() {
+	ip := IP{addr: a, z: r.from.z}
+	if r.from.Is4() {
 		bits -= 12 * 8
 	}
 	return IPPrefix{ip, bits}
@@ -1491,11 +1896,11 @@ func comparePrefixes(a, b uint128) (common uint8, aZeroBSet bool) {
 // Prefix returns r as an IPPrefix, if it can be presented exactly as such.
 // If r is not valid or is not exactly equal to one prefix, ok is false.
 func (r IPRange) Prefix() (p IPPrefix, ok bool) {
-	if !r.Valid() {
+	if !r.IsValid() {
 		return
 	}
-	if common, ok := comparePrefixes(r.From.addr, r.To.addr); ok {
-		return r.prefixFrom128AndBits(r.From.addr, common), true
+	if common, ok := comparePrefixes(r.from.addr, r.to.addr); ok {
+		return r.prefixFrom128AndBits(r.from.addr, common), true
 	}
 	return
 }
@@ -1511,36 +1916,4 @@ func appendRangePrefixes(dst []IPPrefix, makePrefix prefixMaker, a, b uint128) [
 	dst = appendRangePrefixes(dst, makePrefix, a, a.bitsSetFrom(common+1))
 	dst = appendRangePrefixes(dst, makePrefix, b.bitsClearedFrom(common+1), b)
 	return dst
-}
-
-// Next returns the IP following ip.
-// If there is none, it returns the IP zero value.
-func (ip IP) Next() IP {
-	ip.addr = ip.addr.addOne()
-	if ip.Is4() {
-		if uint32(ip.addr.lo) == 0 {
-			// Overflowed.
-			return IP{}
-		}
-	} else {
-		if ip.addr.isZero() {
-			// Overflowed
-			return IP{}
-		}
-	}
-	return ip
-}
-
-// Prior returns the IP before ip.
-// If there is none, it returns the IP zero value.
-func (ip IP) Prior() IP {
-	if ip.Is4() {
-		if uint32(ip.addr.lo) == 0 {
-			return IP{}
-		}
-	} else if ip.addr.isZero() {
-		return IP{}
-	}
-	ip.addr = ip.addr.subOne()
-	return ip
 }

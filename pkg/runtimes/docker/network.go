@@ -95,7 +95,7 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 				if err != nil {
 					return nil, fmt.Errorf("failed to parse IP of container %s: %w", container.Name, err)
 				}
-				network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, prefix.IP)
+				network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, prefix.IP())
 			}
 		}
 
@@ -116,7 +116,7 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 		}
 		network.Members = append(network.Members, &k3d.NetworkMember{
 			Name: container.Name,
-			IP:   prefix.IP,
+			IP:   prefix.IP(),
 		})
 	}
 
@@ -188,7 +188,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 			Config: []network.IPAMConfig{
 				{
 					Subnet:  inNet.IPAM.IPPrefix.String(),
-					Gateway: inNet.IPAM.IPPrefix.Range().From.Next().String(), // second IP in subnet will be the Gateway (Next, so we don't hit x.x.x.0)
+					Gateway: inNet.IPAM.IPPrefix.Range().From().Next().String(), // second IP in subnet will be the Gateway (Next, so we don't hit x.x.x.0)
 				},
 			},
 		}
@@ -362,7 +362,7 @@ func (d Docker) parseIPAM(config network.IPAMConfig) (ipam k3d.IPAM, err error) 
 	}
 
 	if config.Gateway == "" {
-		gateway = ipam.IPPrefix.IP.Next()
+		gateway = ipam.IPPrefix.IP().Next()
 	} else {
 		gateway, err = netaddr.ParseIP(config.Gateway)
 	}
