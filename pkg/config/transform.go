@@ -111,8 +111,12 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 	if !simpleConfig.Options.K3dOptions.DisableLoadbalancer {
 		newCluster.ServerLoadBalancer = k3d.NewLoadbalancer()
+		lbCreateOpts := &k3d.LoadbalancerCreateOpts{}
+		if simpleConfig.Options.K3dOptions.Loadbalancer.ConfigOverrides != nil && len(simpleConfig.Options.K3dOptions.Loadbalancer.ConfigOverrides) > 0 {
+			lbCreateOpts.ConfigOverrides = simpleConfig.Options.K3dOptions.Loadbalancer.ConfigOverrides
+		}
 		var err error
-		newCluster.ServerLoadBalancer.Node, err = client.LoadbalancerPrepare(ctx, runtime, &newCluster, nil)
+		newCluster.ServerLoadBalancer.Node, err = client.LoadbalancerPrepare(ctx, runtime, &newCluster, lbCreateOpts)
 		if err != nil {
 			return nil, fmt.Errorf("error preparing the loadbalancer: %w", err)
 		}

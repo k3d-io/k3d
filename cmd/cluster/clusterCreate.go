@@ -343,6 +343,10 @@ func NewCmdClusterCreate() *cobra.Command {
 		l.Log().Fatalln("Failed to mark flag 'config' as filename flag")
 	}
 
+	/* Loadbalancer / Proxy */
+	cmd.Flags().StringSlice("lb-config-override", nil, "Use dotted YAML path syntax to override nginx loadbalancer settings")
+	_ = cfgViper.BindPFlag("options.k3d.loadbalancer.configoverrides", cmd.Flags().Lookup("lb-config-override"))
+
 	/* Subcommands */
 
 	// done

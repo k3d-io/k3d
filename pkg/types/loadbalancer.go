@@ -73,7 +73,8 @@ type LoadbalancerConfig struct {
 }
 
 type LoadBalancerSettings struct {
-	WorkerProcesses int `yaml:"workerProcesses"`
+	WorkerProcesses     int `yaml:"workerProcesses"`
+	DefaultProxyTimeout int `yaml:"defaultProxyTimeout,omitempty"`
 }
 
 const (
@@ -82,7 +83,8 @@ const (
 )
 
 type LoadbalancerCreateOpts struct {
-	Labels map[string]string
+	Labels          map[string]string
+	ConfigOverrides []string
 }
 
 /*
