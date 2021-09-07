@@ -245,7 +245,7 @@ func runToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cl
 		Networks:      []string{network},
 		Cmd:           []string{},
 		Args:          []string{"noop"},
-		RuntimeLabels: k3d.DefaultRuntimeLabels,
+		RuntimeLabels: labels,
 	}
 	node.RuntimeLabels[k3d.LabelClusterName] = cluster.Name
 	if err := NodeRun(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {

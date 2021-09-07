@@ -186,7 +186,7 @@ func getContainersByLabel(ctx context.Context, labels map[string]string) ([]type
 		All:     true,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Failed to list containers: %+v", err)
+		return nil, fmt.Errorf("failed to list containers: %w", err)
 	}
 
 	return containers, nil

@@ -22,17 +22,18 @@ THE SOFTWARE.
 package types
 
 func (node *Node) FillRuntimeLabels() {
-	labels := make(map[string]string)
+	if node.RuntimeLabels == nil {
+		node.RuntimeLabels = make(map[string]string)
+	}
 	for k, v := range DefaultRuntimeLabels {
-		labels[k] = v
+		node.RuntimeLabels[k] = v
 	}
 	for k, v := range DefaultRuntimeLabelsVar {
-		labels[k] = v
+		node.RuntimeLabels[k] = v
 	}
 	for k, v := range node.RuntimeLabels {
-		labels[k] = v
+		node.RuntimeLabels[k] = v
 	}
-	node.RuntimeLabels = labels
 	// second most important: the node role label
 	node.RuntimeLabels[LabelRole] = string(node.Role)
 
