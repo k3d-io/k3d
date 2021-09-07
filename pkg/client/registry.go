@@ -28,12 +28,12 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/imdario/mergo"
-	l "github.com/rancher/k3d/v4/pkg/logger"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	"github.com/rancher/k3d/v4/pkg/types/k3s"
-	"github.com/rancher/k3d/v4/pkg/types/k8s"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	"github.com/rancher/k3d/v5/pkg/runtimes/docker"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/types/k3s"
+	"github.com/rancher/k3d/v5/pkg/types/k8s"
 	"gopkg.in/yaml.v2"
 )
 

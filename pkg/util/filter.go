@@ -27,8 +27,8 @@ import (
 	"strconv"
 	"strings"
 
-	l "github.com/rancher/k3d/v4/pkg/logger"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 )
 
 const (

@@ -25,8 +25,8 @@ package config
 import (
 	"testing"
 
-	configtypes "github.com/rancher/k3d/v4/pkg/config/types"
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha3"
+	configtypes "github.com/rancher/k3d/v5/pkg/config/types"
+	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
 	"github.com/spf13/viper"
 	"gotest.tools/assert"
 )

@@ -25,9 +25,9 @@ import (
 	"os"
 	"strconv"
 
-	l "github.com/rancher/k3d/v4/pkg/logger"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	"github.com/rancher/k3d/v4/pkg/types/fixes"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	"github.com/rancher/k3d/v5/pkg/types/fixes"
 )
 
 // FIXME: FixCgroupV2 - to be removed when fixed upstream

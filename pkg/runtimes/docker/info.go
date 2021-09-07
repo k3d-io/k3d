@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"strings"
 
-	runtimeTypes "github.com/rancher/k3d/v4/pkg/runtimes/types"
+	runtimeTypes "github.com/rancher/k3d/v5/pkg/runtimes/types"
 )
 
 func (d Docker) Info() (*runtimeTypes.RuntimeInfo, error) {

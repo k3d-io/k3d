@@ -24,7 +24,7 @@ package client
 import (
 	"fmt"
 
-	"github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/types"
 )
 
 // CheckName ensures that a cluster name is also a valid host name according to RFC 1123.

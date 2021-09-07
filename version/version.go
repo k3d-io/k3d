@@ -27,7 +27,7 @@ import (
 	"strings"
 
 	"github.com/heroku/docker-registry-client/registry"
-	l "github.com/rancher/k3d/v4/pkg/logger"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
 // Version is the string that contains version

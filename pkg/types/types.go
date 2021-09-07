@@ -28,8 +28,8 @@ import (
 	"time"
 
 	"github.com/docker/go-connections/nat"
-	"github.com/rancher/k3d/v4/pkg/types/k3s"
-	"github.com/rancher/k3d/v4/version"
+	"github.com/rancher/k3d/v5/pkg/types/k3s"
+	"github.com/rancher/k3d/v5/version"
 	"inet.af/netaddr"
 )
 

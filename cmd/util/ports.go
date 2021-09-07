@@ -28,9 +28,9 @@ import (
 	"strconv"
 
 	"github.com/docker/go-connections/nat"
-	l "github.com/rancher/k3d/v4/pkg/logger"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	"github.com/rancher/k3d/v4/pkg/util"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/util"
 )
 
 var apiPortRegexp = regexp.MustCompile(`^(?P<hostref>(?P<hostip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|(?P<hostname>\S+):)?(?P<port>(\d{1,5}|random))$`)

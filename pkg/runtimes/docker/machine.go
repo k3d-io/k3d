@@ -28,7 +28,7 @@ import (
 	"os/exec"
 	"strings"
 
-	l "github.com/rancher/k3d/v4/pkg/logger"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
 func (d Docker) GetDockerMachineIP() (string, error) {

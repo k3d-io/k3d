@@ -24,14 +24,14 @@ package registry
 import (
 	"fmt"
 
-	l "github.com/rancher/k3d/v4/pkg/logger"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 
-	"github.com/rancher/k3d/v4/pkg/client"
+	"github.com/rancher/k3d/v5/pkg/client"
 
-	cliutil "github.com/rancher/k3d/v4/cmd/util"
+	cliutil "github.com/rancher/k3d/v5/cmd/util"
 	"github.com/spf13/cobra"
 )
 
