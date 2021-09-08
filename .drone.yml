@@ -79,8 +79,6 @@ steps:
           - "refs/tags/*alpha*"
           - "refs/tags/*test*"
           - "refs/tags/*dev*"
-          # exclude docs specific tags
-          - "refs/tags/*docs*"
 
   - name: release
     image: plugins/github-release
@@ -141,10 +139,18 @@ steps:
     image: python:3.9
     commands:
       - python3 -m pip install -r docs/requirements.txt
-      - mkdocs build --verbose --clean --strict
+      - git config user.name ci-bot
+      - git config user.email ci-bot@k3d.io
+      - mike deploy --update-aliases ${DRONE_TAG} latest
+      - |
+        if [ -z "${DRONE_SEMVER_PRERELEASE}" ] && [ -n "${DRONE_TAG}" ]; then
+          mike alias ${DRONE_TAG} stable
+          mike set-default stable
+        fi
     when:
       event:
         - push
+        - tag
 
   - name: publish
     image: plugins/gh-pages
