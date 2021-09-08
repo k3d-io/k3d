@@ -73,6 +73,7 @@ steps:
         - tag
       ref:
         include:
+          # include only pre-release tags
           - "refs/tags/*rc*"
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
@@ -97,11 +98,14 @@ steps:
         - tag
       ref:
         exclude:
+          # exclude pre-release tags
           - "refs/tags/*rc*"
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
           - "refs/tags/*test*"
           - "refs/tags/*dev*"
+          # exclude docs specific tags
+          - "refs/tags/*docs*" 
 
 services:
   # Starting the docker service to be used by dind
@@ -116,51 +120,6 @@ volumes:
   - name: dockersock
     temp: {}
 
----
-#########################
-##### Documentation #####
-#########################
-
-kind: pipeline
-type: docker
-name: docs
-
-platform:
-  os: linux
-  arch: amd64
-
-steps:
-
-  - name: build
-    image: python:3.9
-    commands:
-      - python3 -m pip install -r docs/requirements.txt
-      - mkdocs build --verbose --clean --strict
-    when:
-      branch:
-        - main
-      event:
-        - push
-
-  - name: publish
-    image: plugins/gh-pages
-    settings:
-      password:
-        from_secret: github_token
-      username: rancherio-gh-m
-      pages_directory: site/
-      target_branch: gh-pages
-    when:
-      branch:
-        - main
-      event:
-        - push
-
-trigger:
-  event:
-    - push
-  branch:
-    - main
 
 ---
 ###########################
@@ -258,6 +217,10 @@ trigger:
   event:
     - tag # see note at the start of the "Docker Images" section: creates SemVer tagged images using the `auto_tag` option of the docker plugin
     - push # `auto_tag` option only creates the `latest` tag if target branch is default branch (i.e. `main`)
+  ref:
+    exclude:
+      # exclude docs specific tags
+      - "refs/tags/*docs*" 
 
 depends_on:
   - main
@@ -310,6 +273,10 @@ trigger:
   event:
     - tag # see note at the start of the "Docker Images" section: creates SemVer tagged images using the `auto_tag` option of the docker plugin
     - push # `auto_tag` option only creates the `latest` tag if target branch is default branch (i.e. `main`)
+  ref:
+    exclude:
+      # exclude docs specific tags
+      - "refs/tags/*docs*" 
 
 depends_on:
   - main
@@ -399,6 +366,10 @@ trigger:
   event:
     - tag # see note at the start of the "Docker Images" section: creates SemVer tagged images using the `auto_tag` option of the docker plugin
     - push # `auto_tag` option only creates the `latest` tag if target branch is default branch (i.e. `main`)
+  ref:
+    exclude:
+      # exclude docs specific tags
+      - "refs/tags/*docs*" 
 
 depends_on:
   - main
@@ -465,6 +436,10 @@ trigger:
   event:
     - tag # see note at the start of the "Docker Images" section: creates SemVer tagged images using the `auto_tag` option of the manifest plugin
     - push # `auto_tag` option only creates the `latest` tag if target branch is default branch (i.e. `main`)
+  ref:
+    exclude:
+      # exclude docs specific tags
+      - "refs/tags/*docs*" 
 
 depends_on:
   - main
