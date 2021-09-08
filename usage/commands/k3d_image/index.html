@@ -11,21 +11,21 @@
       
       
       
-        <link rel="canonical" href="https://k3d.io/v4.4.8-docs.0/">
+        <link rel="canonical" href="https://k3d.io/v4.4.8-docs.0/usage/commands/k3d_image/">
       
-      <link rel="icon" href="static/img/favicons_black_blue/favicon.png">
+      <link rel="icon" href="../../../static/img/favicons_black_blue/favicon.png">
       <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.6">
     
     
       
-        <title>k3d</title>
+        <title>K3d image - k3d</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.802231af.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.802231af.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.3f5d1f46.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.3f5d1f46.min.css">
         
       
     
@@ -40,9 +40,9 @@
     
     
     
-      <link rel="stylesheet" href="static/css/asciinema-player.css">
+      <link rel="stylesheet" href="../../../static/css/asciinema-player.css">
     
-      <link rel="stylesheet" href="static/css/extra.css">
+      <link rel="stylesheet" href="../../../static/css/extra.css">
     
     
       
@@ -63,7 +63,7 @@
     <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="grey">
   
     
-    <script>function __prefix(e){return new URL(".",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    <script>function __prefix(e){return new URL("../../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
       <script>var palette=__get("__palette");if(null!==palette&&"object"==typeof palette.color)for(var key in palette.color)document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
     
@@ -73,7 +73,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#overview" class="md-skip">
+        <a href="#k3d-image" class="md-skip">
           Skip to content
         </a>
       
@@ -84,9 +84,9 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="k3d" class="md-header__button md-logo" aria-label="k3d" data-md-component="logo">
+    <a href="../../.." title="k3d" class="md-header__button md-logo" aria-label="k3d" data-md-component="logo">
       
-  <img src="static/img/k3d_logo_black_green.svg" alt="logo">
+  <img src="../../../static/img/k3d_logo_black_green.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              K3d image
             
           </span>
         </div>
@@ -204,9 +204,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="k3d" class="md-nav__button md-logo" aria-label="k3d" data-md-component="logo">
+    <a href="../../.." title="k3d" class="md-nav__button md-logo" aria-label="k3d" data-md-component="logo">
       
-  <img src="static/img/k3d_logo_black_green.svg" alt="logo">
+  <img src="../../../static/img/k3d_logo_black_green.svg" alt="logo">
 
     </a>
     k3d
@@ -233,126 +233,11 @@
 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Overview
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
         Overview
       </a>
-      
-        
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#learning" class="md-nav__link">
-    Learning
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#requirements" class="md-nav__link">
-    Requirements
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#releases" class="md-nav__link">
-    Releases
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    Installation
-  </a>
-  
-    <nav class="md-nav" aria-label="Installation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#install-script" class="md-nav__link">
-     Install Script
-  </a>
-  
-    <nav class="md-nav" aria-label=" Install Script">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#install-current-latest-release" class="md-nav__link">
-    Install current latest release
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#install-specific-release" class="md-nav__link">
-    Install specific release
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#other-installers" class="md-nav__link">
-    Other Installers
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
-    Quick Start
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#related-projects" class="md-nav__link">
-    Related Projects
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -363,12 +248,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
       
       <label class="md-nav__link" for="__nav_2">
         Usage
@@ -384,12 +271,14 @@
             
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_1" type="checkbox" id="__nav_2_1" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_1" type="checkbox" id="__nav_2_1" checked>
       
       <label class="md-nav__link" for="__nav_2_1">
         Commands
@@ -407,7 +296,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d/" class="md-nav__link">
+      <a href="../k3d/" class="md-nav__link">
         K3d
       </a>
     </li>
@@ -419,7 +308,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_cluster/" class="md-nav__link">
+      <a href="../k3d_cluster/" class="md-nav__link">
         K3d cluster
       </a>
     </li>
@@ -431,7 +320,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_cluster_create/" class="md-nav__link">
+      <a href="../k3d_cluster_create/" class="md-nav__link">
         K3d cluster create
       </a>
     </li>
@@ -443,7 +332,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_cluster_delete/" class="md-nav__link">
+      <a href="../k3d_cluster_delete/" class="md-nav__link">
         K3d cluster delete
       </a>
     </li>
@@ -455,7 +344,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_cluster_list/" class="md-nav__link">
+      <a href="../k3d_cluster_list/" class="md-nav__link">
         K3d cluster list
       </a>
     </li>
@@ -467,7 +356,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_cluster_start/" class="md-nav__link">
+      <a href="../k3d_cluster_start/" class="md-nav__link">
         K3d cluster start
       </a>
     </li>
@@ -479,7 +368,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_cluster_stop/" class="md-nav__link">
+      <a href="../k3d_cluster_stop/" class="md-nav__link">
         K3d cluster stop
       </a>
     </li>
@@ -491,7 +380,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_completion/" class="md-nav__link">
+      <a href="../k3d_completion/" class="md-nav__link">
         K3d completion
       </a>
     </li>
@@ -503,7 +392,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_config/" class="md-nav__link">
+      <a href="../k3d_config/" class="md-nav__link">
         K3d config
       </a>
     </li>
@@ -515,7 +404,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_config_init/" class="md-nav__link">
+      <a href="../k3d_config_init/" class="md-nav__link">
         K3d config init
       </a>
     </li>
@@ -527,7 +416,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_docgen/" class="md-nav__link">
+      <a href="../k3d_docgen/" class="md-nav__link">
         K3d docgen
       </a>
     </li>
@@ -537,11 +426,81 @@
             
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="usage/commands/k3d_image/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          K3d image
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         K3d image
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#k3d-image" class="md-nav__link">
+    k3d image
+  </a>
+  
+    <nav class="md-nav" aria-label="k3d image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#synopsis" class="md-nav__link">
+    Synopsis
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    Options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options-inherited-from-parent-commands" class="md-nav__link">
+    Options inherited from parent commands
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    SEE ALSO
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -551,7 +510,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_image_import/" class="md-nav__link">
+      <a href="../k3d_image_import/" class="md-nav__link">
         K3d image import
       </a>
     </li>
@@ -563,7 +522,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_kubeconfig/" class="md-nav__link">
+      <a href="../k3d_kubeconfig/" class="md-nav__link">
         K3d kubeconfig
       </a>
     </li>
@@ -575,7 +534,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_kubeconfig_get/" class="md-nav__link">
+      <a href="../k3d_kubeconfig_get/" class="md-nav__link">
         K3d kubeconfig get
       </a>
     </li>
@@ -587,7 +546,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_kubeconfig_merge/" class="md-nav__link">
+      <a href="../k3d_kubeconfig_merge/" class="md-nav__link">
         K3d kubeconfig merge
       </a>
     </li>
@@ -599,7 +558,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_node/" class="md-nav__link">
+      <a href="../k3d_node/" class="md-nav__link">
         K3d node
       </a>
     </li>
@@ -611,7 +570,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_node_create/" class="md-nav__link">
+      <a href="../k3d_node_create/" class="md-nav__link">
         K3d node create
       </a>
     </li>
@@ -623,7 +582,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_node_delete/" class="md-nav__link">
+      <a href="../k3d_node_delete/" class="md-nav__link">
         K3d node delete
       </a>
     </li>
@@ -635,7 +594,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_node_list/" class="md-nav__link">
+      <a href="../k3d_node_list/" class="md-nav__link">
         K3d node list
       </a>
     </li>
@@ -647,7 +606,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_node_start/" class="md-nav__link">
+      <a href="../k3d_node_start/" class="md-nav__link">
         K3d node start
       </a>
     </li>
@@ -659,7 +618,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_node_stop/" class="md-nav__link">
+      <a href="../k3d_node_stop/" class="md-nav__link">
         K3d node stop
       </a>
     </li>
@@ -671,7 +630,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_registry/" class="md-nav__link">
+      <a href="../k3d_registry/" class="md-nav__link">
         K3d registry
       </a>
     </li>
@@ -683,7 +642,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_registry_create/" class="md-nav__link">
+      <a href="../k3d_registry_create/" class="md-nav__link">
         K3d registry create
       </a>
     </li>
@@ -695,7 +654,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_registry_delete/" class="md-nav__link">
+      <a href="../k3d_registry_delete/" class="md-nav__link">
         K3d registry delete
       </a>
     </li>
@@ -707,7 +666,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_registry_list/" class="md-nav__link">
+      <a href="../k3d_registry_list/" class="md-nav__link">
         K3d registry list
       </a>
     </li>
@@ -719,7 +678,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/commands/k3d_version/" class="md-nav__link">
+      <a href="../k3d_version/" class="md-nav__link">
         K3d version
       </a>
     </li>
@@ -737,7 +696,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/configfile/" class="md-nav__link">
+      <a href="../../configfile/" class="md-nav__link">
         Config File
       </a>
     </li>
@@ -749,7 +708,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/kubeconfig/" class="md-nav__link">
+      <a href="../../kubeconfig/" class="md-nav__link">
         Handling Kubeconfigs
       </a>
     </li>
@@ -761,7 +720,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/multiserver/" class="md-nav__link">
+      <a href="../../multiserver/" class="md-nav__link">
         Creating multi-server clusters
       </a>
     </li>
@@ -794,7 +753,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/guides/exposing_services/" class="md-nav__link">
+      <a href="../../guides/exposing_services/" class="md-nav__link">
         Exposing Services
       </a>
     </li>
@@ -806,7 +765,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/guides/registries/" class="md-nav__link">
+      <a href="../../guides/registries/" class="md-nav__link">
         Registries
       </a>
     </li>
@@ -818,7 +777,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/guides/calico/" class="md-nav__link">
+      <a href="../../guides/calico/" class="md-nav__link">
         Use Calico instead of Flannel
       </a>
     </li>
@@ -830,7 +789,7 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/guides/cuda/" class="md-nav__link">
+      <a href="../../guides/cuda/" class="md-nav__link">
         Running CUDA workloads
       </a>
     </li>
@@ -878,7 +837,7 @@
   
   
     <li class="md-nav__item">
-      <a href="internals/defaults/" class="md-nav__link">
+      <a href="../../../internals/defaults/" class="md-nav__link">
         Defaults
       </a>
     </li>
@@ -890,7 +849,7 @@
   
   
     <li class="md-nav__item">
-      <a href="internals/project/" class="md-nav__link">
+      <a href="../../../internals/project/" class="md-nav__link">
         Project Overview
       </a>
     </li>
@@ -902,7 +861,7 @@
   
   
     <li class="md-nav__item">
-      <a href="internals/networking/" class="md-nav__link">
+      <a href="../../../internals/networking/" class="md-nav__link">
         Networking
       </a>
     </li>
@@ -944,7 +903,7 @@
   
   
     <li class="md-nav__item">
-      <a href="faq/faq/" class="md-nav__link">
+      <a href="../../../faq/faq/" class="md-nav__link">
         FAQ / Nice to know
       </a>
     </li>
@@ -973,8 +932,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -983,84 +940,43 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#learning" class="md-nav__link">
-    Learning
+  <a href="#k3d-image" class="md-nav__link">
+    k3d image
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#requirements" class="md-nav__link">
-    Requirements
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#releases" class="md-nav__link">
-    Releases
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    Installation
-  </a>
-  
-    <nav class="md-nav" aria-label="Installation">
+    <nav class="md-nav" aria-label="k3d image">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#install-script" class="md-nav__link">
-     Install Script
-  </a>
-  
-    <nav class="md-nav" aria-label=" Install Script">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#install-current-latest-release" class="md-nav__link">
-    Install current latest release
+  <a href="#synopsis" class="md-nav__link">
+    Synopsis
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#install-specific-release" class="md-nav__link">
-    Install specific release
+  <a href="#options" class="md-nav__link">
+    Options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options-inherited-from-parent-commands" class="md-nav__link">
+    Options inherited from parent commands
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    SEE ALSO
   </a>
   
 </li>
         
       </ul>
     </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#other-installers" class="md-nav__link">
-    Other Installers
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
-    Quick Start
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#related-projects" class="md-nav__link">
-    Related Projects
-  </a>
   
 </li>
       
@@ -1076,151 +992,31 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/rancher/k3d/edit/main/docs/index.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/rancher/k3d/edit/main/docs/usage/commands/k3d_image.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h1>
-<p><img alt="k3d" src="static/img/k3d_logo_black_blue.svg" /></p>
-<p><strong>This page is targeting k3d v4.0.0 and newer!</strong></p>
-<p>k3d is a lightweight wrapper to run <a href="https://github.com/rancher/k3s">k3s</a> (Rancher Lab&rsquo;s minimal Kubernetes distribution) in docker.</p>
-<p>k3d makes it very easy to create single- and multi-node <a href="https://github.com/rancher/k3s">k3s</a> clusters in docker, e.g. for local development on Kubernetes.</p>
-<details class="tip"><summary>View a quick demo</summary><p><asciinema-player src="/static/asciicast/20200715_k3d.01.cast" cols=200 rows=32></asciinema-player></p>
-</details>
-<h2 id="learning">Learning<a class="headerlink" href="#learning" title="Permanent link">&para;</a></h2>
-<div class="admonition tip">
-<p class="admonition-title">k3d demo repository: <a href="https://github.com/iwilltry42/k3d-demo">iwilltry42/k3d-demo</a></p>
-<p>Featured use-cases include:</p>
-<ul>
-<li><strong>hot-reloading</strong> of code when developing on k3d (Python Flask App)</li>
-<li>build-deploy-test cycle using <strong>Tilt</strong></li>
-<li>full cluster lifecycle for simple and <strong>multi-server</strong> clusters</li>
-<li>Proof of Concept of using k3d as a service in <strong>Drone CI</strong></li>
-</ul>
-</div>
-<ul>
-<li><a href="https://www.youtube.com/watch?v=hMr3prm9gDM">Rancher Meetup - May 2020 - Simplifying Your Cloud-Native Development Workflow With K3s, K3c and K3d (YouTube)</a></li>
-</ul>
-<h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="https://docs.docker.com/install/">docker</a></li>
-</ul>
-<h2 id="releases">Releases<a class="headerlink" href="#releases" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Platform</th>
-<th>Stage</th>
-<th>Version</th>
-<th>Release Date</th>
-<th></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="https://github.com/rancher/k3d/releases"><strong>GitHub Releases</strong></a></td>
-<td>stable</td>
-<td><a href="https://github.com/rancher/k3d/releases/latest"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/rancher/k3d?label=%20&amp;style=for-the-badge&amp;logo=github" /></a></td>
-<td><a href="https://github.com/rancher/k3d/releases/latest"><img alt="GitHub Release Date" src="https://img.shields.io/github/release-date/rancher/k3d?label=%20&amp;style=for-the-badge" /></a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="https://github.com/rancher/k3d/releases"><strong>GitHub Releases</strong></a></td>
-<td>latest</td>
-<td><a href="https://github.com/rancher/k3d/releases"><img alt="GitHub release (latest by date including pre-releases)" src="https://img.shields.io/github/v/release/rancher/k3d?include_prereleases&amp;label=%20&amp;style=for-the-badge&amp;logo=github" /></a></td>
-<td><a href="https://github.com/rancher/k3d/releases"><img alt="GitHub (Pre-)Release Date" src="https://img.shields.io/github/release-date-pre/rancher/k3d?label=%20&amp;style=for-the-badge" /></a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="https://formulae.brew.sh/formula/k3d"><strong>Homebrew</strong></a></td>
-<td>-</td>
-<td><a href="https://formulae.brew.sh/formula/k3d"><img alt="homebrew" src="https://img.shields.io/homebrew/v/k3d?label=%20&amp;style=for-the-badge" /></a></td>
-<td>-</td>
-<td></td>
-</tr>
-<tr>
-<td><a href="https://chocolatey.org/packages/k3d/"><strong>Chocolatey</strong></a></td>
-<td>stable</td>
-<td><a href="https://chocolatey.org/packages/k3d/"><img alt="chocolatey" src="https://img.shields.io/chocolatey/v/k3d?label=%20&amp;style=for-the-badge" /></a></td>
-<td>-</td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<p>You have several options there:</p>
-<h3 id="install-script"><a href="https://raw.githubusercontent.com/rancher/k3d/main/install.sh"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="m149.9 349.1-.2-.2-32.8-28.9 32.8-28.9c3.6-3.2 4-8.8.8-12.4l-.2-.2-17.4-18.6c-3.4-3.6-9-3.7-12.4-.4l-57.7 54.1c-3.7 3.5-3.7 9.4 0 12.8l57.7 54.1c1.6 1.5 3.8 2.4 6 2.4 2.4 0 4.8-1 6.4-2.8l17.4-18.6c3.3-3.5 3.1-9.1-.4-12.4zm220-251.2L286 14C277 5 264.8-.1 252.1-.1H48C21.5 0 0 21.5 0 48v416c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48V131.9c0-12.7-5.1-25-14.1-34zM256 51.9l76.1 76.1H256zM336 464H48V48h160v104c0 13.3 10.7 24 24 24h104zM209.6 214c-4.7-1.4-9.5 1.3-10.9 6L144 408.1c-1.4 4.7 1.3 9.6 6 10.9l24.4 7.1c4.7 1.4 9.6-1.4 10.9-6L240 231.9c1.4-4.7-1.3-9.6-6-10.9zm24.5 76.9.2.2 32.8 28.9-32.8 28.9c-3.6 3.2-4 8.8-.8 12.4l.2.2 17.4 18.6c3.3 3.5 8.9 3.7 12.4.4l57.7-54.1c3.7-3.5 3.7-9.4 0-12.8l-57.7-54.1c-3.5-3.3-9.1-3.2-12.4.4l-17.4 18.6c-3.3 3.5-3.1 9.1.4 12.4z"/></svg></span> Install Script</a><a class="headerlink" href="#install-script" title="Permanent link">&para;</a></h3>
-<h4 id="install-current-latest-release">Install current latest release<a class="headerlink" href="#install-current-latest-release" title="Permanent link">&para;</a></h4>
-<ul>
-<li>wget: <code class="highlight">wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> bash</code></li>
-<li>curl: <code class="highlight">curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> bash</code></li>
-</ul>
-<h4 id="install-specific-release">Install specific release<a class="headerlink" href="#install-specific-release" title="Permanent link">&para;</a></h4>
-<p>Use the install script to grab a specific release (via <code>TAG</code> environment variable):</p>
-<ul>
-<li>wget: <code class="highlight">wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v4.0.0 bash</code></li>
-<li>curl: <code class="highlight">curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v4.0.0 bash</code></li>
-</ul>
-<h3 id="other-installers">Other Installers<a class="headerlink" href="#other-installers" title="Permanent link">&para;</a></h3>
-<details class="tip"><summary>Other Installation Methods</summary><ul>
-<li>
-<p><a href="https://brew.sh"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M368 96h-48V56c0-13.255-10.745-24-24-24H24C10.745 32 0 42.745 0 56v400c0 13.255 10.745 24 24 24h272c13.255 0 24-10.745 24-24v-42.11l80.606-35.977C429.396 365.063 448 336.388 448 304.86V176c0-44.112-35.888-80-80-80zm16 208.86a16.018 16.018 0 0 1-9.479 14.611L320 343.805V160h48c8.822 0 16 7.178 16 16v128.86zM208 384c-8.836 0-16-7.164-16-16V144c0-8.836 7.164-16 16-16s16 7.164 16 16v224c0 8.836-7.164 16-16 16zm-96 0c-8.836 0-16-7.164-16-16V144c0-8.836 7.164-16 16-16s16 7.164 16 16v224c0 8.836-7.164 16-16 16z"/></svg></span> Homebrew (MacOS/Linux)</a>: <code class="highlight">brew install k3d</code></p>
-<p><em>Note</em>: The formula can be found in <a href="https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb">homebrew/homebrew-core</a> and is mirrored to <a href="https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb">homebrew/linuxbrew-core</a></p>
-</li>
-</ul>
-<ul>
-<li>
-<p><a href="https://aur.archlinux.org/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2c-.89 2.18-1.43 3.61-2.42 5.73.61.64 1.35 1.39 2.56 2.24-1.3-.54-2.19-1.07-2.85-1.63C8 11 6.03 14.75 2 22c3.17-1.83 5.63-2.96 7.92-3.39-.1-.42-.16-.88-.15-1.36v-.1c.05-2.03 1.11-3.59 2.36-3.48 1.25.1 2.22 1.83 2.17 3.87-.01.38-.05.75-.12 1.09 2.26.44 4.69 1.56 7.82 3.37-.62-1.14-1.17-2.16-1.69-3.13-.81-.64-1.7-1.48-3.46-2.37 1.21.3 2.08.66 2.76 1.07C14.26 7.62 13.83 6.3 12 2z"/></svg></span> AUR (Arch Linux User Repository)</a>:  <code class="highlight">yay -S rancher-k3d-bin</code></p>
-<p>Package <a href="https://aur.archlinux.org/packages/rancher-k3d-bin/">rancher-k3d-bin</a></p>
-</li>
-</ul>
-<ul>
-<li>
-<p><a href="https://github.com/rancher/k3d/releases"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg></span> Download GitHub Release</a></p>
-<p>Grab a release binary from the <a href="https://github.com/rancher/k3d/releases">release tab</a> and install it yourself</p>
-</li>
-</ul>
-<ul>
-<li>
-<p><a href="https://chocolatey.org/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 12V6.75l6-1.32v6.48L3 12m17-9v8.75l-10 .15V5.21L20 3M3 13l6 .09v6.81l-6-1.15V13m17 .25V22l-10-1.91V13.1l10 .15z"/></svg></span> Chocolatey (Windows)</a>: <code>choco install k3d</code></p>
-<p><em>Note</em>: package source can be found in <a href="https://github.com/erwinkersten/chocolatey-packages/tree/master/automatic/k3d">erwinkersten/chocolatey-packages</a></p>
-</li>
-</ul>
-<ul>
-<li><a href="https://github.com/alexellis/arkade">arkade</a>: <code>arkade get k3d</code></li>
-</ul>
-<ul>
-<li>
-<p><a href="https://asdf-vm.com">asdf</a>: <code>asdf plugin-add k3d &amp;&amp; asdf install k3d latest</code></p>
-<p><em>Note</em>: <code>asdf plugin-add k3d</code>, then <code>asdf install k3d &lt;tag&gt;</code> with <code>&lt;tag&gt; = latest</code> or <code>4.x.x</code> for a specific version (maintained by <a href="https://github.com/spencergilbert/asdf-k3d">spencergilbert/asdf-k3d</a>)</p>
-</li>
-</ul>
-<ul>
-<li>Others<ul>
-<li>install via go: <code class="highlight">go install github.com/rancher/k3d@latest</code> (<strong>Note</strong>: this will give you unreleased/bleeding-edge changes)</li>
-</ul>
-</li>
-</ul>
-</details>
-<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
-<p>Create a cluster named <code>mycluster</code> with just a single server node:</p>
-<div class="highlight"><pre><span></span><code>k3d cluster create mycluster
+                  <h1>K3d image</h1>
+                
+                <h2 id="k3d-image">k3d image<a class="headerlink" href="#k3d-image" title="Permanent link">&para;</a></h2>
+<p>Handle container images.</p>
+<h3 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h3>
+<p>Handle container images.</p>
+<div class="highlight"><pre><span></span><code>k3d image [flags]
 </code></pre></div>
-<p>Use the new cluster with <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl/"><code>kubectl</code></a>, e.g.:</p>
-<div class="highlight"><pre><span></span><code>kubectl get nodes
+<h3 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>  -h, --help   help for image
 </code></pre></div>
-<details class="note"><summary>Getting the cluster&rsquo;s kubeconfig (included in <code>k3d cluster create</code>)</summary><p>Get the new cluster&rsquo;s connection details merged into your default kubeconfig (usually specified using the <code>KUBECONFIG</code> environment variable or the default path <code class="highlight"><span class="nv">$HOME</span>/.kube/config</code>) and directly switch to the new context:</p>
-<div class="highlight"><pre><span></span><code>k3d kubeconfig merge mycluster --kubeconfig-switch-context
+<h3 id="options-inherited-from-parent-commands">Options inherited from parent commands<a class="headerlink" href="#options-inherited-from-parent-commands" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>      --timestamps   Enable Log timestamps
+      --trace        Enable super verbose output (trace logging)
+      --verbose      Enable verbose output (debug logging)
 </code></pre></div>
-</details>
-<h2 id="related-projects">Related Projects<a class="headerlink" href="#related-projects" title="Permanent link">&para;</a></h2>
+<h3 id="see-also">SEE ALSO<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h3>
 <ul>
-<li><a href="https://github.com/inercia/vscode-k3d/">vscode-k3d</a>: VSCode Extension to handle k3d clusters from within VSCode</li>
-<li><a href="https://github.com/inercia/k3x">k3x</a>: a graphics interface (for Linux) to k3d.</li>
-<li><a href="https://github.com/AbsaOSS/k3d-action">AbsaOSS/k3d-action</a>: fully customizable GitHub Action to run lightweight Kubernetes clusters.</li>
-<li><a href="https://github.com/cnrancher/autok3s">AutoK3s</a>: a lightweight tool to help run K3s everywhere including k3d provider.</li>
-<li><a href="https://github.com/nolar/setup-k3d-k3s">nolar/setup-k3d-k3s</a>: setup K3d/K3s for GitHub Actions.</li>
+<li><a href="../k3d/">k3d</a>  - https://k3d.io/ -&gt; Run k3s in Docker!</li>
+<li><a href="../k3d_image_import/">k3d image import</a>    - Import image(s) from docker into k3d cluster(s).</li>
 </ul>
                 
                   
@@ -1230,7 +1026,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 20, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">April 14, 2021</span>
       
     
   </small>
@@ -1259,15 +1055,30 @@
   
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
+        
+        <a href="../k3d_docgen/" class="md-footer__link md-footer__link--prev" aria-label="Previous: K3d docgen" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              K3d docgen
+            </div>
+          </div>
+        </a>
+      
       
         
-        <a href="usage/commands/k3d/" class="md-footer__link md-footer__link--next" aria-label="Next: K3d" rel="next">
+        <a href="../k3d_image_import/" class="md-footer__link md-footer__link--next" aria-label="Next: K3d image import" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              K3d
+              K3d image import
             </div>
           </div>
           <div class="md-footer__button md-icon">
@@ -1300,12 +1111,12 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.top", "search.suggest", "search.highlight"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.409db549.min.js", "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.top", "search.suggest", "search.highlight"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../../assets/javascripts/workers/search.409db549.min.js", "version": {"provider": "mike"}}</script>
     
     
-      <script src="assets/javascripts/bundle.756773cc.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.756773cc.min.js"></script>
       
-        <script src="static/js/asciinema-player.js"></script>
+        <script src="../../../static/js/asciinema-player.js"></script>
       
     
   </body>
