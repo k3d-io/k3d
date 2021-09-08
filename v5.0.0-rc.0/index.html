@@ -1099,7 +1099,7 @@
                 
                 <h1 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h1>
 <p><img alt="k3d" src="static/img/k3d_logo_black_blue.svg" /></p>
-<p><strong>This page is targeting k3d v4.0.0 and newer!</strong></p>
+<p><strong>This page is targeting k3d v5.0.0 and newer!</strong></p>
 <p>k3d is a lightweight wrapper to run <a href="https://github.com/rancher/k3s">k3s</a> (Rancher Lab&rsquo;s minimal Kubernetes distribution) in docker.</p>
 <p>k3d makes it very easy to create single- and multi-node <a href="https://github.com/rancher/k3s">k3s</a> clusters in docker, e.g. for local development on Kubernetes.</p>
 <details class="tip"><summary>View a quick demo</summary><p><asciinema-player src="/static/asciicast/20200715_k3d.01.cast" cols=200 rows=32></asciinema-player></p>
@@ -1175,8 +1175,8 @@
 <h4 id="install-specific-release">Install specific release<a class="headerlink" href="#install-specific-release" title="Permanent link">&para;</a></h4>
 <p>Use the install script to grab a specific release (via <code>TAG</code> environment variable):</p>
 <ul>
-<li>wget: <code class="highlight">wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v4.0.0 bash</code></li>
-<li>curl: <code class="highlight">curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v4.0.0 bash</code></li>
+<li>wget: <code class="highlight">wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v5.0.0 bash</code></li>
+<li>curl: <code class="highlight">curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh <span class="p">|</span> <span class="nv">TAG</span><span class="o">=</span>v5.0.0 bash</code></li>
 </ul>
 <h3 id="other-installers">Other Installers<a class="headerlink" href="#other-installers" title="Permanent link">&para;</a></h3>
 <details class="tip"><summary>Other Installation Methods</summary><ul>
@@ -1209,7 +1209,7 @@
 <ul>
 <li>
 <p><a href="https://asdf-vm.com">asdf</a>: <code>asdf plugin-add k3d &amp;&amp; asdf install k3d latest</code></p>
-<p><em>Note</em>: <code>asdf plugin-add k3d</code>, then <code>asdf install k3d &lt;tag&gt;</code> with <code>&lt;tag&gt; = latest</code> or <code>4.x.x</code> for a specific version (maintained by <a href="https://github.com/spencergilbert/asdf-k3d">spencergilbert/asdf-k3d</a>)</p>
+<p><em>Note</em>: <code>asdf plugin-add k3d</code>, then <code>asdf install k3d &lt;tag&gt;</code> with <code>&lt;tag&gt; = latest</code> or <code>5.x.x</code> for a specific version (maintained by <a href="https://github.com/spencergilbert/asdf-k3d">spencergilbert/asdf-k3d</a>)</p>
 </li>
 </ul>
 <ul>
@@ -1246,7 +1246,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 20, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">September 8, 2021</span>
       
     
   </small>
