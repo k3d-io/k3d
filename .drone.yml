@@ -73,6 +73,7 @@ steps:
         - tag
       ref:
         include:
+          # include only pre-release tags
           - "refs/tags/*rc*"
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
@@ -97,6 +98,7 @@ steps:
         - tag
       ref:
         exclude:
+          # exclude pre-release tags
           - "refs/tags/*rc*"
           - "refs/tags/*beta*"
           - "refs/tags/*alpha*"
@@ -116,51 +118,6 @@ volumes:
   - name: dockersock
     temp: {}
 
----
-#########################
-##### Documentation #####
-#########################
-
-kind: pipeline
-type: docker
-name: docs
-
-platform:
-  os: linux
-  arch: amd64
-
-steps:
-
-  - name: build
-    image: python:3.9
-    commands:
-      - python3 -m pip install -r docs/requirements.txt
-      - mkdocs build --verbose --clean --strict
-    when:
-      branch:
-        - main
-      event:
-        - push
-
-  - name: publish
-    image: plugins/gh-pages
-    settings:
-      password:
-        from_secret: github_token
-      username: rancherio-gh-m
-      pages_directory: site/
-      target_branch: gh-pages
-    when:
-      branch:
-        - main
-      event:
-        - push
-
-trigger:
-  event:
-    - push
-  branch:
-    - main
 
 ---
 ###########################
