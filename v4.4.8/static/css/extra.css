@@ -1,0 +1,32 @@
+.md-header__button.md-logo img, .md-header__button.md-logo svg {
+    width: 3rem;
+}
+
+.md-header-nav__button.md-logo {
+    margin: 0;
+    padding: 0;
+}
+
+.md-header {
+    height: 3rem;
+}
+
+.md-header-nav {
+    align-items: center;
+}
+
+.md-ellipsis {
+    display: inline;
+}
+
+.md-header-nav__topic {
+    position: relative;
+}
+
+[data-md-color-primary=black] .md-tabs {
+    background-color: #0DCEFF;
+}
+
+.md-tabs {
+    color: black;
+}
