@@ -256,3 +256,52 @@ func TestReadUnknownConfig(t *testing.T) {
 	}
 
 }
+
+func TestReadSimpleConfigRegistries(t *testing.T) {
+
+	exposedAPI := conf.SimpleExposureOpts{}
+	exposedAPI.HostIP = "0.0.0.0"
+	exposedAPI.HostPort = "6443"
+
+	expectedConfig := conf.SimpleConfig{
+		TypeMeta: configtypes.TypeMeta{
+			APIVersion: "k3d.io/v1alpha3",
+			Kind:       "Simple",
+		},
+		Name:    "test",
+		Servers: 1,
+		Agents:  1,
+		Registries: conf.SimpleConfigRegistries{
+			Create: &conf.SimpleConfigRegistryCreateConfig{
+				Name:     "registry.localhost",
+				Host:     "0.0.0.0",
+				HostPort: "5001",
+			},
+		},
+	}
+
+	cfgFile := "./test_assets/config_test_registries.yaml"
+
+	config := viper.New()
+	config.SetConfigFile(cfgFile)
+
+	// try to read config into memory (viper map structure)
+	if err := config.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			t.Error(err)
+		}
+		// config file found but some other error happened
+		t.Error(err)
+	}
+
+	readConfig, err := FromViper(config)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", readConfig)
+
+	if diff := deep.Equal(readConfig, expectedConfig); diff != nil {
+		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", readConfig, expectedConfig, diff)
+	}
+}

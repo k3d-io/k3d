@@ -35,7 +35,8 @@ name: test
 servers: 1
 agents: 2
 registries:
-  create: true
+  create: 
+    name: myregistry
   config: |
     mirrors:
       "my.company.registry":
@@ -43,7 +44,7 @@ registries:
           - http://my.company.registry:5000
 ```
 
-Here, the config for the k3d-managed registry, created by the `create: true` flag will be merged with the config specified under `config: |`.
+Here, the config for the k3d-managed registry, created by the `create: {...}` option will be merged with the config specified under `config: |`.
 
 ### Authenticated registries
 
@@ -100,14 +101,14 @@ k3d cluster create \
 
 #### Create a dedicated registry together with your cluster
 
-1. `#!bash k3d cluster create mycluster --registry-create`: This creates your cluster `mycluster` together with a registry container called `k3d-mycluster-registry`
+1. `#!bash k3d cluster create mycluster --registry-create mycluster-registry`: This creates your cluster `mycluster` together with a registry container called `mycluster-registry`
 
   - k3d sets everything up in the cluster for containerd to be able to pull images from that registry (using the `registries.yaml` file)
   - the port, which the registry is listening on will be mapped to a random port on your host system
 
-2. Check the k3d command output or `#!bash docker ps -f name=k3d-mycluster-registry` to find the exposed port (let's use `12345` here)
-3. Pull some image (optional) `#!bash docker pull alpine:latest`, re-tag it to reference your newly created registry `#!bash docker tag alpine:latest k3d-mycluster-registry:12345/testimage:local` and push it `#!bash docker push k3d-mycluster-registry:12345/testimage:local`
-4. Use kubectl to create a new pod in your cluster using that image to see, if the cluster can pull from the new registry: `#!bash kubectl run --image k3d-mycluster-registry:12345/testimage:local testimage --command -- tail -f /dev/null` (creates a container that will not do anything but keep on running)
+2. Check the k3d command output or `#!bash docker ps -f name=mycluster-registry` to find the exposed port (let's use `12345` here)
+3. Pull some image (optional) `#!bash docker pull alpine:latest`, re-tag it to reference your newly created registry `#!bash docker tag alpine:latest mycluster-registry:12345/testimage:local` and push it `#!bash docker push mycluster-registry:12345/testimage:local`
+4. Use kubectl to create a new pod in your cluster using that image to see, if the cluster can pull from the new registry: `#!bash kubectl run --image mycluster-registry:12345/testimage:local testimage --command -- tail -f /dev/null` (creates a container that will not do anything but keep on running)
 
 #### Create a customized k3d-managed registry
 

@@ -1,0 +1,10 @@
+apiVersion: k3d.io/v1alpha3
+kind: Simple
+name: test
+servers: 1
+agents: 1
+registries:
+  create:
+    name: registry.localhost
+    host: "0.0.0.0"
+    hostPort: "5001"

@@ -265,6 +265,9 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().StringArrayP("runtime-label", "", nil, "Add label to container runtime (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 --runtime-label \"my.label@agent:0,1\" --runtime-label \"other.label=somevalue@server:0\"`")
 	_ = ppViper.BindPFlag("cli.runtime-labels", cmd.Flags().Lookup("runtime-label"))
 
+	cmd.Flags().String("registry-create", "", "Create a k3d-managed registry and connect it to the cluster (Format: `NAME[:HOST][:HOSTPORT]`\n - Example: `k3d cluster create --registry-create mycluster-registry:0.0.0.0:5432`")
+	_ = ppViper.BindPFlag("cli.registries.create", cmd.Flags().Lookup("registry-create"))
+
 	/* k3s */
 	cmd.Flags().StringArray("k3s-arg", nil, "Additional args passed to k3s command (Format: `ARG@NODEFILTER[;@NODEFILTER]`)\n - Example: `k3d cluster create --k3s-arg \"--disable=traefik@server:0\"")
 	_ = cfgViper.BindPFlag("cli.k3sargs", cmd.Flags().Lookup("k3s-arg"))
@@ -333,9 +336,6 @@ func NewCmdClusterCreate() *cobra.Command {
 	/* Registry */
 	cmd.Flags().StringArray("registry-use", nil, "Connect to one or more k3d-managed registries running locally")
 	_ = cfgViper.BindPFlag("registries.use", cmd.Flags().Lookup("registry-use"))
-
-	cmd.Flags().Bool("registry-create", false, "Create a k3d-managed registry and connect it to the cluster")
-	_ = cfgViper.BindPFlag("registries.create", cmd.Flags().Lookup("registry-create"))
 
 	cmd.Flags().String("registry-config", "", "Specify path to an extra registries.yaml file")
 	_ = cfgViper.BindPFlag("registries.config", cmd.Flags().Lookup("registry-config"))
@@ -418,7 +418,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 			l.Log().Fatalln(err)
 		}
 
-		if strings.Contains(volume, k3d.DefaultRegistriesFilePath) && (cfg.Registries.Create || cfg.Registries.Config != "" || len(cfg.Registries.Use) != 0) {
+		if strings.Contains(volume, k3d.DefaultRegistriesFilePath) && (cfg.Registries.Create != nil || cfg.Registries.Config != "" || len(cfg.Registries.Use) != 0) {
 			l.Log().Warnf("Seems like you're mounting a file at '%s' while also using a referenced registries config or k3d-managed registries: Your mounted file will probably be overwritten!", k3d.DefaultRegistriesFilePath)
 		}
 
@@ -574,6 +574,25 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 			Arg:         arg,
 			NodeFilters: nodeFilters,
 		})
+	}
+
+	// --registry-create
+	if ppViper.IsSet("cli.registries.create") {
+		flagvalue := ppViper.GetString("cli.registries.create")
+		fvSplit := strings.SplitN(flagvalue, ":", 2)
+		if cfg.Registries.Create == nil {
+			cfg.Registries.Create = &conf.SimpleConfigRegistryCreateConfig{}
+		}
+		cfg.Registries.Create.Name = fvSplit[0]
+		if len(fvSplit) > 1 {
+			exposeAPI, err = cliutil.ParsePortExposureSpec(fvSplit[1], "1234") // internal port is unused after all
+			if err != nil {
+				return cfg, fmt.Errorf("failed to registry port spec: %w", err)
+			}
+			cfg.Registries.Create.Host = exposeAPI.Host
+			cfg.Registries.Create.HostPort = exposeAPI.Binding.HostPort
+		}
+
 	}
 
 	return cfg, nil

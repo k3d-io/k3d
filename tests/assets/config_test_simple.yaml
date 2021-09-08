@@ -23,7 +23,8 @@ env:
     nodeFilters:
       - all
 registries:
-  create: true
+  create:
+    name: registry.localhost
   use: []
   config: |
     mirrors:
