@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/rancher/k3d?style=flat-square)](./LICENSE.md)
 ![Downloads](https://img.shields.io/github/downloads/rancher/k3d/total.svg?style=flat-square)
 
-[![Go Module](https://img.shields.io/badge/Go%20Module-github.com%2Francher%2Fk3d%2Fv4-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/rancher/k3d/v5)
+[![Go Module](https://img.shields.io/badge/Go%20Module-github.com%2Francher%2Fk3d%2Fv5-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/rancher/k3d/v5)
 [![Go version](https://img.shields.io/github/go-mod/go-version/rancher/k3d?logo=go&logoColor=white&style=flat-square)](./go.mod)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rancher/k3d?style=flat-square)](https://goreportcard.com/report/github.com/rancher/k3d)
 
@@ -13,7 +13,7 @@
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
-**Please Note:** `main` is now v4.0.0 and the code for v3.x can be found in the `main-v3` branch!
+**Please Note:** `main` is now v5.0.0 and the code for v4.x can be found in the `main-v4` branch!
 
 ## [k3s in docker](https://k3d.io)
 
@@ -37,6 +37,7 @@ k3d creates containerized k3s clusters. This means, that you can spin up a multi
 
 **Note**: In May 2020 we upgraded from v1.7.x to **v3.0.0** after a complete rewrite of k3d!
 **Note**: In January 2021 we upgraded from v3.x.x to **v4.0.0** which includes some breaking changes!
+**Note**: In September 2021 we upgraded from v4.4.8 to **v5.0.0** which includes some breaking changes!
 
 | Platform | Stage | Version | Release Date |  |
 |-----------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|---|
@@ -53,8 +54,8 @@ You have several options there:
   - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash`
   - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash`
 - use the install script to grab a specific release (via `TAG` environment variable):
-  - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v4.0.0 bash`
-  - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v4.0.0 bash`
+  - wget: `wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v5.0.0 bash`
+  - curl: `curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v5.0.0 bash`
 
 - use [Homebrew](https://brew.sh): `brew install k3d` (Homebrew is available for MacOS and Linux)
   - Formula can be found in [homebrew/homebrew-core](https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb) and is mirrored to [homebrew/linuxbrew-core](https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb)
