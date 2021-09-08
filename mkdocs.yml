@@ -76,6 +76,7 @@ plugins:
       css_dir: static/css             # the directory to put the version selector's CSS
       javascript_dir: static/js       # the directory to put the version selector's JS
       canonical_version: null  # the version for <link rel="canonical">; `null` uses the version specified via `mike deploy`
+  - git-authors # show page authors: https://github.com/timvink/mkdocs-git-authors-plugin
 
 # Other Settings
 strict: true # halt processing when a warning is raised
