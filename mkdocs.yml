@@ -25,7 +25,10 @@ theme:
   name: material
   language: en
   features:
-    - tabs
+    - navigation.top # show back to top button
+    - search.suggest # search suggestions: https://squidfunk.github.io/mkdocs-material/setup/setting-up-site-search/#search-suggestions
+    - search.highlight # highlight search term on target page: https://squidfunk.github.io/mkdocs-material/setup/setting-up-site-search/#search-suggestions
+
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -76,7 +79,11 @@ plugins:
       css_dir: static/css             # the directory to put the version selector's CSS
       javascript_dir: static/js       # the directory to put the version selector's JS
       canonical_version: null  # the version for <link rel="canonical">; `null` uses the version specified via `mike deploy`
-  - git-authors # show page authors: https://github.com/timvink/mkdocs-git-authors-plugin
+
+# Extra mkdocs-material settings
+extra:
+  version:
+    provider: mike
 
 # Other Settings
 strict: true # halt processing when a warning is raised
