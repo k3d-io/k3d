@@ -104,8 +104,6 @@ steps:
           - "refs/tags/*alpha*"
           - "refs/tags/*test*"
           - "refs/tags/*dev*"
-          # exclude docs specific tags
-          - "refs/tags/*docs*" 
 
 services:
   # Starting the docker service to be used by dind
@@ -217,10 +215,6 @@ trigger:
   event:
     - tag # see note at the start of the "Docker Images" section: creates SemVer tagged images using the `auto_tag` option of the docker plugin
     - push # `auto_tag` option only creates the `latest` tag if target branch is default branch (i.e. `main`)
-  ref:
-    exclude:
-      # exclude docs specific tags
-      - "refs/tags/*docs*" 
 
 depends_on:
   - main
@@ -273,10 +267,6 @@ trigger:
   event:
     - tag # see note at the start of the "Docker Images" section: creates SemVer tagged images using the `auto_tag` option of the docker plugin
     - push # `auto_tag` option only creates the `latest` tag if target branch is default branch (i.e. `main`)
-  ref:
-    exclude:
-      # exclude docs specific tags
-      - "refs/tags/*docs*" 
 
 depends_on:
   - main
@@ -366,10 +356,6 @@ trigger:
   event:
     - tag # see note at the start of the "Docker Images" section: creates SemVer tagged images using the `auto_tag` option of the docker plugin
     - push # `auto_tag` option only creates the `latest` tag if target branch is default branch (i.e. `main`)
-  ref:
-    exclude:
-      # exclude docs specific tags
-      - "refs/tags/*docs*" 
 
 depends_on:
   - main
@@ -436,10 +422,6 @@ trigger:
   event:
     - tag # see note at the start of the "Docker Images" section: creates SemVer tagged images using the `auto_tag` option of the manifest plugin
     - push # `auto_tag` option only creates the `latest` tag if target branch is default branch (i.e. `main`)
-  ref:
-    exclude:
-      # exclude docs specific tags
-      - "refs/tags/*docs*" 
 
 depends_on:
   - main
