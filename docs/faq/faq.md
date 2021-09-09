@@ -1,4 +1,4 @@
-# FAQ / Nice to know
+# FAQ
 
 ## Issues with BTRFS
 

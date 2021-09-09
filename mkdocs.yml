@@ -28,7 +28,8 @@ theme:
     - navigation.top # show back to top button
     - search.suggest # search suggestions: https://squidfunk.github.io/mkdocs-material/setup/setting-up-site-search/#search-suggestions
     - search.highlight # highlight search term on target page: https://squidfunk.github.io/mkdocs-material/setup/setting-up-site-search/#search-suggestions
-
+    - navigation.expand
+    - navigation.tabs
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default

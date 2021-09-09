@@ -1,6 +1,6 @@
 nav:
   - index.md
   - usage
-  - internals
+  - design
   - faq
 collapse: false
