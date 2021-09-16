@@ -1,4 +1,4 @@
-# Config File
+# Using Config Files
 
 ## Introduction
 

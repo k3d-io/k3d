@@ -1,4 +1,4 @@
-# Registries
+# Using Image Registries
 
 ## Registries configuration file
 
