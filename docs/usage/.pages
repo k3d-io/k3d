@@ -3,5 +3,7 @@ nav:
   - configfile.md
   - kubeconfig.md
   - multiserver.md
-  - guides
+  - registries.md
+  - exposing_services.md
+  - advanced
   - commands
