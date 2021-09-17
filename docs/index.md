@@ -11,7 +11,7 @@ k3d makes it very easy to create single- and multi-node [k3s](https://github.com
 **Note:** k3d is a **community-driven project**, that is supported by Rancher (SUSE) and it's not an official Rancher (SUSE) project.
 
 ??? Tip "View a quick demo"
-    <asciinema-player src="/static/asciicast/20200715_k3d.01.cast" cols=200 rows=32></asciinema-player>
+    <asciinema-player src="/static/asciicast/20210917_k3d_v5.0.0_01.cast" cols=200 rows=32></asciinema-player>
 
 ## Learning
 
