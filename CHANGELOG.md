@@ -2,6 +2,13 @@
 
 ## v5.0.0
 
+This release contains a whole lot of new features, breaking changes as well as smaller fixes and improvements.
+The changelog shown here is likely not complete but gives a broad overview over the changes.
+For more details, please check the v5 milestone (<https://github.com/rancher/k3d/milestone/27>) or even the commit history.
+The docs have been updated, so you should also find the information you need there.
+
+**Info**: <https://k3d.io> is now versioned, so you can checkout different versions of the documentation by using the dropdown menu in the page title bar!
+
 ### Breaking Changes
 
 - new syntax for nodefilters
@@ -15,6 +22,7 @@
   - the `--port` flag has the `proxy` opt (see new nodefilter syntax above) set by default
   - to leverage the old behavior of direct port-mappings, use the `direct` opt on the port flag
   - the nodefilter `loadbalancer` will now do the same as `servers:*;agents:*` (proxied via the loadbalancer)
+- flag `--registries-create` transformed from bool flag to string flag: let's you define the name and port-binding of the newly created registry, e.g. `--registry-create myregistry.localhost:5001`
 
 ### Fixes
 
@@ -31,6 +39,7 @@
   - updated fork of `confd` to make usage of the file backend including a file watcher for auto-reloads
     - this also checks the config before applying it, so the lb doesn't crash on a faulty config
   - updating the loadbalancer writes the new config file and also checks if everything's going fine afterwards
+  - some settings of the loadbalancer can now be configured using `--lb-config-override`, see docs at <https://k3d.io/v5.0.0/design/defaults/#k3d-loadbalancer>
 - helper images can now be set explicitly via environment variables: `K3D_IMAGE_LOADBALANCER` & `K3D_IMAGE_TOOLS` (#638)
 - concurrently add new nodes to an existing cluster (remove some dumb code) (#640)
   - `--wait` is now the default for `k3d node create`
@@ -52,6 +61,7 @@
   - new config path `options.k3s.extraArgs`
 - config file: environment variables (`$VAR`, `${VAR}` will be expanded unconditionally) (#643)
 - docker context support (#601, @developer-guy & #674)
+- New attempt in fixing DNS when using custom nameservers, e.g. on a company VPN: currently experimental, enable using the environment variable `K3D_FIX_DNS=1`
 
 ### Misc
 
@@ -59,6 +69,7 @@
 - logs: really final output when creating/deleting nodes (so far, we were not outputting a final success message and the process was still doing stuff) (#640)
 - tests/e2e: add tests for v1alpha2 to v1alpha3 migration
 - docs: use v1alpha3 config version
+- docs: update general appearance and cleanup
 
 ## v4.4.8
 
