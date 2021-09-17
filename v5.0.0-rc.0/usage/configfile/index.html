@@ -14,18 +14,18 @@
         <link rel="canonical" href="https://k3d.io/v5.0.0-rc.0/usage/configfile/">
       
       <link rel="icon" href="../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.5">
+      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.6">
     
     
       
-        <title>Config File - k3d</title>
+        <title>Using Config Files - k3d</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.bde7dde4.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.802231af.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ef6f36e2.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.3f5d1f46.min.css">
         
       
     
@@ -46,6 +46,8 @@
     
     
       
+
+
     
     
   </head>
@@ -71,7 +73,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#config-file" class="md-skip">
+        <a href="#using-config-files" class="md-skip">
           Skip to content
         </a>
       
@@ -100,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Config File
+              Using Config Files
             
           </span>
         </div>
@@ -111,7 +113,7 @@
         
           
           
-          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="grey" type="radio" name="__palette" id="__palette_1">
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="grey"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
           
             <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 10a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2m10-3a5 5 0 0 1 5 5 5 5 0 0 1-5 5H7a5 5 0 0 1-5-5 5 5 0 0 1 5-5h10M7 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3h10a3 3 0 0 0 3-3 3 3 0 0 0-3-3H7z"/></svg>
@@ -120,7 +122,7 @@
         
           
           
-          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="light-blue" data-md-color-accent="" type="radio" name="__palette" id="__palette_2">
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="light-blue" data-md-color-accent=""  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
           
             <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3z"/></svg>
@@ -139,14 +141,20 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
       </label>
-      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
-      </button>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
@@ -182,6 +190,73 @@
       
       
         
+          
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../.." class="md-tabs__link">
+      Overview
+    </a>
+  </li>
+
+      
+        
+  
+  
+    
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="./" class="md-tabs__link md-tabs__link--active">
+        Guides
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../design/project/" class="md-tabs__link">
+        Design
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../../faq/faq/" class="md-tabs__link">
+      FAQ
+    </a>
+  </li>
+
+      
+    </ul>
+  </div>
+</nav>
+        
       
       <main class="md-main" data-md-component="main">
         <div class="md-main__inner md-grid">
@@ -193,8 +268,10 @@
                   <div class="md-sidebar__inner">
                     
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="k3d" class="md-nav__button md-logo" aria-label="k3d" data-md-component="logo">
       
@@ -250,15 +327,163 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
       
       <label class="md-nav__link" for="__nav_2">
-        Usage
+        Guides
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Usage" data-md-level="1">
+      <nav class="md-nav" aria-label="Guides" data-md-level="1">
         <label class="md-nav__title" for="__nav_2">
           <span class="md-nav__icon md-icon"></span>
-          Usage
+          Guides
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Using Config Files
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Using Config Files
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    Introduction
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    Usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#required-fields" class="md-nav__link">
+    Required Fields
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config-options" class="md-nav__link">
+    Config Options
+  </a>
+  
+    <nav class="md-nav" aria-label="Config Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#all-options-example" class="md-nav__link">
+    All Options: Example
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config-file-vs-cli-flags" class="md-nav__link">
+    Config File vs. CLI Flags
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    References
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kubeconfig/" class="md-nav__link">
+        Handling Kubeconfigs
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../multiserver/" class="md-nav__link">
+        Creating multi-server clusters
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../registries/" class="md-nav__link">
+        Using Image Registries
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../exposing_services/" class="md-nav__link">
+        Exposing Services
+      </a>
+    </li>
+  
+
           
             
   
@@ -268,14 +493,65 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_1" type="checkbox" id="__nav_2_1" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_6" data-md-state="indeterminate" type="checkbox" id="__nav_2_6" checked>
       
-      <label class="md-nav__link" for="__nav_2_1">
+      <label class="md-nav__link" for="__nav_2_6">
+        Advanced Guides
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Advanced Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_6">
+          <span class="md-nav__icon md-icon"></span>
+          Advanced Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced/calico/" class="md-nav__link">
+        Use Calico instead of Flannel
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced/cuda/" class="md-nav__link">
+        Running CUDA workloads
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_7" data-md-state="indeterminate" type="checkbox" id="__nav_2_7" checked>
+      
+      <label class="md-nav__link" for="__nav_2_7">
         Commands
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Commands" data-md-level="2">
-        <label class="md-nav__title" for="__nav_2_1">
+        <label class="md-nav__title" for="__nav_2_7">
           <span class="md-nav__icon md-icon"></span>
           Commands
         </label>
@@ -635,205 +911,6 @@
   
 
           
-            
-  
-  
-    
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Config File
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        Config File
-      </a>
-      
-        
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#introduction" class="md-nav__link">
-    Introduction
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#usage" class="md-nav__link">
-    Usage
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#required-fields" class="md-nav__link">
-    Required Fields
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#config-options" class="md-nav__link">
-    Config Options
-  </a>
-  
-    <nav class="md-nav" aria-label="Config Options">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#all-options-example" class="md-nav__link">
-    All Options: Example
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#config-file-vs-cli-flags" class="md-nav__link">
-    Config File vs. CLI Flags
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#references" class="md-nav__link">
-    References
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../kubeconfig/" class="md-nav__link">
-        Handling Kubeconfigs
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../multiserver/" class="md-nav__link">
-        Creating multi-server clusters
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_5" type="checkbox" id="__nav_2_5" >
-      
-      <label class="md-nav__link" for="__nav_2_5">
-        Guides
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-      <nav class="md-nav" aria-label="Guides" data-md-level="2">
-        <label class="md-nav__title" for="__nav_2_5">
-          <span class="md-nav__icon md-icon"></span>
-          Guides
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../guides/exposing_services/" class="md-nav__link">
-        Exposing Services
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../guides/registries/" class="md-nav__link">
-        Registries
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../guides/calico/" class="md-nav__link">
-        Use Calico instead of Flannel
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../guides/cuda/" class="md-nav__link">
-        Running CUDA workloads
-      </a>
-    </li>
-  
-
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-          
         </ul>
       </nav>
     </li>
@@ -851,16 +928,16 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" data-md-state="indeterminate" type="checkbox" id="__nav_3" checked>
       
       <label class="md-nav__link" for="__nav_3">
-        Internals
+        Design
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Internals" data-md-level="1">
+      <nav class="md-nav" aria-label="Design" data-md-level="1">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
-          Internals
+          Design
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -869,19 +946,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../internals/defaults/" class="md-nav__link">
-        Defaults
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../internals/project/" class="md-nav__link">
+      <a href="../../design/project/" class="md-nav__link">
         Project Overview
       </a>
     </li>
@@ -893,7 +958,19 @@
   
   
     <li class="md-nav__item">
-      <a href="../../internals/networking/" class="md-nav__link">
+      <a href="../../design/defaults/" class="md-nav__link">
+        Defaults
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/networking/" class="md-nav__link">
         Networking
       </a>
     </li>
@@ -913,37 +990,10 @@
   
   
   
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
-      
-      <label class="md-nav__link" for="__nav_4">
-        FAQ
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-      <nav class="md-nav" aria-label="FAQ" data-md-level="1">
-        <label class="md-nav__title" for="__nav_4">
-          <span class="md-nav__icon md-icon"></span>
-          FAQ
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-  
-  
-  
     <li class="md-nav__item">
       <a href="../../faq/faq/" class="md-nav__link">
-        FAQ / Nice to know
+        FAQ
       </a>
-    </li>
-  
-
-          
-        </ul>
-      </nav>
     </li>
   
 
@@ -1045,10 +1095,9 @@
                   </a>
                 
                 
-                <h1 id="config-file">Config File<a class="headerlink" href="#config-file" title="Permanent link">&para;</a></h1>
+                <h1 id="using-config-files">Using Config Files<a class="headerlink" href="#using-config-files" title="Permanent link">&para;</a></h1>
+<p>The config file feature is <strong>available as of k3d v4.0.0</strong></p>
 <h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h2>
-<p>As of k3d v4.0.0, released in January 2021, k3d ships with configuration file support for the <code>k3d cluster create</code> command.<br />
-This allows you to define all the things that you defined with CLI flags before in a nice and tidy YAML (as a Kubernetes user, we know you love it ;) ).</p>
 <div class="admonition info">
 <p class="admonition-title">Syntax &amp; Semantics</p>
 <p>The options defined in the config file are not 100% the same as the CLI flags.<br />
@@ -1099,6 +1148,7 @@ This JSON-Schema can be found in the specific config version sub-directory in th
   <span class="nt">hostPort</span><span class="p">:</span> <span class="s">&quot;6445&quot;</span> <span class="c1"># where the Kubernetes API listening port will be mapped to on your host system</span>
 <span class="nt">image</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rancher/k3s:v1.20.4-k3s1</span> <span class="c1"># same as `--image rancher/k3s:v1.20.4-k3s1`</span>
 <span class="nt">network</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my-custom-net</span> <span class="c1"># same as `--network my-custom-net`</span>
+<span class="nt">subnet</span><span class="p">:</span> <span class="s">&quot;172.28.0.0/16&quot;</span> <span class="c1"># same as `--subnet 172.28.0.0/16`</span>
 <span class="nt">token</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">superSecretToken</span> <span class="c1"># same as `--token superSecretToken`</span>
 <span class="nt">volumes</span><span class="p">:</span> <span class="c1"># repeatable flags are represented as YAML lists</span>
   <span class="p p-Indicator">-</span> <span class="nt">volume</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/my/host/path:/path/in/node</span> <span class="c1"># same as `--volume &#39;/my/host/path:/path/in/node@server:0;agent:*&#39;`</span>
@@ -1114,8 +1164,10 @@ This JSON-Schema can be found in the specific config version sub-directory in th
     <span class="nt">nodeFilters</span><span class="p">:</span>
       <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">server:0</span>
 <span class="nt">registries</span><span class="p">:</span> <span class="c1"># define how registries should be created or used</span>
-  <span class="nt">create</span><span class="p">:</span>
-    <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">registry.localhost</span> <span class="c1"># creates a default registry to be used with the cluster; same as `--registry-create registry.localhost`</span>
+  <span class="nt">create</span><span class="p">:</span> <span class="c1"># creates a default registry to be used with the cluster; same as `--registry-create registry.localhost`</span>
+    <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">registry.localhost</span>
+    <span class="nt">host</span><span class="p">:</span> <span class="s">&quot;0.0.0.0&quot;</span>
+    <span class="nt">hostPort</span><span class="p">:</span> <span class="s">&quot;5000&quot;</span>
   <span class="nt">use</span><span class="p">:</span>
     <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">k3d-myotherregistry:5000</span> <span class="c1"># some other k3d-managed registry; same as `--registry-use &#39;k3d-myotherregistry:5000&#39;`</span>
   <span class="nt">config</span><span class="p">:</span> <span class="p p-Indicator">|</span> <span class="c1"># define contents of the `registries.yaml` file (or reference a file); same as `--registry-config /path/to/config.yaml`</span>
@@ -1130,6 +1182,9 @@ This JSON-Schema can be found in the specific config version sub-directory in th
     <span class="nt">disableLoadbalancer</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span> <span class="c1"># same as `--no-lb`</span>
     <span class="nt">disableImageVolume</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span> <span class="c1"># same as `--no-image-volume`</span>
     <span class="nt">disableRollback</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span> <span class="c1"># same as `--no-Rollback`</span>
+    <span class="nt">loadbalancer</span><span class="p">:</span>
+      <span class="nt">configOverrides</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">settings.workerConnections=2048</span>
   <span class="nt">k3s</span><span class="p">:</span> <span class="c1"># options passed on to K3s itself</span>
     <span class="nt">extraArgs</span><span class="p">:</span> <span class="c1"># additional arguments passed to the `k3s server|agent` command; same as `--k3s-arg`</span>
       <span class="p p-Indicator">-</span> <span class="nt">arg</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">--tls-san=my.host.domain</span>
@@ -1164,7 +1219,7 @@ For example, you use the same config file to create three clusters which only ha
 <h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
 <ul>
 <li>k3d demo repository: <a href="https://github.com/iwilltry42/k3d-demo/blob/main/README.md#config-file-support">https://github.com/iwilltry42/k3d-demo/blob/main/README.md#config-file-support</a></li>
-<li>SUSE Blog: <a href="https://www.suse.com/c/introduction-k3d-run-k3s-docker-src/">https://www.suse.com/c/introduction-k3d-run-k3s-docker-src/</a> (Search fo <code>The “Configuration as Code” Way</code>)</li>
+<li>SUSE Blog: <a href="https://www.suse.com/c/introduction-k3d-run-k3s-docker-src/">https://www.suse.com/c/introduction-k3d-run-k3s-docker-src/</a> (Search for <code>The “Configuration as Code” Way</code>)</li>
 </ul>
                 
                   
@@ -1174,7 +1229,7 @@ For example, you use the same config file to create three clusters which only ha
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">September 8, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">September 17, 2021</span>
       
     
   </small>
@@ -1191,8 +1246,9 @@ For example, you use the same config file to create three clusters which only ha
           </div>
         </div>
         
-          <a href="#" class="md-top md-icon" title="Back to top" data-md-component="top" data-md-state="hidden">
+          <a href="#" class="md-top md-icon" data-md-component="top" data-md-state="hidden">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"/></svg>
+            Back to top
           </a>
         
       </main>
@@ -1202,7 +1258,8 @@ For example, you use the same config file to create three clusters which only ha
   
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
-        <a href="../commands/k3d_version/" class="md-footer__link md-footer__link--prev" rel="prev">
+        
+        <a href="../.." class="md-footer__link md-footer__link--prev" aria-label="Previous: Overview" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1211,13 +1268,14 @@ For example, you use the same config file to create three clusters which only ha
               <span class="md-footer__direction">
                 Previous
               </span>
-              K3d version
+              Overview
             </div>
           </div>
         </a>
       
       
-        <a href="../kubeconfig/" class="md-footer__link md-footer__link--next" rel="next">
+        
+        <a href="../kubeconfig/" class="md-footer__link md-footer__link--next" aria-label="Next: Handling Kubeconfigs" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
@@ -1256,10 +1314,10 @@ For example, you use the same config file to create three clusters which only ha
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.top", "search.suggest", "search.highlight"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../assets/javascripts/workers/search.d351de03.min.js", "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.top", "search.suggest", "search.highlight", "navigation.expand", "navigation.tabs"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.409db549.min.js", "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a1609d9a.min.js"></script>
+      <script src="../../assets/javascripts/bundle.756773cc.min.js"></script>
       
         <script src="../../static/js/asciinema-player.js"></script>
       
