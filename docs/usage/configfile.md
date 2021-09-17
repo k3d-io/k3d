@@ -1,9 +1,8 @@
 # Using Config Files
 
-## Introduction
+The config file feature is **available as of k3d v4.0.0**
 
-As of k3d v4.0.0, released in January 2021, k3d ships with configuration file support for the `k3d cluster create` command.  
-This allows you to define all the things that you defined with CLI flags before in a nice and tidy YAML (as a Kubernetes user, we know you love it ;) ).
+## Introduction
 
 !!! info "Syntax & Semantics"
     The options defined in the config file are not 100% the same as the CLI flags.  
@@ -129,4 +128,4 @@ For example, you use the same config file to create three clusters which only ha
 ## References
 
 - k3d demo repository: <https://github.com/iwilltry42/k3d-demo/blob/main/README.md#config-file-support>
-- SUSE Blog: <https://www.suse.com/c/introduction-k3d-run-k3s-docker-src/> (Search fo `The “Configuration as Code” Way`)
+- SUSE Blog: <https://www.suse.com/c/introduction-k3d-run-k3s-docker-src/> (Search for `The “Configuration as Code” Way`)
