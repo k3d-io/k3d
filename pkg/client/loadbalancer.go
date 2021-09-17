@@ -172,7 +172,7 @@ func LoadbalancerGenerateConfig(cluster *k3d.Cluster) (k3d.LoadbalancerConfig, e
 	}
 
 	// some additional nginx settings
-	lbConfig.Settings.WorkerProcesses = k3d.DefaultLoadbalancerWorkerProcesses + len(cluster.ServerLoadBalancer.Node.Ports)*len(servers)
+	lbConfig.Settings.WorkerConnections = k3d.DefaultLoadbalancerWorkerConnections + len(cluster.ServerLoadBalancer.Node.Ports)*len(servers)
 
 	return lbConfig, nil
 }

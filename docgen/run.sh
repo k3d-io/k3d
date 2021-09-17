@@ -16,3 +16,7 @@ go mod tidy
 go mod vendor
 
 go run ./main.go
+
+sed -i "s%$REPO_DIR%$REPLACE_PLACEHOLDER%" "$CURR_DIR/go.mod"
+
+rm -r "$CURR_DIR/vendor"

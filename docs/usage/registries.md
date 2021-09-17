@@ -1,12 +1,9 @@
-# Registries
+# Using Image Registries
 
 ## Registries configuration file
 
 You can add registries by specifying them in a `registries.yaml` and referencing it at creation time:
 `#!bash k3d cluster create mycluster --registry-config "/home/YOU/my-registries.yaml"`.
-
-??? Tip "Pre v4.0.0 solution"
-    Before we added the `--registry-config` flag in k3d v4.0.0, you had to bind-mount the file to the correct location: `--volume "/home/YOU/my-registries.yaml:/etc/rancher/k3s/registries.yaml"`
 
 This file is a regular [k3s registries configuration file](https://rancher.com/docs/k3s/latest/en/installation/private-registry/), and looks like this:
 
@@ -17,10 +14,7 @@ mirrors:
       - http://my.company.registry:5000
 ```
 
-In this example, an image with a name like `my.company.registry:5000/nginx:latest` would be
-_pulled_ from the registry running at `http://my.company.registry:5000`.
-
-Note well there is an important limitation: **this configuration file will only work with k3s >= v0.10.0**. It will fail silently with previous versions of k3s, but you find in the [section below](#k3s-old) an alternative solution.
+In this example, an image with a name like `my.company.registry:5000/nginx:latest` would be _pulled_ from the registry running at `http://my.company.registry:5000`.
 
 This file can also be used for providing additional information necessary for accessing some registries, like [authentication](#authenticated-registries) and [certificates](#secure-registries).
 
@@ -96,9 +90,6 @@ k3d cluster create \
 
 ### Using k3d-managed registries
 
-!!! info "Just ported!"
-      The k3d-managed registry is available again as of k3d v4.0.0 (January 2021)
-
 #### Create a dedicated registry together with your cluster
 
 1. `#!bash k3d cluster create mycluster --registry-create mycluster-registry`: This creates your cluster `mycluster` together with a registry container called `mycluster-registry`
@@ -130,13 +121,13 @@ k3d cluster create \
     docker container run -d --name registry.localhost -v local_registry:/var/lib/registry --restart always -p 5000:5000 registry:2
     ```
 
-    These commands will start your registry in `registry.localhost:5000`. In order to push to this registry, you will need to make it accessible as described in the next section.
+    These commands will start your registry container with name and port `registry.localhost:5000`. In order to push to this registry, you will need to make it accessible as described in the next section.
     Once your registry is up and running, we will need to add it to your `registries.yaml` configuration file.
     Finally, you have to connect the registry network to the k3d cluster network: `#!bash docker network connect k3d-k3s-default registry.localhost`. And then you can [test your local registry](#testing-your-registry).
 
 ### Pushing to your local registry address
 
-As per the guide above, the registry will be available at `registry.localhost:5000`.
+As per the guide above, the registry will be available as `registry.localhost:5000`.
 
 All the nodes in your k3d cluster can resolve this hostname (thanks to the DNS server provided by the Docker daemon) but, in order to be able to push to this registry, this hostname also has to be resolved by your host.
 
@@ -151,7 +142,9 @@ If your system does not provide/support tools that can auto-resolve specific nam
 127.0.0.1 k3d-registry.localhost
 ```
 
-Once again, this will only work with k3s >= v0.10.0 (see the some sections below when using k3s <= v0.9.1)
+!!! info "Just use localhost"
+    Alternatively, if you don't care about pretty names, just push directly to `localhost:5000` (or whatever port you used) and it will work.
+    If you later pull the image from the registry, only the repository path (e.g. `myrepo/myimage:mytag` in `registry.localhost:5000/myrepo/myimage:mytag`) matters to find your image in the targeted registry.
 
 ## Testing your registry
 
@@ -200,44 +193,3 @@ EOF
 ```
 
 Then you should check that the pod is running with `kubectl get pods -l "app=nginx-test-registry"`.
-
-## Configuring registries for k3s <= v0.9.1
-
-k3s servers below v0.9.1 do not recognize the `registries.yaml` file as described in the in the beginning, so you will need to embed the contents of that file in a `containerd` configuration file.  
-You will have to create your own `containerd` configuration file at some well-known path like `${HOME}/.k3d/config.toml.tmpl`, like this:
-
-??? registriesprev091 "config.toml.tmpl"
-
-    ```toml
-    # Original section: no changes
-    [plugins.opt]
-    path = "{{ .NodeConfig.Containerd.Opt }}"
-    [plugins.cri]
-    stream_server_address = "{{ .NodeConfig.AgentConfig.NodeName }}"
-    stream_server_port = "10010"
-    {{- if .IsRunningInUserNS }}
-    disable_cgroup = true
-    disable_apparmor = true
-    restrict_oom_score_adj = true
-    {{ end -}}
-    {{- if .NodeConfig.AgentConfig.PauseImage }}
-    sandbox_image = "{{ .NodeConfig.AgentConfig.PauseImage }}"
-    {{ end -}}
-    {{- if not .NodeConfig.NoFlannel }}
-      [plugins.cri.cni]
-        bin_dir = "{{ .NodeConfig.AgentConfig.CNIBinDir }}"
-        conf_dir = "{{ .NodeConfig.AgentConfig.CNIConfDir }}"
-    {{ end -}}
-
-    # Added section: additional registries and the endpoints
-    [plugins.cri.registry.mirrors]
-      [plugins.cri.registry.mirrors."<b>registry.localhost:5000</b>"]
-        endpoint = ["http://<b>registry.localhost:5000</b>"]
-    ```
-
-and then mount it at `/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl` (where `containerd` in your k3d nodes will load it) when creating the k3d cluster:
-
-```bash
-k3d cluster create mycluster \
-    --volume ${HOME}/.k3d/config.toml.tmpl:/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
-```

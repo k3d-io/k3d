@@ -1,0 +1,4 @@
+title: Advanced Guides
+nav:
+  - calico.md
+  - cuda.md

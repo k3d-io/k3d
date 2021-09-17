@@ -1,3 +1,4 @@
 title: FAQ
 nav:
   - faq.md
+collapse: true

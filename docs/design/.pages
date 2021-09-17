@@ -1,5 +1,5 @@
-title: Internals
+title: Design
 nav:
-  - defaults.md
   - project.md
+  - defaults.md
   - networking.md

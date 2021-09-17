@@ -47,7 +47,7 @@ func NewLoadbalancer() *Loadbalancer {
 		Config: &LoadbalancerConfig{
 			Ports: map[string][]string{},
 			Settings: LoadBalancerSettings{
-				WorkerProcesses: DefaultLoadbalancerWorkerProcesses,
+				WorkerConnections: DefaultLoadbalancerWorkerConnections,
 			},
 		},
 	}
@@ -73,13 +73,13 @@ type LoadbalancerConfig struct {
 }
 
 type LoadBalancerSettings struct {
-	WorkerProcesses     int `yaml:"workerProcesses"`
+	WorkerConnections   int `yaml:"workerConnections"`
 	DefaultProxyTimeout int `yaml:"defaultProxyTimeout,omitempty"`
 }
 
 const (
-	DefaultLoadbalancerConfigPath      = "/etc/confd/values.yaml"
-	DefaultLoadbalancerWorkerProcesses = 1024
+	DefaultLoadbalancerConfigPath        = "/etc/confd/values.yaml"
+	DefaultLoadbalancerWorkerConnections = 1024
 )
 
 type LoadbalancerCreateOpts struct {
