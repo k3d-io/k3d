@@ -15,6 +15,29 @@ The following K3s environment variables are used to configure the cluster:
 | `K3S_TOKEN`| random | yes (`--token`) |
 | `K3S_KUBECONFIG_OUTPUT`| `/output/kubeconfig.yaml` | no |
 
+## k3d Loadbalancer
+
+By default, k3d creates an Nginx loadbalancer alongside the clusters it creates to handle the port-forwarding.
+The loadbalancer can partly be configured using k3d-defined settings.
+
+| Nginx setting | k3d default | k3d setting |
+|-------------|-------------|-------------|
+| `proxy_timeout` (default for all server stanzas) | `600` (s) | `settings.defaultProxyTimeout` |  |
+|`worker_connections` | `1024` | `settings.workerConnections` |
+
+### Overrides
+
+- Example via CLI: `k3d cluster create --lb-config-override settings.defaultProxyTimeout=900`
+- Example via Config File:
+
+  ```yaml
+  # ... truncated ...
+  k3d:
+    loadbalancer:
+      configOverrides:
+        - settings.workerConnections=2048
+  ```
+
 ## Multiple server nodes
 
 - by default, when `--server` > 1 and no `--datastore-x` option is set, the first server node (server-0) will be the initializing server node
