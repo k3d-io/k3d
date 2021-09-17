@@ -137,6 +137,19 @@
             "disableRollback": {
               "type": "boolean",
               "default": false
+            },
+            "loadbalancer": {
+              "type": "object",
+              "properties": {
+                "configOverrides": {
+                  "type":"array",
+                  "examples": [
+                    "settings.workerConnections=2048",
+                    "settings.defaultProxyTimeout=900"
+                  ]
+                }
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false
