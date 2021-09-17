@@ -11,7 +11,7 @@ worker_processes auto;
 events {
   multi_accept on;
   use epoll;
-  worker_connections {{ getv "/settings/workerProcesses" }};
+  worker_connections {{ getv "/settings/workerConnections" }};
 }
 
 stream {

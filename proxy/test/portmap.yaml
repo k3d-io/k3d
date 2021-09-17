@@ -7,4 +7,4 @@ ports:
     - agent-1
 
 settings:
-  workerProcesses: 1030
+  workerConnections: 1030
