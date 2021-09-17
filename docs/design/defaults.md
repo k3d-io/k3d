@@ -1,5 +1,20 @@
 # Defaults
 
+## k3d reserved settings
+
+When you create a K3s cluster in Docker using k3d, we make use of some K3s configuration options, making them "reserved" for k3d.
+This means, that overriding those options with your own may break the cluster setup.
+
+### Environment Variables
+
+The following K3s environment variables are used to configure the cluster:
+
+| Variable | K3d Default | Configurable? |
+|----------|-------------|---------------|
+| `K3S_URL`| `https://$CLUSTERNAME-server-0:6443` | no |
+| `K3S_TOKEN`| random | yes (`--token`) |
+| `K3S_KUBECONFIG_OUTPUT`| `/output/kubeconfig.yaml` | no |
+
 ## Multiple server nodes
 
 - by default, when `--server` > 1 and no `--datastore-x` option is set, the first server node (server-0) will be the initializing server node
