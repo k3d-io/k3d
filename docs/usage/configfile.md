@@ -61,6 +61,7 @@ kubeAPI: # same as `--api-port myhost.my.domain:6445` (where the name would reso
   hostPort: "6445" # where the Kubernetes API listening port will be mapped to on your host system
 image: rancher/k3s:v1.20.4-k3s1 # same as `--image rancher/k3s:v1.20.4-k3s1`
 network: my-custom-net # same as `--network my-custom-net`
+subnet: "172.28.0.0/16" # same as `--subnet 172.28.0.0/16`
 token: superSecretToken # same as `--token superSecretToken`
 volumes: # repeatable flags are represented as YAML lists
   - volume: /my/host/path:/path/in/node # same as `--volume '/my/host/path:/path/in/node@server:0;agent:*'`
@@ -76,8 +77,10 @@ env:
     nodeFilters:
       - server:0
 registries: # define how registries should be created or used
-  create:
-    name: registry.localhost # creates a default registry to be used with the cluster; same as `--registry-create registry.localhost`
+  create: # creates a default registry to be used with the cluster; same as `--registry-create registry.localhost`
+    name: registry.localhost
+    host: "0.0.0.0"
+    hostPort: "5000"
   use:
     - k3d-myotherregistry:5000 # some other k3d-managed registry; same as `--registry-use 'k3d-myotherregistry:5000'`
   config: | # define contents of the `registries.yaml` file (or reference a file); same as `--registry-config /path/to/config.yaml`
@@ -92,6 +95,9 @@ options:
     disableLoadbalancer: false # same as `--no-lb`
     disableImageVolume: false # same as `--no-image-volume`
     disableRollback: false # same as `--no-Rollback`
+    loadbalancer:
+      configOverrides:
+        - settings.workerConnections=2048
   k3s: # options passed on to K3s itself
     extraArgs: # additional arguments passed to the `k3s server|agent` command; same as `--k3s-arg`
       - arg: --tls-san=my.host.domain
