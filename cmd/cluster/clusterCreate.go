@@ -270,7 +270,7 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	/* k3s */
 	cmd.Flags().StringArray("k3s-arg", nil, "Additional args passed to k3s command (Format: `ARG@NODEFILTER[;@NODEFILTER]`)\n - Example: `k3d cluster create --k3s-arg \"--disable=traefik@server:0\"")
-	_ = cfgViper.BindPFlag("cli.k3sargs", cmd.Flags().Lookup("k3s-arg"))
+	_ = ppViper.BindPFlag("cli.k3sargs", cmd.Flags().Lookup("k3s-arg"))
 
 	/******************
 	 * "Normal" Flags *
