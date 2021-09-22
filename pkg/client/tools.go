@@ -268,7 +268,7 @@ func EnsureToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d
 			var err error
 			cluster, err = ClusterGet(ctx, runtime, cluster)
 			if err != nil {
-				return nil, fmt.Errorf("failed to retrieve cluster '%s': %w", cluster.Name, err)
+				return nil, fmt.Errorf("failed to retrieve cluster: %w", err)
 			}
 
 			if cluster.Network.Name == "" {

@@ -298,6 +298,7 @@ func ClusterPrepImageVolume(ctx context.Context, runtime k3drt.Runtime, cluster 
 	}
 
 	clusterCreateOpts.GlobalLabels[k3d.LabelImageVolume] = imageVolumeName
+	cluster.ImageVolume = imageVolumeName
 
 	// attach volume to nodes
 	for _, node := range cluster.Nodes {
