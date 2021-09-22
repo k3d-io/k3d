@@ -35,7 +35,22 @@ import (
 	"github.com/rancher/k3d/v5/pkg/util"
 )
 
-var nsLookupAddressRegexp = regexp.MustCompile(`^Address:\s+(?P<ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$`)
+type ResolveHostCmd struct {
+	Cmd        string
+	LogMatcher *regexp.Regexp
+}
+
+var (
+	ResolveHostCmdNSLookup = ResolveHostCmd{
+		Cmd:        "nslookup %s",
+		LogMatcher: regexp.MustCompile(`^Address:\s+(?P<ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$`),
+	}
+
+	ResolveHostCmdGetEnt = ResolveHostCmd{
+		Cmd:        "getent ahostsv4 '%s'",
+		LogMatcher: regexp.MustCompile(`(?P<ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s+STREAM.+`), // e.g. `192.168.47.4   STREAM host.docker.internal`,
+	}
+)
 
 // GetHostIP returns the routable IP address to be able to access services running on the host system from inside the cluster.
 // This depends on the Operating System and the chosen Runtime.
@@ -63,7 +78,7 @@ func GetHostIP(ctx context.Context, rtime rt.Runtime, cluster *k3d.Cluster) (net
 				return nil, fmt.Errorf("failed to ensure that k3d-tools node is running to get host IP :%w", err)
 			}
 
-			ip, err := resolveHostnameFromInside(ctx, rtime, toolsNode, "host.docker.internal")
+			ip, err := resolveHostnameFromInside(ctx, rtime, toolsNode, "host.docker.internal", ResolveHostCmdGetEnt)
 			if err != nil {
 				return nil, fmt.Errorf("failed to resolve 'host.docker.internal' from inside the k3d-tools node: %w", err)
 			}
@@ -80,9 +95,9 @@ func GetHostIP(ctx context.Context, rtime rt.Runtime, cluster *k3d.Cluster) (net
 
 }
 
-func resolveHostnameFromInside(ctx context.Context, rtime rt.Runtime, node *k3d.Node, hostname string) (net.IP, error) {
+func resolveHostnameFromInside(ctx context.Context, rtime rt.Runtime, node *k3d.Node, hostname string, cmd ResolveHostCmd) (net.IP, error) {
 
-	logreader, execErr := rtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", fmt.Sprintf("nslookup %s", hostname)})
+	logreader, execErr := rtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", fmt.Sprintf(cmd.Cmd, hostname)})
 
 	if logreader == nil {
 		if execErr != nil {
@@ -105,12 +120,12 @@ func resolveHostnameFromInside(ctx context.Context, rtime rt.Runtime, node *k3d.
 	}
 	for scanner.Scan() {
 		l.Log().Tracef("Scanning Log Line '%s'", scanner.Text())
-		match := nsLookupAddressRegexp.FindStringSubmatch(scanner.Text())
+		match := cmd.LogMatcher.FindStringSubmatch(scanner.Text())
 		if len(match) == 0 {
 			continue
 		}
 		l.Log().Tracef("-> Match(es): '%+v'", match)
-		submatches = util.MapSubexpNames(nsLookupAddressRegexp.SubexpNames(), match)
+		submatches = util.MapSubexpNames(cmd.LogMatcher.SubexpNames(), match)
 		l.Log().Tracef(" -> Submatch(es): %+v", submatches)
 		break
 	}
@@ -118,7 +133,7 @@ func resolveHostnameFromInside(ctx context.Context, rtime rt.Runtime, node *k3d.
 		if execErr != nil {
 			l.Log().Errorln(execErr)
 		}
-		return nil, fmt.Errorf("Failed to read address for '%s' from nslookup response", hostname)
+		return nil, fmt.Errorf("Failed to read address for '%s' from command output", hostname)
 	}
 
 	l.Log().Debugf("Hostname '%s' -> Address '%s'", hostname, submatches["ip"])

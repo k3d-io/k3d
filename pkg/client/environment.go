@@ -37,7 +37,9 @@ func GatherEnvironmentInfo(ctx context.Context, runtime runtimes.Runtime, cluste
 	if err != nil {
 		return nil, err
 	}
-	defer NodeDelete(ctx, runtime, toolsNode, k3d.NodeDeleteOpts{SkipLBUpdate: true})
+	defer func() {
+		go NodeDelete(ctx, runtime, toolsNode, k3d.NodeDeleteOpts{SkipLBUpdate: true})
+	}()
 
 	envInfo := &k3d.EnvironmentInfo{}
 
