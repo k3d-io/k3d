@@ -28,6 +28,7 @@ import (
 	"net"
 	"regexp"
 	goruntime "runtime"
+	"strings"
 
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/rancher/k3d/v5/pkg/runtimes"
@@ -61,13 +62,17 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 		return nil, err
 	}
 
-	l.Log().Tracef("GOOS: %s / Runtime OS: %s", goruntime.GOOS, rtimeInfo.OSType)
+	l.Log().Tracef("GOOS: %s / Runtime OS: %s (%s)", goruntime.GOOS, rtimeInfo.OSType, rtimeInfo.OS)
+
+	isDockerDesktop := func(os string) bool {
+		return strings.ToLower(os) == "docker desktop"
+	}
 
 	// Docker Runtime
 	if runtime == runtimes.Docker {
 
 		// "native" Docker on Linux
-		if rtimeInfo.OSType == "linux" {
+		if goruntime.GOOS == "linux" && rtimeInfo.OSType == "linux" {
 			ip, err := runtime.GetHostIP(ctx, cluster.Network.Name)
 			if err != nil {
 				return nil, fmt.Errorf("runtime failed to get host IP: %w", err)
@@ -76,7 +81,7 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 		}
 
 		// Docker (for Desktop) on MacOS or Windows
-		if rtimeInfo.OSType == "windows" || rtimeInfo.OSType == "darwin" {
+		if (rtimeInfo.OSType == "windows" || rtimeInfo.OSType == "darwin") && isDockerDesktop(rtimeInfo.OS) {
 
 			toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
 			if err != nil {
@@ -86,11 +91,11 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 			var ip net.IP
 
 			ip, err = resolveHostnameFromInside(ctx, runtime, toolsNode, "host.docker.internal", ResolveHostCmdGetEnt)
-			if err != nil {
-				l.Log().Errorf("failed to resolve 'host.docker.internal' from inside the k3d-tools node: %v", err)
-			} else {
+			if err == nil {
 				return ip, nil
 			}
+
+			l.Log().Warnf("failed to resolve 'host.docker.internal' from inside the k3d-tools node: %v", err)
 
 			l.Log().Infof("HostIP-Fallback: using network gateway...")
 			ip, err = runtime.GetHostIP(ctx, cluster.Network.Name)
@@ -102,7 +107,7 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 		}
 
 		// Catch all other GOOS cases
-		return nil, fmt.Errorf("GetHostIP only implemented for Linux, MacOS (Darwin) and Windows")
+		return nil, fmt.Errorf("GetHostIP not implemented for Docker and the combination of k3d host '%s' / docker host '%s (%s)'", goruntime.GOOS, rtimeInfo.OSType, rtimeInfo.OS)
 
 	}
 
