@@ -88,6 +88,8 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 			ip, err = resolveHostnameFromInside(ctx, runtime, toolsNode, "host.docker.internal", ResolveHostCmdGetEnt)
 			if err != nil {
 				l.Log().Errorf("failed to resolve 'host.docker.internal' from inside the k3d-tools node: %v", err)
+			} else {
+				return ip, nil
 			}
 
 			l.Log().Infof("HostIP-Fallback: using network gateway...")
