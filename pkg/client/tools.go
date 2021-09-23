@@ -256,35 +256,41 @@ func runToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cl
 }
 
 func EnsureToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*k3d.Node, error) {
-	var err error
-
-	cluster, err = ClusterGet(ctx, runtime, cluster)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve cluster '%s': %w", cluster.Name, err)
-	}
-
-	if cluster.Network.Name == "" {
-		return nil, fmt.Errorf("failed to get network for cluster '%s'", cluster.Name)
-	}
-
-	var imageVolume string
-	var ok bool
-	for _, node := range cluster.Nodes {
-		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
-			if imageVolume, ok = node.RuntimeLabels[k3d.LabelImageVolume]; ok {
-				break
-			}
-		}
-	}
-	if imageVolume == "" {
-		return nil, fmt.Errorf("Failed to find image volume for cluster '%s'", cluster.Name)
-	}
-
-	l.Log().Debugf("Attaching to cluster's image volume '%s'", imageVolume)
 
 	var toolsNode *k3d.Node
-	toolsNode, err = runtime.GetNode(ctx, &k3d.Node{Name: fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name)})
+	toolsNode, err := runtime.GetNode(ctx, &k3d.Node{Name: fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name)})
 	if err != nil || toolsNode == nil {
+
+		// Get more info on the cluster, if required
+		var imageVolume string
+		if cluster.Network.Name == "" || cluster.ImageVolume == "" {
+			l.Log().Debugf("Gathering some more info about the cluster before creating the tools node...")
+			var err error
+			cluster, err = ClusterGet(ctx, runtime, cluster)
+			if err != nil {
+				return nil, fmt.Errorf("failed to retrieve cluster: %w", err)
+			}
+
+			if cluster.Network.Name == "" {
+				return nil, fmt.Errorf("failed to get network for cluster '%s'", cluster.Name)
+			}
+
+			var ok bool
+			for _, node := range cluster.Nodes {
+				if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
+					if imageVolume, ok = node.RuntimeLabels[k3d.LabelImageVolume]; ok {
+						break
+					}
+				}
+			}
+			if imageVolume == "" {
+				return nil, fmt.Errorf("Failed to find image volume for cluster '%s'", cluster.Name)
+			}
+			l.Log().Debugf("Attaching to cluster's image volume '%s'", imageVolume)
+			cluster.ImageVolume = imageVolume
+		}
+
+		// start tools node
 		l.Log().Infoln("Starting new tools node...")
 		toolsNode, err = runToolsNode(
 			ctx,
@@ -292,7 +298,7 @@ func EnsureToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d
 			cluster,
 			cluster.Network.Name,
 			[]string{
-				fmt.Sprintf("%s:%s", imageVolume, k3d.DefaultImageVolumeMountPath),
+				fmt.Sprintf("%s:%s", cluster.ImageVolume, k3d.DefaultImageVolumeMountPath),
 				fmt.Sprintf("%s:%s", runtime.GetRuntimePath(), runtime.GetRuntimePath()),
 			})
 		if err != nil {

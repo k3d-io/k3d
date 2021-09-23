@@ -32,14 +32,23 @@ import (
 )
 
 func GatherEnvironmentInfo(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*k3d.EnvironmentInfo, error) {
+
+	envInfo := &k3d.EnvironmentInfo{}
+
+	rtimeInfo, err := runtime.Info()
+	if err != nil {
+		return nil, err
+	}
+	envInfo.RuntimeInfo = *rtimeInfo
+
 	l.Log().Infof("Using the k3d-tools node to gather environment information")
 	toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
 	if err != nil {
 		return nil, err
 	}
-	defer NodeDelete(ctx, runtime, toolsNode, k3d.NodeDeleteOpts{SkipLBUpdate: true})
-
-	envInfo := &k3d.EnvironmentInfo{}
+	defer func() {
+		go NodeDelete(ctx, runtime, toolsNode, k3d.NodeDeleteOpts{SkipLBUpdate: true})
+	}()
 
 	hostIP, err := GetHostIP(ctx, runtime, cluster)
 	if err != nil {

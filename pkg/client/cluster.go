@@ -60,6 +60,9 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 		return fmt.Errorf("Failed Cluster Preparation: %+v", err)
 	}
 
+	// Create tools-node for later steps
+	go EnsureToolsNode(ctx, runtime, &clusterConfig.Cluster)
+
 	/*
 	 * Step 1: Create Containers
 	 */
@@ -295,6 +298,7 @@ func ClusterPrepImageVolume(ctx context.Context, runtime k3drt.Runtime, cluster 
 	}
 
 	clusterCreateOpts.GlobalLabels[k3d.LabelImageVolume] = imageVolumeName
+	cluster.ImageVolume = imageVolumeName
 
 	// attach volume to nodes
 	for _, node := range cluster.Nodes {
@@ -812,12 +816,12 @@ func GenerateNodeName(cluster string, role k3d.Role, suffix int) string {
 }
 
 // ClusterStart starts a whole cluster (i.e. all nodes of the cluster)
-func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, startClusterOpts types.ClusterStartOpts) error {
+func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, clusterStartOpts types.ClusterStartOpts) error {
 	l.Log().Infof("Starting cluster '%s'", cluster.Name)
 
-	if startClusterOpts.Timeout > 0*time.Second {
+	if clusterStartOpts.Timeout > 0*time.Second {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, startClusterOpts.Timeout)
+		ctx, cancel = context.WithTimeout(ctx, clusterStartOpts.Timeout)
 		defer cancel()
 	}
 
@@ -860,9 +864,9 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		l.Log().Infoln("Starting the initializing server...")
 		if err := NodeStart(ctx, runtime, initNode, &k3d.NodeStartOpts{
 			Wait:            true, // always wait for the init node
-			NodeHooks:       startClusterOpts.NodeHooks,
+			NodeHooks:       clusterStartOpts.NodeHooks,
 			ReadyLogMessage: "Running kube-apiserver", // initNode means, that we're using etcd -> this will need quorum, so "k3s is up and running" won't happen right now
-			EnvironmentInfo: startClusterOpts.EnvironmentInfo,
+			EnvironmentInfo: clusterStartOpts.EnvironmentInfo,
 		}); err != nil {
 			return fmt.Errorf("Failed to start initializing server node: %+v", err)
 		}
@@ -875,8 +879,8 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	for _, serverNode := range servers {
 		if err := NodeStart(ctx, runtime, serverNode, &k3d.NodeStartOpts{
 			Wait:            true,
-			NodeHooks:       startClusterOpts.NodeHooks,
-			EnvironmentInfo: startClusterOpts.EnvironmentInfo,
+			NodeHooks:       clusterStartOpts.NodeHooks,
+			EnvironmentInfo: clusterStartOpts.EnvironmentInfo,
 		}); err != nil {
 			return fmt.Errorf("Failed to start server %s: %+v", serverNode.Name, err)
 		}
@@ -894,8 +898,8 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		agentWG.Go(func() error {
 			return NodeStart(aCtx, runtime, currentAgentNode, &k3d.NodeStartOpts{
 				Wait:            true,
-				NodeHooks:       startClusterOpts.NodeHooks,
-				EnvironmentInfo: startClusterOpts.EnvironmentInfo,
+				NodeHooks:       clusterStartOpts.NodeHooks,
+				EnvironmentInfo: clusterStartOpts.EnvironmentInfo,
 			})
 		})
 	}
@@ -915,7 +919,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		helperWG.Go(func() error {
 			nodeStartOpts := &k3d.NodeStartOpts{
 				NodeHooks:       currentHelperNode.HookActions,
-				EnvironmentInfo: startClusterOpts.EnvironmentInfo,
+				EnvironmentInfo: clusterStartOpts.EnvironmentInfo,
 			}
 			if currentHelperNode.Role == k3d.LoadBalancerRole {
 				nodeStartOpts.Wait = true
@@ -936,7 +940,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	/*** DNS ***/
 
 	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
-	if err := prepInjectHostIP(ctx, runtime, cluster); err != nil {
+	if err := prepInjectHostIP(ctx, runtime, cluster, &clusterStartOpts); err != nil {
 		return fmt.Errorf("failed to inject host IP: %w", err)
 	}
 
@@ -1007,33 +1011,27 @@ func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clu
 }
 
 // prepInjectHostIP adds /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
-func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
+func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, clusterStartOpts *k3d.ClusterStartOpts) error {
 	if cluster.Network.Name == "host" {
 		l.Log().Tracef("Not injecting hostIP as clusternetwork is 'host'")
 		return nil
 	}
 	l.Log().Infoln("Trying to get IP of the docker host and inject it into the cluster as 'host.k3d.internal' for easy access")
-	hostIP, err := GetHostIP(ctx, runtime, cluster)
-	if err != nil {
-		l.Log().Warnf("Failed to get HostIP to inject as host.k3d.internal: %+v", err)
-		return nil
-	}
-	if hostIP != nil {
-		hostsEntry := fmt.Sprintf("%s %s", hostIP.String(), k3d.DefaultK3dInternalHostRecord)
-		l.Log().Debugf("Adding extra host entry '%s'...", hostsEntry)
-		for _, node := range cluster.Nodes {
-			if err := runtime.ExecInNode(ctx, node, []string{"sh", "-c", fmt.Sprintf("echo '%s' >> /etc/hosts", hostsEntry)}); err != nil {
-				return fmt.Errorf("failed to add extra entry '%s' to /etc/hosts in node '%s': %w", hostsEntry, node.Name, err)
-			}
+	hostIP := clusterStartOpts.EnvironmentInfo.HostGateway
+	hostsEntry := fmt.Sprintf("%s %s", hostIP.String(), k3d.DefaultK3dInternalHostRecord)
+	l.Log().Debugf("Adding extra host entry '%s'...", hostsEntry)
+	for _, node := range cluster.Nodes {
+		if err := runtime.ExecInNode(ctx, node, []string{"sh", "-c", fmt.Sprintf("echo '%s' >> /etc/hosts", hostsEntry)}); err != nil {
+			return fmt.Errorf("failed to add extra entry '%s' to /etc/hosts in node '%s': %w", hostsEntry, node.Name, err)
 		}
-		l.Log().Debugf("Successfully added host record \"%s\" to /etc/hosts in all nodes", hostsEntry)
+	}
+	l.Log().Debugf("Successfully added host record \"%s\" to /etc/hosts in all nodes", hostsEntry)
 
-		err := corednsAddHost(ctx, runtime, cluster, hostIP.String(), k3d.DefaultK3dInternalHostRecord)
-		if err != nil {
-			return fmt.Errorf("failed to inject host record \"%s\" into CoreDNS ConfigMap: %w", hostsEntry, err)
-		}
-		l.Log().Debugf("Successfully added host record \"%s\" to the CoreDNS ConfigMap ", hostsEntry)
+	err := corednsAddHost(ctx, runtime, cluster, hostIP.String(), k3d.DefaultK3dInternalHostRecord)
+	if err != nil {
+		return fmt.Errorf("failed to inject host record \"%s\" into CoreDNS ConfigMap: %w", hostsEntry, err)
 	}
+	l.Log().Debugf("Successfully added host record \"%s\" to the CoreDNS ConfigMap ", hostsEntry)
 	return nil
 }
 
