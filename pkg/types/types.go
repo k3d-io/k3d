@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/docker/go-connections/nat"
+	runtimeTypes "github.com/rancher/k3d/v5/pkg/runtimes/types"
 	"github.com/rancher/k3d/v5/pkg/types/k3s"
 	"github.com/rancher/k3d/v5/version"
 	"inet.af/netaddr"
@@ -424,4 +425,5 @@ type RegistryExternal struct {
 
 type EnvironmentInfo struct {
 	HostGateway net.IP
+	RuntimeInfo runtimeTypes.RuntimeInfo
 }
