@@ -51,6 +51,11 @@ func NewCmdClusterStart() *cobra.Command {
 				l.Log().Infoln("No clusters found")
 			} else {
 				for _, c := range clusters {
+					envInfo, err := client.GatherEnvironmentInfo(cmd.Context(), runtimes.SelectedRuntime, c)
+					if err != nil {
+						l.Log().Fatalf("failed to gather info about cluster environment: %v", err)
+					}
+					startClusterOpts.EnvironmentInfo = envInfo
 					if err := client.ClusterStart(cmd.Context(), runtimes.SelectedRuntime, c, startClusterOpts); err != nil {
 						l.Log().Fatalln(err)
 					}
