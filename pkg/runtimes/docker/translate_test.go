@@ -23,6 +23,8 @@ THE SOFTWARE.
 package docker
 
 import (
+	"os"
+	"strconv"
 	"testing"
 
 	"github.com/go-test/deep"
@@ -58,6 +60,9 @@ func TestTranslateNodeToContainer(t *testing.T) {
 	}
 
 	init := true
+	if disableInit, err := strconv.ParseBool(os.Getenv("K3D_DEBUG_DISABLE_DOCKER_INIT")); err == nil && disableInit {
+		init = false
+	}
 
 	expectedRepresentation := &NodeInDocker{
 		ContainerConfig: container.Config{

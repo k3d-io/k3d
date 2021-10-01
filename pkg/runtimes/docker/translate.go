@@ -25,6 +25,8 @@ package docker
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/containerd/containerd/log"
@@ -44,10 +46,16 @@ import (
 
 // TranslateNodeToContainer translates a k3d node specification to a docker container representation
 func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
+	init := true
+	if disableInit, err := strconv.ParseBool(os.Getenv("K3D_DEBUG_DISABLE_DOCKER_INIT")); err == nil && disableInit {
+		l.Log().Traceln("docker-init disabled for all containers")
+		init = false
+	}
+
 	/* initialize everything that we need */
 	containerConfig := docker.Config{}
 	hostConfig := docker.HostConfig{
-		Init:       &[]bool{true}[0],
+		Init:       &init,
 		ExtraHosts: node.ExtraHosts,
 	}
 	networkingConfig := network.NetworkingConfig{}
