@@ -1016,14 +1016,21 @@ func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.C
 		l.Log().Tracef("Not injecting hostIP as clusternetwork is 'host'")
 		return nil
 	}
-	l.Log().Infoln("Trying to get IP of the docker host and inject it into the cluster as 'host.k3d.internal' for easy access")
+
 	hostIP := clusterStartOpts.EnvironmentInfo.HostGateway
 	hostsEntry := fmt.Sprintf("%s %s", hostIP.String(), k3d.DefaultK3dInternalHostRecord)
-	l.Log().Debugf("Adding extra host entry '%s'...", hostsEntry)
+	l.Log().Infof("Injecting record '%s'...", hostsEntry)
+
+	// entry in /etc/hosts
+	errgrp, errgrpctx := errgroup.WithContext(ctx)
 	for _, node := range cluster.Nodes {
-		if err := runtime.ExecInNode(ctx, node, []string{"sh", "-c", fmt.Sprintf("echo '%s' >> /etc/hosts", hostsEntry)}); err != nil {
-			return fmt.Errorf("failed to add extra entry '%s' to /etc/hosts in node '%s': %w", hostsEntry, node.Name, err)
-		}
+		n := node
+		errgrp.Go(func() error {
+			return runtime.ExecInNode(errgrpctx, n, []string{"sh", "-c", fmt.Sprintf("echo '%s' >> /etc/hosts", hostsEntry)})
+		})
+	}
+	if err := errgrp.Wait(); err != nil {
+		return fmt.Errorf("failed to add hosts entry %s: %w", hostsEntry, err)
 	}
 	l.Log().Debugf("Successfully added host record \"%s\" to /etc/hosts in all nodes", hostsEntry)
 
