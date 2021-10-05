@@ -22,7 +22,16 @@ THE SOFTWARE.
 
 package util
 
+import "strings"
+
 func RemoveElementFromStringSlice(slice []string, index int) []string {
 	slice[index] = slice[len(slice)-1]
 	return slice[:len(slice)-1]
+}
+
+func ReplaceInAllElements(replacer *strings.Replacer, arr []string) []string {
+	for i, elem := range arr {
+		arr[i] = replacer.Replace(elem)
+	}
+	return arr
 }

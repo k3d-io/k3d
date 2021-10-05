@@ -100,7 +100,7 @@ func NewCmdConfigMigrate() *cobra.Command {
 					l.Log().Fatalln(err)
 				}
 			} else {
-				if err := os.WriteFile(output, yamlout, os.ModeAppend); err != nil {
+				if err := os.WriteFile(output, yamlout, os.ModePerm); err != nil {
 					l.Log().Fatalln(err)
 				}
 			}

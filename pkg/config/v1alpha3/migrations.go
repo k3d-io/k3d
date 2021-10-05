@@ -25,11 +25,13 @@ package v1alpha3
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	configtypes "github.com/rancher/k3d/v5/pkg/config/types"
 	"github.com/rancher/k3d/v5/pkg/config/v1alpha2"
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/util"
 )
 
 var Migrations = map[string]func(configtypes.Config) (configtypes.Config, error){
@@ -39,11 +41,23 @@ var Migrations = map[string]func(configtypes.Config) (configtypes.Config, error)
 func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
 	l.Log().Debugln("Migrating v1alpha2 to v1alpha3")
 
+	// nodefilters changed from `@group[index]` to `@group:index`
+	nodeFilterReplacer := strings.NewReplacer(
+		"[", ":", // replace opening bracket
+		"]", "", // drop closing bracket
+	)
+
+	/*
+	 * We're migrating matching fields between versions by marshalling to JSON and back
+	 */
 	injson, err := json.Marshal(input)
 	if err != nil {
 		return nil, err
 	}
 
+	/*
+	 * Migrate config of `kind: Simple`
+	 */
 	if input.GetKind() == "Simple" {
 		cfgIntermediate := SimpleConfigIntermediateV1alpha2{}
 
@@ -60,14 +74,19 @@ func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
 			return nil, err
 		}
 
+		// simple nodefilter changes
 		cfg.Options.Runtime.Labels = []LabelWithNodeFilters{}
 
 		for _, label := range input.(v1alpha2.SimpleConfig).Labels {
 			cfg.Options.Runtime.Labels = append(cfg.Options.Runtime.Labels, LabelWithNodeFilters{
 				Label:       label.Label,
-				NodeFilters: label.NodeFilters,
+				NodeFilters: util.ReplaceInAllElements(nodeFilterReplacer, label.NodeFilters),
 			})
 		}
+
+		/*
+		 * structural changes (e.g. added nodefilter support)
+		 */
 
 		cfg.Options.K3sOptions.ExtraArgs = []K3sArgWithNodeFilters{}
 
@@ -96,6 +115,25 @@ func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
 				HostPort: "random",
 			}
 		}
+
+		/*
+		 * Matching fields with only syntactical changes (e.g. nodefilter syntax changed)
+		 */
+		for _, env := range cfg.Env {
+			env.NodeFilters = util.ReplaceInAllElements(nodeFilterReplacer, env.NodeFilters)
+		}
+
+		for _, vol := range cfg.Volumes {
+			vol.NodeFilters = util.ReplaceInAllElements(nodeFilterReplacer, vol.NodeFilters)
+		}
+
+		for _, p := range cfg.Ports {
+			p.NodeFilters = util.ReplaceInAllElements(nodeFilterReplacer, p.NodeFilters)
+		}
+
+		/*
+		 * Finalizing
+		 */
 
 		cfg.APIVersion = ApiVersion
 
