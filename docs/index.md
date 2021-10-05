@@ -2,14 +2,16 @@
 
 ![k3d](static/img/k3d_logo_black_blue.svg)
 
-**This page is targeting k3d v4.0.0 and newer!**
+## What is k3d?
 
 k3d is a lightweight wrapper to run [k3s](https://github.com/rancher/k3s) (Rancher Lab's minimal Kubernetes distribution) in docker.
 
 k3d makes it very easy to create single- and multi-node [k3s](https://github.com/rancher/k3s) clusters in docker, e.g. for local development on Kubernetes.
 
+**Note:** k3d is a **community-driven project**, that is supported by Rancher (SUSE) and it's not an official Rancher (SUSE) project.
+
 ??? Tip "View a quick demo"
-    <asciinema-player src="/static/asciicast/20200715_k3d.01.cast" cols=200 rows=32></asciinema-player>
+    <asciinema-player src="/static/asciicast/20210917_k3d_v5.0.0_01.cast" cols=200 rows=32></asciinema-player>
 
 ## Learning
 
@@ -25,7 +27,8 @@ k3d makes it very easy to create single- and multi-node [k3s](https://github.com
 
 ## Requirements
 
-- [docker](https://docs.docker.com/install/)
+- [**docker**](https://docs.docker.com/install/) to be able to use k3d at all
+- [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) to interact with the Kubernetes cluster
 
 ## Releases
 
@@ -51,8 +54,8 @@ You have several options there:
 
 Use the install script to grab a specific release (via `TAG` environment variable):
 
-- wget: `#!bash wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v4.0.0 bash`
-- curl: `#!bash curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v4.0.0 bash`
+- wget: `#!bash wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v5.0.0 bash`
+- curl: `#!bash curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v5.0.0 bash`
 
 ### Other Installers
 
@@ -78,7 +81,7 @@ Use the install script to grab a specific release (via `TAG` environment variabl
 
     - [asdf](https://asdf-vm.com): `asdf plugin-add k3d && asdf install k3d latest`
 
-      *Note*: `asdf plugin-add k3d`, then `asdf install k3d <tag>` with `<tag> = latest` or `4.x.x` for a specific version (maintained by [spencergilbert/asdf-k3d](https://github.com/spencergilbert/asdf-k3d))
+      *Note*: `asdf plugin-add k3d`, then `asdf install k3d <tag>` with `<tag> = latest` or `5.x.x` for a specific version (maintained by [spencergilbert/asdf-k3d](https://github.com/spencergilbert/asdf-k3d))
 
     - Others
       - install via go: `#!bash go install github.com/rancher/k3d@latest` (**Note**: this will give you unreleased/bleeding-edge changes)

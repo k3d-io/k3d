@@ -28,14 +28,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rancher/k3d/v4/cmd/util"
-	k3cluster "github.com/rancher/k3d/v4/pkg/client"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v5/cmd/util"
+	k3cluster "github.com/rancher/k3d/v5/pkg/client"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/liggitt/tabwriter"
 )
@@ -83,14 +82,14 @@ func buildClusterList(ctx context.Context, args []string) []*k3d.Cluster {
 		// cluster name not specified : get all clusters
 		clusters, err = k3cluster.ClusterList(ctx, runtimes.SelectedRuntime)
 		if err != nil {
-			log.Fatalln(err)
+			l.Log().Fatalln(err)
 		}
 	} else {
 		for _, clusterName := range args {
 			// cluster name specified : get specific cluster
 			retrievedCluster, err := k3cluster.ClusterGet(ctx, runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
 			if err != nil {
-				log.Fatalln(err)
+				l.Log().Fatalln(err)
 			}
 			clusters = append(clusters, retrievedCluster)
 		}
@@ -126,7 +125,7 @@ func PrintClusters(clusters []*k3d.Cluster, flags clusterFlags) {
 			}
 			_, err := fmt.Fprintf(tabwriter, "%s\n", strings.Join(headers, "\t"))
 			if err != nil {
-				log.Fatalln("Failed to print headers")
+				l.Log().Fatalln("Failed to print headers")
 			}
 		}
 	}

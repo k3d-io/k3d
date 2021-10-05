@@ -30,17 +30,22 @@ import (
 	"strings"
 
 	"github.com/docker/go-connections/nat"
-	cliutil "github.com/rancher/k3d/v4/cmd/util" // TODO: move parseapiport to pkg
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	"github.com/rancher/k3d/v4/pkg/types/k3s"
-	"github.com/rancher/k3d/v4/pkg/util"
-	"github.com/rancher/k3d/v4/version"
+	cliutil "github.com/rancher/k3d/v5/cmd/util" // TODO: move parseapiport to pkg
+	"github.com/rancher/k3d/v5/pkg/client"
+	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/types/k3s"
+	"github.com/rancher/k3d/v5/pkg/util"
+	"github.com/rancher/k3d/v5/version"
 	"gopkg.in/yaml.v2"
 	"inet.af/netaddr"
 
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+)
+
+var (
+	DefaultTargetsNodefiltersPortMappings = []string{"servers:*:proxy", "agents:*:proxy"}
 )
 
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration
@@ -60,6 +65,9 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	if simpleConfig.Network != "" {
 		clusterNetwork.Name = simpleConfig.Network
 		clusterNetwork.External = true
+	} else {
+		clusterNetwork.Name = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, simpleConfig.Name)
+		clusterNetwork.External = false
 	}
 
 	if simpleConfig.Subnet != "" {
@@ -102,11 +110,19 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	newCluster.Nodes = []*k3d.Node{}
 
 	if !simpleConfig.Options.K3dOptions.DisableLoadbalancer {
-		newCluster.ServerLoadBalancer = &k3d.Node{
-			Role: k3d.LoadBalancerRole,
+		newCluster.ServerLoadBalancer = k3d.NewLoadbalancer()
+		lbCreateOpts := &k3d.LoadbalancerCreateOpts{}
+		if simpleConfig.Options.K3dOptions.Loadbalancer.ConfigOverrides != nil && len(simpleConfig.Options.K3dOptions.Loadbalancer.ConfigOverrides) > 0 {
+			lbCreateOpts.ConfigOverrides = simpleConfig.Options.K3dOptions.Loadbalancer.ConfigOverrides
 		}
+		var err error
+		newCluster.ServerLoadBalancer.Node, err = client.LoadbalancerPrepare(ctx, runtime, &newCluster, lbCreateOpts)
+		if err != nil {
+			return nil, fmt.Errorf("error preparing the loadbalancer: %w", err)
+		}
+		newCluster.Nodes = append(newCluster.Nodes, newCluster.ServerLoadBalancer.Node)
 	} else {
-		log.Debugln("Disabling the load balancer")
+		l.Log().Debugln("Disabling the load balancer")
 	}
 
 	/*************
@@ -115,9 +131,9 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 	for i := 0; i < simpleConfig.Servers; i++ {
 		serverNode := k3d.Node{
+			Name:       client.GenerateNodeName(newCluster.Name, k3d.ServerRole, i),
 			Role:       k3d.ServerRole,
 			Image:      simpleConfig.Image,
-			Args:       simpleConfig.Options.K3sOptions.ExtraServerArgs,
 			ServerOpts: k3d.ServerOpts{},
 			Memory:     simpleConfig.Options.Runtime.ServersMemory,
 		}
@@ -129,13 +145,17 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		}
 
 		newCluster.Nodes = append(newCluster.Nodes, &serverNode)
+
+		if !simpleConfig.Options.K3dOptions.DisableLoadbalancer {
+			newCluster.ServerLoadBalancer.Config.Ports[fmt.Sprintf("%s.tcp", k3d.DefaultAPIPort)] = append(newCluster.ServerLoadBalancer.Config.Ports[fmt.Sprintf("%s.tcp", k3d.DefaultAPIPort)], serverNode.Name)
+		}
 	}
 
 	for i := 0; i < simpleConfig.Agents; i++ {
 		agentNode := k3d.Node{
+			Name:   client.GenerateNodeName(newCluster.Name, k3d.AgentRole, i),
 			Role:   k3d.AgentRole,
 			Image:  simpleConfig.Image,
-			Args:   simpleConfig.Options.K3sOptions.ExtraAgentArgs,
 			Memory: simpleConfig.Options.Runtime.AgentsMemory,
 		}
 		newCluster.Nodes = append(newCluster.Nodes, &agentNode)
@@ -144,18 +164,14 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	/****************************
 	 * Extra Node Configuration *
 	 ****************************/
+	nodeCount := len(newCluster.Nodes)
+	nodeList := newCluster.Nodes
 
 	// -> VOLUMES
-	nodeCount := simpleConfig.Servers + simpleConfig.Agents
-	nodeList := newCluster.Nodes
-	if !simpleConfig.Options.K3dOptions.DisableLoadbalancer {
-		nodeCount++
-		nodeList = append(nodeList, newCluster.ServerLoadBalancer)
-	}
 	for _, volumeWithNodeFilters := range simpleConfig.Volumes {
 		nodes, err := util.FilterNodes(nodeList, volumeWithNodeFilters.NodeFilters)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to filter nodes for volume mapping '%s': %w", volumeWithNodeFilters.Volume, err)
 		}
 
 		for _, node := range nodes {
@@ -164,51 +180,51 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 
 	// -> PORTS
-	for _, portWithNodeFilters := range simpleConfig.Ports {
-		if len(portWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
-			return nil, fmt.Errorf("Portmapping '%s' lacks a node filter, but there's more than one node", portWithNodeFilters.Port)
+	if err := client.TransformPorts(ctx, runtime, &newCluster, simpleConfig.Ports); err != nil {
+		return nil, fmt.Errorf("failed to transform ports: %w", err)
+	}
+
+	// -> K3S NODE LABELS
+	for _, k3sNodeLabelWithNodeFilters := range simpleConfig.Options.K3sOptions.NodeLabels {
+		if len(k3sNodeLabelWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
+			return nil, fmt.Errorf("k3s node label mapping '%s' lacks a node filter, but there's more than one node", k3sNodeLabelWithNodeFilters.Label)
 		}
 
-		nodes, err := util.FilterNodes(nodeList, portWithNodeFilters.NodeFilters)
+		nodes, err := util.FilterNodes(nodeList, k3sNodeLabelWithNodeFilters.NodeFilters)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to filter nodes for k3s node label mapping '%s': %w", k3sNodeLabelWithNodeFilters.Label, err)
 		}
 
 		for _, node := range nodes {
-			portmappings, err := nat.ParsePortSpec(portWithNodeFilters.Port)
-			if err != nil {
-				return nil, fmt.Errorf("Failed to parse port spec '%s': %+v", portWithNodeFilters.Port, err)
+			if node.K3sNodeLabels == nil {
+				node.K3sNodeLabels = make(map[string]string) // ensure that the map is initialized
 			}
-			if node.Ports == nil {
-				node.Ports = nat.PortMap{}
-			}
-			for _, pm := range portmappings {
-				if _, exists := node.Ports[pm.Port]; exists {
-					node.Ports[pm.Port] = append(node.Ports[pm.Port], pm.Binding)
-				} else {
-					node.Ports[pm.Port] = []nat.PortBinding{pm.Binding}
-				}
-			}
+			k, v := util.SplitLabelKeyValue(k3sNodeLabelWithNodeFilters.Label)
+			node.K3sNodeLabels[k] = v
+
 		}
 	}
 
-	// -> LABELS
-	for _, labelWithNodeFilters := range simpleConfig.Labels {
-		if len(labelWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
-			return nil, fmt.Errorf("Labelmapping '%s' lacks a node filter, but there's more than one node", labelWithNodeFilters.Label)
+	// -> RUNTIME LABELS
+	for _, runtimeLabelWithNodeFilters := range simpleConfig.Options.Runtime.Labels {
+		if len(runtimeLabelWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
+			return nil, fmt.Errorf("RuntimeLabelmapping '%s' lacks a node filter, but there's more than one node", runtimeLabelWithNodeFilters.Label)
 		}
 
-		nodes, err := util.FilterNodes(nodeList, labelWithNodeFilters.NodeFilters)
+		nodes, err := util.FilterNodes(nodeList, runtimeLabelWithNodeFilters.NodeFilters)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to filter nodes for runtime label mapping '%s': %w", runtimeLabelWithNodeFilters.Label, err)
 		}
 
 		for _, node := range nodes {
-			if node.Labels == nil {
-				node.Labels = make(map[string]string) // ensure that the map is initialized
+			if node.RuntimeLabels == nil {
+				node.RuntimeLabels = make(map[string]string) // ensure that the map is initialized
 			}
-			k, v := util.SplitLabelKeyValue(labelWithNodeFilters.Label)
-			node.Labels[k] = v
+			k, v := util.SplitLabelKeyValue(runtimeLabelWithNodeFilters.Label)
+
+			cliutil.ValidateRuntimeLabelKey(k)
+
+			node.RuntimeLabels[k] = v
 		}
 	}
 
@@ -220,11 +236,27 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 		nodes, err := util.FilterNodes(nodeList, envVarWithNodeFilters.NodeFilters)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to filter nodes for environment variable config '%s': %w", envVarWithNodeFilters.EnvVar, err)
 		}
 
 		for _, node := range nodes {
 			node.Env = append(node.Env, envVarWithNodeFilters.EnvVar)
+		}
+	}
+
+	// -> ARGS
+	for _, argWithNodeFilters := range simpleConfig.Options.K3sOptions.ExtraArgs {
+		if len(argWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
+			return nil, fmt.Errorf("K3sExtraArg '%s' lacks a node filter, but there's more than one node", argWithNodeFilters.Arg)
+		}
+
+		nodes, err := util.FilterNodes(nodeList, argWithNodeFilters.NodeFilters)
+		if err != nil {
+			return nil, fmt.Errorf("failed to filter nodes for k3s extra args config '%s': %w", argWithNodeFilters.Arg, err)
+		}
+
+		for _, node := range nodes {
+			node.Args = append(node.Args, argWithNodeFilters.Arg)
 		}
 	}
 
@@ -233,36 +265,50 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	 **************************/
 
 	clusterCreateOpts := k3d.ClusterCreateOpts{
-		PrepDisableHostIPInjection: simpleConfig.Options.K3dOptions.PrepDisableHostIPInjection,
-		DisableImageVolume:         simpleConfig.Options.K3dOptions.DisableImageVolume,
-		WaitForServer:              simpleConfig.Options.K3dOptions.Wait,
-		Timeout:                    simpleConfig.Options.K3dOptions.Timeout,
-		DisableLoadBalancer:        simpleConfig.Options.K3dOptions.DisableLoadbalancer,
-		K3sServerArgs:              simpleConfig.Options.K3sOptions.ExtraServerArgs,
-		K3sAgentArgs:               simpleConfig.Options.K3sOptions.ExtraAgentArgs,
-		GPURequest:                 simpleConfig.Options.Runtime.GPURequest,
-		ServersMemory:              simpleConfig.Options.Runtime.ServersMemory,
-		AgentsMemory:               simpleConfig.Options.Runtime.AgentsMemory,
-		GlobalLabels:               map[string]string{}, // empty init
-		GlobalEnv:                  []string{},          // empty init
+		DisableImageVolume:  simpleConfig.Options.K3dOptions.DisableImageVolume,
+		WaitForServer:       simpleConfig.Options.K3dOptions.Wait,
+		Timeout:             simpleConfig.Options.K3dOptions.Timeout,
+		DisableLoadBalancer: simpleConfig.Options.K3dOptions.DisableLoadbalancer,
+		GPURequest:          simpleConfig.Options.Runtime.GPURequest,
+		ServersMemory:       simpleConfig.Options.Runtime.ServersMemory,
+		AgentsMemory:        simpleConfig.Options.Runtime.AgentsMemory,
+		GlobalLabels:        map[string]string{}, // empty init
+		GlobalEnv:           []string{},          // empty init
 	}
 
 	// ensure, that we have the default object labels
-	for k, v := range k3d.DefaultObjectLabels {
+	for k, v := range k3d.DefaultRuntimeLabels {
 		clusterCreateOpts.GlobalLabels[k] = v
 	}
 
 	/*
 	 * Registries
 	 */
-	if simpleConfig.Registries.Create {
-		regPort, err := cliutil.ParsePortExposureSpec("random", k3d.DefaultRegistryPort)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to get port for registry: %+v", err)
+	if simpleConfig.Registries.Create != nil {
+
+		epSpecHost := "0.0.0.0"
+		epSpecPort := "random"
+
+		if simpleConfig.Registries.Create.HostPort != "" {
+			epSpecPort = simpleConfig.Registries.Create.HostPort
 		}
+		if simpleConfig.Registries.Create.Host != "" {
+			epSpecHost = simpleConfig.Registries.Create.Host
+		}
+
+		regPort, err := cliutil.ParsePortExposureSpec(fmt.Sprintf("%s:%s", epSpecHost, epSpecPort), k3d.DefaultRegistryPort)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get port for registry: %w", err)
+		}
+
+		regName := fmt.Sprintf("%s-%s-registry", k3d.DefaultObjectNamePrefix, newCluster.Name)
+		if simpleConfig.Registries.Create.Name != "" {
+			regName = simpleConfig.Registries.Create.Name
+		}
+
 		clusterCreateOpts.Registries.Create = &k3d.Registry{
 			ClusterRef:   newCluster.Name,
-			Host:         fmt.Sprintf("%s-%s-registry", k3d.DefaultObjectNamePrefix, newCluster.Name),
+			Host:         regName,
 			Image:        fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag),
 			ExposureOpts: *regPort,
 		}
@@ -271,9 +317,9 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	for _, usereg := range simpleConfig.Registries.Use {
 		reg, err := util.ParseRegistryRef(usereg)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to parse use-registry string  '%s': %+v", usereg, err)
+			return nil, fmt.Errorf("failed to parse use-registry string  '%s': %w", usereg, err)
 		}
-		log.Tracef("Parsed registry reference: %+v", reg)
+		l.Log().Tracef("Parsed registry reference: %+v", reg)
 		clusterCreateOpts.Registries.Use = append(clusterCreateOpts.Registries.Use, reg)
 	}
 
@@ -281,26 +327,26 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		var k3sRegistry *k3s.Registry
 
 		if strings.Contains(simpleConfig.Registries.Config, "\n") { // CASE 1: embedded registries.yaml (multiline string)
-			log.Debugf("Found multiline registries config embedded in SimpleConfig:\n%s", simpleConfig.Registries.Config)
+			l.Log().Debugf("Found multiline registries config embedded in SimpleConfig:\n%s", simpleConfig.Registries.Config)
 			if err := yaml.Unmarshal([]byte(simpleConfig.Registries.Config), &k3sRegistry); err != nil {
-				return nil, fmt.Errorf("Failed to read embedded registries config: %+v", err)
+				return nil, fmt.Errorf("failed to read embedded registries config: %w", err)
 			}
 		} else { // CASE 2: registries.yaml file referenced by path (single line)
 			registryConfigFile, err := os.Open(simpleConfig.Registries.Config)
 			if err != nil {
-				return nil, fmt.Errorf("Failed to open registry config file at %s: %+v", simpleConfig.Registries.Config, err)
+				return nil, fmt.Errorf("failed to open registry config file at %s: %w", simpleConfig.Registries.Config, err)
 			}
 			configBytes, err := ioutil.ReadAll(registryConfigFile)
 			if err != nil {
-				return nil, fmt.Errorf("Failed to read registry config file at %s: %+v", registryConfigFile.Name(), err)
+				return nil, fmt.Errorf("failed to read registry config file at %s: %w", registryConfigFile.Name(), err)
 			}
 
 			if err := yaml.Unmarshal(configBytes, &k3sRegistry); err != nil {
-				return nil, fmt.Errorf("Failed to read registry configuration: %+v", err)
+				return nil, fmt.Errorf("failed to read registry configuration: %w", err)
 			}
 		}
 
-		log.Tracef("Registry: read config from input:\n%+v", k3sRegistry)
+		l.Log().Tracef("Registry: read config from input:\n%+v", k3sRegistry)
 		clusterCreateOpts.Registries.Config = k3sRegistry
 	}
 

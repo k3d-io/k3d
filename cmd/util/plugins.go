@@ -28,7 +28,7 @@ import (
 	"os/exec"
 	"strings"
 
-	k3d "github.com/rancher/k3d/v4/pkg/types"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 )
 
 // HandlePlugin takes care of finding and executing a plugin based on the longest prefix

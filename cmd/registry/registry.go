@@ -22,7 +22,7 @@ THE SOFTWARE.
 package registry
 
 import (
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -37,8 +37,8 @@ func NewCmdRegistry() *cobra.Command {
 		Long:    `Manage registry/registries`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
-				log.Errorln("Couldn't get help text")
-				log.Fatalln(err)
+				l.Log().Errorln("Couldn't get help text")
+				l.Log().Fatalln(err)
 			}
 		},
 	}
@@ -49,7 +49,6 @@ func NewCmdRegistry() *cobra.Command {
 	cmd.AddCommand(NewCmdRegistryStop())
 	cmd.AddCommand(NewCmdRegistryDelete())
 	cmd.AddCommand(NewCmdRegistryList())
-	// cmd.AddCommand(NewCmdRegistryConnect()) // TODO: registry connect requires reload capabilities for containerd config
 
 	// add flags
 

@@ -22,11 +22,12 @@ THE SOFTWARE.
 package version
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
 	"github.com/heroku/docker-registry-client/registry"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
 // Version is the string that contains version
@@ -36,7 +37,7 @@ var Version string
 var HelperVersionOverride string
 
 // K3sVersion should contain the latest version tag of k3s (hardcoded at build time)
-var K3sVersion = "v1.20.0-k3s2"
+var K3sVersion = "v1.21.4-k3s2"
 
 // GetVersion returns the version for cli, it gets it from "git describe --tags" or returns "dev" when doing simple go build
 func GetVersion() string {
@@ -49,7 +50,7 @@ func GetVersion() string {
 // GetHelperImageVersion returns the CLI version or 'latest'
 func GetHelperImageVersion() string {
 	if tag := os.Getenv("K3D_HELPER_IMAGE_TAG"); tag != "" {
-		log.Infoln("Helper image tag set from env var")
+		l.Log().Infoln("Helper image tag set from env var")
 		return tag
 	}
 	if len(HelperVersionOverride) > 0 {
@@ -66,7 +67,7 @@ func GetK3sVersion(latest bool) string {
 	if latest {
 		version, err := fetchLatestK3sVersion()
 		if err != nil || version == "" {
-			log.Warnln("Failed to fetch latest K3s version from DockerHub, falling back to hardcoded version.")
+			l.Log().Warnln("Failed to fetch latest K3s version from DockerHub, falling back to hardcoded version.")
 			return K3sVersion
 		}
 		return version
@@ -85,16 +86,16 @@ func fetchLatestK3sVersion() (string, error) {
 
 	hub, err := registry.New(url, username, password)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create new registry instance from URL '%s': %w", url, err)
 	}
 
 	tags, err := hub.Tags(repository)
 	if err != nil || len(tags) == 0 {
-		return "", err
+		return "", fmt.Errorf("failed to list tags from repository with URL '%s': %w", url, err)
 	}
 
-	log.Debugln("Fetched the following tags for rancher/k3s from DockerHub:")
-	log.Debugln(tags)
+	l.Log().Debugln("Fetched the following tags for rancher/k3s from DockerHub:")
+	l.Log().Debugln(tags)
 
 	return "sampleTag", nil
 

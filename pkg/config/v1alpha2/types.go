@@ -27,17 +27,20 @@ import (
 	"fmt"
 	"time"
 
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	"github.com/rancher/k3d/v4/version"
+	configtypes "github.com/rancher/k3d/v5/pkg/config/types"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/rancher/k3d/v5/version"
 )
 
 // JSONSchema describes the schema used to validate config files
 //go:embed schema.json
 var JSONSchema string
 
+const ApiVersion = "k3d.io/v1alpha2"
+
 // DefaultConfigTpl for printing
 const DefaultConfigTpl = `---
-apiVersion: k3d.io/v1alpha2
+apiVersion: %s
 kind: Simple
 name: %s
 servers: 1
@@ -48,20 +51,10 @@ image: %s
 // DefaultConfig templated DefaultConfigTpl
 var DefaultConfig = fmt.Sprintf(
 	DefaultConfigTpl,
+	ApiVersion,
 	k3d.DefaultClusterName,
 	fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)),
 )
-
-// TypeMeta is basically copied from https://github.com/kubernetes/apimachinery/blob/a3b564b22db316a41e94fdcffcf9995424fe924c/pkg/apis/meta/v1/types.go#L36-L56
-type TypeMeta struct {
-	Kind       string `mapstructure:"kind,omitempty" yaml:"kind,omitempty" json:"kind,omitempty"`
-	APIVersion string `mapstructure:"apiVersion,omitempty" yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
-}
-
-// Config interface.
-type Config interface {
-	GetKind() string
-}
 
 type VolumeWithNodeFilters struct {
 	Volume      string   `mapstructure:"volume" yaml:"volume" json:"volume,omitempty"`
@@ -119,21 +112,21 @@ type SimpleConfigOptionsK3s struct {
 
 // SimpleConfig describes the toplevel k3d configuration file.
 type SimpleConfig struct {
-	TypeMeta     `mapstructure:",squash" yaml:",inline"`
-	Name         string                  `mapstructure:"name" yaml:"name" json:"name,omitempty"`
-	Servers      int                     `mapstructure:"servers" yaml:"servers" json:"servers,omitempty"` //nolint:lll    // default 1
-	Agents       int                     `mapstructure:"agents" yaml:"agents" json:"agents,omitempty"`    //nolint:lll    // default 0
-	ExposeAPI    SimpleExposureOpts      `mapstructure:"kubeAPI" yaml:"kubeAPI" json:"kubeAPI,omitempty"`
-	Image        string                  `mapstructure:"image" yaml:"image" json:"image,omitempty"`
-	Network      string                  `mapstructure:"network" yaml:"network" json:"network,omitempty"`
-	Subnet       string                  `mapstructure:"subnet" yaml:"subnet" json:"subnet,omitempty"`
-	ClusterToken string                  `mapstructure:"token" yaml:"clusterToken" json:"clusterToken,omitempty"` // default: auto-generated
-	Volumes      []VolumeWithNodeFilters `mapstructure:"volumes" yaml:"volumes" json:"volumes,omitempty"`
-	Ports        []PortWithNodeFilters   `mapstructure:"ports" yaml:"ports" json:"ports,omitempty"`
-	Labels       []LabelWithNodeFilters  `mapstructure:"labels" yaml:"labels" json:"labels,omitempty"`
-	Options      SimpleConfigOptions     `mapstructure:"options" yaml:"options" json:"options,omitempty"`
-	Env          []EnvVarWithNodeFilters `mapstructure:"env" yaml:"env" json:"env,omitempty"`
-	Registries   struct {
+	configtypes.TypeMeta `mapstructure:",squash" yaml:",inline"`
+	Name                 string                  `mapstructure:"name" yaml:"name" json:"name,omitempty"`
+	Servers              int                     `mapstructure:"servers" yaml:"servers" json:"servers,omitempty"` //nolint:lll    // default 1
+	Agents               int                     `mapstructure:"agents" yaml:"agents" json:"agents,omitempty"`    //nolint:lll    // default 0
+	ExposeAPI            SimpleExposureOpts      `mapstructure:"kubeAPI" yaml:"kubeAPI" json:"kubeAPI,omitempty"`
+	Image                string                  `mapstructure:"image" yaml:"image" json:"image,omitempty"`
+	Network              string                  `mapstructure:"network" yaml:"network" json:"network,omitempty"`
+	Subnet               string                  `mapstructure:"subnet" yaml:"subnet" json:"subnet,omitempty"`
+	ClusterToken         string                  `mapstructure:"token" yaml:"clusterToken" json:"clusterToken,omitempty"` // default: auto-generated
+	Volumes              []VolumeWithNodeFilters `mapstructure:"volumes" yaml:"volumes" json:"volumes,omitempty"`
+	Ports                []PortWithNodeFilters   `mapstructure:"ports" yaml:"ports" json:"ports,omitempty"`
+	Labels               []LabelWithNodeFilters  `mapstructure:"labels" yaml:"labels" json:"labels,omitempty"`
+	Options              SimpleConfigOptions     `mapstructure:"options" yaml:"options" json:"options,omitempty"`
+	Env                  []EnvVarWithNodeFilters `mapstructure:"env" yaml:"env" json:"env,omitempty"`
+	Registries           struct {
 		Use    []string `mapstructure:"use" yaml:"use,omitempty" json:"use,omitempty"`
 		Create bool     `mapstructure:"create" yaml:"create,omitempty" json:"create,omitempty"`
 		Config string   `mapstructure:"config" yaml:"config,omitempty" json:"config,omitempty"` // registries.yaml (k3s config for containerd registry override)
@@ -147,30 +140,60 @@ type SimpleExposureOpts struct {
 	HostPort string `mapstructure:"hostPort" yaml:"hostPort,omitempty" json:"hostPort,omitempty"`
 }
 
-// GetKind implements Config.GetKind
+// Kind implements Config.Kind
 func (c SimpleConfig) GetKind() string {
-	return "Cluster"
+	return "Simple"
+}
+
+func (c SimpleConfig) GetAPIVersion() string {
+	return ApiVersion
 }
 
 // ClusterConfig describes a single cluster config
 type ClusterConfig struct {
-	TypeMeta          `mapstructure:",squash" yaml:",inline"`
-	Cluster           k3d.Cluster                   `mapstructure:",squash" yaml:",inline"`
-	ClusterCreateOpts k3d.ClusterCreateOpts         `mapstructure:"options" yaml:"options"`
-	KubeconfigOpts    SimpleConfigOptionsKubeconfig `mapstructure:"kubeconfig" yaml:"kubeconfig"`
+	configtypes.TypeMeta `mapstructure:",squash" yaml:",inline"`
+	Cluster              k3d.Cluster                   `mapstructure:",squash" yaml:",inline"`
+	ClusterCreateOpts    k3d.ClusterCreateOpts         `mapstructure:"options" yaml:"options"`
+	KubeconfigOpts       SimpleConfigOptionsKubeconfig `mapstructure:"kubeconfig" yaml:"kubeconfig"`
 }
 
-// GetKind implements Config.GetKind
+// Kind implements Config.Kind
 func (c ClusterConfig) GetKind() string {
-	return "Cluster"
+	return "Simple"
+}
+
+func (c ClusterConfig) GetAPIVersion() string {
+	return ApiVersion
 }
 
 // ClusterListConfig describes a list of clusters
 type ClusterListConfig struct {
-	TypeMeta `mapstructure:",squash" yaml:",inline"`
-	Clusters []k3d.Cluster `mapstructure:"clusters" yaml:"clusters"`
+	configtypes.TypeMeta `mapstructure:",squash" yaml:",inline"`
+	Clusters             []k3d.Cluster `mapstructure:"clusters" yaml:"clusters"`
 }
 
 func (c ClusterListConfig) GetKind() string {
-	return "ClusterList"
+	return "Simple"
+}
+
+func (c ClusterListConfig) GetAPIVersion() string {
+	return ApiVersion
+}
+
+func GetConfigByKind(kind string) (configtypes.Config, error) {
+
+	// determine config kind
+	switch kind {
+	case "simple":
+		return SimpleConfig{}, nil
+	case "cluster":
+		return ClusterConfig{}, nil
+	case "clusterlist":
+		return ClusterListConfig{}, nil
+	case "":
+		return nil, fmt.Errorf("missing `kind` in config file")
+	default:
+		return nil, fmt.Errorf("unknown `kind` '%s' in config file", kind)
+	}
+
 }

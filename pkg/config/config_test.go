@@ -26,10 +26,11 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
+	configtypes "github.com/rancher/k3d/v5/pkg/config/types"
+	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
 	"github.com/spf13/viper"
 
-	k3d "github.com/rancher/k3d/v4/pkg/types"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 )
 
 func TestReadSimpleConfig(t *testing.T) {
@@ -39,8 +40,8 @@ func TestReadSimpleConfig(t *testing.T) {
 	exposedAPI.HostPort = "6443"
 
 	expectedConfig := conf.SimpleConfig{
-		TypeMeta: conf.TypeMeta{
-			APIVersion: "k3d.io/v1alpha2",
+		TypeMeta: configtypes.TypeMeta{
+			APIVersion: "k3d.io/v1alpha3",
 			Kind:       "Simple",
 		},
 		Name:      "test",
@@ -63,12 +64,6 @@ func TestReadSimpleConfig(t *testing.T) {
 				NodeFilters: []string{"loadbalancer"},
 			},
 		},
-		Labels: []conf.LabelWithNodeFilters{
-			{
-				Label:       "foo=bar",
-				NodeFilters: []string{"server[0]", "loadbalancer"},
-			},
-		},
 		Env: []conf.EnvVarWithNodeFilters{
 			{
 				EnvVar:      "bar=baz",
@@ -83,12 +78,30 @@ func TestReadSimpleConfig(t *testing.T) {
 				DisableImageVolume:  false,
 			},
 			K3sOptions: conf.SimpleConfigOptionsK3s{
-				ExtraServerArgs: []string{"--tls-san=127.0.0.1"},
-				ExtraAgentArgs:  []string{},
+				ExtraArgs: []conf.K3sArgWithNodeFilters{
+					{
+						Arg:         "--tls-san=127.0.0.1",
+						NodeFilters: []string{"server:*"},
+					},
+				},
+				NodeLabels: []conf.LabelWithNodeFilters{
+					{
+						Label:       "foo=bar",
+						NodeFilters: []string{"server:0", "loadbalancer"},
+					},
+				},
 			},
 			KubeconfigOptions: conf.SimpleConfigOptionsKubeconfig{
 				UpdateDefaultKubeconfig: true,
 				SwitchCurrentContext:    true,
+			},
+			Runtime: conf.SimpleConfigOptionsRuntime{
+				Labels: []conf.LabelWithNodeFilters{
+					{
+						Label:       "foo=bar",
+						NodeFilters: []string{"server:0", "loadbalancer"},
+					},
+				},
 			},
 		},
 	}
@@ -107,7 +120,7 @@ func TestReadSimpleConfig(t *testing.T) {
 		t.Error(err)
 	}
 
-	cfg, err := FromViperSimple(config)
+	cfg, err := FromViper(config)
 	if err != nil {
 		t.Error(err)
 	}
@@ -123,8 +136,8 @@ func TestReadSimpleConfig(t *testing.T) {
 func TestReadClusterConfig(t *testing.T) {
 
 	expectedConfig := conf.ClusterConfig{
-		TypeMeta: conf.TypeMeta{
-			APIVersion: "k3d.io/v1alpha2",
+		TypeMeta: configtypes.TypeMeta{
+			APIVersion: "k3d.io/v1alpha3",
 			Kind:       "Cluster",
 		},
 		Cluster: k3d.Cluster{
@@ -168,8 +181,8 @@ func TestReadClusterConfig(t *testing.T) {
 func TestReadClusterListConfig(t *testing.T) {
 
 	expectedConfig := conf.ClusterListConfig{
-		TypeMeta: conf.TypeMeta{
-			APIVersion: "k3d.io/v1alpha2",
+		TypeMeta: configtypes.TypeMeta{
+			APIVersion: "k3d.io/v1alpha3",
 			Kind:       "ClusterList",
 		},
 		Clusters: []k3d.Cluster{
@@ -237,9 +250,58 @@ func TestReadUnknownConfig(t *testing.T) {
 		t.Error(err)
 	}
 
-	_, err := FromViperSimple(config)
+	_, err := FromViper(config)
 	if err == nil {
 		t.Fail()
 	}
 
+}
+
+func TestReadSimpleConfigRegistries(t *testing.T) {
+
+	exposedAPI := conf.SimpleExposureOpts{}
+	exposedAPI.HostIP = "0.0.0.0"
+	exposedAPI.HostPort = "6443"
+
+	expectedConfig := conf.SimpleConfig{
+		TypeMeta: configtypes.TypeMeta{
+			APIVersion: "k3d.io/v1alpha3",
+			Kind:       "Simple",
+		},
+		Name:    "test",
+		Servers: 1,
+		Agents:  1,
+		Registries: conf.SimpleConfigRegistries{
+			Create: &conf.SimpleConfigRegistryCreateConfig{
+				Name:     "registry.localhost",
+				Host:     "0.0.0.0",
+				HostPort: "5001",
+			},
+		},
+	}
+
+	cfgFile := "./test_assets/config_test_registries.yaml"
+
+	config := viper.New()
+	config.SetConfigFile(cfgFile)
+
+	// try to read config into memory (viper map structure)
+	if err := config.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			t.Error(err)
+		}
+		// config file found but some other error happened
+		t.Error(err)
+	}
+
+	readConfig, err := FromViper(config)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", readConfig)
+
+	if diff := deep.Equal(readConfig, expectedConfig); diff != nil {
+		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", readConfig, expectedConfig, diff)
+	}
 }

@@ -29,8 +29,8 @@ import (
 	"strings"
 
 	"github.com/liggitt/tabwriter"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"gopkg.in/yaml.v2"
 )
 
@@ -55,7 +55,7 @@ func PrintNodes(nodes []*k3d.Node, outputFormat string, headers *[]string, nodeP
 		if headers != nil {
 			_, err := fmt.Fprintf(tabwriter, "%s\n", strings.Join(*headers, "\t"))
 			if err != nil {
-				log.Fatalln("Failed to print headers")
+				l.Log().Fatalln("Failed to print headers")
 			}
 		}
 	}

@@ -11,5 +11,5 @@ The code will output files in [`../docs/usage/commands/`](../docs/usage/commands
 cd docgen
 
 # run
-go run ./main.go
+./run.sh
 ```

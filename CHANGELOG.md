@@ -1,5 +1,80 @@
 # Changelog
 
+## v5.0.0
+
+This release contains a whole lot of new features, breaking changes as well as smaller fixes and improvements.
+The changelog shown here is likely not complete but gives a broad overview over the changes.
+For more details, please check the v5 milestone (<https://github.com/rancher/k3d/milestone/27>) or even the commit history.
+The docs have been updated, so you should also find the information you need there, with more to come!
+
+The demo repository has also been updated to work with k3d v5: <https://github.com/iwilltry42/k3d-demo>.
+
+**Info**: <https://k3d.io> is now versioned, so you can checkout different versions of the documentation by using the dropdown menu in the page title bar!
+
+**Feedback welcome!**
+
+### Breaking Changes
+
+- new syntax for nodefilters
+  - dropped the usage of square brackets `[]` for indexing, as it caused problems with some shells trying to interpret them
+  - new syntax: `@identifier[:index][:opt]` (see <https://github.com/rancher/k3d/discussions/652>)
+    - example for a port-mapping: `--port 8080:80@server:0:proxy`
+      - identifier = `server`, index = `0`, opt = `proxy`
+      - `opt` is an extra optional argument used for different purposes depending on the flag
+        - currently, only the `--port` flag has `opt`s, namely `proxy` and `direct` (see other breaking change)
+- port-mapping now go via the loadbalancer (serverlb) by default
+  - the `--port` flag has the `proxy` opt (see new nodefilter syntax above) set by default
+  - to leverage the old behavior of direct port-mappings, use the `direct` opt on the port flag
+  - the nodefilter `loadbalancer` will now do the same as `servers:*;agents:*` (proxied via the loadbalancer)
+- flag `--registries-create` transformed from bool flag to string flag: let's you define the name and port-binding of the newly created registry, e.g. `--registry-create myregistry.localhost:5001`
+
+### Fixes
+
+- cleaned up and properly sorted the sanitization of existing resources used to create new nodes (#638)
+
+### Features & Enhancements
+
+- new command: `k3d node edit` to edit existing nodes (#615)
+  - currently only allows `k3d node edit NODE --port-add HOSTPORT:CONTAINERPORT` for the serverlb/loadbalancer to add new ports
+  - pkg: new `NodeEdit` function
+- new (hidden) command: `k3d debug` with some options for debugging k3d resources (#638)
+  - e.g. `k3d debug loadbalancer get-config` to get the current loadbalancer configuration
+- loadbalancer / k3d-proxy (#638)
+  - updated fork of `confd` to make usage of the file backend including a file watcher for auto-reloads
+    - this also checks the config before applying it, so the lb doesn't crash on a faulty config
+  - updating the loadbalancer writes the new config file and also checks if everything's going fine afterwards
+  - some settings of the loadbalancer can now be configured using `--lb-config-override`, see docs at <https://k3d.io/v5.0.0/design/defaults/#k3d-loadbalancer>
+- helper images can now be set explicitly via environment variables: `K3D_IMAGE_LOADBALANCER` & `K3D_IMAGE_TOOLS` (#638)
+- concurrently add new nodes to an existing cluster (remove some dumb code) (#640)
+  - `--wait` is now the default for `k3d node create`
+- normalized flag usage for k3s and runtime (#598, @ejose19)
+  - rename `k3d cluster create --label` to `k3d cluster create --runtime-label` (as it's labelling the node on runtime level, e.g. docker)
+    - config option moved to `options.runtime.labels`
+  - add `k3d cluster create --k3s-node-label` to add Kubernetes node labels via k3s flag (#584, @developer-guy, @ejose, @dentrax)
+    - new config option `options.k3s.nodeLabels`
+  - the same for `k3d node create`
+- improved config file handling (#605)
+  - new version `v1alpha3`
+    - warning when using outdated version
+    - validation dynamically based on provided config apiVersion
+    - new default for `k3d config init`
+  - new command `k3d config migrate INPUT [OUTPUT]` to migrate config files between versions
+    - currently supported migration `v1alpha2` -> `v1alpha3`
+  - pkg: new `Config` interface type to support new generic `FromViper` config file parsing
+- changed flags `--k3s-server-arg` & `--k3s-agent-arg` into `--k3s-arg` with nodefilter support (#605)
+  - new config path `options.k3s.extraArgs`
+- config file: environment variables (`$VAR`, `${VAR}` will be expanded unconditionally) (#643)
+- docker context support (#601, @developer-guy & #674)
+- Feature flag using the environment variable `K3D_FIX_DNS` and setting it to a true value (e.g. `export K3D_FIX_DNS=1`) to forward DNS queries to your local machine, e.g. to use your local company DNS
+
+### Misc
+
+- tests/e2e: timeouts everywhere to avoid killing DroneCI (#638)
+- logs: really final output when creating/deleting nodes (so far, we were not outputting a final success message and the process was still doing stuff) (#640)
+- tests/e2e: add tests for v1alpha2 to v1alpha3 migration
+- docs: use v1alpha3 config version
+- docs: update general appearance and cleanup
+
 ## v4.4.8
 
 ## Enhancements

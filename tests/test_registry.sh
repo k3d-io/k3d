@@ -19,11 +19,12 @@ export CURRENT_STAGE="Test | registry | $K3S_IMAGE_TAG"
 
 
 clustername="registrytest"
+registryname="$clustername-registry"
 
 highlight "[START] RegistryTest $EXTRA_TITLE"
 
 info "Creating cluster $clustername..."
-$EXE cluster create "$clustername" --agents 1 --api-port 6443 --wait --timeout 360s --registry-create $EXTRA_FLAG || failed "could not create cluster $clustername $EXTRA_TITLE"
+$EXE cluster create "$clustername" --agents 1 --api-port 6443 --wait --timeout 360s --registry-create "$registryname" $EXTRA_FLAG || failed "could not create cluster $clustername $EXTRA_TITLE"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
 sleep 5
@@ -41,14 +42,14 @@ kubectl get configmap -n kube-public local-registry-hosting -o go-template='{{in
 
 # 3. load an image into the registry
 info "Pushing an image to the registry..."
-registryPort=$(docker inspect k3d-$clustername-registry | jq '.[0].NetworkSettings.Ports["5000/tcp"][0].HostPort' | sed -E 's/"//g')
+registryPort=$(docker inspect $registryname | jq '.[0].NetworkSettings.Ports["5000/tcp"][0].HostPort' | sed -E 's/"//g')
 docker pull alpine:latest > /dev/null
-docker tag alpine:latest k3d-$clustername-registry:$registryPort/alpine:local > /dev/null
-docker push k3d-$clustername-registry:$registryPort/alpine:local || failed "Failed to push image to managed registry"
+docker tag alpine:latest "localhost:$registryPort/alpine:local" > /dev/null
+docker push "localhost:$registryPort/alpine:local" || failed "Failed to push image to managed registry"
 
 # 4. use imported image
 info "Spawning a pod using the pushed image..."
-kubectl run --image k3d-$clustername-registry:$registryPort/alpine:local testimage --command -- tail -f /dev/null
+kubectl run --image "$registryname:$registryPort/alpine:local" testimage --command -- tail -f /dev/null
 info "Waiting for a bit for the pod to start..."
 sleep 5
 

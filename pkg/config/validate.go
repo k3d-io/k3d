@@ -26,72 +26,64 @@ import (
 	"context"
 	"time"
 
-	k3dc "github.com/rancher/k3d/v4/pkg/client"
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	runtimeutil "github.com/rancher/k3d/v4/pkg/runtimes/util"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
+	k3dc "github.com/rancher/k3d/v5/pkg/client"
+	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	runtimeutil "github.com/rancher/k3d/v5/pkg/runtimes/util"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 
 	"fmt"
 
 	dockerunits "github.com/docker/go-units"
-	log "github.com/sirupsen/logrus"
 )
 
 // ValidateClusterConfig checks a given cluster config for basic errors
 func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config conf.ClusterConfig) error {
 	// cluster name must be a valid host name
 	if err := k3dc.CheckName(config.Cluster.Name); err != nil {
-		log.Errorf("Provided cluster name '%s' does not match requirements", config.Cluster.Name)
-
-		return err
+		return fmt.Errorf("provided cluster name '%s' does not match requirements: %w", config.Cluster.Name, err)
 	}
 
 	// network:: edge case: hostnetwork -> only if we have a single node (to avoid port collisions)
 	if config.Cluster.Network.Name == "host" && len(config.Cluster.Nodes) > 1 {
-		return fmt.Errorf("Can only use hostnetwork mode with a single node (port collisions, etc.)")
+		return fmt.Errorf("can only use hostnetwork mode with a single node (port collisions, etc.)")
 	}
 
 	// timeout can't be negative
 	if config.ClusterCreateOpts.Timeout < 0*time.Second {
-		return fmt.Errorf("Timeout may not be negative (is '%s')", config.ClusterCreateOpts.Timeout)
+		return fmt.Errorf("timeout may not be negative (is '%s')", config.ClusterCreateOpts.Timeout)
 	}
 
 	// API-Port cannot be changed when using network=host
 	if config.Cluster.Network.Name == "host" && config.Cluster.KubeAPI.Port.Port() != k3d.DefaultAPIPort {
 		// in hostNetwork mode, we're not going to map a hostport. Here it should always use 6443.
 		// Note that hostNetwork mode is super inflexible and since we don't change the backend port (on the container), it will only be one hostmode cluster allowed.
-		return fmt.Errorf("The API Port can not be changed when using 'host' network")
+		return fmt.Errorf("the API Port can not be changed when using 'host' network")
 	}
 
 	// memory limits must have proper format
 	// if empty we don't care about errors in parsing
 	if config.ClusterCreateOpts.ServersMemory != "" {
 		if _, err := dockerunits.RAMInBytes(config.ClusterCreateOpts.ServersMemory); err != nil {
-			return fmt.Errorf("Provided servers memory limit value is invalid")
+			return fmt.Errorf("provided servers memory limit value is invalid: %w", err)
 		}
 
 	}
 
 	if config.ClusterCreateOpts.AgentsMemory != "" {
 		if _, err := dockerunits.RAMInBytes(config.ClusterCreateOpts.AgentsMemory); err != nil {
-			return fmt.Errorf("Provided agents memory limit value is invalid")
+			return fmt.Errorf("provided agents memory limit value is invalid: %w", err)
 		}
 	}
 
 	// validate nodes one by one
 	for _, node := range config.Cluster.Nodes {
 
-		// node names have to be valid hostnames // TODO: validate hostnames once we generate them before this step
-		/*if err := k3dc.CheckName(node.Name); err != nil {
-			return err
-		}*/
-
 		// volumes have to be either an existing path on the host or a named runtime volume
 		for _, volume := range node.Volumes {
 
 			if err := runtimeutil.ValidateVolumeMount(runtime, volume); err != nil {
-				return err
+				return fmt.Errorf("failed to validate volume mount '%s': %w", volume, err)
 			}
 		}
 	}

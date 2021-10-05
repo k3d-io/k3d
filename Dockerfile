@@ -1,9 +1,19 @@
-FROM golang:1.16 as builder
+############################################################
+# builder                                                  #
+# -> golang image used solely for building the k3d binary  #
+# -> built executable can then be copied into other stages #
+############################################################
+FROM golang:1.17 as builder
 ARG GIT_TAG_OVERRIDE
 WORKDIR /app
 COPY . .
 RUN make build -e GIT_TAG_OVERRIDE=${GIT_TAG_OVERRIDE} && bin/k3d version
 
+#######################################################
+# dind                                                #
+# -> k3d + some tools in a docker-in-docker container #
+# -> used e.g. in our CI pipelines for testing        #
+#######################################################
 FROM docker:20.10-dind as dind
 ARG OS=linux
 ARG ARCH=amd64
@@ -22,6 +32,10 @@ RUN curl -L https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_${OS}_${
     chmod +x /usr/bin/yq
 COPY --from=builder /app/bin/k3d /bin/k3d
 
+#########################################
+# binary-only                           #
+# -> only the k3d binary.. nothing else #
+#########################################
 FROM scratch as binary-only
 COPY --from=builder /app/bin/k3d /bin/k3d
 ENTRYPOINT ["/bin/k3d"]

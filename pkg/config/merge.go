@@ -23,19 +23,20 @@ THE SOFTWARE.
 package config
 
 import (
+	"fmt"
+
 	"github.com/imdario/mergo"
-	conf "github.com/rancher/k3d/v4/pkg/config/v1alpha2"
-	log "github.com/sirupsen/logrus"
+	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
 // MergeSimple merges two simple configuration files with the values of the destination one having priority
 func MergeSimple(dest, src conf.SimpleConfig) (*conf.SimpleConfig, error) {
-	log.Debugf("Merging %+v into %+v", src, dest)
+	l.Log().Debugf("Merging %+v into %+v", src, dest)
 
 	if err := mergo.Merge(&dest, src); err != nil {
-		log.Errorln("Failed to merge config")
 
-		return nil, err
+		return nil, fmt.Errorf("failed to merge configs: %w", err)
 	}
 
 	return &dest, nil

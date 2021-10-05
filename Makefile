@@ -26,8 +26,8 @@ ifeq ($(GIT_TAG),)
 GIT_TAG   := $(shell git describe --always)
 endif
 
-# Docker image tag derived from Git tag
-K3D_IMAGE_TAG := $(GIT_TAG)
+# Docker image tag derived from Git tag (with prefix "v" stripped off)
+K3D_IMAGE_TAG := $(GIT_TAG:v%=%)
 
 # get latest k3s version: grep the tag and replace + with - (difference between git and dockerhub tags)
 K3S_TAG		:= $(shell curl --silent "https://update.k3s.io/v1-release/channels/stable" | egrep -o '/v[^ ]+"' | sed -E 's/\/|\"//g' | sed -E 's/\+/\-/')
@@ -65,7 +65,7 @@ PKG       := $(shell go mod vendor)
 TAGS      :=
 TESTS     := ./...
 TESTFLAGS :=
-LDFLAGS   := -w -s -X github.com/rancher/k3d/v4/version.Version=${GIT_TAG} -X github.com/rancher/k3d/v4/version.K3sVersion=${K3S_TAG}
+LDFLAGS   := -w -s -X github.com/rancher/k3d/v5/version.Version=${GIT_TAG} -X github.com/rancher/k3d/v5/version.K3sVersion=${K3S_TAG}
 GCFLAGS   := 
 GOFLAGS   :=
 BINDIR    := $(CURDIR)/bin
@@ -74,7 +74,7 @@ BINARIES  := k3d
 # Set version of the k3d helper images for build
 ifneq ($(K3D_HELPER_VERSION),)
 $(info [INFO] Helper Image version set to ${K3D_HELPER_VERSION})
-LDFLAGS += -X github.com/rancher/k3d/v4/version.HelperVersionOverride=${K3D_HELPER_VERSION}
+LDFLAGS += -X github.com/rancher/k3d/v5/version.HelperVersionOverride=${K3D_HELPER_VERSION}
 endif
 
 # Rules for finding all go source files using 'DIRS' and 'REC_DIRS'
@@ -129,10 +129,10 @@ build-docker-%:
 
 # build helper images
 build-helper-images:
-	@echo "Building docker image rancher/k3d-proxy:$(GIT_TAG)"
-	DOCKER_BUILDKIT=1 docker build proxy/ -f proxy/Dockerfile -t rancher/k3d-proxy:$(GIT_TAG)
-	@echo "Building docker image rancher/k3d-tools:$(GIT_TAG)"
-	DOCKER_BUILDKIT=1 docker build --no-cache tools/ -f tools/Dockerfile -t rancher/k3d-tools:$(GIT_TAG) --build-arg GIT_TAG=$(GIT_TAG)
+	@echo "Building docker image rancher/k3d-proxy:$(K3D_IMAGE_TAG)"
+	DOCKER_BUILDKIT=1 docker build proxy/ -f proxy/Dockerfile -t rancher/k3d-proxy:$(K3D_IMAGE_TAG)
+	@echo "Building docker image rancher/k3d-tools:$(K3D_IMAGE_TAG)"
+	DOCKER_BUILDKIT=1 docker build --no-cache tools/ -f tools/Dockerfile -t rancher/k3d-tools:$(K3D_IMAGE_TAG) --build-arg GIT_TAG=$(GIT_TAG)
 
 ##############################
 ########## Cleaning ##########

@@ -28,23 +28,24 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
+	"path"
 
-	"github.com/docker/cli/cli/connhelper"
+	"github.com/docker/cli/cli/command"
+	"github.com/docker/cli/cli/flags"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/pkg/errors"
-	runtimeErrors "github.com/rancher/k3d/v4/pkg/runtimes/errors"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	runtimeErrors "github.com/rancher/k3d/v5/pkg/runtimes/errors"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 )
 
 // GetDefaultObjectLabelsFilter returns docker type filters created from k3d labels
 func GetDefaultObjectLabelsFilter(clusterName string) filters.Args {
 	filters := filters.NewArgs()
-	for key, value := range k3d.DefaultObjectLabels {
+	for key, value := range k3d.DefaultRuntimeLabels {
 		filters.Add("label", fmt.Sprintf("%s=%s", key, value))
 	}
 	filters.Add("label", fmt.Sprintf("%s=%s", k3d.LabelClusterName, clusterName))
@@ -56,28 +57,24 @@ func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k
 	// create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
-		return err
+		return fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
-		log.Errorf("Failed to find container for target node '%s'", node.Name)
-		return err
+		return fmt.Errorf("failed to find container for target node '%s': %w", node.Name, err)
 	}
 
 	// source: docker/cli/cli/command/container/cp
 	srcInfo, err := archive.CopyInfoSourcePath(src, false)
 	if err != nil {
-		log.Errorln("Failed to copy info source path")
-		return err
+		return fmt.Errorf("failed to copy info source path: %w", err)
 	}
 
 	srcArchive, err := archive.TarResource(srcInfo)
 	if err != nil {
-		log.Errorln("Failed to create tar resource")
-		return err
+		return fmt.Errorf("failed to create tar resource: %w", err)
 	}
 	defer srcArchive.Close()
 
@@ -89,8 +86,7 @@ func (d Docker) CopyToNode(ctx context.Context, src string, dest string, node *k
 
 	destDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, destInfo)
 	if err != nil {
-		log.Errorln("Failed to prepare archive")
-		return err
+		return fmt.Errorf("failed to prepare archive: %w", err)
 	}
 	defer preparedArchive.Close()
 
@@ -108,8 +104,7 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, mo
 	// create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
-		return err
+		return fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
@@ -131,7 +126,7 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, mo
 	}
 
 	if err := tarWriter.Close(); err != nil {
-		log.Debugf("Failed to close tar writer: %+v", err)
+		l.Log().Debugf("Failed to close tar writer: %+v", err)
 	}
 
 	tarBytes := bytes.NewReader(buf.Bytes())
@@ -144,15 +139,15 @@ func (d Docker) WriteToNode(ctx context.Context, content []byte, dest string, mo
 
 // ReadFromNode reads from a given filepath inside the node container
 func (d Docker) ReadFromNode(ctx context.Context, path string, node *k3d.Node) (io.ReadCloser, error) {
-	log.Tracef("Reading path %s from node %s...", path, node.Name)
+	l.Log().Tracef("Reading path %s from node %s...", path, node.Name)
 	nodeContainer, err := getNodeContainer(ctx, node)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to find container for node '%s': %+v", node.Name, err)
+		return nil, fmt.Errorf("failed to find container for node '%s': %w", node.Name, err)
 	}
 
 	docker, err := GetDockerClient()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get docker client: %w", err)
 	}
 
 	reader, _, err := docker.CopyFromContainer(ctx, nodeContainer.ID, path)
@@ -160,7 +155,7 @@ func (d Docker) ReadFromNode(ctx context.Context, path string, node *k3d.Node) (
 		if client.IsErrNotFound(err) {
 			return nil, errors.Wrap(runtimeErrors.ErrRuntimeFileNotFound, err.Error())
 		}
-		return nil, err
+		return nil, fmt.Errorf("failed to copy path '%s' from container '%s': %w", path, nodeContainer.ID, err)
 	}
 
 	return reader, err
@@ -168,31 +163,57 @@ func (d Docker) ReadFromNode(ctx context.Context, path string, node *k3d.Node) (
 
 // GetDockerClient returns a docker client
 func GetDockerClient() (*client.Client, error) {
-	var err error
-	var cli *client.Client
-
-	dockerHost := os.Getenv("DOCKER_HOST")
-
-	if strings.HasPrefix(dockerHost, "ssh://") {
-		var helper *connhelper.ConnectionHelper
-
-		helper, err = connhelper.GetConnectionHelper(dockerHost)
-		if err != nil {
-			return nil, err
-		}
-		cli, err = client.NewClientWithOpts(
-			client.WithHost(helper.Host),
-			client.WithDialContext(helper.Dialer),
-			client.WithAPIVersionNegotiation(),
-		)
-	} else {
-		cli, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	}
+	dockerCli, err := command.NewDockerCli(command.WithStandardStreams())
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, fmt.Errorf("failed to create new docker CLI with standard streams: %w", err)
 	}
 
-	return cli, err
+	newClientOpts := flags.NewClientOptions()
+	newClientOpts.Common.LogLevel = l.Log().GetLevel().String() // this is needed, as the following Initialize() call will set a new log level on the global logrus instance
+
+	err = dockerCli.Initialize(newClientOpts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize docker CLI: %w", err)
+	}
+
+	// check for TLS Files used for protected connections
+	currentContext := dockerCli.CurrentContext()
+	storageInfo := dockerCli.ContextStore().GetStorageInfo(currentContext)
+	tlsFilesMap, err := dockerCli.ContextStore().ListTLSFiles(currentContext)
+	if err != nil {
+		return nil, fmt.Errorf("docker CLI failed to list TLS files for context '%s': %w", currentContext, err)
+	}
+	endpointDriver := "docker"
+	tlsFiles := tlsFilesMap[endpointDriver]
+
+	// get client by endpoint configuration
+	// inspired by https://github.com/docker/cli/blob/a32cd16160f1b41c1c4ae7bee4dac929d1484e59/cli/command/cli.go#L296-L308
+	ep := dockerCli.DockerEndpoint()
+	if ep.Host != "" {
+		clientopts, err := ep.ClientOpts()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get client opts for docker endpoint: %w", err)
+		}
+		headers := make(map[string]string, 1)
+		headers["User-Agent"] = command.UserAgent()
+		clientopts = append(clientopts, client.WithHTTPHeaders(headers))
+
+		// only set TLS config if present
+		if len(tlsFiles) >= 3 {
+			clientopts = append(clientopts,
+				client.WithTLSClientConfig(
+					path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[0]),
+					path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[1]),
+					path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[2]),
+				),
+			)
+		}
+
+		return client.NewClientWithOpts(clientopts...)
+	}
+
+	// fallback default client
+	return client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 }
 
 // isAttachedToNetwork return true if node is attached to network

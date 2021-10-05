@@ -23,18 +23,20 @@ package client
 
 import (
 	"context"
+	"fmt"
 
-	k3drt "github.com/rancher/k3d/v4/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	k3drt "github.com/rancher/k3d/v5/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"inet.af/netaddr"
 )
 
+// GetIP checks a given network for a free IP and returns it, if possible
 func GetIP(ctx context.Context, runtime k3drt.Runtime, network *k3d.ClusterNetwork) (netaddr.IP, error) {
 
 	network, err := runtime.GetNetwork(ctx, network)
 	if err != nil {
-		return netaddr.IP{}, err
+		return netaddr.IP{}, fmt.Errorf("runtime failed to get network '%s': %w", network.Name, err)
 	}
 
 	var ipsetbuilder netaddr.IPSetBuilder
@@ -46,14 +48,17 @@ func GetIP(ctx context.Context, runtime k3drt.Runtime, network *k3d.ClusterNetwo
 	}
 
 	// exclude first and last address
-	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().From)
-	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().To)
+	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().From())
+	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().To())
 
-	ipset := ipsetbuilder.IPSet()
+	ipset, err := ipsetbuilder.IPSet()
+	if err != nil {
+		return netaddr.IP{}, err
+	}
 
-	ip := ipset.Ranges()[0].From
+	ip := ipset.Ranges()[0].From()
 
-	log.Debugf("Found free IP %s in network %s", ip.String(), network.Name)
+	l.Log().Debugf("Found free IP %s in network %s", ip.String(), network.Name)
 
 	return ip, nil
 }

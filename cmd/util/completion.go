@@ -25,10 +25,10 @@ import (
 	"context"
 	"strings"
 
-	k3dcluster "github.com/rancher/k3d/v4/pkg/client"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
+	k3dcluster "github.com/rancher/k3d/v5/pkg/client"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +39,7 @@ func ValidArgsAvailableClusters(cmd *cobra.Command, args []string, toComplete st
 	var clusters []*k3d.Cluster
 	clusters, err := k3dcluster.ClusterList(context.Background(), runtimes.SelectedRuntime)
 	if err != nil {
-		log.Errorln("Failed to get list of clusters for shell completion")
+		l.Log().Errorln("Failed to get list of clusters for shell completion")
 		return nil, cobra.ShellCompDirectiveError
 	}
 
@@ -64,7 +64,7 @@ func ValidArgsAvailableNodes(cmd *cobra.Command, args []string, toComplete strin
 	var nodes []*k3d.Node
 	nodes, err := k3dcluster.NodeList(context.Background(), runtimes.SelectedRuntime)
 	if err != nil {
-		log.Errorln("Failed to get list of nodes for shell completion")
+		l.Log().Errorln("Failed to get list of nodes for shell completion")
 		return nil, cobra.ShellCompDirectiveError
 	}
 
@@ -89,7 +89,7 @@ func ValidArgsAvailableRegistries(cmd *cobra.Command, args []string, toComplete 
 	var nodes []*k3d.Node
 	nodes, err := k3dcluster.NodeList(context.Background(), runtimes.SelectedRuntime)
 	if err != nil {
-		log.Errorln("Failed to get list of nodes for shell completion")
+		l.Log().Errorln("Failed to get list of nodes for shell completion")
 		return nil, cobra.ShellCompDirectiveError
 	}
 

@@ -28,9 +28,9 @@ import (
 	"strconv"
 
 	"github.com/docker/go-connections/nat"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	"github.com/rancher/k3d/v4/pkg/util"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/util"
 )
 
 var apiPortRegexp = regexp.MustCompile(`^(?P<hostref>(?P<hostip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|(?P<hostname>\S+):)?(?P<port>(\d{1,5}|random))$`)
@@ -55,7 +55,7 @@ func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureO
 
 	// check if there's a host reference
 	if submatches["hostname"] != "" {
-		log.Tracef("Port Exposure: found hostname: %s", submatches["hostname"])
+		l.Log().Tracef("Port Exposure: found hostname: %s", submatches["hostname"])
 		addrs, err := net.LookupHost(submatches["hostname"])
 		if err != nil {
 			return nil, fmt.Errorf("Failed to lookup host '%s' specified for Port Exposure: %+v", submatches["hostname"], err)
@@ -77,15 +77,15 @@ func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureO
 
 	// port: get a free one if there's none defined or set to random
 	if submatches["port"] == "" || submatches["port"] == "random" {
-		log.Debugf("Port Exposure Mapping didn't specify hostPort, choosing one randomly...")
+		l.Log().Debugf("Port Exposure Mapping didn't specify hostPort, choosing one randomly...")
 		freePort, err := GetFreePort()
 		if err != nil || freePort == 0 {
-			log.Warnf("Failed to get random free port: %+v", err)
-			log.Warnf("Falling back to internal port %s (may be blocked though)...", internalPort)
+			l.Log().Warnf("Failed to get random free port: %+v", err)
+			l.Log().Warnf("Falling back to internal port %s (may be blocked though)...", internalPort)
 			submatches["port"] = internalPort
 		} else {
 			submatches["port"] = strconv.Itoa(freePort)
-			log.Debugf("Got free port for Port Exposure: '%d'", freePort)
+			l.Log().Debugf("Got free port for Port Exposure: '%d'", freePort)
 		}
 	}
 
@@ -93,7 +93,7 @@ func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureO
 
 	portMapping, err := nat.ParsePortSpec(realPortString)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to parse port spec for Port Exposure '%s': %+v", realPortString, err)
+		return nil, fmt.Errorf("failed to parse port spec for Port Exposure '%s': %+v", realPortString, err)
 	}
 
 	api.Port = portMapping[0].Port // there can be only one due to our regexp
@@ -112,14 +112,12 @@ func ValidatePortMap(portmap string) (string, error) {
 func GetFreePort() (int, error) {
 	tcpAddress, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
-		log.Errorln("Failed to resolve address")
-		return 0, err
+		return 0, fmt.Errorf("failed to resolve address 'localhost:0': %w", err)
 	}
 
 	tcpListener, err := net.ListenTCP("tcp", tcpAddress)
 	if err != nil {
-		log.Errorln("Failed to create TCP Listener")
-		return 0, err
+		return 0, fmt.Errorf("failed to create tcp listener: %w", err)
 	}
 	defer tcpListener.Close()
 

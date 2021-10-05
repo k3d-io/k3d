@@ -14,7 +14,7 @@ platform:
 steps:
 
   - name: lint
-    image: golang:1.16
+    image: golang:1.17
     commands:
       - make ci-setup
       - make check-fmt lint
@@ -40,7 +40,7 @@ steps:
         - tag
 
   - name: build
-    image: golang:1.16
+    image: golang:1.17
     environment:
       GIT_TAG: "${DRONE_TAG}"
     commands:

@@ -28,7 +28,6 @@ import (
 	"strings"
 
 	dockerunits "github.com/docker/go-units"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -58,14 +57,13 @@ func GetNodeFakerDirOrCreate(name string) (string, error) {
 	// this folder needs to be kept across reboots, keep it in ~/.k3d
 	configdir, err := GetConfigDirOrCreate()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get config directory: %w", err)
 	}
 	fakeDir := path.Join(configdir, fmt.Sprintf(".%s", name))
 
 	// create directories if necessary
 	if err := createDirIfNotExists(fakeDir); err != nil {
-		log.Errorf("Failed to create fake files path '%s'", fakeDir)
-		return "", err
+		return "", fmt.Errorf("failed to create fake files path '%s': %w", fakeDir, err)
 	}
 
 	return fakeDir, nil
@@ -83,12 +81,12 @@ func GetFakeMeminfoPathForName(nodeName string) (string, error) {
 func MakeFakeMeminfo(memoryBytes int64, nodeName string) (string, error) {
 	fakeMeminfoPath, err := GetFakeMeminfoPathForName(nodeName)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get fake meminfo path for node '%s': %w", nodeName, err)
 	}
 	fakememinfo, err := os.Create(fakeMeminfoPath)
 	defer fakememinfo.Close()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create fake meminfo path '%s': %w", fakeMeminfoPath, err)
 	}
 
 	// write content, must be kB
@@ -96,7 +94,7 @@ func MakeFakeMeminfo(memoryBytes int64, nodeName string) (string, error) {
 	content := meminfoContent(memoryKb)
 	_, err = fakememinfo.WriteString(content)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to write fake meminfo file: %w", err)
 	}
 
 	return fakememinfo.Name(), nil
@@ -107,13 +105,12 @@ func MakeFakeMeminfo(memoryBytes int64, nodeName string) (string, error) {
 func MakeFakeEdac(nodeName string) (string, error) {
 	dir, err := GetNodeFakerDirOrCreate(nodeName)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get or create fake files dir for node '%s': %w", nodeName, err)
 	}
 	edacPath := path.Join(dir, "edac")
 	// create directories if necessary
 	if err := createDirIfNotExists(edacPath); err != nil {
-		log.Errorf("Failed to create fake edac path '%s'", edacPath)
-		return "", err
+		return "", fmt.Errorf("failed to create fake edac path '%s': %w", edacPath, err)
 	}
 
 	return edacPath, nil
@@ -124,7 +121,7 @@ func fakeInfoPathForName(infoType string, nodeName string) (string, error) {
 	// this file needs to be kept across reboots, keep it in ~/.k3d
 	dir, err := GetNodeFakerDirOrCreate(nodeName)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get or create fake files dir for node '%s': %w", nodeName, err)
 	}
 	return path.Join(dir, infoType), nil
 }

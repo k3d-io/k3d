@@ -33,9 +33,9 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
-	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	runtimeErr "github.com/rancher/k3d/v5/pkg/runtimes/errors"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 )
 
 // CreateNode creates a new container
@@ -44,15 +44,13 @@ func (d Docker) CreateNode(ctx context.Context, node *k3d.Node) error {
 	// translate node spec to docker container specs
 	dockerNode, err := TranslateNodeToContainer(node)
 	if err != nil {
-		log.Errorln("Failed to translate k3d node specification to docker container specifications")
-		return err
+		return fmt.Errorf("failed to translate k3d node spec to docker container spec: %w", err)
 	}
 
 	// create node
 	_, err = createContainer(ctx, dockerNode, node.Name)
 	if err != nil {
-		log.Errorf("Failed to create node '%s'", node.Name)
-		return err
+		return fmt.Errorf("failed to create container for node '%s': %w", node.Name, err)
 	}
 
 	return nil
@@ -60,7 +58,7 @@ func (d Docker) CreateNode(ctx context.Context, node *k3d.Node) error {
 
 // DeleteNode deletes a node
 func (d Docker) DeleteNode(ctx context.Context, nodeSpec *k3d.Node) error {
-	log.Debugf("Deleting node %s ...", nodeSpec.Name)
+	l.Log().Debugf("Deleting node %s ...", nodeSpec.Name)
 	return removeContainer(ctx, nodeSpec.Name)
 }
 
@@ -70,7 +68,7 @@ func (d Docker) GetNodesByLabel(ctx context.Context, labels map[string]string) (
 	// (0) get containers
 	containers, err := getContainersByLabel(ctx, labels)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("docker failed to get containers with labels '%v': %w", labels, err)
 	}
 
 	// (1) convert them to node structs
@@ -81,15 +79,15 @@ func (d Docker) GetNodesByLabel(ctx context.Context, labels map[string]string) (
 
 		containerDetails, err := getContainerDetails(ctx, container.ID)
 		if err != nil {
-			log.Warnf("Failed to get details for container %s", container.Names[0])
+			l.Log().Warnf("Failed to get details for container %s", container.Names[0])
 			node, err = TranslateContainerToNode(&container)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to translate container '%s' to k3d node spec: %w", container.Names[0], err)
 			}
 		} else {
 			node, err = TranslateContainerDetailsToNode(containerDetails)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to translate container'%s' details to k3d node spec: %w", containerDetails.Name, err)
 			}
 		}
 		nodes = append(nodes, node)
@@ -104,15 +102,14 @@ func (d Docker) StartNode(ctx context.Context, node *k3d.Node) error {
 	// (0) create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		return fmt.Errorf("Failed to create docker client. %+v", err)
+		return fmt.Errorf("failed to create docker client. %w", err)
 	}
 	defer docker.Close()
 
 	// get container which represents the node
 	nodeContainer, err := getNodeContainer(ctx, node)
 	if err != nil {
-		log.Errorf("Failed to get container for node '%s'", node.Name)
-		return err
+		return fmt.Errorf("failed to get container for node '%s': %w", node.Name, err)
 	}
 
 	// check if the container is actually managed by
@@ -121,9 +118,9 @@ func (d Docker) StartNode(ctx context.Context, node *k3d.Node) error {
 	}
 
 	// actually start the container
-	log.Infof("Starting Node '%s'", node.Name)
+	l.Log().Infof("Starting Node '%s'", node.Name)
 	if err := docker.ContainerStart(ctx, nodeContainer.ID, types.ContainerStartOptions{}); err != nil {
-		return err
+		return fmt.Errorf("docker failed to start container for node '%s': %w", node.Name, err)
 	}
 
 	// get container which represents the node
@@ -151,8 +148,7 @@ func (d Docker) StopNode(ctx context.Context, node *k3d.Node) error {
 	// get container which represents the node
 	nodeContainer, err := getNodeContainer(ctx, node)
 	if err != nil {
-		log.Errorf("Failed to get container for node '%s'", node.Name)
-		return err
+		return fmt.Errorf("failed to get container for node '%s': %w", node.Name, err)
 	}
 
 	// check if the container is actually managed by
@@ -162,7 +158,7 @@ func (d Docker) StopNode(ctx context.Context, node *k3d.Node) error {
 
 	// actually stop the container
 	if err := docker.ContainerStop(ctx, nodeContainer.ID, nil); err != nil {
-		return err
+		return fmt.Errorf("docker failed to stop the container '%s': %w", nodeContainer.ID, err)
 	}
 
 	return nil
@@ -178,7 +174,7 @@ func getContainersByLabel(ctx context.Context, labels map[string]string) ([]type
 
 	// (1) list containers which have the default k3d labels attached
 	filters := filters.NewArgs()
-	for k, v := range k3d.DefaultObjectLabels {
+	for k, v := range k3d.DefaultRuntimeLabels {
 		filters.Add("label", fmt.Sprintf("%s=%s", k, v))
 	}
 	for k, v := range labels {
@@ -190,7 +186,7 @@ func getContainersByLabel(ctx context.Context, labels map[string]string) ([]type
 		All:     true,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Failed to list containers: %+v", err)
+		return nil, fmt.Errorf("failed to list containers: %w", err)
 	}
 
 	return containers, nil
@@ -201,14 +197,13 @@ func getContainerDetails(ctx context.Context, containerID string) (types.Contain
 	// (0) create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		return types.ContainerJSON{}, fmt.Errorf("Failed to create docker client. %+v", err)
+		return types.ContainerJSON{}, fmt.Errorf("failed to create docker client. %w", err)
 	}
 	defer docker.Close()
 
 	containerDetails, err := docker.ContainerInspect(ctx, containerID)
 	if err != nil {
-		log.Errorf("Failed to get details for container '%s'", containerID)
-		return types.ContainerJSON{}, err
+		return types.ContainerJSON{}, fmt.Errorf("failed to get details for container '%s': %w", containerID, err)
 	}
 
 	return containerDetails, nil
@@ -219,18 +214,17 @@ func getContainerDetails(ctx context.Context, containerID string) (types.Contain
 func (d Docker) GetNode(ctx context.Context, node *k3d.Node) (*k3d.Node, error) {
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
-		return node, err
+		return node, fmt.Errorf("failed to get container for node '%s': %w", node.Name, err)
 	}
 
 	containerDetails, err := getContainerDetails(ctx, container.ID)
 	if err != nil {
-		return node, err
+		return node, fmt.Errorf("failed to get details for container '%s': %w", container.ID, err)
 	}
 
 	node, err = TranslateContainerDetailsToNode(containerDetails)
 	if err != nil {
-		log.Errorf("Failed to translate container '%s' to node object", containerDetails.Name)
-		return node, err
+		return node, fmt.Errorf("failed to translate container '%s' details to node spec: %w", containerDetails.Name, err)
 	}
 
 	return node, nil
@@ -246,20 +240,19 @@ func (d Docker) GetNodeStatus(ctx context.Context, node *k3d.Node) (bool, string
 	// get the container for the given node
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
-		return running, stateString, err
+		return running, stateString, fmt.Errorf("failed to get container for node '%s': %w", node.Name, err)
 	}
 
 	// create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
-		return running, stateString, err
+		return running, stateString, fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
 	containerInspectResponse, err := docker.ContainerInspect(ctx, container.ID)
 	if err != nil {
-		return running, stateString, err
+		return running, stateString, fmt.Errorf("docker failed to inspect container '%s': %w", container.ID, err)
 	}
 
 	running = containerInspectResponse.ContainerJSONBase.State.Running
@@ -272,7 +265,7 @@ func (d Docker) GetNodeStatus(ctx context.Context, node *k3d.Node) (bool, string
 func (d Docker) NodeIsRunning(ctx context.Context, node *k3d.Node) (bool, error) {
 	isRunning, _, err := d.GetNodeStatus(ctx, node)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to get status for node '%s': %w", node.Name, err)
 	}
 	return isRunning, nil
 }
@@ -282,25 +275,23 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 	// get the container for the given node
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get container for node '%s': %w", node.Name, err)
 	}
 
 	// create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
-		return nil, err
+		return nil, fmt.Errorf("failed to get docker client; %w", err)
 	}
 	defer docker.Close()
 
 	containerInspectResponse, err := docker.ContainerInspect(ctx, container.ID)
 	if err != nil {
-		log.Errorf("Failed to inspect node '%s'(ID %s)", node.Name, container.ID)
-		return nil, err
+		return nil, fmt.Errorf("failed ton inspect container '%s': %w", container.ID, err)
 	}
 
 	if !containerInspectResponse.ContainerJSONBase.State.Running {
-		return nil, fmt.Errorf("Node '%s' (container '%s') not running", node.Name, containerInspectResponse.ID)
+		return nil, fmt.Errorf("node '%s' (container '%s') not running", node.Name, containerInspectResponse.ID)
 	}
 
 	sinceStr := ""
@@ -309,8 +300,7 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 	}
 	logreader, err := docker.ContainerLogs(ctx, container.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Since: sinceStr})
 	if err != nil {
-		log.Errorf("Failed to get logs from node '%s' (container '%s')", node.Name, container.ID)
-		return nil, err
+		return nil, fmt.Errorf("docker failed to get logs from node '%s' (container '%s'): %w", node.Name, container.ID, err)
 	}
 
 	return logreader, nil
@@ -335,8 +325,7 @@ func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) er
 		if execConnection != nil && execConnection.Reader != nil {
 			logs, err := ioutil.ReadAll(execConnection.Reader)
 			if err != nil {
-				log.Errorf("Failed to get logs from errored exec process in node '%s'", node.Name)
-				return err
+				return fmt.Errorf("failed to get logs from errored exec process in node '%s': %w", node.Name, err)
 			}
 			err = fmt.Errorf("%w: Logs from failed access process:\n%s", err, string(logs))
 		}
@@ -346,19 +335,18 @@ func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) er
 
 func executeInNode(ctx context.Context, node *k3d.Node, cmd []string) (*types.HijackedResponse, error) {
 
-	log.Debugf("Executing command '%+v' in node '%s'", cmd, node.Name)
+	l.Log().Debugf("Executing command '%+v' in node '%s'", cmd, node.Name)
 
 	// get the container for the given node
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get container for node '%s': %w", node.Name, err)
 	}
 
 	// create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
-		return nil, err
+		return nil, fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
 
@@ -371,40 +359,37 @@ func executeInNode(ctx context.Context, node *k3d.Node, cmd []string) (*types.Hi
 		Cmd:          cmd,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create exec config for node '%s': %+v", node.Name, err)
+		return nil, fmt.Errorf("docker failed to create exec config for node '%s': %+v", node.Name, err)
 	}
 
 	execConnection, err := docker.ContainerExecAttach(ctx, exec.ID, types.ExecStartCheck{
 		Tty: true,
 	})
 	if err != nil {
-		log.Errorf("Failed to connect to exec process in node '%s'", node.Name)
-		return nil, err
+		return nil, fmt.Errorf("docker failed to attach to exec process in node '%s': %w", node.Name, err)
 	}
 
 	if err := docker.ContainerExecStart(ctx, exec.ID, types.ExecStartCheck{Tty: true}); err != nil {
-		log.Errorf("Failed to start exec process in node '%s'", node.Name)
-		return nil, err
+		return nil, fmt.Errorf("docker failed to start exec process in node '%s': %w", node.Name, err)
 	}
 
 	for {
 		// get info about exec process inside container
 		execInfo, err := docker.ContainerExecInspect(ctx, exec.ID)
 		if err != nil {
-			log.Errorf("Failed to inspect exec process in node '%s'", node.Name)
-			return &execConnection, err
+			return &execConnection, fmt.Errorf("docker failed to inspect exec process in node '%s': %w", node.Name, err)
 		}
 
 		// if still running, continue loop
 		if execInfo.Running {
-			log.Tracef("Exec process '%+v' still running in node '%s'.. sleeping for 1 second...", cmd, node.Name)
+			l.Log().Tracef("Exec process '%+v' still running in node '%s'.. sleeping for 1 second...", cmd, node.Name)
 			time.Sleep(1 * time.Second)
 			continue
 		}
 
 		// check exitcode
 		if execInfo.ExitCode == 0 { // success
-			log.Debugf("Exec process in node '%s' exited with '0'", node.Name)
+			l.Log().Debugf("Exec process in node '%s' exited with '0'", node.Name)
 			return &execConnection, nil
 		}
 		return &execConnection, fmt.Errorf("Exec process in node '%s' failed with exit code '%d'", node.Name, execInfo.ExitCode)
@@ -416,14 +401,13 @@ func (d Docker) GetNodesInNetwork(ctx context.Context, network string) ([]*k3d.N
 	// create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
-		return nil, err
+		return nil, fmt.Errorf("failed to create docker client: %w", err)
 	}
 	defer docker.Close()
 
 	net, err := GetNetwork(ctx, network)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get network '%s': %w", network, err)
 	}
 
 	connectedNodes := []*k3d.Node{}
@@ -432,18 +416,35 @@ func (d Docker) GetNodesInNetwork(ctx context.Context, network string) ([]*k3d.N
 	for cID := range net.Containers {
 		containerDetails, err := getContainerDetails(ctx, cID)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("docker failed to get details of container '%s': %w", cID, err)
 		}
 		node, err := TranslateContainerDetailsToNode(containerDetails)
 		if err != nil {
 			if errors.Is(err, runtimeErr.ErrRuntimeContainerUnknown) {
-				log.Tracef("GetNodesInNetwork: inspected non-k3d-managed container %s", containerDetails.Name)
+				l.Log().Tracef("GetNodesInNetwork: inspected non-k3d-managed container %s", containerDetails.Name)
 				continue
 			}
-			return nil, err
+			return nil, fmt.Errorf("failed to translate container '%s' details to node spec: %w", containerDetails.Name, err)
 		}
 		connectedNodes = append(connectedNodes, node)
 	}
 
 	return connectedNodes, nil
+}
+
+func (d Docker) RenameNode(ctx context.Context, node *k3d.Node, newName string) error {
+	// get the container for the given node
+	container, err := getNodeContainer(ctx, node)
+	if err != nil {
+		return fmt.Errorf("failed to get container for node '%s': %w", node.Name, err)
+	}
+
+	// create docker client
+	docker, err := GetDockerClient()
+	if err != nil {
+		return fmt.Errorf("failed to get docker client: %w", err)
+	}
+	defer docker.Close()
+
+	return docker.ContainerRename(ctx, container.ID, newName)
 }

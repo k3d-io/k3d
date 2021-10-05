@@ -22,11 +22,11 @@ THE SOFTWARE.
 package node
 
 import (
-	"github.com/rancher/k3d/v4/cmd/util"
-	"github.com/rancher/k3d/v4/pkg/client"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
+	"github.com/rancher/k3d/v5/cmd/util"
+	"github.com/rancher/k3d/v5/pkg/client"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -52,13 +52,14 @@ func NewCmdNodeDelete() *cobra.Command {
 			nodeDeleteOpts := k3d.NodeDeleteOpts{SkipLBUpdate: flags.All} // do not update LB, if we're deleting all nodes anyway
 
 			if len(nodes) == 0 {
-				log.Infoln("No nodes found")
+				l.Log().Infoln("No nodes found")
 			} else {
 				for _, node := range nodes {
 					if err := client.NodeDelete(cmd.Context(), runtimes.SelectedRuntime, node, nodeDeleteOpts); err != nil {
-						log.Fatalln(err)
+						l.Log().Fatalln(err)
 					}
 				}
+				l.Log().Infof("Successfully deleted %d node(s)!", len(nodes))
 			}
 		},
 	}
@@ -82,11 +83,11 @@ func parseDeleteNodeCmd(cmd *cobra.Command, args []string, flags *nodeDeleteFlag
 	// --all
 	if flags.All {
 		if !flags.IncludeRegistries {
-			log.Infoln("Didn't set '--registries', so won't delete registries.")
+			l.Log().Infoln("Didn't set '--registries', so won't delete registries.")
 		}
 		nodes, err = client.NodeList(cmd.Context(), runtimes.SelectedRuntime)
 		if err != nil {
-			log.Fatalln(err)
+			l.Log().Fatalln(err)
 		}
 		include := k3d.ClusterInternalNodeRoles
 		exclude := []k3d.Role{}
@@ -98,13 +99,13 @@ func parseDeleteNodeCmd(cmd *cobra.Command, args []string, flags *nodeDeleteFlag
 	}
 
 	if !flags.All && len(args) < 1 {
-		log.Fatalln("Expecting at least one node name if `--all` is not set")
+		l.Log().Fatalln("Expecting at least one node name if `--all` is not set")
 	}
 
 	for _, name := range args {
 		node, err := client.NodeGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Node{Name: name})
 		if err != nil {
-			log.Fatalln(err)
+			l.Log().Fatalln(err)
 		}
 		nodes = append(nodes, node)
 	}

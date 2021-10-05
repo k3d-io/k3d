@@ -22,7 +22,7 @@ THE SOFTWARE.
 package image
 
 import (
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -31,13 +31,14 @@ func NewCmdImage() *cobra.Command {
 
 	// create new cobra command
 	cmd := &cobra.Command{
-		Use:   "image",
-		Short: "Handle container images.",
-		Long:  `Handle container images.`,
+		Use:     "image",
+		Aliases: []string{"images"},
+		Short:   "Handle container images.",
+		Long:    `Handle container images.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
-				log.Errorln("Couldn't get help text")
-				log.Fatalln(err)
+				l.Log().Errorln("Couldn't get help text")
+				l.Log().Fatalln(err)
 			}
 		},
 	}

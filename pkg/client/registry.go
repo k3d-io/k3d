@@ -28,12 +28,12 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/imdario/mergo"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	"github.com/rancher/k3d/v4/pkg/runtimes/docker"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	"github.com/rancher/k3d/v4/pkg/types/k3s"
-	"github.com/rancher/k3d/v4/pkg/types/k8s"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	"github.com/rancher/k3d/v5/pkg/runtimes/docker"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/types/k3s"
+	"github.com/rancher/k3d/v5/pkg/types/k8s"
 	"gopkg.in/yaml.v2"
 )
 
@@ -43,11 +43,11 @@ func RegistryRun(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registr
 		return nil, fmt.Errorf("Failed to create registry: %+v", err)
 	}
 
-	if err := NodeStart(ctx, runtime, regNode, k3d.NodeStartOpts{}); err != nil {
+	if err := NodeStart(ctx, runtime, regNode, &k3d.NodeStartOpts{}); err != nil {
 		return nil, fmt.Errorf("Failed to start registry: %+v", err)
 	}
 
-	return regNode, err
+	return regNode, nil
 }
 
 // RegistryCreate creates a registry node
@@ -58,8 +58,8 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 		reg.Host = k3d.DefaultRegistryName
 	}
 	// if err := ValidateHostname(reg.Host); err != nil {
-	// 	log.Errorln("Invalid name for registry")
-	// 	log.Fatalln(err)
+	// 	l.Log().Errorln("Invalid name for registry")
+	// 	l.Log().Fatalln(err)
 	// }
 
 	registryNode := &k3d.Node{
@@ -77,7 +77,7 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 	}
 
 	// setup the node labels
-	registryNode.Labels = map[string]string{
+	registryNode.RuntimeLabels = map[string]string{
 		k3d.LabelClusterName:          reg.ClusterRef,
 		k3d.LabelRole:                 string(k3d.RegistryRole),
 		k3d.LabelRegistryHost:         reg.ExposureOpts.Host, // TODO: docker machine host?
@@ -85,11 +85,11 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 		k3d.LabelRegistryPortExternal: reg.ExposureOpts.Binding.HostPort,
 		k3d.LabelRegistryPortInternal: reg.ExposureOpts.Port.Port(),
 	}
-	for k, v := range k3d.DefaultObjectLabels {
-		registryNode.Labels[k] = v
+	for k, v := range k3d.DefaultRuntimeLabels {
+		registryNode.RuntimeLabels[k] = v
 	}
-	for k, v := range k3d.DefaultObjectLabelsVar {
-		registryNode.Labels[k] = v
+	for k, v := range k3d.DefaultRuntimeLabelsVar {
+		registryNode.RuntimeLabels[k] = v
 	}
 
 	// port
@@ -97,13 +97,12 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 	registryNode.Ports[reg.ExposureOpts.Port] = []nat.PortBinding{reg.ExposureOpts.Binding}
 
 	// create the registry node
-	log.Infof("Creating node '%s'", registryNode.Name)
+	l.Log().Infof("Creating node '%s'", registryNode.Name)
 	if err := NodeCreate(ctx, runtime, registryNode, k3d.NodeCreateOpts{}); err != nil {
-		log.Errorln("Failed to create registry node")
-		return nil, err
+		return nil, fmt.Errorf("failed to create registry node '%s': %w", registryNode.Name, err)
 	}
 
-	log.Infof("Successfully created registry '%s'", registryNode.Name)
+	l.Log().Infof("Successfully created registry '%s'", registryNode.Name)
 
 	return registryNode, nil
 
@@ -115,8 +114,7 @@ func RegistryConnectClusters(ctx context.Context, runtime runtimes.Runtime, regi
 	// find registry node
 	registryNode, err := NodeGet(ctx, runtime, registryNode)
 	if err != nil {
-		log.Errorf("Failed to find registry node '%s'", registryNode.Name)
-		return err
+		return fmt.Errorf("Failed to find registry node '%s': %w", registryNode.Name, err)
 	}
 
 	// get cluster details and connect
@@ -124,13 +122,13 @@ func RegistryConnectClusters(ctx context.Context, runtime runtimes.Runtime, regi
 	for _, c := range clusters {
 		cluster, err := ClusterGet(ctx, runtime, c)
 		if err != nil {
-			log.Warnf("Failed to connect to cluster '%s': Cluster not found", c.Name)
+			l.Log().Warnf("Failed to connect to cluster '%s': Cluster not found", c.Name)
 			failed++
 			continue
 		}
 		if err := runtime.ConnectNodeToNetwork(ctx, registryNode, cluster.Network.Name); err != nil {
-			log.Warnf("Failed to connect to cluster '%s': Connection failed", cluster.Name)
-			log.Warnln(err)
+			l.Log().Warnf("Failed to connect to cluster '%s': Connection failed", cluster.Name)
+			l.Log().Warnln(err)
 			failed++
 		}
 	}
@@ -148,16 +146,15 @@ func RegistryConnectNetworks(ctx context.Context, runtime runtimes.Runtime, regi
 	// find registry node
 	registryNode, err := NodeGet(ctx, runtime, registryNode)
 	if err != nil {
-		log.Errorf("Failed to find registry node '%s'", registryNode.Name)
-		return err
+		return fmt.Errorf("Failed to find registry node '%s': %w", registryNode.Name, err)
 	}
 
 	// get cluster details and connect
 	failed := 0
 	for _, net := range networks {
 		if err := runtime.ConnectNodeToNetwork(ctx, registryNode, net); err != nil {
-			log.Warnf("Failed to connect to network '%s': Connection failed", net)
-			log.Warnln(err)
+			l.Log().Warnf("Failed to connect to network '%s': Connection failed", net)
+			l.Log().Warnln(err)
 			failed++
 		}
 	}
@@ -247,7 +244,7 @@ func RegistryFromNode(node *k3d.Node) (*k3d.Registry, error) {
 		}
 	}
 
-	log.Tracef("Got registry %+v from node %+v", registry, node)
+	l.Log().Tracef("Got registry %+v from node %+v", registry, node)
 
 	return registry, nil
 
@@ -273,11 +270,11 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runt
 	}
 
 	if len(registries) > 1 {
-		log.Warnf("More than one registry specified, but the LocalRegistryHostingV1 spec only supports one -> Selecting the first one: %s", registries[0].Host)
+		l.Log().Warnf("More than one registry specified, but the LocalRegistryHostingV1 spec only supports one -> Selecting the first one: %s", registries[0].Host)
 	}
 
 	if len(registries) < 1 {
-		log.Debugln("No registry specified, not generating local registry hosting configmap")
+		l.Log().Debugln("No registry specified, not generating local registry hosting configmap")
 		return nil, nil
 	}
 
@@ -290,15 +287,15 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runt
 	// if the host is now 0.0.0.0, check if we can set it to the IP of the docker-machine, if it's used
 	if host == k3d.DefaultAPIHost && runtime == runtimes.Docker {
 		if gort.GOOS == "windows" || gort.GOOS == "darwin" {
-			log.Tracef("Running on %s: checking if it's using docker-machine", gort.GOOS)
+			l.Log().Tracef("Running on %s: checking if it's using docker-machine", gort.GOOS)
 			machineIP, err := runtime.(docker.Docker).GetDockerMachineIP()
 			if err != nil {
-				log.Warnf("Using docker-machine, but failed to get it's IP for usage in LocalRegistryHosting Config Map: %+v", err)
+				l.Log().Warnf("Using docker-machine, but failed to get it's IP for usage in LocalRegistryHosting Config Map: %+v", err)
 			} else if machineIP != "" {
-				log.Infof("Using the docker-machine IP %s in the LocalRegistryHosting Config Map", machineIP)
+				l.Log().Infof("Using the docker-machine IP %s in the LocalRegistryHosting Config Map", machineIP)
 				host = machineIP
 			} else {
-				log.Traceln("Not using docker-machine")
+				l.Log().Traceln("Not using docker-machine")
 			}
 		}
 	}
@@ -317,7 +314,7 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runt
 		},
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal LocalRegistryHosting configmap data: %w", err)
 	}
 
 	cm := configmap{
@@ -334,10 +331,10 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runt
 
 	cmYaml, err := yaml.Marshal(cm)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal LocalRegistryHosting configmap: %w", err)
 	}
 
-	log.Tracef("LocalRegistryHostingConfigMapYaml: %s", string(cmYaml))
+	l.Log().Tracef("LocalRegistryHostingConfigMapYaml: %s", string(cmYaml))
 
 	return cmYaml, nil
 }
@@ -345,7 +342,7 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runt
 // RegistryMergeConfig merges a source registry config into an existing dest registry cofnig
 func RegistryMergeConfig(ctx context.Context, dest, src *k3s.Registry) error {
 	if err := mergo.MergeWithOverwrite(dest, src); err != nil {
-		return fmt.Errorf("Failed to merge registry configs: %+v", err)
+		return fmt.Errorf("failed to merge registry configs: %w", err)
 	}
 	return nil
 }

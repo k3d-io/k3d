@@ -117,7 +117,7 @@ check_volume_exists() {
 
 check_cluster_token_exist() {
   [ -n "$EXE" ] || abort "EXE is not defined"
-  $EXE cluster get "$1" --token | grep "TOKEN" >/dev/null 2>&1
+  $EXE cluster get "$1" --token | grep -q "TOKEN" >/dev/null 2>&1
 }
 
 wait_for_pod_running_by_label() {
@@ -174,5 +174,11 @@ exec_in_node() {
 docker_assert_container_label() {
   # $1 = container/node name
   # $2 = label to assert
-  docker inspect --format '{{ range $k, $v := .Config.Labels }}{{ printf "%s=%s\n" $k $v }}{{ end }}' "$1" | grep -E "^$2$"
+  docker inspect --format '{{ range $k, $v := .Config.Labels }}{{ printf "%s=%s\n" $k $v }}{{ end }}' "$1" | grep -qE "^$2$"
+}
+
+k3s_assert_node_label() {
+  # $1 = node name
+  # $2 = label to assert
+  kubectl get node "$1" --output go-template='{{ range $k, $v := .metadata.labels }}{{ printf "%s=%s\n" $k $v }}{{ end }}' | grep -qE "^$2$"
 }

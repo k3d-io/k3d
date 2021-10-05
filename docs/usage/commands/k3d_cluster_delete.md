@@ -13,8 +13,9 @@ k3d cluster delete [NAME [NAME ...] | --all] [flags]
 ### Options
 
 ```
-  -a, --all    Delete all existing clusters
-  -h, --help   help for delete
+  -a, --all             Delete all existing clusters
+  -c, --config string   Path of a config file to use
+  -h, --help            help for delete
 ```
 
 ### Options inherited from parent commands

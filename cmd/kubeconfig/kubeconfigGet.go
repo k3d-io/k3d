@@ -25,13 +25,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rancher/k3d/v4/cmd/util"
-	"github.com/rancher/k3d/v4/pkg/client"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v5/cmd/util"
+	"github.com/rancher/k3d/v5/pkg/client"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/spf13/cobra"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type getKubeconfigFlags struct {
@@ -70,13 +69,13 @@ func NewCmdKubeconfigGet() *cobra.Command {
 			if getKubeconfigFlags.all {
 				clusters, err = client.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
-					log.Fatalln(err)
+					l.Log().Fatalln(err)
 				}
 			} else {
 				for _, clusterName := range args {
 					retrievedCluster, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
 					if err != nil {
-						log.Fatalln(err)
+						l.Log().Fatalln(err)
 					}
 					clusters = append(clusters, retrievedCluster)
 				}
@@ -85,10 +84,10 @@ func NewCmdKubeconfigGet() *cobra.Command {
 			// get kubeconfigs from all clusters
 			errorGettingKubeconfig := false
 			for _, c := range clusters {
-				log.Debugf("Getting kubeconfig for cluster '%s'", c.Name)
+				l.Log().Debugf("Getting kubeconfig for cluster '%s'", c.Name)
 				fmt.Println("---") // YAML document separator
 				if _, err := client.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, c, "-", &writeKubeConfigOptions); err != nil {
-					log.Errorln(err)
+					l.Log().Errorln(err)
 					errorGettingKubeconfig = true
 				}
 			}

@@ -25,19 +25,14 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"runtime"
 )
 
 // GetHostIP returns the IP of the docker host (routable from inside the containers)
 func (d Docker) GetHostIP(ctx context.Context, network string) (net.IP, error) {
-	if runtime.GOOS == "linux" {
-		ip, err := GetGatewayIP(ctx, network)
-		if err != nil {
-			return nil, err
-		}
-		return ip, nil
+	ip, err := GetGatewayIP(ctx, network)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get gateway IP of docker network '%s': %w", network, err)
 	}
-
-	return nil, fmt.Errorf("Docker Runtime: GetHostIP only implemented for Linux")
+	return ip, nil
 
 }

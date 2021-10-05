@@ -22,7 +22,7 @@ THE SOFTWARE.
 package kubeconfig
 
 import (
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -36,8 +36,8 @@ func NewCmdKubeconfig() *cobra.Command {
 		Long:  `Manage kubeconfig(s)`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
-				log.Errorln("Couldn't get help text")
-				log.Fatalln(err)
+				l.Log().Errorln("Couldn't get help text")
+				l.Log().Fatalln(err)
 			}
 		},
 	}

@@ -27,9 +27,9 @@ import (
 	rt "runtime"
 	"strings"
 
-	"github.com/rancher/k3d/v4/pkg/runtimes"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
 
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
 // ValidateVolumeMount checks, if the source of volume mounts exists and if the destination is an absolute path
@@ -78,7 +78,7 @@ func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) error {
 		}
 		if !isNamedVolume {
 			if _, err := os.Stat(src); err != nil {
-				log.Warnf("Failed to stat file/directory/named volume that you're trying to mount: '%s' in '%s' -> Please make sure it exists", src, volumeMount)
+				l.Log().Warnf("Failed to stat file/directory/named volume that you're trying to mount: '%s' in '%s' -> Please make sure it exists", src, volumeMount)
 			}
 		}
 	}
@@ -93,12 +93,12 @@ func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) error {
 
 // verifyNamedVolume checks whether a named volume exists in the runtime
 func verifyNamedVolume(runtime runtimes.Runtime, volumeName string) error {
-	volumeName, err := runtime.GetVolume(volumeName)
+	foundVolName, err := runtime.GetVolume(volumeName)
 	if err != nil {
-		return err
+		return fmt.Errorf("runtime failed to get volume '%s': %w", volumeName, err)
 	}
-	if volumeName == "" {
-		return fmt.Errorf("Failed to find named volume '%s'", volumeName)
+	if foundVolName == "" {
+		return fmt.Errorf("failed to find named volume '%s'", volumeName)
 	}
 	return nil
 }

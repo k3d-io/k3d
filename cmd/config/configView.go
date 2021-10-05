@@ -24,7 +24,6 @@ package config
 import (
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -35,9 +34,7 @@ func NewCmdConfigView() *cobra.Command {
 		Use:     "view",
 		Aliases: []string{"show"},
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Debugln("print config")
 			fmt.Printf("%+v", viper.AllSettings())
-			log.Debugln("printed config")
 		},
 	}
 	return cmd

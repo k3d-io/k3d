@@ -26,11 +26,11 @@ import (
 	"strings"
 
 	"github.com/liggitt/tabwriter"
-	"github.com/rancher/k3d/v4/cmd/util"
-	"github.com/rancher/k3d/v4/pkg/client"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
+	"github.com/rancher/k3d/v5/cmd/util"
+	"github.com/rancher/k3d/v5/pkg/client"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -64,15 +64,15 @@ func NewCmdRegistryList() *cobra.Command {
 			if len(nodes) == 0 { // Option a)  no name specified -> get all registries
 				found, err := client.NodeList(cmd.Context(), runtimes.SelectedRuntime)
 				if err != nil {
-					log.Fatalln(err)
+					l.Log().Fatalln(err)
 				}
 				existingNodes = append(existingNodes, found...)
 			} else { // Option b) registry name(s) specified -> get specific registries
 				for _, node := range nodes {
-					log.Tracef("Node %s", node.Name)
+					l.Log().Tracef("Node %s", node.Name)
 					found, err := client.NodeGet(cmd.Context(), runtimes.SelectedRuntime, node)
 					if err != nil {
-						log.Fatalln(err)
+						l.Log().Fatalln(err)
 					}
 					existingNodes = append(existingNodes, found)
 				}
@@ -88,8 +88,8 @@ func NewCmdRegistryList() *cobra.Command {
 			util.PrintNodes(existingNodes, registryListFlags.output,
 				headers, util.NodePrinterFunc(func(tabwriter *tabwriter.Writer, node *k3d.Node) {
 					cluster := "*"
-					if _, ok := node.Labels[k3d.LabelClusterName]; ok {
-						cluster = node.Labels[k3d.LabelClusterName]
+					if _, ok := node.RuntimeLabels[k3d.LabelClusterName]; ok {
+						cluster = node.RuntimeLabels[k3d.LabelClusterName]
 					}
 					fmt.Fprintf(tabwriter, "%s\t%s\t%s\t%s\n",
 						strings.TrimPrefix(node.Name, "/"),

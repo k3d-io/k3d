@@ -27,18 +27,80 @@ import (
 	"strconv"
 	"strings"
 
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
+)
+
+const (
+	NodeFilterSuffixNone = "nosuffix"
+	NodeFilterMapKeyAll  = "all"
+)
+
+var (
+	rolesByIdentifier = map[string]k3d.Role{
+		"server":       k3d.ServerRole,
+		"servers":      k3d.ServerRole,
+		"agent":        k3d.AgentRole,
+		"agents":       k3d.AgentRole,
+		"loadbalancer": k3d.LoadBalancerRole,
+	}
 )
 
 // Regexp pattern to match node filters
-var filterRegexp = regexp.MustCompile(`^(?P<group>server|agent|loadbalancer|all)(?P<subsetSpec>\[(?P<subset>(?P<subsetList>(\d+,?)+)|(?P<subsetRange>\d*:\d*)|(?P<subsetWildcard>\*))\])?$`)
+var NodeFilterRegexp = regexp.MustCompile(`^(?P<group>server|servers|agent|agents|loadbalancer|all)(?P<subsetSpec>:(?P<subset>(?P<subsetList>(\d+,?)+)|(?P<subsetRange>\d*-\d*)|(?P<subsetWildcard>\*)))?(?P<suffixSpec>:(?P<suffix>[[:alpha:]]+))?$`)
+
+// FilterNodesBySuffix properly interprets NodeFilters with suffix
+func FilterNodesWithSuffix(nodes []*k3d.Node, nodefilters []string) (map[string][]*k3d.Node, error) {
+	if len(nodefilters) == 0 || len(nodefilters[0]) == 0 {
+		return nil, fmt.Errorf("No nodefilters specified")
+	}
+
+	result := map[string][]*k3d.Node{
+		NodeFilterMapKeyAll: nodes,
+	}
+
+	for _, nf := range nodefilters {
+		suffix := NodeFilterSuffixNone
+
+		// match regex with capturing groups
+		match := NodeFilterRegexp.FindStringSubmatch(nf)
+
+		if len(match) == 0 {
+			return nil, fmt.Errorf("Failed to parse node filters: invalid format or empty subset in '%s'", nf)
+		}
+
+		// map capturing group names to submatches
+		submatches := MapSubexpNames(NodeFilterRegexp.SubexpNames(), match)
+
+		// get suffix
+		if sf, ok := submatches["suffix"]; ok && sf != "" {
+			suffix = sf
+		}
+
+		if _, ok := result[suffix]; !ok {
+			result[suffix] = make([]*k3d.Node, 0) // init map for this suffix, if not exists
+		}
+
+		filteredNodes, err := FilterNodes(nodes, []string{nf})
+		if err != nil {
+			return nil, fmt.Errorf("failed to filder nodes by filter '%s': %w", nf, err)
+		}
+
+		l.Log().Tracef("Filtered %d nodes for suffix '%s' (filter: %s)", len(filteredNodes), suffix, nf)
+
+		result[suffix] = append(result[suffix], filteredNodes...)
+	}
+
+	return result, nil
+}
 
 // FilterNodes takes a string filter to return a filtered list of nodes
 func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 
+	l.Log().Tracef("Filtering %d nodes by %s", len(nodes), filters)
+
 	if len(filters) == 0 || len(filters[0]) == 0 {
-		log.Warnln("No node filter specified")
+		l.Log().Warnln("No node filter specified")
 		return nodes, nil
 	}
 
@@ -47,7 +109,6 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 	agentNodes := []*k3d.Node{}
 	var serverlb *k3d.Node
 	for _, node := range nodes {
-		log.Tracef("FilterNodes (%+v): Checking node role %s", filters, node.Role)
 		if node.Role == k3d.ServerRole {
 			serverNodes = append(serverNodes, node)
 		} else if node.Role == k3d.AgentRole {
@@ -64,35 +125,40 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 	for _, filter := range filters {
 
 		// match regex with capturing groups
-		match := filterRegexp.FindStringSubmatch(filter)
+		match := NodeFilterRegexp.FindStringSubmatch(filter)
 
 		if len(match) == 0 {
 			return nil, fmt.Errorf("Failed to parse node filters: invalid format or empty subset in '%s'", filter)
 		}
 
 		// map capturing group names to submatches
-		submatches := MapSubexpNames(filterRegexp.SubexpNames(), match)
+		submatches := MapSubexpNames(NodeFilterRegexp.SubexpNames(), match)
 
 		// if one of the filters is 'all', we only return this and drop all others
 		if submatches["group"] == "all" {
 			if len(filters) > 1 {
-				log.Warnf("Node filter 'all' set, but more were specified in '%+v'", filters)
+				l.Log().Warnf("Node filter 'all' set, but more were specified in '%+v'", filters)
 			}
 			return nodes, nil
 		}
 
 		// Choose the group of nodes to operate on
 		groupNodes := []*k3d.Node{}
-		if submatches["group"] == string(k3d.ServerRole) {
-			groupNodes = serverNodes
-		} else if submatches["group"] == string(k3d.AgentRole) {
-			groupNodes = agentNodes
-		} else if submatches["group"] == string(k3d.LoadBalancerRole) {
-			if serverlb == nil {
-				return nil, fmt.Errorf("Node filter '%s' targets a node that does not exist (disabled?)", filter)
+		if role, ok := rolesByIdentifier[submatches["group"]]; ok {
+			switch role {
+			case k3d.ServerRole:
+				groupNodes = serverNodes
+				break
+			case k3d.AgentRole:
+				groupNodes = agentNodes
+				break
+			case k3d.LoadBalancerRole:
+				if serverlb == nil {
+					return nil, fmt.Errorf("Node filter '%s' targets a node that does not exist (disabled?)", filter)
+				}
+				filteredNodes = append(filteredNodes, serverlb)
+				return filteredNodes, nil // early exit if filtered group is the loadbalancer
 			}
-			filteredNodes = append(filteredNodes, serverlb)
-			return filteredNodes, nil // early exit if filtered group is the loadbalancer
 		}
 
 		/* Option 1) subset defined by list */
@@ -117,10 +183,10 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 		} else if submatches["subsetRange"] != "" {
 
 			/*
-			 * subset specified by a range 'START:END', where each side is optional
+			 * subset specified by a range 'START-END', where each side is optional
 			 */
 
-			split := strings.Split(submatches["subsetRange"], ":")
+			split := strings.Split(submatches["subsetRange"], "-")
 			if len(split) != 2 {
 				return nil, fmt.Errorf("Failed to parse subset range in '%s'", filter)
 			}
@@ -176,6 +242,8 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 		}
 
 	}
+
+	l.Log().Tracef("Filtered %d nodes (filter: %s)", len(filteredNodes), filters)
 
 	return filteredNodes, nil
 }

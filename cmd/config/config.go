@@ -22,7 +22,8 @@ THE SOFTWARE.
 package config
 
 import (
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+
 	"github.com/spf13/cobra"
 )
 
@@ -34,13 +35,14 @@ func NewCmdConfig() *cobra.Command {
 		Long:  `Work with config file(s)`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
-				log.Errorln("Couldn't get help text")
-				log.Fatalln(err)
+				l.Log().Errorln("Couldn't get help text")
+				l.Log().Fatalln(err)
 			}
 		},
 	}
 
 	cmd.AddCommand(NewCmdConfigInit())
+	cmd.AddCommand(NewCmdConfigMigrate())
 
 	return cmd
 }

@@ -32,12 +32,12 @@ import (
 
 	"github.com/xeipuuv/gojsonschema"
 
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
 // ValidateSchemaFile takes a filepath, reads the file and validates it against a JSON schema
 func ValidateSchemaFile(filepath string, schema []byte) error {
-	log.Debugf("Validating file %s against default JSONSchema...", filepath)
+	l.Log().Debugf("Validating file %s against default JSONSchema...", filepath)
 
 	fileContents, err := ioutil.ReadFile(filepath)
 	if err != nil {
@@ -73,10 +73,10 @@ func ValidateSchema(content map[string]interface{}, schemaJSON []byte) error {
 
 	result, err := gojsonschema.Validate(schemaLoader, configLoader)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to validate config: %w", err)
 	}
 
-	log.Debugf("JSON Schema Validation Result: %+v", result)
+	l.Log().Debugf("JSON Schema Validation Result: %+v", result)
 
 	if !result.Valid() {
 		var sb strings.Builder

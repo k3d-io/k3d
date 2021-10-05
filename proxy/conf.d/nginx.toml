@@ -2,7 +2,8 @@
 src = "nginx.tmpl"
 dest = "/etc/nginx/nginx.conf"
 keys = [
-    "SERVERS",
-    "PORTS",
-    "UDP_PORTS",
+    "ports",
+    "settings"
 ]
+check_cmd = "/usr/sbin/nginx -T -c {{.src}}"
+reload_cmd = "/usr/sbin/nginx -s reload"

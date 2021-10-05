@@ -24,11 +24,13 @@ package types
 import (
 	"context"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/docker/go-connections/nat"
-	"github.com/rancher/k3d/v4/pkg/types/k3s"
-	"github.com/rancher/k3d/v4/version"
+	runtimeTypes "github.com/rancher/k3d/v5/pkg/runtimes/types"
+	"github.com/rancher/k3d/v5/pkg/types/k3s"
+	"github.com/rancher/k3d/v5/version"
 	"inet.af/netaddr"
 )
 
@@ -40,21 +42,6 @@ const DefaultClusterName = "k3s-default"
 // <DefaultObjectNamePrefix[3]>-<ClusterName>-<TypeSuffix[5-10]>-<Counter[1-3]>
 // ... and still stay within the 64 character limit (e.g. of docker)
 const DefaultClusterNameMaxLength = 32
-
-// DefaultK3sImageRepo specifies the default image repository for the used k3s image
-const DefaultK3sImageRepo = "docker.io/rancher/k3s"
-
-// DefaultLBImageRepo defines the default cluster load balancer image
-const DefaultLBImageRepo = "docker.io/rancher/k3d-proxy"
-
-// DefaultToolsImageRepo defines the default image used for the tools container
-const DefaultToolsImageRepo = "docker.io/rancher/k3d-tools"
-
-// DefaultRegistryImageRepo defines the default image used for the k3d-managed registry
-const DefaultRegistryImageRepo = "docker.io/library/registry"
-
-// DefaultRegistryImageTag defines the default image tag used for the k3d-managed registry
-const DefaultRegistryImageTag = "2"
 
 // DefaultObjectNamePrefix defines the name prefix for every object created by k3d
 const DefaultObjectNamePrefix = "k3d"
@@ -105,13 +92,13 @@ var ClusterExternalNodeRoles = []Role{
 	RegistryRole,
 }
 
-// DefaultObjectLabels specifies a set of labels that will be attached to k3d objects by default
-var DefaultObjectLabels = map[string]string{
+// DefaultRuntimeLabels specifies a set of labels that will be attached to k3d runtime objects by default
+var DefaultRuntimeLabels = map[string]string{
 	"app": "k3d",
 }
 
-// DefaultObjectLabelsVar specifies a set of labels that will be attached to k3d objects by default but are not static (e.g. across k3d versions)
-var DefaultObjectLabelsVar = map[string]string{
+// DefaultRuntimeLabelsVar specifies a set of labels that will be attached to k3d runtime objects by default but are not static (e.g. across k3d versions)
+var DefaultRuntimeLabelsVar = map[string]string{
 	"k3d.version": version.GetVersion(),
 }
 
@@ -120,6 +107,7 @@ const (
 	LabelClusterName          string = "k3d.cluster"
 	LabelClusterURL           string = "k3d.cluster.url"
 	LabelClusterToken         string = "k3d.cluster.token"
+	LabelClusterExternal      string = "k3d.cluster.external"
 	LabelImageVolume          string = "k3d.cluster.imageVolume"
 	LabelNetworkExternal      string = "k3d.cluster.network.external"
 	LabelNetwork              string = "k3d.cluster.network"
@@ -151,8 +139,15 @@ var DefaultTmpfsMounts = []string{
 
 // DefaultNodeEnv defines some default environment variables that should be set on every node
 var DefaultNodeEnv = []string{
-	"K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml",
+	fmt.Sprintf("%s=/output/kubeconfig.yaml", K3sEnvKubeconfigOutput),
 }
+
+// k3s environment variables
+const (
+	K3sEnvClusterToken      string = "K3S_TOKEN"
+	K3sEnvClusterConnectURL string = "K3S_URL"
+	K3sEnvKubeconfigOutput  string = "K3S_KUBECONFIG_OUTPUT"
+)
 
 // DefaultK3dInternalHostRecord defines the default /etc/hosts entry for the k3d host
 const DefaultK3dInternalHostRecord = "host.k3d.internal"
@@ -179,20 +174,17 @@ var DoNotCopyServerFlags = []string{
 
 // ClusterCreateOpts describe a set of options one can set when creating a cluster
 type ClusterCreateOpts struct {
-	PrepDisableHostIPInjection bool              `yaml:"prepDisableHostIPInjection" json:"prepDisableHostIPInjection,omitempty"`
-	DisableImageVolume         bool              `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
-	WaitForServer              bool              `yaml:"waitForServer" json:"waitForServer,omitempty"`
-	Timeout                    time.Duration     `yaml:"timeout" json:"timeout,omitempty"`
-	DisableLoadBalancer        bool              `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
-	K3sServerArgs              []string          `yaml:"k3sServerArgs" json:"k3sServerArgs,omitempty"`
-	K3sAgentArgs               []string          `yaml:"k3sAgentArgs" json:"k3sAgentArgs,omitempty"`
-	GPURequest                 string            `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
-	ServersMemory              string            `yaml:"serversMemory" json:"serversMemory,omitempty"`
-	AgentsMemory               string            `yaml:"agentsMemory" json:"agentsMemory,omitempty"`
-	NodeHooks                  []NodeHook        `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
-	GlobalLabels               map[string]string `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
-	GlobalEnv                  []string          `yaml:"globalEnv,omitempty" json:"globalEnv,omitempty"`
-	Registries                 struct {
+	DisableImageVolume  bool              `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
+	WaitForServer       bool              `yaml:"waitForServer" json:"waitForServer,omitempty"`
+	Timeout             time.Duration     `yaml:"timeout" json:"timeout,omitempty"`
+	DisableLoadBalancer bool              `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
+	GPURequest          string            `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
+	ServersMemory       string            `yaml:"serversMemory" json:"serversMemory,omitempty"`
+	AgentsMemory        string            `yaml:"agentsMemory" json:"agentsMemory,omitempty"`
+	NodeHooks           []NodeHook        `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	GlobalLabels        map[string]string `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
+	GlobalEnv           []string          `yaml:"globalEnv,omitempty" json:"globalEnv,omitempty"`
+	Registries          struct {
 		Create *Registry     `yaml:"create,omitempty" json:"create,omitempty"`
 		Use    []*Registry   `yaml:"use,omitempty" json:"use,omitempty"`
 		Config *k3s.Registry `yaml:"config,omitempty" json:"config,omitempty"` // registries.yaml (k3s config for containerd registry override)
@@ -216,9 +208,10 @@ const (
 
 // ClusterStartOpts describe a set of options one can set when (re-)starting a cluster
 type ClusterStartOpts struct {
-	WaitForServer bool
-	Timeout       time.Duration
-	NodeHooks     []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	WaitForServer   bool
+	Timeout         time.Duration
+	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	EnvironmentInfo *EnvironmentInfo
 }
 
 // ClusterDeleteOpts describe a set of options one can set when deleting a cluster
@@ -228,9 +221,11 @@ type ClusterDeleteOpts struct {
 
 // NodeCreateOpts describes a set of options one can set when creating a new node
 type NodeCreateOpts struct {
-	Wait      bool
-	Timeout   time.Duration
-	NodeHooks []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	Wait            bool
+	Timeout         time.Duration
+	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	EnvironmentInfo *EnvironmentInfo
+	ClusterToken    string
 }
 
 // NodeStartOpts describes a set of options one can set when (re-)starting a node
@@ -239,6 +234,7 @@ type NodeStartOpts struct {
 	Timeout         time.Duration
 	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 	ReadyLogMessage string
+	EnvironmentInfo *EnvironmentInfo
 }
 
 // NodeDeleteOpts describes a set of options one can set when deleting a node
@@ -263,12 +259,18 @@ type IPAM struct {
 	Managed  bool             // IPAM is done by k3d
 }
 
+type NetworkMember struct {
+	Name string
+	IP   netaddr.IP
+}
+
 // ClusterNetwork describes a network which a cluster is running in
 type ClusterNetwork struct {
 	Name     string `yaml:"name" json:"name,omitempty"`
 	ID       string `yaml:"id" json:"id"` // may be the same as name, but e.g. docker only differentiates by random ID, not by name
 	External bool   `yaml:"external" json:"isExternal,omitempty"`
 	IPAM     IPAM   `yaml:"ipam" json:"ipam,omitempty"`
+	Members  []*NetworkMember
 }
 
 // Cluster describes a k3d cluster
@@ -280,7 +282,7 @@ type Cluster struct {
 	InitNode           *Node              // init server node
 	ExternalDatastore  *ExternalDatastore `yaml:"externalDatastore,omitempty" json:"externalDatastore,omitempty"`
 	KubeAPI            *ExposureOpts      `yaml:"kubeAPI" json:"kubeAPI,omitempty"`
-	ServerLoadBalancer *Node              `yaml:"serverLoadbalancer,omitempty" json:"serverLoadBalancer,omitempty"`
+	ServerLoadBalancer *Loadbalancer      `yaml:"serverLoadbalancer,omitempty" json:"serverLoadBalancer,omitempty"`
 	ImageVolume        string             `yaml:"imageVolume" json:"imageVolume,omitempty"`
 }
 
@@ -314,16 +316,6 @@ func (c *Cluster) AgentCountRunning() (int, int) {
 	return agentCount, agentsRunning
 }
 
-// HasLoadBalancer returns true if cluster has a loadbalancer node
-func (c *Cluster) HasLoadBalancer() bool {
-	for _, node := range c.Nodes {
-		if node.Role == LoadBalancerRole {
-			return true
-		}
-	}
-	return false
-}
-
 type NodeIP struct {
 	IP     netaddr.IP
 	Static bool
@@ -331,25 +323,27 @@ type NodeIP struct {
 
 // Node describes a k3d node
 type Node struct {
-	Name       string            `yaml:"name" json:"name,omitempty"`
-	Role       Role              `yaml:"role" json:"role,omitempty"`
-	Image      string            `yaml:"image" json:"image,omitempty"`
-	Volumes    []string          `yaml:"volumes" json:"volumes,omitempty"`
-	Env        []string          `yaml:"env" json:"env,omitempty"`
-	Cmd        []string          // filled automatically based on role
-	Args       []string          `yaml:"extraArgs" json:"extraArgs,omitempty"`
-	Ports      nat.PortMap       `yaml:"portMappings" json:"portMappings,omitempty"`
-	Restart    bool              `yaml:"restart" json:"restart,omitempty"`
-	Created    string            `yaml:"created" json:"created,omitempty"`
-	Labels     map[string]string // filled automatically
-	Networks   []string          // filled automatically
-	ExtraHosts []string          // filled automatically
-	ServerOpts ServerOpts        `yaml:"serverOpts" json:"serverOpts,omitempty"`
-	AgentOpts  AgentOpts         `yaml:"agentOpts" json:"agentOpts,omitempty"`
-	GPURequest string            // filled automatically
-	Memory     string            // filled automatically
-	State      NodeState         // filled automatically
-	IP         NodeIP            // filled automatically
+	Name          string            `yaml:"name" json:"name,omitempty"`
+	Role          Role              `yaml:"role" json:"role,omitempty"`
+	Image         string            `yaml:"image" json:"image,omitempty"`
+	Volumes       []string          `yaml:"volumes" json:"volumes,omitempty"`
+	Env           []string          `yaml:"env" json:"env,omitempty"`
+	Cmd           []string          // filled automatically based on role
+	Args          []string          `yaml:"extraArgs" json:"extraArgs,omitempty"`
+	Ports         nat.PortMap       `yaml:"portMappings" json:"portMappings,omitempty"`
+	Restart       bool              `yaml:"restart" json:"restart,omitempty"`
+	Created       string            `yaml:"created" json:"created,omitempty"`
+	RuntimeLabels map[string]string `yaml:"runtimeLabels" json:"runtimeLabels,omitempty"`
+	K3sNodeLabels map[string]string `yaml:"k3sNodeLabels" json:"k3sNodeLabels,omitempty"`
+	Networks      []string          // filled automatically
+	ExtraHosts    []string          // filled automatically
+	ServerOpts    ServerOpts        `yaml:"serverOpts" json:"serverOpts,omitempty"`
+	AgentOpts     AgentOpts         `yaml:"agentOpts" json:"agentOpts,omitempty"`
+	GPURequest    string            // filled automatically
+	Memory        string            // filled automatically
+	State         NodeState         // filled automatically
+	IP            NodeIP            // filled automatically -> refers solely to the cluster network
+	HookActions   []NodeHook        `yaml:"hooks" json:"hooks,omitempty"`
 }
 
 // ServerOpts describes some additional server role specific opts
@@ -427,4 +421,9 @@ type RegistryExternal struct {
 	Protocol string `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
 	Host     string `yaml:"host" json:"host"`
 	Port     string `yaml:"port" json:"port"`
+}
+
+type EnvironmentInfo struct {
+	HostGateway net.IP
+	RuntimeInfo runtimeTypes.RuntimeInfo
 }

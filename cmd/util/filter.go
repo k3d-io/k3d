@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
 // SplitFiltersFromFlag separates a flag's value from the node filter, if there is one
@@ -50,10 +50,10 @@ func SplitFiltersFromFlag(flag string) (string, []string, error) {
 			// Case 1.1: Escaped backslash
 			if strings.HasSuffix(it, "\\\\") {
 				it = strings.TrimSuffix(it, "\\")
-				log.Warnf("The part '%s' of the flag input '%s' ends with a double backslash, so we assume you want to escape the backslash before the '@'. That's the only time we do this.", it, flag)
+				l.Log().Warnf("The part '%s' of the flag input '%s' ends with a double backslash, so we assume you want to escape the backslash before the '@'. That's the only time we do this.", it, flag)
 			} else {
 				// Case 1.2: Unescaped backslash -> Escaping the '@' -> remove suffix and append it to buffer, followed by the escaped @ sign
-				log.Tracef("Item '%s' just before an '@' ends with '\\', so we assume it's escaping a literal '@'", it)
+				l.Log().Tracef("Item '%s' just before an '@' ends with '\\', so we assume it's escaping a literal '@'", it)
 				buffer += strings.TrimSuffix(it, "\\") + "@"
 				continue
 			}

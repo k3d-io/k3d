@@ -23,6 +23,8 @@ THE SOFTWARE.
 package docker
 
 import (
+	"os"
+	"strconv"
 	"testing"
 
 	"github.com/go-test/deep"
@@ -30,8 +32,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	"github.com/rancher/k3d/v4/pkg/types/fixes"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/types/fixes"
 )
 
 func TestTranslateNodeToContainer(t *testing.T) {
@@ -52,12 +54,15 @@ func TestTranslateNodeToContainer(t *testing.T) {
 				},
 			},
 		},
-		Restart:  true,
-		Labels:   map[string]string{k3d.LabelRole: string(k3d.ServerRole), "test_key_1": "test_val_1"},
-		Networks: []string{"mynet"},
+		Restart:       true,
+		RuntimeLabels: map[string]string{k3d.LabelRole: string(k3d.ServerRole), "test_key_1": "test_val_1"},
+		Networks:      []string{"mynet"},
 	}
 
 	init := true
+	if disableInit, err := strconv.ParseBool(os.Getenv("K3D_DEBUG_DISABLE_DOCKER_INIT")); err == nil && disableInit {
+		init = false
+	}
 
 	expectedRepresentation := &NodeInDocker{
 		ContainerConfig: container.Config{
@@ -95,8 +100,8 @@ func TestTranslateNodeToContainer(t *testing.T) {
 	}
 
 	// TODO: // FIXME: FixCgroupV2 - to be removed when fixed upstream
-	if fixes.FixCgroupV2Enabled() {
-		expectedRepresentation.ContainerConfig.Entrypoint = []string{"/bin/entrypoint.sh"}
+	if fixes.FixEnabledAny() {
+		expectedRepresentation.ContainerConfig.Entrypoint = []string{"/bin/k3d-entrypoint.sh"}
 	}
 
 	actualRepresentation, err := TranslateNodeToContainer(inputNode)

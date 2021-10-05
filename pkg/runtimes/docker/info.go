@@ -24,24 +24,23 @@ package docker
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
-	runtimeTypes "github.com/rancher/k3d/v4/pkg/runtimes/types"
-	log "github.com/sirupsen/logrus"
+	runtimeTypes "github.com/rancher/k3d/v5/pkg/runtimes/types"
 )
 
 func (d Docker) Info() (*runtimeTypes.RuntimeInfo, error) {
 	// create docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		log.Errorln("Failed to create docker client")
-		return nil, err
+		return nil, fmt.Errorf("failed to create docker client: %w", err)
 	}
 	defer docker.Close()
 
 	info, err := docker.Info(context.Background())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("docker failed to provide info output: %w", err)
 	}
 
 	runtimeInfo := runtimeTypes.RuntimeInfo{

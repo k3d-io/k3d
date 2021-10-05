@@ -27,8 +27,8 @@ import (
 	"testing"
 
 	"github.com/docker/go-connections/nat"
-	"github.com/rancher/k3d/v4/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 )
 
 func TestRegistryGenerateLocalRegistryHostingConfigMapYAML(t *testing.T) {

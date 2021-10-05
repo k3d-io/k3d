@@ -25,16 +25,20 @@ package docker
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 
+	"github.com/containerd/containerd/log"
 	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
-	runtimeErr "github.com/rancher/k3d/v4/pkg/runtimes/errors"
-	k3d "github.com/rancher/k3d/v4/pkg/types"
-	"github.com/rancher/k3d/v4/pkg/types/fixes"
-	log "github.com/sirupsen/logrus"
+	l "github.com/rancher/k3d/v5/pkg/logger"
+	runtimeErr "github.com/rancher/k3d/v5/pkg/runtimes/errors"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/types/fixes"
+	"inet.af/netaddr"
 
 	dockercliopts "github.com/docker/cli/opts"
 	dockerunits "github.com/docker/go-units"
@@ -42,10 +46,16 @@ import (
 
 // TranslateNodeToContainer translates a k3d node specification to a docker container representation
 func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
+	init := true
+	if disableInit, err := strconv.ParseBool(os.Getenv("K3D_DEBUG_DISABLE_DOCKER_INIT")); err == nil && disableInit {
+		l.Log().Traceln("docker-init disabled for all containers")
+		init = false
+	}
+
 	/* initialize everything that we need */
 	containerConfig := docker.Config{}
 	hostConfig := docker.HostConfig{
-		Init:       &[]bool{true}[0],
+		Init:       &init,
 		ExtraHosts: node.ExtraHosts,
 	}
 	networkingConfig := network.NetworkingConfig{}
@@ -56,10 +66,10 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 
 	/* Command & Arguments */
 	// FIXME: FixCgroupV2 - to be removed when fixed upstream
-	if fixes.FixCgroupV2Enabled() {
+	if fixes.FixEnabledAny() {
 		if node.Role == k3d.AgentRole || node.Role == k3d.ServerRole {
 			containerConfig.Entrypoint = []string{
-				"/bin/entrypoint.sh",
+				"/bin/k3d-entrypoint.sh",
 			}
 		}
 	}
@@ -73,7 +83,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	containerConfig.Env = node.Env
 
 	/* Labels */
-	containerConfig.Labels = node.Labels // has to include the role
+	containerConfig.Labels = node.RuntimeLabels // has to include the role
 
 	/* Auto-Restart */
 	if node.Restart {
@@ -145,8 +155,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	if len(node.Networks) > 0 {
 		netInfo, err := GetNetwork(context.Background(), node.Networks[0]) // FIXME: only considering first network here, as that's the one k3d creates for a cluster
 		if err != nil {
-			log.Warnln("Failed to get network information")
-			log.Warnln(err)
+			l.Log().Warnf("Failed to get network information: %v", err)
 		} else if netInfo.Driver == "host" {
 			hostConfig.NetworkMode = "host"
 		}
@@ -162,10 +171,10 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 // TranslateContainerToNode translates a docker container object into a k3d node representation
 func TranslateContainerToNode(cont *types.Container) (*k3d.Node, error) {
 	node := &k3d.Node{
-		Name:   strings.TrimPrefix(cont.Names[0], "/"), // container name with leading '/' cut off
-		Image:  cont.Image,
-		Labels: cont.Labels,
-		Role:   k3d.NodeRoles[cont.Labels[k3d.LabelRole]],
+		Name:          strings.TrimPrefix(cont.Names[0], "/"), // container name with leading '/' cut off
+		Image:         cont.Image,
+		RuntimeLabels: cont.Labels,
+		Role:          k3d.NodeRoles[cont.Labels[k3d.LabelRole]],
 		// TODO: all the rest
 	}
 	return node, nil
@@ -175,8 +184,8 @@ func TranslateContainerToNode(cont *types.Container) (*k3d.Node, error) {
 func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d.Node, error) {
 
 	// first, make sure, that it's actually a k3d managed container by checking if it has all the default labels
-	for k, v := range k3d.DefaultObjectLabels {
-		log.Tracef("TranslateContainerDetailsToNode: Checking for default object label %s=%s on container %s", k, v, containerDetails.Name)
+	for k, v := range k3d.DefaultRuntimeLabels {
+		l.Log().Tracef("TranslateContainerDetailsToNode: Checking for default object label %s=%s on container %s", k, v, containerDetails.Name)
 		found := false
 		for lk, lv := range containerDetails.Config.Labels {
 			if lk == k && lv == v {
@@ -185,7 +194,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 			}
 		}
 		if !found {
-			log.Debugf("Container %s is missing default label %s=%s in label set %+v", containerDetails.Name, k, v, containerDetails.Config.Labels)
+			l.Log().Debugf("Container %s is missing default label %s=%s in label set %+v", containerDetails.Name, k, v, containerDetails.Config.Labels)
 			return nil, runtimeErr.ErrRuntimeContainerUnknown
 		}
 	}
@@ -224,7 +233,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 	if serverIsInitLabel, ok := containerDetails.Config.Labels[k3d.LabelServerIsInit]; ok {
 		if serverIsInitLabel == "true" {
 			if !clusterInitFlagSet {
-				log.Errorf("Container %s has label %s=true, but the args do not contain the --cluster-init flag", containerDetails.Name, k3d.LabelServerIsInit)
+				l.Log().Errorf("Container %s has label %s=true, but the args do not contain the --cluster-init flag", containerDetails.Name, k3d.LabelServerIsInit)
 			} else {
 				serverOpts.IsInit = true
 			}
@@ -240,14 +249,6 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 			serverOpts.KubeAPI.Host = v
 		} else if k == k3d.LabelServerAPIPort {
 			serverOpts.KubeAPI.Binding.HostPort = v
-		}
-	}
-
-	// env vars: only copy K3S_* and K3D_* // FIXME: should we really do this? Might be unexpected, if user has e.g. HTTP_PROXY vars
-	env := []string{}
-	for _, envVar := range containerDetails.Config.Env {
-		if strings.HasPrefix(envVar, "K3D_") || strings.HasPrefix(envVar, "K3S_") {
-			env = append(env, envVar)
 		}
 	}
 
@@ -272,23 +273,59 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		memoryStr = ""
 	}
 
+	// IP
+	var nodeIP k3d.NodeIP
+	var clusterNet *network.EndpointSettings
+	if netLabel, ok := labels[k3d.LabelNetwork]; ok {
+		for netName, net := range containerDetails.NetworkSettings.Networks {
+			if netName == netLabel {
+				clusterNet = net
+			}
+		}
+	} else {
+		l.Log().Debugf("no netlabel present on container %s", containerDetails.Name)
+	}
+	if clusterNet != nil {
+		parsedIP, err := netaddr.ParseIP(clusterNet.IPAddress)
+		if err != nil {
+			if nodeState.Running && nodeState.Status != "restarting" { // if the container is not running or currently restarting, it won't have an IP, so we don't error in that case
+				return nil, fmt.Errorf("failed to parse IP '%s' for container '%s': %s\nStatus: %v\n%+v", clusterNet.IPAddress, containerDetails.Name, err, nodeState.Status, containerDetails.NetworkSettings)
+			} else {
+				log.L.Tracef("failed to parse IP '%s' for container '%s', likely because it's not running (or restarting): %v", clusterNet.IPAddress, containerDetails.Name, err)
+			}
+		}
+		isStaticIP := false
+		if staticIPLabel, ok := labels[k3d.LabelNodeStaticIP]; ok && staticIPLabel != "" {
+			isStaticIP = true
+		}
+		if !parsedIP.IsZero() {
+			nodeIP = k3d.NodeIP{
+				IP:     parsedIP,
+				Static: isStaticIP,
+			}
+		}
+	} else {
+		l.Log().Debugf("failed to get IP for container %s as we couldn't find the cluster network", containerDetails.Name)
+	}
+
 	node := &k3d.Node{
-		Name:       strings.TrimPrefix(containerDetails.Name, "/"), // container name with leading '/' cut off
-		Role:       k3d.NodeRoles[containerDetails.Config.Labels[k3d.LabelRole]],
-		Image:      containerDetails.Image,
-		Volumes:    containerDetails.HostConfig.Binds,
-		Env:        env,
-		Cmd:        containerDetails.Config.Cmd,
-		Args:       []string{}, // empty, since Cmd already contains flags
-		Ports:      containerDetails.HostConfig.PortBindings,
-		Restart:    restart,
-		Created:    containerDetails.Created,
-		Labels:     labels,
-		Networks:   orderedNetworks,
-		ServerOpts: serverOpts,
-		AgentOpts:  k3d.AgentOpts{},
-		State:      nodeState,
-		Memory:     memoryStr,
+		Name:          strings.TrimPrefix(containerDetails.Name, "/"), // container name with leading '/' cut off
+		Role:          k3d.NodeRoles[containerDetails.Config.Labels[k3d.LabelRole]],
+		Image:         containerDetails.Image,
+		Volumes:       containerDetails.HostConfig.Binds,
+		Env:           containerDetails.Config.Env,
+		Cmd:           containerDetails.Config.Cmd,
+		Args:          []string{}, // empty, since Cmd already contains flags
+		Ports:         containerDetails.HostConfig.PortBindings,
+		Restart:       restart,
+		Created:       containerDetails.Created,
+		RuntimeLabels: labels,
+		Networks:      orderedNetworks,
+		ServerOpts:    serverOpts,
+		AgentOpts:     k3d.AgentOpts{},
+		State:         nodeState,
+		Memory:        memoryStr,
+		IP:            nodeIP, // only valid for the cluster network
 	}
 	return node, nil
 }

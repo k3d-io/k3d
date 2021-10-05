@@ -1,4 +1,4 @@
-apiVersion: k3d.io/v1alpha2
+apiVersion: k3d.io/v1alpha3
 kind: Simple
 name: test
 servers: 3
@@ -6,9 +6,9 @@ agents: 2
 kubeAPI:
   hostIP: "0.0.0.0"
   hostPort: "6446"
-image: rancher/k3s:latest
+#image: rancher/k3s:latest
 volumes:
-  - volume: /my/path:/some/path
+  - volume: $HOME:/some/path
     nodeFilters:
       - all
 ports:
@@ -22,13 +22,9 @@ env:
   - envVar: bar=baz,bob
     nodeFilters:
       - all
-labels:
-  - label: foo=bar
-    nodeFilters:
-      - server[0]
-      - loadbalancer
 registries:
-  create: true
+  create:
+    name: registry.localhost
   use: []
   config: |
     mirrors:
@@ -43,9 +39,21 @@ options:
     disableLoadbalancer: false
     disableImageVolume: false
   k3s:
-    extraServerArgs:
-      - --tls-san=127.0.0.1
-    extraAgentArgs: []
+    extraArgs:
+      - arg: --tls-san=127.0.0.1
+        nodeFilters:
+          - server:*
+    nodeLabels:
+      - label: foo=bar
+        nodeFilters:
+          - server:0
+          - loadbalancer
   kubeconfig:
     updateDefaultKubeconfig: true
     switchCurrentContext: true
+  runtime:
+    labels:
+      - label: foo=bar
+        nodeFilters:
+          - server:0
+          - loadbalancer
