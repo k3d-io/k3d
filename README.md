@@ -35,9 +35,9 @@ k3d creates containerized k3s clusters. This means, that you can spin up a multi
 
 ## Releases
 
-**Note**: In May 2020 we upgraded from v1.7.x to **v3.0.0** after a complete rewrite of k3d!
-**Note**: In January 2021 we upgraded from v3.x.x to **v4.0.0** which includes some breaking changes!
-**Note**: In September 2021 we upgraded from v4.4.8 to **v5.0.0** which includes some breaking changes!
+**Note**: In May 2020 we upgraded from v1.7.x to **v3.0.0** after a complete rewrite of k3d!  
+**Note**: In January 2021 we upgraded from v3.x.x to **v4.0.0** which includes some breaking changes!  
+**Note**: In September 2021 we upgraded from v4.4.8 to **v5.0.0** which includes some breaking changes!  
 
 | Platform | Stage | Version | Release Date |  |
 |-----------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|---|
