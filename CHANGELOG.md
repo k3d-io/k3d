@@ -5,9 +5,13 @@
 This release contains a whole lot of new features, breaking changes as well as smaller fixes and improvements.
 The changelog shown here is likely not complete but gives a broad overview over the changes.
 For more details, please check the v5 milestone (<https://github.com/rancher/k3d/milestone/27>) or even the commit history.
-The docs have been updated, so you should also find the information you need there.
+The docs have been updated, so you should also find the information you need there, with more to come!
+
+The demo repository has also been updated to work with k3d v5: <https://github.com/iwilltry42/k3d-demo>.
 
 **Info**: <https://k3d.io> is now versioned, so you can checkout different versions of the documentation by using the dropdown menu in the page title bar!
+
+**Feedback welcome!**
 
 ### Breaking Changes
 
@@ -61,7 +65,7 @@ The docs have been updated, so you should also find the information you need the
   - new config path `options.k3s.extraArgs`
 - config file: environment variables (`$VAR`, `${VAR}` will be expanded unconditionally) (#643)
 - docker context support (#601, @developer-guy & #674)
-- New attempt in fixing DNS when using custom nameservers, e.g. on a company VPN: currently experimental, enable using the environment variable `K3D_FIX_DNS=1`
+- Feature flag using the environment variable `K3D_FIX_DNS` and setting it to a true value (e.g. `export K3D_FIX_DNS=1`) to forward DNS queries to your local machine, e.g. to use your local company DNS
 
 ### Misc
 
