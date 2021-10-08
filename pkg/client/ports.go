@@ -100,8 +100,9 @@ func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 
 	}
 
-	// print generated loadbalancer config
-	if l.Log().GetLevel() >= logrus.DebugLevel {
+	// print generated loadbalancer config if exists
+	// (avoid segmentation fault if loadbalancer is disabled)
+	if l.Log().GetLevel() >= logrus.DebugLevel && cluster.ServerLoadBalancer != nil {
 		yamlized, err := yaml.Marshal(cluster.ServerLoadBalancer.Config)
 		if err != nil {
 			l.Log().Errorf("error printing loadbalancer config: %v", err)
