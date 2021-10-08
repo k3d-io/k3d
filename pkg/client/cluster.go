@@ -994,11 +994,15 @@ func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clu
 				break
 			} else {
 				msg := fmt.Sprintf("error patching the CoreDNS ConfigMap to include entry '%s': %+v", hostsEntry, err)
-				readlogs, err := ioutil.ReadAll(logreader)
-				if err != nil {
-					l.Log().Debugf("error reading the logs from failed CoreDNS patch exec process in node %s: %v", node.Name, err)
+				if logreader != nil {
+					readlogs, err := ioutil.ReadAll(logreader)
+					if err != nil {
+						l.Log().Debugf("error reading the logs from failed CoreDNS patch exec process in node %s: %v", node.Name, err)
+					} else {
+						msg += fmt.Sprintf("\nLogs: %s", string(readlogs))
+					}
 				} else {
-					msg += fmt.Sprintf("\nLogs: %s", string(readlogs))
+					l.Log().Debugf("no logreader returned for exec process")
 				}
 				l.Log().Debugln(msg)
 			}
