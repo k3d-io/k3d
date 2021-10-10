@@ -104,7 +104,7 @@ k3d cluster create \
 #### Create a customized k3d-managed registry
 
 1. `#!bash k3d registry create myregistry.localhost --port 12345` creates a new registry called `k3d-myregistry.localhost` (could be used with automatic resolution of `*.localhost`, see next section - also, **note the `k3d-` prefix** that k3d adds to all resources it creates)
-2. `#!bash k3d cluster create newcluster --registry-use k3d-myregistry.localhost:12345` (make sure you use the **`k3d-` prefix** here) creates a new cluster set up to us that registry
+2. `#!bash k3d cluster create newcluster --registry-use k3d-myregistry.localhost:12345` (make sure you use the **`k3d-` prefix** here) creates a new cluster set up to use that registry
 3. continue with step 3 and 4 from the last section for testing
 
 <!-- Admonition to describe usage of a non-k3d-managed registry -->
