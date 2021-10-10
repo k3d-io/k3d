@@ -27,6 +27,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"sort"
 	"strconv"
 	"time"
@@ -934,19 +935,30 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	}
 
 	/*
-	 * Additional Cluster Preparation
+	 * Additional Cluster Preparation (post start)
 	 */
+
+	postStartErrgrp, postStartErrgrpCtx := errgroup.WithContext(ctx)
 
 	/*** DNS ***/
 
-	// add /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
-	if err := prepInjectHostIP(ctx, runtime, cluster, &clusterStartOpts); err != nil {
-		return fmt.Errorf("failed to inject host IP: %w", err)
-	}
+	// add host.k3d.internal record to /etc/hosts in all nodes
+	postStartErrgrp.Go(func() error {
+		return prepInjectHostIP(postStartErrgrpCtx, runtime, cluster, &clusterStartOpts)
+	})
 
-	// create host records in CoreDNS for external registries
-	if err := prepCoreDNSInjectNetworkMembers(ctx, runtime, cluster); err != nil {
-		return fmt.Errorf("failed to patch CoreDNS with network members: %w", err)
+	// add host.k3d.internal record to the CoreDNS Configmap
+	postStartErrgrp.Go(func() error {
+		return corednsAddHost(postStartErrgrpCtx, runtime, cluster, clusterStartOpts.EnvironmentInfo.HostGateway.String(), k3d.DefaultK3dInternalHostRecord)
+	})
+
+	// add records for other containers in the cluster network to the CoreDNS configmap (e.g. useful for using registries from within Pods inside the cluster)
+	postStartErrgrp.Go(func() error {
+		return prepCoreDNSInjectNetworkMembers(postStartErrgrpCtx, runtime, cluster)
+	})
+
+	if err := postStartErrgrp.Wait(); err != nil {
+		return fmt.Errorf("error during post-start cluster preparation: %w", err)
 	}
 
 	return nil
@@ -983,33 +995,43 @@ func SortClusters(clusters []*k3d.Cluster) []*k3d.Cluster {
 
 // corednsAddHost adds a host entry to the CoreDNS configmap if it doesn't exist (a host entry is a single line of the form "IP HOST")
 func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, ip string, name string) error {
+	retries := 3
+	if v, ok := os.LookupEnv("K3D_DEBUG_COREDNS_RETRIES"); ok && v != "" {
+		if r, err := strconv.Atoi(v); err != nil {
+			retries = r
+		}
+	}
 	hostsEntry := fmt.Sprintf("%s %s", ip, name)
 	patchCmd := `patch=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s` + name + `$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | busybox xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$patch"`
 	successInjectCoreDNSEntry := false
+nodeLoop:
 	for _, node := range cluster.Nodes {
 		if node.Role == k3d.AgentRole || node.Role == k3d.ServerRole {
-			logreader, err := runtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", patchCmd})
-			if err == nil {
-				successInjectCoreDNSEntry = true
-				break
-			} else {
-				msg := fmt.Sprintf("error patching the CoreDNS ConfigMap to include entry '%s': %+v", hostsEntry, err)
-				if logreader != nil {
-					readlogs, err := ioutil.ReadAll(logreader)
-					if err != nil {
-						l.Log().Debugf("error reading the logs from failed CoreDNS patch exec process in node %s: %v", node.Name, err)
-					} else {
-						msg += fmt.Sprintf("\nLogs: %s", string(readlogs))
-					}
+			for i := 0; i < retries; i++ {
+				logreader, err := runtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", patchCmd})
+				if err == nil {
+					successInjectCoreDNSEntry = true
+					break nodeLoop
 				} else {
-					l.Log().Debugf("no logreader returned for exec process")
+					msg := fmt.Sprintf("(try %d/%d) error patching the CoreDNS ConfigMap to include entry '%s': %+v", i, retries, hostsEntry, err)
+					if logreader != nil {
+						readlogs, err := ioutil.ReadAll(logreader)
+						if err != nil {
+							l.Log().Debugf("(try %d/%d) error reading the logs from failed CoreDNS patch exec process in node %s: %v", i, retries, node.Name, err)
+						} else {
+							msg += fmt.Sprintf("\nLogs: %s", string(readlogs))
+						}
+					} else {
+						l.Log().Debugf("(try %d/%d) error reading the logs from failed CoreDNS patch exec process in node %s: no logreader returned for exec process", i, retries, node.Name)
+					}
+					l.Log().Debugln(msg)
+					time.Sleep(1 * time.Second)
 				}
-				l.Log().Debugln(msg)
 			}
 		}
 	}
 	if !successInjectCoreDNSEntry {
-		return fmt.Errorf("Failed to patch CoreDNS ConfigMap to include entry '%s' (see debug logs)", hostsEntry)
+		return fmt.Errorf("failed to patch CoreDNS ConfigMap to include entry '%s' (%d tries, see debug logs)", hostsEntry, retries)
 	}
 	return nil
 }
@@ -1023,7 +1045,7 @@ func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.C
 
 	hostIP := clusterStartOpts.EnvironmentInfo.HostGateway
 	hostsEntry := fmt.Sprintf("%s %s", hostIP.String(), k3d.DefaultK3dInternalHostRecord)
-	l.Log().Infof("Injecting record '%s'...", hostsEntry)
+	l.Log().Infof("Injecting '%s' into /etc/hosts of all nodes...", hostsEntry)
 
 	// entry in /etc/hosts
 	errgrp, errgrpctx := errgroup.WithContext(ctx)
@@ -1038,24 +1060,19 @@ func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.C
 	}
 	l.Log().Debugf("Successfully added host record \"%s\" to /etc/hosts in all nodes", hostsEntry)
 
-	err := corednsAddHost(ctx, runtime, cluster, hostIP.String(), k3d.DefaultK3dInternalHostRecord)
-	if err != nil {
-		return fmt.Errorf("failed to inject host record \"%s\" into CoreDNS ConfigMap: %w", hostsEntry, err)
-	}
-	l.Log().Debugf("Successfully added host record \"%s\" to the CoreDNS ConfigMap ", hostsEntry)
 	return nil
 }
 
 func prepCoreDNSInjectNetworkMembers(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
 	net, err := runtime.GetNetwork(ctx, &cluster.Network)
 	if err != nil {
-		return fmt.Errorf("failed to get cluster network %s to inject host records into CoreDNS: %v", cluster.Network.Name, err)
+		return fmt.Errorf("failed to get cluster network %s to inject host records into CoreDNS: %w", cluster.Network.Name, err)
 	}
-	l.Log().Debugf("Adding %d network members to coredns", len(net.Members))
+	l.Log().Debugf("Adding %d network members to coredns...", len(net.Members))
 	for _, member := range net.Members {
 		hostsEntry := fmt.Sprintf("%s %s", member.IP.String(), member.Name)
 		if err := corednsAddHost(ctx, runtime, cluster, member.IP.String(), member.Name); err != nil {
-			return fmt.Errorf("failed to add host entry \"%s\" into CoreDNS: %v", hostsEntry, err)
+			return fmt.Errorf("failed to add host entry \"%s\" into CoreDNS: %w", hostsEntry, err)
 		}
 	}
 	return nil
