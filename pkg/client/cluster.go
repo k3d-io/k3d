@@ -997,6 +997,7 @@ func SortClusters(clusters []*k3d.Cluster) []*k3d.Cluster {
 func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, ip string, name string) error {
 	retries := 3
 	if v, ok := os.LookupEnv("K3D_DEBUG_COREDNS_RETRIES"); ok && v != "" {
+		l.Log().Debugf("Running with K3D_DEBUG_COREDNS_RETRIES=%s", v)
 		if r, err := strconv.Atoi(v); err != nil {
 			retries = r
 		}
@@ -1004,35 +1005,42 @@ func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clu
 	hostsEntry := fmt.Sprintf("%s %s", ip, name)
 	patchCmd := `patch=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s` + name + `$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | busybox xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$patch"`
 	successInjectCoreDNSEntry := false
-nodeLoop:
-	for _, node := range cluster.Nodes {
-		if node.Role == k3d.AgentRole || node.Role == k3d.ServerRole {
-			for i := 0; i < retries; i++ {
-				logreader, err := runtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", patchCmd})
-				if err == nil {
-					successInjectCoreDNSEntry = true
-					break nodeLoop
+
+	// select any server node
+	var node *k3d.Node
+	for _, n := range cluster.Nodes {
+		if n.Role == k3d.ServerRole {
+			node = n
+		}
+	}
+
+	// try 3 (or K3D_DEBUG_COREDNS_RETRIES value) times, as e.g. on cluster startup it may take some time for the Configmap to be available and the server to be responsive
+	for i := 0; i < retries; i++ {
+		l.Log().Infof("Running CoreDNS patch in node %s (try %d/%d)...", node.Name, i, retries)
+		logreader, err := runtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", patchCmd})
+		if err == nil {
+			successInjectCoreDNSEntry = true
+			break
+		} else {
+			msg := fmt.Sprintf("(try %d/%d) error patching the CoreDNS ConfigMap to include entry '%s': %+v", i, retries, hostsEntry, err)
+			if logreader != nil {
+				readlogs, err := ioutil.ReadAll(logreader)
+				if err != nil {
+					l.Log().Debugf("(try %d/%d) error reading the logs from failed CoreDNS patch exec process in node %s: %v", i, retries, node.Name, err)
 				} else {
-					msg := fmt.Sprintf("(try %d/%d) error patching the CoreDNS ConfigMap to include entry '%s': %+v", i, retries, hostsEntry, err)
-					if logreader != nil {
-						readlogs, err := ioutil.ReadAll(logreader)
-						if err != nil {
-							l.Log().Debugf("(try %d/%d) error reading the logs from failed CoreDNS patch exec process in node %s: %v", i, retries, node.Name, err)
-						} else {
-							msg += fmt.Sprintf("\nLogs: %s", string(readlogs))
-						}
-					} else {
-						l.Log().Debugf("(try %d/%d) error reading the logs from failed CoreDNS patch exec process in node %s: no logreader returned for exec process", i, retries, node.Name)
-					}
-					l.Log().Debugln(msg)
-					time.Sleep(1 * time.Second)
+					msg += fmt.Sprintf("\nLogs: %s", string(readlogs))
 				}
+			} else {
+				l.Log().Debugf("(try %d/%d) error reading the logs from failed CoreDNS patch exec process in node %s: no logreader returned for exec process", i, retries, node.Name)
 			}
+			l.Log().Debugln(msg)
+			time.Sleep(1 * time.Second)
 		}
 	}
 	if !successInjectCoreDNSEntry {
 		return fmt.Errorf("failed to patch CoreDNS ConfigMap to include entry '%s' (%d tries, see debug logs)", hostsEntry, retries)
 	}
+	l.Log().Debugf("Successfully patched CoreDNS Configmap with record '%s'", hostsEntry)
 	return nil
 }
 

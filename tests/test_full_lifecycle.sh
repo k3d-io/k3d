@@ -77,7 +77,8 @@ wait_for_pod_running_by_label "k8s-app=kube-dns" "kube-system"
 sleep 5
 
 # 6. test host.k3d.internal
-info "Checking DNS Lookup for host.k3d.internal"
+info "Checking DNS Lookup for host.k3d.internal..."
+kubectl describe cm coredns -n kube-system | grep "host.k3d.internal" > /dev/null 2>&1 || failed "Couldn't find host.k3d.internal in CoreDNS configmap"
 wait_for_pod_exec "testimage" "nslookup host.k3d.internal" 15 || failed "DNS Lookup for host.k3d.internal failed"
 
 # Cleanup
