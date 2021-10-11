@@ -1042,12 +1042,12 @@
 <h2 id="2-create-the-cluster-without-flannel-and-with-calico">2. Create the cluster without flannel and with calico<a class="headerlink" href="#2-create-the-cluster-without-flannel-and-with-calico" title="Permanent link">&para;</a></h2>
 <p>On the k3s cluster creation :</p>
 <ul>
-<li>add the flag <code>--flannel-backend=none</code>. For this, on k3d you need to forward this flag to k3s with the option <code>--k3s-server-arg</code>.</li>
+<li>add the flag <code>--flannel-backend=none</code>. For this, on k3d you need to forward this flag to k3s with the option <code>--k3s-arg</code>.</li>
 <li>mount (<code>--volume</code>) the calico descriptor in the auto deploy manifest directory of k3s <code>/var/lib/rancher/k3s/server/manifests/</code></li>
 </ul>
 <p>So the command of the cluster creation is (when you are at root of the k3d repository)</p>
 <div class="highlight"><pre><span></span><code>k3d cluster create <span class="s2">&quot;</span><span class="si">${</span><span class="nv">clustername</span><span class="si">}</span><span class="s2">&quot;</span> <span class="se">\</span>
-  --k3s-server-arg <span class="s1">&#39;--flannel-backend=none&#39;</span> <span class="se">\</span>
+  --k3s-arg <span class="s1">&#39;--flannel-backend=none@server:*&#39;</span> <span class="se">\</span>
   --volume <span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/docs/usage/guides/calico.yaml:/var/lib/rancher/k3s/server/manifests/calico.yaml&quot;</span>
 </code></pre></div>
 <p>In this example :</p>
@@ -1098,7 +1098,7 @@ coredns-8655855d6-cxtnr                    <span class="m">1</span>/1     Runnin
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">September 17, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 11, 2021</span>
       
     
   </small>

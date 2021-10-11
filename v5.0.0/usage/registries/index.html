@@ -1258,7 +1258,7 @@ For example, if we mount the CA file in <code>/etc/ssl/certs/my-company-root.pem
 <h4 id="create-a-customized-k3d-managed-registry">Create a customized k3d-managed registry<a class="headerlink" href="#create-a-customized-k3d-managed-registry" title="Permanent link">&para;</a></h4>
 <ol>
 <li><code class="highlight">k3d registry create myregistry.localhost --port <span class="m">12345</span></code> creates a new registry called <code>k3d-myregistry.localhost</code> (could be used with automatic resolution of <code>*.localhost</code>, see next section - also, <strong>note the <code>k3d-</code> prefix</strong> that k3d adds to all resources it creates)</li>
-<li><code class="highlight">k3d cluster create newcluster --registry-use k3d-myregistry.localhost:12345</code> (make sure you use the <strong><code>k3d-</code> prefix</strong> here) creates a new cluster set up to us that registry</li>
+<li><code class="highlight">k3d cluster create newcluster --registry-use k3d-myregistry.localhost:12345</code> (make sure you use the <strong><code>k3d-</code> prefix</strong> here) creates a new cluster set up to use that registry</li>
 <li>continue with step 3 and 4 from the last section for testing</li>
 </ol>
 <!-- Admonition to describe usage of a non-k3d-managed registry -->
@@ -1336,7 +1336,7 @@ docker push k3d-registry.localhost:5000/nginx:latest
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">September 17, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 11, 2021</span>
       
     
   </small>

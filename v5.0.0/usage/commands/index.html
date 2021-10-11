@@ -960,8 +960,7 @@
       -e, --env  <span class="c1"># add environment variables to the nodes (quoted string, format: &#39;KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]&#39;, use flag multiple times)</span>
       --gpus  <span class="c1"># [from docker CLI] add GPU devices to the node containers (string, e.g. &#39;all&#39;)</span>
       -i, --image  <span class="c1"># specify which k3s image should be used for the nodes (string, default: &#39;docker.io/rancher/k3s:v1.20.0-k3s2&#39;, tag changes per build)</span>
-      --k3s-agent-arg  <span class="c1"># add additional arguments to the k3s agent (quoted string, use flag multiple times) (see https://rancher.com/docs/k3s/latest/en/installation/install-options/agent-config/#k3s-agent-cli-help)</span>
-      --k3s-server-arg  <span class="c1"># add additional arguments to the k3s server (quoted string, use flag multiple times) (see https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/#k3s-server-cli-help)</span>
+      --k3s-arg  <span class="c1"># add additional arguments to the k3s server/agent (quoted string, use flag multiple times) (see https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/#k3s-server-cli-help &amp; https://rancher.com/docs/k3s/latest/en/installation/install-options/agent-config/#k3s-agent-cli-help)</span>
       --kubeconfig-switch-context  <span class="c1"># (implies --kubeconfig-update-default) automatically sets the current-context of your default kubeconfig to the new cluster&#39;s context (default: true)</span>
       --kubeconfig-update-default  <span class="c1"># enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets &#39;--wait=true&#39;) (default: true)</span>
       -l, --label  <span class="c1"># add (docker) labels to the node containers (format: &#39;KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]&#39;, use flag multiple times)</span>
@@ -1044,7 +1043,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">March 30, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 11, 2021</span>
       
     
   </small>

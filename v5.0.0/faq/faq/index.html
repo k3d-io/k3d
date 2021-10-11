@@ -1302,8 +1302,8 @@
 <li>
 <p>change the kubelet&rsquo;s eviction thresholds upon cluster creation:</p>
 <div class="highlight"><pre><span></span><code>k3d cluster create <span class="se">\</span>
-  --k3s-agent-arg <span class="s1">&#39;--kubelet-arg=eviction-hard=imagefs.available&lt;1%,nodefs.available&lt;1%&#39;</span> <span class="se">\</span>
-  --k3s-agent-arg <span class="s1">&#39;--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%&#39;</span>
+  --k3s-arg <span class="s1">&#39;--kubelet-arg=eviction-hard=imagefs.available&lt;1%,nodefs.available&lt;1%@agent:*&#39;</span> <span class="se">\</span>
+  --k3s-arg <span class="s1">&#39;--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@agent:*&#39;</span>
 </code></pre></div>
 </li>
 </ul>
@@ -1323,7 +1323,7 @@
 <ul>
 <li>The Problem: Passing a feature flag to the Kubernetes API Server running inside k3s.</li>
 <li>Example: you want to enable the EphemeralContainers feature flag in Kubernetes</li>
-<li>Solution: <code class="highlight">k3d cluster create --k3s-server-arg <span class="s1">&#39;--kube-apiserver-arg=feature-gates=EphemeralContainers=true&#39;</span></code><ul>
+<li>Solution: <code class="highlight">k3d cluster create --k3s-arg <span class="s1">&#39;--kube-apiserver-arg=feature-gates=EphemeralContainers=true@server:*&#39;</span></code><ul>
 <li><strong>Note</strong>: Be aware of where the flags require dashes (<code>--</code>) and where not.<ul>
 <li>the k3s flag (<code>--kube-apiserver-arg</code>) has the dashes</li>
 <li>the kube-apiserver flag <code>feature-gates</code> doesn&rsquo;t have them (k3s adds them internally)</li>
@@ -1336,10 +1336,10 @@
 <li>
 <p>Second example:</p>
 <div class="highlight"><pre><span></span><code>k3d cluster create k3d-one <span class="se">\</span>
-  --k3s-server-arg --cluster-cidr<span class="o">=</span><span class="s2">&quot;10.118.0.0/17&quot;</span> <span class="se">\</span>
-  --k3s-server-arg --service-cidr<span class="o">=</span><span class="s2">&quot;10.118.128.0/17&quot;</span> <span class="se">\</span>
-  --k3s-server-arg --disable<span class="o">=</span>servicelb <span class="se">\</span>
-  --k3s-server-arg --disable<span class="o">=</span>traefik <span class="se">\</span>
+  --k3s-arg <span class="s2">&quot;--cluster-cidr=10.118.0.0/17@server:*&quot;</span> <span class="se">\</span>
+  --k3s-arg <span class="s2">&quot;--service-cidr=10.118.128.0/17@server:*&quot;</span> <span class="se">\</span>
+  --k3s-arg <span class="s2">&quot;--disable=servicelb@server:*&quot;</span> <span class="se">\</span>
+  --k3s-arg <span class="s2">&quot;--disable=traefik@server:*&quot;</span> <span class="se">\</span>
   --verbose
 </code></pre></div>
 <ul>
@@ -1389,8 +1389,8 @@ Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables t
 <li>
 <p>Workaround: as a workaround, we can tell <code>kube-proxy</code> to not even try to set this value:</p>
 <div class="highlight"><pre><span></span><code>k3d cluster create <span class="se">\</span>
-  --k3s-server-arg <span class="s2">&quot;--kube-proxy-arg=conntrack-max-per-core=0&quot;</span> <span class="se">\</span>
-  --k3s-agent-arg <span class="s2">&quot;--kube-proxy-arg=conntrack-max-per-core=0&quot;</span> <span class="se">\</span>
+  --k3s-arg <span class="s2">&quot;--kube-proxy-arg=conntrack-max-per-core=0@server:*&quot;</span> <span class="se">\</span>
+  --k3s-arg <span class="s2">&quot;--kube-proxy-arg=conntrack-max-per-core=0@agent:*&quot;</span> <span class="se">\</span>
   --image rancher/k3s:v1.20.6-k3s
 </code></pre></div>
 </li>
@@ -1448,7 +1448,7 @@ c) authenticate containerd inside k3s/k3d to use your DockerHub user  </p>
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">September 17, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 11, 2021</span>
       
     
   </small>
