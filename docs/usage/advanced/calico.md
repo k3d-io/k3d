@@ -20,14 +20,14 @@ Or you can directly use this [calico.yaml](calico.yaml) manifest
 
 On the k3s cluster creation :
 
-- add the flag `--flannel-backend=none`. For this, on k3d you need to forward this flag to k3s with the option `--k3s-server-arg`.
+- add the flag `--flannel-backend=none`. For this, on k3d you need to forward this flag to k3s with the option `--k3s-arg`.
 - mount (`--volume`) the calico descriptor in the auto deploy manifest directory of k3s `/var/lib/rancher/k3s/server/manifests/`
 
 So the command of the cluster creation is (when you are at root of the k3d repository)
 
 ```bash
 k3d cluster create "${clustername}" \
-  --k3s-server-arg '--flannel-backend=none' \
+  --k3s-arg '--flannel-backend=none@server:*' \
   --volume "$(pwd)/docs/usage/guides/calico.yaml:/var/lib/rancher/k3s/server/manifests/calico.yaml"
 ```
 

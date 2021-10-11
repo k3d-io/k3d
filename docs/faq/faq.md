@@ -28,8 +28,8 @@
 
       ```bash
       k3d cluster create \
-        --k3s-agent-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%' \
-        --k3s-agent-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%'
+        --k3s-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%@agent:*' \
+        --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@agent:*'
       ```
 
 ## Restarting a multi-server cluster or the initializing server node fails
@@ -44,7 +44,7 @@
 
 - The Problem: Passing a feature flag to the Kubernetes API Server running inside k3s.
 - Example: you want to enable the EphemeralContainers feature flag in Kubernetes
-- Solution: `#!bash k3d cluster create --k3s-server-arg '--kube-apiserver-arg=feature-gates=EphemeralContainers=true'`
+- Solution: `#!bash k3d cluster create --k3s-arg '--kube-apiserver-arg=feature-gates=EphemeralContainers=true@server:*'`
   - **Note**: Be aware of where the flags require dashes (`--`) and where not.
     - the k3s flag (`--kube-apiserver-arg`) has the dashes
     - the kube-apiserver flag `feature-gates` doesn't have them (k3s adds them internally)
@@ -53,10 +53,10 @@
 
   ```bash
   k3d cluster create k3d-one \
-    --k3s-server-arg --cluster-cidr="10.118.0.0/17" \
-    --k3s-server-arg --service-cidr="10.118.128.0/17" \
-    --k3s-server-arg --disable=servicelb \
-    --k3s-server-arg --disable=traefik \
+    --k3s-arg "--cluster-cidr=10.118.0.0/17@server:*" \
+    --k3s-arg "--service-cidr=10.118.128.0/17@server:*" \
+    --k3s-arg "--disable=servicelb@server:*" \
+    --k3s-arg "--disable=traefik@server:*" \
     --verbose
   ```
 
@@ -105,8 +105,8 @@ Some can be fixed by passing the `HTTP_PROXY` environment variables to k3d, some
 
   ```bash
   k3d cluster create \
-    --k3s-server-arg "--kube-proxy-arg=conntrack-max-per-core=0" \
-    --k3s-agent-arg "--kube-proxy-arg=conntrack-max-per-core=0" \
+    --k3s-arg "--kube-proxy-arg=conntrack-max-per-core=0@server:*" \
+    --k3s-arg "--kube-proxy-arg=conntrack-max-per-core=0@agent:*" \
     --image rancher/k3s:v1.20.6-k3s
   ```
 
