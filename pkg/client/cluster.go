@@ -947,13 +947,14 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		return prepInjectHostIP(postStartErrgrpCtx, runtime, cluster, &clusterStartOpts)
 	})
 
-	// add host.k3d.internal record to the CoreDNS Configmap
 	postStartErrgrp.Go(func() error {
-		return corednsAddHost(postStartErrgrpCtx, runtime, cluster, clusterStartOpts.EnvironmentInfo.HostGateway.String(), k3d.DefaultK3dInternalHostRecord)
-	})
+		// add host.k3d.internal record to the CoreDNS Configmap
+		l.Log().Infoln("Injecting record for host.k3d.internal into CoreDNS configmap...")
+		if err := corednsAddHost(postStartErrgrpCtx, runtime, cluster, clusterStartOpts.EnvironmentInfo.HostGateway.String(), k3d.DefaultK3dInternalHostRecord); err != nil {
+			return err
+		}
 
-	// add records for other containers in the cluster network to the CoreDNS configmap (e.g. useful for using registries from within Pods inside the cluster)
-	postStartErrgrp.Go(func() error {
+		// add records for other containers in the cluster network to the CoreDNS configmap (e.g. useful for using registries from within Pods inside the cluster)
 		return prepCoreDNSInjectNetworkMembers(postStartErrgrpCtx, runtime, cluster)
 	})
 
@@ -998,13 +999,12 @@ func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clu
 	retries := 3
 	if v, ok := os.LookupEnv("K3D_DEBUG_COREDNS_RETRIES"); ok && v != "" {
 		l.Log().Debugf("Running with K3D_DEBUG_COREDNS_RETRIES=%s", v)
-		if r, err := strconv.Atoi(v); err != nil {
+		if r, err := strconv.Atoi(v); err == nil {
 			retries = r
+		} else {
+			return fmt.Errorf("Invalid value set for env var K3D_DEBUG_COREDNS_RETRIES (%s): %w", v, err)
 		}
 	}
-	hostsEntry := fmt.Sprintf("%s %s", ip, name)
-	patchCmd := `patch=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s` + name + `$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | busybox xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$patch"`
-	successInjectCoreDNSEntry := false
 
 	// select any server node
 	var node *k3d.Node
@@ -1014,9 +1014,13 @@ func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clu
 		}
 	}
 
+	hostsEntry := fmt.Sprintf("%s %s", ip, name)
+	patchCmd := `patch=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s` + name + `$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | busybox xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$patch"`
+	successInjectCoreDNSEntry := false
+
 	// try 3 (or K3D_DEBUG_COREDNS_RETRIES value) times, as e.g. on cluster startup it may take some time for the Configmap to be available and the server to be responsive
 	for i := 0; i < retries; i++ {
-		l.Log().Infof("Running CoreDNS patch in node %s (try %d/%d)...", node.Name, i, retries)
+		l.Log().Debugf("Running CoreDNS patch in node %s to add %s (try %d/%d)...", node.Name, hostsEntry, i, retries)
 		logreader, err := runtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", patchCmd})
 		if err == nil {
 			successInjectCoreDNSEntry = true
@@ -1076,7 +1080,7 @@ func prepCoreDNSInjectNetworkMembers(ctx context.Context, runtime k3drt.Runtime,
 	if err != nil {
 		return fmt.Errorf("failed to get cluster network %s to inject host records into CoreDNS: %w", cluster.Network.Name, err)
 	}
-	l.Log().Debugf("Adding %d network members to coredns...", len(net.Members))
+	l.Log().Debugf("Adding %d network members to CoreDNS...", len(net.Members))
 	for _, member := range net.Members {
 		hostsEntry := fmt.Sprintf("%s %s", member.IP.String(), member.Name)
 		if err := corednsAddHost(ctx, runtime, cluster, member.IP.String(), member.Name); err != nil {
