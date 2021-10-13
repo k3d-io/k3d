@@ -94,36 +94,36 @@ type SimpleConfigOptionsKubeconfig struct {
 }
 
 type SimpleConfigOptions struct {
-	K3dOptions        SimpleConfigOptionsK3d        `mapstructure:"k3d" yaml:"k3d"`
-	K3sOptions        SimpleConfigOptionsK3s        `mapstructure:"k3s" yaml:"k3s"`
-	KubeconfigOptions SimpleConfigOptionsKubeconfig `mapstructure:"kubeconfig" yaml:"kubeconfig"`
-	Runtime           SimpleConfigOptionsRuntime    `mapstructure:"runtime" yaml:"runtime"`
+	K3dOptions        SimpleConfigOptionsK3d        `mapstructure:"k3d" yaml:"k3d" json:"k3d"`
+	K3sOptions        SimpleConfigOptionsK3s        `mapstructure:"k3s" yaml:"k3s" json:"k3d"`
+	KubeconfigOptions SimpleConfigOptionsKubeconfig `mapstructure:"kubeconfig" yaml:"kubeconfig" json:"kubeconfig"`
+	Runtime           SimpleConfigOptionsRuntime    `mapstructure:"runtime" yaml:"runtime" json:"runtime"`
 }
 
 type SimpleConfigOptionsRuntime struct {
-	GPURequest    string                 `mapstructure:"gpuRequest" yaml:"gpuRequest"`
-	ServersMemory string                 `mapstructure:"serversMemory" yaml:"serversMemory"`
-	AgentsMemory  string                 `mapstructure:"agentsMemory" yaml:"agentsMemory"`
-	Labels        []LabelWithNodeFilters `mapstructure:"labels" yaml:"labels"`
+	GPURequest    string                 `mapstructure:"gpuRequest" yaml:"gpuRequest" json:"gpuRequest"`
+	ServersMemory string                 `mapstructure:"serversMemory" yaml:"serversMemory" json:"serversMemory"`
+	AgentsMemory  string                 `mapstructure:"agentsMemory" yaml:"agentsMemory" json:"agentsMemory"`
+	Labels        []LabelWithNodeFilters `mapstructure:"labels" yaml:"labels" json:"labels"`
 }
 
 type SimpleConfigOptionsK3d struct {
-	Wait                bool                               `mapstructure:"wait" yaml:"wait"`
-	Timeout             time.Duration                      `mapstructure:"timeout" yaml:"timeout"`
-	DisableLoadbalancer bool                               `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer"`
-	DisableImageVolume  bool                               `mapstructure:"disableImageVolume" yaml:"disableImageVolume"`
-	NoRollback          bool                               `mapstructure:"disableRollback" yaml:"disableRollback"`
-	NodeHookActions     []k3d.NodeHookAction               `mapstructure:"nodeHookActions" yaml:"nodeHookActions,omitempty"`
-	Loadbalancer        SimpleConfigOptionsK3dLoadbalancer `mapstructure:"loadbalancer" yaml:"loadbalancer,omitempty"`
+	Wait                bool                               `mapstructure:"wait" yaml:"wait" json:"wait"`
+	Timeout             time.Duration                      `mapstructure:"timeout" yaml:"timeout" json:"timeout"`
+	DisableLoadbalancer bool                               `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer" json:"disableLoadbalancer"`
+	DisableImageVolume  bool                               `mapstructure:"disableImageVolume" yaml:"disableImageVolume" json:"disableImageVolume"`
+	NoRollback          bool                               `mapstructure:"disableRollback" yaml:"disableRollback" json:"disableRollback"`
+	NodeHookActions     []k3d.NodeHookAction               `mapstructure:"nodeHookActions" yaml:"nodeHookActions,omitempty" json:"nodeHookActions,omitempty"`
+	Loadbalancer        SimpleConfigOptionsK3dLoadbalancer `mapstructure:"loadbalancer" yaml:"loadbalancer,omitempty" json:"loadbalancer,omitempty"`
 }
 
 type SimpleConfigOptionsK3dLoadbalancer struct {
-	ConfigOverrides []string `mapstructure:"configOverrides" yaml:"configOverrides,omitempty"`
+	ConfigOverrides []string `mapstructure:"configOverrides" yaml:"configOverrides,omitempty" json:"configOverrides,omitempty"`
 }
 
 type SimpleConfigOptionsK3s struct {
-	ExtraArgs  []K3sArgWithNodeFilters `mapstructure:"extraArgs" yaml:"extraArgs"`
-	NodeLabels []LabelWithNodeFilters  `mapstructure:"nodeLabels" yaml:"nodeLabels"`
+	ExtraArgs  []K3sArgWithNodeFilters `mapstructure:"extraArgs" yaml:"extraArgs" json:"extraArgs"`
+	NodeLabels []LabelWithNodeFilters  `mapstructure:"nodeLabels" yaml:"nodeLabels" json:"nodeLabels"`
 }
 
 type SimpleConfigRegistries struct {
