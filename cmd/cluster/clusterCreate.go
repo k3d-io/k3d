@@ -191,7 +191,7 @@ func NewCmdClusterCreate() *cobra.Command {
 			 * Kubeconfig *
 			 **************/
 
-			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig && clusterConfig.KubeconfigOpts.SwitchCurrentContext {
+			if !clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig && clusterConfig.KubeconfigOpts.SwitchCurrentContext {
 				l.Log().Infoln("--kubeconfig-update-default=false --> sets --kubeconfig-switch-context=false")
 				clusterConfig.KubeconfigOpts.SwitchCurrentContext = false
 			}
