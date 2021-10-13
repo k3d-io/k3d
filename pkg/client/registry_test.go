@@ -42,6 +42,7 @@ metadata:
 data:
   localRegistryHosting.v1: |
     host: test-host:5432
+    hostFromClusterNetwork: test-host:1234
     hostFromContainerRuntime: test-host:1234
     help: https://k3d.io/usage/guides/registries/#using-a-local-registry
 `

@@ -310,6 +310,7 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runt
 		k8s.LocalRegistryHostingV1{
 			Host:                     fmt.Sprintf("%s:%s", host, registries[0].ExposureOpts.Binding.HostPort),
 			HostFromContainerRuntime: fmt.Sprintf("%s:%s", registries[0].Host, registries[0].ExposureOpts.Port.Port()),
+			HostFromClusterNetwork:   fmt.Sprintf("%s:%s", registries[0].Host, registries[0].ExposureOpts.Port.Port()),
 			Help:                     "https://k3d.io/usage/guides/registries/#using-a-local-registry",
 		},
 	)
