@@ -1,4 +1,4 @@
-apiVersion: k3d.io/v1alpha3
+apiVersion: k3d.io/v1alpha2
 kind: Simple
 name: test
 servers: 3
@@ -22,11 +22,14 @@ env:
   - envVar: bar=baz,bob
     nodeFilters:
       - all
+labels:
+  - label: foo=bar
+    nodeFilters:
+      - server[0]
+      - loadbalancer
 registries:
-  create:
-    name: k3d-test-registry
-    host: "0.0.0.0"
-    hostPort: random
+  create: true
+  use: []
   config: |
     mirrors:
       "my.company.registry":
@@ -40,16 +43,9 @@ options:
     disableLoadbalancer: false
     disableImageVolume: false
   k3s:
-    extraArgs:
-      - arg: --tls-san=127.0.0.1
-        nodeFilters:
-          - server:*
+    extraServerArgs:
+      - --tls-san=127.0.0.1
+    extraAgentArgs: []
   kubeconfig:
     updateDefaultKubeconfig: true
     switchCurrentContext: true
-  runtime:
-    labels:
-      - label: foo=bar
-        nodeFilters:
-          - server:0
-          - loadbalancer

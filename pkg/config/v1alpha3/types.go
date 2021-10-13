@@ -95,7 +95,7 @@ type SimpleConfigOptionsKubeconfig struct {
 
 type SimpleConfigOptions struct {
 	K3dOptions        SimpleConfigOptionsK3d        `mapstructure:"k3d" yaml:"k3d" json:"k3d"`
-	K3sOptions        SimpleConfigOptionsK3s        `mapstructure:"k3s" yaml:"k3s" json:"k3d"`
+	K3sOptions        SimpleConfigOptionsK3s        `mapstructure:"k3s" yaml:"k3s" json:"k3s"`
 	KubeconfigOptions SimpleConfigOptionsKubeconfig `mapstructure:"kubeconfig" yaml:"kubeconfig" json:"kubeconfig"`
 	Runtime           SimpleConfigOptionsRuntime    `mapstructure:"runtime" yaml:"runtime" json:"runtime"`
 }
@@ -104,12 +104,12 @@ type SimpleConfigOptionsRuntime struct {
 	GPURequest    string                 `mapstructure:"gpuRequest" yaml:"gpuRequest,omitempty" json:"gpuRequest,omitempty"`
 	ServersMemory string                 `mapstructure:"serversMemory" yaml:"serversMemory,omitempty" json:"serversMemory,omitempty"`
 	AgentsMemory  string                 `mapstructure:"agentsMemory" yaml:"agentsMemory,omitempty" json:"agentsMemory,omitempty"`
-	Labels        []LabelWithNodeFilters `mapstructure:"labels" yaml:"labels" json:"labels"`
+	Labels        []LabelWithNodeFilters `mapstructure:"labels" yaml:"labels,omitempty" json:"labels,omitempty"`
 }
 
 type SimpleConfigOptionsK3d struct {
 	Wait                bool                               `mapstructure:"wait" yaml:"wait" json:"wait"`
-	Timeout             time.Duration                      `mapstructure:"timeout" yaml:"timeout" json:"timeout"`
+	Timeout             time.Duration                      `mapstructure:"timeout" yaml:"timeout,omitempty" json:"timeout,omitempty"`
 	DisableLoadbalancer bool                               `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer" json:"disableLoadbalancer"`
 	DisableImageVolume  bool                               `mapstructure:"disableImageVolume" yaml:"disableImageVolume" json:"disableImageVolume"`
 	NoRollback          bool                               `mapstructure:"disableRollback" yaml:"disableRollback" json:"disableRollback"`
@@ -122,8 +122,8 @@ type SimpleConfigOptionsK3dLoadbalancer struct {
 }
 
 type SimpleConfigOptionsK3s struct {
-	ExtraArgs  []K3sArgWithNodeFilters `mapstructure:"extraArgs" yaml:"extraArgs" json:"extraArgs"`
-	NodeLabels []LabelWithNodeFilters  `mapstructure:"nodeLabels" yaml:"nodeLabels" json:"nodeLabels"`
+	ExtraArgs  []K3sArgWithNodeFilters `mapstructure:"extraArgs" yaml:"extraArgs,omitempty" json:"extraArgs,omitempty"`
+	NodeLabels []LabelWithNodeFilters  `mapstructure:"nodeLabels" yaml:"nodeLabels,omitempty" json:"nodeLabels,omitempty"`
 }
 
 type SimpleConfigRegistries struct {
