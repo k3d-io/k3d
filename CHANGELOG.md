@@ -1,5 +1,22 @@
 # Changelog
 
+## v5.0.1
+
+### Enhancement
+
+- add `HostFromClusterNetwork` field to `LocalRegistryHosting` configmap as per KEP-1755 (#754)
+
+### Fixes
+
+- fix: nilpointer exception on failed exec process with no returned logreader
+- make post-create cluster preparation (DNS stuff mostly) more resilient (#780)
+- fix v1alpha2 -> v1alpha3 config migration (and other related issues) (#799)
+
+### Misc
+
+- docs: fix typo (#784)
+- docs: fix usage of legacy `--k3s-agent/server-arg` flag
+
 ## v5.0.0
 
 This release contains a whole lot of new features, breaking changes as well as smaller fixes and improvements.
