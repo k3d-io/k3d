@@ -35,6 +35,20 @@ func Migrate(config types.Config, targetVersion string) (types.Config, error) {
 		return nil, fmt.Errorf("no migration possible from '%s' to '%s'", config.GetAPIVersion(), targetVersion)
 	}
 
-	return migration(config)
+	cfg, err := migration(config)
+	if err != nil {
+		return nil, fmt.Errorf("error migrating config: %w", err)
+	}
+
+	schema, err := GetSchemaByVersion(cfg.GetAPIVersion())
+	if err != nil {
+		return nil, fmt.Errorf("error getting schema for config apiVersion %s: %w", cfg.GetAPIVersion(), err)
+	}
+
+	if err := ValidateSchema(cfg, schema); err != nil {
+		return config, fmt.Errorf("post-migrate schema validation failed: %w", err)
+	}
+
+	return cfg, err
 
 }

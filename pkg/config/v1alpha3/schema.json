@@ -119,7 +119,6 @@
               "default": true
             },
             "timeout": {
-              "type": "string",
               "examples": [
                 "60s",
                 "1m",
