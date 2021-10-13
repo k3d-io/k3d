@@ -31,7 +31,6 @@ registries:
       "my.company.registry":
         endpoint:
           - http://my.company.registry:5000
-
 options:
   k3d:
     wait: true
