@@ -409,6 +409,16 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 		}
 	}
 
+	// execute lifecycle hook actions
+	for _, hook := range nodeStartOpts.NodeHooks {
+		if hook.Stage == k3d.LifecycleStagePostStart {
+			l.Log().Tracef("Node %s: Executing postStartAction '%s'", node.Name, reflect.TypeOf(hook))
+			if err := hook.Action.Run(ctx, node); err != nil {
+				l.Log().Errorf("Node %s: Failed executing postStartAction '%+v': %+v", node.Name, hook, err)
+			}
+		}
+	}
+
 	return nil
 }
 

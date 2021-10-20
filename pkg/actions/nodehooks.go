@@ -22,11 +22,16 @@ THE SOFTWARE.
 package actions
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/rancher/k3d/v5/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
+
+	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
 type WriteFileAction struct {
@@ -38,4 +43,36 @@ type WriteFileAction struct {
 
 func (act WriteFileAction) Run(ctx context.Context, node *k3d.Node) error {
 	return act.Runtime.WriteToNode(ctx, act.Content, act.Dest, act.Mode, node)
+}
+
+type RewriteFileAction struct {
+	Runtime     runtimes.Runtime
+	Path        string
+	RewriteFunc func([]byte) ([]byte, error)
+	Mode        os.FileMode
+}
+
+func (act RewriteFileAction) Run(ctx context.Context, node *k3d.Node) error {
+	reader, err := act.Runtime.ReadFromNode(ctx, act.Path, node)
+	if err != nil {
+		return fmt.Errorf("runtime failed to read '%s' from node '%s': %w", act.Path, node.Name, err)
+	}
+	defer reader.Close()
+
+	file, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+
+	file = bytes.Trim(file[512:], "\x00") // trim control characters, etc.
+
+	file, err = act.RewriteFunc(file)
+	if err != nil {
+		return fmt.Errorf("error while rewriting %s in %s: %w", act.Path, node.Name, err)
+	}
+
+	l.Log().Tracef("Rewritten:\n%s", string(file))
+
+	return act.Runtime.WriteToNode(ctx, file, act.Path, act.Mode, node)
+
 }

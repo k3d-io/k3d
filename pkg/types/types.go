@@ -48,7 +48,7 @@ const DefaultObjectNamePrefix = "k3d"
 
 // ReadyLogMessageByRole defines the log messages we wait for until a server node is considered ready
 var ReadyLogMessageByRole = map[Role]string{
-	ServerRole:       "k3s is up and running",
+	ServerRole:       "Cluster dns configmap has been set successfully", // FIXME: on restart this could be "... exists" and it's not valid for secondary servers!
 	AgentRole:        "Successfully registered node",
 	LoadBalancerRole: "start worker processes",
 	RegistryRole:     "listening on",
