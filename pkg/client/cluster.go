@@ -987,6 +987,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 			},
 		}
 
+		// get the first server in the list and run action on it once it's ready for it
 		for _, n := range cluster.Nodes {
 			if n.Role == k3d.ServerRole {
 				ts, err := time.Parse("2006-01-02T15:04:05.999999999Z", n.State.Started)

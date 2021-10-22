@@ -454,7 +454,7 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 
 		// DNS Fix
 		if fixes.FixEnabled(fixes.EnvFixDNS) {
-			l.Log().Debugf("ENABLING DNS MAGIC!!!")
+			l.Log().Debugln(">>> enabling dns magic")
 
 			if nodeStartOpts.EnvironmentInfo == nil || nodeStartOpts.EnvironmentInfo.HostGateway == nil {
 				return fmt.Errorf("Cannot enable DNS fix, as Host Gateway IP is missing!")
@@ -475,7 +475,7 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 
 		// CGroupsV2Fix
 		if fixes.FixEnabled(fixes.EnvFixCgroupV2) {
-			l.Log().Debugf("ENABLING CGROUPSV2 MAGIC!!!")
+			l.Log().Debugf(">>> enabling cgroupsv2 magic")
 
 			if nodeStartOpts.NodeHooks == nil {
 				nodeStartOpts.NodeHooks = []k3d.NodeHook{}

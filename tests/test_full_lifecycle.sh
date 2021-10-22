@@ -49,6 +49,8 @@ $EXE cluster start "$clustername" --wait --timeout 360s || failed "cluster didn'
 info "Checking that we have access to the cluster..."
 check_clusters "$clustername" || failed "error checking cluster"
 
+kubectl delete pod -n kube-system -l k8s-app=kube-dns  > /dev/null 2>&1 # delete coredns to force reload of config (reload plugin uses default 30s, which will make tests below fail)
+
 info "Checking that we have 2 nodes online..."
 check_multi_node "$clustername" 2 || failed "failed to verify number of nodes"
 
