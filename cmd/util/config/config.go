@@ -84,7 +84,7 @@ func InitViperWithConfigFile(cfgViper *viper.Viper, configFile string) error {
 			l.Log().Fatalf("Cannot validate config file %s: %+v", configFile, err)
 		}
 
-		if err := config.ValidateSchemaFile(configFile, schema); err != nil {
+		if err := config.ValidateSchemaFile(tmpfile.Name(), schema); err != nil {
 			l.Log().Fatalf("Schema Validation failed for config file %s: %+v", configFile, err)
 		}
 
