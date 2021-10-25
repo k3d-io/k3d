@@ -86,40 +86,38 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 	rootCmd.Flags().BoolVar(&flags.version, "version", false, "Show k3d and default k3s version")
 
 	// add subcommands
-	rootCmd.AddCommand(NewCmdCompletion(rootCmd))
-	rootCmd.AddCommand(cluster.NewCmdCluster())
-	rootCmd.AddCommand(kubeconfig.NewCmdKubeconfig())
-	rootCmd.AddCommand(node.NewCmdNode())
-	rootCmd.AddCommand(image.NewCmdImage())
-	rootCmd.AddCommand(cfg.NewCmdConfig())
-	rootCmd.AddCommand(registry.NewCmdRegistry())
-	rootCmd.AddCommand(debug.NewCmdDebug())
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "version",
-		Short: "Show k3d and default k3s version",
-		Long:  "Show k3d and default k3s version",
-		Run: func(cmd *cobra.Command, args []string) {
-			printVersion()
+	rootCmd.AddCommand(NewCmdCompletion(rootCmd),
+		cluster.NewCmdCluster(),
+		kubeconfig.NewCmdKubeconfig(),
+		node.NewCmdNode(),
+		image.NewCmdImage(),
+		cfg.NewCmdConfig(),
+		registry.NewCmdRegistry(),
+		debug.NewCmdDebug(),
+		&cobra.Command{
+			Use:   "version",
+			Short: "Show k3d and default k3s version",
+			Long:  "Show k3d and default k3s version",
+			Run: func(cmd *cobra.Command, args []string) {
+				printVersion()
+			},
 		},
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "runtime-info",
-		Short: "Show runtime information",
-		Long:  "Show some information about the runtime environment (e.g. docker info)",
-		Run: func(cmd *cobra.Command, args []string) {
-			info, err := runtimes.SelectedRuntime.Info()
-			if err != nil {
-				l.Log().Fatalln(err)
-			}
-			err = yaml.NewEncoder(os.Stdout).Encode(info)
-			if err != nil {
-				l.Log().Fatalln(err)
-			}
-		},
-		Hidden: true,
-	})
+		&cobra.Command{
+			Use:   "runtime-info",
+			Short: "Show runtime information",
+			Long:  "Show some information about the runtime environment (e.g. docker info)",
+			Run: func(cmd *cobra.Command, args []string) {
+				info, err := runtimes.SelectedRuntime.Info()
+				if err != nil {
+					l.Log().Fatalln(err)
+				}
+				err = yaml.NewEncoder(os.Stdout).Encode(info)
+				if err != nil {
+					l.Log().Fatalln(err)
+				}
+			},
+			Hidden: true,
+		})
 
 	// Init
 	cobra.OnInitialize(initLogging, initRuntime)
