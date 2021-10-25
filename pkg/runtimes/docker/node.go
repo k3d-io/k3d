@@ -309,7 +309,7 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 
 // ExecInNodeGetLogs executes a command inside a node and returns the logs to the caller, e.g. to parse them
 func (d Docker) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []string) (*bufio.Reader, error) {
-	resp, err := executeInNode(ctx, node, cmd)
+	resp, err := executeInNode(ctx, node, cmd, nil)
 	if resp != nil {
 		defer resp.Close()
 	}
@@ -322,9 +322,23 @@ func (d Docker) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []str
 	return resp.Reader, nil
 }
 
+// GetImageStream creates a tar stream for the given images, to be read (and closed) by the caller
+func (d Docker) GetImageStream(ctx context.Context, image []string) (io.ReadCloser, error) {
+	docker, err := GetDockerClient()
+	if err != nil {
+		return nil, err
+	}
+	reader, err := docker.ImageSave(ctx, image)
+	return reader, err
+}
+
 // ExecInNode execs a command inside a node
 func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) error {
-	execConnection, err := executeInNode(ctx, node, cmd)
+	return execInNode(ctx, node, cmd, nil)
+}
+
+func execInNode(ctx context.Context, node *k3d.Node, cmd []string, stdin io.ReadCloser) error {
+	execConnection, err := executeInNode(ctx, node, cmd, stdin)
 	if execConnection != nil {
 		defer execConnection.Close()
 	}
@@ -340,7 +354,11 @@ func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) er
 	return err
 }
 
-func executeInNode(ctx context.Context, node *k3d.Node, cmd []string) (*types.HijackedResponse, error) {
+func (d Docker) ExecInNodeWithStdin(ctx context.Context, node *k3d.Node, cmd []string, stdin io.ReadCloser) error {
+	return execInNode(ctx, node, cmd, stdin)
+}
+
+func executeInNode(ctx context.Context, node *k3d.Node, cmd []string, stdin io.ReadCloser) (*types.HijackedResponse, error) {
 
 	l.Log().Debugf("Executing command '%+v' in node '%s'", cmd, node.Name)
 
@@ -357,12 +375,18 @@ func executeInNode(ctx context.Context, node *k3d.Node, cmd []string) (*types.Hi
 	}
 	defer docker.Close()
 
+	var attachStdin bool = false
+	if stdin != nil {
+		attachStdin = true
+	}
+
 	// exec
 	exec, err := docker.ContainerExecCreate(ctx, container.ID, types.ExecConfig{
 		Privileged:   true,
 		Tty:          true,
 		AttachStderr: true,
 		AttachStdout: true,
+		AttachStdin:  attachStdin,
 		Cmd:          cmd,
 	})
 	if err != nil {
@@ -378,6 +402,32 @@ func executeInNode(ctx context.Context, node *k3d.Node, cmd []string) (*types.Hi
 
 	if err := docker.ContainerExecStart(ctx, exec.ID, types.ExecStartCheck{Tty: true}); err != nil {
 		return nil, fmt.Errorf("docker failed to start exec process in node '%s': %w", node.Name, err)
+	}
+
+	// If we need to write to stdin pipe, start a new goroutine that writes the stream to stdin
+	if stdin != nil {
+		go func() {
+			// read in 4K blocks
+			buffer := make([]byte, 4096)
+			defer stdin.Close()
+			for {
+				n, err := stdin.Read(buffer)
+				if err != nil {
+					l.Log().Tracef("Stopping read from stdin stream due to error: %w", err)
+					return
+				}
+				if n == 0 {
+					l.Log().Tracef("stdin stream appears to have ended, stopping write to exec connection")
+					return
+				}
+
+				_, err = execConnection.Conn.Write(buffer)
+				if err != nil {
+					l.Log().Debugf("Failed to write stdin to exec stream, stopping write to exec connection: %w", err)
+					return
+				}
+			}
+		}()
 	}
 
 	for {

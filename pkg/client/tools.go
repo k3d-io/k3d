@@ -25,11 +25,10 @@ package client
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
-	"path"
 	"strings"
 	"sync"
-	"time"
 
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/rancher/k3d/v5/pkg/runtimes"
@@ -49,12 +48,6 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 		return fmt.Errorf("No valid images specified")
 	}
 
-	// create tools node to export images
-	toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
-	if err != nil {
-		return fmt.Errorf("failed to ensure that tools node is running: %w", err)
-	}
-
 	/* TODO:
 	 * Loop over list of images and check, whether they are files (tar archives) and sort them respectively
 	 * Special case: '-' means "read from stdin"
@@ -66,16 +59,19 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 	var importTarNames []string
 
 	if len(imagesFromRuntime) > 0 {
-		// save image to tarfile in shared volume
-		l.Log().Infof("Saving %d image(s) from runtime...", len(imagesFromRuntime))
-		tarName := fmt.Sprintf("%s/k3d-%s-images-%s.tar", k3d.DefaultImageVolumeMountPath, cluster.Name, time.Now().Format("20060102150405"))
-		if err := runtime.ExecInNode(ctx, toolsNode, append([]string{"./k3d-tools", "save-image", "-d", tarName}, imagesFromRuntime...)); err != nil {
-			return fmt.Errorf("failed to save image(s) in tools container for cluster '%s': %w", cluster.Name, err)
+		l.Log().Infof("Loading %d image(s) from runtime into nodes...", len(imagesFromRuntime))
+		// open a stream to all given images
+		stream, err := runtime.GetImageStream(ctx, imagesFromRuntime)
+		loadImageFromStream(ctx, runtime, stream, cluster)
+		if err != nil {
+			return fmt.Errorf("Could not open image stream for given images %s: %w", imagesFromRuntime, err)
 		}
-		importTarNames = append(importTarNames, tarName)
+		// load the images directly into the nodes
+
 	}
 
-	if len(imagesFromTar) > 0 {
+	// TODO: stdin for tar images as well
+	/*if len(imagesFromTar) > 0 {
 		// copy tarfiles to shared volume
 		l.Log().Infof("Saving %d tarball(s) to shared image volume...", len(imagesFromTar))
 		for _, file := range imagesFromTar {
@@ -86,7 +82,7 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 			}
 			importTarNames = append(importTarNames, tarName)
 		}
-	}
+	}*/
 
 	// import image in each node
 	l.Log().Infoln("Importing images into nodes...")
@@ -108,26 +104,22 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 	}
 	importWaitgroup.Wait()
 
-	// remove tarball
-	if !opts.KeepTar && len(importTarNames) > 0 {
-		l.Log().Infoln("Removing the tarball(s) from image volume...")
-		if err := runtime.ExecInNode(ctx, toolsNode, []string{"rm", "-f", strings.Join(importTarNames, " ")}); err != nil {
-			l.Log().Errorf("failed to delete one or more tarballs from '%+v': %v", importTarNames, err)
-		}
-	}
-
-	// delete tools container
-	if !opts.KeepToolsNode {
-		l.Log().Infoln("Removing k3d-tools node...")
-		if err := runtime.DeleteNode(ctx, toolsNode); err != nil {
-			l.Log().Errorf("failed to delete tools node '%s' (try to delete it manually): %v", toolsNode.Name, err)
-		}
-	}
-
 	l.Log().Infoln("Successfully imported image(s)")
 
 	return nil
 
+}
+
+func loadImageFromStream(ctx context.Context, runtime runtimes.Runtime, stream io.ReadCloser, cluster *k3d.Cluster) {
+	for _, node := range cluster.Nodes {
+		// only import image in server and agent nodes (i.e. ignoring auxiliary nodes like the server loadbalancer)
+		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
+			l.Log().Infof("Importing images into node '%s'...", node.Name)
+			if err := runtime.ExecInNodeWithStdin(ctx, node, []string{"ctr", "image", "import", "-"}, stream); err != nil {
+				l.Log().Errorf("failed to import images in node '%s': %v", node.Name, err)
+			}
+		}
+	}
 }
 
 type runtimeImageGetter interface {
