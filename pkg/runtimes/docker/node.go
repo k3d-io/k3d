@@ -35,6 +35,8 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	runtimeErr "github.com/rancher/k3d/v5/pkg/runtimes/errors"
+	runtimeTypes "github.com/rancher/k3d/v5/pkg/runtimes/types"
+
 	k3d "github.com/rancher/k3d/v5/pkg/types"
 )
 
@@ -271,7 +273,7 @@ func (d Docker) NodeIsRunning(ctx context.Context, node *k3d.Node) (bool, error)
 }
 
 // GetNodeLogs returns the logs from a given node
-func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time) (io.ReadCloser, error) {
+func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time, opts *runtimeTypes.NodeLogsOpts) (io.ReadCloser, error) {
 	// get the container for the given node
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
@@ -298,47 +300,10 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 	if !since.IsZero() {
 		sinceStr = since.Format("2006-01-02T15:04:05.999999999Z")
 	}
-	logreader, err := docker.ContainerLogs(ctx, container.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Since: sinceStr})
+	logreader, err := docker.ContainerLogs(ctx, container.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Since: sinceStr, Follow: opts.Follow})
 	if err != nil {
 		return nil, fmt.Errorf("docker failed to get logs from node '%s' (container '%s'): %w", node.Name, container.ID, err)
 	}
-
-	return logreader, nil
-}
-
-func (d Docker) NodeFollowLogs(ctx context.Context, node *k3d.Node, since time.Time) (io.ReadCloser, error) {
-	// get the container for the given node
-	container, err := getNodeContainer(ctx, node)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get container for node '%s': %w", node.Name, err)
-	}
-
-	// create docker client
-	docker, err := GetDockerClient()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get docker client; %w", err)
-	}
-	defer docker.Close()
-
-	containerInspectResponse, err := docker.ContainerInspect(ctx, container.ID)
-	if err != nil {
-		return nil, fmt.Errorf("failed ton inspect container '%s': %w", container.ID, err)
-	}
-
-	if !containerInspectResponse.ContainerJSONBase.State.Running {
-		return nil, fmt.Errorf("node '%s' (container '%s') not running", node.Name, containerInspectResponse.ID)
-	}
-
-	sinceStr := ""
-	if !since.IsZero() {
-		sinceStr = since.Format("2006-01-02T15:04:05.999999999Z")
-	}
-	l.Log().Traceln("Starting to get logs")
-	logreader, err := docker.ContainerLogs(ctx, container.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Since: sinceStr, Follow: true})
-	if err != nil {
-		return nil, fmt.Errorf("docker failed to get logs from node '%s' (container '%s'): %w", node.Name, container.ID, err)
-	}
-	l.Log().Traceln("Returning logreader")
 
 	return logreader, nil
 }

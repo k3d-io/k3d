@@ -32,3 +32,7 @@ type RuntimeInfo struct {
 	CgroupDriver  string `yaml:",omitempty" json:",omitempty"`
 	Filesystem    string `yaml:",omitempty" json:",omitempty"`
 }
+
+type NodeLogsOpts struct {
+	Follow bool
+}

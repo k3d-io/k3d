@@ -44,6 +44,8 @@ import (
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/rancher/k3d/v5/pkg/runtimes"
 	"github.com/rancher/k3d/v5/pkg/runtimes/docker"
+	runtimeTypes "github.com/rancher/k3d/v5/pkg/runtimes/types"
+
 	runtimeErrors "github.com/rancher/k3d/v5/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/rancher/k3d/v5/pkg/types/fixes"
@@ -669,9 +671,12 @@ func NodeGet(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3
 // NodeWaitForLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
 func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string, since time.Time) error {
 	l.Log().Tracef("NodeWaitForLogMessage: Node '%s' waiting for log message '%s' since '%+v'", node.Name, message, since)
+	maxrestarts := 10 // FIXME: replace hard-coded value with config/default value
+	restarted := 0
+restartWaiting:
 	found := false
 	// read the logs
-	out, err := runtime.NodeFollowLogs(ctx, node, since)
+	out, err := runtime.GetNodeLogs(ctx, node, since, &runtimeTypes.NodeLogsOpts{Follow: true})
 	if out != nil {
 		defer out.Close()
 	}
@@ -679,6 +684,7 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 		return fmt.Errorf("Failed waiting for log message '%s' from node '%s': %w", message, node.Name, err)
 	}
 	scanner := bufio.NewScanner(out)
+	var previousline string
 
 	donechan := make(chan struct{})
 	defer close(donechan)
@@ -695,14 +701,13 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 			// check if the container is restarting
 			running, status, _ := runtime.GetNodeStatus(ctx, node)
 			if running && status == k3d.NodeStatusRestarting && time.Now().Sub(since) > k3d.NodeWaitForLogMessageRestartWarnTime {
-				l.Log().Warnf("Node '%s' is restarting for more than a minute now. Possibly it will recover soon (e.g. when it's waiting to join). Consider using a creation timeout to avoid waiting forever in a Restart Loop.", node.Name)
+				l.Log().Warnf("Node '%s' is restarting for more than %s now. Possibly it will recover soon (e.g. when it's waiting to join). Consider using a creation timeout to avoid waiting forever in a Restart Loop.", node.Name, k3d.NodeWaitForLogMessageRestartWarnTime)
 			}
 			time.Sleep(500 * time.Millisecond)
 		}
 
 	}(ctx, runtime, node, since, donechan)
 
-scanLoop:
 	for scanner.Scan() {
 		select {
 		case <-ctx.Done():
@@ -722,11 +727,20 @@ scanLoop:
 		}
 		// check if we can find the specified line in the log
 		if strings.Contains(scanner.Text(), message) {
-			l.Log().Tracef("Found target log line: `%s`", message)
+			l.Log().Tracef("Found target message `%s` in log line `%s`", message, scanner.Text())
 			found = true
-			break scanLoop
+			break
 		}
 
+		previousline = scanner.Text()
+
+	}
+	if restarted < maxrestarts && strings.Contains(previousline, "level=fatal") { // FIXME: replace hard-coded
+		restarted++
+		l.Log().Warnf("warning: encountered fatal log from node %s (retrying %d/%d): %s", node.Name, restarted, maxrestarts, previousline)
+		out.Close()
+		time.Sleep(500 * time.Millisecond)
+		goto restartWaiting // FIXME: replace goto with loop
 	}
 	if !found {
 		return fmt.Errorf("error waiting for log line `%s` from node '%s': stopped returning log lines", message, node.Name)
