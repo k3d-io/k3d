@@ -306,6 +306,43 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 	return logreader, nil
 }
 
+func (d Docker) NodeFollowLogs(ctx context.Context, node *k3d.Node, since time.Time) (io.ReadCloser, error) {
+	// get the container for the given node
+	container, err := getNodeContainer(ctx, node)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get container for node '%s': %w", node.Name, err)
+	}
+
+	// create docker client
+	docker, err := GetDockerClient()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get docker client; %w", err)
+	}
+	defer docker.Close()
+
+	containerInspectResponse, err := docker.ContainerInspect(ctx, container.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed ton inspect container '%s': %w", container.ID, err)
+	}
+
+	if !containerInspectResponse.ContainerJSONBase.State.Running {
+		return nil, fmt.Errorf("node '%s' (container '%s') not running", node.Name, containerInspectResponse.ID)
+	}
+
+	sinceStr := ""
+	if !since.IsZero() {
+		sinceStr = since.Format("2006-01-02T15:04:05.999999999Z")
+	}
+	l.Log().Traceln("Starting to get logs")
+	logreader, err := docker.ContainerLogs(ctx, container.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Since: sinceStr, Follow: true})
+	if err != nil {
+		return nil, fmt.Errorf("docker failed to get logs from node '%s' (container '%s'): %w", node.Name, container.ID, err)
+	}
+	l.Log().Traceln("Returning logreader")
+
+	return logreader, nil
+}
+
 // ExecInNodeGetLogs executes a command inside a node and returns the logs to the caller, e.g. to parse them
 func (d Docker) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []string) (*bufio.Reader, error) {
 	resp, err := executeInNode(ctx, node, cmd)

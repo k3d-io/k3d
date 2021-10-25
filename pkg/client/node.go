@@ -23,6 +23,7 @@ THE SOFTWARE.
 package client
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"errors"
@@ -34,7 +35,6 @@ import (
 	"time"
 
 	copystruct "github.com/mitchellh/copystructure"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
 	"github.com/docker/go-connections/nat"
@@ -669,7 +669,41 @@ func NodeGet(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3
 // NodeWaitForLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
 func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string, since time.Time) error {
 	l.Log().Tracef("NodeWaitForLogMessage: Node '%s' waiting for log message '%s' since '%+v'", node.Name, message, since)
-	for {
+	found := false
+	// read the logs
+	out, err := runtime.NodeFollowLogs(ctx, node, since)
+	if out != nil {
+		defer out.Close()
+	}
+	if err != nil {
+		return fmt.Errorf("Failed waiting for log message '%s' from node '%s': %w", message, node.Name, err)
+	}
+	scanner := bufio.NewScanner(out)
+
+	donechan := make(chan struct{})
+	defer close(donechan)
+
+	go func(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, since time.Time, donechan chan struct{}) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-donechan:
+				return
+			default:
+			}
+			// check if the container is restarting
+			running, status, _ := runtime.GetNodeStatus(ctx, node)
+			if running && status == k3d.NodeStatusRestarting && time.Now().Sub(since) > k3d.NodeWaitForLogMessageRestartWarnTime {
+				l.Log().Warnf("Node '%s' is restarting for more than a minute now. Possibly it will recover soon (e.g. when it's waiting to join). Consider using a creation timeout to avoid waiting forever in a Restart Loop.", node.Name)
+			}
+			time.Sleep(500 * time.Millisecond)
+		}
+
+	}(ctx, runtime, node, since, donechan)
+
+scanLoop:
+	for scanner.Scan() {
 		select {
 		case <-ctx.Done():
 			if ctx.Err() == context.DeadlineExceeded {
@@ -683,43 +717,19 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 		default:
 		}
 
-		// read the logs
-		out, err := runtime.GetNodeLogs(ctx, node, since)
-		if out != nil {
-			defer out.Close()
-		}
-		if err != nil {
-			return fmt.Errorf("Failed waiting for log message '%s' from node '%s': %w", message, node.Name, err)
-		}
-
-		buf := new(bytes.Buffer)
-		nRead, _ := buf.ReadFrom(out)
-		out.Close()
-		output := buf.String()
-
-		if nRead > 0 && strings.Contains(os.Getenv("K3D_LOG_NODE_WAIT_LOGS"), string(node.Role)) {
-			l.Log().Tracef("=== Read logs since %s ===\n%s\n", since, output)
+		if strings.Contains(os.Getenv("K3D_LOG_NODE_WAIT_LOGS"), string(node.Role)) {
+			l.Log().Tracef(">>> Parsing log line: `%s`", scanner.Text())
 		}
 		// check if we can find the specified line in the log
-		if nRead > 0 && strings.Contains(output, message) {
-			if l.Log().GetLevel() >= logrus.TraceLevel {
-				temp := strings.Split(output, "\n")
-				for _, t := range temp {
-					if strings.Contains(t, message) {
-						l.Log().Tracef("Found target log line: `%s`", t)
-					}
-				}
-			}
-			break
+		if strings.Contains(scanner.Text(), message) {
+			l.Log().Tracef("Found target log line: `%s`", message)
+			found = true
+			break scanLoop
 		}
 
-		// check if the container is restarting
-		running, status, _ := runtime.GetNodeStatus(ctx, node)
-		if running && status == k3d.NodeStatusRestarting && time.Now().Sub(since) > k3d.NodeWaitForLogMessageRestartWarnTime {
-			l.Log().Warnf("Node '%s' is restarting for more than a minute now. Possibly it will recover soon (e.g. when it's waiting to join). Consider using a creation timeout to avoid waiting forever in a Restart Loop.", node.Name)
-		}
-
-		time.Sleep(500 * time.Millisecond) // wait for half a second to avoid overloading docker (error `socket: too many open files`)
+	}
+	if !found {
+		return fmt.Errorf("error waiting for log line `%s` from node '%s': stopped returning log lines", message, node.Name)
 	}
 	l.Log().Debugf("Finished waiting for log message '%s' from node '%s'", message, node.Name)
 	return nil
