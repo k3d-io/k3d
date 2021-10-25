@@ -309,6 +309,9 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 // ExecInNodeGetLogs executes a command inside a node and returns the logs to the caller, e.g. to parse them
 func (d Docker) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []string) (*bufio.Reader, error) {
 	resp, err := executeInNode(ctx, node, cmd)
+	if resp != nil {
+		defer resp.Close()
+	}
 	if err != nil {
 		if resp != nil && resp.Reader != nil { // sometimes the exec process returns with a non-zero exit code, but we still have the logs we
 			return resp.Reader, err
@@ -321,6 +324,9 @@ func (d Docker) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []str
 // ExecInNode execs a command inside a node
 func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) error {
 	execConnection, err := executeInNode(ctx, node, cmd)
+	if execConnection != nil {
+		defer execConnection.Close()
+	}
 	if err != nil {
 		if execConnection != nil && execConnection.Reader != nil {
 			logs, err := ioutil.ReadAll(execConnection.Reader)

@@ -685,13 +685,12 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 
 		// read the logs
 		out, err := runtime.GetNodeLogs(ctx, node, since)
+		if out != nil {
+			defer out.Close()
+		}
 		if err != nil {
-			if out != nil {
-				out.Close()
-			}
 			return fmt.Errorf("Failed waiting for log message '%s' from node '%s': %w", message, node.Name, err)
 		}
-		defer out.Close()
 
 		buf := new(bytes.Buffer)
 		nRead, _ := buf.ReadFrom(out)
