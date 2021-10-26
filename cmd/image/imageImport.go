@@ -63,7 +63,7 @@ So if a file './rancher/k3d-tools' exists, k3d will try to import it instead of 
 			errOccured := false
 			for _, cluster := range clusters {
 				l.Log().Infof("Importing image(s) into cluster '%s'", cluster.Name)
-				if err := client.ImageImportIntoClusterMulti(cmd.Context(), runtimes.SelectedRuntime, images, &cluster, loadImageOpts); err != nil {
+				if err := client.ImageImportIntoClusterMulti(cmd.Context(), runtimes.SelectedRuntime, images, cluster, loadImageOpts); err != nil {
 					l.Log().Errorf("Failed to import image(s) into cluster '%s': %+v", cluster.Name, err)
 					errOccured = true
 				}
@@ -94,16 +94,30 @@ So if a file './rancher/k3d-tools' exists, k3d will try to import it instead of 
 }
 
 // parseLoadImageCmd parses the command input into variables required to create a cluster
-func parseLoadImageCmd(cmd *cobra.Command, args []string) ([]string, []k3d.Cluster) {
+func parseLoadImageCmd(cmd *cobra.Command, args []string) ([]string, []*k3d.Cluster) {
 
 	// --cluster
 	clusterNames, err := cmd.Flags().GetStringArray("cluster")
 	if err != nil {
 		l.Log().Fatalln(err)
 	}
-	clusters := []k3d.Cluster{}
+	clusters := []*k3d.Cluster{}
 	for _, clusterName := range clusterNames {
-		clusters = append(clusters, k3d.Cluster{Name: clusterName})
+		clusters = append(clusters, &k3d.Cluster{Name: clusterName})
+	}
+
+	// TODO is this actually necessary? looks like it never worked as intended at first glance.
+	// Figure out the nodes for each cluster
+	nodeList, err := client.NodeList(cmd.Context(), runtimes.SelectedRuntime)
+	if err != nil {
+		l.Log().Fatalf("Failed to list clusters %v", err)
+	}
+	for _, node := range nodeList {
+		for _, cluster := range clusters {
+			if cluster.Name == node.RuntimeLabels[k3d.LabelClusterName] {
+				cluster.Nodes = append(cluster.Nodes, node)
+			}
+		}
 	}
 
 	// images

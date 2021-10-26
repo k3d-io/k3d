@@ -115,6 +115,7 @@ func loadImageFromStream(ctx context.Context, runtime runtimes.Runtime, stream i
 				if err := runtime.ExecInNodeWithStdin(ctx, node, []string{"ctr", "image", "import", "-"}, stream); err != nil {
 					l.Log().Errorf("failed to import images in node '%s': %v", node.Name, err)
 				}
+				wg.Done()
 			}(node, &importWaitgroup, stream)
 		}
 	}
