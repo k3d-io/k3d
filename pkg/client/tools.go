@@ -61,7 +61,6 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 		l.Log().Infof("Loading %d image(s) from runtime into nodes...", len(imagesFromRuntime))
 		// open a stream to all given images
 		stream, err := runtime.GetImageStream(ctx, imagesFromRuntime)
-		// TODO this isn't going to work for multiple streams. Wrap in nopcloser and close here afterwards or something like that
 		loadImageFromStream(ctx, runtime, stream, cluster)
 		if err != nil {
 			return fmt.Errorf("Could not open image stream for given images %s: %w", imagesFromRuntime, err)
@@ -101,7 +100,6 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 	l.Log().Infoln("Successfully imported image(s)")
 	return nil
-
 }
 
 func loadImageFromStream(ctx context.Context, runtime runtimes.Runtime, stream io.ReadCloser, cluster *k3d.Cluster) {
