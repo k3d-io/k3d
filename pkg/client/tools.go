@@ -76,7 +76,6 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 	}
 
-	// TODO: stdin for tar images as well
 	if len(imagesFromTar) > 0 {
 		// copy tarfiles to shared volume
 		l.Log().Infof("Saving %d tarball(s) to shared image volume...", len(imagesFromTar))
@@ -103,7 +102,6 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 			}
 		}
 	}
-	// TODO: stdin reading from args
 
 	l.Log().Infoln("Successfully imported image(s)")
 	return nil
