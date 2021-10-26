@@ -56,12 +56,12 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 	 * 3. From stdin: save to tar -> import
 	 * Note: temporary storage location is always the shared image volume and actions are always executed by the tools node
 	 */
-	var importTarNames []string
 
 	if len(imagesFromRuntime) > 0 {
 		l.Log().Infof("Loading %d image(s) from runtime into nodes...", len(imagesFromRuntime))
 		// open a stream to all given images
 		stream, err := runtime.GetImageStream(ctx, imagesFromRuntime)
+		// TODO this isn't going to work for multiple streams. Wrap in nopcloser and close here afterwards or something like that
 		loadImageFromStream(ctx, runtime, stream, cluster)
 		if err != nil {
 			return fmt.Errorf("Could not open image stream for given images %s: %w", imagesFromRuntime, err)
@@ -71,55 +71,54 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 	}
 
 	// TODO: stdin for tar images as well
-	/*if len(imagesFromTar) > 0 {
+	if len(imagesFromTar) > 0 {
 		// copy tarfiles to shared volume
 		l.Log().Infof("Saving %d tarball(s) to shared image volume...", len(imagesFromTar))
-		for _, file := range imagesFromTar {
-			tarName := fmt.Sprintf("%s/k3d-%s-images-%s-file-%s", k3d.DefaultImageVolumeMountPath, cluster.Name, time.Now().Format("20060102150405"), path.Base(file))
-			if err := runtime.CopyToNode(ctx, file, tarName, toolsNode); err != nil {
-				l.Log().Errorf("failed to copy image tar '%s' to tools node! Error below:\n%+v", file, err)
+
+		files := make([]*os.File, len(imagesFromTar))
+		readers := make([]io.Reader, len(imagesFromTar))
+		failedFiles := 0
+		for i, fileName := range imagesFromTar {
+			file, err := os.Open(fileName)
+			if err != nil {
+				l.Log().Errorf("failed to read file '%s', skipping. Error below:\n%+v", fileName, err)
+				failedFiles++
 				continue
 			}
-			importTarNames = append(importTarNames, tarName)
+			files[i] = file
+			readers[i] = file
 		}
-	}*/
-
-	// import image in each node
-	l.Log().Infoln("Importing images into nodes...")
-	var importWaitgroup sync.WaitGroup
-	for _, tarName := range importTarNames {
-		for _, node := range cluster.Nodes {
-			// only import image in server and agent nodes (i.e. ignoring auxiliary nodes like the server loadbalancer)
-			if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
-				importWaitgroup.Add(1)
-				go func(node *k3d.Node, wg *sync.WaitGroup, tarPath string) {
-					l.Log().Infof("Importing images from tarball '%s' into node '%s'...", tarPath, node.Name)
-					if err := runtime.ExecInNode(ctx, node, []string{"ctr", "image", "import", tarPath}); err != nil {
-						l.Log().Errorf("failed to import images in node '%s': %v", node.Name, err)
-					}
-					wg.Done()
-				}(node, &importWaitgroup, tarName)
+		multiReader := io.MultiReader(readers...)
+		loadImageFromStream(ctx, runtime, io.NopCloser(multiReader), cluster)
+		for _, file := range files {
+			err := file.Close()
+			if err != nil {
+				l.Log().Errorf("Failed to close file '%s' after reading. Error below:\n%+v", file.Name(), err)
 			}
 		}
 	}
-	importWaitgroup.Wait()
+	// TODO: stdin reading from args
 
 	l.Log().Infoln("Successfully imported image(s)")
-
 	return nil
 
 }
 
 func loadImageFromStream(ctx context.Context, runtime runtimes.Runtime, stream io.ReadCloser, cluster *k3d.Cluster) {
+	var importWaitgroup sync.WaitGroup
 	for _, node := range cluster.Nodes {
 		// only import image in server and agent nodes (i.e. ignoring auxiliary nodes like the server loadbalancer)
 		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
-			l.Log().Infof("Importing images into node '%s'...", node.Name)
-			if err := runtime.ExecInNodeWithStdin(ctx, node, []string{"ctr", "image", "import", "-"}, stream); err != nil {
-				l.Log().Errorf("failed to import images in node '%s': %v", node.Name, err)
-			}
+			importWaitgroup.Add(1)
+			go func(node *k3d.Node, wg *sync.WaitGroup, stream io.ReadCloser) {
+				l.Log().Infof("Importing images into node '%s'...", node.Name)
+				if err := runtime.ExecInNodeWithStdin(ctx, node, []string{"ctr", "image", "import", "-"}, stream); err != nil {
+					l.Log().Errorf("failed to import images in node '%s': %v", node.Name, err)
+				}
+			}(node, &importWaitgroup, stream)
 		}
 	}
+	importWaitgroup.Wait()
 }
 
 type runtimeImageGetter interface {
