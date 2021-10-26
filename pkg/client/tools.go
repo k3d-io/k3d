@@ -131,6 +131,10 @@ func loadImageFromStream(ctx context.Context, runtime runtimes.Runtime, stream i
 		if err != nil {
 			l.Log().Errorf("Failed to copy read stream. %v", err)
 		}
+		err = stream.Close()
+		if err != nil {
+			l.Log().Errorf("Failed to close stream. %v", err)
+		}
 	}()
 
 	pipeId := 0
