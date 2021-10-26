@@ -407,36 +407,16 @@ func executeInNode(ctx context.Context, node *k3d.Node, cmd []string, stdin io.R
 
 	// If we need to write to stdin pipe, start a new goroutine that writes the stream to stdin
 	if stdin != nil {
-		go func(stdin io.ReadCloser) {
-			// pipe in 8K blocks
-			buffer := make([]byte, 8192)
-			defer func(stdin io.ReadCloser) {
-				err := stdin.Close()
-				if err != nil {
-					l.Log().Tracef("Failed to close stdin stream: %+v", err)
-				}
-			}(stdin)
-			nWritten := 0
-			for {
-				n, err := stdin.Read(buffer)
-
-				if n == 0 || (err != nil && err.Error() == "EOF") {
-					l.Log().Tracef("stdin stream appears to have ended, stopping write to exec connection")
-					return
-				}
-				if err != nil {
-					l.Log().Tracef("Stopping read from stdin stream due to error: %w", err)
-					return
-				}
-
-				nWrite, err := execConnection.Conn.Write(buffer)
-				if err != nil {
-					l.Log().Debugf("Failed to write stdin to exec stream, stopping write to exec connection: %w", err)
-					return
-				}
-				nWritten = nWritten + nWrite
+		go func() {
+			_, err := io.Copy(execConnection.Conn, stdin)
+			if err != nil {
+				l.Log().Errorf("Failed to copy read stream. %v", err)
 			}
-		}(stdin)
+			err = stdin.Close()
+			if err != nil {
+				l.Log().Errorf("Failed to close stdin stream. %v", err)
+			}
+		}()
 	}
 
 	for {

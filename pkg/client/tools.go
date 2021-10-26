@@ -111,6 +111,31 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 func loadImageFromStream(ctx context.Context, runtime runtimes.Runtime, stream io.ReadCloser, cluster *k3d.Cluster) {
 	var importWaitgroup sync.WaitGroup
+
+	numNodes := 0
+	for _, node := range cluster.Nodes {
+		// only import image in server and agent nodes (i.e. ignoring auxiliary nodes like the server loadbalancer)
+		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
+			numNodes++
+		}
+	}
+	// multiplex the stream so we can write to multiple nodes
+	pipeReaders := make([]*io.PipeReader, numNodes)
+	pipeWriters := make([]io.Writer, numNodes)
+	for i := 0; i < numNodes; i++ {
+		reader, writer := io.Pipe()
+		pipeReaders[i] = reader
+		pipeWriters[i] = writer
+	}
+
+	go func() {
+		_, err := io.Copy(io.MultiWriter(pipeWriters...), stream)
+		if err != nil {
+			l.Log().Errorf("Failed to copy read stream. %v", err)
+		}
+	}()
+
+	pipeId := 0
 	for _, node := range cluster.Nodes {
 		// only import image in server and agent nodes (i.e. ignoring auxiliary nodes like the server loadbalancer)
 		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
@@ -121,7 +146,8 @@ func loadImageFromStream(ctx context.Context, runtime runtimes.Runtime, stream i
 					l.Log().Errorf("failed to import images in node '%s': %v", node.Name, err)
 				}
 				wg.Done()
-			}(node, &importWaitgroup, stream)
+			}(node, &importWaitgroup, pipeReaders[pipeId])
+			pipeId++
 		}
 	}
 	importWaitgroup.Wait()
