@@ -38,6 +38,13 @@ import (
 // ImageImportIntoClusterMulti starts up a k3d tools container for the selected cluster and uses it to export
 // images from the runtime to import them into the nodes of the selected cluster
 func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, opts k3d.ImageImportOpts) error {
+
+	// stdin case
+	if len(images) == 1 && images[0] == "-" {
+		loadImageFromStream(ctx, runtime, os.Stdin, cluster)
+		return nil
+	}
+
 	imagesFromRuntime, imagesFromTar, err := findImages(ctx, runtime, images)
 	if err != nil {
 		return fmt.Errorf("failed to find images: %w", err)
