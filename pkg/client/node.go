@@ -329,9 +329,7 @@ func NodeCreateMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d
 	}
 
 	if err := nodeWaitGroup.Wait(); err != nil {
-		l.Log().Errorln("Failed to bring up all nodes in time. Check the logs:")
-		l.Log().Errorf(">>> %+v", err)
-		return fmt.Errorf("Failed to create nodes")
+		return fmt.Errorf("failed to create nodes: %w", err)
 	}
 
 	return nil
