@@ -24,6 +24,7 @@ package types
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/rancher/k3d/v5/version"
@@ -45,19 +46,34 @@ const DefaultRegistryImageRepo = "docker.io/library/registry"
 const DefaultRegistryImageTag = "2"
 
 func GetLoadbalancerImage() string {
-	if img := os.Getenv("K3D_IMAGE_LOADBALANCER"); img != "" {
-		l.Log().Infof("Loadbalancer image set from env var $K3D_IMAGE_LOADBALANCER: %s", img)
+	if img := os.Getenv(K3dEnvImageLoadbalancer); img != "" {
+		l.Log().Infof("Loadbalancer image set from env var $%s: %s", K3dEnvImageLoadbalancer, img)
 		return img
 	}
 
-	return fmt.Sprintf("%s:%s", DefaultLBImageRepo, version.GetHelperImageVersion())
+	return fmt.Sprintf("%s:%s", DefaultLBImageRepo, GetHelperImageVersion())
 }
 
 func GetToolsImage() string {
-	if img := os.Getenv("K3D_IMAGE_TOOLS"); img != "" {
-		l.Log().Infof("Tools image set from env var $K3D_IMAGE_TOOLS: %s", img)
+	if img := os.Getenv(K3dEnvImageTools); img != "" {
+		l.Log().Infof("Tools image set from env var $%s: %s", K3dEnvImageTools, img)
 		return img
 	}
 
-	return fmt.Sprintf("%s:%s", DefaultToolsImageRepo, version.GetHelperImageVersion())
+	return fmt.Sprintf("%s:%s", DefaultToolsImageRepo, GetHelperImageVersion())
+}
+
+// GetHelperImageVersion returns the CLI version or 'latest'
+func GetHelperImageVersion() string {
+	if tag := os.Getenv(K3dEnvImageHelperTag); tag != "" {
+		l.Log().Infoln("Helper image tag set from env var")
+		return tag
+	}
+	if len(version.HelperVersionOverride) > 0 {
+		return version.HelperVersionOverride
+	}
+	if len(version.Version) == 0 {
+		return "latest"
+	}
+	return strings.TrimPrefix(version.Version, "v")
 }

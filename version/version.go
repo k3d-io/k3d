@@ -23,8 +23,6 @@ package version
 
 import (
 	"fmt"
-	"os"
-	"strings"
 
 	"github.com/heroku/docker-registry-client/registry"
 	l "github.com/rancher/k3d/v5/pkg/logger"
@@ -45,21 +43,6 @@ func GetVersion() string {
 		return "v4-dev"
 	}
 	return Version
-}
-
-// GetHelperImageVersion returns the CLI version or 'latest'
-func GetHelperImageVersion() string {
-	if tag := os.Getenv("K3D_HELPER_IMAGE_TAG"); tag != "" {
-		l.Log().Infoln("Helper image tag set from env var")
-		return tag
-	}
-	if len(HelperVersionOverride) > 0 {
-		return HelperVersionOverride
-	}
-	if len(Version) == 0 {
-		return "latest"
-	}
-	return strings.TrimPrefix(Version, "v")
 }
 
 // GetK3sVersion returns the version string for K3s

@@ -47,7 +47,7 @@ import (
 // TranslateNodeToContainer translates a k3d node specification to a docker container representation
 func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	init := true
-	if disableInit, err := strconv.ParseBool(os.Getenv("K3D_DEBUG_DISABLE_DOCKER_INIT")); err == nil && disableInit {
+	if disableInit, err := strconv.ParseBool(os.Getenv(k3d.K3dEnvDebugDisableDockerInit)); err == nil && disableInit {
 		l.Log().Traceln("docker-init disabled for all containers")
 		init = false
 	}

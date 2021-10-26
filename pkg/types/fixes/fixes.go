@@ -25,6 +25,8 @@ import (
 	_ "embed"
 	"os"
 	"strconv"
+
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 )
 
 /* NOTE
@@ -40,8 +42,8 @@ import (
 type K3DFixEnv string
 
 const (
-	EnvFixCgroupV2 K3DFixEnv = "K3D_FIX_CGROUPV2" // EnvFixCgroupV2 is the environment variable that k3d will check for to enable/disable the cgroupv2 workaround
-	EnvFixDNS      K3DFixEnv = "K3D_FIX_DNS"      // EnvFixDNS is the environment variable that check for to enable/disable the application of network magic related to DNS
+	EnvFixCgroupV2 K3DFixEnv = k3d.K3dEnvFixCgroupV2 // EnvFixCgroupV2 is the environment variable that k3d will check for to enable/disable the cgroupv2 workaround
+	EnvFixDNS      K3DFixEnv = k3d.K3dEnvFixDNS      // EnvFixDNS is the environment variable that check for to enable/disable the application of network magic related to DNS
 )
 
 var FixEnvs []K3DFixEnv = []K3DFixEnv{

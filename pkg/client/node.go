@@ -722,7 +722,7 @@ restartWaiting:
 		default:
 		}
 
-		if strings.Contains(os.Getenv("K3D_LOG_NODE_WAIT_LOGS"), string(node.Role)) {
+		if strings.Contains(os.Getenv(k3d.K3dEnvLogNodeWaitLogs), string(node.Role)) {
 			l.Log().Tracef(">>> Parsing log line: `%s`", scanner.Text())
 		}
 		// check if we can find the specified line in the log

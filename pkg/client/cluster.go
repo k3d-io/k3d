@@ -1042,12 +1042,12 @@ func SortClusters(clusters []*k3d.Cluster) []*k3d.Cluster {
 // corednsAddHost adds a host entry to the CoreDNS configmap if it doesn't exist (a host entry is a single line of the form "IP HOST")
 func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, ip string, name string) error {
 	retries := 3
-	if v, ok := os.LookupEnv("K3D_DEBUG_COREDNS_RETRIES"); ok && v != "" {
-		l.Log().Debugf("Running with K3D_DEBUG_COREDNS_RETRIES=%s", v)
+	if v, ok := os.LookupEnv(k3d.K3dEnvDebugCorednsRetries); ok && v != "" {
+		l.Log().Debugf("Running with %s=%s", k3d.K3dEnvDebugCorednsRetries, v)
 		if r, err := strconv.Atoi(v); err == nil {
 			retries = r
 		} else {
-			return fmt.Errorf("Invalid value set for env var K3D_DEBUG_COREDNS_RETRIES (%s): %w", v, err)
+			return fmt.Errorf("Invalid value set for env var %s (%s): %w", k3d.K3dEnvDebugCorednsRetries, v, err)
 		}
 	}
 
