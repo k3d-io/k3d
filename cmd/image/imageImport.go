@@ -98,7 +98,7 @@ So if a file './rancher/k3d-tools' exists, k3d will try to import it instead of 
 
 	cmd.Flags().BoolVarP(&loadImageOpts.KeepTar, "keep-tarball", "k", false, "Do not delete the tarball containing the saved images from the shared volume")
 	cmd.Flags().BoolVarP(&loadImageOpts.KeepToolsNode, "keep-tools", "t", false, "Do not delete the tools node after import")
-	cmd.Flags().StringP("load-mode", "lm", string(k3d.AutoDetect), "Which method to use to load images to the cluster [auto, direct, tools-node]. Default: auto")
+	cmd.Flags().StringP("load-mode", "m", string(k3d.AutoDetect), "Which method to use to load images to the cluster [auto, direct, tools-node].")
 	/* Subcommands */
 
 	// done
