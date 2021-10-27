@@ -59,16 +59,28 @@ So if a file './rancher/k3d-tools' exists, k3d will try to import it instead of 
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			images, clusters := parseLoadImageCmd(cmd, args)
+
+			loadModeStr, err := cmd.Flags().GetString("load-mode")
+			if err != nil {
+				l.Log().Errorln("No load-mode specified")
+				l.Log().Fatalln(err)
+			}
+			if mode, ok := k3d.LoadModes[loadModeStr]; !ok {
+				l.Log().Fatalf("Unknown image loading mode '%s'\n", loadModeStr)
+			} else {
+				loadImageOpts.LoadingMode = mode
+			}
+
 			l.Log().Debugf("Importing image(s) [%+v] from runtime [%s] into cluster(s) [%+v]...", images, runtimes.SelectedRuntime, clusters)
-			errOccured := false
+			errOccurred := false
 			for _, cluster := range clusters {
 				l.Log().Infof("Importing image(s) into cluster '%s'", cluster.Name)
 				if err := client.ImageImportIntoClusterMulti(cmd.Context(), runtimes.SelectedRuntime, images, cluster, loadImageOpts); err != nil {
 					l.Log().Errorf("Failed to import image(s) into cluster '%s': %+v", cluster.Name, err)
-					errOccured = true
+					errOccurred = true
 				}
 			}
-			if errOccured {
+			if errOccurred {
 				l.Log().Warnln("At least one error occured while trying to import the image(s) into the selected cluster(s)")
 				os.Exit(1)
 			}
@@ -86,7 +98,7 @@ So if a file './rancher/k3d-tools' exists, k3d will try to import it instead of 
 
 	cmd.Flags().BoolVarP(&loadImageOpts.KeepTar, "keep-tarball", "k", false, "Do not delete the tarball containing the saved images from the shared volume")
 	cmd.Flags().BoolVarP(&loadImageOpts.KeepToolsNode, "keep-tools", "t", false, "Do not delete the tools node after import")
-
+	cmd.Flags().StringP("load-mode", "lm", string(k3d.AutoDetect), "Which method to use to load images to the cluster [auto, direct, tools-node]. Default: auto")
 	/* Subcommands */
 
 	// done

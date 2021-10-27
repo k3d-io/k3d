@@ -178,10 +178,27 @@ type NodeHookAction interface {
 	Run(ctx context.Context, node *Node) error
 }
 
+// LoadMode describes how images are loaded into the cluster
+type LoadMode string
+
+const (
+	AutoDetect LoadMode = "auto"
+	Direct     LoadMode = "direct"
+	ToolsNode  LoadMode = "tools-node"
+)
+
+// LoadModes defines the loading methods for image loading
+var LoadModes = map[string]LoadMode{
+	string(AutoDetect): AutoDetect,
+	string(Direct):     Direct,
+	string(ToolsNode):  ToolsNode,
+}
+
 // ImageImportOpts describes a set of options one can set for loading image(s) into cluster(s)
 type ImageImportOpts struct {
 	KeepTar       bool
 	KeepToolsNode bool
+	LoadingMode   LoadMode
 }
 
 type IPAM struct {
