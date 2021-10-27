@@ -43,8 +43,7 @@ func NewCmdKubeconfig() *cobra.Command {
 	}
 
 	// add subcommands
-	cmd.AddCommand(NewCmdKubeconfigGet())
-	cmd.AddCommand(NewCmdKubeconfigMerge())
+	cmd.AddCommand(NewCmdKubeconfigGet(), NewCmdKubeconfigMerge())
 
 	// add flags
 

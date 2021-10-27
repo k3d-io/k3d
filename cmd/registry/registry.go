@@ -44,11 +44,11 @@ func NewCmdRegistry() *cobra.Command {
 	}
 
 	// add subcommands
-	cmd.AddCommand(NewCmdRegistryCreate())
-	cmd.AddCommand(NewCmdRegistryStart())
-	cmd.AddCommand(NewCmdRegistryStop())
-	cmd.AddCommand(NewCmdRegistryDelete())
-	cmd.AddCommand(NewCmdRegistryList())
+	cmd.AddCommand(NewCmdRegistryCreate(),
+		NewCmdRegistryStart(),
+		NewCmdRegistryStop(),
+		NewCmdRegistryDelete(),
+		NewCmdRegistryList())
 
 	// add flags
 
