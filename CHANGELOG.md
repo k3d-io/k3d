@@ -1,5 +1,24 @@
 # Changelog
 
+## v5.0.2
+
+### Enhancements
+
+- CoreDNS Configmap is now edited in the auto-deploy manifest on disk instead of relying on `kubectl patch` command (#814)
+- refactor: add cmd subcommands in a single function call (#819, @moeryomenko)
+- handle ready-log-messages by type and intent & check them in single log streams instead of checking whole chunks every time (#818)
+
+### Fixes
+
+- fix: config file check failing with env var expansion because unexpanded input file was checked
+
+### Misc
+
+- cleanup: ensure that connections/streams are closed once unused (#818)
+- cleanup: split type definitions across multiple files to increase readability (#818)
+- docs: clarify `node create` help text about cluster reference (#808, @losinggeneration)
+- refactor: move from io/ioutil (deprecated) to io and os packages (#827, @Juneezee)
+
 ## v5.0.1
 
 ### Enhancement
