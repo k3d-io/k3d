@@ -89,3 +89,8 @@ const DefaultAPIHost = "0.0.0.0"
 func GetDefaultObjectName(name string) string {
 	return fmt.Sprintf("%s-%s", DefaultObjectNamePrefix, name)
 }
+
+// DefaultNodeWaitForLogMessageCrashLoopBackOffLimit defines the maximum number of retries to find the target log message, if the
+// container is in a crash loop.
+// This makes sense e.g. when a new server is waiting to join an existing cluster and has to wait for other learners to finish.
+const DefaultNodeWaitForLogMessageCrashLoopBackOffLimit = 10

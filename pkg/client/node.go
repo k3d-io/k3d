@@ -31,6 +31,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -671,24 +672,19 @@ func NodeGet(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3
 // NodeWaitForLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
 func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string, since time.Time) error {
 	l.Log().Tracef("NodeWaitForLogMessage: Node '%s' waiting for log message '%s' since '%+v'", node.Name, message, since)
-	maxrestarts := 10 // FIXME: replace hard-coded value with config/default value
-	restarted := 0
-restartWaiting:
-	found := false
-	// read the logs
-	out, err := runtime.GetNodeLogs(ctx, node, since, &runtimeTypes.NodeLogsOpts{Follow: true})
-	if out != nil {
-		defer out.Close()
-	}
-	if err != nil {
-		return fmt.Errorf("Failed waiting for log message '%s' from node '%s': %w", message, node.Name, err)
-	}
-	scanner := bufio.NewScanner(out)
-	var previousline string
 
+	// specify max number of retries if container is in crashloop (as defined by last seen message being a fatal log)
+	backOffLimit := k3d.DefaultNodeWaitForLogMessageCrashLoopBackOffLimit
+	if l, ok := os.LookupEnv(k3d.K3dEnvDebugNodeWaitBackOffLimit); ok {
+		limit, err := strconv.Atoi(l)
+		if err == nil {
+			backOffLimit = limit
+		}
+	}
+
+	// start a goroutine to print a warning continuously if a node is restarting for quite some time already
 	donechan := make(chan struct{})
 	defer close(donechan)
-
 	go func(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, since time.Time, donechan chan struct{}) {
 		for {
 			select {
@@ -708,45 +704,68 @@ restartWaiting:
 
 	}(ctx, runtime, node, since, donechan)
 
-	for scanner.Scan() {
-		select {
-		case <-ctx.Done():
-			if ctx.Err() == context.DeadlineExceeded {
-				d, ok := ctx.Deadline()
-				if ok {
-					l.Log().Debugf("NodeWaitForLogMessage: Context Deadline (%s) > Current Time (%s)", d, time.Now())
-				}
-				return fmt.Errorf("Context deadline exceeded while waiting for log message '%s' of node %s: %w", message, node.Name, ctx.Err())
-			}
-			return ctx.Err()
-		default:
+	// Start loop to check log stream for specified log message.
+	// We're looping here, as sometimes the containers run into a crash loop, but *may* recover from that
+	// e.g. when a new server is joining an existing cluster and has to wait for another member to finish learning.
+	// The logstream returned by docker ends everytime the container restarts, so we have to start from the beginning.
+	for i := 0; i < backOffLimit; i++ {
+
+		// get the log stream (reader is following the logstream)
+		out, err := runtime.GetNodeLogs(ctx, node, since, &runtimeTypes.NodeLogsOpts{Follow: true})
+		if out != nil {
+			defer out.Close()
+		}
+		if err != nil {
+			return fmt.Errorf("Failed waiting for log message '%s' from node '%s': %w", message, node.Name, err)
 		}
 
-		if strings.Contains(os.Getenv(k3d.K3dEnvLogNodeWaitLogs), string(node.Role)) {
-			l.Log().Tracef(">>> Parsing log line: `%s`", scanner.Text())
+		// We're scanning the logstream continuously line-by-line
+		scanner := bufio.NewScanner(out)
+		var previousline string
+
+		for scanner.Scan() {
+			select {
+			case <-ctx.Done():
+				if ctx.Err() == context.DeadlineExceeded {
+					d, ok := ctx.Deadline()
+					if ok {
+						l.Log().Debugf("NodeWaitForLogMessage: Context Deadline (%s) > Current Time (%s)", d, time.Now())
+					}
+					return fmt.Errorf("Context deadline exceeded while waiting for log message '%s' of node %s: %w", message, node.Name, ctx.Err())
+				}
+				return ctx.Err()
+			default:
+			}
+
+			if strings.Contains(os.Getenv(k3d.K3dEnvLogNodeWaitLogs), string(node.Role)) {
+				l.Log().Tracef(">>> Parsing log line: `%s`", scanner.Text())
+			}
+			// check if we can find the specified line in the log
+			if strings.Contains(scanner.Text(), message) {
+				l.Log().Tracef("Found target message `%s` in log line `%s`", message, scanner.Text())
+				l.Log().Debugf("Finished waiting for log message '%s' from node '%s'", message, node.Name)
+				return nil
+			}
+
+			previousline = scanner.Text()
+
 		}
-		// check if we can find the specified line in the log
-		if strings.Contains(scanner.Text(), message) {
-			l.Log().Tracef("Found target message `%s` in log line `%s`", message, scanner.Text())
-			found = true
+
+		out.Close() // no more input on scanner, but target log not yet found -> close current logreader (precautionary)
+
+		// we got here, because the logstream ended (no more input on scanner), so we check if maybe the container crashed
+		if strings.Contains(previousline, "level=fatal") {
+			// case 1: last log line we saw contained a fatal error, so probably it crashed and we want to retry on restart
+			l.Log().Warnf("warning: encountered fatal log from node %s (retrying %d/%d): %s", node.Name, i, backOffLimit, previousline)
+			out.Close()
+			time.Sleep(500 * time.Millisecond)
+			continue
+		} else {
+			// case 2: last log line we saw did not contain a fatal error, so we break the loop here and return a generic error
 			break
 		}
-
-		previousline = scanner.Text()
-
 	}
-	if restarted < maxrestarts && strings.Contains(previousline, "level=fatal") { // FIXME: replace hard-coded
-		restarted++
-		l.Log().Warnf("warning: encountered fatal log from node %s (retrying %d/%d): %s", node.Name, restarted, maxrestarts, previousline)
-		out.Close()
-		time.Sleep(500 * time.Millisecond)
-		goto restartWaiting // FIXME: replace goto with loop
-	}
-	if !found {
-		return fmt.Errorf("error waiting for log line `%s` from node '%s': stopped returning log lines", message, node.Name)
-	}
-	l.Log().Debugf("Finished waiting for log message '%s' from node '%s'", message, node.Name)
-	return nil
+	return fmt.Errorf("error waiting for log line `%s` from node '%s': stopped returning log lines", message, node.Name)
 }
 
 // NodeFilterByRoles filters a list of nodes by their roles

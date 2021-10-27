@@ -32,8 +32,9 @@ const (
 	K3dEnvImageHelperTag    = "K3D_HELPER_IMAGE_TAG"
 
 	// Debug options
-	K3dEnvDebugCorednsRetries    = "K3D_DEBUG_COREDNS_RETRIES"
-	K3dEnvDebugDisableDockerInit = "K3D_DEBUG_DISABLE_DOCKER_INIT"
+	K3dEnvDebugCorednsRetries       = "K3D_DEBUG_COREDNS_RETRIES"
+	K3dEnvDebugDisableDockerInit    = "K3D_DEBUG_DISABLE_DOCKER_INIT"
+	K3dEnvDebugNodeWaitBackOffLimit = "K3D_DEBUG_NODE_WAIT_BACKOFF_LIMIT"
 
 	// Fixes
 	K3dEnvFixCgroupV2 = "K3D_FIX_CGROUPV2"
