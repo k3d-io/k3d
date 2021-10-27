@@ -49,6 +49,7 @@ import (
 	runtimeErrors "github.com/rancher/k3d/v5/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/rancher/k3d/v5/pkg/types/fixes"
+	"github.com/rancher/k3d/v5/pkg/types/k3s"
 	"github.com/rancher/k3d/v5/pkg/util"
 	"golang.org/x/sync/errgroup"
 )
@@ -174,23 +175,23 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	k3sURLEnvFound := false
 	k3sTokenEnvFoundIndex := -1
 	for index, envVar := range node.Env {
-		if strings.HasPrefix(envVar, k3d.K3sEnvClusterConnectURL) {
+		if strings.HasPrefix(envVar, k3s.EnvClusterConnectURL) {
 			k3sURLEnvFound = true
 		}
-		if strings.HasPrefix(envVar, k3d.K3sEnvClusterToken) {
+		if strings.HasPrefix(envVar, k3s.EnvClusterToken) {
 			k3sTokenEnvFoundIndex = index
 		}
 	}
 	if !k3sURLEnvFound {
 		if url, ok := node.RuntimeLabels[k3d.LabelClusterURL]; ok {
-			node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3d.K3sEnvClusterConnectURL, url))
+			node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3s.EnvClusterConnectURL, url))
 		} else {
 			l.Log().Warnln("Failed to find K3S_URL value!")
 		}
 	}
 	if k3sTokenEnvFoundIndex != -1 && createNodeOpts.ClusterToken != "" {
 		l.Log().Debugln("Overriding copied cluster token with value from nodeCreateOpts...")
-		node.Env[k3sTokenEnvFoundIndex] = fmt.Sprintf("%s=%s", k3d.K3sEnvClusterToken, createNodeOpts.ClusterToken)
+		node.Env[k3sTokenEnvFoundIndex] = fmt.Sprintf("%s=%s", k3s.EnvClusterToken, createNodeOpts.ClusterToken)
 		node.RuntimeLabels[k3d.LabelClusterToken] = createNodeOpts.ClusterToken
 	}
 
@@ -248,8 +249,8 @@ func NodeAddToClusterRemote(ctx context.Context, runtime runtimes.Runtime, node 
 		node.Env = []string{}
 	}
 
-	node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3d.K3sEnvClusterConnectURL, clusterRef))
-	node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3d.K3sEnvClusterToken, createNodeOpts.ClusterToken))
+	node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3s.EnvClusterConnectURL, clusterRef))
+	node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3s.EnvClusterToken, createNodeOpts.ClusterToken))
 
 	if err := NodeRun(ctx, runtime, node, createNodeOpts); err != nil {
 		return fmt.Errorf("failed to run node '%s': %w", node.Name, err)
@@ -318,7 +319,7 @@ func NodeCreateMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d
 			currentNode := node
 			nodeWaitGroup.Go(func() error {
 				l.Log().Debugf("Starting to wait for node '%s'", currentNode.Name)
-				readyLogMessage := k3d.ReadyLogMessageByRole[currentNode.Role]
+				readyLogMessage := k3d.GetReadyLogMessage(currentNode, k3d.IntentNodeCreate)
 				if readyLogMessage != "" {
 					return NodeWaitForLogMessage(ctx, runtime, currentNode, readyLogMessage, time.Time{})
 				}
@@ -346,6 +347,7 @@ func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, node
 		Timeout:         nodeCreateOpts.Timeout,
 		NodeHooks:       nodeCreateOpts.NodeHooks,
 		EnvironmentInfo: nodeCreateOpts.EnvironmentInfo,
+		Intent:          k3d.IntentNodeCreate,
 	}); err != nil {
 		return fmt.Errorf("failed to start node '%s': %w", node.Name, err)
 	}
@@ -397,7 +399,7 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 
 	if nodeStartOpts.Wait {
 		if nodeStartOpts.ReadyLogMessage == "" {
-			nodeStartOpts.ReadyLogMessage = k3d.ReadyLogMessageByRole[node.Role]
+			nodeStartOpts.ReadyLogMessage = k3d.GetReadyLogMessage(node, nodeStartOpts.Intent)
 		}
 		if nodeStartOpts.ReadyLogMessage != "" {
 			l.Log().Debugf("Waiting for node %s to get ready (Log: '%s')", node.Name, nodeStartOpts.ReadyLogMessage)
