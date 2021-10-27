@@ -28,7 +28,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"reflect"
 	"strconv"
@@ -156,7 +156,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		defer registryConfigReader.Close()
 
 		var err error
-		registryConfigBytes, err = ioutil.ReadAll(registryConfigReader)
+		registryConfigBytes, err = io.ReadAll(registryConfigReader)
 		if err != nil {
 			l.Log().Warnf("Failed to read registry config from node %s: %+v", node.Name, err)
 		}

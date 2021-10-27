@@ -25,7 +25,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -167,7 +166,7 @@ func initLogging() {
 			l.Log().SetLevel(logrus.InfoLevel)
 		}
 	}
-	l.Log().SetOutput(ioutil.Discard)
+	l.Log().SetOutput(io.Discard)
 	l.Log().AddHook(&writer.Hook{
 		Writer: os.Stderr,
 		LogLevels: []logrus.Level{

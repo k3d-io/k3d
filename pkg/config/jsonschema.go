@@ -25,7 +25,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"sigs.k8s.io/yaml"
@@ -39,7 +39,7 @@ import (
 func ValidateSchemaFile(filepath string, schema []byte) error {
 	l.Log().Debugf("Validating file %s against default JSONSchema...", filepath)
 
-	fileContents, err := ioutil.ReadFile(filepath)
+	fileContents, err := os.ReadFile(filepath)
 	if err != nil {
 		return fmt.Errorf("Failed to read file %s: %+v", filepath, err)
 	}

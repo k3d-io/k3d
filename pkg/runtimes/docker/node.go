@@ -28,7 +28,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -331,7 +330,7 @@ func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) er
 	}
 	if err != nil {
 		if execConnection != nil && execConnection.Reader != nil {
-			logs, err := ioutil.ReadAll(execConnection.Reader)
+			logs, err := io.ReadAll(execConnection.Reader)
 			if err != nil {
 				return fmt.Errorf("failed to get logs from errored exec process in node '%s': %w", node.Name, err)
 			}

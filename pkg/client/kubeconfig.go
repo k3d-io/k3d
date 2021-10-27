@@ -25,7 +25,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -147,7 +147,7 @@ func KubeconfigGet(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.C
 	}
 	defer reader.Close()
 
-	readBytes, err := ioutil.ReadAll(reader)
+	readBytes, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read kubeconfig file: %w", err)
 	}

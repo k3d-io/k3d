@@ -26,7 +26,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"github.com/docker/docker/api/types"
@@ -119,7 +118,7 @@ func pullImage(ctx context.Context, docker *client.Client, image string) error {
 	l.Log().Infof("Pulling image '%s'", image)
 
 	// in debug mode (--verbose flag set), output pull progress
-	var writer io.Writer = ioutil.Discard
+	var writer io.Writer = io.Discard
 	if l.Log().GetLevel() == logrus.DebugLevel {
 		writer = os.Stdout
 	}

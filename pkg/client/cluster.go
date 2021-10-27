@@ -27,7 +27,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"sort"
 	"strconv"
@@ -1078,7 +1078,7 @@ func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clu
 		} else {
 			msg := fmt.Sprintf("(try %d/%d) error patching the CoreDNS ConfigMap to include entry '%s': %+v", i, retries, hostsEntry, err)
 			if logreader != nil {
-				readlogs, err := ioutil.ReadAll(logreader)
+				readlogs, err := io.ReadAll(logreader)
 				if err != nil {
 					l.Log().Debugf("(try %d/%d) error reading the logs from failed CoreDNS patch exec process in node %s: %v", i, retries, node.Name, err)
 				} else {
