@@ -23,7 +23,6 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -58,7 +57,7 @@ func InitViperWithConfigFile(cfgViper *viper.Viper, configFile string) error {
 		}
 		defer tmpfile.Close()
 
-		originalcontent, err := ioutil.ReadFile(configFile)
+		originalcontent, err := os.ReadFile(configFile)
 		if err != nil {
 			l.Log().Fatalf("error reading config file %s: %v", configFile, err)
 		}

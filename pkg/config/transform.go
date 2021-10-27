@@ -25,7 +25,7 @@ package config
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 
@@ -336,7 +336,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			if err != nil {
 				return nil, fmt.Errorf("failed to open registry config file at %s: %w", simpleConfig.Registries.Config, err)
 			}
-			configBytes, err := ioutil.ReadAll(registryConfigFile)
+			configBytes, err := io.ReadAll(registryConfigFile)
 			if err != nil {
 				return nil, fmt.Errorf("failed to read registry config file at %s: %w", registryConfigFile.Name(), err)
 			}

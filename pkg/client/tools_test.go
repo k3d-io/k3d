@@ -24,7 +24,6 @@ package client
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -178,7 +177,7 @@ func Test_findRuntimeImage(T *testing.T) {
 
 func Test_findImages(t *testing.T) {
 	// given
-	tarImage, err := ioutil.TempFile("", "images.tgz")
+	tarImage, err := os.CreateTemp("", "images.tgz")
 	if err != nil {
 		t.Fatal("Failed to create temporary file")
 	}

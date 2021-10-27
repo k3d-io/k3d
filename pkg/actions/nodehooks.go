@@ -25,7 +25,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 
 	"github.com/rancher/k3d/v5/pkg/runtimes"
@@ -59,7 +59,7 @@ func (act RewriteFileAction) Run(ctx context.Context, node *k3d.Node) error {
 	}
 	defer reader.Close()
 
-	file, err := ioutil.ReadAll(reader)
+	file, err := io.ReadAll(reader)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
 	}

@@ -26,7 +26,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"strings"
 	"time"
 
@@ -134,7 +134,7 @@ func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 	}
 	defer reader.Close()
 
-	file, err := ioutil.ReadAll(reader)
+	file, err := io.ReadAll(reader)
 	if err != nil {
 		return cfg, fmt.Errorf("failed to read loadbalancer config file: %w", err)
 	}
