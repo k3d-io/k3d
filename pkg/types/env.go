@@ -21,18 +21,22 @@ THE SOFTWARE.
 */
 package types
 
-type RuntimeInfo struct {
-	Name          string
-	Endpoint      string `yaml:",omitempty" json:",omitempty"`
-	Version       string `yaml:",omitempty" json:",omitempty"`
-	OSType        string `yaml:",omitempty" json:",omitempty"`
-	OS            string `yaml:",omitempty" json:",omitempty"`
-	Arch          string `yaml:",omitempty" json:",omitempty"`
-	CgroupVersion string `yaml:",omitempty" json:",omitempty"`
-	CgroupDriver  string `yaml:",omitempty" json:",omitempty"`
-	Filesystem    string `yaml:",omitempty" json:",omitempty"`
-}
+// k3d config environment variables for options that don't have a place in the config file or CLI
+const (
+	// Log config
+	K3dEnvLogNodeWaitLogs = "K3D_LOG_NODE_WAIT_LOGS"
 
-type NodeLogsOpts struct {
-	Follow bool
-}
+	// Images
+	K3dEnvImageLoadbalancer = "K3D_IMAGE_LOADBALANCER"
+	K3dEnvImageTools        = "K3D_IMAGE_TOOLS"
+	K3dEnvImageHelperTag    = "K3D_HELPER_IMAGE_TAG"
+
+	// Debug options
+	K3dEnvDebugCorednsRetries       = "K3D_DEBUG_COREDNS_RETRIES"
+	K3dEnvDebugDisableDockerInit    = "K3D_DEBUG_DISABLE_DOCKER_INIT"
+	K3dEnvDebugNodeWaitBackOffLimit = "K3D_DEBUG_NODE_WAIT_BACKOFF_LIMIT"
+
+	// Fixes
+	K3dEnvFixCgroupV2 = "K3D_FIX_CGROUPV2"
+	K3dEnvFixDNS      = "K3D_FIX_DNS"
+)

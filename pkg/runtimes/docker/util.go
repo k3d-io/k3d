@@ -149,6 +149,7 @@ func (d Docker) ReadFromNode(ctx context.Context, path string, node *k3d.Node) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to get docker client: %w", err)
 	}
+	defer docker.Close()
 
 	reader, _, err := docker.CopyFromContainer(ctx, nodeContainer.ID, path)
 	if err != nil {

@@ -19,20 +19,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package types
+package k3s
 
-type RuntimeInfo struct {
-	Name          string
-	Endpoint      string `yaml:",omitempty" json:",omitempty"`
-	Version       string `yaml:",omitempty" json:",omitempty"`
-	OSType        string `yaml:",omitempty" json:",omitempty"`
-	OS            string `yaml:",omitempty" json:",omitempty"`
-	Arch          string `yaml:",omitempty" json:",omitempty"`
-	CgroupVersion string `yaml:",omitempty" json:",omitempty"`
-	CgroupDriver  string `yaml:",omitempty" json:",omitempty"`
-	Filesystem    string `yaml:",omitempty" json:",omitempty"`
-}
-
-type NodeLogsOpts struct {
-	Follow bool
-}
+// k3s environment variables
+const (
+	EnvClusterToken      string = "K3S_TOKEN"
+	EnvClusterConnectURL string = "K3S_URL"
+	EnvKubeconfigOutput  string = "K3S_KUBECONFIG_OUTPUT"
+)

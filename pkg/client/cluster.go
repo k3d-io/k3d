@@ -89,6 +89,7 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 		Timeout:         clusterConfig.ClusterCreateOpts.Timeout, // TODO: here we should consider the time used so far
 		NodeHooks:       clusterConfig.ClusterCreateOpts.NodeHooks,
 		EnvironmentInfo: envInfo,
+		Intent:          k3d.IntentClusterCreate,
 	}); err != nil {
 		return fmt.Errorf("Failed Cluster Start: %+v", err)
 	}
@@ -379,7 +380,7 @@ ClusterCreatOpts:
 	// connection url is always the name of the first server node (index 0) // TODO: change this to the server loadbalancer
 	connectionURL := fmt.Sprintf("https://%s:%s", GenerateNodeName(cluster.Name, k3d.ServerRole, 0), k3d.DefaultAPIPort)
 	clusterCreateOpts.GlobalLabels[k3d.LabelClusterURL] = connectionURL
-	clusterCreateOpts.GlobalEnv = append(clusterCreateOpts.GlobalEnv, fmt.Sprintf("%s=%s", k3d.K3sEnvClusterToken, cluster.Token))
+	clusterCreateOpts.GlobalEnv = append(clusterCreateOpts.GlobalEnv, fmt.Sprintf("%s=%s", k3s.EnvClusterToken, cluster.Token))
 
 	nodeSetup := func(node *k3d.Node) error {
 		// cluster specific settings
@@ -413,12 +414,12 @@ ClusterCreatOpts:
 
 			// the cluster has an init server node, but its not this one, so connect it to the init node
 			if cluster.InitNode != nil && !node.ServerOpts.IsInit {
-				node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3d.K3sEnvClusterConnectURL, connectionURL))
+				node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3s.EnvClusterConnectURL, connectionURL))
 				node.RuntimeLabels[k3d.LabelServerIsInit] = "false" // set label, that this server node is not the init server
 			}
 
 		} else if node.Role == k3d.AgentRole {
-			node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3d.K3sEnvClusterConnectURL, connectionURL))
+			node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3s.EnvClusterConnectURL, connectionURL))
 		}
 
 		node.Networks = []string{cluster.Network.Name}
@@ -822,6 +823,10 @@ func GenerateNodeName(cluster string, role k3d.Role, suffix int) string {
 func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, clusterStartOpts types.ClusterStartOpts) error {
 	l.Log().Infof("Starting cluster '%s'", cluster.Name)
 
+	if clusterStartOpts.Intent == "" {
+		clusterStartOpts.Intent = k3d.IntentClusterStart
+	}
+
 	if clusterStartOpts.Timeout > 0*time.Second {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, clusterStartOpts.Timeout)
@@ -860,7 +865,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		if err := NodeStart(ctx, runtime, initNode, &k3d.NodeStartOpts{
 			Wait:            true, // always wait for the init node
 			NodeHooks:       clusterStartOpts.NodeHooks,
-			ReadyLogMessage: "Running kube-apiserver", // initNode means, that we're using etcd -> this will need quorum, so "k3s is up and running" won't happen right now
+			ReadyLogMessage: types.GetReadyLogMessage(initNode, clusterStartOpts.Intent), // initNode means, that we're using etcd -> this will need quorum, so "k3s is up and running" won't happen right now
 			EnvironmentInfo: clusterStartOpts.EnvironmentInfo,
 		}); err != nil {
 			return fmt.Errorf("Failed to start initializing server node: %+v", err)
@@ -1042,12 +1047,12 @@ func SortClusters(clusters []*k3d.Cluster) []*k3d.Cluster {
 // corednsAddHost adds a host entry to the CoreDNS configmap if it doesn't exist (a host entry is a single line of the form "IP HOST")
 func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, ip string, name string) error {
 	retries := 3
-	if v, ok := os.LookupEnv("K3D_DEBUG_COREDNS_RETRIES"); ok && v != "" {
-		l.Log().Debugf("Running with K3D_DEBUG_COREDNS_RETRIES=%s", v)
+	if v, ok := os.LookupEnv(k3d.K3dEnvDebugCorednsRetries); ok && v != "" {
+		l.Log().Debugf("Running with %s=%s", k3d.K3dEnvDebugCorednsRetries, v)
 		if r, err := strconv.Atoi(v); err == nil {
 			retries = r
 		} else {
-			return fmt.Errorf("Invalid value set for env var K3D_DEBUG_COREDNS_RETRIES (%s): %w", v, err)
+			return fmt.Errorf("Invalid value set for env var %s (%s): %w", k3d.K3dEnvDebugCorednsRetries, v, err)
 		}
 	}
 

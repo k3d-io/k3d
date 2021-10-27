@@ -21,18 +21,12 @@ THE SOFTWARE.
 */
 package types
 
-type RuntimeInfo struct {
-	Name          string
-	Endpoint      string `yaml:",omitempty" json:",omitempty"`
-	Version       string `yaml:",omitempty" json:",omitempty"`
-	OSType        string `yaml:",omitempty" json:",omitempty"`
-	OS            string `yaml:",omitempty" json:",omitempty"`
-	Arch          string `yaml:",omitempty" json:",omitempty"`
-	CgroupVersion string `yaml:",omitempty" json:",omitempty"`
-	CgroupDriver  string `yaml:",omitempty" json:",omitempty"`
-	Filesystem    string `yaml:",omitempty" json:",omitempty"`
-}
+type Intent string
 
-type NodeLogsOpts struct {
-	Follow bool
-}
+const (
+	IntentClusterCreate Intent = "cluster-create"
+	IntentClusterStart  Intent = "cluster-start"
+	IntentNodeCreate    Intent = "node-create"
+	IntentNodeStart     Intent = "node-start"
+	IntentAny           Intent = ""
+)

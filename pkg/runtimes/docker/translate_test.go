@@ -60,7 +60,7 @@ func TestTranslateNodeToContainer(t *testing.T) {
 	}
 
 	init := true
-	if disableInit, err := strconv.ParseBool(os.Getenv("K3D_DEBUG_DISABLE_DOCKER_INIT")); err == nil && disableInit {
+	if disableInit, err := strconv.ParseBool(os.Getenv(k3d.K3dEnvDebugDisableDockerInit)); err == nil && disableInit {
 		init = false
 	}
 

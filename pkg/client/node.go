@@ -23,6 +23,7 @@ THE SOFTWARE.
 package client
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"errors"
@@ -30,11 +31,11 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
 	copystruct "github.com/mitchellh/copystructure"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
 	"github.com/docker/go-connections/nat"
@@ -44,9 +45,12 @@ import (
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/rancher/k3d/v5/pkg/runtimes"
 	"github.com/rancher/k3d/v5/pkg/runtimes/docker"
+	runtimeTypes "github.com/rancher/k3d/v5/pkg/runtimes/types"
+
 	runtimeErrors "github.com/rancher/k3d/v5/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/rancher/k3d/v5/pkg/types/fixes"
+	"github.com/rancher/k3d/v5/pkg/types/k3s"
 	"github.com/rancher/k3d/v5/pkg/util"
 	"golang.org/x/sync/errgroup"
 )
@@ -172,23 +176,23 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	k3sURLEnvFound := false
 	k3sTokenEnvFoundIndex := -1
 	for index, envVar := range node.Env {
-		if strings.HasPrefix(envVar, k3d.K3sEnvClusterConnectURL) {
+		if strings.HasPrefix(envVar, k3s.EnvClusterConnectURL) {
 			k3sURLEnvFound = true
 		}
-		if strings.HasPrefix(envVar, k3d.K3sEnvClusterToken) {
+		if strings.HasPrefix(envVar, k3s.EnvClusterToken) {
 			k3sTokenEnvFoundIndex = index
 		}
 	}
 	if !k3sURLEnvFound {
 		if url, ok := node.RuntimeLabels[k3d.LabelClusterURL]; ok {
-			node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3d.K3sEnvClusterConnectURL, url))
+			node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3s.EnvClusterConnectURL, url))
 		} else {
 			l.Log().Warnln("Failed to find K3S_URL value!")
 		}
 	}
 	if k3sTokenEnvFoundIndex != -1 && createNodeOpts.ClusterToken != "" {
 		l.Log().Debugln("Overriding copied cluster token with value from nodeCreateOpts...")
-		node.Env[k3sTokenEnvFoundIndex] = fmt.Sprintf("%s=%s", k3d.K3sEnvClusterToken, createNodeOpts.ClusterToken)
+		node.Env[k3sTokenEnvFoundIndex] = fmt.Sprintf("%s=%s", k3s.EnvClusterToken, createNodeOpts.ClusterToken)
 		node.RuntimeLabels[k3d.LabelClusterToken] = createNodeOpts.ClusterToken
 	}
 
@@ -246,8 +250,8 @@ func NodeAddToClusterRemote(ctx context.Context, runtime runtimes.Runtime, node 
 		node.Env = []string{}
 	}
 
-	node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3d.K3sEnvClusterConnectURL, clusterRef))
-	node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3d.K3sEnvClusterToken, createNodeOpts.ClusterToken))
+	node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3s.EnvClusterConnectURL, clusterRef))
+	node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3s.EnvClusterToken, createNodeOpts.ClusterToken))
 
 	if err := NodeRun(ctx, runtime, node, createNodeOpts); err != nil {
 		return fmt.Errorf("failed to run node '%s': %w", node.Name, err)
@@ -316,7 +320,7 @@ func NodeCreateMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d
 			currentNode := node
 			nodeWaitGroup.Go(func() error {
 				l.Log().Debugf("Starting to wait for node '%s'", currentNode.Name)
-				readyLogMessage := k3d.ReadyLogMessageByRole[currentNode.Role]
+				readyLogMessage := k3d.GetReadyLogMessage(currentNode, k3d.IntentNodeCreate)
 				if readyLogMessage != "" {
 					return NodeWaitForLogMessage(ctx, runtime, currentNode, readyLogMessage, time.Time{})
 				}
@@ -327,9 +331,7 @@ func NodeCreateMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d
 	}
 
 	if err := nodeWaitGroup.Wait(); err != nil {
-		l.Log().Errorln("Failed to bring up all nodes in time. Check the logs:")
-		l.Log().Errorf(">>> %+v", err)
-		return fmt.Errorf("Failed to create nodes")
+		return fmt.Errorf("failed to create nodes: %w", err)
 	}
 
 	return nil
@@ -346,6 +348,7 @@ func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, node
 		Timeout:         nodeCreateOpts.Timeout,
 		NodeHooks:       nodeCreateOpts.NodeHooks,
 		EnvironmentInfo: nodeCreateOpts.EnvironmentInfo,
+		Intent:          k3d.IntentNodeCreate,
 	}); err != nil {
 		return fmt.Errorf("failed to start node '%s': %w", node.Name, err)
 	}
@@ -397,7 +400,7 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 
 	if nodeStartOpts.Wait {
 		if nodeStartOpts.ReadyLogMessage == "" {
-			nodeStartOpts.ReadyLogMessage = k3d.ReadyLogMessageByRole[node.Role]
+			nodeStartOpts.ReadyLogMessage = k3d.GetReadyLogMessage(node, nodeStartOpts.Intent)
 		}
 		if nodeStartOpts.ReadyLogMessage != "" {
 			l.Log().Debugf("Waiting for node %s to get ready (Log: '%s')", node.Name, nodeStartOpts.ReadyLogMessage)
@@ -669,61 +672,100 @@ func NodeGet(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3
 // NodeWaitForLogMessage follows the logs of a node container and returns if it finds a specific line in there (or timeout is reached)
 func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string, since time.Time) error {
 	l.Log().Tracef("NodeWaitForLogMessage: Node '%s' waiting for log message '%s' since '%+v'", node.Name, message, since)
-	for {
-		select {
-		case <-ctx.Done():
-			if ctx.Err() == context.DeadlineExceeded {
-				d, ok := ctx.Deadline()
-				if ok {
-					l.Log().Debugf("NodeWaitForLogMessage: Context Deadline (%s) > Current Time (%s)", d, time.Now())
-				}
-				return fmt.Errorf("Context deadline exceeded while waiting for log message '%s' of node %s: %w", message, node.Name, ctx.Err())
+
+	// specify max number of retries if container is in crashloop (as defined by last seen message being a fatal log)
+	backOffLimit := k3d.DefaultNodeWaitForLogMessageCrashLoopBackOffLimit
+	if l, ok := os.LookupEnv(k3d.K3dEnvDebugNodeWaitBackOffLimit); ok {
+		limit, err := strconv.Atoi(l)
+		if err == nil {
+			backOffLimit = limit
+		}
+	}
+
+	// start a goroutine to print a warning continuously if a node is restarting for quite some time already
+	donechan := make(chan struct{})
+	defer close(donechan)
+	go func(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, since time.Time, donechan chan struct{}) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-donechan:
+				return
+			default:
 			}
-			return ctx.Err()
-		default:
+			// check if the container is restarting
+			running, status, _ := runtime.GetNodeStatus(ctx, node)
+			if running && status == k3d.NodeStatusRestarting && time.Now().Sub(since) > k3d.NodeWaitForLogMessageRestartWarnTime {
+				l.Log().Warnf("Node '%s' is restarting for more than %s now. Possibly it will recover soon (e.g. when it's waiting to join). Consider using a creation timeout to avoid waiting forever in a Restart Loop.", node.Name, k3d.NodeWaitForLogMessageRestartWarnTime)
+			}
+			time.Sleep(500 * time.Millisecond)
 		}
 
-		// read the logs
-		out, err := runtime.GetNodeLogs(ctx, node, since)
+	}(ctx, runtime, node, since, donechan)
+
+	// Start loop to check log stream for specified log message.
+	// We're looping here, as sometimes the containers run into a crash loop, but *may* recover from that
+	// e.g. when a new server is joining an existing cluster and has to wait for another member to finish learning.
+	// The logstream returned by docker ends everytime the container restarts, so we have to start from the beginning.
+	for i := 0; i < backOffLimit; i++ {
+
+		// get the log stream (reader is following the logstream)
+		out, err := runtime.GetNodeLogs(ctx, node, since, &runtimeTypes.NodeLogsOpts{Follow: true})
+		if out != nil {
+			defer out.Close()
+		}
 		if err != nil {
-			if out != nil {
-				out.Close()
-			}
 			return fmt.Errorf("Failed waiting for log message '%s' from node '%s': %w", message, node.Name, err)
 		}
-		defer out.Close()
 
-		buf := new(bytes.Buffer)
-		nRead, _ := buf.ReadFrom(out)
-		out.Close()
-		output := buf.String()
+		// We're scanning the logstream continuously line-by-line
+		scanner := bufio.NewScanner(out)
+		var previousline string
 
-		if nRead > 0 && strings.Contains(os.Getenv("K3D_LOG_NODE_WAIT_LOGS"), string(node.Role)) {
-			l.Log().Tracef("=== Read logs since %s ===\n%s\n", since, output)
-		}
-		// check if we can find the specified line in the log
-		if nRead > 0 && strings.Contains(output, message) {
-			if l.Log().GetLevel() >= logrus.TraceLevel {
-				temp := strings.Split(output, "\n")
-				for _, t := range temp {
-					if strings.Contains(t, message) {
-						l.Log().Tracef("Found target log line: `%s`", t)
+		for scanner.Scan() {
+			select {
+			case <-ctx.Done():
+				if ctx.Err() == context.DeadlineExceeded {
+					d, ok := ctx.Deadline()
+					if ok {
+						l.Log().Debugf("NodeWaitForLogMessage: Context Deadline (%s) > Current Time (%s)", d, time.Now())
 					}
+					return fmt.Errorf("Context deadline exceeded while waiting for log message '%s' of node %s: %w", message, node.Name, ctx.Err())
 				}
+				return ctx.Err()
+			default:
 			}
+
+			if strings.Contains(os.Getenv(k3d.K3dEnvLogNodeWaitLogs), string(node.Role)) {
+				l.Log().Tracef(">>> Parsing log line: `%s`", scanner.Text())
+			}
+			// check if we can find the specified line in the log
+			if strings.Contains(scanner.Text(), message) {
+				l.Log().Tracef("Found target message `%s` in log line `%s`", message, scanner.Text())
+				l.Log().Debugf("Finished waiting for log message '%s' from node '%s'", message, node.Name)
+				return nil
+			}
+
+			previousline = scanner.Text()
+
+		}
+
+		out.Close() // no more input on scanner, but target log not yet found -> close current logreader (precautionary)
+
+		// we got here, because the logstream ended (no more input on scanner), so we check if maybe the container crashed
+		if strings.Contains(previousline, "level=fatal") {
+			// case 1: last log line we saw contained a fatal error, so probably it crashed and we want to retry on restart
+			l.Log().Warnf("warning: encountered fatal log from node %s (retrying %d/%d): %s", node.Name, i, backOffLimit, previousline)
+			out.Close()
+			time.Sleep(500 * time.Millisecond)
+			continue
+		} else {
+			// case 2: last log line we saw did not contain a fatal error, so we break the loop here and return a generic error
 			break
 		}
-
-		// check if the container is restarting
-		running, status, _ := runtime.GetNodeStatus(ctx, node)
-		if running && status == k3d.NodeStatusRestarting && time.Now().Sub(since) > k3d.NodeWaitForLogMessageRestartWarnTime {
-			l.Log().Warnf("Node '%s' is restarting for more than a minute now. Possibly it will recover soon (e.g. when it's waiting to join). Consider using a creation timeout to avoid waiting forever in a Restart Loop.", node.Name)
-		}
-
-		time.Sleep(500 * time.Millisecond) // wait for half a second to avoid overloading docker (error `socket: too many open files`)
 	}
-	l.Log().Debugf("Finished waiting for log message '%s' from node '%s'", message, node.Name)
-	return nil
+	return fmt.Errorf("error waiting for log line `%s` from node '%s': stopped returning log lines", message, node.Name)
 }
 
 // NodeFilterByRoles filters a list of nodes by their roles

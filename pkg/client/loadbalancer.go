@@ -86,7 +86,7 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 
 	successCtx, successCtxCancel := context.WithDeadline(ctx, time.Now().Add(5*time.Second))
 	defer successCtxCancel()
-	err = NodeWaitForLogMessage(successCtx, runtime, cluster.ServerLoadBalancer.Node, k3d.ReadyLogMessageByRole[k3d.LoadBalancerRole], startTime)
+	err = NodeWaitForLogMessage(successCtx, runtime, cluster.ServerLoadBalancer.Node, k3d.GetReadyLogMessage(cluster.ServerLoadBalancer.Node, k3d.IntentAny), startTime)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			failureCtx, failureCtxCancel := context.WithDeadline(ctx, time.Now().Add(5*time.Second))

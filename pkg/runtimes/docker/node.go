@@ -35,6 +35,8 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	runtimeErr "github.com/rancher/k3d/v5/pkg/runtimes/errors"
+	runtimeTypes "github.com/rancher/k3d/v5/pkg/runtimes/types"
+
 	k3d "github.com/rancher/k3d/v5/pkg/types"
 )
 
@@ -271,7 +273,7 @@ func (d Docker) NodeIsRunning(ctx context.Context, node *k3d.Node) (bool, error)
 }
 
 // GetNodeLogs returns the logs from a given node
-func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time) (io.ReadCloser, error) {
+func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time, opts *runtimeTypes.NodeLogsOpts) (io.ReadCloser, error) {
 	// get the container for the given node
 	container, err := getNodeContainer(ctx, node)
 	if err != nil {
@@ -298,7 +300,7 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 	if !since.IsZero() {
 		sinceStr = since.Format("2006-01-02T15:04:05.999999999Z")
 	}
-	logreader, err := docker.ContainerLogs(ctx, container.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Since: sinceStr})
+	logreader, err := docker.ContainerLogs(ctx, container.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Since: sinceStr, Follow: opts.Follow})
 	if err != nil {
 		return nil, fmt.Errorf("docker failed to get logs from node '%s' (container '%s'): %w", node.Name, container.ID, err)
 	}
@@ -309,6 +311,9 @@ func (d Docker) GetNodeLogs(ctx context.Context, node *k3d.Node, since time.Time
 // ExecInNodeGetLogs executes a command inside a node and returns the logs to the caller, e.g. to parse them
 func (d Docker) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []string) (*bufio.Reader, error) {
 	resp, err := executeInNode(ctx, node, cmd)
+	if resp != nil {
+		defer resp.Close()
+	}
 	if err != nil {
 		if resp != nil && resp.Reader != nil { // sometimes the exec process returns with a non-zero exit code, but we still have the logs we
 			return resp.Reader, err
@@ -321,6 +326,9 @@ func (d Docker) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []str
 // ExecInNode execs a command inside a node
 func (d Docker) ExecInNode(ctx context.Context, node *k3d.Node, cmd []string) error {
 	execConnection, err := executeInNode(ctx, node, cmd)
+	if execConnection != nil {
+		defer execConnection.Close()
+	}
 	if err != nil {
 		if execConnection != nil && execConnection.Reader != nil {
 			logs, err := ioutil.ReadAll(execConnection.Reader)

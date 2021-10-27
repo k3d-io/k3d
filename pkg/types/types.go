@@ -23,39 +23,14 @@ package types
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"time"
 
 	"github.com/docker/go-connections/nat"
 	runtimeTypes "github.com/rancher/k3d/v5/pkg/runtimes/types"
 	"github.com/rancher/k3d/v5/pkg/types/k3s"
-	"github.com/rancher/k3d/v5/version"
 	"inet.af/netaddr"
 )
-
-// DefaultClusterName specifies the default name used for newly created clusters
-const DefaultClusterName = "k3s-default"
-
-// DefaultClusterNameMaxLength specifies the maximal length of a passed in cluster name
-// This restriction allows us to construct an name consisting of
-// <DefaultObjectNamePrefix[3]>-<ClusterName>-<TypeSuffix[5-10]>-<Counter[1-3]>
-// ... and still stay within the 64 character limit (e.g. of docker)
-const DefaultClusterNameMaxLength = 32
-
-// DefaultObjectNamePrefix defines the name prefix for every object created by k3d
-const DefaultObjectNamePrefix = "k3d"
-
-// ReadyLogMessageByRole defines the log messages we wait for until a server node is considered ready
-var ReadyLogMessageByRole = map[Role]string{
-	ServerRole:       "k3s is up and running",
-	AgentRole:        "Successfully registered node",
-	LoadBalancerRole: "start worker processes",
-	RegistryRole:     "listening on",
-}
-
-// NodeWaitForLogMessageRestartWarnTime is the time after which to warn about a restarting container
-const NodeWaitForLogMessageRestartWarnTime = 2 * time.Minute
 
 // NodeStatusRestarting defines the status string that signals the node container is restarting
 const NodeStatusRestarting = "restarting"
@@ -70,6 +45,12 @@ const (
 	NoRole           Role = "noRole"
 	LoadBalancerRole Role = "loadbalancer"
 	RegistryRole     Role = "registry"
+)
+
+type InternalRole Role
+
+const (
+	InternalRoleInitServer InternalRole = "initServer"
 )
 
 // NodeRoles defines the roles available for nodes
@@ -90,16 +71,6 @@ var ClusterInternalNodeRoles = []Role{
 // ClusterExternalNodeRoles is a list of roles for nodes that do not belong to a specific cluster
 var ClusterExternalNodeRoles = []Role{
 	RegistryRole,
-}
-
-// DefaultRuntimeLabels specifies a set of labels that will be attached to k3d runtime objects by default
-var DefaultRuntimeLabels = map[string]string{
-	"app": "k3d",
-}
-
-// DefaultRuntimeLabelsVar specifies a set of labels that will be attached to k3d runtime objects by default but are not static (e.g. across k3d versions)
-var DefaultRuntimeLabelsVar = map[string]string{
-	"k3d.version": version.GetVersion(),
 }
 
 // List of k3d technical label name
@@ -124,48 +95,6 @@ const (
 	LabelRegistryPortInternal string = "k3s.registry.port.internal"
 	LabelNodeStaticIP         string = "k3d.node.staticIP"
 )
-
-// DefaultRoleCmds maps the node roles to their respective default commands
-var DefaultRoleCmds = map[Role][]string{
-	ServerRole: {"server"},
-	AgentRole:  {"agent"},
-}
-
-// DefaultTmpfsMounts specifies tmpfs mounts that are required for all k3d nodes
-var DefaultTmpfsMounts = []string{
-	"/run",
-	"/var/run",
-}
-
-// DefaultNodeEnv defines some default environment variables that should be set on every node
-var DefaultNodeEnv = []string{
-	fmt.Sprintf("%s=/output/kubeconfig.yaml", K3sEnvKubeconfigOutput),
-}
-
-// k3s environment variables
-const (
-	K3sEnvClusterToken      string = "K3S_TOKEN"
-	K3sEnvClusterConnectURL string = "K3S_URL"
-	K3sEnvKubeconfigOutput  string = "K3S_KUBECONFIG_OUTPUT"
-)
-
-// DefaultK3dInternalHostRecord defines the default /etc/hosts entry for the k3d host
-const DefaultK3dInternalHostRecord = "host.k3d.internal"
-
-// DefaultImageVolumeMountPath defines the mount path inside k3d nodes where we will mount the shared image volume by default
-const DefaultImageVolumeMountPath = "/k3d/images"
-
-// DefaultConfigDirName defines the name of the config directory (where we'll e.g. put the kubeconfigs)
-const DefaultConfigDirName = ".k3d" // should end up in $HOME/
-
-// DefaultKubeconfigPrefix defines the default prefix for kubeconfig files
-const DefaultKubeconfigPrefix = DefaultObjectNamePrefix + "-kubeconfig"
-
-// DefaultAPIPort defines the default Kubernetes API Port
-const DefaultAPIPort = "6443"
-
-// DefaultAPIHost defines the default host (IP) for the Kubernetes API
-const DefaultAPIHost = "0.0.0.0"
 
 // DoNotCopyServerFlags defines a list of commands/args that shouldn't be copied from an existing node when adding a similar node to a cluster
 var DoNotCopyServerFlags = []string{
@@ -212,6 +141,7 @@ type ClusterStartOpts struct {
 	Timeout         time.Duration
 	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 	EnvironmentInfo *EnvironmentInfo
+	Intent          Intent
 }
 
 // ClusterDeleteOpts describe a set of options one can set when deleting a cluster
@@ -235,6 +165,7 @@ type NodeStartOpts struct {
 	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 	ReadyLogMessage string
 	EnvironmentInfo *EnvironmentInfo
+	Intent          Intent
 }
 
 // NodeDeleteOpts describes a set of options one can set when deleting a node
@@ -370,57 +301,11 @@ type ExternalDatastore struct {
 // AgentOpts describes some additional agent role specific opts
 type AgentOpts struct{}
 
-// GetDefaultObjectName prefixes the passed name with the default prefix
-func GetDefaultObjectName(name string) string {
-	return fmt.Sprintf("%s-%s", DefaultObjectNamePrefix, name)
-}
-
 // NodeState describes the current state of a node
 type NodeState struct {
 	Running bool
 	Status  string
 	Started string
-}
-
-/*
- * Registry
- */
-
-// Registry Defaults
-const (
-	DefaultRegistryPort       = "5000"
-	DefaultRegistryName       = DefaultObjectNamePrefix + "-registry"
-	DefaultRegistriesFilePath = "/etc/rancher/k3s/registries.yaml"
-	DefaultRegistryMountPath  = "/var/lib/registry"
-	DefaultDockerHubAddress   = "registry-1.docker.io"
-	// Default temporary path for the LocalRegistryHosting configmap, from where it will be applied via kubectl
-	DefaultLocalRegistryHostingConfigmapTempPath = "/tmp/localRegistryHostingCM.yaml"
-)
-
-// Registry describes a k3d-managed registry
-type Registry struct {
-	ClusterRef   string       // filled automatically -> if created with a cluster
-	Protocol     string       `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
-	Host         string       `yaml:"host" json:"host"`
-	Image        string       `yaml:"image,omitempty" json:"image,omitempty"`
-	ExposureOpts ExposureOpts `yaml:"expose" json:"expose"`
-	Options      struct {
-		ConfigFile string `yaml:"configFile,omitempty" json:"configFile,omitempty"`
-		Proxy      struct {
-			RemoteURL string `yaml:"remoteURL" json:"remoteURL"`
-			Username  string `yaml:"username,omitempty" json:"username,omitempty"`
-			Password  string `yaml:"password,omitempty" json:"password,omitempty"`
-		} `yaml:"proxy,omitempty" json:"proxy,omitempty"`
-	} `yaml:"options,omitempty" json:"options,omitempty"`
-}
-
-// RegistryExternal describes a minimal spec for an "external" registry
-// "external" meaning, that it's unrelated to the current cluster
-// e.g. used for the --registry-use flag registry reference
-type RegistryExternal struct {
-	Protocol string `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
-	Host     string `yaml:"host" json:"host"`
-	Port     string `yaml:"port" json:"port"`
 }
 
 type EnvironmentInfo struct {

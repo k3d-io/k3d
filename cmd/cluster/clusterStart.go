@@ -37,7 +37,9 @@ import (
 // NewCmdClusterStart returns a new cobra command
 func NewCmdClusterStart() *cobra.Command {
 
-	startClusterOpts := types.ClusterStartOpts{}
+	startClusterOpts := types.ClusterStartOpts{
+		Intent: k3d.IntentClusterStart,
+	}
 
 	// create new command
 	cmd := &cobra.Command{
@@ -59,6 +61,7 @@ func NewCmdClusterStart() *cobra.Command {
 					if err := client.ClusterStart(cmd.Context(), runtimes.SelectedRuntime, c, startClusterOpts); err != nil {
 						l.Log().Fatalln(err)
 					}
+					l.Log().Infof("Started cluster '%s'", c.Name)
 				}
 			}
 		},
