@@ -28,7 +28,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -62,16 +61,14 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 	switch opts.LoadingMode {
 	case k3d.AutoDetect:
-		info, err := runtimes.SelectedRuntime.Info()
 		if err != nil {
 			return fmt.Errorf("failed to retrieve container runtime information: %w", err)
 		}
-		// Regexp matches for ssh:// and tcp:// runtime endpoints which are not well-known local addresses
-		regex, err := regexp.Compile("(ssh|tcp):\\/\\/(?!localhost|127.0.0.1).+")
 		if err != nil {
 			return fmt.Errorf("failed to compile remote runtime endpoint regexp: %w", err)
 		}
-		if regex.MatchString(info.Endpoint) {
+		runtimeHost := runtime.GetHost()
+		if runtimeHost != "" && runtimeHost != "localhost" && runtimeHost != "127.0.0.1" {
 			l.Log().Infof("Auto-detected a remote docker daemon, using tools node for loading images")
 			loadWithToolsNode = true
 		}
