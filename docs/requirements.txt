@@ -1,4 +1,4 @@
-mkdocs==1.2.2
+mkdocs==1.2.3
 mkdocs-material==7.2.6
 pymdown-extensions==8.2
 mkdocs-git-revision-date-localized-plugin==0.9.3
