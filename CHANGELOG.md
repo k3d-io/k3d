@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.0.3
+
+### Enhancements & Fixes
+
+- simplified way of getting a Docker API Client that works with Docker Contexts and `DOCKER_*` environment variable configuration (#829, @dragonflylee)
+  - fix: didn't honor `DOCKER_TLS` environment variables before
+
 ## v5.0.2
 
 ### Enhancements
