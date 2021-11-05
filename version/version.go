@@ -40,7 +40,7 @@ var K3sVersion = "v1.21.4-k3s2"
 // GetVersion returns the version for cli, it gets it from "git describe --tags" or returns "dev" when doing simple go build
 func GetVersion() string {
 	if len(Version) == 0 {
-		return "v4-dev"
+		return "v5-dev"
 	}
 	return Version
 }
