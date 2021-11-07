@@ -56,9 +56,18 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		simpleConfig.Name = k3d.DefaultClusterName
 	}
 
-	// fetch latest image
-	if simpleConfig.Image == "latest" {
-		simpleConfig.Image = version.GetK3sVersion(true)
+	/* Special cases for Image:
+	 * - "latest" / "stable": get latest / stable channel image
+	 * - starts with "+": get channel following the "+"
+	 */
+	if simpleConfig.Image == "latest" || simpleConfig.Image == "stable" || strings.HasPrefix(simpleConfig.Image, "+") {
+		searchChannel := strings.TrimPrefix(simpleConfig.Image, "+")
+		v, err := version.GetK3sVersion(searchChannel)
+		if err != nil {
+			return nil, err
+		}
+		l.Log().Debugf("Using fetched K3s version %s", v)
+		simpleConfig.Image = fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, v)
 	}
 
 	clusterNetwork := k3d.ClusterNetwork{}

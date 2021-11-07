@@ -53,7 +53,7 @@ image: %s
 var DefaultConfig = fmt.Sprintf(
 	DefaultConfigTpl,
 	k3d.DefaultClusterName,
-	fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)),
+	fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.K3sVersion),
 )
 
 type VolumeWithNodeFilters struct {
