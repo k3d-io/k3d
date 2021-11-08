@@ -31,6 +31,10 @@ import (
 
 type Docker struct{}
 
+const (
+	DefaultDockerSock = "/var/run/docker.sock"
+)
+
 // ID returns the identity of the runtime
 func (d Docker) ID() string {
 	return "docker"
@@ -49,5 +53,10 @@ func (d Docker) GetHost() string {
 
 // GetRuntimePath returns the path of the docker socket
 func (d Docker) GetRuntimePath() string {
-	return "/var/run/docker.sock"
+	dockerSock := os.Getenv("DOCKER_SOCK")
+	if dockerSock == "" {
+		dockerSock = DefaultDockerSock
+	}
+	l.Log().Debugf("DOCKER_SOCK=%s", dockerSock)
+	return dockerSock
 }
