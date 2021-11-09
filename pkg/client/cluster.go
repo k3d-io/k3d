@@ -207,10 +207,11 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 		clusterConfig.ClusterCreateOpts.NodeHooks = append(clusterConfig.ClusterCreateOpts.NodeHooks, k3d.NodeHook{
 			Stage: k3d.LifecycleStagePreStart,
 			Action: actions.WriteFileAction{
-				Runtime: runtime,
-				Content: regCm,
-				Dest:    k3d.DefaultLocalRegistryHostingConfigmapTempPath,
-				Mode:    0644,
+				Runtime:     runtime,
+				Content:     regCm,
+				Dest:        k3d.DefaultLocalRegistryHostingConfigmapTempPath,
+				Mode:        0644,
+				Description: "Write LocalRegistryHosting Configmap",
 			},
 		})
 
@@ -236,10 +237,11 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 		clusterConfig.ClusterCreateOpts.NodeHooks = append(clusterConfig.ClusterCreateOpts.NodeHooks, k3d.NodeHook{
 			Stage: k3d.LifecycleStagePreStart,
 			Action: actions.WriteFileAction{
-				Runtime: runtime,
-				Content: regConfBytes,
-				Dest:    k3d.DefaultRegistriesFilePath,
-				Mode:    0644,
+				Runtime:     runtime,
+				Content:     regConfBytes,
+				Dest:        k3d.DefaultRegistriesFilePath,
+				Mode:        0644,
+				Description: "Write Registry Configuration",
 			},
 		})
 	}
@@ -432,9 +434,6 @@ ClusterCreatOpts:
 			return fmt.Errorf("failed to create node: %w", err)
 		}
 		l.Log().Debugf("Created node '%s'", node.Name)
-
-		// start node
-		//return NodeStart(clusterCreateCtx, runtime, node, k3d.NodeStartOpts{PreStartActions: clusterCreateOpts.NodeHookActions})
 		return nil
 	}
 
@@ -530,10 +529,11 @@ ClusterCreatOpts:
 		writeLbConfigAction := k3d.NodeHook{
 			Stage: k3d.LifecycleStagePreStart,
 			Action: actions.WriteFileAction{
-				Runtime: runtime,
-				Dest:    k3d.DefaultLoadbalancerConfigPath,
-				Mode:    0744,
-				Content: configyaml,
+				Runtime:     runtime,
+				Dest:        k3d.DefaultLoadbalancerConfigPath,
+				Mode:        0744,
+				Content:     configyaml,
+				Description: "Write Loadbalancer Configuration",
 			},
 		}
 
@@ -1098,7 +1098,7 @@ func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clu
 	return nil
 }
 
-// prepInjectHostIP adds /etc/hosts and CoreDNS entry for host.k3d.internal, referring to the host system
+// prepInjectHostIP adds /etc/hosts entry for host.k3d.internal, referring to the host system
 func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, clusterStartOpts *k3d.ClusterStartOpts) error {
 	if cluster.Network.Name == "host" {
 		l.Log().Tracef("Not injecting hostIP as clusternetwork is 'host'")
@@ -1206,10 +1206,11 @@ func ClusterEditChangesetSimple(ctx context.Context, runtime k3drt.Runtime, clus
 	writeLbConfigAction := k3d.NodeHook{
 		Stage: k3d.LifecycleStagePreStart,
 		Action: actions.WriteFileAction{
-			Runtime: runtime,
-			Dest:    k3d.DefaultLoadbalancerConfigPath,
-			Mode:    0744,
-			Content: configyaml,
+			Runtime:     runtime,
+			Dest:        k3d.DefaultLoadbalancerConfigPath,
+			Mode:        0744,
+			Content:     configyaml,
+			Description: "Write Loadbalancer Configuration",
 		},
 	}
 	if lbChangeset.Node.HookActions == nil {
