@@ -40,6 +40,9 @@ failed() {
   else
     log "${RED}$1${END}"
   fi
+  if [[ -n "$2" ]]; then
+    mv "$2" "$2.failed"
+  fi
   abort "test failed"
 }
 

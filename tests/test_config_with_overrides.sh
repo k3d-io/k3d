@@ -6,6 +6,9 @@ CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./common.sh
 source "$CURR_DIR/common.sh"
 
+LOG_FILE="$TEST_OUTPUT_DIR/$( basename "${BASH_SOURCE[0]}" ).log"
+exec >${LOG_FILE} 2>&1
+
 
 : "${EXTRA_FLAG:=""}"
 : "${EXTRA_TITLE:=""}"
@@ -21,7 +24,7 @@ clustername="cfgoverridetest"
 highlight "[START] Config With Override $EXTRA_TITLE"
 
 info "Creating cluster $clustername..."
-$EXE cluster create "$clustername" --config "$CURR_DIR/assets/config_test_simple.yaml" --servers 4 -v /tmp/test:/tmp/test@loadbalancer --env "x=y@agent:1" $EXTRA_FLAG  || failed "could not create cluster $clustername $EXTRA_TITLE"
+$EXE cluster create "$clustername" --registry-create "newreg.localhost" --config "$CURR_DIR/assets/config_test_simple.yaml" --servers 4 -v /tmp/test:/tmp/test@loadbalancer --env "x=y@agent:1" $EXTRA_FLAG  || failed "could not create cluster $clustername $EXTRA_TITLE"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
 sleep 5
@@ -51,6 +54,7 @@ k3s_assert_node_label "k3d-$clustername-server-0" "foo=bar" || failed "Expected 
 ## Registry Node
 info "Ensuring, that we DO NOT have a registry node present"
 $EXE node list "k3d-$clustername-registry" && failed "Expected k3d-$clustername-registry to NOT be present"
+
 
 ## merged registries.yaml
 info "Ensuring, that the registries.yaml file contains both registries"

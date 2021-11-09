@@ -3,11 +3,14 @@
 CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 [ -d "$CURR_DIR" ] || { echo "FATAL: no current dir (maybe running in zsh?)";  exit 1; }
 
-K3S_VERSIONS=("v1.18.19-k3s1" "v1.19.11-k3s1" "v1.20.7-k3s1" "v1.21.1-k3s1")
+K3S_VERSIONS=("v1.20.12-k3s1" "v1.21.6-k3s1" "v1.22.3-k3s1")
 FAILED_TESTS=()
 
 # shellcheck source=./common.sh
 source "$CURR_DIR/common.sh"
+
+LOG_FILE="$TEST_OUTPUT_DIR/$( basename "${BASH_SOURCE[0]}" ).log"
+exec >${LOG_FILE} 2>&1
 
 for version in "${K3S_VERSIONS[@]}"; do
 
