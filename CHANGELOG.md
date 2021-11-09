@@ -1,5 +1,28 @@
 # Changelog
 
+## v5.1.0
+
+### Features
+
+- clusterCreate: `--image` option (also in config file) magic words to follow K3s channels (#841)
+  - `latest`/`stable` to follow latest/stable channels of K3s
+  - `+<channel>` (prefix `+`) where `<channel>` can as well be `latest` or `stable`, but also e.g. `v1.21`
+  - k3d will then check the K3s channel server to get the latest image for that channel
+
+### Enhancements
+
+- nodeHooks: add descriptions and log them for more verbosity (#843)
+- `node create`: inject `host.k3d.internal` into `/etc/hosts` similar to the `cluster create` command (#843)
+
+### Fix
+
+- `--network host`: do not do any network magic (like `host.k3d.internal` injection, etc.) when `host` network is used (#844)
+
+### Misc
+
+- CI/Makefile: build with `-mod vendor`
+- docs: document using some K3s features in k3d, including `servicelb`, `traefik`, `local-storage-provisioner` and `coredns` (#845)
+
 ## v5.0.3
 
 ### Enhancements & Fixes
