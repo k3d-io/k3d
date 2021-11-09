@@ -101,7 +101,7 @@ func removeContainer(ctx context.Context, ID string) error {
 		return fmt.Errorf("docker failed to remove the container '%s': %w", ID, err)
 	}
 
-	l.Log().Infoln("Deleted", ID)
+	l.Log().Tracef("[Docker] Deleted Container %s", ID)
 
 	return nil
 }

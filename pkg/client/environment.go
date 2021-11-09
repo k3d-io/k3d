@@ -50,12 +50,14 @@ func GatherEnvironmentInfo(ctx context.Context, runtime runtimes.Runtime, cluste
 		go NodeDelete(ctx, runtime, toolsNode, k3d.NodeDeleteOpts{SkipLBUpdate: true})
 	}()
 
-	hostIP, err := GetHostIP(ctx, runtime, cluster)
-	if err != nil {
-		return envInfo, fmt.Errorf("failed to get host IP: %w", err)
-	}
+	if cluster.Network.Name != "host" {
+		hostIP, err := GetHostIP(ctx, runtime, cluster)
+		if err != nil {
+			return envInfo, fmt.Errorf("failed to get host IP: %w", err)
+		}
 
-	envInfo.HostGateway = hostIP
+		envInfo.HostGateway = hostIP
+	}
 
 	return envInfo, nil
 

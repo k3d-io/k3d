@@ -224,21 +224,23 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		)
 	}
 
-	// add host.k3d.internal to /etc/hosts
-	createNodeOpts.NodeHooks = append(createNodeOpts.NodeHooks,
-		k3d.NodeHook{
-			Stage: k3d.LifecycleStagePostStart,
-			Action: actions.ExecAction{
-				Runtime: runtime,
-				Command: []string{
-					"sh", "-c",
-					fmt.Sprintf("echo '%s %s' >> /etc/hosts", envInfo.HostGateway.String(), k3d.DefaultK3dInternalHostRecord),
+	if cluster.Network.Name != "host" {
+		// add host.k3d.internal to /etc/hosts
+		createNodeOpts.NodeHooks = append(createNodeOpts.NodeHooks,
+			k3d.NodeHook{
+				Stage: k3d.LifecycleStagePostStart,
+				Action: actions.ExecAction{
+					Runtime: runtime,
+					Command: []string{
+						"sh", "-c",
+						fmt.Sprintf("echo '%s %s' >> /etc/hosts", envInfo.HostGateway.String(), k3d.DefaultK3dInternalHostRecord),
+					},
+					Retries:     0,
+					Description: fmt.Sprintf("Inject /etc/hosts record for %s", k3d.DefaultK3dInternalHostRecord),
 				},
-				Retries:     0,
-				Description: fmt.Sprintf("Inject /etc/hosts record for %s", k3d.DefaultK3dInternalHostRecord),
 			},
-		},
-	)
+		)
+	}
 
 	// clear status fields
 	node.State.Running = false
