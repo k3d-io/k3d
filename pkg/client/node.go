@@ -63,6 +63,11 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		return fmt.Errorf("Failed to find specified cluster '%s': %w", targetClusterName, err)
 	}
 
+	envInfo, err := GatherEnvironmentInfo(ctx, runtime, cluster)
+	if err != nil {
+		return fmt.Errorf("error gathering cluster environment info required to properly create the node: %w", err)
+	}
+
 	// networks: ensure that cluster network is on index 0
 	networks := []string{cluster.Network.Name}
 	if node.Networks != nil {
@@ -196,21 +201,44 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		node.RuntimeLabels[k3d.LabelClusterToken] = createNodeOpts.ClusterToken
 	}
 
-	// add node actions
+	/*
+	 * Add Node Hook Actions (Lifecylce Hooks)
+	 */
+
+	// Write registry config file if there is any
 	if len(registryConfigBytes) != 0 {
 		if createNodeOpts.NodeHooks == nil {
 			createNodeOpts.NodeHooks = []k3d.NodeHook{}
 		}
-		createNodeOpts.NodeHooks = append(createNodeOpts.NodeHooks, k3d.NodeHook{
-			Stage: k3d.LifecycleStagePreStart,
-			Action: actions.WriteFileAction{
-				Runtime: runtime,
-				Content: registryConfigBytes,
-				Dest:    k3d.DefaultRegistriesFilePath,
-				Mode:    0644,
+		createNodeOpts.NodeHooks = append(createNodeOpts.NodeHooks,
+			k3d.NodeHook{
+				Stage: k3d.LifecycleStagePreStart,
+				Action: actions.WriteFileAction{
+					Runtime:     runtime,
+					Content:     registryConfigBytes,
+					Dest:        k3d.DefaultRegistriesFilePath,
+					Mode:        0644,
+					Description: "Write Registry Configuration",
+				},
 			},
-		})
+		)
 	}
+
+	// add host.k3d.internal to /etc/hosts
+	createNodeOpts.NodeHooks = append(createNodeOpts.NodeHooks,
+		k3d.NodeHook{
+			Stage: k3d.LifecycleStagePostStart,
+			Action: actions.ExecAction{
+				Runtime: runtime,
+				Command: []string{
+					"sh", "-c",
+					fmt.Sprintf("echo '%s %s' >> /etc/hosts", envInfo.HostGateway.String(), k3d.DefaultK3dInternalHostRecord),
+				},
+				Retries:     0,
+				Description: fmt.Sprintf("Inject /etc/hosts record for %s", k3d.DefaultK3dInternalHostRecord),
+			},
+		},
+	)
 
 	// clear status fields
 	node.State.Running = false
@@ -229,6 +257,8 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 			}
 		}
 	}
+
+	// inject host.k3d.internal entry
 
 	return nil
 }
@@ -415,9 +445,9 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 	// execute lifecycle hook actions
 	for _, hook := range nodeStartOpts.NodeHooks {
 		if hook.Stage == k3d.LifecycleStagePostStart {
-			l.Log().Tracef("Node %s: Executing postStartAction '%s'", node.Name, reflect.TypeOf(hook))
+			l.Log().Tracef("Node %s: Executing postStartAction: %s", node.Name, hook.Action.Info())
 			if err := hook.Action.Run(ctx, node); err != nil {
-				l.Log().Errorf("Node %s: Failed executing postStartAction '%+v': %+v", node.Name, hook, err)
+				return fmt.Errorf("Node %s: Failed executing postStartAction: %s: %+v", node.Name, hook.Action.Info(), err)
 			}
 		}
 	}
@@ -448,10 +478,11 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 		nodeStartOpts.NodeHooks = append(nodeStartOpts.NodeHooks, k3d.NodeHook{
 			Stage: k3d.LifecycleStagePreStart,
 			Action: actions.WriteFileAction{
-				Runtime: runtime,
-				Content: fixes.K3DEntrypoint,
-				Dest:    "/bin/k3d-entrypoint.sh",
-				Mode:    0744,
+				Runtime:     runtime,
+				Content:     fixes.K3DEntrypoint,
+				Dest:        "/bin/k3d-entrypoint.sh",
+				Mode:        0744,
+				Description: "Write custom k3d entrypoint script (that powers the magic fixes)",
 			},
 		})
 
@@ -468,10 +499,11 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 			nodeStartOpts.NodeHooks = append(nodeStartOpts.NodeHooks, k3d.NodeHook{
 				Stage: k3d.LifecycleStagePreStart,
 				Action: actions.WriteFileAction{
-					Runtime: runtime,
-					Content: data,
-					Dest:    "/bin/k3d-entrypoint-dns.sh",
-					Mode:    0744,
+					Runtime:     runtime,
+					Content:     data,
+					Dest:        "/bin/k3d-entrypoint-dns.sh",
+					Mode:        0744,
+					Description: "Write entrypoint script for DNS fix",
 				},
 			})
 		}
@@ -487,10 +519,11 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 			nodeStartOpts.NodeHooks = append(nodeStartOpts.NodeHooks, k3d.NodeHook{
 				Stage: k3d.LifecycleStagePreStart,
 				Action: actions.WriteFileAction{
-					Runtime: runtime,
-					Content: fixes.CgroupV2Entrypoint,
-					Dest:    "/bin/k3d-entrypoint-cgroupv2.sh",
-					Mode:    0744,
+					Runtime:     runtime,
+					Content:     fixes.CgroupV2Entrypoint,
+					Dest:        "/bin/k3d-entrypoint-cgroupv2.sh",
+					Mode:        0744,
+					Description: "Write entrypoint script for CGroupV2 fix",
 				},
 			})
 		}
@@ -863,10 +896,11 @@ func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, chang
 		writeLbConfigAction := k3d.NodeHook{
 			Stage: k3d.LifecycleStagePreStart,
 			Action: actions.WriteFileAction{
-				Runtime: runtime,
-				Dest:    k3d.DefaultLoadbalancerConfigPath,
-				Mode:    0744,
-				Content: configyaml,
+				Runtime:     runtime,
+				Dest:        k3d.DefaultLoadbalancerConfigPath,
+				Mode:        0744,
+				Content:     configyaml,
+				Description: "Write Loadbalancer Configuration",
 			},
 		}
 
