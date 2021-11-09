@@ -34,22 +34,48 @@ import (
 	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
+// WriteFileAction writes a file inside into the node filesystem
 type WriteFileAction struct {
-	Runtime runtimes.Runtime
-	Content []byte
-	Dest    string
-	Mode    os.FileMode
+	Runtime     runtimes.Runtime
+	Content     []byte
+	Dest        string
+	Mode        os.FileMode
+	Description string
 }
 
 func (act WriteFileAction) Run(ctx context.Context, node *k3d.Node) error {
 	return act.Runtime.WriteToNode(ctx, act.Content, act.Dest, act.Mode, node)
 }
 
+func (act WriteFileAction) Name() string {
+	return "WriteFileAction"
+}
+
+func (act WriteFileAction) Info() string {
+	if act.Description == "" {
+		act.Description = "<no description>"
+	}
+	return fmt.Sprintf("[%s] Writing %d bytes to %s (mode %s): %s", act.Name(), len(act.Content), act.Dest, act.Mode.String(), act.Description)
+}
+
+// RewriteFileAction takes an existing file from the node filesystem and rewrites it using a specified rewrite function
 type RewriteFileAction struct {
 	Runtime     runtimes.Runtime
 	Path        string
 	RewriteFunc func([]byte) ([]byte, error)
 	Mode        os.FileMode
+	Description string
+}
+
+func (act RewriteFileAction) Name() string {
+	return "RewriteFileAction"
+}
+
+func (act RewriteFileAction) Info() string {
+	if act.Description == "" {
+		act.Description = "<no description>"
+	}
+	return fmt.Sprintf("[%s] Rewriting file at %s (mode %s) using custom function: %s", act.Name(), act.Path, act.Mode.String(), act.Description)
 }
 
 func (act RewriteFileAction) Run(ctx context.Context, node *k3d.Node) error {
@@ -75,4 +101,45 @@ func (act RewriteFileAction) Run(ctx context.Context, node *k3d.Node) error {
 
 	return act.Runtime.WriteToNode(ctx, file, act.Path, act.Mode, node)
 
+}
+
+// ExecAction executes some command inside the node
+type ExecAction struct {
+	Runtime     runtimes.Runtime
+	Command     []string
+	Retries     int
+	Description string
+}
+
+func (act ExecAction) Name() string {
+	return "ExecAction"
+}
+
+func (act ExecAction) Info() string {
+	if act.Description == "" {
+		act.Description = "<no description>"
+	}
+	return fmt.Sprintf("[%s] Executing `%s` (%d retries): %s", act.Name(), act.Command, act.Retries, act.Description)
+}
+
+func (act ExecAction) Run(ctx context.Context, node *k3d.Node) error {
+	for i := 0; i <= act.Retries; i++ {
+		l.Log().Tracef("ExecAction (%s in %s) try %d/%d", act.Command, node.Name, i+1, act.Retries+1)
+		logreader, err := act.Runtime.ExecInNodeGetLogs(ctx, node, act.Command)
+		if err != nil {
+			if logreader != nil {
+				logs, logerr := io.ReadAll(logreader)
+				if logerr != nil {
+					err = fmt.Errorf("%w: <failed to get logs> (%v)", err, logerr)
+				} else {
+					err = fmt.Errorf("%w: Logs from failed exec process below:\n%s", err, string(logs))
+				}
+			} else {
+				err = fmt.Errorf("%w: <no logreader returned>", err)
+			}
+			return fmt.Errorf("error executing hook %s in node %s: %w", act.Name(), node.Name, err)
+		}
+
+	}
+	return nil
 }
