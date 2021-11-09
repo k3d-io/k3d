@@ -948,6 +948,11 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 
 	postStartErrgrp.Go(func() error {
 
+		if cluster.Network.Name == "host" {
+			l.Log().Debugf("Not injecting host.k3d.internal into CoreDNS as clusternetwork is 'host'")
+			return nil
+		}
+
 		hosts := fmt.Sprintf("%s %s\n", clusterStartOpts.EnvironmentInfo.HostGateway.String(), k3d.DefaultK3dInternalHostRecord)
 
 		net, err := runtime.GetNetwork(ctx, &cluster.Network)
@@ -1101,7 +1106,7 @@ func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clu
 // prepInjectHostIP adds /etc/hosts entry for host.k3d.internal, referring to the host system
 func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, clusterStartOpts *k3d.ClusterStartOpts) error {
 	if cluster.Network.Name == "host" {
-		l.Log().Tracef("Not injecting hostIP as clusternetwork is 'host'")
+		l.Log().Debugf("Not injecting host.k3d.internal into /etc/hosts as clusternetwork is 'host'")
 		return nil
 	}
 
