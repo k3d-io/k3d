@@ -290,6 +290,15 @@ func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d
 		clusterCreateOpts.GlobalLabels[k3d.LabelNetworkExternal] = "true" // if the network wasn't created, we say that it's managed externally (important for cluster deletion)
 	}
 
+	// just reserve some IPs for k3d (e.g. k3d-tools container), so we don't try to use them again
+	if cluster.Network.IPAM.Managed {
+		reservedIP, err := GetIP(ctx, runtime, &cluster.Network)
+		if err != nil {
+			return fmt.Errorf("error reserving IP in new cluster network %s", network.Name)
+		}
+		cluster.Network.IPAM.IPsUsed = append(cluster.Network.IPAM.IPsUsed, reservedIP)
+	}
+
 	return nil
 }
 

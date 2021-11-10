@@ -42,6 +42,8 @@ failed() {
   fi
   if [[ -n "$2" ]]; then
     mv "$2" "$2.failed"
+  elif [[ -n "$LOG_FILE" ]]; then
+    mv "$LOG_FILE" "$LOG_FILE.failed"
   fi
   abort "test failed"
 }
@@ -71,7 +73,7 @@ check_url() {
 check_clusters() {
   [ -n "$EXE" ] || abort "EXE is not defined"
   for c in "$@" ; do
-    $EXE kubeconfig merge "$c" --kubeconfig-switch-context
+    $EXE kubeconfig merge "$c" --kubeconfig-switch-context || return 1
     if kubectl cluster-info ; then
       passed "cluster $c is reachable"
     else
@@ -85,8 +87,9 @@ check_clusters() {
 
 check_cluster_count() {
   expectedClusterCount=$1
-  actualClusterCount=$(LOG_LEVEL=warn $EXE cluster list --no-headers | wc -l) # this must always have a loglevel of <= warn or it will fail
-  if [[ $actualClusterCount != $expectedClusterCount ]]; then
+  shift # all remaining args are clusternames
+  actualClusterCount=$(LOG_LEVEL=warn $EXE cluster list --no-headers "$@" | wc -l) # this must always have a loglevel of <= warn or it will fail
+  if [[ $actualClusterCount -ne $expectedClusterCount ]]; then
     failed "incorrect number of clusters available: $actualClusterCount != $expectedClusterCount"
     return 1
   fi
@@ -99,7 +102,7 @@ check_multi_node() {
   expectedNodeCount=$2
   $EXE kubeconfig merge "$cluster" --kubeconfig-switch-context
   nodeCount=$(kubectl get nodes -o=custom-columns=NAME:.metadata.name --no-headers | wc -l)
-  if [[ $nodeCount == $expectedNodeCount ]]; then
+  if [[ $nodeCount -eq $expectedNodeCount ]]; then
     passed "cluster $cluster has $expectedNodeCount nodes, as expected"
   else
     warn "cluster $cluster has incorrect number of nodes: $nodeCount != $expectedNodeCount"

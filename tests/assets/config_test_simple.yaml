@@ -3,21 +3,11 @@ kind: Simple
 name: test
 servers: 3
 agents: 2
-kubeAPI:
-  hostIP: "0.0.0.0"
-  hostPort: "6446"
 #image: rancher/k3s:latest
 volumes:
   - volume: $HOME:/some/path
     nodeFilters:
       - all
-ports:
-  - port: 80:80
-    nodeFilters:
-      - loadbalancer
-  - port: 0.0.0.0:443:443
-    nodeFilters:
-      - loadbalancer
 env:
   - envVar: bar=baz,bob
     nodeFilters:

@@ -11,6 +11,7 @@ CURR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 : "${E2E_INCLUDE:=""}"
 : "${E2E_EXCLUDE:=""}"
 : "${E2E_EXTRA:=""}"
+: "${E2E_PARALLEL:="4"}"
 
 export CURRENT_STAGE="Runner"
 
@@ -23,7 +24,8 @@ source "$CURR_DIR/common.sh"
 
 info "Preparing filesystem and environment..."
 
-mkdir -p "$HOME"/.kube
+export KUBECONFIG_ROOT="$HOME/.kube"
+mkdir -p "$KUBECONFIG_ROOT"
 
 export TEST_OUTPUT_DIR="$HOME"/testoutput
 mkdir -p "$TEST_OUTPUT_DIR"
@@ -91,7 +93,7 @@ function run_tests() {
   #
   # Run Tests
   #
-  local max_batch_size=4
+  local max_batch_size=$E2E_PARALLEL
   local current_batch_size=0
   local current_batch_number=1
   local total_batch_number=$(((num_included_tests + (max_batch_size - 1)) / max_batch_size))
@@ -139,7 +141,7 @@ function run_tests() {
   info "FINISHED $section_name${END}
   > ${WHT}Total:\t$num_total_tests${END}
   > ${BLU}Run:\t$num_included_tests${END}
-  > ${YEL}Not Run:\t$num_excluded_tests${END}
+  > ${YEL}Skipped:\t$num_excluded_tests${END}
   > ${GRN}Passed:\t$((num_included_tests - num_failed_tests))${END}
   > ${RED}Failed:\t$num_failed_tests${END}"
 

@@ -6,19 +6,27 @@ CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./common.sh
 source "$CURR_DIR/common.sh"
 
+### Step Setup ###
+# Redirect all stdout/stderr output to logfile
 LOG_FILE="$TEST_OUTPUT_DIR/$( basename "${BASH_SOURCE[0]}" ).log"
 exec >${LOG_FILE} 2>&1
+export LOG_FILE
+
+# use a kubeconfig file specific to this test
+KUBECONFIG="$KUBECONFIG_ROOT/$( basename "${BASH_SOURCE[0]}" ).yaml"
+export KUBECONFIG
+### Step Setup ###
 
 export CURRENT_STAGE="Test | IPAM"
 
 highlight "[START] IPAM $EXTRA_TITLE"
 
 clustername="ipamtest"
-subnet="172.45.0.0/16"
-expectedIPGateway="172.45.0.1" # k3d defaults to subnet_start+1 for the Gateway IP
-expectedIPLabelServer0="172.45.0.3"
+subnet="172.80.0.0/16"
+expectedIPGateway="172.80.0.1" # k3d defaults to subnet_start+1 for the Gateway IP
+expectedIPLabelServer0="172.80.0.3"
 expectedIPServer0="$expectedIPLabelServer0/16" # k3d excludes the subnet_start (x.x.x.0) and then uses IPs in sequential order, but .2 will be used by the tools container that gathers information at start
-expectedIPServerLB="172.45.0.4/16"
+expectedIPServerLB="172.80.0.4/16"
 
 info "Creating cluster $clustername..."
 $EXE cluster create $clustername --timeout 360s --subnet $subnet || failed "could not create cluster $clustername"

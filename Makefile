@@ -51,6 +51,8 @@ E2E_EXCLUDE ?=
 E2E_EXTRA ?=
 E2E_RUNNER_START_TIMEOUT ?= 10
 E2E_HELPER_IMAGE_TAG ?=
+E2E_KEEP ?=
+E2E_PARALLEL ?=
 
 ########## Go Build Options ##########
 # Build targets
@@ -125,7 +127,7 @@ build-cross:
 # build a specific docker target ( '%' matches the target as specified in the Dockerfile)
 build-docker-%:
 	@echo "Building Docker image k3d:$(K3D_IMAGE_TAG)-$*"
-	DOCKER_BUILDKIT=1 docker build . -t k3d:$(K3D_IMAGE_TAG)-$* --target $*
+	DOCKER_BUILDKIT=1 docker build . --no-cache -t k3d:$(K3D_IMAGE_TAG)-$* --target $*
 
 # build helper images
 build-helper-images: build-proxy-image build-tools-image
@@ -175,7 +177,7 @@ test:
 
 e2e: build-docker-dind
 	@echo "Running e2e tests in k3d:$(K3D_IMAGE_TAG)"
-	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_INCLUDE="$(E2E_INCLUDE)" E2E_EXCLUDE="$(E2E_EXCLUDE)" E2E_EXTRA="$(E2E_EXTRA)" E2E_RUNNER_START_TIMEOUT=$(E2E_RUNNER_START_TIMEOUT) E2E_HELPER_IMAGE_TAG="$(E2E_HELPER_IMAGE_TAG)" tests/dind.sh "${K3D_IMAGE_TAG}-dind"
+	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_INCLUDE="$(E2E_INCLUDE)" E2E_EXCLUDE="$(E2E_EXCLUDE)" E2E_EXTRA="$(E2E_EXTRA)" E2E_RUNNER_START_TIMEOUT=$(E2E_RUNNER_START_TIMEOUT) E2E_HELPER_IMAGE_TAG="$(E2E_HELPER_IMAGE_TAG)" E2E_KEEP="$(E2E_KEEP)" E2E_PARALLEL="$(E2E_PARALLEL)" tests/dind.sh "${K3D_IMAGE_TAG}-dind"
 
 ci-tests: fmt check e2e
 
