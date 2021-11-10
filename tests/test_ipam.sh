@@ -22,11 +22,11 @@ export CURRENT_STAGE="Test | IPAM"
 highlight "[START] IPAM $EXTRA_TITLE"
 
 clustername="ipamtest"
-subnet="172.45.0.0/16"
-expectedIPGateway="172.45.0.1" # k3d defaults to subnet_start+1 for the Gateway IP
-expectedIPLabelServer0="172.45.0.3"
+subnet="172.80.0.0/16"
+expectedIPGateway="172.80.0.1" # k3d defaults to subnet_start+1 for the Gateway IP
+expectedIPLabelServer0="172.80.0.3"
 expectedIPServer0="$expectedIPLabelServer0/16" # k3d excludes the subnet_start (x.x.x.0) and then uses IPs in sequential order, but .2 will be used by the tools container that gathers information at start
-expectedIPServerLB="172.45.0.4/16"
+expectedIPServerLB="172.80.0.4/16"
 
 info "Creating cluster $clustername..."
 $EXE cluster create $clustername --timeout 360s --subnet $subnet || failed "could not create cluster $clustername"

@@ -8,13 +8,6 @@ volumes:
   - volume: $HOME:/some/path
     nodeFilters:
       - all
-ports:
-  - port: 80:80
-    nodeFilters:
-      - loadbalancer
-  - port: 0.0.0.0:443:443
-    nodeFilters:
-      - loadbalancer
 env:
   - envVar: bar=baz,bob
     nodeFilters:

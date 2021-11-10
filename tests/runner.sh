@@ -11,6 +11,7 @@ CURR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 : "${E2E_INCLUDE:=""}"
 : "${E2E_EXCLUDE:=""}"
 : "${E2E_EXTRA:=""}"
+: "${E2E_PARALLEL:="4"}"
 
 export CURRENT_STAGE="Runner"
 
@@ -92,7 +93,7 @@ function run_tests() {
   #
   # Run Tests
   #
-  local max_batch_size=4
+  local max_batch_size=$E2E_PARALLEL
   local current_batch_size=0
   local current_batch_number=1
   local total_batch_number=$(((num_included_tests + (max_batch_size - 1)) / max_batch_size))

@@ -6,6 +6,9 @@ K3D_IMAGE_TAG=$1
 # define E2E_KEEP to non-empty for keeping the e2e runner container after running the tests
 E2E_KEEP=${E2E_KEEP:-}
 
+# Max. number of tests executed in parallel
+E2E_PARALLEL=${E2E_PARALLEL:-}
+
 # Max. time to wait for the runner container to be up
 RUNNER_START_TIMEOUT=${E2E_RUNNER_START_TIMEOUT:-10}
 
@@ -36,6 +39,7 @@ k3de2e=$(docker run -d \
           -e LOG_LEVEL="$LOG_LEVEL" \
           -e E2E_INCLUDE="$E2E_INCLUDE" \
           -e E2E_EXCLUDE="$E2E_EXCLUDE" \
+          -e E2E_PARALLEL="$E2E_PARALLEL" \
           -e E2E_EXTRA="$E2E_EXTRA" \
           -e LOG_TIMESTAMPS="true" \
           --add-host "k3d-registrytest-registry:127.0.0.1" \
