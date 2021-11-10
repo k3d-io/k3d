@@ -6,6 +6,9 @@ CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./common.sh
 source "$CURR_DIR/common.sh"
 
+LOG_FILE="$TEST_OUTPUT_DIR/$( basename "${BASH_SOURCE[0]}" ).log"
+exec >${LOG_FILE} 2>&1
+
 export CURRENT_STAGE="Test | MemoryLimits"
 
 highlight "[START] MemoryLimitTest $EXTRA_TITLE"
