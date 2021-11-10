@@ -6,8 +6,16 @@ CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./common.sh
 source "$CURR_DIR/common.sh"
 
+### Step Setup ###
+# Redirect all stdout/stderr output to logfile
 LOG_FILE="$TEST_OUTPUT_DIR/$( basename "${BASH_SOURCE[0]}" ).log"
 exec >${LOG_FILE} 2>&1
+export LOG_FILE
+
+# use a kubeconfig file specific to this test
+KUBECONFIG="$KUBECONFIG_ROOT/$( basename "${BASH_SOURCE[0]}" ).yaml"
+export KUBECONFIG
+### Step Setup ###
 
 
 : "${EXTRA_FLAG:=""}"
@@ -26,7 +34,7 @@ clustername="lifecycletest"
 highlight "[START] Lifecycletest $EXTRA_TITLE"
 
 info "Creating cluster $clustername..."
-$EXE cluster create "$clustername" --agents 1 --api-port 6443 --wait --timeout 360s $EXTRA_FLAG || failed "could not create cluster $clustername $EXTRA_TITLE"
+$EXE cluster create "$clustername" --agents 1 --wait --timeout 360s $EXTRA_FLAG || failed "could not create cluster $clustername $EXTRA_TITLE"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
 sleep 10

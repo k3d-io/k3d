@@ -6,8 +6,16 @@ CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./common.sh
 source "$CURR_DIR/common.sh"
 
+### Step Setup ###
+# Redirect all stdout/stderr output to logfile
 LOG_FILE="$TEST_OUTPUT_DIR/$( basename "${BASH_SOURCE[0]}" ).log"
 exec >${LOG_FILE} 2>&1
+export LOG_FILE
+
+# use a kubeconfig file specific to this test
+KUBECONFIG="$KUBECONFIG_ROOT/$( basename "${BASH_SOURCE[0]}" ).yaml"
+export KUBECONFIG
+### Step Setup ###
 
 : "${EXTRA_FLAG:=""}"
 : "${EXTRA_TITLE:=""}"
@@ -22,7 +30,7 @@ export CURRENT_STAGE="Test | multi-server | $K3S_IMAGE_TAG"
 clustername="multiserver"
 
 info "Creating cluster $clustername $EXTRA_TITLE ..."
-$EXE cluster create "$clustername" --servers 3 --api-port 6443 --wait --timeout 360s $EXTRA_FLAG || failed "could not create cluster $clustername $EXTRA_TITLE"
+$EXE cluster create "$clustername" --servers 3 --wait --timeout 360s $EXTRA_FLAG || failed "could not create cluster $clustername $EXTRA_TITLE"
 info "Checking that we have access to the cluster..."
 check_clusters "$clustername" || failed "error checking cluster $EXTRA_TITLE"
 

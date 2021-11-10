@@ -23,7 +23,8 @@ source "$CURR_DIR/common.sh"
 
 info "Preparing filesystem and environment..."
 
-mkdir -p "$HOME"/.kube
+export KUBECONFIG_ROOT="$HOME/.kube"
+mkdir -p "$KUBECONFIG_ROOT"
 
 export TEST_OUTPUT_DIR="$HOME"/testoutput
 mkdir -p "$TEST_OUTPUT_DIR"
@@ -139,7 +140,7 @@ function run_tests() {
   info "FINISHED $section_name${END}
   > ${WHT}Total:\t$num_total_tests${END}
   > ${BLU}Run:\t$num_included_tests${END}
-  > ${YEL}Not Run:\t$num_excluded_tests${END}
+  > ${YEL}Skipped:\t$num_excluded_tests${END}
   > ${GRN}Passed:\t$((num_included_tests - num_failed_tests))${END}
   > ${RED}Failed:\t$num_failed_tests${END}"
 
