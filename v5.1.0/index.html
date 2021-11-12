@@ -1178,7 +1178,7 @@
 <h2 id="what-is-k3d">What is k3d?<a class="headerlink" href="#what-is-k3d" title="Permanent link">&para;</a></h2>
 <p>k3d is a lightweight wrapper to run <a href="https://github.com/rancher/k3s">k3s</a> (Rancher Lab&rsquo;s minimal Kubernetes distribution) in docker.</p>
 <p>k3d makes it very easy to create single- and multi-node <a href="https://github.com/rancher/k3s">k3s</a> clusters in docker, e.g. for local development on Kubernetes.</p>
-<p><strong>Note:</strong> k3d is a <strong>community-driven project</strong>, that is supported by Rancher (SUSE) and it&rsquo;s not an official Rancher (SUSE) project.</p>
+<p><strong>Note:</strong> k3d is a <strong>community-driven project</strong>, that is supported by Rancher (SUSE) and it&rsquo;s not an official Rancher (SUSE) product.</p>
 <details class="tip"><summary>View a quick demo</summary><p><asciinema-player src="/static/asciicast/20210917_k3d_v5.0.0_01.cast" cols=200 rows=32></asciinema-player></p>
 </details>
 <h2 id="learning">Learning<a class="headerlink" href="#learning" title="Permanent link">&para;</a></h2>
@@ -1197,7 +1197,10 @@
 </ul>
 <h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="https://docs.docker.com/install/"><strong>docker</strong></a> to be able to use k3d at all</li>
+<li><a href="https://docs.docker.com/install/"><strong>docker</strong></a> to be able to use k3d at all<ul>
+<li>Note: k3d v5.x.x requires at least Docker v20.10.4 to work properly</li>
+</ul>
+</li>
 <li><a href="https://kubernetes.io/docs/tasks/tools/#kubectl">kubectl</a> to interact with the Kubernetes cluster</li>
 </ul>
 <h2 id="releases">Releases<a class="headerlink" href="#releases" title="Permanent link">&para;</a></h2>
@@ -1324,7 +1327,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">September 17, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 12, 2021</span>
       
     
   </small>
