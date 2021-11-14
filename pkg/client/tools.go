@@ -60,7 +60,7 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 	loadWithToolsNode := false
 
 	switch opts.LoadingMode {
-	case k3d.AutoDetect:
+	case k3d.ImportModeAutoDetect:
 		if err != nil {
 			return fmt.Errorf("failed to retrieve container runtime information: %w", err)
 		}
@@ -72,9 +72,9 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 			l.Log().Infof("Auto-detected a remote docker daemon, using tools node for loading images")
 			loadWithToolsNode = true
 		}
-	case k3d.ToolsNode:
+	case k3d.ImportModeTools:
 		loadWithToolsNode = true
-	case k3d.Direct:
+	case k3d.ImportModeDirect:
 		loadWithToolsNode = false
 	}
 
@@ -184,7 +184,7 @@ func importWithStream(ctx context.Context, runtime runtimes.Runtime, imagesFromR
 
 	if len(imagesFromTar) > 0 {
 		// copy tarfiles to shared volume
-		l.Log().Infof("Saving %d tarball(s) to shared image volume...", len(imagesFromTar))
+		l.Log().Infof("Importing images from %d tarball(s)...", len(imagesFromTar))
 
 		files := make([]*os.File, len(imagesFromTar))
 		readers := make([]io.Reader, len(imagesFromTar))
