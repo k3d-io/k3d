@@ -65,10 +65,10 @@ So if a file './rancher/k3d-tools' exists, k3d will try to import it instead of 
 				l.Log().Errorln("No load-mode specified")
 				l.Log().Fatalln(err)
 			}
-			if mode, ok := k3d.LoadModes[loadModeStr]; !ok {
+			if mode, ok := k3d.ImportModes[loadModeStr]; !ok {
 				l.Log().Fatalf("Unknown image loading mode '%s'\n", loadModeStr)
 			} else {
-				loadImageOpts.LoadingMode = mode
+				loadImageOpts.Mode = mode
 			}
 
 			l.Log().Debugf("Importing image(s) [%+v] from runtime [%s] into cluster(s) [%+v]...", images, runtimes.SelectedRuntime, clusters)
@@ -98,7 +98,7 @@ So if a file './rancher/k3d-tools' exists, k3d will try to import it instead of 
 
 	cmd.Flags().BoolVarP(&loadImageOpts.KeepTar, "keep-tarball", "k", false, "Do not delete the tarball containing the saved images from the shared volume")
 	cmd.Flags().BoolVarP(&loadImageOpts.KeepToolsNode, "keep-tools", "t", false, "Do not delete the tools node after import")
-	cmd.Flags().StringP("mode", "m", string(k3d.ImportModeAutoDetect), "Which method to use to import images into the cluster [auto, direct, tools].")
+	cmd.Flags().StringP("mode", "m", string(k3d.ImportModeAutoDetect), "Which method to use to import images into the cluster [auto, direct, tools]. See https://k3d.io/usage/guides/importing_images/")
 	/* Subcommands */
 
 	// done

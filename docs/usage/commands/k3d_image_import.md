@@ -29,7 +29,7 @@ k3d image import [IMAGE | ARCHIVE [IMAGE | ARCHIVE...]] [flags]
   -h, --help                  help for import
   -k, --keep-tarball          Do not delete the tarball containing the saved images from the shared volume
   -t, --keep-tools            Do not delete the tools node after import
-  -m, --load-mode            Which method to use to load images to the cluster [auto, direct, tools-node]. (default "auto")
+  -m, --mode string           Which method to use to import images into the cluster [auto, direct, tools]. (default "auto")
 ```
 
 ### Options inherited from parent commands
@@ -39,25 +39,6 @@ k3d image import [IMAGE | ARCHIVE [IMAGE | ARCHIVE...]] [flags]
       --trace        Enable super verbose output (trace logging)
       --verbose      Enable verbose output (debug logging)
 ```
-
-
-### Loading modes
-
-#### Auto
-
-Auto-determine whether to use `direct` or `tools-node`.
-
-For remote container runtimes, `tools-node` is faster due to less network overhead, thus it is automatically selected for remote runtimes.
-
-Otherwise direct is used.
-
-#### Direct
-
-Directly load the given images to the k3s nodes. No separate container is spawned, no intermediate files are written.
-
-#### Tools Node
-
-Start a `k3d-tools` container in the container runtime, copy images to that runtime, then load the images to k3s nodes from there.
 
 ### SEE ALSO
 

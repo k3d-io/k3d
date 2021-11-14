@@ -59,7 +59,7 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 	loadWithToolsNode := false
 
-	switch opts.LoadingMode {
+	switch opts.Mode {
 	case k3d.ImportModeAutoDetect:
 		if err != nil {
 			return fmt.Errorf("failed to retrieve container runtime information: %w", err)
@@ -72,7 +72,7 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 			l.Log().Infof("Auto-detected a remote docker daemon, using tools node for loading images")
 			loadWithToolsNode = true
 		}
-	case k3d.ImportModeTools:
+	case k3d.ImportModeToolsNode:
 		loadWithToolsNode = true
 	case k3d.ImportModeDirect:
 		loadWithToolsNode = false
@@ -87,9 +87,9 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 	 * Note: temporary storage location is always the shared image volume and actions are always executed by the tools node
 	 */
 	if loadWithToolsNode {
-		err = importWithToolsNode(ctx, runtime, err, cluster, imagesFromRuntime, imagesFromTar, opts)
+		err = importWithToolsNode(ctx, runtime, cluster, imagesFromRuntime, imagesFromTar, opts)
 	} else {
-		err = importWithStream(ctx, runtime, imagesFromRuntime, cluster, imagesFromTar)
+		err = importWithStream(ctx, runtime, cluster, imagesFromRuntime, imagesFromTar)
 	}
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 	return nil
 }
 
-func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, err error, cluster *k3d.Cluster, imagesFromRuntime []string, imagesFromTar []string, opts k3d.ImageImportOpts) error {
+func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, imagesFromRuntime []string, imagesFromTar []string, opts k3d.ImageImportOpts) error {
 	// create tools node to export images
 	toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
 	if err != nil {
@@ -169,7 +169,7 @@ func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, err erro
 	return nil
 }
 
-func importWithStream(ctx context.Context, runtime runtimes.Runtime, imagesFromRuntime []string, cluster *k3d.Cluster, imagesFromTar []string) error {
+func importWithStream(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, imagesFromRuntime []string, imagesFromTar []string) error {
 	if len(imagesFromRuntime) > 0 {
 		l.Log().Infof("Loading %d image(s) from runtime into nodes...", len(imagesFromRuntime))
 		// open a stream to all given images
