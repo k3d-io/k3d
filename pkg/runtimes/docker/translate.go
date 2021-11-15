@@ -285,7 +285,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 	} else {
 		l.Log().Debugf("no netlabel present on container %s", containerDetails.Name)
 	}
-	if clusterNet != nil {
+	if clusterNet != nil && labels[k3d.LabelNetwork] != "host" {
 		parsedIP, err := netaddr.ParseIP(clusterNet.IPAddress)
 		if err != nil {
 			if nodeState.Running && nodeState.Status != "restarting" { // if the container is not running or currently restarting, it won't have an IP, so we don't error in that case

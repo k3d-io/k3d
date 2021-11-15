@@ -28,7 +28,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
@@ -40,6 +39,7 @@ import (
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	runtimeErrors "github.com/rancher/k3d/v5/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/spf13/pflag"
 )
 
 // GetDefaultObjectLabelsFilter returns docker type filters created from k3d labels
@@ -163,7 +163,7 @@ func (d Docker) ReadFromNode(ctx context.Context, path string, node *k3d.Node) (
 }
 
 // GetDockerClient returns a docker client
-func GetDockerClient() (*client.Client, error) {
+func GetDockerClient() (client.APIClient, error) {
 	dockerCli, err := command.NewDockerCli(command.WithStandardStreams())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new docker CLI with standard streams: %w", err)
@@ -172,49 +172,16 @@ func GetDockerClient() (*client.Client, error) {
 	newClientOpts := flags.NewClientOptions()
 	newClientOpts.Common.LogLevel = l.Log().GetLevel().String() // this is needed, as the following Initialize() call will set a new log level on the global logrus instance
 
+	flagset := pflag.NewFlagSet("docker", pflag.ContinueOnError)
+	newClientOpts.Common.InstallFlags(flagset)
+	newClientOpts.Common.SetDefaultOptions(flagset)
+
 	err = dockerCli.Initialize(newClientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize docker CLI: %w", err)
 	}
 
-	// check for TLS Files used for protected connections
-	currentContext := dockerCli.CurrentContext()
-	storageInfo := dockerCli.ContextStore().GetStorageInfo(currentContext)
-	tlsFilesMap, err := dockerCli.ContextStore().ListTLSFiles(currentContext)
-	if err != nil {
-		return nil, fmt.Errorf("docker CLI failed to list TLS files for context '%s': %w", currentContext, err)
-	}
-	endpointDriver := "docker"
-	tlsFiles := tlsFilesMap[endpointDriver]
-
-	// get client by endpoint configuration
-	// inspired by https://github.com/docker/cli/blob/a32cd16160f1b41c1c4ae7bee4dac929d1484e59/cli/command/cli.go#L296-L308
-	ep := dockerCli.DockerEndpoint()
-	if ep.Host != "" {
-		clientopts, err := ep.ClientOpts()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get client opts for docker endpoint: %w", err)
-		}
-		headers := make(map[string]string, 1)
-		headers["User-Agent"] = command.UserAgent()
-		clientopts = append(clientopts, client.WithHTTPHeaders(headers))
-
-		// only set TLS config if present
-		if len(tlsFiles) >= 3 {
-			clientopts = append(clientopts,
-				client.WithTLSClientConfig(
-					path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[0]),
-					path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[1]),
-					path.Join(storageInfo.TLSPath, endpointDriver, tlsFiles[2]),
-				),
-			)
-		}
-
-		return client.NewClientWithOpts(clientopts...)
-	}
-
-	// fallback default client
-	return client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	return dockerCli.Client(), nil
 }
 
 // isAttachedToNetwork return true if node is attached to network

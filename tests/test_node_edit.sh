@@ -6,6 +6,17 @@ CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./common.sh
 source "$CURR_DIR/common.sh"
 
+### Step Setup ###
+# Redirect all stdout/stderr output to logfile
+LOG_FILE="$TEST_OUTPUT_DIR/$( basename "${BASH_SOURCE[0]}" ).log"
+exec >${LOG_FILE} 2>&1
+export LOG_FILE
+
+# use a kubeconfig file specific to this test
+KUBECONFIG="$KUBECONFIG_ROOT/$( basename "${BASH_SOURCE[0]}" ).yaml"
+export KUBECONFIG
+### Step Setup ###
+
 export CURRENT_STAGE="Test | NodeEdit"
 
 highlight "[START] NodeEdit"

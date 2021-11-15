@@ -51,6 +51,8 @@ E2E_EXCLUDE ?=
 E2E_EXTRA ?=
 E2E_RUNNER_START_TIMEOUT ?= 10
 E2E_HELPER_IMAGE_TAG ?=
+E2E_KEEP ?=
+E2E_PARALLEL ?=
 
 ########## Go Build Options ##########
 # Build targets
@@ -67,7 +69,7 @@ TESTS     := ./...
 TESTFLAGS :=
 LDFLAGS   := -w -s -X github.com/rancher/k3d/v5/version.Version=${GIT_TAG} -X github.com/rancher/k3d/v5/version.K3sVersion=${K3S_TAG}
 GCFLAGS   := 
-GOFLAGS   :=
+GOFLAGS   := -mod vendor
 BINDIR    := $(CURDIR)/bin
 BINARIES  := k3d
 
@@ -125,12 +127,16 @@ build-cross:
 # build a specific docker target ( '%' matches the target as specified in the Dockerfile)
 build-docker-%:
 	@echo "Building Docker image k3d:$(K3D_IMAGE_TAG)-$*"
-	DOCKER_BUILDKIT=1 docker build . -t k3d:$(K3D_IMAGE_TAG)-$* --target $*
+	DOCKER_BUILDKIT=1 docker build . --no-cache -t k3d:$(K3D_IMAGE_TAG)-$* --target $*
 
 # build helper images
-build-helper-images:
+build-helper-images: build-proxy-image build-tools-image
+
+build-proxy-image:
 	@echo "Building docker image rancher/k3d-proxy:$(K3D_IMAGE_TAG)"
-	DOCKER_BUILDKIT=1 docker build proxy/ -f proxy/Dockerfile -t rancher/k3d-proxy:$(K3D_IMAGE_TAG)
+	DOCKER_BUILDKIT=1 docker build --no-cache proxy/ -f proxy/Dockerfile -t rancher/k3d-proxy:$(K3D_IMAGE_TAG)
+
+build-tools-image:
 	@echo "Building docker image rancher/k3d-tools:$(K3D_IMAGE_TAG)"
 	DOCKER_BUILDKIT=1 docker build --no-cache tools/ -f tools/Dockerfile -t rancher/k3d-tools:$(K3D_IMAGE_TAG) --build-arg GIT_TAG=$(GIT_TAG)
 
@@ -171,7 +177,7 @@ test:
 
 e2e: build-docker-dind
 	@echo "Running e2e tests in k3d:$(K3D_IMAGE_TAG)"
-	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_INCLUDE="$(E2E_INCLUDE)" E2E_EXCLUDE="$(E2E_EXCLUDE)" E2E_EXTRA="$(E2E_EXTRA)" E2E_RUNNER_START_TIMEOUT=$(E2E_RUNNER_START_TIMEOUT) E2E_HELPER_IMAGE_TAG="$(E2E_HELPER_IMAGE_TAG)" tests/dind.sh "${K3D_IMAGE_TAG}-dind"
+	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_INCLUDE="$(E2E_INCLUDE)" E2E_EXCLUDE="$(E2E_EXCLUDE)" E2E_EXTRA="$(E2E_EXTRA)" E2E_RUNNER_START_TIMEOUT=$(E2E_RUNNER_START_TIMEOUT) E2E_HELPER_IMAGE_TAG="$(E2E_HELPER_IMAGE_TAG)" E2E_KEEP="$(E2E_KEEP)" E2E_PARALLEL="$(E2E_PARALLEL)" tests/dind.sh "${K3D_IMAGE_TAG}-dind"
 
 ci-tests: fmt check e2e
 

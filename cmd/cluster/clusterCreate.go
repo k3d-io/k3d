@@ -291,7 +291,7 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	cmd.Flags().StringP("image", "i", "", "Specify k3s image that you want to use for the nodes")
 	_ = cfgViper.BindPFlag("image", cmd.Flags().Lookup("image"))
-	cfgViper.SetDefault("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.GetK3sVersion(false)))
+	cfgViper.SetDefault("image", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.K3sVersion))
 
 	cmd.Flags().String("network", "", "Join an existing network")
 	_ = cfgViper.BindPFlag("network", cmd.Flags().Lookup("network"))

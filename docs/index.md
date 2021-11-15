@@ -8,7 +8,7 @@ k3d is a lightweight wrapper to run [k3s](https://github.com/rancher/k3s) (Ranch
 
 k3d makes it very easy to create single- and multi-node [k3s](https://github.com/rancher/k3s) clusters in docker, e.g. for local development on Kubernetes.
 
-**Note:** k3d is a **community-driven project**, that is supported by Rancher (SUSE) and it's not an official Rancher (SUSE) project.
+**Note:** k3d is a **community-driven project**, that is supported by Rancher (SUSE) and it's not an official Rancher (SUSE) product.
 
 ??? Tip "View a quick demo"
     <asciinema-player src="/static/asciicast/20210917_k3d_v5.0.0_01.cast" cols=200 rows=32></asciinema-player>
@@ -28,6 +28,7 @@ k3d makes it very easy to create single- and multi-node [k3s](https://github.com
 ## Requirements
 
 - [**docker**](https://docs.docker.com/install/) to be able to use k3d at all
+  - Note: k3d v5.x.x requires at least Docker v20.10.4 to work properly
 - [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) to interact with the Kubernetes cluster
 
 ## Releases

@@ -176,6 +176,8 @@ type NodeDeleteOpts struct {
 // NodeHookAction is an interface to implement actions that should trigger at specific points of the node lifecycle
 type NodeHookAction interface {
 	Run(ctx context.Context, node *Node) error
+	Name() string // returns the name (type) of the action
+	Info() string // returns a description of what this action does
 }
 
 // LoadMode describes how images are loaded into the cluster

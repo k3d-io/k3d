@@ -32,6 +32,7 @@ k3d creates containerized k3s clusters. This means, that you can spin up a multi
 ## Requirements
 
 - [docker](https://docs.docker.com/install/)
+  - Note: k3d v5.x.x requires at least Docker v20.10.4 to work properly
 
 ## Releases
 

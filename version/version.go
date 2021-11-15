@@ -22,10 +22,13 @@ THE SOFTWARE.
 package version
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
 
-	"github.com/heroku/docker-registry-client/registry"
-	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/types/k3s"
 )
 
 // Version is the string that contains version
@@ -40,46 +43,49 @@ var K3sVersion = "v1.21.4-k3s2"
 // GetVersion returns the version for cli, it gets it from "git describe --tags" or returns "dev" when doing simple go build
 func GetVersion() string {
 	if len(Version) == 0 {
-		return "v4-dev"
+		return "v5-dev"
 	}
 	return Version
 }
 
 // GetK3sVersion returns the version string for K3s
-func GetK3sVersion(latest bool) string {
-	if latest {
-		version, err := fetchLatestK3sVersion()
-		if err != nil || version == "" {
-			l.Log().Warnln("Failed to fetch latest K3s version from DockerHub, falling back to hardcoded version.")
-			return K3sVersion
+func GetK3sVersion(channel string) (string, error) {
+	if channel != "" {
+		version, err := fetchLatestK3sVersion(channel)
+		if err != nil {
+			return "", fmt.Errorf("error getting K3s version for channel %s: %w", channel, err)
 		}
-		return version
+		return version, nil
 	}
-	return K3sVersion
+	return K3sVersion, nil
 }
 
 // fetchLatestK3sVersion tries to fetch the latest version of k3s from DockerHub
-func fetchLatestK3sVersion() (string, error) {
-	// TODO: actually fetch the latest image from the k3s channel server
+func fetchLatestK3sVersion(channel string) (string, error) {
 
-	url := "https://registry-1.docker.io/"
-	username := "" // anonymous
-	password := "" // anonymous
-	repository := "rancher/k3s"
-
-	hub, err := registry.New(url, username, password)
+	resp, err := http.Get(k3s.K3sChannelServerURL)
 	if err != nil {
-		return "", fmt.Errorf("failed to create new registry instance from URL '%s': %w", url, err)
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	out := k3s.ChannelServerResponse{}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading channelserver response body: %w", err)
 	}
 
-	tags, err := hub.Tags(repository)
-	if err != nil || len(tags) == 0 {
-		return "", fmt.Errorf("failed to list tags from repository with URL '%s': %w", url, err)
+	if err := json.Unmarshal(body, &out); err != nil {
+		return "", fmt.Errorf("error unmarshalling channelserver response: %w", err)
 	}
 
-	l.Log().Debugln("Fetched the following tags for rancher/k3s from DockerHub:")
-	l.Log().Debugln(tags)
+	for _, c := range out.Channels {
+		if c.Name == channel {
+			return strings.ReplaceAll(c.Latest, "+", "-"), err
+		}
+	}
 
-	return "sampleTag", nil
+	return "", fmt.Errorf("no latest version found for channel %s (%s)", channel, k3s.K3sChannelServerURL)
 
 }

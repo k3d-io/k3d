@@ -101,13 +101,13 @@ func removeContainer(ctx context.Context, ID string) error {
 		return fmt.Errorf("docker failed to remove the container '%s': %w", ID, err)
 	}
 
-	l.Log().Infoln("Deleted", ID)
+	l.Log().Tracef("[Docker] Deleted Container %s", ID)
 
 	return nil
 }
 
 // pullImage pulls a container image and outputs progress if --verbose flag is set
-func pullImage(ctx context.Context, docker *client.Client, image string) error {
+func pullImage(ctx context.Context, docker client.APIClient, image string) error {
 
 	resp, err := docker.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
