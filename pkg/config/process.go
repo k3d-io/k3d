@@ -25,14 +25,27 @@ package config
 import (
 	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
 	l "github.com/rancher/k3d/v5/pkg/logger"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 )
+
+// ProcessSimpleConfig applies processing to the simple config, sanitizing it and doing some modifications
+func ProcessSimpleConfig(simpleConfig *conf.SimpleConfig) error {
+	if simpleConfig.Network == "host" {
+		l.Log().Infoln("[SimpleConfig] Hostnetwork selected - disabling injection of docker host into the cluster, server load balancer and setting the api port to the k3s default")
+		simpleConfig.Options.K3dOptions.DisableLoadbalancer = true
+
+		l.Log().Debugf("Host network was chosen, changing provided/random api port to k3s:%s", k3d.DefaultAPIPort)
+		simpleConfig.ExposeAPI.HostPort = k3d.DefaultAPIPort
+	}
+	return nil
+}
 
 // ProcessClusterConfig applies processing to the config sanitizing it and doing
 // some final modifications
 func ProcessClusterConfig(clusterConfig conf.ClusterConfig) (*conf.ClusterConfig, error) {
 	cluster := clusterConfig.Cluster
 	if cluster.Network.Name == "host" {
-		l.Log().Infoln("Hostnetwork selected - disabling injection of docker host into the cluster, server load balancer and setting the api port to the k3s default")
+		l.Log().Infoln("[ClusterConfig] Hostnetwork selected - disabling injection of docker host into the cluster, server load balancer and setting the api port to the k3s default")
 		// if network is set to host, exposed api port must be the one imposed by k3s
 		k3sPort := cluster.KubeAPI.Port.Port()
 		l.Log().Debugf("Host network was chosen, changing provided/random api port to k3s:%s", k3sPort)
