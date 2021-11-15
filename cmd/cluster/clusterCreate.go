@@ -140,17 +140,15 @@ func NewCmdClusterCreate() *cobra.Command {
 				simpleCfg.Name = args[0]
 			}
 
+			if err := config.ProcessSimpleConfig(&simpleCfg); err != nil {
+				l.Log().Fatalf("error processing/sanitizing simple config: %v", err)
+			}
+
 			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, simpleCfg)
 			if err != nil {
 				l.Log().Fatalln(err)
 			}
 			l.Log().Debugf("===== Merged Cluster Config =====\n%+v\n===== ===== =====\n", clusterConfig)
-
-			clusterConfig, err = config.ProcessClusterConfig(*clusterConfig)
-			if err != nil {
-				l.Log().Fatalln(err)
-			}
-			l.Log().Debugf("===== Processed Cluster Config =====\n%+v\n===== ===== =====\n", clusterConfig)
 
 			if err := config.ValidateClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *clusterConfig); err != nil {
 				l.Log().Fatalln("Failed Cluster Configuration Validation: ", err)
