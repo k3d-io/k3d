@@ -180,10 +180,27 @@ type NodeHookAction interface {
 	Info() string // returns a description of what this action does
 }
 
+// LoadMode describes how images are loaded into the cluster
+type ImportMode string
+
+const (
+	ImportModeAutoDetect ImportMode = "auto"
+	ImportModeDirect     ImportMode = "direct"
+	ImportModeToolsNode  ImportMode = "tools-node"
+)
+
+// ImportModes defines the loading methods for image loading
+var ImportModes = map[string]ImportMode{
+	string(ImportModeAutoDetect): ImportModeAutoDetect,
+	string(ImportModeDirect):     ImportModeDirect,
+	string(ImportModeToolsNode):  ImportModeToolsNode,
+}
+
 // ImageImportOpts describes a set of options one can set for loading image(s) into cluster(s)
 type ImageImportOpts struct {
 	KeepTar       bool
 	KeepToolsNode bool
+	Mode   ImportMode
 }
 
 type IPAM struct {

@@ -29,6 +29,7 @@ k3d image import [IMAGE | ARCHIVE [IMAGE | ARCHIVE...]] [flags]
   -h, --help                  help for import
   -k, --keep-tarball          Do not delete the tarball containing the saved images from the shared volume
   -t, --keep-tools            Do not delete the tools node after import
+  -m, --mode string           Which method to use to import images into the cluster [auto, direct, tools]. (default "auto")
 ```
 
 ### Options inherited from parent commands

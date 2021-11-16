@@ -5,6 +5,7 @@ nav:
   - multiserver.md
   - registries.md
   - exposing_services.md
+  - importing_images.md
   - k3s.md
   - advanced
   - commands
