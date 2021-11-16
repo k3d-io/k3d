@@ -247,7 +247,8 @@ func loadImageFromStream(ctx context.Context, runtime runtimes.Runtime, stream i
 	})
 
 	pipeId := 0
-	for _, node := range cluster.Nodes {
+	for _, n := range cluster.Nodes {
+		node := n
 		// only import image in server and agent nodes (i.e. ignoring auxiliary nodes like the server loadbalancer)
 		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
 			pipeReader := pipeReaders[pipeId]
