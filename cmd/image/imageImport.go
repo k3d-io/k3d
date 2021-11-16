@@ -115,20 +115,11 @@ func parseLoadImageCmd(cmd *cobra.Command, args []string) ([]string, []*k3d.Clus
 	}
 	clusters := []*k3d.Cluster{}
 	for _, clusterName := range clusterNames {
-		clusters = append(clusters, &k3d.Cluster{Name: clusterName})
-	}
-
-	// Figure out the nodes for each cluster
-	nodeList, err := client.NodeList(cmd.Context(), runtimes.SelectedRuntime)
-	if err != nil {
-		l.Log().Fatalf("Failed to list clusters %v", err)
-	}
-	for _, node := range nodeList {
-		for _, cluster := range clusters {
-			if cluster.Name == node.RuntimeLabels[k3d.LabelClusterName] && node.Role == k3d.ServerRole {
-				cluster.Nodes = append(cluster.Nodes, node)
-			}
+		cluster, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterName})
+		if err != nil {
+			l.Log().Fatalf("failed to get cluster %s: %v", clusterName, err)
 		}
+		clusters = append(clusters, cluster)
 	}
 
 	// images
