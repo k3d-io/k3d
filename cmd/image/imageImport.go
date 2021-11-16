@@ -118,7 +118,6 @@ func parseLoadImageCmd(cmd *cobra.Command, args []string) ([]string, []*k3d.Clus
 		clusters = append(clusters, &k3d.Cluster{Name: clusterName})
 	}
 
-	// TODO is this actually necessary? looks like it never worked as intended at first glance.
 	// Figure out the nodes for each cluster
 	nodeList, err := client.NodeList(cmd.Context(), runtimes.SelectedRuntime)
 	if err != nil {
@@ -126,7 +125,7 @@ func parseLoadImageCmd(cmd *cobra.Command, args []string) ([]string, []*k3d.Clus
 	}
 	for _, node := range nodeList {
 		for _, cluster := range clusters {
-			if cluster.Name == node.RuntimeLabels[k3d.LabelClusterName] {
+			if cluster.Name == node.RuntimeLabels[k3d.LabelClusterName] && node.Role == k3d.ServerRole {
 				cluster.Nodes = append(cluster.Nodes, node)
 			}
 		}
