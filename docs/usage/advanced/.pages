@@ -2,3 +2,4 @@ title: Advanced Guides
 nav:
   - calico.md
   - cuda.md
+  - podman.md
