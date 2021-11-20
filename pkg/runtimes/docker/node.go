@@ -395,14 +395,11 @@ func executeInNode(ctx context.Context, node *k3d.Node, cmd []string, stdin io.R
 	}
 
 	execConnection, err := docker.ContainerExecAttach(ctx, exec.ID, types.ExecStartCheck{
-		Tty: true,
+		// Don't use tty true when piping stdin.
+		Tty: !attachStdin,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("docker failed to attach to exec process in node '%s': %w", node.Name, err)
-	}
-
-	if err := docker.ContainerExecStart(ctx, exec.ID, types.ExecStartCheck{Tty: true}); err != nil {
-		return nil, fmt.Errorf("docker failed to start exec process in node '%s': %w", node.Name, err)
 	}
 
 	// If we need to write to stdin pipe, start a new goroutine that writes the stream to stdin
