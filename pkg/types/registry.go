@@ -34,12 +34,13 @@ const (
 
 // Registry describes a k3d-managed registry
 type Registry struct {
-	ClusterRef   string       // filled automatically -> if created with a cluster
-	Protocol     string       `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
-	Host         string       `yaml:"host" json:"host"`
-	Image        string       `yaml:"image,omitempty" json:"image,omitempty"`
-	ExposureOpts ExposureOpts `yaml:"expose" json:"expose"`
-	Options      struct {
+	ClusterRef     string       // filled automatically -> if created with a cluster
+	Protocol       string       `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
+	Host           string       `yaml:"host" json:"host"`
+	Image          string       `yaml:"image,omitempty" json:"image,omitempty"`
+	DefaultNetwork string       `yaml:"defaultNetwork,omitempty" json:"defaultNetwork,omitempty"`
+	ExposureOpts   ExposureOpts `yaml:"expose" json:"expose"`
+	Options        struct {
 		ConfigFile string `yaml:"configFile,omitempty" json:"configFile,omitempty"`
 		Proxy      struct {
 			RemoteURL string `yaml:"remoteURL" json:"remoteURL"`
