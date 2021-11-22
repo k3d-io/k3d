@@ -492,6 +492,12 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 		if fixes.FixEnabled(fixes.EnvFixDNS) {
 			l.Log().Debugln(">>> enabling dns magic")
 
+			for _, v := range node.Volumes {
+				if strings.Contains(v, "/etc/resolv.conf") {
+					return fmt.Errorf("[Node %s] Cannot activate DNS fix (K3D_FIX_DNS) when there's a file mounted at /etc/resolv.conf!", node.Name)
+				}
+			}
+
 			if nodeStartOpts.EnvironmentInfo == nil || nodeStartOpts.EnvironmentInfo.HostGateway == nil {
 				return fmt.Errorf("Cannot enable DNS fix, as Host Gateway IP is missing!")
 			}
