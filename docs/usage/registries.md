@@ -96,7 +96,7 @@ If you follow the guide closely (or definitely if you use the k3d-managed option
 However, you usually want to push images into that registry from your local machine, which **does not know** that name by default.  
 Now you have a few options, including the following three:  
 
-1. Use `localhost`: Since the container will have a port mapped to your local host, you can just directly reference it via e.g. `localhost:5432`, where `5432` is the mapped port
+1. Use `localhost`: Since the container will have a port mapped to your local host, you can just directly reference it via e.g. `localhost:12345`, where `12345` is the mapped port
    - If you later pull the image from the registry, only the repository path (e.g. `myrepo/myimage:mytag` in `mycluster-registry:5000/myrepo/myimage:mytag`) matters to find your image in the targeted registry.
 2. Get your machine to know the container name: For this you can use the plain old hosts file (`/etc/hosts` on Unix systems and `C:\windows\system32\drivers\etc\hosts` on Windows) by adding an entry like the following to the end of the file:  
 
@@ -139,10 +139,10 @@ Now you have a few options, including the following three:
 
     ```bash
     docker volume create local_registry
-    docker container run -d --name registry.localhost -v local_registry:/var/lib/registry --restart always -p 5000:5000 registry:2
+    docker container run -d --name registry.localhost -v local_registry:/var/lib/registry --restart always -p 12345:5000 registry:2
     ```
 
-    These commands will start your registry container with name and port `registry.localhost:5000`. In order to push to this registry, you will need to make it accessible as described in the next section.  
+    These commands will start your registry container with name and port (on your host) `registry.localhost:12345`. In order to push to this registry, you will need to make it accessible as described in the next section.  
     Once your registry is up and running, we will need to add it to your `registries.yaml` configuration file.  
     Finally, you have to connect the registry network to the k3d cluster network: `#!bash docker network connect k3d-k3s-default registry.localhost`.  
     And then you can [test your local registry](#testing-your-registry).
@@ -172,8 +172,8 @@ First, we can download some image (like `nginx`) and push it to our local regist
 
 ```bash
 docker pull nginx:latest
-docker tag nginx:latest k3d-registry.localhost:5000/nginx:latest
-docker push k3d-registry.localhost:5000/nginx:latest
+docker tag nginx:latest k3d-registry.localhost:12345/nginx:latest
+docker push k3d-registry.localhost:12345/nginx:latest
 ```
 
 Then we can deploy a pod referencing this image to your cluster:
