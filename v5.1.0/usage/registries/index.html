@@ -1324,7 +1324,7 @@ If you follow the guide closely (or definitely if you use the k3d-managed option
 However, you usually want to push images into that registry from your local machine, which <strong>does not know</strong> that name by default.<br />
 Now you have a few options, including the following three:  </p>
 <ol>
-<li>Use <code>localhost</code>: Since the container will have a port mapped to your local host, you can just directly reference it via e.g. <code>localhost:5432</code>, where <code>5432</code> is the mapped port<ul>
+<li>Use <code>localhost</code>: Since the container will have a port mapped to your local host, you can just directly reference it via e.g. <code>localhost:12345</code>, where <code>12345</code> is the mapped port<ul>
 <li>If you later pull the image from the registry, only the repository path (e.g. <code>myrepo/myimage:mytag</code> in <code>mycluster-registry:5000/myrepo/myimage:mytag</code>) matters to find your image in the targeted registry.</li>
 </ul>
 </li>
@@ -1368,9 +1368,9 @@ Otherwise, it&rsquo;s installable using <code>sudo apt install libnss-myhostname
 <p><em>We recommend using a k3d-managed registry, as it plays nicely together with k3d clusters, but here&rsquo;s also a guide to create your own (not k3d-managed) registry, if you need features or customizations, that k3d does not provide:</em></p>
 <details class="nonk3dregistry"><summary>Using your own (not k3d-managed) local registry</summary><p>You can start your own local registry it with some <code>docker</code> commands, like:</p>
 <div class="highlight"><pre><span></span><code>docker volume create local_registry
-docker container run -d --name registry.localhost -v local_registry:/var/lib/registry --restart always -p <span class="m">5000</span>:5000 registry:2
+docker container run -d --name registry.localhost -v local_registry:/var/lib/registry --restart always -p <span class="m">12345</span>:5000 registry:2
 </code></pre></div>
-<p>These commands will start your registry container with name and port <code>registry.localhost:5000</code>. In order to push to this registry, you will need to make it accessible as described in the next section.<br />
+<p>These commands will start your registry container with name and port (on your host) <code>registry.localhost:12345</code>. In order to push to this registry, you will need to make it accessible as described in the next section.<br />
 Once your registry is up and running, we will need to add it to your <code>registries.yaml</code> configuration file.<br />
 Finally, you have to connect the registry network to the k3d cluster network: <code class="highlight">docker network connect k3d-k3s-default registry.localhost</code>.<br />
 And then you can <a href="#testing-your-registry">test your local registry</a>.</p>
@@ -1393,8 +1393,8 @@ Things would be basically the same for checking an external registry, but some a
 <h3 id="nginx-deployment">Nginx Deployment<a class="headerlink" href="#nginx-deployment" title="Permanent link">&para;</a></h3>
 <p>First, we can download some image (like <code>nginx</code>) and push it to our local registry with:</p>
 <div class="highlight"><pre><span></span><code>docker pull nginx:latest
-docker tag nginx:latest k3d-registry.localhost:5000/nginx:latest
-docker push k3d-registry.localhost:5000/nginx:latest
+docker tag nginx:latest k3d-registry.localhost:12345/nginx:latest
+docker push k3d-registry.localhost:12345/nginx:latest
 </code></pre></div>
 <p>Then we can deploy a pod referencing this image to your cluster:</p>
 <div class="highlight"><pre><span></span><code>cat <span class="s">&lt;&lt;EOF | kubectl apply -f -</span>
@@ -1440,7 +1440,7 @@ docker push k3d-registry.localhost:5000/nginx:latest
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 22, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 23, 2021</span>
       
     
   </small>
