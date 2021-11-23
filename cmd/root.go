@@ -23,9 +23,12 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -85,7 +88,9 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 	rootCmd.Flags().BoolVar(&flags.version, "version", false, "Show k3d and default k3s version")
 
 	// add subcommands
-	rootCmd.AddCommand(NewCmdCompletion(rootCmd),
+	rootCmd.AddCommand(
+		NewCmdVersion(),
+		NewCmdCompletion(rootCmd),
 		cluster.NewCmdCluster(),
 		kubeconfig.NewCmdKubeconfig(),
 		node.NewCmdNode(),
@@ -93,14 +98,6 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 		cfg.NewCmdConfig(),
 		registry.NewCmdRegistry(),
 		debug.NewCmdDebug(),
-		&cobra.Command{
-			Use:   "version",
-			Short: "Show k3d and default k3s version",
-			Long:  "Show k3d and default k3s version",
-			Run: func(cmd *cobra.Command, args []string) {
-				printVersion()
-			},
-		},
 		&cobra.Command{
 			Use:   "runtime-info",
 			Short: "Show runtime information",
@@ -116,7 +113,8 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 				}
 			},
 			Hidden: true,
-		})
+		},
+	)
 
 	// Init
 	cobra.OnInitialize(initLogging, initRuntime)
@@ -208,9 +206,122 @@ func initRuntime() {
 	}
 }
 
+func NewCmdVersion() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "version",
+		Short: "Show k3d and default k3s version",
+		Long:  "Show k3d and default k3s version",
+		Run: func(cmd *cobra.Command, args []string) {
+			printVersion()
+		},
+		Args: cobra.NoArgs,
+	}
+
+	cmd.AddCommand(NewCmdVersionLs())
+
+	return cmd
+
+}
+
 func printVersion() {
 	fmt.Printf("k3d version %s\n", version.GetVersion())
 	fmt.Printf("k3s version %s (default)\n", version.K3sVersion)
+}
+
+func NewCmdVersionLs() *cobra.Command {
+
+	type VersionLsOutputFormat string
+
+	const (
+		VersionLsOutputFormatRaw  VersionLsOutputFormat = "raw"
+		VersionLsOutputFormatRepo VersionLsOutputFormat = "repo"
+	)
+
+	var VersionLsOutputFormats = map[string]VersionLsOutputFormat{
+		string(VersionLsOutputFormatRaw):  VersionLsOutputFormatRaw,
+		string(VersionLsOutputFormatRepo): VersionLsOutputFormatRepo,
+	}
+
+	type Flags struct {
+		includeRegexp string
+		excludeRegexp string
+		format        string
+	}
+
+	flags := Flags{}
+
+	cmd := &cobra.Command{
+		Use:       "list",
+		Aliases:   []string{"ls"},
+		Short:     "List k3d/K3s versions",
+		ValidArgs: []string{"k3d", "k3s", "k3d-proxy", "k3d-tools"},
+		Args:      cobra.ExactValidArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			var format VersionLsOutputFormat
+			if f, ok := VersionLsOutputFormats[flags.format]; !ok {
+				l.Log().Fatalf("Unknown output format '%s'", flags.format)
+			} else {
+				format = f
+			}
+
+			urlTpl := "https://registry.hub.docker.com/v1/repositories/%s/tags"
+			org := "rancher"
+			repo := fmt.Sprintf("%s/%s", org, args[0])
+			resp, err := http.Get(fmt.Sprintf(urlTpl, repo))
+			if err != nil {
+				l.Log().Fatalln(err)
+			}
+			defer resp.Body.Close()
+			type Layers struct {
+				Layer string
+				Name  string
+			}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				l.Log().Fatalln(err)
+			}
+			respJSON := &[]Layers{}
+			if err := json.Unmarshal(body, respJSON); err != nil {
+				l.Log().Fatalln(err)
+			}
+
+			includeRegexp, err := regexp.Compile(flags.includeRegexp)
+			if err != nil {
+				l.Log().Fatalln(err)
+			}
+
+			excludeRegexp, err := regexp.Compile(flags.excludeRegexp)
+			if err != nil {
+				l.Log().Fatalln(err)
+			}
+
+			for _, tag := range *respJSON {
+				if includeRegexp.Match([]byte(tag.Name)) {
+					if flags.excludeRegexp == "" || !excludeRegexp.Match([]byte(tag.Name)) {
+						switch format {
+						case VersionLsOutputFormatRaw:
+							fmt.Println(tag.Name)
+						case VersionLsOutputFormatRepo:
+							fmt.Printf("%s:%s\n", repo, tag.Name)
+						default:
+							l.Log().Fatalf("Unknown output format '%+v'", format)
+						}
+					} else {
+						l.Log().Tracef("Tag %s excluded (regexp: `%s`)", tag.Name, flags.excludeRegexp)
+					}
+				} else {
+					l.Log().Tracef("Tag %s not included (regexp: `%s`)", tag.Name, flags.includeRegexp)
+				}
+			}
+
+		},
+	}
+
+	cmd.Flags().StringVarP(&flags.includeRegexp, "include", "i", ".*", "Include Regexp")
+	cmd.Flags().StringVarP(&flags.excludeRegexp, "exclude", "e", "", "Exclude Regexp")
+	cmd.Flags().StringVarP(&flags.format, "format", "f", string(VersionLsOutputFormatRaw), "Output Format")
+
+	return cmd
 }
 
 // NewCmdCompletion creates a new completion command
