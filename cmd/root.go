@@ -29,6 +29,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -231,10 +232,15 @@ func printVersion() {
 func NewCmdVersionLs() *cobra.Command {
 
 	type VersionLsOutputFormat string
+	type VersionLsSortMode string
 
 	const (
 		VersionLsOutputFormatRaw  VersionLsOutputFormat = "raw"
 		VersionLsOutputFormatRepo VersionLsOutputFormat = "repo"
+
+		VersionLsSortDesc VersionLsSortMode = "desc"
+		VersionLsSortAsc  VersionLsSortMode = "asc"
+		VersionLsSortOff  VersionLsSortMode = "off"
 	)
 
 	var VersionLsOutputFormats = map[string]VersionLsOutputFormat{
@@ -242,10 +248,18 @@ func NewCmdVersionLs() *cobra.Command {
 		string(VersionLsOutputFormatRepo): VersionLsOutputFormatRepo,
 	}
 
+	var VersionLsSortModes = map[string]VersionLsSortMode{
+		string(VersionLsSortDesc): VersionLsSortDesc,
+		string(VersionLsSortAsc):  VersionLsSortAsc,
+		string(VersionLsSortOff):  VersionLsSortOff,
+	}
+
 	type Flags struct {
 		includeRegexp string
 		excludeRegexp string
 		format        string
+		sortMode      string
+		limit         int
 	}
 
 	flags := Flags{}
@@ -262,6 +276,13 @@ func NewCmdVersionLs() *cobra.Command {
 				l.Log().Fatalf("Unknown output format '%s'", flags.format)
 			} else {
 				format = f
+			}
+
+			var sortMode VersionLsSortMode
+			if m, ok := VersionLsSortModes[flags.sortMode]; !ok {
+				l.Log().Fatalf("Unknown sort mode '%s'", flags.sortMode)
+			} else {
+				sortMode = m
 			}
 
 			urlTpl := "https://registry.hub.docker.com/v1/repositories/%s/tags"
@@ -295,14 +316,16 @@ func NewCmdVersionLs() *cobra.Command {
 				l.Log().Fatalln(err)
 			}
 
+			tags := []string{}
+
 			for _, tag := range *respJSON {
 				if includeRegexp.Match([]byte(tag.Name)) {
 					if flags.excludeRegexp == "" || !excludeRegexp.Match([]byte(tag.Name)) {
 						switch format {
 						case VersionLsOutputFormatRaw:
-							fmt.Println(tag.Name)
+							tags = append(tags, tag.Name)
 						case VersionLsOutputFormatRepo:
-							fmt.Printf("%s:%s\n", repo, tag.Name)
+							tags = append(tags, fmt.Sprintf("%s:%s\n", repo, tag.Name))
 						default:
 							l.Log().Fatalf("Unknown output format '%+v'", format)
 						}
@@ -314,12 +337,29 @@ func NewCmdVersionLs() *cobra.Command {
 				}
 			}
 
+			// Sort
+			if sortMode != VersionLsSortOff {
+				sort.Slice(tags, func(i, j int) bool {
+					if sortMode == VersionLsSortAsc {
+						return tags[i] < tags[j]
+					}
+					return tags[i] > tags[j]
+				})
+			}
+
+			if flags.limit > 0 {
+				tags = tags[0:flags.limit]
+			}
+			fmt.Println(strings.Join(tags, "\n"))
+
 		},
 	}
 
-	cmd.Flags().StringVarP(&flags.includeRegexp, "include", "i", ".*", "Include Regexp")
-	cmd.Flags().StringVarP(&flags.excludeRegexp, "exclude", "e", "", "Exclude Regexp")
+	cmd.Flags().StringVarP(&flags.includeRegexp, "include", "i", ".*", "Include Regexp (default includes everything")
+	cmd.Flags().StringVarP(&flags.excludeRegexp, "exclude", "e", ".+(rc|engine|alpha|beta|dev|test|arm|arm64|amd64).*", "Exclude Regexp (default excludes pre-releases and arch-specific tags)")
 	cmd.Flags().StringVarP(&flags.format, "format", "f", string(VersionLsOutputFormatRaw), "Output Format")
+	cmd.Flags().StringVarP(&flags.sortMode, "sort", "s", string(VersionLsSortDesc), "Sort Mode (asc | desc | off)")
+	cmd.Flags().IntVarP(&flags.limit, "limit", "l", 0, "Limit number of tags in output (0 = unlimited)")
 
 	return cmd
 }
