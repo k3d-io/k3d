@@ -44,10 +44,6 @@ import (
 	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
-var (
-	DefaultTargetsNodefiltersPortMappings = []string{"servers:*:proxy", "agents:*:proxy"}
-)
-
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration
 func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtime, simpleConfig conf.SimpleConfig) (*conf.ClusterConfig, error) {
 

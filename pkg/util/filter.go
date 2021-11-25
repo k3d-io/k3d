@@ -50,13 +50,17 @@ var (
 var NodeFilterRegexp = regexp.MustCompile(`^(?P<group>server|servers|agent|agents|loadbalancer|all)(?P<subsetSpec>:(?P<subset>(?P<subsetList>(\d+,?)+)|(?P<subsetRange>\d*-\d*)|(?P<subsetWildcard>\*)))?(?P<suffixSpec>:(?P<suffix>[[:alpha:]]+))?$`)
 
 // FilterNodesBySuffix properly interprets NodeFilters with suffix
-func FilterNodesWithSuffix(nodes []*k3d.Node, nodefilters []string) (map[string][]*k3d.Node, error) {
+func FilterNodesWithSuffix(nodes []*k3d.Node, nodefilters []string, allowedSuffices ...string) (map[string][]*k3d.Node, error) {
 	if len(nodefilters) == 0 || len(nodefilters[0]) == 0 {
 		return nil, fmt.Errorf("No nodefilters specified")
 	}
 
 	result := map[string][]*k3d.Node{
-		NodeFilterMapKeyAll: nodes,
+		NodeFilterMapKeyAll:  nodes,
+		NodeFilterSuffixNone: make([]*k3d.Node, 0),
+	}
+	for _, s := range allowedSuffices {
+		result[s] = make([]*k3d.Node, 0) // init map for this suffix, if not exists
 	}
 
 	for _, nf := range nodefilters {
@@ -66,24 +70,27 @@ func FilterNodesWithSuffix(nodes []*k3d.Node, nodefilters []string) (map[string]
 		match := NodeFilterRegexp.FindStringSubmatch(nf)
 
 		if len(match) == 0 {
-			return nil, fmt.Errorf("Failed to parse node filters: invalid format or empty subset in '%s'", nf)
+			return nil, fmt.Errorf("Failed to parse node filters (with suffix): invalid format or empty subset in '%s'", nf)
 		}
 
 		// map capturing group names to submatches
 		submatches := MapSubexpNames(NodeFilterRegexp.SubexpNames(), match)
 
 		// get suffix
+		cleanedNf := nf
 		if sf, ok := submatches["suffix"]; ok && sf != "" {
 			suffix = sf
+			cleanedNf = strings.TrimSuffix(nf, submatches["suffixSpec"])
 		}
 
+		// suffix not in result map, meaning, that it's also not allowed
 		if _, ok := result[suffix]; !ok {
-			result[suffix] = make([]*k3d.Node, 0) // init map for this suffix, if not exists
+			return nil, fmt.Errorf("error filtering nodes: unallowed suffix '%s' in nodefilter '%s'", suffix, nf)
 		}
 
-		filteredNodes, err := FilterNodes(nodes, []string{nf})
+		filteredNodes, err := FilterNodes(nodes, []string{cleanedNf})
 		if err != nil {
-			return nil, fmt.Errorf("failed to filder nodes by filter '%s': %w", nf, err)
+			return nil, fmt.Errorf("failed to filter nodes by filter '%s': %w", nf, err)
 		}
 
 		l.Log().Tracef("Filtered %d nodes for suffix '%s' (filter: %s)", len(filteredNodes), suffix, nf)
@@ -133,6 +140,11 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 
 		// map capturing group names to submatches
 		submatches := MapSubexpNames(NodeFilterRegexp.SubexpNames(), match)
+
+		// error out if filter is specified (should only work in FilterNodesWithSuffix)
+		if sf, ok := submatches["suffix"]; ok && sf != "" {
+			return nil, fmt.Errorf("error filtering with '%s': no suffix allowed in simple filter", filter)
+		}
 
 		// if one of the filters is 'all', we only return this and drop all others
 		if submatches["group"] == "all" {
