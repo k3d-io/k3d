@@ -98,12 +98,9 @@ k3d cluster create \
   - the port, which the registry is listening on will be mapped to a random port on your host system
 
 2. Check the k3d command output or `#!bash docker ps -f name=mycluster-registry` to find the exposed port (let's use `12345` here)
-3. Add the created registry to your `/etc/hosts` file (`c:\windows\system32\drivers\etc\hosts` on Windows) so that you can push to it (notice the `k3d-` prefix):
-```bash
-127.0.0.1 k3d-mycluster-registry
-```
-4. Pull some image (optional) `#!bash docker pull alpine:latest`, re-tag it to reference your newly created registry `#!bash docker tag alpine:latest mycluster-registry:12345/testimage:local` and push it `#!bash docker push mycluster-registry:12345/testimage:local`
-5. Use kubectl to create a new pod in your cluster using that image to see, if the cluster can pull from the new registry: `#!bash kubectl run --image mycluster-registry:12345/testimage:local testimage --command -- tail -f /dev/null` (creates a container that will not do anything but keep on running)
+3. Pull some image (optional) `#!bash docker pull alpine:latest`, re-tag it to reference your newly created registry `#!bash docker tag alpine:latest mycluster-registry:12345/testimage:local` and push it `#!bash docker push mycluster-registry:12345/testimage:local`
+  - If the push fails with `dial tcp: lookup k3d-mycluster-registry: Temporary failure in name resolution`, follow the guide on [pushing to your local registry address](#pushing-to-your-local-registry-address).
+4. Use kubectl to create a new pod in your cluster using that image to see, if the cluster can pull from the new registry: `#!bash kubectl run --image mycluster-registry:12345/testimage:local testimage --command -- tail -f /dev/null` (creates a container that will not do anything but keep on running)
 
 #### Create a customized k3d-managed registry
 
