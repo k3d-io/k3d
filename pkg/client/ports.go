@@ -61,12 +61,16 @@ func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 			}
 		}
 
-		filteredNodes, err := util.FilterNodesWithSuffix(nodeList, portWithNodeFilters.NodeFilters)
+		filteredNodes, err := util.FilterNodesWithSuffix(nodeList, portWithNodeFilters.NodeFilters, "proxy", "direct") // TODO: move "proxy" and "direct" allowed suffices to constants
 		if err != nil {
 			return err
 		}
 
 		for suffix, nodes := range filteredNodes {
+			// skip, if no nodes in filtered set, so we don't add portmappings with no targets in the backend
+			if len(nodes) == 0 {
+				continue
+			}
 			portmappings, err := nat.ParsePortSpec(portWithNodeFilters.Port)
 			if err != nil {
 				return fmt.Errorf("error parsing port spec '%s': %+v", portWithNodeFilters.Port, err)
