@@ -80,6 +80,9 @@ plugins:
       css_dir: static/css             # the directory to put the version selector's CSS
       javascript_dir: static/js       # the directory to put the version selector's JS
       canonical_version: null  # the version for <link rel="canonical">; `null` uses the version specified via `mike deploy`
+  - redirects: # https://github.com/datarobot/mkdocs-redirects
+      redirect_maps:
+        'usage/guides/exposing_services.md': 'usage/exposing_services.md'
 
 # Extra mkdocs-material settings
 extra:
