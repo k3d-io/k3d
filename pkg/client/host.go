@@ -79,9 +79,16 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 				return nil, fmt.Errorf("failed to ensure that k3d-tools node is running to get host IP :%w", err)
 			}
 
-			ip, err := resolveHostnameFromInside(ctx, runtime, toolsNode, "host.docker.internal", ResolveHostCmdGetEnt)
+			k3dInternalIP, err := resolveHostnameFromInside(ctx, runtime, toolsNode, k3d.DefaultK3dInternalHostRecord, ResolveHostCmdGetEnt)
 			if err == nil {
-				return ip, nil
+				return k3dInternalIP, nil
+			}
+
+			l.Log().Debugf("[GetHostIP on Docker Desktop] failed to resolve '%s' from inside the k3d-tools node: %v", k3d.DefaultK3dInternalHostRecord, err)
+
+			dockerInternalIP, err := resolveHostnameFromInside(ctx, runtime, toolsNode, "host.docker.internal", ResolveHostCmdGetEnt)
+			if err == nil {
+				return dockerInternalIP, nil
 			}
 
 			l.Log().Debugf("[GetHostIP on Docker Desktop] failed to resolve 'host.docker.internal' from inside the k3d-tools node: %v", err)

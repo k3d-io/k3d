@@ -24,6 +24,7 @@ package docker
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -313,13 +314,20 @@ func (d Docker) ExecInNodeGetLogs(ctx context.Context, node *k3d.Node, cmd []str
 	if resp != nil {
 		defer resp.Close()
 	}
-	if err != nil {
-		if resp != nil && resp.Reader != nil { // sometimes the exec process returns with a non-zero exit code, but we still have the logs we
-			return resp.Reader, err
+
+	var logreader *bufio.Reader // backwards compatibility: TODO:(breaking) remove in future major version and return simple byte array or reader
+
+	if resp != nil && resp.Reader != nil {
+		logs, err := io.ReadAll(resp.Reader)
+		if err != nil {
+			return nil, fmt.Errorf("error reading logs from exec process in node %s: %w", node.Name, err)
 		}
-		return nil, err
+		lr := bytes.NewReader(logs)
+		logreader = bufio.NewReader(lr)
+		resp.Close()
 	}
-	return resp.Reader, nil
+
+	return logreader, err
 }
 
 // GetImageStream creates a tar stream for the given images, to be read (and closed) by the caller
