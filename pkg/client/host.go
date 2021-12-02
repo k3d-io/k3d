@@ -28,10 +28,10 @@ import (
 	"net"
 	"regexp"
 	goruntime "runtime"
-	"strings"
 
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/rancher/k3d/v5/pkg/runtimes"
+	"github.com/rancher/k3d/v5/pkg/runtimes/docker"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/rancher/k3d/v5/pkg/util"
 )
@@ -64,15 +64,11 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 
 	l.Log().Tracef("GOOS: %s / Runtime OS: %s (%s)", goruntime.GOOS, rtimeInfo.OSType, rtimeInfo.OS)
 
-	isDockerDesktop := func(os string) bool {
-		return strings.ToLower(os) == "docker desktop"
-	}
-
 	// Docker Runtime
 	if runtime == runtimes.Docker {
 
 		// Docker (for Desktop) on MacOS or Windows
-		if isDockerDesktop(rtimeInfo.OS) {
+		if docker.IsDockerDesktop(rtimeInfo.OS) {
 
 			toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
 			if err != nil {
