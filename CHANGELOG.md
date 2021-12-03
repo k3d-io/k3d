@@ -1,5 +1,42 @@
 # Changelog
 
+## v5.2.0
+
+### Features & Enhancements
+
+- Improve image import performance (#826, @sbaier1)
+  - **New flag**: `k3d image import --mode [auto | direct | tools]`
+    - `tools` is the old default, which spawns a `k3d-tools` container for importing
+    - `auto` is the new default to automatically detect which mode should work best
+    - `direct` directly streams the images into the node containers without the `k3d-tools` container
+- Enhanced usability of nodefilters & error messages for wrong usage (#871)
+- **New command**: `k3d version list [k3s | k3d | k3d-proxy | k3d-tools]` to get image tags that can be used with k3d (#870)
+  - e.g. use `k3d version list k3s --format repo` to get the latest image available for K3s and use it via `k3d cluster create --image <image>`
+  - Docs: [docs/usage/commands/k3d_version_list.md](./docs/usage/commands/k3d_version_list.md)
+
+### Fixes
+
+- cluster network: reserve IP extra IP for k3d-tools container in k3d-managed IPAM to avoid conflicts
+- process the SimpleConfig before validating it to avoid early exit in hostnetwork mode (#860)
+- error out if `K3D_FIX_DNS=1` is set and user tries to mount a file to `/etc/resolv.conf` (conflict)
+- clusterStart: only run actions which are necessary given the start reason (e.g. `cluster start` vs. `cluster create`)
+- fix injection of `host.k3d.internal` based on resolving `host.docker.internal` (#872)
+  - also now uses `host.docker.internal` in kubeconfig based on certain conditions (see PR)
+
+### Misc
+
+- tests/e2e: parellelize and cleanup tests -> cut execution speed in half (#848 & #849)
+  - also run some make targets in parallel
+  - new env var `E2E_PARALLEL=<int>` to configure parallelism
+  - test output is now redirected to files inside the runner and only the logs of failed tests will later be output
+- Update dependencies, including docker, containerd & k8s
+- docs: clarify usage of local registries with k3d
+- docs: fix port numbers in registry usage guide
+
+### Notes
+
+- k3d v5.x.x requires at least docker version 20.10.4
+
 ## v5.1.0
 
 ### Features
