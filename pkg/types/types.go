@@ -200,7 +200,7 @@ var ImportModes = map[string]ImportMode{
 type ImageImportOpts struct {
 	KeepTar       bool
 	KeepToolsNode bool
-	Mode   ImportMode
+	Mode          ImportMode
 }
 
 type IPAM struct {

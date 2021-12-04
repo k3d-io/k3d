@@ -23,6 +23,7 @@ THE SOFTWARE.
 package docker
 
 import (
+	"net"
 	"net/url"
 	"os"
 
@@ -42,13 +43,43 @@ func (d Docker) ID() string {
 
 // GetHost returns the docker daemon host
 func (d Docker) GetHost() string {
+	// a) DOCKER_HOST env var
 	dockerHost := os.Getenv("DOCKER_HOST")
+	if dockerHost == "" {
+		l.Log().Traceln("[Docker] GetHost: DOCKER_HOST empty/unset")
+		info, err := d.Info()
+		if err != nil {
+			l.Log().Errorf("[Docker] error getting runtime information: %v", err)
+			return ""
+		}
+		// b) Docker for Desktop (Win/Mac) and it's a local connection
+		if IsDockerDesktop(info.OS) && IsLocalConnection(info.Endpoint) {
+			// b.1) local DfD connection, but inside WSL, where host.docker.internal resolves to an IP, but it's not reachable
+			if _, ok := os.LookupEnv("WSL_DISTRO_NAME"); ok {
+				l.Log().Debugln("[Docker] wanted to use 'host.docker.internal' as docker host, but it's not reachable in WSL2")
+				return ""
+			}
+			l.Log().Debugln("[Docker] Local DfD: using 'host.docker.internal'")
+			dockerHost = "host.docker.internal"
+			if _, err := net.LookupHost(dockerHost); err != nil {
+				l.Log().Debugf("[Docker] wanted to use 'host.docker.internal' as docker host, but it's not resolvable locally: %v", err)
+				return ""
+			}
+		}
+	}
 	url, err := url.Parse(dockerHost)
 	if err != nil {
+		l.Log().Debugf("[Docker] GetHost: error parsing '%s' as URL: %#v", dockerHost, url)
 		return ""
 	}
-	l.Log().Debugf("DockerHost: %s", url.Host)
-	return url.Host
+	dockerHost = url.Host
+	// apparently, host.docker.internal is not parsed as host but
+	if dockerHost == "" && url.String() != "" {
+		dockerHost = url.String()
+	}
+	l.Log().Debugf("[Docker] DockerHost: '%s' (%+v)", dockerHost, url)
+
+	return dockerHost
 }
 
 // GetRuntimePath returns the path of the docker socket

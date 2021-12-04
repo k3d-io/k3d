@@ -28,6 +28,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
+	"strings"
 
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
@@ -41,6 +43,22 @@ import (
 	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/spf13/pflag"
 )
+
+func IsDockerDesktop(os string) bool {
+	return strings.ToLower(os) == "docker desktop"
+}
+
+/*
+ * Simple Matching to detect local connection:
+ * - file (socket): starts with / (absolute path)
+ * - tcp://(localhost|127.0.0.1)
+ * - ssh://(localhost|127.0.0.1)
+ */
+var LocalConnectionRegexp = regexp.MustCompile(`^(/|((tcp|ssh)://(localhost|127\.0\.0\.1))).*`)
+
+func IsLocalConnection(endpoint string) bool {
+	return LocalConnectionRegexp.Match([]byte(endpoint))
+}
 
 // GetDefaultObjectLabelsFilter returns docker type filters created from k3d labels
 func GetDefaultObjectLabelsFilter(clusterName string) filters.Args {

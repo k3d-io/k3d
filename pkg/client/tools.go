@@ -25,13 +25,14 @@ package client
 import (
 	"context"
 	"fmt"
-	"golang.org/x/sync/errgroup"
 	"io"
 	"os"
 	"path"
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/rancher/k3d/v5/pkg/runtimes"
@@ -385,6 +386,7 @@ func runToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cl
 		Cmd:           []string{},
 		Args:          []string{"noop"},
 		RuntimeLabels: labels,
+		ExtraHosts:    []string{fmt.Sprintf("%s:host-gateway", k3d.DefaultK3dInternalHostRecord)},
 	}
 	node.RuntimeLabels[k3d.LabelClusterName] = cluster.Name
 	if err := NodeRun(ctx, runtime, node, k3d.NodeCreateOpts{}); err != nil {

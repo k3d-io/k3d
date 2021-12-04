@@ -27,4 +27,5 @@ k3d version [flags]
 ### SEE ALSO
 
 * [k3d](k3d.md)	 - https://k3d.io/ -> Run k3s in Docker!
+* [k3d version list](k3d_version_list.md)	 - List k3d/K3s versions
 

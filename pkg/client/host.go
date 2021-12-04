@@ -28,10 +28,10 @@ import (
 	"net"
 	"regexp"
 	goruntime "runtime"
-	"strings"
 
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/rancher/k3d/v5/pkg/runtimes"
+	"github.com/rancher/k3d/v5/pkg/runtimes/docker"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/rancher/k3d/v5/pkg/util"
 )
@@ -64,35 +64,38 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 
 	l.Log().Tracef("GOOS: %s / Runtime OS: %s (%s)", goruntime.GOOS, rtimeInfo.OSType, rtimeInfo.OS)
 
-	isDockerDesktop := func(os string) bool {
-		return strings.ToLower(os) == "docker desktop"
-	}
-
 	// Docker Runtime
 	if runtime == runtimes.Docker {
 
 		// Docker (for Desktop) on MacOS or Windows
-		if isDockerDesktop(rtimeInfo.OS) {
+		if docker.IsDockerDesktop(rtimeInfo.OS) {
 
 			toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
 			if err != nil {
 				return nil, fmt.Errorf("failed to ensure that k3d-tools node is running to get host IP :%w", err)
 			}
 
-			ip, err := resolveHostnameFromInside(ctx, runtime, toolsNode, "host.docker.internal", ResolveHostCmdGetEnt)
+			k3dInternalIP, err := resolveHostnameFromInside(ctx, runtime, toolsNode, k3d.DefaultK3dInternalHostRecord, ResolveHostCmdGetEnt)
 			if err == nil {
-				return ip, nil
+				return k3dInternalIP, nil
 			}
 
-			l.Log().Warnf("failed to resolve 'host.docker.internal' from inside the k3d-tools node: %v", err)
+			l.Log().Debugf("[GetHostIP on Docker Desktop] failed to resolve '%s' from inside the k3d-tools node: %v", k3d.DefaultK3dInternalHostRecord, err)
+
+			dockerInternalIP, err := resolveHostnameFromInside(ctx, runtime, toolsNode, "host.docker.internal", ResolveHostCmdGetEnt)
+			if err == nil {
+				return dockerInternalIP, nil
+			}
+
+			l.Log().Debugf("[GetHostIP on Docker Desktop] failed to resolve 'host.docker.internal' from inside the k3d-tools node: %v", err)
 
 		}
 
-		l.Log().Infof("HostIP: using network gateway...")
 		ip, err := runtime.GetHostIP(ctx, cluster.Network.Name)
 		if err != nil {
 			return nil, fmt.Errorf("runtime failed to get host IP: %w", err)
 		}
+		l.Log().Infof("HostIP: using network gateway %s address", ip)
 
 		return ip, nil
 
@@ -105,20 +108,22 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 
 func resolveHostnameFromInside(ctx context.Context, rtime runtimes.Runtime, node *k3d.Node, hostname string, cmd ResolveHostCmd) (net.IP, error) {
 
+	errPrefix := fmt.Errorf("error resolving hostname %s from inside node %s", hostname, node.Name)
+
 	logreader, execErr := rtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", fmt.Sprintf(cmd.Cmd, hostname)})
 
 	if logreader == nil {
 		if execErr != nil {
-			return nil, execErr
+			return nil, fmt.Errorf("%v: %w", errPrefix, execErr)
 		}
-		return nil, fmt.Errorf("Failed to get logs from exec process")
+		return nil, fmt.Errorf("%w: failed to get logs from exec process", errPrefix)
 	}
 
 	submatches := map[string]string{}
 	scanner := bufio.NewScanner(logreader)
 	if scanner == nil {
 		if execErr != nil {
-			return nil, execErr
+			return nil, fmt.Errorf("%v: %w", errPrefix, execErr)
 		}
 		return nil, fmt.Errorf("Failed to scan logs for host IP: Could not create scanner from logreader")
 	}
@@ -132,19 +137,18 @@ func resolveHostnameFromInside(ctx context.Context, rtime runtimes.Runtime, node
 		if len(match) == 0 {
 			continue
 		}
-		l.Log().Tracef("-> Match(es): '%+v'", match)
 		submatches = util.MapSubexpNames(cmd.LogMatcher.SubexpNames(), match)
-		l.Log().Tracef(" -> Submatch(es): %+v", submatches)
+		l.Log().Tracef("-> Match(es): '%+v' -> Submatch(es): %+v", match, submatches)
 		break
 	}
 	if _, ok := submatches["ip"]; !ok {
 		if execErr != nil {
 			l.Log().Errorln(execErr)
 		}
-		return nil, fmt.Errorf("Failed to read address for '%s' from command output", hostname)
+		return nil, fmt.Errorf("%w: failed to read address for '%s' from command output", errPrefix, hostname)
 	}
 
-	l.Log().Debugf("Hostname '%s' -> Address '%s'", hostname, submatches["ip"])
+	l.Log().Debugf("Hostname '%s' resolved to address '%s' inside node %s", hostname, submatches["ip"], node.Name)
 
 	return net.ParseIP(submatches["ip"]), nil
 
