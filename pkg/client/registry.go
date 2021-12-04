@@ -62,11 +62,15 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 	// 	l.Log().Fatalln(err)
 	// }
 
+	if len(reg.Network) == 0 {
+		reg.Network = k3d.DefaultRuntimeNetwork
+	}
+
 	registryNode := &k3d.Node{
 		Name:     reg.Host,
 		Image:    reg.Image,
 		Role:     k3d.RegistryRole,
-		Networks: []string{"bridge"}, // Default network: TODO: change to const from types
+		Networks: []string{reg.Network},
 		Restart:  true,
 	}
 

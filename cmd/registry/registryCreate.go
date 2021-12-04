@@ -41,8 +41,9 @@ type regCreatePreProcessedFlags struct {
 }
 
 type regCreateFlags struct {
-	Image  string
-	NoHelp bool
+	Image          string
+	Network string
+	NoHelp         bool
 }
 
 var helptext string = `# You can now use the registry like this (example):
@@ -103,6 +104,8 @@ func NewCmdRegistryCreate() *cobra.Command {
 
 	cmd.Flags().StringVarP(&ppFlags.Port, "port", "p", "random", "Select which port the registry should be listening on on your machine (localhost) (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d registry create --port 0.0.0.0:5111`")
 
+	cmd.Flags().StringVar(&flags.Network, "default-network", k3d.DefaultRuntimeNetwork, "Specify the network connected to the registry")
+
 	cmd.Flags().BoolVar(&flags.NoHelp, "no-help", false, "Disable the help text (How-To use the registry)")
 
 	// done
@@ -135,5 +138,5 @@ func parseCreateRegistryCmd(cmd *cobra.Command, args []string, flags *regCreateF
 		registryName = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, args[0])
 	}
 
-	return &k3d.Registry{Host: registryName, Image: flags.Image, ExposureOpts: *exposePort}, clusters
+	return &k3d.Registry{Host: registryName, Image: flags.Image, ExposureOpts: *exposePort, Network: flags.Network}, clusters
 }

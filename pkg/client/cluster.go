@@ -583,7 +583,7 @@ func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 				if net == cluster.Network.Name {
 					continue
 				}
-				if net == "bridge" || net == "host" {
+				if net == k3d.DefaultRuntimeNetwork || net == "host" {
 					continue
 				}
 				l.Log().Tracef("net: %s", net)
