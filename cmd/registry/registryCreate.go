@@ -104,7 +104,7 @@ func NewCmdRegistryCreate() *cobra.Command {
 
 	cmd.Flags().StringVarP(&ppFlags.Port, "port", "p", "random", "Select which port the registry should be listening on on your machine (localhost) (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d registry create --port 0.0.0.0:5111`")
 
-	cmd.Flags().StringVar(&flags.Network, "default-network", k3d.Network, "Specify the network connected to the registry")
+	cmd.Flags().StringVar(&flags.Network, "default-network", k3d.DefaultRuntimeNetwork, "Specify the network connected to the registry")
 
 	cmd.Flags().BoolVar(&flags.NoHelp, "no-help", false, "Disable the help text (How-To use the registry)")
 
