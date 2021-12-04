@@ -95,5 +95,5 @@ func GetDefaultObjectName(name string) string {
 // This makes sense e.g. when a new server is waiting to join an existing cluster and has to wait for other learners to finish.
 const DefaultNodeWaitForLogMessageCrashLoopBackOffLimit = 10
 
-// DefaultNetwork defines the default Docker network
-const DefaultNetwork = "bridge"
+// DefaultNetwork defines the default (Docker) runtime network
+const DefaultRuntimeNetwork = "bridge"

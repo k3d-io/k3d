@@ -38,7 +38,7 @@ type Registry struct {
 	Protocol       string       `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
 	Host           string       `yaml:"host" json:"host"`
 	Image          string       `yaml:"image,omitempty" json:"image,omitempty"`
-	DefaultNetwork string       `yaml:"defaultNetwork,omitempty" json:"defaultNetwork,omitempty"`
+	Network string       `yaml:"Network,omitempty" json:"Network,omitempty"`
 	ExposureOpts   ExposureOpts `yaml:"expose" json:"expose"`
 	Options        struct {
 		ConfigFile string `yaml:"configFile,omitempty" json:"configFile,omitempty"`
