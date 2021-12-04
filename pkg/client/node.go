@@ -745,6 +745,9 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 
 	}(ctx, runtime, node, since, donechan)
 
+	// pre-building error message in case the node stops returning logs for some reason: to be enriched with scanner error
+	errMsg := fmt.Errorf("error waiting for log line `%s` from node '%s': stopped returning log lines", message, node.Name)
+
 	// Start loop to check log stream for specified log message.
 	// We're looping here, as sometimes the containers run into a crash loop, but *may* recover from that
 	// e.g. when a new server is joining an existing cluster and has to wait for another member to finish learning.
@@ -792,6 +795,10 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 
 		}
 
+		if e := scanner.Err(); e != nil {
+			errMsg = fmt.Errorf("%v: %w", errMsg, e)
+		}
+
 		out.Close() // no more input on scanner, but target log not yet found -> close current logreader (precautionary)
 
 		// we got here, because the logstream ended (no more input on scanner), so we check if maybe the container crashed
@@ -806,7 +813,7 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 			break
 		}
 	}
-	return fmt.Errorf("error waiting for log line `%s` from node '%s': stopped returning log lines", message, node.Name)
+	return errMsg
 }
 
 // NodeFilterByRoles filters a list of nodes by their roles
