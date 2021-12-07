@@ -673,17 +673,6 @@ func patchServerSpec(node *k3d.Node, runtime runtimes.Runtime) error {
 	node.RuntimeLabels[k3d.LabelServerAPIHost] = node.ServerOpts.KubeAPI.Host
 	node.RuntimeLabels[k3d.LabelServerAPIPort] = node.ServerOpts.KubeAPI.Binding.HostPort
 
-	// If the runtime is docker, attempt to use the docker host
-	if runtime == runtimes.Docker {
-		dockerHost := runtime.GetHost()
-		if dockerHost != "" {
-			dockerHost = strings.Split(dockerHost, ":")[0] // remove the port
-			l.Log().Tracef("Using docker host %s", dockerHost)
-			node.RuntimeLabels[k3d.LabelServerAPIHostIP] = dockerHost
-			node.RuntimeLabels[k3d.LabelServerAPIHost] = dockerHost
-		}
-	}
-
 	node.Args = append(node.Args, "--tls-san", node.RuntimeLabels[k3d.LabelServerAPIHost]) // add TLS SAN for non default host name
 
 	return nil

@@ -43,7 +43,19 @@ func (d Docker) ID() string {
 
 // GetHost returns the docker daemon host
 func (d Docker) GetHost() string {
-	// a) DOCKER_HOST env var
+
+	// a) docker-machine
+	machineIP, err := d.GetDockerMachineIP()
+	if err != nil {
+		l.Log().Warnf("[Docker] Using docker-machine, but failed to get it's IP: %+v", err)
+	} else if machineIP != "" {
+		l.Log().Infof("[Docker] Using the docker-machine IP %s to connect to the Kubernetes API", machineIP)
+		return machineIP
+	} else {
+		l.Log().Traceln("[Docker] Not using docker-machine")
+	}
+
+	// b) DOCKER_HOST env var
 	dockerHost := os.Getenv("DOCKER_HOST")
 	if dockerHost == "" {
 		l.Log().Traceln("[Docker] GetHost: DOCKER_HOST empty/unset")
@@ -52,9 +64,9 @@ func (d Docker) GetHost() string {
 			l.Log().Errorf("[Docker] error getting runtime information: %v", err)
 			return ""
 		}
-		// b) Docker for Desktop (Win/Mac) and it's a local connection
+		// c) Docker for Desktop (Win/Mac) and it's a local connection
 		if IsDockerDesktop(info.OS) && IsLocalConnection(info.Endpoint) {
-			// b.1) local DfD connection, but inside WSL, where host.docker.internal resolves to an IP, but it's not reachable
+			// c.1) local DfD connection, but inside WSL, where host.docker.internal resolves to an IP, but it's not reachable
 			if _, ok := os.LookupEnv("WSL_DISTRO_NAME"); ok {
 				l.Log().Debugln("[Docker] wanted to use 'host.docker.internal' as docker host, but it's not reachable in WSL2")
 				return ""
