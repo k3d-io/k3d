@@ -26,6 +26,7 @@ import (
 	"net"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/docker/go-connections/nat"
 	l "github.com/rancher/k3d/v5/pkg/logger"
@@ -61,7 +62,14 @@ func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureO
 			return nil, fmt.Errorf("Failed to lookup host '%s' specified for Port Exposure: %+v", submatches["hostname"], err)
 		}
 		api.Host = submatches["hostname"]
-		submatches["hostip"] = addrs[0] // set hostip to the resolved address
+		for _, addr := range addrs {
+			if !strings.Contains(addr, ":") { // lazy IPv6 check :D
+				submatches["hostip"] = addr // set hostip to the resolved address
+			}
+		}
+		if submatches["hostip"] == "" {
+			return nil, fmt.Errorf("Failed to lookup IPv4 address for host '%s'", submatches["hostname"])
+		}
 	}
 
 	realPortString := ""

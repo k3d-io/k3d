@@ -41,9 +41,9 @@ type regCreatePreProcessedFlags struct {
 }
 
 type regCreateFlags struct {
-	Image          string
+	Image   string
 	Network string
-	NoHelp         bool
+	NoHelp  bool
 }
 
 var helptext string = `# You can now use the registry like this (example):

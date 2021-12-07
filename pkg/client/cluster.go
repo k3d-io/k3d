@@ -34,16 +34,14 @@ import (
 	"strings"
 	"time"
 
-	gort "runtime"
-
 	"github.com/docker/go-connections/nat"
 	"github.com/imdario/mergo"
 	copystruct "github.com/mitchellh/copystructure"
 	"github.com/rancher/k3d/v5/pkg/actions"
 	config "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
 	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/rancher/k3d/v5/pkg/runtimes"
 	k3drt "github.com/rancher/k3d/v5/pkg/runtimes"
-	"github.com/rancher/k3d/v5/pkg/runtimes/docker"
 	runtimeErr "github.com/rancher/k3d/v5/pkg/runtimes/errors"
 	"github.com/rancher/k3d/v5/pkg/types"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
@@ -357,17 +355,13 @@ ClusterCreatOpts:
 	 * Docker Machine Special Configuration
 	 */
 	if cluster.KubeAPI.Host == k3d.DefaultAPIHost && runtime == k3drt.Docker {
-		if gort.GOOS == "windows" || gort.GOOS == "darwin" {
-			l.Log().Tracef("Running on %s: checking if it's using docker-machine", gort.GOOS)
-			machineIP, err := runtime.(docker.Docker).GetDockerMachineIP()
-			if err != nil {
-				l.Log().Warnf("Using docker-machine, but failed to get it's IP: %+v", err)
-			} else if machineIP != "" {
-				l.Log().Infof("Using the docker-machine IP %s to connect to the Kubernetes API", machineIP)
-				cluster.KubeAPI.Host = machineIP
-				cluster.KubeAPI.Binding.HostIP = machineIP
-			} else {
-				l.Log().Traceln("Not using docker-machine")
+		// If the runtime is docker, attempt to use the docker host
+		if runtime == runtimes.Docker {
+			dockerHost := runtime.GetHost()
+			if dockerHost != "" {
+				dockerHost = strings.Split(dockerHost, ":")[0] // remove the port
+				l.Log().Tracef("Using docker host %s", dockerHost)
+				cluster.KubeAPI.Host = dockerHost
 			}
 		}
 	}
