@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.2.1
+
+### Features & Enhancements
+
+- improved Podman compatibility (#868, @serverwentdown)
+  - last missing piece: release of <https://github.com/containers/podman/pull/12328>
+- improved error handling and logs when waiting for container logs (ca47fac)
+
+### Fixes
+
+- fix: only replace default api host with docker host (#879)
+- fix: use available hardcoded K3s version in version.go (0bbb5b9)
+
 ## v5.2.0
 
 ### Features & Enhancements
