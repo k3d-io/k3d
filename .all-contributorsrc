@@ -148,6 +148,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "serverwentdown",
+      "name": "Ambrose Chua",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1705906?v=4",
+      "profile": "https://ambrose.website",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
