@@ -45,7 +45,7 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 	// stdin case
 	if len(images) == 1 && images[0] == "-" {
-		err := loadImageFromStream(ctx, runtime, os.Stdin, cluster)
+		err := loadImageFromStream(ctx, runtime, os.Stdin, cluster, []string{"stdin"})
 		return fmt.Errorf("failed to load image to cluster from stdin: %v", err)
 	}
 
@@ -176,7 +176,7 @@ func importWithStream(ctx context.Context, runtime runtimes.Runtime, cluster *k3
 		if err != nil {
 			return fmt.Errorf("could not open image stream for given images %s: %w", imagesFromRuntime, err)
 		}
-		err = loadImageFromStream(ctx, runtime, stream, cluster)
+		err = loadImageFromStream(ctx, runtime, stream, cluster, imagesFromRuntime)
 		if err != nil {
 			return fmt.Errorf("could not load image to cluster from stream %s: %w", imagesFromRuntime, err)
 		}
@@ -188,35 +188,21 @@ func importWithStream(ctx context.Context, runtime runtimes.Runtime, cluster *k3
 		// copy tarfiles to shared volume
 		l.Log().Infof("Importing images from %d tarball(s)...", len(imagesFromTar))
 
-		files := make([]*os.File, len(imagesFromTar))
-		readers := make([]io.Reader, len(imagesFromTar))
-		failedFiles := 0
-		for i, fileName := range imagesFromTar {
+		for _, fileName := range imagesFromTar {
 			file, err := os.Open(fileName)
 			if err != nil {
-				l.Log().Errorf("failed to read file '%s', skipping. Error below:\n%+v", fileName, err)
-				failedFiles++
-				continue
+				return err
 			}
-			files[i] = file
-			readers[i] = file
-		}
-		multiReader := io.MultiReader(readers...)
-		err := loadImageFromStream(ctx, runtime, io.NopCloser(multiReader), cluster)
-		if err != nil {
-			return fmt.Errorf("could not load image to cluster from stream %s: %w", imagesFromTar, err)
-		}
-		for _, file := range files {
-			err := file.Close()
+			err = loadImageFromStream(ctx, runtime, file, cluster, []string{fileName})
 			if err != nil {
-				l.Log().Errorf("Failed to close file '%s' after reading. Error below:\n%+v", file.Name(), err)
+				return fmt.Errorf("could not load image to cluster from stream %s: %w", fileName, err)
 			}
 		}
 	}
 	return nil
 }
 
-func loadImageFromStream(ctx context.Context, runtime runtimes.Runtime, stream io.ReadCloser, cluster *k3d.Cluster) error {
+func loadImageFromStream(ctx context.Context, runtime runtimes.Runtime, stream io.ReadCloser, cluster *k3d.Cluster, imageNames []string) error {
 	var errorGroup errgroup.Group
 
 	numNodes := 0
@@ -254,7 +240,7 @@ func loadImageFromStream(ctx context.Context, runtime runtimes.Runtime, stream i
 		if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
 			pipeReader := pipeReaders[pipeId]
 			errorGroup.Go(func() error {
-				l.Log().Infof("Importing images into node '%s'...", node.Name)
+				l.Log().Infof("Importing images '%s' into node '%s'...", imageNames, node.Name)
 				if err := runtime.ExecInNodeWithStdin(ctx, node, []string{"ctr", "image", "import", "-"}, pipeReader); err != nil {
 					return fmt.Errorf("failed to import images in node '%s': %v", node.Name, err)
 				}
