@@ -195,7 +195,7 @@ func importWithStream(ctx context.Context, runtime runtimes.Runtime, cluster *k3
 			}
 			err = loadImageFromStream(ctx, runtime, file, cluster, []string{fileName})
 			if err != nil {
-				return fmt.Errorf("could not load image to cluster from stream %s: %w", imagesFromTar, err)
+				return fmt.Errorf("could not load image to cluster from stream %s: %w", fileName, err)
 			}
 		}
 	}
