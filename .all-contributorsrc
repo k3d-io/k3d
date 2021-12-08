@@ -139,6 +139,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "sbaier1",
+      "name": "Simon Baier",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20339314?v=4",
+      "profile": "https://github.com/sbaier1",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
