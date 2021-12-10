@@ -44,7 +44,15 @@
 
 - The Problem: Passing a feature flag to the Kubernetes API Server running inside k3s.
 - Example: you want to enable the EphemeralContainers feature flag in Kubernetes
-- Solution: `#!bash k3d cluster create --k3s-arg '--kube-apiserver-arg=feature-gates=EphemeralContainers=true@server:*'`
+- Solution:
+
+  ```bash
+    k3d cluster create \
+    --k3s-arg '--kube-apiserver-arg=feature-gates=EphemeralContainers=true@server:*' \
+    --k3s-arg '--kube-scheduler-arg=feature-gates=EphemeralContainers=true@server:*' \
+    --k3s-arg '--kubelet-arg=feature-gates=EphemeralContainers=true@agent:*'
+  ```
+
   - **Note**: Be aware of where the flags require dashes (`--`) and where not.
     - the k3s flag (`--kube-apiserver-arg`) has the dashes
     - the kube-apiserver flag `feature-gates` doesn't have them (k3s adds them internally)
