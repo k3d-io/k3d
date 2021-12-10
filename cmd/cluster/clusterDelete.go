@@ -22,6 +22,7 @@ THE SOFTWARE.
 package cluster
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -131,8 +132,9 @@ func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 		}
 
 		c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterDeleteCfgViper.GetString("name")})
-		if err != nil {
-			l.Log().Fatalf("failed to delete cluster '%s': %v", clusterDeleteCfgViper.GetString("name"), err)
+		if errors.Is(err, client.ClusterGetNoNodesFoundError) {
+			l.Log().Infof("No nodes found for cluster '%s', nothing to delete.", clusterDeleteCfgViper.GetString("name"))
+			return nil
 		}
 
 		clusters = append(clusters, c)
