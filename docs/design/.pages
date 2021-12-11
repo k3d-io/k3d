@@ -1,5 +1,6 @@
 title: Design
 nav:
   - project.md
+  - concepts.md
   - defaults.md
   - networking.md
