@@ -11,21 +11,21 @@
       
       
       
-        <link rel="canonical" href="https://k3d.io/v5.2.1/usage/commands/k3d_node_edit/">
+        <link rel="canonical" href="https://k3d.io/v5.2.1/design/concepts/">
       
-      <link rel="icon" href="../../../static/img/favicons_black_blue/favicon.png">
+      <link rel="icon" href="../../static/img/favicons_black_blue/favicon.png">
       <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-7.3.6">
     
     
       
-        <title>K3d node edit - k3d</title>
+        <title>Concepts - k3d</title>
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.a57b2b03.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.a57b2b03.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.3f5d1f46.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.3f5d1f46.min.css">
         
       
     
@@ -40,9 +40,9 @@
     
     
     
-      <link rel="stylesheet" href="../../../static/css/asciinema-player.css">
+      <link rel="stylesheet" href="../../static/css/asciinema-player.css">
     
-      <link rel="stylesheet" href="../../../static/css/extra.css">
+      <link rel="stylesheet" href="../../static/css/extra.css">
     
     
       
@@ -63,7 +63,7 @@
     <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="grey">
   
     
-    <script>function __prefix(e){return new URL("../../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
       <script>var palette=__get("__palette");if(null!==palette&&"object"==typeof palette.color)for(var key in palette.color)document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
     
@@ -73,7 +73,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#k3d-node-edit" class="md-skip">
+        <a href="#concepts" class="md-skip">
           Skip to content
         </a>
       
@@ -86,9 +86,9 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../.." title="k3d" class="md-header__button md-logo" aria-label="k3d" data-md-component="logo">
+    <a href="../.." title="k3d" class="md-header__button md-logo" aria-label="k3d" data-md-component="logo">
       
-  <img src="../../../static/img/k3d_logo_black_green.svg" alt="logo">
+  <img src="../../static/img/k3d_logo_black_green.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -104,7 +104,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              K3d node edit
+              Concepts
             
           </span>
         </div>
@@ -205,10 +205,26 @@
 
 
   <li class="md-tabs__item">
-    <a href="../../.." class="md-tabs__link">
+    <a href="../.." class="md-tabs__link">
       Overview
     </a>
   </li>
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../usage/configfile/" class="md-tabs__link">
+        Guides
+      </a>
+    </li>
+  
 
       
         
@@ -222,23 +238,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../configfile/" class="md-tabs__link md-tabs__link--active">
-        Guides
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-
-
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../../design/project/" class="md-tabs__link">
+      <a href="../project/" class="md-tabs__link md-tabs__link--active">
         Design
       </a>
     </li>
@@ -251,7 +251,7 @@
 
 
   <li class="md-tabs__item">
-    <a href="../../../faq/faq/" class="md-tabs__link">
+    <a href="../../faq/faq/" class="md-tabs__link">
       FAQ
     </a>
   </li>
@@ -278,9 +278,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="k3d" class="md-nav__button md-logo" aria-label="k3d" data-md-component="logo">
+    <a href="../.." title="k3d" class="md-nav__button md-logo" aria-label="k3d" data-md-component="logo">
       
-  <img src="../../../static/img/k3d_logo_black_green.svg" alt="logo">
+  <img src="../../static/img/k3d_logo_black_green.svg" alt="logo">
 
     </a>
     k3d
@@ -309,7 +309,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         Overview
       </a>
     </li>
@@ -322,14 +322,12 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" data-md-state="indeterminate" type="checkbox" id="__nav_2" checked>
       
       
       
@@ -352,7 +350,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../configfile/" class="md-nav__link">
+      <a href="../../usage/configfile/" class="md-nav__link">
         Using Config Files
       </a>
     </li>
@@ -366,7 +364,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../kubeconfig/" class="md-nav__link">
+      <a href="../../usage/kubeconfig/" class="md-nav__link">
         Handling Kubeconfigs
       </a>
     </li>
@@ -380,7 +378,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../multiserver/" class="md-nav__link">
+      <a href="../../usage/multiserver/" class="md-nav__link">
         Creating multi-server clusters
       </a>
     </li>
@@ -394,7 +392,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../registries/" class="md-nav__link">
+      <a href="../../usage/registries/" class="md-nav__link">
         Using Image Registries
       </a>
     </li>
@@ -408,7 +406,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../exposing_services/" class="md-nav__link">
+      <a href="../../usage/exposing_services/" class="md-nav__link">
         Exposing Services
       </a>
     </li>
@@ -422,7 +420,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../importing_images/" class="md-nav__link">
+      <a href="../../usage/importing_images/" class="md-nav__link">
         Importing modes
       </a>
     </li>
@@ -436,7 +434,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../k3s/" class="md-nav__link">
+      <a href="../../usage/k3s/" class="md-nav__link">
         K3s Features in k3d
       </a>
     </li>
@@ -476,7 +474,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/calico/" class="md-nav__link">
+      <a href="../../usage/advanced/calico/" class="md-nav__link">
         Use Calico instead of Flannel
       </a>
     </li>
@@ -490,7 +488,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/cuda/" class="md-nav__link">
+      <a href="../../usage/advanced/cuda/" class="md-nav__link">
         Running CUDA workloads
       </a>
     </li>
@@ -509,14 +507,12 @@
               
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_9" type="checkbox" id="__nav_2_9" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_9" data-md-state="indeterminate" type="checkbox" id="__nav_2_9" checked>
       
       
       
@@ -539,7 +535,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d/" class="md-nav__link">
+      <a href="../../usage/commands/k3d/" class="md-nav__link">
         K3d
       </a>
     </li>
@@ -553,7 +549,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_cluster/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_cluster/" class="md-nav__link">
         K3d cluster
       </a>
     </li>
@@ -567,7 +563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_cluster_create/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_cluster_create/" class="md-nav__link">
         K3d cluster create
       </a>
     </li>
@@ -581,7 +577,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_cluster_delete/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_cluster_delete/" class="md-nav__link">
         K3d cluster delete
       </a>
     </li>
@@ -595,7 +591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_cluster_edit/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_cluster_edit/" class="md-nav__link">
         K3d cluster edit
       </a>
     </li>
@@ -609,7 +605,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_cluster_list/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_cluster_list/" class="md-nav__link">
         K3d cluster list
       </a>
     </li>
@@ -623,7 +619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_cluster_start/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_cluster_start/" class="md-nav__link">
         K3d cluster start
       </a>
     </li>
@@ -637,7 +633,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_cluster_stop/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_cluster_stop/" class="md-nav__link">
         K3d cluster stop
       </a>
     </li>
@@ -651,7 +647,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_completion/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_completion/" class="md-nav__link">
         K3d completion
       </a>
     </li>
@@ -665,7 +661,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_config/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_config/" class="md-nav__link">
         K3d config
       </a>
     </li>
@@ -679,7 +675,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_config_init/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_config_init/" class="md-nav__link">
         K3d config init
       </a>
     </li>
@@ -693,7 +689,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_config_migrate/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_config_migrate/" class="md-nav__link">
         K3d config migrate
       </a>
     </li>
@@ -707,7 +703,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_image/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_image/" class="md-nav__link">
         K3d image
       </a>
     </li>
@@ -721,7 +717,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_image_import/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_image_import/" class="md-nav__link">
         K3d image import
       </a>
     </li>
@@ -735,7 +731,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_kubeconfig/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_kubeconfig/" class="md-nav__link">
         K3d kubeconfig
       </a>
     </li>
@@ -749,7 +745,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_kubeconfig_get/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_kubeconfig_get/" class="md-nav__link">
         K3d kubeconfig get
       </a>
     </li>
@@ -763,7 +759,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_kubeconfig_merge/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_kubeconfig_merge/" class="md-nav__link">
         K3d kubeconfig merge
       </a>
     </li>
@@ -777,7 +773,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_node/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_node/" class="md-nav__link">
         K3d node
       </a>
     </li>
@@ -791,7 +787,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_node_create/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_node_create/" class="md-nav__link">
         K3d node create
       </a>
     </li>
@@ -805,7 +801,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_node_delete/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_node_delete/" class="md-nav__link">
         K3d node delete
       </a>
     </li>
@@ -817,83 +813,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          K3d node edit
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_node_edit/" class="md-nav__link">
         K3d node edit
       </a>
-      
-        
-
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#k3d-node-edit" class="md-nav__link">
-    k3d node edit
-  </a>
-  
-    <nav class="md-nav" aria-label="k3d node edit">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
-    Synopsis
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#options" class="md-nav__link">
-    Options
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#options-inherited-from-parent-commands" class="md-nav__link">
-    Options inherited from parent commands
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    SEE ALSO
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -905,7 +829,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_node_list/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_node_list/" class="md-nav__link">
         K3d node list
       </a>
     </li>
@@ -919,7 +843,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_node_start/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_node_start/" class="md-nav__link">
         K3d node start
       </a>
     </li>
@@ -933,7 +857,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_node_stop/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_node_stop/" class="md-nav__link">
         K3d node stop
       </a>
     </li>
@@ -947,7 +871,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_registry/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_registry/" class="md-nav__link">
         K3d registry
       </a>
     </li>
@@ -961,7 +885,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_registry_create/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_registry_create/" class="md-nav__link">
         K3d registry create
       </a>
     </li>
@@ -975,7 +899,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_registry_delete/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_registry_delete/" class="md-nav__link">
         K3d registry delete
       </a>
     </li>
@@ -989,7 +913,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_registry_list/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_registry_list/" class="md-nav__link">
         K3d registry list
       </a>
     </li>
@@ -1003,7 +927,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_version/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_version/" class="md-nav__link">
         K3d version
       </a>
     </li>
@@ -1017,7 +941,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../k3d_version_list/" class="md-nav__link">
+      <a href="../../usage/commands/k3d_version_list/" class="md-nav__link">
         K3d version list
       </a>
     </li>
@@ -1044,12 +968,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" data-md-state="indeterminate" type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
       
       
       
@@ -1072,7 +998,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../design/project/" class="md-nav__link">
+      <a href="../project/" class="md-nav__link">
         Project Overview
       </a>
     </li>
@@ -1084,11 +1010,80 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../../../design/concepts/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Concepts
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Concepts
       </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#nodefilters" class="md-nav__link">
+    Nodefilters
+  </a>
+  
+    <nav class="md-nav" aria-label="Nodefilters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#about" class="md-nav__link">
+    About
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#syntax" class="md-nav__link">
+    Syntax
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1100,7 +1095,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../design/defaults/" class="md-nav__link">
+      <a href="../defaults/" class="md-nav__link">
         Defaults
       </a>
     </li>
@@ -1114,7 +1109,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../design/networking/" class="md-nav__link">
+      <a href="../networking/" class="md-nav__link">
         Networking
       </a>
     </li>
@@ -1136,7 +1131,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../faq/faq/" class="md-nav__link">
+      <a href="../../faq/faq/" class="md-nav__link">
         FAQ
       </a>
     </li>
@@ -1161,6 +1156,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1169,37 +1166,30 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#k3d-node-edit" class="md-nav__link">
-    k3d node edit
+  <a href="#nodefilters" class="md-nav__link">
+    Nodefilters
   </a>
   
-    <nav class="md-nav" aria-label="k3d node edit">
+    <nav class="md-nav" aria-label="Nodefilters">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
-    Synopsis
+  <a href="#about" class="md-nav__link">
+    About
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#options" class="md-nav__link">
-    Options
+  <a href="#syntax" class="md-nav__link">
+    Syntax
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#options-inherited-from-parent-commands" class="md-nav__link">
-    Options inherited from parent commands
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    SEE ALSO
+  <a href="#example" class="md-nav__link">
+    Example
   </a>
   
 </li>
@@ -1221,32 +1211,51 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/rancher/k3d/edit/main/docs/usage/commands/k3d_node_edit.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/rancher/k3d/edit/main/docs/design/concepts.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                  <h1>K3d node edit</h1>
-                
-                <h2 id="k3d-node-edit">k3d node edit<a class="headerlink" href="#k3d-node-edit" title="Permanent link">&para;</a></h2>
-<p>[EXPERIMENTAL] Edit node(s).</p>
-<h3 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h3>
-<p>[EXPERIMENTAL] Edit node(s).</p>
-<div class="highlight"><pre><span></span><code>k3d node edit NODE [flags]
-</code></pre></div>
-<h3 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>  -h, --help                                                               help for edit
-      --port-add [HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]   [EXPERIMENTAL] (serverlb only!) Map ports from the node container to the host (Format: [HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER])
-                                                                            - Example: `k3d node edit k3d-mycluster-serverlb --port-add 8080:80`
-</code></pre></div>
-<h3 id="options-inherited-from-parent-commands">Options inherited from parent commands<a class="headerlink" href="#options-inherited-from-parent-commands" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>      --timestamps   Enable Log timestamps
-      --trace        Enable super verbose output (trace logging)
-      --verbose      Enable verbose output (debug logging)
-</code></pre></div>
-<h3 id="see-also">SEE ALSO<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h3>
+                <h1 id="concepts">Concepts<a class="headerlink" href="#concepts" title="Permanent link">&para;</a></h1>
+<h2 id="nodefilters">Nodefilters<a class="headerlink" href="#nodefilters" title="Permanent link">&para;</a></h2>
+<h3 id="about">About<a class="headerlink" href="#about" title="Permanent link">&para;</a></h3>
+<p>Nodefilters are a concept in k3d to specify which nodes of a newly created cluster a condition or setting should apply to.</p>
+<h3 id="syntax">Syntax<a class="headerlink" href="#syntax" title="Permanent link">&para;</a></h3>
+<p>The overall syntax is <code>@&lt;group&gt;:&lt;subset&gt;[:&lt;suffix]</code>.</p>
 <ul>
-<li><a href="../k3d_node/">k3d node</a>    - Manage node(s)</li>
+<li><code>@</code> denotes the start of a nodefilter in a k3d flag value</li>
+<li><code>&lt;group&gt;</code> denotes the node group you want to filter in<ul>
+<li>one of <code>server</code>, <code>servers</code>, <code>agent</code>, <code>agents</code>, <code>loadbalancer</code>, <code>all</code><ul>
+<li>note, that <code>all</code> also includes the cluster-external server loadbalancer (<code>k3d-proxy</code> container)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>&lt;subset&gt;</code> denotes the subset of the chosen group you want to apply the flag to<ul>
+<li>wildcard <code>*</code>: all nodes in that group</li>
+<li>index, e.g. <code>0</code>: only the first node of that group</li>
+<li>list, e.g. <code>1,3,5</code>: nodes 1, 3 and 5 of that group</li>
+<li>range, e.g. <code>2-4</code>: nodes 2 to 4 of that group</li>
+</ul>
+</li>
+<li><code>&lt;suffix&gt;</code> (optional) can hold some flag specific configuration<ul>
+<li>e.g. for the <code>--port</code> flag this could be <code>direct</code> or <code>proxy</code> (default) to configure the way of exposing ports</li>
+</ul>
+</li>
+</ul>
+<h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Problem: You want to have Nginx as your ingress controller, but by default, K3s deploys Traefik.</li>
+<li>Solution: Disabling the default Traefik deployment using K3s&rsquo; <code>--disable=traefik</code> flag.</li>
+<li>Note: It&rsquo;s enough to do this on the first (initializing) server node.</li>
+<li>How-To: <code>k3d cluster create notraefik --k3s-arg="--disable=traefik@server:0"</code><ul>
+<li>Looking at <code>--k3s-arg="--disable=traefik@server:0"</code>, everything after the <code>@</code> sign is part of the nodefilter.<ul>
+<li><code>server</code> is the node group: server nodes</li>
+<li>after the <code>:</code> follows the subset, which in this case is the index <code>0</code>: the first server node to be created (<code>k3d-notraefik-server-0</code>)</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
                 
                   
@@ -1256,7 +1265,7 @@
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">July 21, 2021</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">December 11, 2021</span>
       
     
   </small>
@@ -1286,7 +1295,7 @@
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../k3d_node_delete/" class="md-footer__link md-footer__link--prev" aria-label="Previous: K3d node delete" rel="prev">
+        <a href="../project/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Project Overview" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1295,20 +1304,20 @@
               <span class="md-footer__direction">
                 Previous
               </span>
-              K3d node delete
+              Project Overview
             </div>
           </div>
         </a>
       
       
         
-        <a href="../k3d_node_list/" class="md-footer__link md-footer__link--next" aria-label="Next: K3d node list" rel="next">
+        <a href="../defaults/" class="md-footer__link md-footer__link--next" aria-label="Next: Defaults" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              K3d node list
+              Defaults
             </div>
           </div>
           <div class="md-footer__button md-icon">
@@ -1343,12 +1352,12 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.top", "search.suggest", "search.highlight", "navigation.expand", "navigation.tabs"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../../assets/javascripts/workers/search.fcfe8b6d.min.js", "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.top", "search.suggest", "search.highlight", "navigation.expand", "navigation.tabs"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.fcfe8b6d.min.js", "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.b1047164.min.js"></script>
+      <script src="../../assets/javascripts/bundle.b1047164.min.js"></script>
       
-        <script src="../../../static/js/asciinema-player.js"></script>
+        <script src="../../static/js/asciinema-player.js"></script>
       
     
   </body>
