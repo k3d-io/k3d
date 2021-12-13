@@ -30,6 +30,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/rancher/k3d/v5/pkg/runtimes/containerd"
 	"github.com/rancher/k3d/v5/pkg/runtimes/docker"
 	runtimeTypes "github.com/rancher/k3d/v5/pkg/runtimes/types"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
@@ -43,7 +44,8 @@ var Docker = docker.Docker{}
 
 // Runtimes defines a map of implemented k3d runtimes
 var Runtimes = map[string]Runtime{
-	"docker": docker.Docker{},
+	"docker":     docker.Docker{},
+	"containerd": containerd.Containerd{},
 }
 
 // Runtime defines an interface that can be implemented for various container runtime environments (docker, containerd, etc.)
