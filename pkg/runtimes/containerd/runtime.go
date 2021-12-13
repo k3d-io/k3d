@@ -78,13 +78,14 @@ func (cd Containerd) ID() string {
 	return RuntimeIdentifierContainerd
 }
 
+// Info returns information about the underlying runtime (server side info)
 func (cd Containerd) Info() (*types.RuntimeInfo, error) {
 	c, ctx, err := GetClient(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	i, err := infoutil.Info(ctx, c, "", "")
+	i, err := infoutil.Info(ctx, c, "", "") // FIXME: pass in snapshotter, etc.?
 	if err != nil {
 		return nil, err
 	}

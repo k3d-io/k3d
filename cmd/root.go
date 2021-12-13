@@ -197,7 +197,11 @@ func initLogging() {
 }
 
 func initRuntime() {
-	runtime, err := runtimes.GetRuntime("docker")
+	rtenv := os.Getenv("K3D_RUNTIME")
+	if rtenv == "" {
+		rtenv = "docker" // docker as default runtime
+	}
+	runtime, err := runtimes.GetRuntime(rtenv)
 	if err != nil {
 		l.Log().Fatalln(err)
 	}
