@@ -1,5 +1,17 @@
 # Changelog
 
+## v5.2.2
+
+### Fixes
+
+- mitigate issue when importing images from multiple tars (#881, @sbaier1)
+- fix: cluster delete should not fail if no cluster was found by config file (#886, @kuritka)
+
+### Misc
+
+- docs: new page about k3d concepts, incl. nodefilters (#888)
+  - <https://k3d.io/v5.2.1/design/concepts/#nodefilters>
+
 ## v5.2.1
 
 ### Features & Enhancements
