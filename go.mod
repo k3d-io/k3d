@@ -42,6 +42,7 @@ require (
 
 require (
 	github.com/containerd/nerdctl v0.14.0
+	github.com/opencontainers/runtime-spec v1.0.3-0.20211101234015-a3c33d663ebc
 	github.com/spf13/pflag v1.0.5
 )
 
@@ -106,7 +107,6 @@ require (
 	github.com/multiformats/go-varint v0.0.6 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2-0.20211102003311-9a7a9876500e // indirect
-	github.com/opencontainers/runtime-spec v1.0.3-0.20211101234015-a3c33d663ebc // indirect
 	github.com/opencontainers/selinux v1.8.2 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/prometheus/client_golang v1.11.0 // indirect

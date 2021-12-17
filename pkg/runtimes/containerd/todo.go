@@ -37,10 +37,6 @@ func (cd Containerd) GetHost() string {
 	panic("not implemented") // TODO: Implement
 }
 
-func (cd Containerd) CreateNode(_ context.Context, _ *k3d.Node) error {
-	panic("not implemented") // TODO: Implement
-}
-
 func (cd Containerd) DeleteNode(_ context.Context, _ *k3d.Node) error {
 	panic("not implemented") // TODO: Implement
 }
