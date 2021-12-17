@@ -96,7 +96,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		l.Log().Debugf("Didn't find node with role '%s' in cluster '%s'. Choosing any other node (and using defaults)...", node.Role, cluster.Name)
 		node.Cmd = k3d.DefaultRoleCmds[node.Role]
 		for _, existingNode := range cluster.Nodes {
-			if existingNode.Role != k3d.LoadBalancerRole { // any role except for the LoadBalancer role
+			if existingNode.Role == k3d.AgentRole || existingNode.Role == k3d.ServerRole { // only K3s nodes
 				srcNode = existingNode
 				break
 			}
@@ -114,12 +114,18 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	 * -> remove fields that are not safe to copy as they break something down the stream
 	 */
 
+	// sanitize fields that mismatch between roles
+	if srcNode.Role != node.Role {
+		l.Log().Debugf("Dropping some fields from source node because it's not of the same role (%s != %s)...", srcNode.Role, node.Role)
+		srcNode.Memory = "" // memory settings are scoped per role (--servers-memory/--agents-memory)
+	}
+
 	// TODO: I guess proper deduplication can be handled in a cleaner/better way or at the infofaker level at some point
 	for _, forbiddenMount := range util.DoNotCopyVolumeSuffices {
-		for i, mount := range node.Volumes {
+		for i, mount := range srcNode.Volumes {
 			if strings.Contains(mount, forbiddenMount) {
-				l.Log().Tracef("Dropping copied volume mount %s to avoid issues...", mount)
-				node.Volumes = util.RemoveElementFromStringSlice(node.Volumes, i)
+				l.Log().Tracef("Dropping volume mount %s from source node to avoid issues...", mount)
+				srcNode.Volumes = util.RemoveElementFromStringSlice(srcNode.Volumes, i)
 			}
 		}
 	}
