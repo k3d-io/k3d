@@ -36,6 +36,34 @@ import (
 // - SRC: source directory/file -> tests: must exist
 // - DEST: source directory/file -> tests: must be absolute path
 func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) error {
+	src, dest, err := ReadVolumeMount(volumeMount)
+	if err != nil {
+		return err
+	}
+
+	// verify that the source exists
+	if src != "" {
+		// a) named volume
+		isNamedVolume := true
+		if err := verifyNamedVolume(runtime, src); err != nil {
+			isNamedVolume = false
+		}
+		if !isNamedVolume {
+			if _, err := os.Stat(src); err != nil {
+				l.Log().Warnf("failed to stat file/directory/named volume that you're trying to mount: '%s' in '%s' -> Please make sure it exists", src, volumeMount)
+			}
+		}
+	}
+
+	// verify that the destination is an absolute path
+	if !strings.HasPrefix(dest, "/") {
+		return fmt.Errorf("volume mount destination doesn't appear to be an absolute path: '%s' in '%s'", dest, volumeMount)
+	}
+
+	return nil
+}
+
+func ReadVolumeMount(volumeMount string) (string, string, error) {
 	src := ""
 	dest := ""
 
@@ -50,10 +78,10 @@ func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) error {
 		maxParts++
 	}
 	if len(split) < 1 {
-		return fmt.Errorf("No volume/path specified")
+		return src, dest, fmt.Errorf("no volume/path specified")
 	}
 	if len(split) > maxParts {
-		return fmt.Errorf("Invalid volume mount '%s': maximal %d ':' allowed", volumeMount, maxParts-1)
+		return src, dest, fmt.Errorf("invalid volume mount '%s': maximal %d ':' allowed", volumeMount, maxParts-1)
 	}
 
 	// we only have SRC specified -> DEST = SRC
@@ -68,27 +96,7 @@ func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) error {
 		src = split[0]
 		dest = split[1]
 	}
-
-	// verify that the source exists
-	if src != "" {
-		// a) named volume
-		isNamedVolume := true
-		if err := verifyNamedVolume(runtime, src); err != nil {
-			isNamedVolume = false
-		}
-		if !isNamedVolume {
-			if _, err := os.Stat(src); err != nil {
-				l.Log().Warnf("Failed to stat file/directory/named volume that you're trying to mount: '%s' in '%s' -> Please make sure it exists", src, volumeMount)
-			}
-		}
-	}
-
-	// verify that the destination is an absolute path
-	if !strings.HasPrefix(dest, "/") {
-		return fmt.Errorf("Volume mount destination doesn't appear to be an absolute path: '%s' in '%s'", dest, volumeMount)
-	}
-
-	return nil
+	return src, dest, nil
 }
 
 // verifyNamedVolume checks whether a named volume exists in the runtime
