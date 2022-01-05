@@ -37,3 +37,8 @@ var (
 
 // Container Filesystem Errors
 var ErrRuntimeFileNotFound = errors.New("file not found")
+
+// Runtime Volume Errors
+var (
+	ErrRuntimeVolumeNotExists = errors.New("volume does not exist")
+)

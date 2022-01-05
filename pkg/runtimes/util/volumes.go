@@ -22,12 +22,16 @@ THE SOFTWARE.
 package util
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
 	rt "runtime"
 	"strings"
 
 	"github.com/rancher/k3d/v5/pkg/runtimes"
+	runtimeErrors "github.com/rancher/k3d/v5/pkg/runtimes/errors"
+	k3d "github.com/rancher/k3d/v5/pkg/types"
 
 	l "github.com/rancher/k3d/v5/pkg/logger"
 )
@@ -35,7 +39,7 @@ import (
 // ValidateVolumeMount checks, if the source of volume mounts exists and if the destination is an absolute path
 // - SRC: source directory/file -> tests: must exist
 // - DEST: source directory/file -> tests: must be absolute path
-func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) error {
+func ValidateVolumeMount(ctx context.Context, runtime runtimes.Runtime, volumeMount string, cluster *k3d.Cluster) error {
 	src, dest, err := ReadVolumeMount(volumeMount)
 	if err != nil {
 		return err
@@ -43,14 +47,28 @@ func ValidateVolumeMount(runtime runtimes.Runtime, volumeMount string) error {
 
 	// verify that the source exists
 	if src != "" {
-		// a) named volume
-		isNamedVolume := true
-		if err := verifyNamedVolume(runtime, src); err != nil {
-			isNamedVolume = false
-		}
-		if !isNamedVolume {
+		// directory/file: path containing / or \ (not allowed in named volumes)
+		if strings.ContainsAny(src, "/\\") {
 			if _, err := os.Stat(src); err != nil {
-				l.Log().Warnf("failed to stat file/directory/named volume that you're trying to mount: '%s' in '%s' -> Please make sure it exists", src, volumeMount)
+				l.Log().Warnf("failed to stat file/directory '%s' volume mount '%s': please make sure it exists", src, volumeMount)
+			}
+		} else {
+			err := verifyNamedVolume(runtime, src)
+			if err != nil {
+				l.Log().Traceln(err)
+				if errors.Is(err, runtimeErrors.ErrRuntimeVolumeNotExists) {
+					if strings.HasPrefix(src, "k3d-") {
+						if err := runtime.CreateVolume(ctx, src, map[string]string{k3d.LabelClusterName: cluster.Name}); err != nil {
+							return fmt.Errorf("failed to create named volume '%s': %v", src, err)
+						}
+						cluster.Volumes = append(cluster.Volumes, src)
+						l.Log().Infof("Created named volume '%s'", src)
+					} else {
+						l.Log().Infof("No named volume '%s' found. The runtime will create it automatically.", src)
+					}
+				} else {
+					l.Log().Warnf("failed to get named volume: %v", err)
+				}
 			}
 		}
 	}
@@ -101,12 +119,9 @@ func ReadVolumeMount(volumeMount string) (string, string, error) {
 
 // verifyNamedVolume checks whether a named volume exists in the runtime
 func verifyNamedVolume(runtime runtimes.Runtime, volumeName string) error {
-	foundVolName, err := runtime.GetVolume(volumeName)
+	_, err := runtime.GetVolume(volumeName)
 	if err != nil {
 		return fmt.Errorf("runtime failed to get volume '%s': %w", volumeName, err)
-	}
-	if foundVolName == "" {
-		return fmt.Errorf("failed to find named volume '%s'", volumeName)
 	}
 	return nil
 }

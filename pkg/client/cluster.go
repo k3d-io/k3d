@@ -309,9 +309,11 @@ func ClusterPrepImageVolume(ctx context.Context, runtime k3drt.Runtime, cluster 
 	if err := runtime.CreateVolume(ctx, imageVolumeName, map[string]string{k3d.LabelClusterName: cluster.Name}); err != nil {
 		return fmt.Errorf("failed to create image volume '%s' for cluster '%s': %w", imageVolumeName, cluster.Name, err)
 	}
+	l.Log().Infof("Created image volume %s", imageVolumeName)
 
 	clusterCreateOpts.GlobalLabels[k3d.LabelImageVolume] = imageVolumeName
 	cluster.ImageVolume = imageVolumeName
+	cluster.Volumes = append(cluster.Volumes, imageVolumeName)
 
 	// attach volume to nodes
 	for _, node := range cluster.Nodes {
@@ -640,11 +642,12 @@ func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 		}
 	}
 
-	// delete image volume
-	if cluster.ImageVolume != "" {
-		l.Log().Infof("Deleting image volume '%s'", cluster.ImageVolume)
-		if err := runtime.DeleteVolume(ctx, cluster.ImageVolume); err != nil {
-			l.Log().Warningf("Failed to delete image volume '%s' of cluster '%s': Try to delete it manually", cluster.ImageVolume, cluster.Name)
+	// delete managed volumes attached to this cluster
+	l.Log().Infof("Deleting %d attached volumes...", len(cluster.Volumes))
+	for _, vol := range cluster.Volumes {
+		l.Log().Debugf("Deleting volume %s...", vol)
+		if err := runtime.DeleteVolume(ctx, vol); err != nil {
+			l.Log().Warningf("Failed to delete volume '%s' of cluster '%s': %v -> Try to delete it manually", cluster.ImageVolume, err, cluster.Name)
 		}
 	}
 
@@ -805,6 +808,12 @@ func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster
 			cluster.ServerLoadBalancer.Config = &lbcfg
 		}
 	}
+
+	vols, err := runtime.GetVolumesByLabel(ctx, map[string]string{types.LabelClusterName: cluster.Name})
+	if err != nil {
+		return nil, err
+	}
+	cluster.Volumes = append(cluster.Volumes, vols...)
 
 	if err := populateClusterFieldsFromLabels(cluster); err != nil {
 		l.Log().Warnf("Failed to populate cluster fields from node labels: %v", err)

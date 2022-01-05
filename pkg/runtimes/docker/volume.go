@@ -27,7 +27,7 @@ import (
 
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/volume"
-	l "github.com/rancher/k3d/v5/pkg/logger"
+	runtimeErrors "github.com/rancher/k3d/v5/pkg/runtimes/errors"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
 )
 
@@ -55,11 +55,10 @@ func (d Docker) CreateVolume(ctx context.Context, name string, labels map[string
 		volumeCreateOptions.Labels[k] = v
 	}
 
-	vol, err := docker.VolumeCreate(ctx, volumeCreateOptions)
+	_, err = docker.VolumeCreate(ctx, volumeCreateOptions)
 	if err != nil {
 		return fmt.Errorf("failed to create volume '%s': %w", name, err)
 	}
-	l.Log().Infof("Created volume '%s'", vol.Name)
 	return nil
 }
 
@@ -110,9 +109,40 @@ func (d Docker) GetVolume(name string) (string, error) {
 		return "", fmt.Errorf("docker failed to list volumes: %w", err)
 	}
 	if len(volumeList.Volumes) < 1 {
-		return "", fmt.Errorf("failed to find named volume '%s'", name)
+		return "", fmt.Errorf("failed to find named volume '%s': %w", name, runtimeErrors.ErrRuntimeVolumeNotExists)
 	}
 
 	return volumeList.Volumes[0].Name, nil
+
+}
+
+func (d Docker) GetVolumesByLabel(ctx context.Context, labels map[string]string) ([]string, error) {
+	var volumes []string
+	// (0) create new docker client
+	docker, err := GetDockerClient()
+	if err != nil {
+		return volumes, fmt.Errorf("failed to get docker client: %w", err)
+	}
+	defer docker.Close()
+
+	// (1) list containers which have the default k3d labels attached
+	filters := filters.NewArgs()
+	for k, v := range k3d.DefaultRuntimeLabels {
+		filters.Add("label", fmt.Sprintf("%s=%s", k, v))
+	}
+	for k, v := range labels {
+		filters.Add("label", fmt.Sprintf("%s=%s", k, v))
+	}
+
+	volumeList, err := docker.VolumeList(ctx, filters)
+	if err != nil {
+		return volumes, fmt.Errorf("docker failed to list volumes: %w", err)
+	}
+
+	for _, v := range volumeList.Volumes {
+		volumes = append(volumes, v.Name)
+	}
+
+	return volumes, nil
 
 }
