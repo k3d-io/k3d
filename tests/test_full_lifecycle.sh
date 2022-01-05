@@ -74,8 +74,8 @@ check_multi_node "$clustername" 3 || failed "failed to verify number of nodes"
 
 # 4. load an image into the cluster
 info "Importing an image into the cluster..."
-docker pull alpine:latest > /dev/null
-docker tag alpine:latest alpine:local > /dev/null
+docker pull alpine:3.15.0 > /dev/null
+docker tag alpine:3.15.0 alpine:local > /dev/null
 $EXE image import alpine:local -c $clustername || failed "could not import image in $clustername"
 
 # 5. use imported image
@@ -90,9 +90,9 @@ wait_for_pod_running_by_label "k8s-app=kube-dns" "kube-system"
 sleep 5
 
 # 6. test host.k3d.internal
-info "Checking DNS Lookup for host.k3d.internal..."
+info "Checking DNS Lookup for host.k3d.internal via Ping..."
 kubectl describe cm coredns -n kube-system | grep "host.k3d.internal" > /dev/null 2>&1 || failed "Couldn't find host.k3d.internal in CoreDNS configmap"
-wait_for_pod_exec "testimage" "nslookup host.k3d.internal" 15 || failed "DNS Lookup for host.k3d.internal failed"
+wait_for_pod_exec "testimage" "ping -c1 host.k3d.internal" 15 || failed "Pinging host.k3d.internal failed"
 
 # Cleanup
 

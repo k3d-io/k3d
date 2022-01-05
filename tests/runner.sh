@@ -22,6 +22,9 @@ source "$CURR_DIR/common.sh"
 
 [ -n "$EXE" ] || abort "no EXE provided"
 
+info "Checking test environment..."
+$EXE runtime-info
+
 info "Preparing filesystem and environment..."
 
 export KUBECONFIG_ROOT="$HOME/.kube"
