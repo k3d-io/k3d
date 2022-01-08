@@ -65,6 +65,7 @@ type Runtime interface {
 	CreateVolume(context.Context, string, map[string]string) error
 	DeleteVolume(context.Context, string) error
 	GetVolume(string) (string, error)
+	GetVolumesByLabel(context.Context, map[string]string) ([]string, error) // @param context, labels - @return volumes, error
 	GetImageStream(context.Context, []string) (io.ReadCloser, error)
 	GetRuntimePath() string // returns e.g. '/var/run/docker.sock' for a default docker setup
 	ExecInNode(context.Context, *k3d.Node, []string) error

@@ -24,10 +24,12 @@ package config
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
 	"github.com/rancher/k3d/v5/pkg/runtimes"
+	"github.com/rancher/k3d/v5/pkg/types/k3s"
 	"github.com/spf13/viper"
 	"gotest.tools/assert"
 )
@@ -51,10 +53,19 @@ func TestProcessClusterConfig(t *testing.T) {
 		t.Error(err)
 	}
 
+	// append some volume to test K3s volume shortcut expansion
+	clusterCfg.Cluster.Nodes[0].Volumes = append(clusterCfg.Cluster.Nodes[0].Volumes, "/tmp/testexpansion:k3s-storage:rw")
+
 	t.Logf("\n========== Process Cluster Config (non-host network) ==========\n%+v\n=================================\n", cfg)
 
 	clusterCfg, err = ProcessClusterConfig(*clusterCfg)
 	assert.Assert(t, clusterCfg.ClusterCreateOpts.DisableLoadBalancer == false, "The load balancer should be enabled")
+
+	for _, v := range clusterCfg.Cluster.Nodes[0].Volumes {
+		if strings.HasPrefix(v, "/tmp/testexpansion") {
+			assert.Assert(t, strings.Contains(v, k3s.K3sPathStorage), "volume path shortcut expansion of k3s-storage didn't work")
+		}
+	}
 
 	t.Logf("\n===== Resulting Cluster Config (non-host network) =====\n%+v\n===============\n", clusterCfg)
 
@@ -65,5 +76,6 @@ func TestProcessClusterConfig(t *testing.T) {
 	assert.Assert(t, clusterCfg.ClusterCreateOpts.DisableLoadBalancer == true, "The load balancer should be disabled")
 
 	t.Logf("\n===== Resulting Cluster Config (host network) =====\n%+v\n===============\n", clusterCfg)
+	t.Logf("\n===== First Node in Resulting Cluster Config (host network) =====\n%+v\n===============\n", clusterCfg.Cluster.Nodes[0])
 
 }

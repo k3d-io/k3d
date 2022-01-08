@@ -82,7 +82,7 @@ func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config
 		// volumes have to be either an existing path on the host or a named runtime volume
 		for _, volume := range node.Volumes {
 
-			if err := runtimeutil.ValidateVolumeMount(runtime, volume); err != nil {
+			if err := runtimeutil.ValidateVolumeMount(ctx, runtime, volume, &config.Cluster); err != nil {
 				return fmt.Errorf("failed to validate volume mount '%s': %w", volume, err)
 			}
 		}

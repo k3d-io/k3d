@@ -19,26 +19,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package errors
+package k3s
 
-import "errors"
-
-// ErrRuntimeNetworkNotEmpty describes an error that occurs because a network still has containers connected to it (e.g. cannot be deleted)
-var ErrRuntimeNetworkNotEmpty = errors.New("network not empty")
-
-// ErrRuntimeContainerUnknown describes the situation, where we're inspecting a container that's not obviously managed by k3d
-var ErrRuntimeContainerUnknown = errors.New("container not managed by k3d: missing default label(s)")
-
-// Runtime Network Errors
-var (
-	ErrRuntimeNetworkNotExists     = errors.New("network does not exist")
-	ErrRuntimeNetworkMultiSameName = errors.New("multiple networks with same name found")
+const (
+	K3sPathStorage              = "/var/lib/rancher/k3s/storage"
+	K3sPathManifests            = "/var/lib/rancher/k3s/server/manifests"
+	K3sPathManifestsCustom      = "/var/lib/rancher/k3s/server/manifests/custom" // custom subfolder
+	K3sPathContainerdConfig     = "/var/lib/rancher/k3s/agent/etc/containerd/config.toml"
+	K3sPathContainerdConfigTmpl = "/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl"
+	K3sPathRegistryConfig       = "/etc/rancher/k3s/registries.yaml"
 )
 
-// Container Filesystem Errors
-var ErrRuntimeFileNotFound = errors.New("file not found")
-
-// Runtime Volume Errors
-var (
-	ErrRuntimeVolumeNotExists = errors.New("volume does not exist")
-)
+var K3sPathShortcuts = map[string]string{
+	"k3s-storage":          K3sPathStorage,
+	"k3s-manifests":        K3sPathManifests,
+	"k3s-manifests-custom": K3sPathManifestsCustom,
+	"k3s-containerd":       K3sPathContainerdConfig,
+	"k3s-containerd-tmpl":  K3sPathContainerdConfigTmpl,
+	"k3s-registry-config":  K3sPathRegistryConfig,
+}

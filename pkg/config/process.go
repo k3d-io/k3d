@@ -23,9 +23,13 @@ THE SOFTWARE.
 package config
 
 import (
+	"strings"
+
 	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
 	l "github.com/rancher/k3d/v5/pkg/logger"
+	runtimeutil "github.com/rancher/k3d/v5/pkg/runtimes/util"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/types/k3s"
 )
 
 // ProcessSimpleConfig applies processing to the simple config, sanitizing it and doing some modifications
@@ -54,6 +58,19 @@ func ProcessClusterConfig(clusterConfig conf.ClusterConfig) (*conf.ClusterConfig
 		// if network is host, disable load balancer
 		// serverlb not supported in hostnetwork mode due to port collisions with server node
 		clusterConfig.ClusterCreateOpts.DisableLoadBalancer = true
+	}
+
+	for _, node := range clusterConfig.Cluster.Nodes {
+		for vIndex, volume := range node.Volumes {
+			_, dest, err := runtimeutil.ReadVolumeMount(volume)
+			if err != nil {
+				return nil, err
+			}
+			if path, ok := k3s.K3sPathShortcuts[dest]; ok {
+				l.Log().Tracef("[node: %s] expanding volume shortcut %s to %s", node.Name, dest, path)
+				node.Volumes[vIndex] = strings.Replace(volume, dest, path, 1)
+			}
+		}
 	}
 
 	return &clusterConfig, nil
