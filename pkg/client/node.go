@@ -30,7 +30,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -413,9 +412,9 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 	// execute lifecycle hook actions
 	for _, hook := range nodeStartOpts.NodeHooks {
 		if hook.Stage == k3d.LifecycleStagePreStart {
-			l.Log().Tracef("Node %s: Executing preStartAction '%s'", node.Name, reflect.TypeOf(hook))
+			l.Log().Tracef("Node %s: Executing preStartAction '%s': %s", node.Name, hook.Action.Name(), hook.Action.Info())
 			if err := hook.Action.Run(ctx, node); err != nil {
-				l.Log().Errorf("Node %s: Failed executing preStartAction '%+v': %+v", node.Name, hook, err)
+				l.Log().Errorf("Node %s: Failed executing preStartAction '%s': %s: %+v", node.Name, hook.Action.Name(), hook.Action.Info(), err) // TODO: should we error out on failed preStartAction?
 			}
 		}
 	}

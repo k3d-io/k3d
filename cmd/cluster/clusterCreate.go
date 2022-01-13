@@ -32,6 +32,7 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/sirupsen/logrus"
+	"inet.af/netaddr"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -265,6 +266,9 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	cmd.Flags().String("registry-create", "", "Create a k3d-managed registry and connect it to the cluster (Format: `NAME[:HOST][:HOSTPORT]`\n - Example: `k3d cluster create --registry-create mycluster-registry:0.0.0.0:5432`")
 	_ = ppViper.BindPFlag("cli.registries.create", cmd.Flags().Lookup("registry-create"))
+
+	cmd.Flags().StringArray("host-alias", nil, "Add `ip:host[,host,...]` mappings")
+	_ = ppViper.BindPFlag("hostaliases", cmd.Flags().Lookup("host-alias"))
 
 	/* k3s */
 	cmd.Flags().StringArray("k3s-arg", nil, "Additional args passed to k3s command (Format: `ARG@NODEFILTER[;@NODEFILTER]`)\n - Example: `k3d cluster create --k3s-arg \"--disable=traefik@server:0\"")
@@ -593,7 +597,38 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 			cfg.Registries.Create.Host = exposeAPI.Host
 			cfg.Registries.Create.HostPort = exposeAPI.Binding.HostPort
 		}
+	}
 
+	// --host-alias
+	hostAliasFlags := ppViper.GetStringSlice("hostaliases")
+	if len(hostAliasFlags) > 0 {
+		for _, ha := range hostAliasFlags {
+
+			// split on :
+			s := strings.Split(ha, ":")
+			if len(s) != 2 {
+				return cfg, fmt.Errorf("invalid format of host-alias %s (exactly one ':' allowed)", ha)
+			}
+
+			// validate IP
+			ip, err := netaddr.ParseIP(s[0])
+			if err != nil {
+				return cfg, fmt.Errorf("invalid IP '%s' in host-alias '%s': %w", s[0], ha, err)
+			}
+
+			// hostnames
+			hostnames := strings.Split(s[1], ",")
+			for _, hostname := range hostnames {
+				if err := k3dCluster.ValidateHostname(hostname); err != nil {
+					return cfg, fmt.Errorf("invalid hostname '%s' in host-alias '%s': %w", hostname, ha, err)
+				}
+			}
+
+			cfg.HostAliases = append(cfg.HostAliases, k3d.HostAlias{
+				IP:        ip.String(),
+				Hostnames: hostnames,
+			})
+		}
 	}
 
 	return cfg, nil
