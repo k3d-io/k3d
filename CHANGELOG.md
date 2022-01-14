@@ -1,5 +1,26 @@
 # Changelog
 
+## v5.3.0
+
+**Note:** Now trying to follow a standard scheme defined by <https://keepachangelog.com/en/1.0.0/>
+
+### Added
+
+- Volumemount-Shortcuts (#916)
+  - Use some destination shortcuts with the `--volume/-v` flag that k3d automatically expands
+    - `k3s-storage` -> `/var/lib/rancher/k3s/storage`
+    - `k3s-manifests` -> `/var/lib/rancher/k3s/server/manifests`
+    - `k3s-manifests-custom` -> `/var/lib/rancher/k3s/server/manifests/custom` (not K3s default: this is just some sub-directory inside the auto-deploy manifests directory which will also be parsed)
+    - `k3s-containerd` -> `/var/lib/rancher/k3s/agent/etc/containerd/config.toml` (use with caution, K3s generates this file!)
+    - `k3s-containerd-tmpl` -> `/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl` (used by K3s to generate the real config above)
+    - `k3s-registry-config` -> `/etc/rancher/k3s/registries.yaml` (or just use `--registry-config`)
+- k3d-managed volumes (#916)
+  - non-existing named volumes starting with a `k3d-` prefix will now be created and managed by `k3d`
+
+### Removed
+
+- unused volume validation functionality in `cmd/util`, does not affect the CLI (#916)
+
 ## v5.2.2
 
 ### Fixes

@@ -28,7 +28,7 @@ k3d makes it very easy to create single- and multi-node [k3s](https://github.com
 ## Requirements
 
 - [**docker**](https://docs.docker.com/install/) to be able to use k3d at all
-  - Note: k3d v5.x.x requires at least Docker v20.10.4 to work properly
+  - Note: k3d v5.x.x requires at least Docker v20.10.5 (runc >= v1.0.0-rc93) to work properly (see [#807](https://github.com/rancher/k3d/issues/807))
 - [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) to interact with the Kubernetes cluster
 
 ## Releases

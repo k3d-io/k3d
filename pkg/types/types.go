@@ -234,6 +234,7 @@ type Cluster struct {
 	KubeAPI            *ExposureOpts      `yaml:"kubeAPI" json:"kubeAPI,omitempty"`
 	ServerLoadBalancer *Loadbalancer      `yaml:"serverLoadbalancer,omitempty" json:"serverLoadBalancer,omitempty"`
 	ImageVolume        string             `yaml:"imageVolume" json:"imageVolume,omitempty"`
+	Volumes            []string           `yaml:"volumes,omitempty" json:"volumes,omitempty"` // k3d-managed volumes attached to this cluster
 }
 
 // ServerCountRunning returns the number of server nodes running in the cluster and the total number
