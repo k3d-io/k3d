@@ -1282,7 +1282,7 @@ type IPPrefix struct {
 	bits uint8
 }
 
-// IPPrefixFrom returns an IPPrefix with IP ip and port port.
+// IPPrefixFrom returns an IPPrefix with IP ip and provided bits prefix length.
 // It does not allocate.
 func IPPrefixFrom(ip IP, bits uint8) IPPrefix {
 	return IPPrefix{
