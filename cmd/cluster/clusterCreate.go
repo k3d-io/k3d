@@ -297,6 +297,9 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().String("subnet", "", "[Experimental: IPAM] Define a subnet for the newly created container network (Example: `172.28.0.0/16`)")
 	_ = cfgViper.BindPFlag("subnet", cmd.Flags().Lookup("subnet"))
 
+	cmd.Flags().Bool("host-pid-mode", false, "Enable host pid mode of server(s) and agent(s)")
+	_ = cfgViper.BindPFlag("host-pid-mode", cmd.Flags().Lookup("host-pid-mode"))
+
 	cmd.Flags().String("token", "", "Specify a cluster token. By default, we generate one.")
 	_ = cfgViper.BindPFlag("token", cmd.Flags().Lookup("token"))
 
