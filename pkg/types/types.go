@@ -284,6 +284,7 @@ type Node struct {
 	Ports         nat.PortMap       `yaml:"portMappings" json:"portMappings,omitempty"`
 	Restart       bool              `yaml:"restart" json:"restart,omitempty"`
 	Created       string            `yaml:"created" json:"created,omitempty"`
+	HostPidMode   bool              `yaml:"hostPidMode" json:"hostPidMode,omitempty"`
 	RuntimeLabels map[string]string `yaml:"runtimeLabels" json:"runtimeLabels,omitempty"`
 	K3sNodeLabels map[string]string `yaml:"k3sNodeLabels" json:"k3sNodeLabels,omitempty"`
 	Networks      []string          // filled automatically

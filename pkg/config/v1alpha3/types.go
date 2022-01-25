@@ -104,6 +104,7 @@ type SimpleConfigOptionsRuntime struct {
 	GPURequest    string                 `mapstructure:"gpuRequest" yaml:"gpuRequest,omitempty" json:"gpuRequest,omitempty"`
 	ServersMemory string                 `mapstructure:"serversMemory" yaml:"serversMemory,omitempty" json:"serversMemory,omitempty"`
 	AgentsMemory  string                 `mapstructure:"agentsMemory" yaml:"agentsMemory,omitempty" json:"agentsMemory,omitempty"`
+	HostPidMode   bool                   `mapstructure:"hostPidMode" yaml:"hostPidMode,omitempty" json:"hostPidMode,omitempty"`
 	Labels        []LabelWithNodeFilters `mapstructure:"labels" yaml:"labels,omitempty" json:"labels,omitempty"`
 }
 

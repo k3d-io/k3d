@@ -136,11 +136,12 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 	for i := 0; i < simpleConfig.Servers; i++ {
 		serverNode := k3d.Node{
-			Name:       client.GenerateNodeName(newCluster.Name, k3d.ServerRole, i),
-			Role:       k3d.ServerRole,
-			Image:      simpleConfig.Image,
-			ServerOpts: k3d.ServerOpts{},
-			Memory:     simpleConfig.Options.Runtime.ServersMemory,
+			Name:        client.GenerateNodeName(newCluster.Name, k3d.ServerRole, i),
+			Role:        k3d.ServerRole,
+			Image:       simpleConfig.Image,
+			ServerOpts:  k3d.ServerOpts{},
+			Memory:      simpleConfig.Options.Runtime.ServersMemory,
+			HostPidMode: simpleConfig.Options.Runtime.HostPidMode,
 		}
 
 		// first server node will be init node if we have more than one server specified but no external datastore
@@ -158,10 +159,11 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 	for i := 0; i < simpleConfig.Agents; i++ {
 		agentNode := k3d.Node{
-			Name:   client.GenerateNodeName(newCluster.Name, k3d.AgentRole, i),
-			Role:   k3d.AgentRole,
-			Image:  simpleConfig.Image,
-			Memory: simpleConfig.Options.Runtime.AgentsMemory,
+			Name:        client.GenerateNodeName(newCluster.Name, k3d.AgentRole, i),
+			Role:        k3d.AgentRole,
+			Image:       simpleConfig.Image,
+			Memory:      simpleConfig.Options.Runtime.AgentsMemory,
+			HostPidMode: simpleConfig.Options.Runtime.HostPidMode,
 		}
 		newCluster.Nodes = append(newCluster.Nodes, &agentNode)
 	}
