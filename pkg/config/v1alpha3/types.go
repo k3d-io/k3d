@@ -104,6 +104,7 @@ type SimpleConfigOptionsRuntime struct {
 	GPURequest    string                 `mapstructure:"gpuRequest" yaml:"gpuRequest,omitempty" json:"gpuRequest,omitempty"`
 	ServersMemory string                 `mapstructure:"serversMemory" yaml:"serversMemory,omitempty" json:"serversMemory,omitempty"`
 	AgentsMemory  string                 `mapstructure:"agentsMemory" yaml:"agentsMemory,omitempty" json:"agentsMemory,omitempty"`
+	HostPidMode   bool                   `mapstructure:"hostPidMode" yaml:"hostPidMode,omitempty" json:"hostPidMode,omitempty"`
 	Labels        []LabelWithNodeFilters `mapstructure:"labels" yaml:"labels,omitempty" json:"labels,omitempty"`
 }
 
@@ -148,7 +149,6 @@ type SimpleConfig struct {
 	Image           string                  `mapstructure:"image" yaml:"image,omitempty" json:"image,omitempty"`
 	Network         string                  `mapstructure:"network" yaml:"network,omitempty" json:"network,omitempty"`
 	Subnet          string                  `mapstructure:"subnet" yaml:"subnet,omitempty" json:"subnet,omitempty"`
-	HostPidMode     bool                    `mapstructure:"host-pid-mode" yaml:"host-pid-mode,omitempty" json:"host-pid-mode,omitempty"`
 	ClusterToken    string                  `mapstructure:"token" yaml:"clusterToken,omitempty" json:"clusterToken,omitempty"` // default: auto-generated
 	Volumes         []VolumeWithNodeFilters `mapstructure:"volumes" yaml:"volumes,omitempty" json:"volumes,omitempty"`
 	Ports           []PortWithNodeFilters   `mapstructure:"ports" yaml:"ports,omitempty" json:"ports,omitempty"`

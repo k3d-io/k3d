@@ -141,7 +141,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			Image:       simpleConfig.Image,
 			ServerOpts:  k3d.ServerOpts{},
 			Memory:      simpleConfig.Options.Runtime.ServersMemory,
-			HostPidMode: simpleConfig.HostPidMode,
+			HostPidMode: simpleConfig.Options.Runtime.HostPidMode,
 		}
 
 		// first server node will be init node if we have more than one server specified but no external datastore
@@ -163,7 +163,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			Role:        k3d.AgentRole,
 			Image:       simpleConfig.Image,
 			Memory:      simpleConfig.Options.Runtime.AgentsMemory,
-			HostPidMode: simpleConfig.HostPidMode,
+			HostPidMode: simpleConfig.Options.Runtime.HostPidMode,
 		}
 		newCluster.Nodes = append(newCluster.Nodes, &agentNode)
 	}
