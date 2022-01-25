@@ -1,3 +1,4 @@
+ARG DOCKER_VERSION=20.10
 ############################################################
 # builder                                                  #
 # -> golang image used solely for building the k3d binary  #
@@ -14,12 +15,13 @@ RUN make build -e GIT_TAG_OVERRIDE=${GIT_TAG_OVERRIDE} && bin/k3d version
 # -> k3d + some tools in a docker-in-docker container #
 # -> used e.g. in our CI pipelines for testing        #
 #######################################################
-FROM docker:20.10-dind as dind
+FROM docker:$DOCKER_VERSION-dind as dind
 ARG OS=linux
 ARG ARCH=amd64
 
 # install some basic packages needed for testing, etc.
-RUN echo "building for ${OS}/${ARCH}" && \
+RUN docker version; \
+    echo ">>> building for ${OS}/${ARCH}" && \
     apk update && \
     apk add bash curl sudo jq git make netcat-openbsd
 

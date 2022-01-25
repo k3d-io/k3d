@@ -53,6 +53,7 @@ E2E_RUNNER_START_TIMEOUT ?= 10
 E2E_HELPER_IMAGE_TAG ?=
 E2E_KEEP ?=
 E2E_PARALLEL ?=
+E2E_DIND_VERSION ?=
 
 ########## Go Build Options ##########
 # Build targets
@@ -127,18 +128,18 @@ build-cross:
 # build a specific docker target ( '%' matches the target as specified in the Dockerfile)
 build-docker-%:
 	@echo "Building Docker image k3d:$(K3D_IMAGE_TAG)-$*"
-	DOCKER_BUILDKIT=1 docker build . --no-cache -t k3d:$(K3D_IMAGE_TAG)-$* --target $*
+	DOCKER_BUILDKIT=1 docker build . --quiet --no-cache -t k3d:$(K3D_IMAGE_TAG)-$* --target $*
 
 # build helper images
 build-helper-images: build-proxy-image build-tools-image
 
 build-proxy-image:
 	@echo "Building docker image rancher/k3d-proxy:$(K3D_IMAGE_TAG)"
-	DOCKER_BUILDKIT=1 docker build --no-cache proxy/ -f proxy/Dockerfile -t rancher/k3d-proxy:$(K3D_IMAGE_TAG)
+	DOCKER_BUILDKIT=1 docker build --quiet --no-cache proxy/ -f proxy/Dockerfile -t rancher/k3d-proxy:$(K3D_IMAGE_TAG)
 
 build-tools-image:
 	@echo "Building docker image rancher/k3d-tools:$(K3D_IMAGE_TAG)"
-	DOCKER_BUILDKIT=1 docker build --no-cache tools/ -f tools/Dockerfile -t rancher/k3d-tools:$(K3D_IMAGE_TAG) --build-arg GIT_TAG=$(GIT_TAG)
+	DOCKER_BUILDKIT=1 docker build --quiet --no-cache tools/ -f tools/Dockerfile -t rancher/k3d-tools:$(K3D_IMAGE_TAG) --build-arg GIT_TAG=$(GIT_TAG)
 
 ##############################
 ########## Cleaning ##########
@@ -175,9 +176,9 @@ check: check-fmt lint
 test:
 	$(GO) test $(TESTS) $(TESTFLAGS)
 
-e2e: build-docker-dind
-	@echo "Running e2e tests in k3d:$(K3D_IMAGE_TAG)"
-	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_INCLUDE="$(E2E_INCLUDE)" E2E_EXCLUDE="$(E2E_EXCLUDE)" E2E_EXTRA="$(E2E_EXTRA)" E2E_RUNNER_START_TIMEOUT=$(E2E_RUNNER_START_TIMEOUT) E2E_HELPER_IMAGE_TAG="$(E2E_HELPER_IMAGE_TAG)" E2E_KEEP="$(E2E_KEEP)" E2E_PARALLEL="$(E2E_PARALLEL)" tests/dind.sh "${K3D_IMAGE_TAG}-dind"
+e2e:
+	@echo "Running e2e tests"
+	LOG_LEVEL="$(E2E_LOG_LEVEL)" E2E_INCLUDE="$(E2E_INCLUDE)" E2E_EXCLUDE="$(E2E_EXCLUDE)" E2E_EXTRA="$(E2E_EXTRA)" E2E_RUNNER_START_TIMEOUT=$(E2E_RUNNER_START_TIMEOUT) E2E_HELPER_IMAGE_TAG="$(E2E_HELPER_IMAGE_TAG)" E2E_KEEP="$(E2E_KEEP)" E2E_PARALLEL="$(E2E_PARALLEL)" E2E_DIND_VERSION="$(E2E_DIND_VERSION)" tests/dind.sh "${K3D_IMAGE_TAG}"
 
 ci-tests: fmt check e2e
 

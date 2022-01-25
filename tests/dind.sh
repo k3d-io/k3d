@@ -1,7 +1,7 @@
 #!/bin/bash
 
 K3D_EXE=${EXE:-/bin/k3d}
-K3D_IMAGE_TAG=$1
+K3D_IMAGE_TAG="$1-dind"
 
 # define E2E_KEEP to non-empty for keeping the e2e runner container after running the tests
 E2E_KEEP=${E2E_KEEP:-}
@@ -11,6 +11,9 @@ E2E_PARALLEL=${E2E_PARALLEL:-}
 
 # Max. time to wait for the runner container to be up
 RUNNER_START_TIMEOUT=${E2E_RUNNER_START_TIMEOUT:-10}
+
+# Override Docker-in-Docker version
+E2E_DIND_VERSION=${E2E_DIND_VERSION:-}
 
 ####################################################################################
 
@@ -28,9 +31,19 @@ source "$CURR_DIR/common.sh"
 
 ####################################################################################
 
+info "Building container image k3d:${K3D_IMAGE_TAG}"
+# Extra Image Build Arg
+: "${EXTRA_BUILD_FLAG:=""}"
+if [[ -n "$E2E_DIND_VERSION" ]]; then
+  info "Testing with Docker version $E2E_DIND_VERSION"
+  EXTRA_BUILD_FLAG="--build-arg DOCKER_VERSION=$E2E_DIND_VERSION"
+fi
+DOCKER_BUILDKIT=1 docker build . --quiet --no-cache $EXTRA_BUILD_FLAG --tag "k3d:${K3D_IMAGE_TAG}" --target "dind" || failed "Build failed"
+
 # Start the runner container
 TIMESTAMP=$(date "+%y%m%d%H%M%S")
 container_name="k3d-e2e-runner-$TIMESTAMP"
+info "Starting E2E Test Runner container ${container_name}"
 k3de2e=$(docker run -d \
           -v "$(pwd):/src" \
           --privileged \
