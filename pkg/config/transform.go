@@ -32,7 +32,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	cliutil "github.com/rancher/k3d/v5/cmd/util" // TODO: move parseapiport to pkg
 	"github.com/rancher/k3d/v5/pkg/client"
-	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
 	"github.com/rancher/k3d/v5/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/rancher/k3d/v5/pkg/types/k3s"

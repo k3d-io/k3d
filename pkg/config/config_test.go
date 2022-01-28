@@ -27,7 +27,7 @@ import (
 
 	"github.com/go-test/deep"
 	configtypes "github.com/rancher/k3d/v5/pkg/config/types"
-	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
 	"github.com/spf13/viper"
 
 	k3d "github.com/rancher/k3d/v5/pkg/types"
@@ -41,7 +41,7 @@ func TestReadSimpleConfig(t *testing.T) {
 
 	expectedConfig := conf.SimpleConfig{
 		TypeMeta: configtypes.TypeMeta{
-			APIVersion: "k3d.io/v1alpha3",
+			APIVersion: "k3d.io/v1alpha4",
 			Kind:       "Simple",
 		},
 		Name:      "test",
@@ -137,7 +137,7 @@ func TestReadClusterConfig(t *testing.T) {
 
 	expectedConfig := conf.ClusterConfig{
 		TypeMeta: configtypes.TypeMeta{
-			APIVersion: "k3d.io/v1alpha3",
+			APIVersion: "k3d.io/v1alpha4",
 			Kind:       "Cluster",
 		},
 		Cluster: k3d.Cluster{
@@ -182,7 +182,7 @@ func TestReadClusterListConfig(t *testing.T) {
 
 	expectedConfig := conf.ClusterListConfig{
 		TypeMeta: configtypes.TypeMeta{
-			APIVersion: "k3d.io/v1alpha3",
+			APIVersion: "k3d.io/v1alpha4",
 			Kind:       "ClusterList",
 		},
 		Clusters: []k3d.Cluster{
@@ -265,7 +265,7 @@ func TestReadSimpleConfigRegistries(t *testing.T) {
 
 	expectedConfig := conf.SimpleConfig{
 		TypeMeta: configtypes.TypeMeta{
-			APIVersion: "k3d.io/v1alpha3",
+			APIVersion: "k3d.io/v1alpha4",
 			Kind:       "Simple",
 		},
 		Name:    "test",

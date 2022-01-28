@@ -31,7 +31,8 @@ import (
 
 	"github.com/rancher/k3d/v5/pkg/config/v1alpha2"
 	"github.com/rancher/k3d/v5/pkg/config/v1alpha3"
-	defaultConfig "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	"github.com/rancher/k3d/v5/pkg/config/v1alpha4"
+	defaultConfig "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
 
 	types "github.com/rancher/k3d/v5/pkg/config/types"
 )
@@ -41,6 +42,7 @@ const DefaultConfigApiVersion = defaultConfig.ApiVersion
 var Schemas = map[string]string{
 	v1alpha2.ApiVersion: v1alpha2.JSONSchema,
 	v1alpha3.ApiVersion: v1alpha3.JSONSchema,
+	v1alpha4.ApiVersion: v1alpha4.JSONSchema,
 }
 
 func GetSchemaByVersion(apiVersion string) ([]byte, error) {
@@ -66,6 +68,8 @@ func FromViper(config *viper.Viper) (types.Config, error) {
 		cfg, err = v1alpha2.GetConfigByKind(kind)
 	case "k3d.io/v1alpha3":
 		cfg, err = v1alpha3.GetConfigByKind(kind)
+	case "k3d.io/v1alpha4":
+		cfg, err = v1alpha4.GetConfigByKind(kind)
 	case "":
 		cfg, err = defaultConfig.GetConfigByKind(kind)
 	default:
@@ -87,6 +91,8 @@ func getMigrations(version string) map[string]func(types.Config) (types.Config, 
 	switch version {
 	case v1alpha3.ApiVersion:
 		return v1alpha3.Migrations
+	case v1alpha4.ApiVersion:
+		return v1alpha4.Migrations
 	default:
 		return nil
 	}

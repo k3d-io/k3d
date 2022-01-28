@@ -10,9 +10,9 @@
     "apiVersion": {
       "type": "string",
       "enum": [
-        "k3d.io/v1alpha3"
+        "k3d.io/v1alpha4"
       ],
-      "default": "k3d.io/v1alpha3"
+      "default": "k3d.io/v1alpha4"
     },
     "kind": {
       "type": "string",
@@ -219,6 +219,10 @@
             "agentsMemory": {
               "type": "string"
             },
+            "hostPidMode": {
+              "type":"boolean",
+              "default": false
+            },
             "labels": {
               "type": "array",
               "items": {
@@ -303,6 +307,24 @@
           "description": "Reference a K3s registry configuration file or at it's contents here."
         },
         "additionalProperties": false
+      }
+    },
+    "hostAliases": {
+      "type": "array",
+      "description": "Additional IP to multiple hostnames mappings",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ip": {
+            "type": "string"
+          },
+          "hostnames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       }
     }
   },

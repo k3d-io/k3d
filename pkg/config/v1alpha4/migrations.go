@@ -20,24 +20,37 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package config
+package v1alpha4
 
 import (
 	"fmt"
 
-	"github.com/imdario/mergo"
-	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
+	configtypes "github.com/rancher/k3d/v5/pkg/config/types"
+	"github.com/rancher/k3d/v5/pkg/config/v1alpha2"
+	"github.com/rancher/k3d/v5/pkg/config/v1alpha3"
 	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 
-// MergeSimple merges two simple configuration files with the values of the destination one having priority
-func MergeSimple(dest, src conf.SimpleConfig) (*conf.SimpleConfig, error) {
-	l.Log().Debugf("Merging %+v into %+v", src, dest)
+var Migrations = map[string]func(configtypes.Config) (configtypes.Config, error){
+	v1alpha2.ApiVersion: MigrateV1Alpha2,
+	v1alpha3.ApiVersion: MigrateV1Alpha3,
+}
 
-	if err := mergo.Merge(&dest, src); err != nil {
+func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
+	l.Log().Debugln("Migrating v1alpha2 to v1alpha4")
 
-		return nil, fmt.Errorf("failed to merge configs: %w", err)
+	// first, migrate to v1alpha3
+	input, err := v1alpha3.MigrateV1Alpha2(input)
+	if err != nil {
+		return nil, fmt.Errorf("error migration v1alpha2 to v1alpha3: %w", err)
 	}
 
-	return &dest, nil
+	// then, migrate to v1alpha4
+	return MigrateV1Alpha3(input)
+}
+
+func MigrateV1Alpha3(input configtypes.Config) (configtypes.Config, error) {
+	l.Log().Debugln("Migrating v1alpha3 to v1alpha4")
+
+	return input, nil
 }

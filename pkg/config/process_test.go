@@ -27,7 +27,7 @@ import (
 	"strings"
 	"testing"
 
-	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
 	"github.com/rancher/k3d/v5/pkg/runtimes"
 	"github.com/rancher/k3d/v5/pkg/types/k3s"
 	"github.com/spf13/viper"
