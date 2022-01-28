@@ -1,5 +1,5 @@
 /*
-Copyright © 2020-2021 The k3d Author(s)
+Copyright © 2020-2022 The k3d Author(s)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,13 +34,13 @@ const (
 
 // Registry describes a k3d-managed registry
 type Registry struct {
-	ClusterRef     string       // filled automatically -> if created with a cluster
-	Protocol       string       `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
-	Host           string       `yaml:"host" json:"host"`
-	Image          string       `yaml:"image,omitempty" json:"image,omitempty"`
-	Network string       `yaml:"Network,omitempty" json:"Network,omitempty"`
-	ExposureOpts   ExposureOpts `yaml:"expose" json:"expose"`
-	Options        struct {
+	ClusterRef   string       // filled automatically -> if created with a cluster
+	Protocol     string       `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
+	Host         string       `yaml:"host" json:"host"`
+	Image        string       `yaml:"image,omitempty" json:"image,omitempty"`
+	Network      string       `yaml:"Network,omitempty" json:"Network,omitempty"`
+	ExposureOpts ExposureOpts `yaml:"expose" json:"expose"`
+	Options      struct {
 		ConfigFile string `yaml:"configFile,omitempty" json:"configFile,omitempty"`
 		Proxy      struct {
 			RemoteURL string `yaml:"remoteURL" json:"remoteURL"`
