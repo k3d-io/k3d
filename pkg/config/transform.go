@@ -279,6 +279,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		GPURequest:          simpleConfig.Options.Runtime.GPURequest,
 		ServersMemory:       simpleConfig.Options.Runtime.ServersMemory,
 		AgentsMemory:        simpleConfig.Options.Runtime.AgentsMemory,
+		HostAliases:         simpleConfig.HostAliases,
 		GlobalLabels:        map[string]string{}, // empty init
 		GlobalEnv:           []string{},          // empty init
 	}

@@ -31,6 +31,7 @@ import (
 	"github.com/rancher/k3d/v5/pkg/runtimes"
 	runtimeutil "github.com/rancher/k3d/v5/pkg/runtimes/util"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"inet.af/netaddr"
 
 	"fmt"
 
@@ -74,6 +75,31 @@ func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config
 		if _, err := dockerunits.RAMInBytes(config.ClusterCreateOpts.AgentsMemory); err != nil {
 			return fmt.Errorf("provided agents memory limit value is invalid: %w", err)
 		}
+	}
+
+	// hostAliases
+	if len(config.ClusterCreateOpts.HostAliases) > 0 {
+		// not allowed in hostnetwork mode
+		if config.Cluster.Network.Name == "host" {
+			return fmt.Errorf("hostAliases not allowed in hostnetwork mode")
+		}
+
+		// validate IP and hostname
+		for _, ha := range config.ClusterCreateOpts.HostAliases {
+			// validate IP
+			_, err := netaddr.ParseIP(ha.IP)
+			if err != nil {
+				return fmt.Errorf("invalid IP '%s' in hostAlias '%s': %w", ha.IP, ha, err)
+			}
+
+			// validate hostnames
+			for _, hostname := range ha.Hostnames {
+				if err := k3dc.ValidateHostname(hostname); err != nil {
+					return fmt.Errorf("invalid hostname '%s' in hostAlias '%s': %w", hostname, ha, err)
+				}
+			}
+		}
+
 	}
 
 	// validate nodes one by one

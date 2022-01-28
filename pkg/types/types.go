@@ -101,6 +101,11 @@ var DoNotCopyServerFlags = []string{
 	"--cluster-init",
 }
 
+type HostAlias struct {
+	IP        string   `mapstructure:"ip" yaml:"ip" json:"ip"`
+	Hostnames []string `mapstructure:"hostnames" yaml:"hostnames" json:"hostnames"`
+}
+
 // ClusterCreateOpts describe a set of options one can set when creating a cluster
 type ClusterCreateOpts struct {
 	DisableImageVolume  bool              `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
@@ -113,6 +118,7 @@ type ClusterCreateOpts struct {
 	NodeHooks           []NodeHook        `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 	GlobalLabels        map[string]string `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
 	GlobalEnv           []string          `yaml:"globalEnv,omitempty" json:"globalEnv,omitempty"`
+	HostAliases         []HostAlias       `yaml:"hostAliases,omitempty" json:"hostAliases,omitempty"`
 	Registries          struct {
 		Create *Registry     `yaml:"create,omitempty" json:"create,omitempty"`
 		Use    []*Registry   `yaml:"use,omitempty" json:"use,omitempty"`
@@ -142,6 +148,7 @@ type ClusterStartOpts struct {
 	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
 	EnvironmentInfo *EnvironmentInfo
 	Intent          Intent
+	HostAliases     []HostAlias `yaml:"hostAliases,omitempty" json:"hostAliases,omitempty"`
 }
 
 // ClusterDeleteOpts describe a set of options one can set when deleting a cluster
@@ -288,7 +295,7 @@ type Node struct {
 	RuntimeLabels map[string]string `yaml:"runtimeLabels" json:"runtimeLabels,omitempty"`
 	K3sNodeLabels map[string]string `yaml:"k3sNodeLabels" json:"k3sNodeLabels,omitempty"`
 	Networks      []string          // filled automatically
-	ExtraHosts    []string          // filled automatically
+	ExtraHosts    []string          // filled automatically (docker specific?)
 	ServerOpts    ServerOpts        `yaml:"serverOpts" json:"serverOpts,omitempty"`
 	AgentOpts     AgentOpts         `yaml:"agentOpts" json:"agentOpts,omitempty"`
 	GPURequest    string            // filled automatically

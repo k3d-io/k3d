@@ -27,9 +27,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/rancher/k3d/v5/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/rancher/k3d/v5/pkg/util"
 
 	l "github.com/rancher/k3d/v5/pkg/logger"
 )
@@ -65,6 +67,11 @@ type RewriteFileAction struct {
 	RewriteFunc func([]byte) ([]byte, error)
 	Mode        os.FileMode
 	Description string
+	Opts        RewriteFileActionOpts
+}
+
+type RewriteFileActionOpts struct {
+	NoCopy bool // do not copy over the file, but rather overwrite the contents of the target (e.g. to avoid "Resource busy" error on /etc/hosts)
 }
 
 func (act RewriteFileAction) Name() string {
@@ -99,7 +106,29 @@ func (act RewriteFileAction) Run(ctx context.Context, node *k3d.Node) error {
 
 	l.Log().Tracef("Rewritten:\n%s", string(file))
 
-	return act.Runtime.WriteToNode(ctx, file, act.Path, act.Mode, node)
+	// default way: copy over file
+	if !act.Opts.NoCopy {
+		return act.Runtime.WriteToNode(ctx, file, act.Path, act.Mode, node)
+	}
+
+	// non-default: overwrite file contents
+	tmpPath := fmt.Sprintf(
+		"/tmp/%s-%s",
+		strings.ReplaceAll(act.Path, "/", "-"),
+		util.GenerateRandomString(20),
+	)
+
+	if err := act.Runtime.WriteToNode(ctx, file, tmpPath, act.Mode, node); err != nil {
+		return fmt.Errorf("error creating temp file %s: %w", tmpPath, err)
+	}
+
+	cmd := fmt.Sprintf("cat %s > %s", tmpPath, act.Path)
+
+	if err := act.Runtime.ExecInNode(ctx, node, []string{"sh", "-c", cmd}); err != nil {
+		return fmt.Errorf("error overwriting contents of %s: %w", act.Path, err)
+	}
+
+	return nil
 
 }
 

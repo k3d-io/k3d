@@ -74,6 +74,7 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 	/*
 	 * Step 2: Pre-Start Configuration
 	 */
+	// Gather Environment information, e.g. the host gateway address
 	envInfo, err := GatherEnvironmentInfo(ctx, runtime, &clusterConfig.Cluster)
 	if err != nil {
 		return fmt.Errorf("failed to gather environment information used for cluster creation: %w", err)
@@ -88,6 +89,7 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 		NodeHooks:       clusterConfig.ClusterCreateOpts.NodeHooks,
 		EnvironmentInfo: envInfo,
 		Intent:          k3d.IntentClusterCreate,
+		HostAliases:     clusterConfig.ClusterCreateOpts.HostAliases,
 	}); err != nil {
 		return fmt.Errorf("Failed Cluster Start: %+v", err)
 	}
@@ -970,78 +972,95 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 
 		/*** DNS ***/
 
-		// add host.k3d.internal record to /etc/hosts in all nodes
-		postStartErrgrp.Go(func() error {
-			return prepInjectHostIP(postStartErrgrpCtx, runtime, cluster, &clusterStartOpts)
-		})
+		// -> skip if hostnetwork mode
+		if cluster.Network.Name == "host" {
+			l.Log().Debugf("Not injecting hostAliases into /etc/hosts and CoreDNS as clusternetwork is 'host'")
+		} else {
+			// -> add hostAliases to /etc/hosts in all nodes
+			// --> inject host-gateway as host.k3d.internal
+			clusterStartOpts.HostAliases = append(clusterStartOpts.HostAliases, k3d.HostAlias{
+				IP:        clusterStartOpts.EnvironmentInfo.HostGateway.String(),
+				Hostnames: []string{"host.k3d.internal"},
+			})
 
-		if len(servers) > 0 {
-			postStartErrgrp.Go(func() error {
+			for _, node := range append(servers, agents...) {
+				currNode := node
+				postStartErrgrp.Go(func() error {
+					return NewHostAliasesInjectEtcHostsAction(runtime, clusterStartOpts.HostAliases).Run(postStartErrgrpCtx, currNode)
+				})
+			}
 
-				if cluster.Network.Name == "host" {
-					l.Log().Debugf("Not injecting host.k3d.internal into CoreDNS as clusternetwork is 'host'")
-					return nil
-				}
+			// -> inject hostAliases and network members into CoreDNS configmap
+			if len(servers) > 0 {
+				postStartErrgrp.Go(func() error {
 
-				hosts := fmt.Sprintf("%s %s\n", clusterStartOpts.EnvironmentInfo.HostGateway.String(), k3d.DefaultK3dInternalHostRecord)
+					hosts := ""
 
-				net, err := runtime.GetNetwork(ctx, &cluster.Network)
-				if err != nil {
-					return fmt.Errorf("failed to get cluster network %s to inject host records into CoreDNS: %w", cluster.Network.Name, err)
-				}
-				for _, member := range net.Members {
-					hosts += fmt.Sprintf("%s %s\n", member.IP.String(), member.Name)
-				}
+					// hosts: hostAliases (including host.k3d.internal)
+					for _, hostAlias := range clusterStartOpts.HostAliases {
+						hosts += fmt.Sprintf("%s %s\n", hostAlias.IP, strings.Join(hostAlias.Hostnames, " "))
+					}
 
-				l.Log().Infof("Injecting records for host.k3d.internal and for %d network members into CoreDNS configmap...", len(net.Members))
-				act := actions.RewriteFileAction{
-					Runtime: runtime,
-					Path:    "/var/lib/rancher/k3s/server/manifests/coredns.yaml",
-					Mode:    0744,
-					RewriteFunc: func(input []byte) ([]byte, error) {
-						split, err := util.SplitYAML(input)
-						if err != nil {
-							return nil, fmt.Errorf("error splitting yaml: %w", err)
-						}
+					// more hosts: network members ("neighbor" containers)
+					net, err := runtime.GetNetwork(postStartErrgrpCtx, &cluster.Network)
+					if err != nil {
+						return fmt.Errorf("failed to get cluster network %s to inject host records into CoreDNS: %w", cluster.Network.Name, err)
+					}
+					for _, member := range net.Members {
+						hosts += fmt.Sprintf("%s %s\n", member.IP.String(), member.Name)
+					}
 
-						var outputBuf bytes.Buffer
-						outputEncoder := yaml.NewEncoder(&outputBuf)
-
-						for _, d := range split {
-							var doc map[string]interface{}
-							if err := yaml.Unmarshal(d, &doc); err != nil {
-								return nil, err
+					// inject CoreDNS configmap
+					l.Log().Infof("Injecting records for hostAliases (incl. host.k3d.internal) and for %d network members into CoreDNS configmap...", len(net.Members))
+					act := actions.RewriteFileAction{
+						Runtime: runtime,
+						Path:    "/var/lib/rancher/k3s/server/manifests/coredns.yaml",
+						Mode:    0744,
+						RewriteFunc: func(input []byte) ([]byte, error) {
+							split, err := util.SplitYAML(input)
+							if err != nil {
+								return nil, fmt.Errorf("error splitting yaml: %w", err)
 							}
-							if kind, ok := doc["kind"]; ok {
-								if strings.ToLower(kind.(string)) == "configmap" {
-									configmapData := doc["data"].(map[interface{}]interface{})
-									configmapData["NodeHosts"] = hosts
+
+							var outputBuf bytes.Buffer
+							outputEncoder := yaml.NewEncoder(&outputBuf)
+
+							for _, d := range split {
+								var doc map[string]interface{}
+								if err := yaml.Unmarshal(d, &doc); err != nil {
+									return nil, err
+								}
+								if kind, ok := doc["kind"]; ok {
+									if strings.ToLower(kind.(string)) == "configmap" {
+										configmapData := doc["data"].(map[interface{}]interface{})
+										configmapData["NodeHosts"] = hosts
+									}
+								}
+								if err := outputEncoder.Encode(doc); err != nil {
+									return nil, err
 								}
 							}
-							if err := outputEncoder.Encode(doc); err != nil {
-								return nil, err
-							}
-						}
-						outputEncoder.Close()
-						return outputBuf.Bytes(), nil
-					},
-				}
-
-				// get the first server in the list and run action on it once it's ready for it
-				for _, n := range cluster.Nodes {
-					if n.Role == k3d.ServerRole {
-						ts, err := time.Parse("2006-01-02T15:04:05.999999999Z", n.State.Started)
-						if err != nil {
-							return err
-						}
-						if err := NodeWaitForLogMessage(ctx, runtime, n, "Cluster dns configmap", ts.Truncate(time.Second)); err != nil {
-							return err
-						}
-						return act.Run(ctx, n)
+							outputEncoder.Close()
+							return outputBuf.Bytes(), nil
+						},
 					}
-				}
-				return nil
-			})
+
+					// get the first server in the list and run action on it once it's ready for it
+					for _, n := range cluster.Nodes {
+						if n.Role == k3d.ServerRole {
+							ts, err := time.Parse("2006-01-02T15:04:05.999999999Z", n.State.Started)
+							if err != nil {
+								return err
+							}
+							if err := NodeWaitForLogMessage(postStartErrgrpCtx, runtime, n, "Cluster dns configmap", ts.Truncate(time.Second)); err != nil {
+								return err
+							}
+							return act.Run(postStartErrgrpCtx, n)
+						}
+					}
+					return nil
+				})
+			}
 		}
 
 		if err := postStartErrgrp.Wait(); err != nil {
@@ -1132,33 +1151,6 @@ func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clu
 		return fmt.Errorf("failed to patch CoreDNS ConfigMap to include entry '%s' (%d tries, see debug logs)", hostsEntry, retries)
 	}
 	l.Log().Debugf("Successfully patched CoreDNS Configmap with record '%s'", hostsEntry)
-	return nil
-}
-
-// prepInjectHostIP adds /etc/hosts entry for host.k3d.internal, referring to the host system
-func prepInjectHostIP(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, clusterStartOpts *k3d.ClusterStartOpts) error {
-	if cluster.Network.Name == "host" {
-		l.Log().Debugf("Not injecting host.k3d.internal into /etc/hosts as clusternetwork is 'host'")
-		return nil
-	}
-
-	hostIP := clusterStartOpts.EnvironmentInfo.HostGateway
-	hostsEntry := fmt.Sprintf("%s %s", hostIP.String(), k3d.DefaultK3dInternalHostRecord)
-	l.Log().Infof("Injecting '%s' into /etc/hosts of all nodes...", hostsEntry)
-
-	// entry in /etc/hosts
-	errgrp, errgrpctx := errgroup.WithContext(ctx)
-	for _, node := range cluster.Nodes {
-		n := node
-		errgrp.Go(func() error {
-			return runtime.ExecInNode(errgrpctx, n, []string{"sh", "-c", fmt.Sprintf("echo '%s' >> /etc/hosts", hostsEntry)})
-		})
-	}
-	if err := errgrp.Wait(); err != nil {
-		return fmt.Errorf("failed to add hosts entry %s: %w", hostsEntry, err)
-	}
-	l.Log().Debugf("Successfully added host record \"%s\" to /etc/hosts in all nodes", hostsEntry)
-
 	return nil
 }
 

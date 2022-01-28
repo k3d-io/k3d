@@ -23,9 +23,13 @@ package client
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/rancher/k3d/v5/pkg/types"
 )
+
+// HostnameRegexp as per RFC 1123
+var HostnameRegexp = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
 // CheckName ensures that a cluster name is also a valid host name according to RFC 1123.
 // We further restrict the length of the cluster name to maximum 'clusterNameMaxSize'
@@ -48,21 +52,8 @@ func ValidateHostname(name string) error {
 		return fmt.Errorf("No name provided")
 	}
 
-	if name[0] == '-' || name[len(name)-1] == '-' {
-		return fmt.Errorf("Hostname '%s' must not start or end with '-' (dash)", name)
-	}
-
-	for _, c := range name {
-		switch {
-		case '0' <= c && c <= '9':
-		case 'a' <= c && c <= 'z':
-		case 'A' <= c && c <= 'Z':
-		case c == '-':
-			break
-		default:
-			return fmt.Errorf("Hostname '%s' contains characters other than 'Aa-Zz', '0-9' or '-'", name)
-
-		}
+	if !HostnameRegexp.Match([]byte(name)) {
+		return fmt.Errorf("name %s is not a valid hostname as per RFC 1123", name)
 	}
 
 	return nil

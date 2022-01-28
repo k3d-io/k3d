@@ -40,14 +40,19 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require github.com/spf13/pflag v1.0.5
+require (
+	github.com/goodhosts/hostsfile v0.1.1
+	github.com/spf13/pflag v1.0.5
+)
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
+	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/containerd/continuity v0.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/go v1.5.1-1.0.20160303222718-d30aec9fd63c // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
