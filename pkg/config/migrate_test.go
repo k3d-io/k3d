@@ -74,3 +74,11 @@ func TestMigrateV1Alpha2ToV1Alpha3(t *testing.T) {
 	}
 
 }
+
+func TestMigrateV1Alpha2ToV1Alpha4(t *testing.T) {
+	t.Log("not implemented") // TODO: test migration v1alpha2 to v1alpha4
+}
+
+func TestMigrateV1Alpha3ToV1Alpha4(t *testing.T) {
+	t.Log("not implemented") // TODO: test migration v1alpha3 to v1alpha4
+}

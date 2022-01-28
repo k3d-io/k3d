@@ -304,24 +304,6 @@
         },
         "additionalProperties": false
       }
-    },
-    "hostAliases": {
-      "type": "array",
-      "description": "Additional IP to multiple hostnames mappings",
-      "items": {
-        "type": "object",
-        "properties": {
-          "ip": {
-            "type": "string"
-          },
-          "hostnames": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      }
     }
   },
   "additionalProperties": false,

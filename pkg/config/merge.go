@@ -26,7 +26,7 @@ import (
 	"fmt"
 
 	"github.com/imdario/mergo"
-	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
 	l "github.com/rancher/k3d/v5/pkg/logger"
 )
 

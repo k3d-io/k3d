@@ -25,7 +25,7 @@ import (
 	"github.com/rancher/k3d/v5/cmd/util"
 	cliutil "github.com/rancher/k3d/v5/cmd/util"
 	"github.com/rancher/k3d/v5/pkg/client"
-	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/rancher/k3d/v5/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v5/pkg/types"

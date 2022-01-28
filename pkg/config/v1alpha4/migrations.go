@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package v1alpha3
+package v1alpha4
 
 import (
 	"fmt"
@@ -33,6 +33,7 @@ import (
 
 var Migrations = map[string]func(configtypes.Config) (configtypes.Config, error){
 	v1alpha2.ApiVersion: MigrateV1Alpha2,
+	v1alpha3.ApiVersion: MigrateV1Alpha3,
 }
 
 func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
@@ -51,5 +52,5 @@ func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
 func MigrateV1Alpha3(input configtypes.Config) (configtypes.Config, error) {
 	l.Log().Debugln("Migrating v1alpha3 to v1alpha4")
 
-	return nil, nil
+	return input, nil
 }

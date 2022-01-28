@@ -25,7 +25,7 @@ package config
 import (
 	"strings"
 
-	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	runtimeutil "github.com/rancher/k3d/v5/pkg/runtimes/util"
 	k3d "github.com/rancher/k3d/v5/pkg/types"

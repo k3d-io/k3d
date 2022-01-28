@@ -10,9 +10,9 @@
     "apiVersion": {
       "type": "string",
       "enum": [
-        "k3d.io/v1alpha3"
+        "k3d.io/v1alpha4"
       ],
-      "default": "k3d.io/v1alpha3"
+      "default": "k3d.io/v1alpha4"
     },
     "kind": {
       "type": "string",
@@ -218,6 +218,10 @@
             },
             "agentsMemory": {
               "type": "string"
+            },
+            "hostPidMode": {
+              "type":"boolean",
+              "default": false
             },
             "labels": {
               "type": "array",

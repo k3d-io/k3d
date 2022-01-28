@@ -29,7 +29,7 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/rancher/k3d/v5/pkg/config/types"
-	config "github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	config "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/rancher/k3d/v5/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
