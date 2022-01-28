@@ -23,8 +23,8 @@
     },
     "name": {
       "description": "Name of the cluster (must be a valid hostname and will be prefixed with 'k3d-'). Example: 'mycluster'.",
-			"type": "string",
-			"format": "hostname"
+      "type": "string",
+      "format": "hostname"
     },
     "servers": {
       "type": "number",
@@ -50,7 +50,7 @@
           ]
         },
         "hostPort": {
-          "type":"string",
+          "type": "string",
           "examples": [
             "6443"
           ]
@@ -86,7 +86,7 @@
           "volume": {
             "type": "string"
           },
-          "nodeFilters": {  
+          "nodeFilters": {
             "$ref": "#/definitions/nodeFilters"
           }
         },
@@ -101,7 +101,7 @@
           "port": {
             "type": "string"
           },
-          "nodeFilters": {  
+          "nodeFilters": {
             "$ref": "#/definitions/nodeFilters"
           }
         },
@@ -141,7 +141,7 @@
               "type": "object",
               "properties": {
                 "configOverrides": {
-                  "type":"array",
+                  "type": "array",
                   "examples": [
                     "settings.workerConnections=2048",
                     "settings.defaultProxyTimeout=900"
@@ -163,7 +163,10 @@
                 "properties": {
                   "arg": {
                     "type": "string",
-                    "examples": ["--tls-san=127.0.0.1", "--disable=traefik"]
+                    "examples": [
+                      "--tls-san=127.0.0.1",
+                      "--disable=traefik"
+                    ]
                   },
                   "nodeFilters": {
                     "$ref": "#/definitions/nodeFilters"
@@ -244,7 +247,7 @@
           "envVar": {
             "type": "string"
           },
-          "nodeFilters": {  
+          "nodeFilters": {
             "$ref": "#/definitions/nodeFilters"
           }
         },
@@ -323,7 +326,7 @@
   },
   "additionalProperties": false,
   "definitions": {
-    "nodeFilters": {  
+    "nodeFilters": {
       "type": "array",
       "items": {
         "type": "string"
