@@ -29,7 +29,6 @@ import (
 	"time"
 
 	config "github.com/rancher/k3d/v5/pkg/config/types"
-	"github.com/rancher/k3d/v5/pkg/types"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/rancher/k3d/v5/version"
 )
@@ -105,7 +104,6 @@ type SimpleConfigOptionsRuntime struct {
 	GPURequest    string                 `mapstructure:"gpuRequest" yaml:"gpuRequest,omitempty" json:"gpuRequest,omitempty"`
 	ServersMemory string                 `mapstructure:"serversMemory" yaml:"serversMemory,omitempty" json:"serversMemory,omitempty"`
 	AgentsMemory  string                 `mapstructure:"agentsMemory" yaml:"agentsMemory,omitempty" json:"agentsMemory,omitempty"`
-	HostPidMode   bool                   `mapstructure:"hostPidMode" yaml:"hostPidMode,omitempty" json:"hostPidMode,omitempty"`
 	Labels        []LabelWithNodeFilters `mapstructure:"labels" yaml:"labels,omitempty" json:"labels,omitempty"`
 }
 
@@ -156,7 +154,6 @@ type SimpleConfig struct {
 	Options         SimpleConfigOptions     `mapstructure:"options" yaml:"options,omitempty" json:"options,omitempty"`
 	Env             []EnvVarWithNodeFilters `mapstructure:"env" yaml:"env,omitempty" json:"env,omitempty"`
 	Registries      SimpleConfigRegistries  `mapstructure:"registries" yaml:"registries,omitempty" json:"registries,omitempty"`
-	HostAliases     []types.HostAlias       `mapstructure:"hostAliases" yaml:"hostAliases,omitempty" json:"hostAliases,omitempty"`
 }
 
 type SimpleConfigIntermediateV1alpha2 struct {
