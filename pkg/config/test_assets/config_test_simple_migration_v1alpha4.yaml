@@ -4,24 +4,36 @@ metadata:
   name: test
 servers: 3
 agents: 2
+kubeAPI:
+  hostIP: "0.0.0.0"
+  hostPort: "6446"
 #image: rancher/k3s:latest
 volumes:
-  - volume: $HOME:/some/path
+  - volume: /my/path:/some/path
     nodeFilters:
       - all
+ports:
+  - port: 80:80
+    nodeFilters:
+      - loadbalancer
+  - port: 0.0.0.0:443:443
+    nodeFilters:
+      - loadbalancer
 env:
   - envVar: bar=baz,bob
     nodeFilters:
       - all
 registries:
   create:
-    name: registry.localhost
-  use: []
+    name: k3d-test-registry
+    host: "0.0.0.0"
+    hostPort: random
   config: |
     mirrors:
       "my.company.registry":
         endpoint:
           - http://my.company.registry:5000
+
 options:
   k3d:
     wait: true
@@ -33,11 +45,6 @@ options:
       - arg: --tls-san=127.0.0.1
         nodeFilters:
           - server:*
-    nodeLabels:
-      - label: foo=bar
-        nodeFilters:
-          - server:0
-          - loadbalancer
   kubeconfig:
     updateDefaultKubeconfig: true
     switchCurrentContext: true

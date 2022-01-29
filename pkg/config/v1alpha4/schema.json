@@ -21,10 +21,16 @@
       ],
       "default": "Simple"
     },
-    "name": {
-      "description": "Name of the cluster (must be a valid hostname and will be prefixed with 'k3d-'). Example: 'mycluster'.",
-      "type": "string",
-      "format": "hostname"
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Name of the cluster (must be a valid hostname and will be prefixed with 'k3d-'). Example: 'mycluster'.",
+          "type": "string",
+          "format": "hostname"
+        }
+      },
+      "additionalProperties": false
     },
     "servers": {
       "type": "number",
@@ -220,7 +226,7 @@
               "type": "string"
             },
             "hostPidMode": {
-              "type":"boolean",
+              "type": "boolean",
               "default": false
             },
             "labels": {

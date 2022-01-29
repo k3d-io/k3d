@@ -1,6 +1,7 @@
 apiVersion: k3d.io/v1alpha4
 kind: Simple
-name: 1234
+metadata:
+  name: 1234
 servers: 1
 agents: 2
 kubeAPI:

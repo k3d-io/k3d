@@ -46,7 +46,7 @@ func TestValidateSchemaFail(t *testing.T) {
 		t.Errorf("Validation of config file %s against the default schema passed where we expected a failure", cfgPath)
 	}
 
-	expectedErrorText := `- name: Invalid type. Expected: string, given: integer
+	expectedErrorText := `- metadata.name: Invalid type. Expected: string, given: integer
 `
 
 	if err.Error() != expectedErrorText {
