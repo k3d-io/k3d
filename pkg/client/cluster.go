@@ -510,11 +510,13 @@ ClusterCreatOpts:
 	if !clusterCreateOpts.DisableLoadBalancer {
 		if cluster.ServerLoadBalancer == nil {
 			l.Log().Infof("No loadbalancer specified, creating a default one...")
-			lbNode, err := LoadbalancerPrepare(ctx, runtime, cluster, &k3d.LoadbalancerCreateOpts{Labels: clusterCreateOpts.GlobalLabels})
+			cluster.ServerLoadBalancer = k3d.NewLoadbalancer()
+			var err error
+			cluster.ServerLoadBalancer.Node, err = LoadbalancerPrepare(ctx, runtime, cluster, &k3d.LoadbalancerCreateOpts{Labels: clusterCreateOpts.GlobalLabels})
 			if err != nil {
 				return fmt.Errorf("failed to prepare loadbalancer: %w", err)
 			}
-			cluster.Nodes = append(cluster.Nodes, lbNode) // append lbNode to list of cluster nodes, so it will be considered during rollback
+			cluster.Nodes = append(cluster.Nodes, cluster.ServerLoadBalancer.Node) // append lbNode to list of cluster nodes, so it will be considered during rollback
 		}
 
 		if len(cluster.ServerLoadBalancer.Config.Ports) == 0 {
