@@ -525,8 +525,6 @@ ClusterCreatOpts:
 			cluster.ServerLoadBalancer.Config = &lbConfig
 		}
 
-		cluster.ServerLoadBalancer.Node.RuntimeLabels = clusterCreateOpts.GlobalLabels
-
 		// prepare to write config to lb container
 		configyaml, err := yaml.Marshal(cluster.ServerLoadBalancer.Config)
 		if err != nil {
@@ -545,6 +543,8 @@ ClusterCreatOpts:
 		}
 
 		cluster.ServerLoadBalancer.Node.HookActions = append(cluster.ServerLoadBalancer.Node.HookActions, writeLbConfigAction)
+		cluster.ServerLoadBalancer.Node.RuntimeLabels = clusterCreateOpts.GlobalLabels
+		cluster.ServerLoadBalancer.Node.Restart = true
 
 		l.Log().Infof("Creating LoadBalancer '%s'", cluster.ServerLoadBalancer.Node.Name)
 		if err := NodeCreate(ctx, runtime, cluster.ServerLoadBalancer.Node, k3d.NodeCreateOpts{}); err != nil {
