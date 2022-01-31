@@ -25,7 +25,8 @@ If you're using a `SimpleConfig` file to configure your k3d cluster, you may as 
 ```yaml
 apiVersion: k3d.io/v1alpha4
 kind: Simple
-name: test
+metadata:
+  name: test
 servers: 1
 agents: 2
 registries:

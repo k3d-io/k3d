@@ -44,7 +44,9 @@ func TestReadSimpleConfig(t *testing.T) {
 			APIVersion: "k3d.io/v1alpha4",
 			Kind:       "Simple",
 		},
-		Name:      "test",
+		ObjectMeta: configtypes.ObjectMeta{
+			Name: "test",
+		},
 		Servers:   1,
 		Agents:    2,
 		ExposeAPI: exposedAPI,
@@ -268,7 +270,9 @@ func TestReadSimpleConfigRegistries(t *testing.T) {
 			APIVersion: "k3d.io/v1alpha4",
 			Kind:       "Simple",
 		},
-		Name:    "test",
+		ObjectMeta: configtypes.ObjectMeta{
+			Name: "test",
+		},
 		Servers: 1,
 		Agents:  1,
 		Registries: conf.SimpleConfigRegistries{
