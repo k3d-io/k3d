@@ -429,7 +429,7 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 	if node.State.Started != "" {
 		ts, err := time.Parse("2006-01-02T15:04:05.999999999Z", node.State.Started)
 		if err != nil {
-			l.Log().Debugf("Failed to parse '%s.State.Started' timestamp '%s', falling back to calulated time", node.Name, node.State.Started)
+			l.Log().Debugf("Failed to parse '%s.State.Started' timestamp '%s', falling back to calculated time", node.Name, node.State.Started)
 		}
 		startTime = ts.Truncate(time.Second)
 		l.Log().Debugf("Truncated %s to %s", ts, startTime)
