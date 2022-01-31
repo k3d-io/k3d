@@ -545,7 +545,6 @@ ClusterCreatOpts:
 		}
 
 		cluster.ServerLoadBalancer.Node.HookActions = append(cluster.ServerLoadBalancer.Node.HookActions, writeLbConfigAction)
-		cluster.ServerLoadBalancer.Node.RuntimeLabels = clusterCreateOpts.GlobalLabels
 		cluster.ServerLoadBalancer.Node.Restart = true
 
 		l.Log().Infof("Creating LoadBalancer '%s'", cluster.ServerLoadBalancer.Node.Name)
