@@ -27,6 +27,11 @@ type TypeMeta struct {
 	APIVersion string `mapstructure:"apiVersion,omitempty" yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
 }
 
+// ObjectMeta got its name from the Kubernetes counterpart.
+type ObjectMeta struct {
+	Name string `mapstructure:"name,omitempty" yaml:"name,omitempty" json:"name,omitempty"`
+}
+
 // Config interface.
 type Config interface {
 	GetKind() string
