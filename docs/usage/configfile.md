@@ -52,7 +52,8 @@ Since the config options and the config file are changing quite a bit, it's hard
 # k3d configuration file, saved as e.g. /home/me/myk3dcluster.yaml
 apiVersion: k3d.io/v1alpha4 # this will change in the future as we make everything more stable
 kind: Simple # internally, we also have a Cluster config, which is not yet available externally
-name: mycluster # name that you want to give to your cluster (will still be prefixed with `k3d-`)
+metadata:
+  name: mycluster # name that you want to give to your cluster (will still be prefixed with `k3d-`)
 servers: 1 # same as `--servers 1`
 agents: 2 # same as `--agents 2`
 kubeAPI: # same as `--api-port myhost.my.domain:6445` (where the name would resolve to 127.0.0.1)

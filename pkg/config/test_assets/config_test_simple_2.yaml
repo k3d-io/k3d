@@ -1,4 +1,5 @@
 apiVersion: k3d.io/v1alpha4
 kind: Simple
-name: supertest
+metadata:
+  name: supertest
 agents: 8

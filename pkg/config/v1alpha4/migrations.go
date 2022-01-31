@@ -23,6 +23,7 @@ THE SOFTWARE.
 package v1alpha4
 
 import (
+	"encoding/json"
 	"fmt"
 
 	configtypes "github.com/rancher/k3d/v5/pkg/config/types"
@@ -51,6 +52,49 @@ func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
 
 func MigrateV1Alpha3(input configtypes.Config) (configtypes.Config, error) {
 	l.Log().Debugln("Migrating v1alpha3 to v1alpha4")
+
+	/*
+	 * We're migrating matching fields between versions by marshalling to JSON and back
+	 */
+	injson, err := json.Marshal(input)
+	if err != nil {
+		return nil, err
+	}
+
+	/*
+	 * Migrate config of `kind: Simple`
+	 */
+	if input.GetKind() == "Simple" {
+		cfgIntermediate := v1alpha3.SimpleConfig{}
+
+		if err := json.Unmarshal(injson, &cfgIntermediate); err != nil {
+			return nil, err
+		}
+
+		intermediateJSON, err := json.Marshal(cfgIntermediate)
+		if err != nil {
+			return nil, err
+		}
+		cfg := SimpleConfig{}
+		if err := json.Unmarshal(intermediateJSON, &cfg); err != nil {
+			return nil, err
+		}
+
+		cfg.Name = cfgIntermediate.Name
+
+		/*
+		 * Finalizing
+		 */
+
+		cfg.APIVersion = ApiVersion
+
+		l.Log().Debugf("Migrated config: %+v", cfg)
+
+		return cfg, nil
+
+	}
+
+	l.Log().Debugf("No migration needed for %s#%s -> %s#%s", input.GetAPIVersion(), input.GetKind(), ApiVersion, input.GetKind())
 
 	return input, nil
 }

@@ -26,59 +26,76 @@ import (
 	"testing"
 
 	"github.com/go-test/deep"
+	"github.com/rancher/k3d/v5/pkg/config/v1alpha3"
+	"github.com/rancher/k3d/v5/pkg/config/v1alpha4"
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/spf13/viper"
 )
 
-func TestMigrateV1Alpha2ToV1Alpha3(t *testing.T) {
-
-	actualPath := "test_assets/config_test_simple_migration_v1alpha2.yaml"
-	expectedPath := "test_assets/config_test_simple_migration_v1alpha3.yaml"
-
-	actualViper := viper.New()
-	expectedViper := viper.New()
-
-	actualViper.SetConfigType("yaml")
-	expectedViper.SetConfigType("yaml")
-
-	actualViper.SetConfigFile(actualPath)
-	expectedViper.SetConfigFile(expectedPath)
-
-	if err := actualViper.ReadInConfig(); err != nil {
-		t.Fatal(err)
+func TestMigrate(t *testing.T) {
+	tests := map[string]struct {
+		targetVersion string
+		actualPath    string
+		expectedPath  string
+	}{
+		"V1Alpha2ToV1Alpha3": {
+			targetVersion: v1alpha3.ApiVersion,
+			actualPath:    "test_assets/config_test_simple_migration_v1alpha2.yaml",
+			expectedPath:  "test_assets/config_test_simple_migration_v1alpha3.yaml",
+		},
+		"V1Alpha2ToV1Alpha4": {
+			targetVersion: v1alpha4.ApiVersion,
+			actualPath:    "test_assets/config_test_simple_migration_v1alpha2.yaml",
+			expectedPath:  "test_assets/config_test_simple_migration_v1alpha4.yaml",
+		},
+		"V1Alpha3ToV1Alpha4": {
+			targetVersion: v1alpha4.ApiVersion,
+			actualPath:    "test_assets/config_test_simple_migration_v1alpha3.yaml",
+			expectedPath:  "test_assets/config_test_simple_migration_v1alpha4.yaml",
+		},
 	}
 
-	if err := expectedViper.ReadInConfig(); err != nil {
-		t.Fatal(err)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			actualViper := viper.New()
+			expectedViper := viper.New()
+
+			actualViper.SetConfigType("yaml")
+			expectedViper.SetConfigType("yaml")
+
+			actualViper.SetConfigFile(tc.actualPath)
+			expectedViper.SetConfigFile(tc.expectedPath)
+
+			if err := actualViper.ReadInConfig(); err != nil {
+				t.Fatal(err)
+			}
+
+			if err := expectedViper.ReadInConfig(); err != nil {
+				t.Fatal(err)
+			}
+
+			actualCfg, err := FromViper(actualViper)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if actualCfg.GetAPIVersion() != tc.targetVersion {
+				actualCfg, err = Migrate(actualCfg, tc.targetVersion)
+				if err != nil {
+					l.Log().Fatalln(err)
+				}
+			}
+
+			expectedCfg, err := FromViper(expectedViper)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := deep.Equal(actualCfg, expectedCfg); diff != nil {
+				t.Fatalf("Actual\n%#v\ndoes not match expected\n%+v\nDiff:\n%#v", actualCfg, expectedCfg, diff)
+			}
+
+		})
 	}
-
-	actualCfg, err := FromViper(actualViper)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if actualCfg.GetAPIVersion() != DefaultConfigApiVersion {
-		actualCfg, err = Migrate(actualCfg, DefaultConfigApiVersion)
-		if err != nil {
-			l.Log().Fatalln(err)
-		}
-	}
-
-	expectedCfg, err := FromViper(expectedViper)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if diff := deep.Equal(actualCfg, expectedCfg); diff != nil {
-		t.Fatalf("Actual\n%#v\ndoes not match expected\n%+v\nDiff:\n%#v", actualCfg, expectedCfg, diff)
-	}
-
-}
-
-func TestMigrateV1Alpha2ToV1Alpha4(t *testing.T) {
-	t.Log("not implemented") // TODO: test migration v1alpha2 to v1alpha4
-}
-
-func TestMigrateV1Alpha3ToV1Alpha4(t *testing.T) {
-	t.Log("not implemented") // TODO: test migration v1alpha3 to v1alpha4
 }
