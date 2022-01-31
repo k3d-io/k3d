@@ -157,6 +157,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "erikgb",
+      "name": "Erik Godding Boye",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1142578?v=4",
+      "profile": "https://www.zenior.no/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
