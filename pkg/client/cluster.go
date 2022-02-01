@@ -527,6 +527,12 @@ ClusterCreatOpts:
 			cluster.ServerLoadBalancer.Config = &lbConfig
 		}
 
+		// ensure labels
+		cluster.ServerLoadBalancer.Node.FillRuntimeLabels()
+		for k, v := range clusterCreateOpts.GlobalLabels {
+			cluster.ServerLoadBalancer.Node.RuntimeLabels[k] = v
+		}
+
 		// prepare to write config to lb container
 		configyaml, err := yaml.Marshal(cluster.ServerLoadBalancer.Config)
 		if err != nil {
