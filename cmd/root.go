@@ -30,6 +30,7 @@ import (
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -147,22 +148,17 @@ func Execute() {
 
 // initLogging initializes the logger
 func initLogging() {
+	l.Log().SetLevel(logrus.InfoLevel) // default log level: info
 	if flags.traceLogging {
 		l.Log().SetLevel(logrus.TraceLevel)
 	} else if flags.debugLogging {
 		l.Log().SetLevel(logrus.DebugLevel)
 	} else {
-		switch logLevel := strings.ToUpper(os.Getenv("LOG_LEVEL")); logLevel {
-		case "TRACE":
-			l.Log().SetLevel(logrus.TraceLevel)
-		case "DEBUG":
-			l.Log().SetLevel(logrus.DebugLevel)
-		case "WARN":
-			l.Log().SetLevel(logrus.WarnLevel)
-		case "ERROR":
-			l.Log().SetLevel(logrus.ErrorLevel)
-		default:
-			l.Log().SetLevel(logrus.InfoLevel)
+		if ll := os.Getenv("LOG_LEVEL"); ll != "" {
+			level, err := logrus.ParseLevel(ll)
+			if err != nil {
+				l.Log().SetLevel(level)
+			}
 		}
 	}
 	l.Log().SetOutput(io.Discard)
@@ -186,6 +182,10 @@ func initLogging() {
 
 	formatter := &logrus.TextFormatter{
 		ForceColors: true,
+	}
+
+	if logColor, err := strconv.ParseBool(os.Getenv("LOG_COLORS")); err == nil {
+		formatter.ForceColors = logColor
 	}
 
 	if flags.timestampedLogging || os.Getenv("LOG_TIMESTAMPS") != "" {
