@@ -382,7 +382,13 @@ func runToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cl
 	return node, nil
 }
 
+var EnsureToolsNodeMutex sync.Mutex
+
 func EnsureToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*k3d.Node, error) {
+	// Mutex to prevent simultaneous creation of two tools-nodes, e.g. due to slow network connection cause the image pulling to take too long
+	// FIXME: could be prevented completely by having a smarter image pre-pulling mechanism
+	EnsureToolsNodeMutex.Lock()
+	defer EnsureToolsNodeMutex.Unlock()
 
 	var toolsNode *k3d.Node
 	toolsNode, err := runtime.GetNode(ctx, &k3d.Node{Name: fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name)})
