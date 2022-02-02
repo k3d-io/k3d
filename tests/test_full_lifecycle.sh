@@ -60,7 +60,6 @@ $EXE cluster start "$clustername" --wait --timeout 360s || failed "cluster didn'
 info "Checking that we have access to the cluster..."
 check_clusters "$clustername" || failed "error checking cluster"
 
-kubectl delete pod -n kube-system -l k8s-app=kube-dns  > /dev/null 2>&1 # delete coredns to force reload of config (reload plugin uses default 30s, which will make tests below fail)
 
 info "Checking that we have 2 nodes online..."
 check_multi_node "$clustername" 2 || failed "failed to verify number of nodes"
@@ -74,16 +73,17 @@ check_multi_node "$clustername" 3 || failed "failed to verify number of nodes"
 
 # 4. load an image into the cluster
 info "Importing an image into the cluster..."
-docker pull alpine:3.15.0 > /dev/null
-docker tag alpine:3.15.0 alpine:local > /dev/null
-$EXE image import alpine:local -c $clustername || failed "could not import image in $clustername"
+docker pull iwilltry42/dnsutils:20.04 > /dev/null
+docker tag iwilltry42/dnsutils:20.04 testimage:local > /dev/null
+$EXE image import testimage:local -c $clustername || failed "could not import image in $clustername"
 
 # 5. use imported image
 info "Spawning a pod using the imported image..."
-kubectl run --image alpine:local testimage --command -- tail -f /dev/null
+kubectl run --image testimage:local testimage --command -- tail -f /dev/null
 info "Waiting for a bit for the pod to start..."
 sleep 5
 
+kubectl delete pod -n kube-system -l k8s-app=kube-dns  > /dev/null 2>&1 # delete coredns to force reload of config (reload plugin uses default 30s, which will make tests below fail)
 wait_for_pod_running_by_name "testimage"
 wait_for_pod_running_by_label "k8s-app=kube-dns" "kube-system"
 
