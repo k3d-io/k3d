@@ -8,17 +8,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        docker_version_failing:
+          - "20.10.3" 
         docker_version:
-          - "20.10.4"
-          - "20.10.5" # earliest known-to-work version
+          - "20.10.5" # one of the earliest known-to-work version
           - "20.10.12" # latest version
     steps:
       - uses: actions/checkout@v2
       - name: Setup Docker
         uses: docker-practice/actions-setup-docker@master
-      - name: Test Docker
+      - name: Test Docker Version expected to fail
+        run: |
+          echo "Running test with docker version >${{matrix.docker_version_failing}}<"
+          docker info
+          make e2e \
+            -e E2E_DIND_VERSION=${{matrix.docker_version_failing}} \
+            -e E2E_INCLUDE=test_basic
+      - name: Test Docker Version expected to pass
         run: |
           echo "Running test with docker version >${{matrix.docker_version}}<"
+          docker info
           make e2e \
             -e E2E_DIND_VERSION=${{matrix.docker_version}} \
             -e E2E_INCLUDE=test_basic
