@@ -9,6 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         docker_version:
+          - "20.10.4"
           - "20.10.5" # earliest known-to-work version
           - "20.10.12" # latest version
     steps:
