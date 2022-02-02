@@ -54,6 +54,7 @@ k3de2e=$(docker run -d \
           -e E2E_EXCLUDE="$E2E_EXCLUDE" \
           -e E2E_PARALLEL="$E2E_PARALLEL" \
           -e E2E_EXTRA="$E2E_EXTRA" \
+          -e K3S_IMAGE="$E2E_K3S_VERSION" \
           -e LOG_TIMESTAMPS="true" \
           --add-host "k3d-registrytest-registry:127.0.0.1" \
           --name "$container_name" \
