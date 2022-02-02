@@ -36,21 +36,21 @@ for version in "${K3S_VERSIONS[@]}"; do
   info "Deleting cluster ..."
   $EXE cluster delete $clustername || failed "could not delete the cluster $clustername"
 
-  K3S_IMAGE_TAG="$version" $CURR_DIR/test_full_lifecycle.sh
+  K3S_IMAGE="rancher/k3s:$version" $CURR_DIR/test_full_lifecycle.sh
   if [[ $? -eq 1 ]]; then
     FAILED_TESTS+=("full_lifecycle: $version")
   fi
 
   $EXE cluster rm -a || failed "failed to delete clusters"
 
-  K3S_IMAGE_TAG="$version" $CURR_DIR/test_multi_master.sh
+  K3S_IMAGE="rancher/k3s:$version" $CURR_DIR/test_multi_master.sh
   if [[ $? -eq 1 ]]; then
     FAILED_TESTS+=("multi_master: $version")
   fi
 
   $EXE cluster rm -a || failed "failed to delete clusters"
 
-  K3S_IMAGE_TAG="$version" $CURR_DIR/test_multi_master_start_stop.sh
+  K3S_IMAGE="rancher/k3s:$version" $CURR_DIR/test_multi_master_start_stop.sh
   if [[ $? -eq 1 ]]; then
     FAILED_TESTS+=("multi_master_start_stop: $version")
   fi

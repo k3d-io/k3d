@@ -20,12 +20,12 @@ export KUBECONFIG
 : "${EXTRA_FLAG:=""}"
 : "${EXTRA_TITLE:=""}"
 
-if [[ -n "$K3S_IMAGE_TAG" ]]; then
-  EXTRA_FLAG="--image rancher/k3s:$K3S_IMAGE_TAG"
-  EXTRA_TITLE="(rancher/k3s:$K3S_IMAGE_TAG)"
+if [[ -n "$K3S_IMAGE" ]]; then
+  EXTRA_FLAG="--image rancher/k3s:$K3S_IMAGE"
+  EXTRA_TITLE="(rancher/k3s:$K3S_IMAGE)"
 fi
 
-export CURRENT_STAGE="Test | multi-server | $K3S_IMAGE_TAG"
+export CURRENT_STAGE="Test | multi-server | $K3S_IMAGE"
 
 clustername="multiserver"
 

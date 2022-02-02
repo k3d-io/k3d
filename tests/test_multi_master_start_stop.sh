@@ -23,17 +23,17 @@ export KUBECONFIG
 : "${EXTRA_TITLE:=""}"
 
 
-export CURRENT_STAGE="Test | multi-server-start-stop | $K3S_IMAGE_TAG"
+export CURRENT_STAGE="Test | multi-server-start-stop | $K3S_IMAGE"
 
-if [[ -n "$K3S_IMAGE_TAG" ]]; then
+if [[ -n "$K3S_IMAGE" ]]; then
   for failing in "${KNOWN_TO_FAIL[@]}"; do
-    if [[ "$failing" == "$K3S_IMAGE_TAG" ]]; then
-      warn "$K3S_IMAGE_TAG is known to fail this test. Skipping."
+    if [[ "$failing" == "$K3S_IMAGE" ]]; then
+      warn "$K3S_IMAGE is known to fail this test. Skipping."
       exit 0
     fi
   done
-  EXTRA_FLAG="--image rancher/k3s:$K3S_IMAGE_TAG"
-  EXTRA_TITLE="(rancher/k3s:$K3S_IMAGE_TAG)"
+  EXTRA_FLAG="--image rancher/k3s:$K3S_IMAGE"
+  EXTRA_TITLE="(rancher/k3s:$K3S_IMAGE)"
 fi
 
 clustername="multiserverstartstop"
