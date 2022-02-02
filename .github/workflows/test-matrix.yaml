@@ -1,0 +1,24 @@
+name: Test Matrix
+
+on: workflow_dispatch
+
+jobs:
+  test-docker-versions:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        docker_version:
+          - "20.10.5" # earliest known-to-work version
+          - "20.10.12" # latest version
+    steps:
+      - name: Setup Docker
+        uses: docker-practice/actions-setup-docker@master
+      - name: Test Docker
+        run: |
+          echo "Running test with docker version >${{matrix.docker_version}}<"
+          make ci-setup
+          make e2e \
+            -e E2E_DIND_VERSION=${{matrix.docker_version}} \
+            -e E2E_INCLUDE=test_basic
+
