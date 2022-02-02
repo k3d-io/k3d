@@ -27,8 +27,6 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
-	"io"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -1053,17 +1051,23 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 					}
 
 					// get the first server in the list and run action on it once it's ready for it
-					for _, n := range cluster.Nodes {
-						if n.Role == k3d.ServerRole {
-							ts, err := time.Parse("2006-01-02T15:04:05.999999999Z", n.State.Started)
-							if err != nil {
-								return err
+					for _, n := range servers {
+
+						// do not try to run the action, if CoreDNS is disabled on K3s level
+						for _, flag := range n.Args {
+							if strings.HasPrefix(flag, "--disable") && strings.Contains(flag, "coredns") {
+								l.Log().Debugf("CoreDNS disabled in K3s via flag `%s`. Not trying to use it.", flag)
+								return nil
 							}
-							if err := NodeWaitForLogMessage(postStartErrgrpCtx, runtime, n, "Cluster dns configmap", ts.Truncate(time.Second)); err != nil {
-								return err
-							}
-							return act.Run(postStartErrgrpCtx, n)
 						}
+						ts, err := time.Parse("2006-01-02T15:04:05.999999999Z", n.State.Started)
+						if err != nil {
+							return err
+						}
+						if err := NodeWaitForLogMessage(postStartErrgrpCtx, runtime, n, "Cluster dns configmap", ts.Truncate(time.Second)); err != nil {
+							return err
+						}
+						return act.Run(postStartErrgrpCtx, n)
 					}
 					return nil
 				})
@@ -1105,60 +1109,6 @@ func SortClusters(clusters []*k3d.Cluster) []*k3d.Cluster {
 		return clusters[i].Name < clusters[j].Name
 	})
 	return clusters
-}
-
-// corednsAddHost adds a host entry to the CoreDNS configmap if it doesn't exist (a host entry is a single line of the form "IP HOST")
-func corednsAddHost(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, ip string, name string) error {
-	retries := 3
-	if v, ok := os.LookupEnv(k3d.K3dEnvDebugCorednsRetries); ok && v != "" {
-		l.Log().Debugf("Running with %s=%s", k3d.K3dEnvDebugCorednsRetries, v)
-		if r, err := strconv.Atoi(v); err == nil {
-			retries = r
-		} else {
-			return fmt.Errorf("Invalid value set for env var %s (%s): %w", k3d.K3dEnvDebugCorednsRetries, v, err)
-		}
-	}
-
-	// select any server node
-	var node *k3d.Node
-	for _, n := range cluster.Nodes {
-		if n.Role == k3d.ServerRole {
-			node = n
-		}
-	}
-
-	hostsEntry := fmt.Sprintf("%s %s", ip, name)
-	patchCmd := `patch=$(kubectl get cm coredns -n kube-system --template='{{.data.NodeHosts}}' | sed -n -E -e '/[0-9\.]{4,12}\s` + name + `$/!p' -e '$a` + hostsEntry + `' | tr '\n' '^' | busybox xargs -0 printf '{"data": {"NodeHosts":"%s"}}'| sed -E 's%\^%\\n%g') && kubectl patch cm coredns -n kube-system -p="$patch"`
-	successInjectCoreDNSEntry := false
-
-	// try 3 (or K3D_DEBUG_COREDNS_RETRIES value) times, as e.g. on cluster startup it may take some time for the Configmap to be available and the server to be responsive
-	for i := 0; i < retries; i++ {
-		l.Log().Debugf("Running CoreDNS patch in node %s to add %s (try %d/%d)...", node.Name, hostsEntry, i, retries)
-		logreader, err := runtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", patchCmd})
-		if err == nil {
-			successInjectCoreDNSEntry = true
-			break
-		} else {
-			msg := fmt.Sprintf("(try %d/%d) error patching the CoreDNS ConfigMap to include entry '%s': %+v", i, retries, hostsEntry, err)
-			if logreader != nil {
-				readlogs, err := io.ReadAll(logreader)
-				if err != nil {
-					l.Log().Debugf("(try %d/%d) error reading the logs from failed CoreDNS patch exec process in node %s: %v", i, retries, node.Name, err)
-				} else {
-					msg += fmt.Sprintf("\nLogs: %s", string(readlogs))
-				}
-			} else {
-				l.Log().Debugf("(try %d/%d) error reading the logs from failed CoreDNS patch exec process in node %s: no logreader returned for exec process", i, retries, node.Name)
-			}
-			l.Log().Debugln(msg)
-			time.Sleep(1 * time.Second)
-		}
-	}
-	if !successInjectCoreDNSEntry {
-		return fmt.Errorf("failed to patch CoreDNS ConfigMap to include entry '%s' (%d tries, see debug logs)", hostsEntry, retries)
-	}
-	l.Log().Debugf("Successfully patched CoreDNS Configmap with record '%s'", hostsEntry)
-	return nil
 }
 
 func prepCreateLocalRegistryHostingConfigMap(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) error {
