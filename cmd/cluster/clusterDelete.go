@@ -30,6 +30,7 @@ import (
 	"github.com/rancher/k3d/v5/cmd/util"
 	cliconfig "github.com/rancher/k3d/v5/cmd/util/config"
 	"github.com/rancher/k3d/v5/pkg/client"
+	"github.com/rancher/k3d/v5/pkg/config"
 	l "github.com/rancher/k3d/v5/pkg/logger"
 	"github.com/rancher/k3d/v5/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v5/pkg/types"
@@ -127,7 +128,12 @@ func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 			l.Log().Fatalln("failed to delete cluster: cannot use `--config` flag with additional arguments or `--all`")
 		}
 
-		if clusterDeleteCfgViper.GetString("name") == "" {
+		cfg, err := config.SimpleConfigFromViper(clusterDeleteCfgViper)
+		if err != nil {
+			l.Log().Fatalln(err)
+		}
+
+		if cfg.Name == "" {
 			l.Log().Fatalln("failed to delete cluster via config file: no name in config file")
 		}
 

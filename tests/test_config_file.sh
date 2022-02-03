@@ -32,8 +32,8 @@ configfileoriginal="$CURR_DIR/assets/config_test_simple.yaml"
 configfile="/tmp/config_test_simple-tmp_$(date -u +'%Y%m%dT%H%M%SZ').yaml"
 clustername="configtest"
 
-sed -E "s/^name:.+/name: $clustername/g" < "$configfileoriginal" > "$configfile" # replace cluster name in config file so we can use it in this script without running into override issues
-
+sed -E "s/^  name:.+/  name: $clustername/g" < "$configfileoriginal" > "$configfile" # replace cluster name in config file so we can use it in this script without running into override issues
+cat "$configfile"
 highlight "[START] ConfigTest $EXTRA_TITLE"
 
 info "Creating cluster $clustername..."
@@ -76,7 +76,7 @@ exec_in_node "k3d-$clustername-server-0" "cat /etc/rancher/k3s/registries.yaml" 
 # Cleanup
 
 info "Deleting cluster $clustername (using config file)..."
-$EXE cluster delete --config "$configfile" || failed "could not delete the cluster $clustername"
+$EXE cluster delete --config "$configfile" --trace || failed "could not delete the cluster $clustername"
 
 rm "$configfile"
 

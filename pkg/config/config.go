@@ -97,3 +97,26 @@ func getMigrations(version string) map[string]func(types.Config) (types.Config, 
 		return nil
 	}
 }
+
+func SimpleConfigFromViper(cfgViper *viper.Viper) (defaultConfig.SimpleConfig, error) {
+	if cfgViper.GetString("apiversion") == "" {
+		cfgViper.Set("apiversion", DefaultConfigApiVersion)
+	}
+	if cfgViper.GetString("kind") == "" {
+		cfgViper.Set("kind", "Simple")
+	}
+	cfg, err := FromViper(cfgViper)
+	if err != nil {
+		return defaultConfig.SimpleConfig{}, err
+	}
+
+	if cfg.GetAPIVersion() != DefaultConfigApiVersion {
+		l.Log().Warnf("Default config apiVersion is '%s', but you're using '%s': consider migrating.", DefaultConfigApiVersion, cfg.GetAPIVersion())
+		cfg, err = Migrate(cfg, DefaultConfigApiVersion)
+		if err != nil {
+			return defaultConfig.SimpleConfig{}, err
+		}
+	}
+
+	return cfg.(defaultConfig.SimpleConfig), nil
+}

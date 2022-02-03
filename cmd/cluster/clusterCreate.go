@@ -102,26 +102,10 @@ func NewCmdClusterCreate() *cobra.Command {
 			/*************************
 			 * Compute Configuration *
 			 *************************/
-			if cfgViper.GetString("apiversion") == "" {
-				cfgViper.Set("apiversion", config.DefaultConfigApiVersion)
-			}
-			if cfgViper.GetString("kind") == "" {
-				cfgViper.Set("kind", "Simple")
-			}
-			cfg, err := config.FromViper(cfgViper)
+			simpleCfg, err := config.SimpleConfigFromViper(cfgViper)
 			if err != nil {
 				l.Log().Fatalln(err)
 			}
-
-			if cfg.GetAPIVersion() != config.DefaultConfigApiVersion {
-				l.Log().Warnf("Default config apiVersion is '%s', but you're using '%s': consider migrating.", config.DefaultConfigApiVersion, cfg.GetAPIVersion())
-				cfg, err = config.Migrate(cfg, config.DefaultConfigApiVersion)
-				if err != nil {
-					l.Log().Fatalln(err)
-				}
-			}
-
-			simpleCfg := cfg.(conf.SimpleConfig)
 
 			l.Log().Debugf("========== Simple Config ==========\n%+v\n==========================\n", simpleCfg)
 
