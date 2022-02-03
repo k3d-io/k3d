@@ -156,7 +156,7 @@ func initLogging() {
 	} else {
 		if ll := os.Getenv("LOG_LEVEL"); ll != "" {
 			level, err := logrus.ParseLevel(ll)
-			if err != nil {
+			if err == nil {
 				l.Log().SetLevel(level)
 			}
 		}
