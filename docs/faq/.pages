@@ -1,4 +1,5 @@
 title: FAQ
 nav:
   - faq.md
+  - compatibility.md
 collapse: true
