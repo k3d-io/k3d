@@ -1,0 +1,27 @@
+name: Release
+
+on: workflow_dispatch
+    
+jobs:
+  release:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Go environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17.x"
+      - name: Setup Docker
+        uses: docker-practice/actions-setup-docker@master
+        with:
+          docker_version: "20.10"
+      - name: Setup CI Tools
+        run: make ci-setup
+      - name: lint
+        run: make lint
+      - name: test
+        run: make test
+      - name: e2e
+        run: make e2e
+      - name: build
+        run: make build-cross
