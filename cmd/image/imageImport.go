@@ -26,11 +26,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/rancher/k3d/v5/cmd/util"
-	"github.com/rancher/k3d/v5/pkg/client"
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	"github.com/rancher/k3d/v5/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/cmd/util"
+	"github.com/k3d-io/k3d/v5/pkg/client"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	"github.com/k3d-io/k3d/v5/pkg/runtimes"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
 // NewCmdImageImport returns a new cobra command
@@ -45,16 +45,16 @@ func NewCmdImageImport() *cobra.Command {
 		Long: `Import image(s) from docker into k3d cluster(s).
 
 If an IMAGE starts with the prefix 'docker.io/', then this prefix is stripped internally.
-That is, 'docker.io/rancher/k3d-tools:latest' is treated as 'rancher/k3d-tools:latest'.
+That is, 'docker.io/k3d-io/k3d-tools:latest' is treated as 'k3d-io/k3d-tools:latest'.
 
 If an IMAGE starts with the prefix 'library/' (or 'docker.io/library/'), then this prefix is stripped internally.
 That is, 'library/busybox:latest' (or 'docker.io/library/busybox:latest') are treated as 'busybox:latest'.
 
 If an IMAGE does not have a version tag, then ':latest' is assumed.
-That is, 'rancher/k3d-tools' is treated as 'rancher/k3d-tools:latest'.
+That is, 'k3d-io/k3d-tools' is treated as 'k3d-io/k3d-tools:latest'.
 
 A file ARCHIVE always takes precedence.
-So if a file './rancher/k3d-tools' exists, k3d will try to import it instead of the IMAGE of the same name.`,
+So if a file './k3d-io/k3d-tools' exists, k3d will try to import it instead of the IMAGE of the same name.`,
 		Aliases: []string{"load"},
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {

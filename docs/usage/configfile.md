@@ -42,7 +42,7 @@ Currently, the config file is still in an Alpha-State, meaning, that it is subje
 !!! info "Validation via JSON-Schema"
     k3d uses a [JSON-Schema](https://json-schema.org/) to describe the expected format and fields of the configuration file.  
     This schema is also used to [validate](https://github.com/xeipuuv/gojsonschema#validation) a user-given config file.  
-    This JSON-Schema can be found in the specific config version sub-directory in the repository (e.g. [here for `v1alpha4`](https://github.com/rancher/k3d/blob/main/pkg/config/v1alpha4/schema.json)) and could be used to lookup supported fields or by linters to validate the config file, e.g. in your code editor.  
+    This JSON-Schema can be found in the specific config version sub-directory in the repository (e.g. [here for `v1alpha4`](https://github.com/k3d-io/k3d/blob/main/pkg/config/v1alpha4/schema.json)) and could be used to lookup supported fields or by linters to validate the config file, e.g. in your code editor.  
 
 ### All Options: Example
 

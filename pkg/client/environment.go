@@ -25,10 +25,10 @@ import (
 	"context"
 	"fmt"
 
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	"github.com/rancher/k3d/v5/pkg/runtimes"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 
-	k3d "github.com/rancher/k3d/v5/pkg/types"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
 func GatherEnvironmentInfo(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*k3d.EnvironmentInfo, error) {

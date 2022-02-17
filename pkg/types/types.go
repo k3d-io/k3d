@@ -27,8 +27,8 @@ import (
 	"time"
 
 	"github.com/docker/go-connections/nat"
-	runtimeTypes "github.com/rancher/k3d/v5/pkg/runtimes/types"
-	"github.com/rancher/k3d/v5/pkg/types/k3s"
+	runtimeTypes "github.com/k3d-io/k3d/v5/pkg/runtimes/types"
+	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 	"inet.af/netaddr"
 )
 

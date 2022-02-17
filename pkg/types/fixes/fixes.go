@@ -26,7 +26,7 @@ import (
 	"os"
 	"strconv"
 
-	k3d "github.com/rancher/k3d/v5/pkg/types"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
 /* NOTE

@@ -25,16 +25,16 @@ import (
 	"fmt"
 	"strings"
 
-	l "github.com/rancher/k3d/v5/pkg/logger"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 
 	"github.com/spf13/viper"
 
-	"github.com/rancher/k3d/v5/pkg/config/v1alpha2"
-	"github.com/rancher/k3d/v5/pkg/config/v1alpha3"
-	"github.com/rancher/k3d/v5/pkg/config/v1alpha4"
-	defaultConfig "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
+	"github.com/k3d-io/k3d/v5/pkg/config/v1alpha2"
+	"github.com/k3d-io/k3d/v5/pkg/config/v1alpha3"
+	"github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	defaultConfig "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
 
-	types "github.com/rancher/k3d/v5/pkg/config/types"
+	types "github.com/k3d-io/k3d/v5/pkg/config/types"
 )
 
 const DefaultConfigApiVersion = defaultConfig.ApiVersion

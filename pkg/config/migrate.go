@@ -25,7 +25,7 @@ package config
 import (
 	"fmt"
 
-	types "github.com/rancher/k3d/v5/pkg/config/types"
+	types "github.com/k3d-io/k3d/v5/pkg/config/types"
 )
 
 func Migrate(config types.Config, targetVersion string) (types.Config, error) {

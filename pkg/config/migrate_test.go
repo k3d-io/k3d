@@ -26,9 +26,9 @@ import (
 	"testing"
 
 	"github.com/go-test/deep"
-	"github.com/rancher/k3d/v5/pkg/config/v1alpha3"
-	"github.com/rancher/k3d/v5/pkg/config/v1alpha4"
-	l "github.com/rancher/k3d/v5/pkg/logger"
+	"github.com/k3d-io/k3d/v5/pkg/config/v1alpha3"
+	"github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/spf13/viper"
 )
 

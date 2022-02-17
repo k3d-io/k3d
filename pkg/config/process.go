@@ -25,11 +25,11 @@ package config
 import (
 	"strings"
 
-	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	runtimeutil "github.com/rancher/k3d/v5/pkg/runtimes/util"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
-	"github.com/rancher/k3d/v5/pkg/types/k3s"
+	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	runtimeutil "github.com/k3d-io/k3d/v5/pkg/runtimes/util"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 )
 
 // ProcessSimpleConfig applies processing to the simple config, sanitizing it and doing some modifications

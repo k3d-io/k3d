@@ -28,11 +28,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rancher/k3d/v5/cmd/util"
-	k3cluster "github.com/rancher/k3d/v5/pkg/client"
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	"github.com/rancher/k3d/v5/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/cmd/util"
+	k3cluster "github.com/k3d-io/k3d/v5/pkg/client"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	"github.com/k3d-io/k3d/v5/pkg/runtimes"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 

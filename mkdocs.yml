@@ -14,8 +14,8 @@ extra_css:
   - static/css/extra.css
 
 # Repo Information
-repo_name: rancher/k3d
-repo_url: https://github.com/rancher/k3d
+repo_name: k3d-io/k3d
+repo_url: https://github.com/k3d-io/k3d
 
 # Edit Link on Site
 edit_uri: edit/main/docs/

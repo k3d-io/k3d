@@ -26,8 +26,8 @@ import (
 	"fmt"
 
 	"github.com/imdario/mergo"
-	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
-	l "github.com/rancher/k3d/v5/pkg/logger"
+	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 )
 
 // MergeSimple merges two simple configuration files with the values of the destination one having priority

@@ -1,11 +1,11 @@
-module github.com/rancher/k3d/docgen
+module github.com/k3d-io/k3d/docgen
 
 go 1.16
 
 require (
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/rancher/k3d/v5 v5.0.0-00010101000000-000000000000
+	github.com/k3d-io/k3d/v5 v5.0.0-00010101000000-000000000000
 	github.com/spf13/cobra v1.2.1
 )
 
-replace github.com/rancher/k3d/v5 => /PATH/TO/YOUR/REPO/DIRECTORY
+replace github.com/k3d-io/k3d/v5 => /PATH/TO/YOUR/REPO/DIRECTORY

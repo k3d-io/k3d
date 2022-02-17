@@ -1,4 +1,4 @@
-module github.com/rancher/k3d/tools
+module github.com/k3d-io/k3d/tools
 
 go 1.17
 

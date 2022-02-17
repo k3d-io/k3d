@@ -24,7 +24,7 @@ package config
 import (
 	"testing"
 
-	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
+	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
 )
 
 func TestValidateSchema(t *testing.T) {

@@ -24,8 +24,8 @@ package types
 import (
 	"fmt"
 
-	"github.com/rancher/k3d/v5/pkg/types/k3s"
-	"github.com/rancher/k3d/v5/version"
+	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
+	"github.com/k3d-io/k3d/v5/version"
 )
 
 // DefaultClusterName specifies the default name used for newly created clusters

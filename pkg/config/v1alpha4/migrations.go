@@ -26,10 +26,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	configtypes "github.com/rancher/k3d/v5/pkg/config/types"
-	"github.com/rancher/k3d/v5/pkg/config/v1alpha2"
-	"github.com/rancher/k3d/v5/pkg/config/v1alpha3"
-	l "github.com/rancher/k3d/v5/pkg/logger"
+	configtypes "github.com/k3d-io/k3d/v5/pkg/config/types"
+	"github.com/k3d-io/k3d/v5/pkg/config/v1alpha2"
+	"github.com/k3d-io/k3d/v5/pkg/config/v1alpha3"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 )
 
 var Migrations = map[string]func(configtypes.Config) (configtypes.Config, error){

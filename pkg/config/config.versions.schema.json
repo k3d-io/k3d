@@ -1,6 +1,6 @@
 {
-  "$id": "https://github.com/rancher/k3d/tree/main/pkg/config/config.versions.schema.json",
-  "$schema": "https://raw.githubusercontent.com/rancher/k3d/main/pkg/config/config.versions.meta.schema.json#",
+  "$id": "https://github.com/k3d-io/k3d/tree/main/pkg/config/config.versions.schema.json",
+  "$schema": "https://raw.githubusercontent.com/k3d-io/k3d/main/pkg/config/config.versions.meta.schema.json#",
   "title": "All k3d config versions",
   "type": "object",
   "oneOf": [
@@ -14,7 +14,7 @@
           }
         },
         {
-          "$ref": "https://raw.githubusercontent.com/rancher/k3d/main/pkg/config/v1alpha4/schema.json"
+          "$ref": "https://raw.githubusercontent.com/k3d-io/k3d/main/pkg/config/v1alpha4/schema.json"
         }
       ]
     },{
@@ -27,7 +27,7 @@
           }
         },
         {
-          "$ref": "https://raw.githubusercontent.com/rancher/k3d/main/pkg/config/v1alpha3/schema.json"
+          "$ref": "https://raw.githubusercontent.com/k3d-io/k3d/main/pkg/config/v1alpha3/schema.json"
         }
       ]
     },
@@ -41,7 +41,7 @@
           }
         },
         {
-          "$ref": "https://raw.githubusercontent.com/rancher/k3d/main/pkg/config/v1alpha2/schema.json"
+          "$ref": "https://raw.githubusercontent.com/k3d-io/k3d/main/pkg/config/v1alpha2/schema.json"
         }
       ]
     }

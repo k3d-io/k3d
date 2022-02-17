@@ -24,7 +24,7 @@ package util
 import (
 	"strings"
 
-	l "github.com/rancher/k3d/v5/pkg/logger"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 )
 
 // validateRuntimeLabelKey validates a given label key is not reserved for internal k3d usage

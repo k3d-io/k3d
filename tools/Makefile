@@ -12,7 +12,7 @@ PKG       := $(shell go mod vendor)
 TAGS      :=
 TESTS     := .
 TESTFLAGS :=
-LDFLAGS   := -w -s -X github.com/rancher/k3d/tools/version.Version=${GIT_TAG}
+LDFLAGS   := -w -s -X github.com/k3d-io/k3d/tools/version.Version=${GIT_TAG}
 GOFLAGS   :=
 BINDIR    := $(CURDIR)/bin
 BINARIES  := k3d-tools
