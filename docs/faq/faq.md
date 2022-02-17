@@ -167,3 +167,19 @@ c) authenticate containerd inside k3s/k3d to use your DockerHub user
   ```
 
 3. Profit. That's it. In the test for this, we pulled the same image 120 times in a row (confirmed, that pull numbers went up), without being rate limited (as a non-paying, normal user)
+
+## Longhorn in k3d
+
+### Problem
+
+Longhorn is not working when deployed in a K3s cluster spawned with k3d.
+
+### Cause
+
+The container image of K3s is quite limited and doesn't contain the necessary libraries.  Also, additional volume mounts and more would be required to get Longhorn up and running properly.  
+So basically Longhorn does rely too much on the host OS to work properly in the dockerized environment without quite some modifications.
+
+### Solution
+
+There are a few ways one can build a working image to use with k3d.  
+See <https://github.com/k3d-io/k3d/discussions/478> for more info.
