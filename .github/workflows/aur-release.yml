@@ -7,7 +7,7 @@ on:
 jobs:
   aur-release:
     runs-on: ubuntu-20.04
-    container: archlinux:base-20210228.0.16308
+    container: archlinux:base
     steps:
       - name: Checkout Project
         uses: actions/checkout@v1
