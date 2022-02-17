@@ -32,10 +32,10 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"inet.af/netaddr"
 
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	runtimeErr "github.com/rancher/k3d/v5/pkg/runtimes/errors"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
-	"github.com/rancher/k3d/v5/pkg/util"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	runtimeErr "github.com/k3d-io/k3d/v5/pkg/runtimes/errors"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/pkg/util"
 )
 
 // GetNetwork returns a given network

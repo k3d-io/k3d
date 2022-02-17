@@ -22,12 +22,12 @@ THE SOFTWARE.
 package node
 
 import (
-	"github.com/rancher/k3d/v5/cmd/util"
-	"github.com/rancher/k3d/v5/pkg/runtimes"
+	"github.com/k3d-io/k3d/v5/cmd/util"
+	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	"github.com/spf13/cobra"
 
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
 // NewCmdNodeStop returns a new cobra command

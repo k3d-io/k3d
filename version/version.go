@@ -28,7 +28,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rancher/k3d/v5/pkg/types/k3s"
+	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 )
 
 // Version is the string that contains version

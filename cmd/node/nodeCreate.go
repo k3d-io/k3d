@@ -29,13 +29,13 @@ import (
 	"github.com/spf13/cobra"
 
 	dockerunits "github.com/docker/go-units"
-	"github.com/rancher/k3d/v5/cmd/util"
-	cliutil "github.com/rancher/k3d/v5/cmd/util"
-	k3dc "github.com/rancher/k3d/v5/pkg/client"
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	"github.com/rancher/k3d/v5/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
-	"github.com/rancher/k3d/v5/version"
+	"github.com/k3d-io/k3d/v5/cmd/util"
+	cliutil "github.com/k3d-io/k3d/v5/cmd/util"
+	k3dc "github.com/k3d-io/k3d/v5/pkg/client"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	"github.com/k3d-io/k3d/v5/pkg/runtimes"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/version"
 )
 
 // NewCmdNodeCreate returns a new cobra command

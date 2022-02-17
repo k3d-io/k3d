@@ -27,7 +27,7 @@ import (
 	"net/url"
 	"os"
 
-	l "github.com/rancher/k3d/v5/pkg/logger"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 )
 
 type Docker struct{}

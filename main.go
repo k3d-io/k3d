@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/rancher/k3d/v5/cmd"
+import "github.com/k3d-io/k3d/v5/cmd"
 
 func main() {
 	cmd.Execute()

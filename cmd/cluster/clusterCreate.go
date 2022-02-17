@@ -38,15 +38,15 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 
-	cliutil "github.com/rancher/k3d/v5/cmd/util"
-	cliconfig "github.com/rancher/k3d/v5/cmd/util/config"
-	k3dCluster "github.com/rancher/k3d/v5/pkg/client"
-	"github.com/rancher/k3d/v5/pkg/config"
-	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	"github.com/rancher/k3d/v5/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
-	"github.com/rancher/k3d/v5/version"
+	cliutil "github.com/k3d-io/k3d/v5/cmd/util"
+	cliconfig "github.com/k3d-io/k3d/v5/cmd/util/config"
+	k3dCluster "github.com/k3d-io/k3d/v5/pkg/client"
+	"github.com/k3d-io/k3d/v5/pkg/config"
+	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	"github.com/k3d-io/k3d/v5/pkg/runtimes"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/version"
 )
 
 var configFile string

@@ -26,7 +26,7 @@ import (
 	"regexp"
 
 	"github.com/docker/go-connections/nat"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
 var registryRefRegexp = regexp.MustCompile(`^(?P<protocol>http:\/\/|https:\/\/)?(?P<hostref>(?P<hostip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|(?P<hostname>[a-zA-Z\-\.0-9]+)){1}?((:)(?P<internalport>\d{1,5}))?((:)(?P<externalport>\d{1,5}))?$`)

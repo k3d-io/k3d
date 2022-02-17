@@ -34,9 +34,9 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	"github.com/rancher/k3d/v5/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	"github.com/k3d-io/k3d/v5/pkg/runtimes"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
 // ImageImportIntoClusterMulti starts up a k3d tools container for the selected cluster and uses it to export

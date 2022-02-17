@@ -27,9 +27,9 @@ import (
 	"time"
 
 	"github.com/goodhosts/hostsfile"
-	"github.com/rancher/k3d/v5/pkg/actions"
-	"github.com/rancher/k3d/v5/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/pkg/actions"
+	"github.com/k3d-io/k3d/v5/pkg/runtimes"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
 func NewHostAliasesInjectEtcHostsAction(runtime runtimes.Runtime, hostAliases []k3d.HostAlias) actions.RewriteFileAction {

@@ -1,7 +1,7 @@
 # Networking
 
 - Related issues:
-  - [rancher/k3d #220](https://github.com/rancher/k3d/issues/220)
+  - [k3d-io/k3d #220](https://github.com/k3d-io/k3d/issues/220)
 
 ## Introduction
 

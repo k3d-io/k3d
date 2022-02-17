@@ -37,10 +37,10 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	runtimeErrors "github.com/k3d-io/k3d/v5/pkg/runtimes/errors"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/pkg/errors"
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	runtimeErrors "github.com/rancher/k3d/v5/pkg/runtimes/errors"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"github.com/spf13/pflag"
 )
 

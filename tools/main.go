@@ -7,8 +7,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	run "github.com/rancher/k3d/tools/cmd"
-	"github.com/rancher/k3d/tools/version"
+	run "github.com/k3d-io/k3d/tools/cmd"
+	"github.com/k3d-io/k3d/tools/version"
 	"github.com/urfave/cli"
 )
 

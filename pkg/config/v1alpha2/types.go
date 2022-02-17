@@ -27,9 +27,9 @@ import (
 	"fmt"
 	"time"
 
-	configtypes "github.com/rancher/k3d/v5/pkg/config/types"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
-	"github.com/rancher/k3d/v5/version"
+	configtypes "github.com/k3d-io/k3d/v5/pkg/config/types"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/version"
 )
 
 // JSONSchema describes the schema used to validate config files

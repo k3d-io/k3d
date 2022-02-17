@@ -28,15 +28,15 @@ k3d makes it very easy to create single- and multi-node [k3s](https://github.com
 ## Requirements
 
 - [**docker**](https://docs.docker.com/install/) to be able to use k3d at all
-  - Note: k3d v5.x.x requires at least Docker v20.10.5 (runc >= v1.0.0-rc93) to work properly (see [#807](https://github.com/rancher/k3d/issues/807))
+  - Note: k3d v5.x.x requires at least Docker v20.10.5 (runc >= v1.0.0-rc93) to work properly (see [#807](https://github.com/k3d-io/k3d/issues/807))
 - [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) to interact with the Kubernetes cluster
 
 ## Releases
 
 | Platform | Stage | Version | Release Date | Downloads so far |
 |-----------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|---|
-| [**GitHub Releases**](https://github.com/rancher/k3d/releases) | stable | [![GitHub release (latest by date)](https://img.shields.io/github/v/release/rancher/k3d?label=%20&style=for-the-badge&logo=github)](https://github.com/rancher/k3d/releases/latest) | [![GitHub Release Date](https://img.shields.io/github/release-date/rancher/k3d?label=%20&style=for-the-badge)](https://github.com/rancher/k3d/releases/latest) | ![GitHub Release Downloads](https://img.shields.io/github/downloads/rancher/k3d/latest/total?label=%20&style=for-the-badge) |
-| [**GitHub Releases**](https://github.com/rancher/k3d/releases) | latest | [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/rancher/k3d?include_prereleases&label=%20&style=for-the-badge&logo=github)](https://github.com/rancher/k3d/releases) | [![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/rancher/k3d?label=%20&style=for-the-badge)](https://github.com/rancher/k3d/releases) | ![GitHub Release Downloads (incl. Pre-Releases)](https://img.shields.io/github/downloads-pre/rancher/k3d/latest/total?label=%20&style=for-the-badge) |
+| [**GitHub Releases**](https://github.com/k3d-io/k3d/releases) | stable | [![GitHub release (latest by date)](https://img.shields.io/github/v/release/k3d-io/k3d?label=%20&style=for-the-badge&logo=github)](https://github.com/k3d-io/k3d/releases/latest) | [![GitHub Release Date](https://img.shields.io/github/release-date/k3d-io/k3d?label=%20&style=for-the-badge)](https://github.com/k3d-io/k3d/releases/latest) | ![GitHub Release Downloads](https://img.shields.io/github/downloads/k3d-io/k3d/latest/total?label=%20&style=for-the-badge) |
+| [**GitHub Releases**](https://github.com/k3d-io/k3d/releases) | latest | [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/k3d-io/k3d?include_prereleases&label=%20&style=for-the-badge&logo=github)](https://github.com/k3d-io/k3d/releases) | [![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/k3d-io/k3d?label=%20&style=for-the-badge)](https://github.com/k3d-io/k3d/releases) | ![GitHub Release Downloads (incl. Pre-Releases)](https://img.shields.io/github/downloads-pre/k3d-io/k3d/latest/total?label=%20&style=for-the-badge) |
 | [**Homebrew**](https://formulae.brew.sh/formula/k3d) | stable | [![homebrew](https://img.shields.io/homebrew/v/k3d?label=%20&style=for-the-badge)](https://formulae.brew.sh/formula/k3d) | - | - |
 | [**Chocolatey**](https://chocolatey.org/packages/k3d/)| stable | [![chocolatey](https://img.shields.io/chocolatey/v/k3d?label=%20&style=for-the-badge)](https://chocolatey.org/packages/k3d/) | - | - |
 
@@ -44,19 +44,19 @@ k3d makes it very easy to create single- and multi-node [k3s](https://github.com
 
 You have several options there:
 
-### [:fontawesome-regular-file-code: Install Script](https://raw.githubusercontent.com/rancher/k3d/main/install.sh)
+### [:fontawesome-regular-file-code: Install Script](https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh)
 
 #### Install current latest release
 
-- wget: `#!bash wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash`
-- curl: `#!bash curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash`
+- wget: `#!bash wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash`
+- curl: `#!bash curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash`
 
 #### Install specific release
 
 Use the install script to grab a specific release (via `TAG` environment variable):
 
-- wget: `#!bash wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v5.0.0 bash`
-- curl: `#!bash curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v5.0.0 bash`
+- wget: `#!bash wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.0.0 bash`
+- curl: `#!bash curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.0.0 bash`
 
 ### Other Installers
 
@@ -70,9 +70,9 @@ Use the install script to grab a specific release (via `TAG` environment variabl
 
       Package [rancher-k3d-bin](https://aur.archlinux.org/packages/rancher-k3d-bin/)
 
-    - [:material-github: Download GitHub Release](https://github.com/rancher/k3d/releases)
+    - [:material-github: Download GitHub Release](https://github.com/k3d-io/k3d/releases)
 
-      Grab a release binary from the [release tab](https://github.com/rancher/k3d/releases) and install it yourself
+      Grab a release binary from the [release tab](https://github.com/k3d-io/k3d/releases) and install it yourself
 
     - [:material-microsoft-windows: Chocolatey (Windows)](https://chocolatey.org/): `choco install k3d`
 
@@ -85,7 +85,7 @@ Use the install script to grab a specific release (via `TAG` environment variabl
       *Note*: `asdf plugin-add k3d`, then `asdf install k3d <tag>` with `<tag> = latest` or `5.x.x` for a specific version (maintained by [spencergilbert/asdf-k3d](https://github.com/spencergilbert/asdf-k3d))
 
     - Others
-      - install via go: `#!bash go install github.com/rancher/k3d@latest` (**Note**: this will give you unreleased/bleeding-edge changes)
+      - install via go: `#!bash go install github.com/k3d-io/k3d@latest` (**Note**: this will give you unreleased/bleeding-edge changes)
 
 ## Quick Start
 

@@ -1,5 +1,5 @@
 {
-  "$id": "https://github.com/rancher/k3d/tree/main/pkg/config/config.versions.meta.schema.json",
+  "$id": "https://github.com/k3d-io/k3d/tree/main/pkg/config/config.versions.meta.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "The meta schema for k3d's config version schemas.",
   "type": "object",

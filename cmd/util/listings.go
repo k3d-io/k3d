@@ -28,9 +28,9 @@ import (
 	"sort"
 	"strings"
 
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/liggitt/tabwriter"
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
 	"gopkg.in/yaml.v2"
 )
 

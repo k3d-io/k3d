@@ -22,7 +22,7 @@ THE SOFTWARE.
 package node
 
 import (
-	l "github.com/rancher/k3d/v5/pkg/logger"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/spf13/cobra"
 )
 

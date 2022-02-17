@@ -28,9 +28,9 @@ import (
 	"strings"
 	"time"
 
-	config "github.com/rancher/k3d/v5/pkg/config/types"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
-	"github.com/rancher/k3d/v5/version"
+	config "github.com/k3d-io/k3d/v5/pkg/config/types"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/version"
 )
 
 const ApiVersion = "k3d.io/v1alpha4"

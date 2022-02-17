@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"strings"
 
-	l "github.com/rancher/k3d/v5/pkg/logger"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 )
 
 // SplitFiltersFromFlag separates a flag's value from the node filter, if there is one

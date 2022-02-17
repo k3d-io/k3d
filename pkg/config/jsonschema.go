@@ -32,7 +32,7 @@ import (
 
 	"github.com/xeipuuv/gojsonschema"
 
-	l "github.com/rancher/k3d/v5/pkg/logger"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 )
 
 // ValidateSchemaFile takes a filepath, reads the file and validates it against a JSON schema

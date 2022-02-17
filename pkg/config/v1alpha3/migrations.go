@@ -27,11 +27,11 @@ import (
 	"fmt"
 	"strings"
 
-	configtypes "github.com/rancher/k3d/v5/pkg/config/types"
-	"github.com/rancher/k3d/v5/pkg/config/v1alpha2"
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
-	"github.com/rancher/k3d/v5/pkg/util"
+	configtypes "github.com/k3d-io/k3d/v5/pkg/config/types"
+	"github.com/k3d-io/k3d/v5/pkg/config/v1alpha2"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/pkg/util"
 )
 
 var Migrations = map[string]func(configtypes.Config) (configtypes.Config, error){

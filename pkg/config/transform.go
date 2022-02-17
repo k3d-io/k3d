@@ -30,18 +30,18 @@ import (
 	"strings"
 
 	"github.com/docker/go-connections/nat"
-	cliutil "github.com/rancher/k3d/v5/cmd/util" // TODO: move parseapiport to pkg
-	"github.com/rancher/k3d/v5/pkg/client"
-	conf "github.com/rancher/k3d/v5/pkg/config/v1alpha4"
-	"github.com/rancher/k3d/v5/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
-	"github.com/rancher/k3d/v5/pkg/types/k3s"
-	"github.com/rancher/k3d/v5/pkg/util"
-	"github.com/rancher/k3d/v5/version"
+	cliutil "github.com/k3d-io/k3d/v5/cmd/util" // TODO: move parseapiport to pkg
+	"github.com/k3d-io/k3d/v5/pkg/client"
+	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	"github.com/k3d-io/k3d/v5/pkg/runtimes"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
+	"github.com/k3d-io/k3d/v5/pkg/util"
+	"github.com/k3d-io/k3d/v5/version"
 	"gopkg.in/yaml.v2"
 	"inet.af/netaddr"
 
-	l "github.com/rancher/k3d/v5/pkg/logger"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 )
 
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration

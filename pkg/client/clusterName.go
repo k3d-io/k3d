@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/rancher/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/pkg/types"
 )
 
 // HostnameRegexp as per RFC 1123

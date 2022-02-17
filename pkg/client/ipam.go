@@ -25,9 +25,9 @@ import (
 	"context"
 	"fmt"
 
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	k3drt "github.com/rancher/k3d/v5/pkg/runtimes"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	k3drt "github.com/k3d-io/k3d/v5/pkg/runtimes"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"inet.af/netaddr"
 )
 

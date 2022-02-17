@@ -16,7 +16,7 @@ We test a full cluster lifecycle with different [K3s channels](https://update.k3
 
 **Expected to Fail** with the following versions:
 
-* <= 20.10.4 (due to runc, see <https://github.com/rancher/k3d/issues/807>)
+* <= 20.10.4 (due to runc, see <https://github.com/k3d-io/k3d/issues/807>)
 
 #### K3s
 

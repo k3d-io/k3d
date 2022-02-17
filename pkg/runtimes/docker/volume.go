@@ -27,8 +27,8 @@ import (
 
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/volume"
-	runtimeErrors "github.com/rancher/k3d/v5/pkg/runtimes/errors"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
+	runtimeErrors "github.com/k3d-io/k3d/v5/pkg/runtimes/errors"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
 // CreateVolume creates a new named volume

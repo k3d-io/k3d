@@ -29,11 +29,11 @@ import (
 	rt "runtime"
 	"strings"
 
-	"github.com/rancher/k3d/v5/pkg/runtimes"
-	runtimeErrors "github.com/rancher/k3d/v5/pkg/runtimes/errors"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/pkg/runtimes"
+	runtimeErrors "github.com/k3d-io/k3d/v5/pkg/runtimes/errors"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 
-	l "github.com/rancher/k3d/v5/pkg/logger"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 )
 
 // ValidateVolumeMount checks, if the source of volume mounts exists and if the destination is an absolute path

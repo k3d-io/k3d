@@ -24,14 +24,14 @@ package cluster
 import (
 	"time"
 
-	"github.com/rancher/k3d/v5/cmd/util"
-	"github.com/rancher/k3d/v5/pkg/client"
-	"github.com/rancher/k3d/v5/pkg/runtimes"
-	"github.com/rancher/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/cmd/util"
+	"github.com/k3d-io/k3d/v5/pkg/client"
+	"github.com/k3d-io/k3d/v5/pkg/runtimes"
+	"github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/spf13/cobra"
 
-	l "github.com/rancher/k3d/v5/pkg/logger"
-	k3d "github.com/rancher/k3d/v5/pkg/types"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
 // NewCmdClusterStart returns a new cobra command
