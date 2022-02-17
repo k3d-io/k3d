@@ -654,7 +654,7 @@ func ClusterDelete(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clus
 	for _, vol := range cluster.Volumes {
 		l.Log().Debugf("Deleting volume %s...", vol)
 		if err := runtime.DeleteVolume(ctx, vol); err != nil {
-			l.Log().Warningf("Failed to delete volume '%s' of cluster '%s': %v -> Try to delete it manually", cluster.ImageVolume, err, cluster.Name)
+			l.Log().Warningf("Failed to delete volume '%s' of cluster '%s': %v -> Try to delete it manually", cluster.ImageVolume, cluster.Name, err)
 		}
 	}
 
