@@ -135,6 +135,11 @@ func NewCmdClusterCreate() *cobra.Command {
 			}
 			l.Log().Debugf("===== Merged Cluster Config =====\n%+v\n===== ===== =====\n", clusterConfig)
 
+			clusterConfig, err = config.ProcessClusterConfig(*clusterConfig)
+			if err != nil {
+				l.Log().Fatalf("error processing cluster configuration: %v", err)
+			}
+
 			if err := config.ValidateClusterConfig(cmd.Context(), runtimes.SelectedRuntime, *clusterConfig); err != nil {
 				l.Log().Fatalln("Failed Cluster Configuration Validation: ", err)
 			}
