@@ -30,6 +30,7 @@ jobs:
       - name: Run Go Tests
         run: make test
       - name: Run E2E Tests
+        timeout-minutes: 20
         run: make e2e
       # Builds
       - name: Test Platform Builds
