@@ -5,6 +5,7 @@ on: workflow_dispatch
 env:
   IMAGE_REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  GO_VERSION:
     
 jobs:
   test-suite:
