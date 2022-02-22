@@ -120,6 +120,10 @@ options:
 
 ```
 
+## Tips
+
+- k3d [expands environment variables](https://pkg.go.dev/os#ExpandEnv) (`$VAR` or `${VAR}`) unconditionally in the config file, even before processing it in any way.  
+
 ## Config File vs. CLI Flags
 
 k3d uses [`Cobra`](https://github.com/spf13/cobra) and [`Viper`](https://github.com/spf13/viper) for CLI and general config handling respectively.  
