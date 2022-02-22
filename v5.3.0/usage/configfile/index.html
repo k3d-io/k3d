@@ -432,6 +432,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#tips" class="md-nav__link">
+    Tips
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#config-file-vs-cli-flags" class="md-nav__link">
     Config File vs. CLI Flags
   </a>
@@ -1279,6 +1286,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#tips" class="md-nav__link">
+    Tips
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#config-file-vs-cli-flags" class="md-nav__link">
     Config File vs. CLI Flags
   </a>
@@ -1419,6 +1433,10 @@ This JSON-Schema can be found in the specific config version sub-directory in th
         <span class="nt">nodeFilters</span><span class="p">:</span>
           <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">agent:1</span>
 </code></pre></div>
+<h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">&para;</a></h2>
+<ul>
+<li>k3d <a href="https://pkg.go.dev/os#ExpandEnv">expands environment variables</a> (<code>$VAR</code> or <code>${VAR}</code>) unconditionally in the config file, even before processing it in any way.  </li>
+</ul>
 <h2 id="config-file-vs-cli-flags">Config File vs. CLI Flags<a class="headerlink" href="#config-file-vs-cli-flags" title="Permanent link">&para;</a></h2>
 <p>k3d uses <a href="https://github.com/spf13/cobra"><code>Cobra</code></a> and <a href="https://github.com/spf13/viper"><code>Viper</code></a> for CLI and general config handling respectively.<br />
 This automatically introduces a &ldquo;config option order of priority&rdquo; (<a href="https://github.com/spf13/viper#why-viper">precedence order</a>):</p>
@@ -1444,7 +1462,7 @@ For example, you use the same config file to create three clusters which only ha
 <div class="md-source-date">
   <small>
     
-      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">February 17, 2022</span>
+      Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">February 22, 2022</span>
       
     
   </small>
