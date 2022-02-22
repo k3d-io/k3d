@@ -5,6 +5,7 @@ on: push
 env:
   IMAGE_REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  IMAGE_PLATFORMS: ${{ env.IMAGE_PLATFORMS }}
   GO_VERSION: "1.17.x"
   DOCKER_VERSION: "20.10"
     
@@ -79,11 +80,42 @@ jobs:
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-      - name: Build and push
+      # Build and Push container images
+      - name: Build/Push k3d binary-only
         uses: docker/build-push-action@v2
         with:
+          file: Dockerfile
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          target: binary-only
+          platforms: ${{ env.IMAGE_PLATFORMS }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      - name: Build/Push k3d dind
+        uses: docker/build-push-action@v2
+        with:
+          file: Dockerfile
+          context: .
+          target: dind
+          platforms: ${{ env.IMAGE_PLATFORMS }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      - name: Build/Push k3d-proxy
+        uses: docker/build-push-action@v2
+        with:
+          file: proxy/Dockerfile
+          context: proxy/
+          platforms: ${{ env.IMAGE_PLATFORMS }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      - name: Build/Push k3d-tools
+        uses: docker/build-push-action@v2
+        with:
+          file: tools/Dockerfile
+          context: tools/
+          platforms: ${{ env.IMAGE_PLATFORMS }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
