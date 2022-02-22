@@ -41,6 +41,7 @@ jobs:
         run: make build-helper-images
 
   release:
+    name: Build & Release
     # Only run on tags
     if: startsWith(github.ref, 'refs/tags/')
     needs: test-suite
