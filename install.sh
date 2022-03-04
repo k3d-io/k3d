@@ -42,6 +42,18 @@ runAsRoot() {
   $CMD
 }
 
+# scurl invokes `curl` with secure defaults
+scurl() {
+  # - `--proto =https` requires that all URLs use HTTPS. Attempts to call http://
+  #   URLs will fail.
+  # - `--tlsv1.2` ensures that at least TLS v1.2 is used, disabling less secure
+  #   prior TLS versions.
+  # - `--fail` ensures that the command fails if HTTP response is not 2xx.
+  # - `--show-error` causes curl to output error messages when it fails (when
+  #   also invoked with -s|--silent).
+  curl --proto =https --tlsv1.2 --fail --show-error "$@"
+}
+
 # verifySupported checks that the os/arch combination is supported for
 # binary builds.
 verifySupported() {
@@ -84,7 +96,7 @@ checkTagProvided() {
 checkLatestVersion() {
   local latest_release_url="$REPO_URL/releases/latest"
   if type "curl" > /dev/null; then
-    TAG=$(curl -Ls -o /dev/null -w %{url_effective} $latest_release_url | grep -oE "[^/]+$" )
+    TAG=$(scurl -Ls -o /dev/null -w %{url_effective} $latest_release_url | grep -oE "[^/]+$" )
   elif type "wget" > /dev/null; then
     TAG=$(wget $latest_release_url --server-response -O /dev/null 2>&1 | awk '/^\s*Location: /{DEST=$2} END{ print DEST}' | grep -oE "[^/]+$")
   fi
@@ -98,7 +110,7 @@ downloadFile() {
   K3D_TMP_ROOT="$(mktemp -dt k3d-binary-XXXXXX)"
   K3D_TMP_FILE="$K3D_TMP_ROOT/$K3D_DIST"
   if type "curl" > /dev/null; then
-    curl -SsL "$DOWNLOAD_URL" -o "$K3D_TMP_FILE"
+    scurl -sL "$DOWNLOAD_URL" -o "$K3D_TMP_FILE"
   elif type "wget" > /dev/null; then
     wget -q -O "$K3D_TMP_FILE" "$DOWNLOAD_URL"
   fi
