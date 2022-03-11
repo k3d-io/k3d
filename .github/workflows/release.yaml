@@ -108,7 +108,7 @@ jobs:
             type=ref,event=pr
             type=sha
           flavor: |
-            suffix: ${{ env.IMAGE_SUFFIX }}
+            suffix=${{ env.IMAGE_SUFFIX }}
       - name: Docker Metadata k3d-proxy
         id: meta-k3d-proxy
         env:
