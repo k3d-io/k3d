@@ -4,8 +4,8 @@ on: push
 
 env:
   IMAGE_REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-  IMAGE_PLATFORMS: ${{ env.IMAGE_PLATFORMS }}
+  IMAGE_BASE_REPO: k3d-io
+  IMAGE_PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
   GO_VERSION: "1.17.x"
   DOCKER_VERSION: "20.10"
     
@@ -70,52 +70,87 @@ jobs:
           registry: ${{ env.IMAGE_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
+      # Gather Docker Metadata
+      - name: Docker Metadata k3d-binary
+        id: meta-k3d-binary
+        env:
+          IMAGE_ID: k3d
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_BASE_REPO }}/${{ env.IMAGE_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          bake-target: docker-metadata-${{ env.IMAGE_ID }}
+          tags: |
+            type=semver,pattern={{major}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+      - name: Docker Metadata k3d-dind
+        id: meta-k3d-dind
+        env:
+          IMAGE_ID: k3d
+          IMAGE_SUFFIX: "-dind"
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_BASE_REPO }}/${{ env.IMAGE_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          bake-target: docker-metadata-${{ env.IMAGE_ID }}${{ env.IMAGE_SUFFIX }}
+          tags: |
+            type=semver,pattern={{major}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+          flavor: |
+            suffix: ${{ env.IMAGE_SUFFIX }}
+      - name: Docker Metadata k3d-proxy
+        id: meta-k3d-proxy
+        env:
+          IMAGE_ID: k3d-proxy
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_BASE_REPO }}/${{ env.IMAGE_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          bake-target: docker-metadata-${{ env.IMAGE_ID }}
+          tags: |
+            type=semver,pattern={{major}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+      - name: Docker Metadata k3d-tools
+        id: meta-k3d-tools
+        env:
+          IMAGE_ID: k3d-tools
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_BASE_REPO }}/${{ env.IMAGE_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          bake-target: docker-metadata-${{ env.IMAGE_ID }}
+          tags: |
+            type=semver,pattern={{major}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
       # Build and Push container images
-      - name: Build/Push k3d binary-only
-        uses: docker/build-push-action@v2
+      - name: Build & Push Images
+        uses: docker/bake-action@v1
         with:
-          file: Dockerfile
-          context: .
-          target: binary-only
-          platforms: ${{ env.IMAGE_PLATFORMS }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-      - name: Build/Push k3d dind
-        uses: docker/build-push-action@v2
-        with:
-          file: Dockerfile
-          context: .
-          target: dind
-          platforms: ${{ env.IMAGE_PLATFORMS }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-      - name: Build/Push k3d-proxy
-        uses: docker/build-push-action@v2
-        with:
-          file: proxy/Dockerfile
-          context: proxy/
-          platforms: ${{ env.IMAGE_PLATFORMS }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-      - name: Build/Push k3d-tools
-        uses: docker/build-push-action@v2
-        with:
-          file: tools/Dockerfile
-          context: tools/
-          platforms: ${{ env.IMAGE_PLATFORMS }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          files: |
+            ./docker-bake.hcl
+            ${{ steps.meta-k3d-binary.outputs.bake-file }}
+            ${{ steps.meta-k3d-dind.outputs.bake-file }}
+            ${{ steps.meta-k3d-proxy.outputs.bake-file }}
+            ${{ steps.meta-k3d-tools.outputs.bake-file }}
+          targets: build
+          push: false
