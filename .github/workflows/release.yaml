@@ -44,7 +44,6 @@ jobs:
   release:
     name: Build & Release
     # Only run on tags
-    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-20.04
     steps:
       # Setup
@@ -142,8 +141,8 @@ jobs:
             type=ref,event=pr
             type=sha
       # Build and Push container images
-      - name: Build & Push Images
-        uses: docker/bake-action@v1
+      - name: Build Images
+        uses: docker/bake-action@v1.7.0
         with:
           files: |
             ./docker-bake.hcl
@@ -151,7 +150,7 @@ jobs:
             ${{ steps.meta-k3d-dind.outputs.bake-file }}
             ${{ steps.meta-k3d-proxy.outputs.bake-file }}
             ${{ steps.meta-k3d-tools.outputs.bake-file }}
-          targets: release
+          targets: binary,dind,proxy,tools
           push: false
       - name: Wait for tests to succeed
         uses: lewagon/wait-on-check-action@v1.1.1
@@ -160,8 +159,9 @@ jobs:
           check-name: "Full Test Suite"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 20
-      - name: Build & Push Images
-        uses: docker/bake-action@v1
+      - name: Push Images
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: docker/bake-action@v1.7.0
         with:
           files: |
             ./docker-bake.hcl
@@ -169,5 +169,5 @@ jobs:
             ${{ steps.meta-k3d-dind.outputs.bake-file }}
             ${{ steps.meta-k3d-proxy.outputs.bake-file }}
             ${{ steps.meta-k3d-tools.outputs.bake-file }}
-          targets: build
+          targets: binary,dind,proxy,tools
           push: false # TODO: change to true on release
