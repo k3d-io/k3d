@@ -1,3 +1,8 @@
+// release group
+group "release" {
+  targets = ["binary", "dind", "proxy", "tools"]
+}
+
 // filled by GitHub Actions
 target "docker-metadata-k3d" {}
 target "docker-metadata-k3d-dind" {}
