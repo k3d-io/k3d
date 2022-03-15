@@ -150,7 +150,7 @@ jobs:
             ${{ steps.meta-k3d-dind.outputs.bake-file }}
             ${{ steps.meta-k3d-proxy.outputs.bake-file }}
             ${{ steps.meta-k3d-tools.outputs.bake-file }}
-          targets: binary,dind,proxy,tools
+          targets: release
           push: false
       - name: Wait for tests to succeed
         uses: lewagon/wait-on-check-action@v1.1.1
@@ -169,5 +169,5 @@ jobs:
             ${{ steps.meta-k3d-dind.outputs.bake-file }}
             ${{ steps.meta-k3d-proxy.outputs.bake-file }}
             ${{ steps.meta-k3d-tools.outputs.bake-file }}
-          targets: binary,dind,proxy,tools
-          push: false # TODO: change to true on release
+          targets: release
+          push: true
