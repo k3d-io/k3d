@@ -409,7 +409,7 @@ Zsh:
 	$ echo "autoload -U compinit; compinit" >> ~/.zshrc
 
 	# To load completions for each session, execute once:
-	$ k3d completion zsh > "${fpath[1]}/k3d"
+	$ k3d completion zsh > "${fpath[1]}/_k3d"
 
 	# You will need to start a new shell for this setup to take effect.
 
