@@ -51,7 +51,7 @@ scurl() {
   # - `--fail` ensures that the command fails if HTTP response is not 2xx.
   # - `--show-error` causes curl to output error messages when it fails (when
   #   also invoked with -s|--silent).
-  curl --proto =https --tlsv1.2 --fail --show-error "$@"
+  curl --proto "=https" --tlsv1.2 --fail --show-error "$@"
 }
 
 # verifySupported checks that the os/arch combination is supported for
