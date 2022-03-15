@@ -46,9 +46,9 @@ func GatherEnvironmentInfo(ctx context.Context, runtime runtimes.Runtime, cluste
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		go NodeDelete(ctx, runtime, toolsNode, k3d.NodeDeleteOpts{SkipLBUpdate: true})
-	}()
+	if err := NodeDelete(ctx, runtime, toolsNode, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
+		l.Log().Warnf("Failed to delete tools node '%s'. This is not critical, but may lead to errors down the road. Error: %v", toolsNode.Name, err)
+	}
 
 	if cluster.Network.Name != "host" {
 		hostIP, err := GetHostIP(ctx, runtime, cluster)
