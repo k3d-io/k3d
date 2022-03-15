@@ -57,6 +57,10 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	hostConfig := docker.HostConfig{
 		Init:       &init,
 		ExtraHosts: node.ExtraHosts,
+		// Explicitly require bridge networking. Podman incorrectly uses
+		// slirp4netns when running rootless, therefore for rootless podman to
+		// work, this must be set.
+		NetworkMode: "bridge",
 	}
 	networkingConfig := network.NetworkingConfig{}
 

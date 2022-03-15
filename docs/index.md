@@ -108,6 +108,12 @@ kubectl get nodes
     k3d kubeconfig merge mycluster --kubeconfig-switch-context
     ```
 
+## Connect
+
+1. Join the Rancher community on slack via [slack.rancher.io](https://slack.rancher.io/)
+2. Go to [rancher-users.slack.com](https://rancher-users.slack.com) and join our channel #k3d
+3. Start chatting
+
 ## Related Projects
 
 - [vscode-k3d](https://github.com/inercia/vscode-k3d/): VSCode Extension to handle k3d clusters from within VSCode

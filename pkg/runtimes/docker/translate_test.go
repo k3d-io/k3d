@@ -76,7 +76,8 @@ func TestTranslateNodeToContainer(t *testing.T) {
 			},
 		},
 		HostConfig: container.HostConfig{
-			Binds: []string{"/test:/tmp/test"},
+			Binds:       []string{"/test:/tmp/test"},
+			NetworkMode: "bridge",
 			RestartPolicy: container.RestartPolicy{
 				Name: "unless-stopped",
 			},
