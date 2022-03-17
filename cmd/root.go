@@ -42,6 +42,7 @@ import (
 	"github.com/k3d-io/k3d/v5/cmd/image"
 	"github.com/k3d-io/k3d/v5/cmd/kubeconfig"
 	"github.com/k3d-io/k3d/v5/cmd/node"
+	plugin "github.com/k3d-io/k3d/v5/cmd/plugin"
 	"github.com/k3d-io/k3d/v5/cmd/registry"
 	cliutil "github.com/k3d-io/k3d/v5/cmd/util"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
@@ -100,6 +101,7 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 		cfg.NewCmdConfig(),
 		registry.NewCmdRegistry(),
 		debug.NewCmdDebug(),
+		plugin.NewCmdPlugin(),
 		&cobra.Command{
 			Use:   "runtime-info",
 			Short: "Show runtime information",
