@@ -1,27 +1,187 @@
-name: Release
+name: Test & Release
 
-on: workflow_dispatch
+on:
+  - push
+  - workflow_dispatch
+
+env:
+  IMAGE_REGISTRY: ghcr.io
+  IMAGE_BASE_REPO: k3d-io
+  IMAGE_PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
+  GO_VERSION: "1.17.x"
+  DOCKER_VERSION: "20.10"
     
 jobs:
-  release:
+  test-suite:
+    name: Full Test Suite
     runs-on: ubuntu-20.04
     steps:
+      # Setup
       - uses: actions/checkout@v2
       - name: Setup Go environment
         uses: actions/setup-go@v2
         with:
-          go-version: "1.17.x"
+          go-version: "${{ env.GO_VERSION }}"
       - name: Setup Docker
         uses: docker-practice/actions-setup-docker@master
         with:
-          docker_version: "20.10"
+          docker_version: "${{ env.DOCKER_VERSION }}"
       - name: Setup CI Tools
         run: make ci-setup
-      - name: lint
+      # Code Check
+      - name: Run Static Analysis
         run: make lint
-      - name: test
+      # Tests
+      - name: Run Go Tests
         run: make test
-      - name: e2e
+      - name: Run E2E Tests
+        timeout-minutes: 20
         run: make e2e
-      - name: build
+      # Builds
+      - name: Test Platform Builds
         run: make build-cross
+      - name: Test Helper Image Builds
+        run: make build-helper-images
+
+  release:
+    name: Build & Release
+    # Only run on tags
+    runs-on: ubuntu-20.04
+    steps:
+      # Setup
+      - uses: actions/checkout@v2
+      - name: Setup Go environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: "${{ env.GO_VERSION }}"
+      - name: Setup CI Tools
+        run: make ci-setup
+      # Go Build
+      - name: Build k3d Binary
+        run: make build-cross
+      # Container Image Setup
+      - name: Setup Docker
+        uses: docker-practice/actions-setup-docker@master
+        with:
+          docker_version: "${{ env.DOCKER_VERSION }}"
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.IMAGE_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      # Gather Docker Metadata
+      - name: Docker Metadata k3d-binary
+        id: meta-k3d-binary
+        env:
+          IMAGE_ID: k3d
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_BASE_REPO }}/${{ env.IMAGE_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          bake-target: docker-metadata-${{ env.IMAGE_ID }}
+          tags: |
+            type=semver,pattern={{major}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+      - name: Docker Metadata k3d-dind
+        id: meta-k3d-dind
+        env:
+          IMAGE_ID: k3d
+          IMAGE_SUFFIX: "-dind"
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_BASE_REPO }}/${{ env.IMAGE_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          bake-target: docker-metadata-${{ env.IMAGE_ID }}${{ env.IMAGE_SUFFIX }}
+          tags: |
+            type=semver,pattern={{major}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+          flavor: |
+            suffix=${{ env.IMAGE_SUFFIX }}
+      - name: Docker Metadata k3d-proxy
+        id: meta-k3d-proxy
+        env:
+          IMAGE_ID: k3d-proxy
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_BASE_REPO }}/${{ env.IMAGE_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          bake-target: docker-metadata-${{ env.IMAGE_ID }}
+          tags: |
+            type=semver,pattern={{major}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+      - name: Docker Metadata k3d-tools
+        id: meta-k3d-tools
+        env:
+          IMAGE_ID: k3d-tools
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_BASE_REPO }}/${{ env.IMAGE_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          bake-target: docker-metadata-${{ env.IMAGE_ID }}
+          tags: |
+            type=semver,pattern={{major}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+      - name: Merge Metadata Bake Definitions
+        run: |
+          INPUT=(${{ steps.meta-k3d-binary.outputs.bake-file }} ${{ steps.meta-k3d-dind.outputs.bake-file }} ${{ steps.meta-k3d-proxy.outputs.bake-file }} ${{ steps.meta-k3d-tools.outputs.bake-file }})
+          OUT_FILE=./bake-metadata.json
+          OUT_FILE_TMP=./bake-metadata-tmp.json
+
+          cat << EOF > $OUT_FILE
+          {
+            "target": {}
+          }
+          EOF
+
+          for file in "${INPUT[@]}"; do
+            cat $OUT_FILE > $OUT_FILE_TMP
+            jq -s '.[0] * .[1]' $OUT_FILE_TMP $file > $OUT_FILE
+          done
+
+          rm "$OUT_FILE_TMP"
+      # Build and Push container images
+      - name: Build Images
+        uses: docker/bake-action@v1.7.0
+        with:
+          files: |
+            ./docker-bake.hcl
+            ./bake-metadata.json
+          targets: release
+          push: false
+      - name: Wait for tests to succeed
+        uses: lewagon/wait-on-check-action@v1.1.1
+        with:
+          ref: ${{ github.ref }}
+          check-name: "Full Test Suite"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 20
+      - name: Push Images
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: docker/bake-action@v1.7.0
+        with:
+          files: |
+            ./docker-bake.hcl
+            ./bake-metadata.json
+          targets: release
+          push: true
