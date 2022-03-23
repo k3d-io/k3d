@@ -1,6 +1,8 @@
 name: Test & Release
 
-on: push
+on:
+  - push
+  - workflow_dispatch
 
 env:
   IMAGE_REGISTRY: ghcr.io
