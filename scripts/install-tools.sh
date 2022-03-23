@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 
 # initArch discovers the architecture for this system.
 initArch() {
