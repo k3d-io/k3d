@@ -140,16 +140,31 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=sha
+      - name: Merge Metadata Bake Definitions
+        run: |
+          INPUT=(${{ steps.meta-k3d-binary.outputs.bake-file }} ${{ steps.meta-k3d-dind.outputs.bake-file }} ${{ steps.meta-k3d-proxy.outputs.bake-file }} ${{ steps.meta-k3d-tools.outputs.bake-file }})
+          OUT_FILE=./bake-metadata.json
+          OUT_FILE_TMP=./bake-metadata-tmp.json
+
+          cat << EOF > $OUT_FILE
+          {
+            "target": {}
+          }
+          EOF
+
+          for file in "${INPUT[@]}"; do
+            cat $OUT_FILE > $OUT_FILE_TMP
+            jq -s '.[0] * .[1]' $OUT_FILE_TMP $file > $OUT_FILE
+          done
+
+          rm "$OUT_FILE_TMP"
       # Build and Push container images
       - name: Build Images
         uses: docker/bake-action@v1.7.0
         with:
           files: |
             ./docker-bake.hcl
-            ${{ steps.meta-k3d-binary.outputs.bake-file }}
-            ${{ steps.meta-k3d-dind.outputs.bake-file }}
-            ${{ steps.meta-k3d-proxy.outputs.bake-file }}
-            ${{ steps.meta-k3d-tools.outputs.bake-file }}
+            ./bake-metadata.json
           targets: release
           push: false
       - name: Wait for tests to succeed
@@ -165,9 +180,6 @@ jobs:
         with:
           files: |
             ./docker-bake.hcl
-            ${{ steps.meta-k3d-binary.outputs.bake-file }}
-            ${{ steps.meta-k3d-dind.outputs.bake-file }}
-            ${{ steps.meta-k3d-proxy.outputs.bake-file }}
-            ${{ steps.meta-k3d-tools.outputs.bake-file }}
+            ./bake-metadata.json
           targets: release
           push: true
