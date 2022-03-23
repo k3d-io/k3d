@@ -30,11 +30,11 @@ endif
 K3D_IMAGE_TAG := $(GIT_TAG:v%=%)
 
 # get latest k3s version: grep the tag and replace + with - (difference between git and dockerhub tags)
-K3S_TAG		:= $(shell curl --silent "https://update.k3s.io/v1-release/channels/stable" | egrep -o '/v[^ ]+"' | sed -E 's/\/|\"//g' | sed -E 's/\+/\-/')
+K3S_TAG		:= $(shell curl --silent --retry 3 "https://update.k3s.io/v1-release/channels/stable" | egrep -o '/v[^ ]+"' | sed -E 's/\/|\"//g' | sed -E 's/\+/\-/')
 
 ifeq ($(K3S_TAG),)
 $(warning K3S_TAG undefined: couldn't get latest k3s image tag!)
-$(warning Output of curl: $(shell curl --silent "https://update.k3s.io/v1-release/channels/stable"))
+$(warning Output of curl: $(shell curl "https://update.k3s.io/v1-release/channels/stable"))
 $(error exiting)
 endif
 
@@ -228,6 +228,4 @@ ci-setup:
 	$(GO) get $(PKG_GOX)
 
 	@echo "Installing kubectl..."
-	curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
-	chmod +x ./kubectl
-	mv ./kubectl /usr/local/bin/kubectl
+	./scripts/install-tools.sh kubectl
