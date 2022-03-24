@@ -43,22 +43,13 @@ jobs:
       - name: Test Helper Image Builds
         run: make build-helper-images
 
-  release:
-    name: Build & Release
+  release-images:
+    name: Build & Release Images
     # Only run on tags
     runs-on: ubuntu-20.04
     steps:
       # Setup
       - uses: actions/checkout@v2
-      - name: Setup Go environment
-        uses: actions/setup-go@v2
-        with:
-          go-version: "${{ env.GO_VERSION }}"
-      - name: Setup CI Tools
-        run: make ci-setup
-      # Go Build
-      - name: Build k3d Binary
-        run: make build-cross
       # Container Image Setup
       - name: Setup Docker
         uses: docker-practice/actions-setup-docker@master
@@ -185,3 +176,47 @@ jobs:
             ./bake-metadata.json
           targets: release
           push: true
+
+  release-github:
+    name: Build & Release Binaries
+    # Only run on tags
+    runs-on: ubuntu-20.04
+    steps:
+      # Setup
+      - uses: actions/checkout@v2
+      - name: Setup Go environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: "${{ env.GO_VERSION }}"
+      - name: Setup CI Tools
+        run: make ci-setup
+      # Go Build
+      - name: Build k3d Binary
+        run: make build-cross
+      # Wait
+      - name: Wait for tests to succeed
+        uses: lewagon/wait-on-check-action@v1.1.1
+        with:
+          ref: ${{ github.ref }}
+          check-name: "Full Test Suite"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 20
+      # Create Git Release
+      - name: Extract Tag from Ref
+        if: startsWith(github.ref, 'refs/tags/')
+        id: tag
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        shell: bash
+      - uses: apexskier/github-semver-parse@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        id: semver
+        with:
+          version: ${{ steps.tag.outputs.VERSION }}
+      - name: Git Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: anton-yurchenko/git-release@v4
+        env:
+          PRE_RELEASE: "${{ steps.semver.outputs.prerelease }}"
+          ALLOW_EMPTY_CHANGELOG: "false"
+        with:
+          args: _dist/*
