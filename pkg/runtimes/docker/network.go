@@ -256,8 +256,14 @@ func GetGatewayIP(ctx context.Context, network string) (net.IP, error) {
 	}
 
 	if len(bridgeNetwork.IPAM.Config) > 0 {
-		gatewayIP := net.ParseIP(bridgeNetwork.IPAM.Config[0].Gateway)
-		return gatewayIP, nil
+		if bridgeNetwork.IPAM.Config[0].Gateway == "" {
+			return nil, fmt.Errorf("no gateway defined for network %s", bridgeNetwork.Name)
+		}
+		gatewayIP, err := netaddr.ParseIP(bridgeNetwork.IPAM.Config[0].Gateway)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get gateway of network %s: %w", bridgeNetwork.Name, err)
+		}
+		return gatewayIP.IPAddr().IP, nil
 	} else {
 		return nil, fmt.Errorf("Failed to get IPAM Config for network %s", bridgeNetwork.Name)
 	}
