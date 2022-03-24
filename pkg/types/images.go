@@ -34,10 +34,10 @@ import (
 const DefaultK3sImageRepo = "docker.io/rancher/k3s"
 
 // DefaultLBImageRepo defines the default cluster load balancer image
-const DefaultLBImageRepo = "docker.io/rancher/k3d-proxy"
+const DefaultLBImageRepo = "ghcr.io/k3d-io/k3d-proxy"
 
 // DefaultToolsImageRepo defines the default image used for the tools container
-const DefaultToolsImageRepo = "docker.io/rancher/k3d-tools"
+const DefaultToolsImageRepo = "ghcr.io/k3d-io/k3d-tools"
 
 // DefaultRegistryImageRepo defines the default image used for the k3d-managed registry
 const DefaultRegistryImageRepo = "docker.io/library/registry"

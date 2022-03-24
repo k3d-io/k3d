@@ -3,7 +3,7 @@
 Podman has an [Docker API compatibility layer](https://podman.io/blogs/2020/06/29/podman-v2-announce.html#restful-api). k3d uses the Docker API and is compatible with Podman v4 and higher.
 
 !!! important "Podman support is experimental"
-    k3d is not guaranteed to work with Podman. If you find a bug, do help by [filing an issue](https://github.com/rancher/k3d/issues/new?labels=bug&template=bug_report.md&title=%5BBUG%5D+Podman)
+    k3d is not guaranteed to work with Podman. If you find a bug, do help by [filing an issue](https://github.com/k3d-io/k3d/issues/new?labels=bug&template=bug_report.md&title=%5BBUG%5D+Podman)
 
 ## Using Podman
 
