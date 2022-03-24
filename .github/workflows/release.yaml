@@ -213,6 +213,7 @@ jobs:
         with:
           version: ${{ steps.tag.outputs.VERSION }}
       - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
