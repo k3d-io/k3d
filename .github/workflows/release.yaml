@@ -221,7 +221,7 @@ jobs:
           artifacts: _dist/*
           discussionCategory: releases
           generateReleaseNotes: true
-          prerelease: ${{ steps.semver.outputs.prerelease }}
+          prerelease: ${{ steps.semver.outputs.prerelease != '' }}
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
