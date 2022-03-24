@@ -212,11 +212,16 @@ jobs:
         id: semver
         with:
           version: ${{ steps.tag.outputs.VERSION }}
-      - name: Git Release
+      - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: anton-yurchenko/git-release@v4
-        env:
-          PRE_RELEASE: "${{ steps.semver.outputs.prerelease }}"
-          ALLOW_EMPTY_CHANGELOG: "false"
+        uses: ncipollo/release-action@v1
         with:
-          args: _dist/*
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          artifacts: _dist/*
+          discussionCategory: releases
+          generateReleaseNotes: true
+          prerelease: ${{ steps.semver.outputs.prerelease != '' }}
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+

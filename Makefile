@@ -135,12 +135,12 @@ build-docker-%:
 build-helper-images: build-proxy-image build-tools-image
 
 build-proxy-image:
-	@echo "Building docker image rancher/k3d-proxy:$(K3D_IMAGE_TAG)"
-	DOCKER_BUILDKIT=1 docker build --quiet --no-cache proxy/ -f proxy/Dockerfile -t rancher/k3d-proxy:$(K3D_IMAGE_TAG)
+	@echo "Building docker image ghcr.io/k3d-io/k3d-proxy:$(K3D_IMAGE_TAG)"
+	DOCKER_BUILDKIT=1 docker build --quiet --no-cache proxy/ -f proxy/Dockerfile -t ghcr.io/k3d-io/k3d-proxy:$(K3D_IMAGE_TAG)
 
 build-tools-image:
-	@echo "Building docker image rancher/k3d-tools:$(K3D_IMAGE_TAG)"
-	DOCKER_BUILDKIT=1 docker build --quiet --no-cache tools/ -f tools/Dockerfile -t rancher/k3d-tools:$(K3D_IMAGE_TAG) --build-arg GIT_TAG=$(GIT_TAG)
+	@echo "Building docker image ghcr.io/k3d-io/k3d-tools:$(K3D_IMAGE_TAG)"
+	DOCKER_BUILDKIT=1 docker build --quiet --no-cache tools/ -f tools/Dockerfile -t ghcr.io/k3d-io/k3d-tools:$(K3D_IMAGE_TAG) --build-arg GIT_TAG=$(GIT_TAG)
 
 ##############################
 ########## Cleaning ##########

@@ -20,13 +20,13 @@ On this page we'll try to give an overview of all the moving bits and pieces in 
   - all function calls within [`cmd/`](https://github.com/k3d-io/k3d/tree/main/cmd) that do non-trivial things are imported from here
   - this (or rather sub-packages) is what other projects would import as a module to work with k3d without using the CLI
 - [`proxy/`](https://github.com/k3d-io/k3d/tree/main/proxy)
-  - configuration to build the [`rancher/k3d-proxy`](https://hub.docker.com/r/rancher/k3d-proxy/) container image which is used as a loadbalancer/proxy in front of (almost) every k3d cluster
+  - configuration to build the [`k3d-io/k3d-proxy`](https://github.com/k3d-io/k3d/pkgs/container/k3d-proxy) container image which is used as a loadbalancer/proxy in front of (almost) every k3d cluster
   - this is basically just a combination of NGINX with confd and some k3d-specific configuration details
 - [`tests/`](https://github.com/k3d-io/k3d/tree/main/tests)
   - a set of bash scripts used for end-to-end (E2E) tests of k3d
   - mostly used for all the functionality of the k3d CLI which cannot be tested using Go unit tests
 - [`tools/`](https://github.com/k3d-io/k3d/tree/main/tools)
-  - sub-module used to build the [`rancher/k3d-tools`](https://hub.docker.com/r/rancher/k3d-tools) container image which supports some k3d functionality like `k3d image import`
+  - sub-module used to build the [`k3d-io/k3d-tools`](https://github.com/k3d-io/k3d/pkgs/container/k3d-tools) container image which supports some k3d functionality like `k3d image import`
 - [`vendor/`](https://github.com/k3d-io/k3d/tree/main/vendor)
   - result of `go mod vendor`, which contains all dependencies of k3d
 - [`version/`](https://github.com/k3d-io/k3d/tree/main/version)
@@ -49,7 +49,7 @@ On this page we'll try to give an overview of all the moving bits and pieces in 
     - interface and implementations of runtimes that power k3d (currently, that's only Docker)
     - functions in [`client/`](https://github.com/k3d-io/k3d/tree/main/pkg/client) eventually call runtime functions to "materialize" nodes and clusters
   - [`tools/`](https://github.com/k3d-io/k3d/tree/main/pkg/tools)
-    - functions eventually calling the [`k3d-tools`](https://hub.docker.com/r/rancher/k3d-tools) container (see [`tools/`](https://github.com/k3d-io/k3d/tree/main/tools) in the repo root)
+    - functions eventually calling the [`k3d-tools`](https://github.com/k3d-io/k3d/pkgs/container/k3d-tools) container (see [`tools/`](https://github.com/k3d-io/k3d/tree/main/tools) in the repo root)
   - [`types/`](https://github.com/k3d-io/k3d/tree/main/pkg/types)
     - definition of all k3d primitives and many other details and defaults
     - e.g. contains the definition of a `Node` or a `Cluster` in k3d
@@ -62,7 +62,7 @@ By default, every k3d cluster consists of at least 2 containers (nodes):
 
 1. (optional, but default and strongly recommended) loadbalancer
 
-   - image: [`rancher/k3d-proxy`](https://hub.docker.com/r/rancher/k3d-proxy/), built from [`proxy/`](https://github.com/k3d-io/k3d/tree/main/proxy)
+   - image: [`ghcr.io/k3d-io/k3d-proxy`](https://github.com/k3d-io/k3d/pkgs/container/k3d-proxy), built from [`proxy/`](https://github.com/k3d-io/k3d/tree/main/proxy)
    - purpose: proxy and load balance requests from the outside (i.e. most of the times your local host) to the cluster
      - by default, it e.g. proxies all the traffic for the Kubernetes API to port `6443` (default listening port of K3s) to all the server nodes in the cluster
      - can be used for multiple port-mappings to one or more nodes in your cluster
@@ -91,16 +91,12 @@ The k3d repository mainly leverages the following two CI systems:
 - GitHub Actions
   - 2 workflows in <https://github.com/k3d-io/k3d/tree/main/.github/workflows> to push the artifact to AUR (Arch Linux User Repository)
   - logs/history can be seen in the Actions tab: <https://github.com/k3d-io/k3d/actions>
-- DroneCI
-  - a set of pipelines in a single file: <https://github.com/k3d-io/k3d/blob/main/.drone.yml>
   - static code analysis
   - build
   - tests
   - docker builds + pushes
   - render + push docs
   - (pre-) release to GitHub
-  - `push` events end up here (also does the releases, when a tag is pushed): <https://drone-publish.rancher.io/rancher/k3d>
-  - `pr`s end up here: <https://drone-pr.rancher.io/rancher/k3d>
 
 ## Documentation
 
