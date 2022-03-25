@@ -25,6 +25,7 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -376,6 +377,18 @@ ClusterCreatOpts:
 		cluster.Token = GenerateClusterToken()
 	}
 	clusterCreateOpts.GlobalLabels[k3d.LabelClusterToken] = cluster.Token
+
+	/*
+	 * Extra Labels
+	 */
+	if len(clusterCreateOpts.HostAliases) > 0 {
+		hostAliasesJSON, err := json.Marshal(clusterCreateOpts.HostAliases)
+		if err != nil {
+			return fmt.Errorf("error marshalling hostaliases: %w", err)
+		}
+
+		clusterCreateOpts.GlobalLabels[k3d.LabelClusterStartHostAliases] = string(hostAliasesJSON)
+	}
 
 	/*
 	 * Nodes
@@ -760,6 +773,22 @@ func populateClusterFieldsFromLabels(cluster *k3d.Cluster) error {
 	}
 
 	return nil
+}
+
+func GetClusterStartOptsFromLabels(cluster *k3d.Cluster) (k3d.ClusterStartOpts, error) {
+	clusterStartOpts := k3d.ClusterStartOpts{
+		HostAliases: []k3d.HostAlias{},
+	}
+	for _, node := range cluster.Nodes {
+		if len(clusterStartOpts.HostAliases) == 0 {
+			if hostAliasesJSON, ok := node.RuntimeLabels[k3d.LabelClusterStartHostAliases]; ok {
+				if err := json.Unmarshal([]byte(hostAliasesJSON), &clusterStartOpts.HostAliases); err != nil {
+					return clusterStartOpts, fmt.Errorf("error unmarshalling hostaliases JSON from node %s label: %w", node.Name, err)
+				}
+			}
+		}
+	}
+	return clusterStartOpts, nil
 }
 
 var ClusterGetNoNodesFoundError = errors.New("No nodes found for given cluster")

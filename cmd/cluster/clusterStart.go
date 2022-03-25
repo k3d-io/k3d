@@ -58,6 +58,17 @@ func NewCmdClusterStart() *cobra.Command {
 						l.Log().Fatalf("failed to gather info about cluster environment: %v", err)
 					}
 					startClusterOpts.EnvironmentInfo = envInfo
+
+					// Get pre-defined clusterStartOpts from cluster
+					fetchedClusterStartOpts, err := client.GetClusterStartOptsFromLabels(c)
+					if err != nil {
+						l.Log().Fatalf("failed to get cluster start opts from cluster labels: %v", err)
+					}
+
+					// override only a few clusterStartOpts from fetched opts
+					startClusterOpts.HostAliases = fetchedClusterStartOpts.HostAliases
+
+					// start the cluster
 					if err := client.ClusterStart(cmd.Context(), runtimes.SelectedRuntime, c, startClusterOpts); err != nil {
 						l.Log().Fatalln(err)
 					}
