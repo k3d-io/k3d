@@ -35,7 +35,6 @@ import (
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
-	"github.com/k3d-io/k3d/v5/version"
 )
 
 // NewCmdNodeCreate returns a new cobra command
@@ -77,7 +76,7 @@ func NewCmdNodeCreate() *cobra.Command {
 		l.Log().Fatalln("Failed to register flag completion for '--cluster'", err)
 	}
 
-	cmd.Flags().StringP("image", "i", fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.K3sVersion), "Specify k3s image used for the node(s)")
+	cmd.Flags().StringP("image", "i", "", "Specify k3s image used for the node(s) (default: copied from existing node)")
 	cmd.Flags().String("memory", "", "Memory limit imposed on the node [From docker]")
 
 	cmd.Flags().BoolVar(&createNodeOpts.Wait, "wait", true, "Wait for the node(s) to be ready before returning.")
