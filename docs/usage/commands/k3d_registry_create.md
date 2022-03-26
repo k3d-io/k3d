@@ -13,11 +13,12 @@ k3d registry create NAME [flags]
 ### Options
 
 ```
-  -h, --help                   help for create
-  -i, --image string           Specify image used for the registry (default "docker.io/library/registry:2")
-      --no-help                Disable the help text (How-To use the registry)
-  -p, --port [HOST:]HOSTPORT   Select which port the registry should be listening on on your machine (localhost) (Format: [HOST:]HOSTPORT)
-                                - Example: `k3d registry create --port 0.0.0.0:5111` (default "random")
+      --default-network string   Specify the network connected to the registry (default "bridge")
+  -h, --help                     help for create
+  -i, --image string             Specify image used for the registry (default "docker.io/library/registry:2")
+      --no-help                  Disable the help text (How-To use the registry)
+  -p, --port [HOST:]HOSTPORT     Select which port the registry should be listening on on your machine (localhost) (Format: [HOST:]HOSTPORT)
+                                  - Example: `k3d registry create --port 0.0.0.0:5111` (default "random")
 ```
 
 ### Options inherited from parent commands
