@@ -1,6 +1,5 @@
 # [![k3d](docs/static/img/k3d_logo_black_blue.svg)](https://k3d.io/)
 
-[![Build Status](https://img.shields.io/drone/build/rancher/k3d/main?logo=drone&server=https%3A%2F%2Fdrone-publish.rancher.io&style=flat-square)](https://drone-publish.rancher.io/rancher/k3d)
 [![License](https://img.shields.io/github/license/k3d-io/k3d?style=flat-square)](./LICENSE.md)
 ![Downloads](https://img.shields.io/github/downloads/k3d-io/k3d/total.svg?style=flat-square)
 
