@@ -160,7 +160,9 @@ jobs:
             ./bake-metadata.json
           targets: release
           push: false
+      # Wait for tests to pass and push images (ONLY ON TAG)
       - name: Wait for tests to succeed
+        if: startsWith(github.ref, 'refs/tags/')
         uses: lewagon/wait-on-check-action@v1.1.1
         with:
           ref: ${{ github.ref }}
@@ -193,8 +195,9 @@ jobs:
       # Go Build
       - name: Build k3d Binary
         run: make build-cross
-      # Wait
+      # Wait for tests to pass and create release (ONLY ON TAG)
       - name: Wait for tests to succeed
+        if: startsWith(github.ref, 'refs/tags/')
         uses: lewagon/wait-on-check-action@v1.1.1
         with:
           ref: ${{ github.ref }}

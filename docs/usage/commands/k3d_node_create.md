@@ -15,7 +15,7 @@ k3d node create NAME [flags]
 ```
   -c, --cluster string           Cluster URL or k3d cluster name to connect to. (default "k3s-default")
   -h, --help                     help for create
-  -i, --image string             Specify k3s image used for the node(s) (default "docker.io/rancher/k3s:v1.21.7-k3s1")
+  -i, --image string             Specify k3s image used for the node(s) (default: copied from existing node)
       --k3s-arg stringArray      Additional args passed to k3d command
       --k3s-node-label strings   Specify k3s node labels in format "foo=bar"
       --memory string            Memory limit imposed on the node [From docker]
