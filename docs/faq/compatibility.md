@@ -7,6 +7,28 @@ We test a full cluster lifecycle with different [K3s channels](https://update.k3
 
 ## Releases
 
+### v5.4.0 - 26.03.2022
+
+Test Workflow: <https://github.com/k3d-io/k3d/actions/runs/2044325827>
+
+#### Docker
+
+* 20.10.5
+* 20.10.12
+
+**Expected to Fail** with the following versions:
+
+* <= 20.10.4 (due to runc, see <https://github.com/k3d-io/k3d/issues/807>)
+
+#### K3s
+
+* Channel v1.23
+* Channel v1.22
+
+**Expected to Fail** with the following versions:
+
+* <= v1.18 (due to not included, but expected CoreDNS in K3s)
+
 ### v5.3.0 - 03.02.2022
 
 #### Docker

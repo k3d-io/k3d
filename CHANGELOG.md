@@ -49,6 +49,30 @@
 
 - DroneCI Test & Release Pipeline
 
+### Compatibility
+
+This release was [automatically tested](https://github.com/k3d-io/k3d/actions/runs/2044325827) with the following setups:
+
+#### Docker
+
+- 20.10.5
+- 20.10.12
+
+**Expected to Fail** with the following versions:
+
+- <= 20.10.4 (due to runc, see <https://github.com/rancher/k3d/issues/807>)
+
+#### K3s
+
+We test a full cluster lifecycle with different [K3s channels](https://update.k3s.io/v1-release/channels), meaning that the following list refers to the current latest version released under the given channel:
+
+- Channel v1.23
+- Channel v1.22
+
+**Expected to Fail** with the following versions:
+
+- <= v1.18 (due to not included, but expected CoreDNS in K3s)
+
 ## v5.3.0 - 03.02.2022
 
 **Note:** Now trying to follow a standard scheme defined by <https://keepachangelog.com/en/1.0.0/>
