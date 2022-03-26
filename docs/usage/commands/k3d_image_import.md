@@ -7,16 +7,16 @@ Import image(s) from docker into k3d cluster(s).
 Import image(s) from docker into k3d cluster(s).
 
 If an IMAGE starts with the prefix 'docker.io/', then this prefix is stripped internally.
-That is, 'docker.io/rancher/k3d-tools:latest' is treated as 'rancher/k3d-tools:latest'.
+That is, 'docker.io/k3d-io/k3d-tools:latest' is treated as 'k3d-io/k3d-tools:latest'.
 
 If an IMAGE starts with the prefix 'library/' (or 'docker.io/library/'), then this prefix is stripped internally.
 That is, 'library/busybox:latest' (or 'docker.io/library/busybox:latest') are treated as 'busybox:latest'.
 
 If an IMAGE does not have a version tag, then ':latest' is assumed.
-That is, 'rancher/k3d-tools' is treated as 'rancher/k3d-tools:latest'.
+That is, 'k3d-io/k3d-tools' is treated as 'k3d-io/k3d-tools:latest'.
 
 A file ARCHIVE always takes precedence.
-So if a file './rancher/k3d-tools' exists, k3d will try to import it instead of the IMAGE of the same name.
+So if a file './k3d-io/k3d-tools' exists, k3d will try to import it instead of the IMAGE of the same name.
 
 ```
 k3d image import [IMAGE | ARCHIVE [IMAGE | ARCHIVE...]] [flags]
@@ -29,7 +29,7 @@ k3d image import [IMAGE | ARCHIVE [IMAGE | ARCHIVE...]] [flags]
   -h, --help                  help for import
   -k, --keep-tarball          Do not delete the tarball containing the saved images from the shared volume
   -t, --keep-tools            Do not delete the tools node after import
-  -m, --mode string           Which method to use to import images into the cluster [auto, direct, tools]. See https://k3d.io/usage/guides/importing_images/ (default "auto")
+  -m, --mode string           Which method to use to import images into the cluster [auto, direct, tools]. See https://k3d.io/usage/guides/importing_images/ (default "tools-node")
 ```
 
 ### Options inherited from parent commands

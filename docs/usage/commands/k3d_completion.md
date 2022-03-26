@@ -8,40 +8,41 @@ To load completions:
 
 Bash:
 
- $ source <(k3d completion bash)
+	$ source <(k3d completion bash)
 
- # To load completions for each session, execute once:
- # Linux:
- $ k3d completion bash > /etc/bash_completion.d/k3d
- # macOS:
- $ k3d completion bash > /usr/local/etc/bash_completion.d/k3d
+	# To load completions for each session, execute once:
+	# Linux:
+	$ k3d completion bash > /etc/bash_completion.d/k3d
+	# macOS:
+	$ k3d completion bash > /usr/local/etc/bash_completion.d/k3d
 
 Zsh:
 
- # If shell completion is not already enabled in your environment,
- # you will need to enable it.  You can execute the following once:
+	# If shell completion is not already enabled in your environment,
+	# you will need to enable it.  You can execute the following once:
 
- $ echo "autoload -U compinit; compinit" >> ~/.zshrc
+	$ echo "autoload -U compinit; compinit" >> ~/.zshrc
 
- # To load completions for each session, execute once:
- $ k3d completion zsh > "${fpath[1]}/_k3d"
+	# To load completions for each session, execute once:
+	$ k3d completion zsh > "${fpath[1]}/_k3d"
 
- # You will need to start a new shell for this setup to take effect.
+	# You will need to start a new shell for this setup to take effect.
 
 fish:
 
- $ k3d completion fish | source
+	$ k3d completion fish | source
 
- # To load completions for each session, execute once:
- $ k3d completion fish > ~/.config/fish/completions/k3d.fish
+	# To load completions for each session, execute once:
+	$ k3d completion fish > ~/.config/fish/completions/k3d.fish
 
 PowerShell:
 
- PS> k3d completion powershell | Out-String | Invoke-Expression
+	PS> k3d completion powershell | Out-String | Invoke-Expression
 
- # To load completions for every new session, run:
- PS> k3d completion powershell > k3d.ps1
- # and source this file from your PowerShell profile.
+	# To load completions for every new session, run:
+	PS> k3d completion powershell > k3d.ps1
+	# and source this file from your PowerShell profile.
+
 
 ```
 k3d completion SHELL
@@ -63,4 +64,5 @@ k3d completion SHELL
 
 ### SEE ALSO
 
-* [k3d](k3d.md)  - <https://k3d.io/> -> Run k3s in Docker!
+* [k3d](k3d.md)	 - https://k3d.io/ -> Run k3s in Docker!
+

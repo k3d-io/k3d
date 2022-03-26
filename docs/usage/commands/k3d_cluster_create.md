@@ -28,6 +28,8 @@ k3d cluster create NAME [flags]
                                                                         - Example: `k3d cluster create --agents 2 -e "HTTP_PROXY=my.proxy.com@server:0" -e "SOME_KEY=SOME_VAL@server:0"`
       --gpus string                                                    GPU devices to add to the cluster node containers ('all' to pass all GPUs) [From docker]
   -h, --help                                                           help for create
+      --host-alias ip:host[,host,...]                                  Add ip:host[,host,...] mappings
+      --host-pid-mode                                                  Enable host pid mode of server(s) and agent(s)
   -i, --image string                                                   Specify k3s image that you want to use for the nodes
       --k3s-arg ARG@NODEFILTER[;@NODEFILTER]                           Additional args passed to k3s command (Format: ARG@NODEFILTER[;@NODEFILTER])
                                                                         - Example: `k3d cluster create --k3s-arg "--disable=traefik@server:0"
