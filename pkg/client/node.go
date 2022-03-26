@@ -45,6 +45,7 @@ import (
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes/docker"
 	runtimeTypes "github.com/k3d-io/k3d/v5/pkg/runtimes/types"
+	"github.com/k3d-io/k3d/v5/version"
 
 	runtimeErrors "github.com/k3d-io/k3d/v5/pkg/runtimes/errors"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
@@ -282,6 +283,10 @@ func NodeAddToClusterRemote(ctx context.Context, runtime runtimes.Runtime, node 
 	node.RuntimeLabels[k3d.LabelClusterURL] = clusterRef
 	node.RuntimeLabels[k3d.LabelClusterExternal] = "true"
 	node.RuntimeLabels[k3d.LabelClusterToken] = createNodeOpts.ClusterToken
+
+	if node.Image == "" { // we don't set a default, because on local clusters the value is copied from existing nodes
+		node.Image = fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.K3sVersion)
+	}
 
 	if node.Env == nil {
 		node.Env = []string{}
