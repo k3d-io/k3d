@@ -90,6 +90,8 @@ func NewCmdNodeCreate() *cobra.Command {
 
 	cmd.Flags().StringVarP(&createNodeOpts.ClusterToken, "token", "t", "", "Override cluster token (required when connecting to an external cluster)")
 
+	cmd.Flags().StringArray("k3s-arg", nil, "Additional args passed to k3d command")
+
 	// done
 	return cmd
 }
@@ -180,6 +182,12 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string)
 		l.Log().Fatalf("failed to get --network string slice flag: %v", err)
 	}
 
+	// --k3s-arg
+	k3sArgs, err := cmd.Flags().GetStringArray("k3s-arg")
+	if err != nil {
+		l.Log().Fatalf("failed to get --k3s-arg string array flag: %v", err)
+	}
+
 	// generate list of nodes
 	nodes := []*k3d.Node{}
 	for i := 0; i < replicas; i++ {
@@ -192,6 +200,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string)
 			Restart:       true,
 			Memory:        memory,
 			Networks:      networks,
+			Args:          k3sArgs,
 		}
 		nodes = append(nodes, node)
 	}
