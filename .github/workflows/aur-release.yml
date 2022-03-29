@@ -3,6 +3,7 @@ name: AUR Release
 on:
   release:
     types: [released]
+  workflow_dispatch:
 
 jobs:
   aur-release:

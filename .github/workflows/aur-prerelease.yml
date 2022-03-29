@@ -3,6 +3,7 @@ name: AUR Prerelease
 on:
   release:
     types: [prereleased]
+  workflow_dispatch:
 
 jobs:
   aur-pre-release:
