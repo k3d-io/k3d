@@ -1,5 +1,11 @@
 # Changelog
 
+## v5.4.1 - 29.03.2022
+
+### Changed
+
+- Updated dependencies (docker, containerd, etc.)
+
 ## v5.4.0 - 26.03.2022
 
 **Note**: This is the **first independent release** of k3d
