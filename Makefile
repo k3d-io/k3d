@@ -199,7 +199,7 @@ HAS_GOLANGCI_VERSION := $(shell golangci-lint --version | grep "version $(PKG_GO
 
 install-tools:
 ifndef HAS_GOX
-	($(GO) get $(PKG_GOX))
+	($(GO) install $(PKG_GOX))
 endif
 ifndef HAS_GOLANGCI
 	(curl -sfL $(PKG_GOLANGCI_LINT_SCRIPT) | sh -s -- -b $(GOENVPATH)/bin v${PKG_GOLANGCI_LINT_VERSION})
