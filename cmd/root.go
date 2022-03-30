@@ -28,6 +28,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -46,6 +48,7 @@ import (
 	"github.com/k3d-io/k3d/v5/cmd/registry"
 	cliutil "github.com/k3d-io/k3d/v5/cmd/util"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	k3dPlugin "github.com/k3d-io/k3d/v5/pkg/plugin"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	"github.com/k3d-io/k3d/v5/version"
 	"github.com/sirupsen/logrus"
@@ -120,10 +123,54 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 		},
 	)
 
+	loadPluginCommands(rootCmd)
+
 	// Init
 	cobra.OnInitialize(initLogging, initRuntime)
 
 	return rootCmd
+}
+
+// loadPluginCommands dinamically adds plugin commands
+func loadPluginCommands(cmd *cobra.Command) {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		l.Log().Fatalln(err)
+	}
+
+	// TODO: Override this variables from cobra/viper or using env vars
+	pluginPath := filepath.Join(userHomeDir, ".k3d", "plugins")
+	manifestName := k3dPlugin.DefaultManifestName
+
+	plugins, err := k3dPlugin.LoadAll(pluginPath, manifestName)
+	if err != nil {
+		l.Log().Fatalln(err)
+	}
+
+	for _, plugin := range plugins {
+		pluginCommand := &cobra.Command{
+			Use:   plugin.Manifest.Name,
+			Short: plugin.Manifest.ShortHelpMessage,
+			Long:  plugin.Manifest.HelpMessage,
+			Run: func(cmd *cobra.Command, args []string) {
+				// Lookup $SHELL variable to determine user's shell
+				userShell := os.Getenv("SHELL")
+
+				// Execute plugin command in a separate shell in order to allow using pipes
+				pluginExec := exec.Command(userShell, "-c", plugin.Manifest.Command)
+				pluginExec.Env = os.Environ()
+				pluginExec.Stdin = os.Stdin
+				pluginExec.Stdout = os.Stdout
+				pluginExec.Stderr = os.Stderr
+
+				err := pluginExec.Run()
+				if err != nil {
+					l.Log().Errorln(err)
+				}
+			},
+		}
+		cmd.AddCommand(pluginCommand)
+	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
