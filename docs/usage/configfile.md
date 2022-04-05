@@ -89,6 +89,14 @@ registries: # define how registries should be created or used
       "my.company.registry":
         endpoint:
           - http://my.company.registry:5000
+hostAliases: # /etc/hosts style entries to be injected into /etc/hosts in the node containers and in the NodeHosts section in CoreDNS
+  - ip: 1.2.3.4
+    hostnames: 
+      - my.host.local
+      - that.other.local
+  - ip: 1.1.1.1
+    hostnames:
+      - cloud.flare.dns
 options:
   k3d: # k3d runtime settings
     wait: true # wait for cluster to be usable before returining; same as `--wait` (default: true)
