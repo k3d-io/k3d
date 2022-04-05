@@ -1419,6 +1419,14 @@ This JSON-Schema can be found in the specific config version sub-directory in th
 <span class="w">      </span><span class="no">&quot;my.company.registry&quot;:</span><span class="w"></span>
 <span class="w">        </span><span class="no">endpoint:</span><span class="w"></span>
 <span class="w">          </span><span class="no">- http://my.company.registry:5000</span><span class="w"></span>
+<span class="nt">hostAliases</span><span class="p">:</span><span class="w"> </span><span class="c1"># /etc/hosts style entries to be injected into /etc/hosts in the node containers and in the NodeHosts section in CoreDNS</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.2.3.4</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hostnames</span><span class="p">:</span><span class="w"> </span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my.host.local</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">that.other.local</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.1.1.1</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hostnames</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cloud.flare.dns</span><span class="w"></span>
 <span class="nt">options</span><span class="p">:</span><span class="w"></span>
 <span class="w">  </span><span class="nt">k3d</span><span class="p">:</span><span class="w"> </span><span class="c1"># k3d runtime settings</span><span class="w"></span>
 <span class="w">    </span><span class="nt">wait</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># wait for cluster to be usable before returining; same as `--wait` (default: true)</span><span class="w"></span>
@@ -1475,7 +1483,7 @@ For example, you use the same config file to create three clusters which only ha
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">February 22, 2022</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">April 5, 2022</span>
       
     
   </small>
