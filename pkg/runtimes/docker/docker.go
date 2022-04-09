@@ -23,6 +23,7 @@ THE SOFTWARE.
 package docker
 
 import (
+	"fmt"
 	"net"
 	"net/url"
 	"os"
@@ -72,11 +73,12 @@ func (d Docker) GetHost() string {
 				return ""
 			}
 			l.Log().Debugln("[Docker] Local DfD: using 'host.docker.internal'")
-			dockerHost = "host.docker.internal"
-			if _, err := net.LookupHost(dockerHost); err != nil {
+			dfdHost := "host.docker.internal"
+			if _, err := net.LookupHost(dfdHost); err != nil {
 				l.Log().Debugf("[Docker] wanted to use 'host.docker.internal' as docker host, but it's not resolvable locally: %v", err)
 				return ""
 			}
+			dockerHost = fmt.Sprintf("tcp://%s", dfdHost)
 		}
 	}
 	url, err := url.Parse(dockerHost)
@@ -85,10 +87,6 @@ func (d Docker) GetHost() string {
 		return ""
 	}
 	dockerHost = url.Host
-	// apparently, host.docker.internal is not parsed as host but
-	if dockerHost == "" && url.String() != "" {
-		dockerHost = url.String()
-	}
 	l.Log().Debugf("[Docker] DockerHost: '%s' (%+v)", dockerHost, url)
 
 	return dockerHost
