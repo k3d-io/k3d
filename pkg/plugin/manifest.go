@@ -21,10 +21,10 @@ THE SOFTWARE.
 */
 package plugin
 
-// PluginFileName is the name of the manifest file that describes the plugin
+// DefaultManifestName is the name of the manifest file that describes the plugin
 const DefaultManifestName = "k3d-plugin.yaml"
 
-// PluginManifest describes plugin attributes
+// Manifest PluginManifest describes plugin attributes
 type Manifest struct {
 	Name             string `yaml:"name"`
 	Version          string `yaml:"version"`

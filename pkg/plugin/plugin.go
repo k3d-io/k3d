@@ -69,7 +69,7 @@ func LoadAll(pluginsPath, manifestName string) ([]*Plugin, error) {
 	}
 	l.Log().Debugf("Read subdirectory of %s, found %d subdir(s)", pluginsPath, len(pluginDirectories))
 
-	plugins := []*Plugin{}
+	var plugins []*Plugin
 
 	for _, dir := range pluginDirectories {
 		manifestPath := filepath.Join(dir, manifestName)

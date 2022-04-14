@@ -38,6 +38,7 @@ type pluginListFlags struct {
 	noHeader bool
 }
 
+// NewCmdPluginList create a Cobra command to list plugins
 func NewCmdPluginList() *cobra.Command {
 	pluginListFlags := pluginListFlags{}
 
@@ -80,15 +81,15 @@ func PrintPlugins(plugins []*k3dPlugin.Plugin, flags pluginListFlags) {
 		headers = &[]string{"NAME", "VERSION", "DESCRIPTION"}
 	}
 
-	tabwriter := tabwriter.NewWriter(os.Stdout, 6, 4, 3, ' ', tabwriter.RememberWidths)
-	defer tabwriter.Flush()
+	writer := tabwriter.NewWriter(os.Stdout, 6, 4, 3, ' ', tabwriter.RememberWidths)
+	defer writer.Flush()
 
-	_, err := fmt.Fprintf(tabwriter, "%s\n", strings.Join(*headers, "\t"))
+	_, err := fmt.Fprintf(writer, "%s\n", strings.Join(*headers, "\t"))
 	if err != nil {
 		l.Log().Fatalln("Failed to print headers")
 	}
 
-	for _, plugin := range plugins {
-		fmt.Fprintf(tabwriter, "%s\t%s\t%s\n", plugin.Manifest.Name, plugin.Manifest.Version, plugin.Manifest.ShortHelpMessage)
+	for _, p := range plugins {
+		fmt.Fprintf(writer, "%s\t%s\t%s\n", p.Manifest.Name, p.Manifest.Version, p.Manifest.ShortHelpMessage)
 	}
 }

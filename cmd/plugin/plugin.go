@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewCmdNode returns a new cobra command
+// NewCmdPlugin NewCmdNode returns a new cobra command
 func NewCmdPlugin() *cobra.Command {
 
 	// create new cobra command
