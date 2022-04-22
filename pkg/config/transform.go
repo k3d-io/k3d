@@ -314,10 +314,15 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			regName = simpleConfig.Registries.Create.Name
 		}
 
+		image := fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag)
+		if simpleConfig.Registries.Create.Image != "" {
+			image = simpleConfig.Registries.Create.Image
+		}
+
 		clusterCreateOpts.Registries.Create = &k3d.Registry{
 			ClusterRef:   newCluster.Name,
 			Host:         regName,
-			Image:        fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag),
+			Image:        image,
 			ExposureOpts: *regPort,
 		}
 	}
