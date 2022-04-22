@@ -294,6 +294,13 @@
                 "2345"
               ],
               "default": "random"
+            },
+            "image": {
+              "type": "string",
+              "examples": [
+                "myregistry/registry:2"
+              ],
+              "default": "docker.io/library/registry:2"
             }
           },
           "additionalProperties": false
