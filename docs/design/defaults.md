@@ -57,4 +57,4 @@ The loadbalancer can partly be configured using k3d-defined settings.
 
 ## Networking
 
-- [by default, k3d creates a new (docker) network for every cluster](./networking)
+- [by default, k3d creates a new (docker) network for every cluster](./networking.md)
