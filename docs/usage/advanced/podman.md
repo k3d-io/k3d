@@ -17,16 +17,17 @@ sudo systemctl enable --now podman.socket
 To point k3d at the right Docker socket, create a symbolic link:
 
 ```bash
-ln -s /run/podman/podman.sock /var/run/docker.sock
+sudo ln -s /run/podman/podman.sock /var/run/docker.sock
 # or install your system podman-docker if available
 sudo k3d cluster create
 ```
 
-Alternatively, set DOCKER_HOST when running k3d:
+Alternatively, set `DOCKER_HOST` when running k3d:
 
 ```bash
 export DOCKER_HOST=unix:///run/podman/podman.sock
-sudo --preserve-env=DOCKER_HOST k3d cluster create
+export DOCKER_SOCK=/run/podman/podman.sock
+sudo --preserve-env=DOCKER_HOST --preserve-env=DOCKER_SOCK k3d cluster create
 ```
 
 ### Using rootless Podman
@@ -38,11 +39,22 @@ systemctl --user enable --now podman.socket
 # or podman system service --time=0
 ```
 
-Set DOCKER_HOST when running k3d:
+Set `DOCKER_HOST` when running k3d:
 
 ```bash
 XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
 export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/podman/podman.sock
+export DOCKER_SOCK=$XDG_RUNTIME_DIR/podman/podman.sock
+k3d cluster create
+```
+
+### Using remote Podman
+
+[Start Podman on the remote host](https://github.com/containers/podman/blob/main/docs/tutorials/remote_client.md), and then set `DOCKER_HOST` when running k3d:
+
+```
+export DOCKER_HOST=ssh://username@hostname
+export DOCKER_SOCK=/run/user/1000/podman/podman.sock
 k3d cluster create
 ```
 
@@ -62,3 +74,6 @@ k3d cluster create --registry-use mycluster-registry mycluster
 
 !!! note "Incompatibility with `--registry-create`"
     Because `--registry-create` assumes the default network to be "bridge", avoid `--registry-create` when using Podman. Instead, always create a registry before creating a cluster.
+
+!!! note "Missing cpuset cgroup controller"
+    If you experince an error regarding missing cpuset cgroup controller, ensure the user unit `xdg-document-portal.service` is disabled by running `systemctl --user stop xdg-document-portal.service`. See [this issue](https://github.com/systemd/systemd/issues/18293#issuecomment-831397578)
