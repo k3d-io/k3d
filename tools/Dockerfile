@@ -1,4 +1,4 @@
-FROM golang:1.17-alpine3.13 as builder
+FROM golang:1.18-alpine3.15 as builder
 ARG GIT_TAG
 WORKDIR /app
 COPY . .
