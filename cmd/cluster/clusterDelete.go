@@ -137,9 +137,9 @@ func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 			l.Log().Fatalln("failed to delete cluster via config file: no name in config file")
 		}
 
-		c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: clusterDeleteCfgViper.GetString("name")})
+		c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: cfg.Name})
 		if errors.Is(err, client.ClusterGetNoNodesFoundError) {
-			l.Log().Infof("No nodes found for cluster '%s', nothing to delete.", clusterDeleteCfgViper.GetString("name"))
+			l.Log().Infof("No nodes found for cluster '%s', nothing to delete.", cfg.Name)
 			return nil
 		}
 
