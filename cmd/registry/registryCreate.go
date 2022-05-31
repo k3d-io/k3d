@@ -38,12 +38,16 @@ import (
 type regCreatePreProcessedFlags struct {
 	Port     string
 	Clusters []string
+	Volumes  []string
 }
 
 type regCreateFlags struct {
-	Image   string
-	Network string
-	NoHelp  bool
+	Image          string
+	Network        string
+	ProxyRemoteURL string
+	ProxyUsername  string
+	ProxyPassword  string
+	NoHelp         bool
 }
 
 var helptext string = `# You can now use the registry like this (example):
@@ -103,8 +107,12 @@ func NewCmdRegistryCreate() *cobra.Command {
 	cmd.Flags().StringVarP(&flags.Image, "image", "i", fmt.Sprintf("%s:%s", k3d.DefaultRegistryImageRepo, k3d.DefaultRegistryImageTag), "Specify image used for the registry")
 
 	cmd.Flags().StringVarP(&ppFlags.Port, "port", "p", "random", "Select which port the registry should be listening on on your machine (localhost) (Format: `[HOST:]HOSTPORT`)\n - Example: `k3d registry create --port 0.0.0.0:5111`")
+	cmd.Flags().StringArrayVarP(&ppFlags.Volumes, "volume", "v", nil, "Mount volumes into the registry node (Format: `[SOURCE:]DEST`")
 
 	cmd.Flags().StringVar(&flags.Network, "default-network", k3d.DefaultRuntimeNetwork, "Specify the network connected to the registry")
+	cmd.Flags().StringVar(&flags.ProxyRemoteURL, "proxy-remote-url", "", "Specify the url of the proxied remote registry")
+	cmd.Flags().StringVar(&flags.ProxyUsername, "proxy-username", "", "Specify the username of the proxied remote registry")
+	cmd.Flags().StringVar(&flags.ProxyPassword, "proxy-password", "", "Specify the password of the proxied remote registry")
 
 	cmd.Flags().BoolVar(&flags.NoHelp, "no-help", false, "Disable the help text (How-To use the registry)")
 
@@ -138,5 +146,33 @@ func parseCreateRegistryCmd(cmd *cobra.Command, args []string, flags *regCreateF
 		registryName = fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, args[0])
 	}
 
-	return &k3d.Registry{Host: registryName, Image: flags.Image, ExposureOpts: *exposePort, Network: flags.Network}, clusters
+	// -- proxy
+	var options k3d.RegistryOptions
+
+	if flags.ProxyRemoteURL != "" {
+		proxy := k3d.RegistryProxy{
+			RemoteURL: flags.ProxyRemoteURL,
+			Username:  flags.ProxyUsername,
+			Password:  flags.ProxyPassword,
+		}
+		options.Proxy = proxy
+		l.Log().Traceln("Proxy info:", proxy)
+	}
+
+	// --volume
+	var volumes []string
+	if len(ppFlags.Volumes) > 0 {
+		volumes = []string{}
+
+		for _, volumeFlag := range ppFlags.Volumes {
+			volume, _, err := cliutil.SplitFiltersFromFlag(volumeFlag)
+			if err != nil {
+				l.Log().Fatalln(err)
+			}
+			volumes = append(volumes, volume)
+		}
+
+	}
+
+	return &k3d.Registry{Host: registryName, Image: flags.Image, ExposureOpts: *exposePort, Network: flags.Network, Options: options, Volumes: volumes}, clusters
 }

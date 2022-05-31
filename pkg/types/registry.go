@@ -32,22 +32,27 @@ const (
 	DefaultLocalRegistryHostingConfigmapTempPath = "/tmp/localRegistryHostingCM.yaml"
 )
 
+type RegistryOptions struct {
+	ConfigFile string        `yaml:"configFile,omitempty" json:"configFile,omitempty"`
+	Proxy      RegistryProxy `yaml:"proxy,omitempty" json:"proxy,omitempty"`
+}
+
+type RegistryProxy struct {
+	RemoteURL string `yaml:"remoteURL" json:"remoteURL"`
+	Username  string `yaml:"username,omitempty" json:"username,omitempty"`
+	Password  string `yaml:"password,omitempty" json:"password,omitempty"`
+}
+
 // Registry describes a k3d-managed registry
 type Registry struct {
-	ClusterRef   string       // filled automatically -> if created with a cluster
-	Protocol     string       `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
-	Host         string       `yaml:"host" json:"host"`
-	Image        string       `yaml:"image,omitempty" json:"image,omitempty"`
-	Network      string       `yaml:"Network,omitempty" json:"Network,omitempty"`
-	ExposureOpts ExposureOpts `yaml:"expose" json:"expose"`
-	Options      struct {
-		ConfigFile string `yaml:"configFile,omitempty" json:"configFile,omitempty"`
-		Proxy      struct {
-			RemoteURL string `yaml:"remoteURL" json:"remoteURL"`
-			Username  string `yaml:"username,omitempty" json:"username,omitempty"`
-			Password  string `yaml:"password,omitempty" json:"password,omitempty"`
-		} `yaml:"proxy,omitempty" json:"proxy,omitempty"`
-	} `yaml:"options,omitempty" json:"options,omitempty"`
+	ClusterRef   string          // filled automatically -> if created with a cluster
+	Protocol     string          `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
+	Host         string          `yaml:"host" json:"host"`
+	Image        string          `yaml:"image,omitempty" json:"image,omitempty"`
+	Network      string          `yaml:"Network,omitempty" json:"Network,omitempty"`
+	Volumes      []string        `yaml:"Volumes,omitempty" json:"Volumes,omitempty"`
+	ExposureOpts ExposureOpts    `yaml:"expose" json:"expose"`
+	Options      RegistryOptions `yaml:"options,omitempty" json:"options,omitempty"`
 }
 
 // RegistryExternal describes a minimal spec for an "external" registry
