@@ -72,6 +72,23 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 		Role:     k3d.RegistryRole,
 		Networks: []string{reg.Network},
 		Restart:  true,
+		Env:      []string{},
+	}
+
+	if reg.Options.Proxy.RemoteURL != "" {
+		registryNode.Env = append(registryNode.Env, fmt.Sprintf("REGISTRY_PROXY_REMOTEURL=%s", reg.Options.Proxy.RemoteURL))
+
+		if reg.Options.Proxy.Username != "" {
+			registryNode.Env = append(registryNode.Env, fmt.Sprintf("REGISTRY_PROXY_USERNAME=%s", reg.Options.Proxy.Username))
+		}
+
+		if reg.Options.Proxy.Password != "" {
+			registryNode.Env = append(registryNode.Env, fmt.Sprintf("REGISTRY_PROXY_PASSWORD=%s", reg.Options.Proxy.Password))
+		}
+	}
+
+	if len(reg.Volumes) > 0 {
+		registryNode.Volumes = reg.Volumes
 	}
 
 	// error out if that registry exists already
