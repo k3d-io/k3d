@@ -1,5 +1,24 @@
 # Changelog
 
+## v5.4.2 - 04.06.2022
+
+### Added
+
+- Docs: `hostAliases` in the config file
+- New field `registries.create.image` (same as `k3d registry create --image`) in config `v1alpha4` (no version bump) (#1056)
+
+### Changed
+
+- Go 1.18
+
+### Fixed
+
+- docs: fix defaults-networking href (#1064)
+- fix deleting of cluster by config file (#1054)
+- fix: DOCKER_HOST handling of unix sockets (#1045)
+- make: Use go install instead of go get for installing tools (#1038)
+- fix: e2e tests safe git directory
+
 ## v5.4.1 - 29.03.2022
 
 ### Changed
