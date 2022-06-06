@@ -8,7 +8,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/k3d-io/k3d?style=flat-square)](https://goreportcard.com/report/github.com/k3d-io/k3d)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-17-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-18-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
@@ -147,6 +147,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/sbaier1"><img src="https://avatars.githubusercontent.com/u/20339314?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Simon Baier</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=sbaier1" title="Code">💻</a></td>
     <td align="center"><a href="https://ambrose.website"><img src="https://avatars.githubusercontent.com/u/1705906?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Ambrose Chua</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=serverwentdown" title="Code">💻</a></td>
     <td align="center"><a href="https://www.zenior.no/"><img src="https://avatars.githubusercontent.com/u/1142578?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Erik Godding Boye</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=erikgb" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/ethinx"><img src="https://avatars.githubusercontent.com/u/965612?v=4?s=100" width="100px;" alt=""/><br /><sub><b>York Wong</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=ethinx" title="Code">💻</a></td>
   </tr>
 </table>
 
