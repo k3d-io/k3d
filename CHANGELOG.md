@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Support for pull-through registry (#1075)
+  - In command `k3d registry create`
+    - e.g. `k3d registry create --proxy-remote-url https://registry-1.docker.io -p 5000 -v /tmp/registry:/var/lib/registry`
+  - In config file:
+
+      ```yaml
+      # ...
+      registries:
+        create:
+          name: docker-io # name of the registry container
+          proxy:
+            remoteURL: https://registry-1.docker.io # proxy DockerHub
+          volumes:
+            - /tmp/reg:/var/lib/registry # persist data locally in /tmp/reg
+        config: | # tell K3s to use this registry when pulling from DockerHub
+          mirrors:
+            "docker.io":
+              endpoint:
+                - http://docker-io:5000
+      ```
+
+  - See registry documentation
+
 ## v5.4.2 - 04.06.2022
 
 ### Added

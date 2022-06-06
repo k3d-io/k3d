@@ -132,7 +132,7 @@ Now you have a few options, including the following three:
 
 ### Using your own (not k3d-managed) local registry
 
-*We recommend using a k3d-managed registry, as it plays nicely together with k3d clusters, but here's also a guide to create your own (not k3d-managed) registry, if you need features or customizations, that k3d does not provide:*
+_We recommend using a k3d-managed registry, as it plays nicely together with k3d clusters, but here's also a guide to create your own (not k3d-managed) registry, if you need features or customizations, that k3d does not provide:_
 
 ??? nonk3dregistry "Using your own (not k3d-managed) local registry"
 
@@ -214,3 +214,64 @@ Then you should check that the pod is running with `kubectl get pods -l "app=ngi
 3. push it: `#!bash docker push k3d-registry.localhost:12345/testimage:local`
 4. Use kubectl to create a new pod in your cluster using that image to see, if the cluster can pull from the new registry: `#!bash kubectl run --image k3d-registry.localhost:12345/testimage:local testimage --command -- tail -f /dev/null`
    - (creates a container that will not do anything but keep on running)
+
+## Creating a registry proxy / pull-through registry
+
+1. Create a pull-through registry
+
+    ```bash
+    k3d registry create docker-io `# Create a registry named k3d-docker-io` \
+      -p 5000 `# listening on local host port 5000` \ 
+      --proxy-remote-url https://registry-1.docker.io `# let it mirror the Docker Hub registry` \
+      -v ~/.local/share/docker-io-registry:/var/lib/registry `# also persist the downloaded images on the device outside the container`
+    ```
+
+2. Create `registry.yaml`
+
+    ```yaml
+    mirrors:
+      "docker.io":
+        endpoint:
+          - http://k3d-docker-io:5000
+    ```
+
+3. Create a cluster and using the pull-through cache
+
+    ```bash
+    k3d cluster create cluster01 --registry-use k3d-docker-io:5000 --registry-config registry.yml
+    ```
+
+4. After cluster01 ready, create another cluster with the same registry or rebuild the cluster, it will use the already locally cached images.
+
+    ```bash
+    k3d cluster create cluster02 --registry-use k3d-docker-io:5000 --registry-config registry.yml
+    ```
+
+### Creating a registry proxy / pull-through registry via configfile
+
+1. Create a config file, e.g. `/home/me/test-regcache.yaml`
+
+    ```yaml
+    apiVersion: k3d.io/v1alpha4
+    kind: Simple
+    metadata:
+      name: test-regcache
+    registries:
+      create:
+        name: docker-io # name of the registry container
+        proxy:
+          remoteURL: https://registry-1.docker.io # proxy DockerHub
+        volumes:
+          - /tmp/reg:/var/lib/registry # persist data locally in /tmp/reg
+      config: | # tell K3s to use this registry when pulling from DockerHub
+        mirrors:
+          "docker.io":
+            endpoint:
+              - http://docker-io:5000
+    ```
+
+2. Create cluster from config:
+
+    ```bash
+    k3d cluster create -c /home/me/test-regcache.yaml
+    ```

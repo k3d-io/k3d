@@ -82,6 +82,12 @@ registries: # define how registries should be created or used
     name: registry.localhost
     host: "0.0.0.0"
     hostPort: "5000"
+    proxy: # omit this to have a "normal" registry, set this to create a registry proxy (pull-through cache)
+      remoteURL: https://registry-1.docker.io # mirror the DockerHub registry
+      username: "" # unauthenticated
+      password: "" # unauthenticated
+    volumes:
+      - /some/path:/var/lib/registry # persist registry data locally
   use:
     - k3d-myotherregistry:5000 # some other k3d-managed registry; same as `--registry-use 'k3d-myotherregistry:5000'`
   config: | # define contents of the `registries.yaml` file (or reference a file); same as `--registry-config /path/to/config.yaml`
