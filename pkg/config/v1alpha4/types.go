@@ -82,10 +82,12 @@ type K3sArgWithNodeFilters struct {
 }
 
 type SimpleConfigRegistryCreateConfig struct {
-	Name     string `mapstructure:"name" yaml:"name,omitempty" json:"name,omitempty"`
-	Host     string `mapstructure:"host" yaml:"host,omitempty" json:"host,omitempty"`
-	HostPort string `mapstructure:"hostPort" yaml:"hostPort,omitempty" json:"hostPort,omitempty"`
-	Image    string `mapstructure:"image" yaml:"image,omitempty" json:"image,omitempty"`
+	Name     string            `mapstructure:"name" yaml:"name,omitempty" json:"name,omitempty"`
+	Host     string            `mapstructure:"host" yaml:"host,omitempty" json:"host,omitempty"`
+	HostPort string            `mapstructure:"hostPort" yaml:"hostPort,omitempty" json:"hostPort,omitempty"`
+	Image    string            `mapstructure:"image" yaml:"image,omitempty" json:"image,omitempty"`
+	Proxy    k3d.RegistryProxy `mapstructure:"proxy" yaml:"proxy,omitempty" json:"proxy,omitempty"`
+	Volumes  []string          `mapstructure:"volumes" yaml:"volumes,omitempty" json:"volumes,omitempty"`
 }
 
 // SimpleConfigOptionsKubeconfig describes the set of options referring to the kubeconfig during cluster creation.

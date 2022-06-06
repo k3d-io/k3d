@@ -301,6 +301,33 @@
                 "myregistry/registry:2"
               ],
               "default": "docker.io/library/registry:2"
+            },
+            "proxy": {
+              "type": "object",
+              "properties": {
+                "remoteURL": {
+                  "type": "string",
+                  "examples": [
+                    "https://registry-1.docker.io"
+                  ]
+                },
+                "username": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "volumes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "examples": [
+                "/tmp/registry:/var/lib/registry"
+              ]
             }
           },
           "additionalProperties": false

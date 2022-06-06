@@ -324,6 +324,10 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			Host:         regName,
 			Image:        image,
 			ExposureOpts: *regPort,
+			Volumes:      simpleConfig.Registries.Create.Volumes,
+			Options: k3d.RegistryOptions{
+				Proxy: simpleConfig.Registries.Create.Proxy,
+			},
 		}
 	}
 
