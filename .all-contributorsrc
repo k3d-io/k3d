@@ -166,11 +166,20 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "ethinx",
+      "name": "York Wong",
+      "avatar_url": "https://avatars.githubusercontent.com/u/965612?v=4",
+      "profile": "https://github.com/ethinx",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
   "projectName": "k3d",
-  "projectOwner": "rancher",
+  "projectOwner": "k3d-io",
   "repoType": "github",
   "repoHost": "https://github.com",
   "skipCi": true
