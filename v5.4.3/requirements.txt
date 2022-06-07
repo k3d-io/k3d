@@ -1,0 +1,9 @@
+mkdocs==1.2.3
+mkdocs-material==8.2.7
+pymdown-extensions==9.3
+mkdocs-git-revision-date-localized-plugin==1.0.0
+mkdocs-awesome-pages-plugin==2.7.0
+mdx_truly_sane_lists==1.2 # https://github.com/radude/mdx_truly_sane_lists
+mkdocs-include-markdown-plugin==3.3.0 # https://github.com/mondeja/mkdocs-include-markdown-plugin
+mike==1.1.2 # versioned docs: https://github.com/jimporter/mike
+
