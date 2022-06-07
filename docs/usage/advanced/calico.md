@@ -1,6 +1,6 @@
 # Use Calico instead of Flannel
 
-If you want to use NetworkPolicy you can use Calico in k3s instead of Flannel.
+Note: k3s comes with a controller that enforces network policies by default. You do not need to switch to Calico for network policies to be enforced. See <https://github.com/k3s-io/k3s/issues/1308> for more information.
 
 ## 1. Download and modify the Calico descriptor
 
@@ -20,7 +20,7 @@ Or you can directly use this [calico.yaml](calico.yaml) manifest
 
 On the k3s cluster creation :
 
-- add the flag `--flannel-backend=none`. For this, on k3d you need to forward this flag to k3s with the option `--k3s-arg`.
+- add the flags `--flannel-backend=none` and `--disable-network-policy`. For this, on k3d you need to forward this flag to k3s with the option `--k3s-arg`.
 - mount (`--volume`) the calico descriptor in the auto deploy manifest directory of k3s `/var/lib/rancher/k3s/server/manifests/`
 
 So the command of the cluster creation is (when you are at root of the k3d repository)
@@ -28,6 +28,7 @@ So the command of the cluster creation is (when you are at root of the k3d repos
 ```bash
 k3d cluster create "${clustername}" \
   --k3s-arg '--flannel-backend=none@server:*' \
+  --k3s-arg '--disable-network-policy' \
   --volume "$(pwd)/docs/usage/guides/calico.yaml:/var/lib/rancher/k3s/server/manifests/calico.yaml"
 ```
 
