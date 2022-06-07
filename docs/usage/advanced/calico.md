@@ -1,6 +1,8 @@
 # Use Calico instead of Flannel
 
-Note: k3s comes with a controller that enforces network policies by default. You do not need to switch to Calico for network policies to be enforced. See <https://github.com/k3s-io/k3s/issues/1308> for more information.
+!!! info "Network Policies"
+    k3s comes with a controller that enforces network policies by default. You do not need to switch to Calico for network policies to be enforced. See <https://github.com/k3s-io/k3s/issues/1308> for more information.  
+    The docs below assume you want to switch to Calico's policy engine, thus setting `--disable-network-policy`.
 
 ## 1. Download and modify the Calico descriptor
 
