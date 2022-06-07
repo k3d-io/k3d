@@ -32,7 +32,7 @@ clustername="cfgoverridetest"
 highlight "[START] Config With Override $EXTRA_TITLE"
 
 info "Creating cluster $clustername..."
-$EXE cluster create "$clustername" --registry-create "newreg.localhost" --config "$CURR_DIR/assets/config_test_simple.yaml" --servers 4 -v /tmp/test:/tmp/test@loadbalancer --env "x=y@agent:1" $EXTRA_FLAG  || failed "could not create cluster $clustername $EXTRA_TITLE"
+$EXE cluster create "$clustername" --registry-create "newreg.localhost" --config "$CURR_DIR/assets/config_test_simple.yaml" --servers 1 -v /tmp/test:/tmp/test@loadbalancer --env "x=y@agent:1" $EXTRA_FLAG  || failed "could not create cluster $clustername $EXTRA_TITLE"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
 sleep 5
@@ -41,8 +41,8 @@ sleep 5
 info "Checking that we have access to the cluster..."
 check_clusters "$clustername" || failed "error checking cluster"
 
-info "Checking that we have 6 nodes online..."
-check_multi_node "$clustername" 6 || failed "failed to verify number of nodes"
+info "Checking that we have 3 nodes online..."
+check_multi_node "$clustername" 3 || failed "failed to verify number of nodes"
 
 # 2. check some config settings
 
