@@ -48,6 +48,26 @@ export DOCKER_SOCK=$XDG_RUNTIME_DIR/podman/podman.sock
 k3d cluster create
 ```
 
+#### Using cgroup (v2)
+
+By default, a non-root user can only get memory controller and pids controller to be delegated.
+
+To run properly we need to enable CPU, CPUSET, and I/O delegation
+
+!!! note "Make sure you're running cgroup v2"
+    If `/sys/fs/cgroup/cgroup.controllers` is present on your system, you are using v2, otherwise you are using v1.
+
+```bash
+mkdir -p /etc/systemd/system/user@.service.d
+cat > /etc/systemd/system/user@.service.d/delegate.conf <<EOF
+[Service]
+Delegate=cpu cpuset io memory pids
+EOF
+systemctl daemon-reload
+```
+
+Reference: [https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling-cpu-cpuset-and-io-delegation](https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling-cpu-cpuset-and-io-delegation)
+
 ### Using remote Podman
 
 [Start Podman on the remote host](https://github.com/containers/podman/blob/main/docs/tutorials/remote_client.md), and then set `DOCKER_HOST` when running k3d:
@@ -77,3 +97,4 @@ k3d cluster create --registry-use mycluster-registry mycluster
 
 !!! note "Missing cpuset cgroup controller"
     If you experince an error regarding missing cpuset cgroup controller, ensure the user unit `xdg-document-portal.service` is disabled by running `systemctl --user stop xdg-document-portal.service`. See [this issue](https://github.com/systemd/systemd/issues/18293#issuecomment-831397578)
+

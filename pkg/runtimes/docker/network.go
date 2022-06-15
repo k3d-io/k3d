@@ -91,11 +91,11 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 
 		for _, container := range targetNetwork.Containers {
 			if container.IPv4Address != "" {
-				prefix, err := netaddr.ParseIPPrefix(container.IPv4Address)
+				ipAddr, err := parseIPAddress(container.IPv4Address)
 				if err != nil {
-					return nil, fmt.Errorf("failed to parse IP of container %s: %w", container.Name, err)
+					return nil, fmt.Errorf("failed to parse IP address of container %s: %w", container.Name, err)
 				}
-				network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, prefix.IP())
+				network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, ipAddr)
 			}
 		}
 
@@ -110,13 +110,13 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 	}
 
 	for _, container := range targetNetwork.Containers {
-		prefix, err := netaddr.ParseIPPrefix(container.IPv4Address)
+		ipAddr, err := parseIPAddress(container.IPv4Address)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse IP Prefix of network \"%s\"'s member %s: %v", network.Name, container.Name, err)
 		}
 		network.Members = append(network.Members, &k3d.NetworkMember{
 			Name: container.Name,
-			IP:   prefix.IP(),
+			IP:   ipAddr,
 		})
 	}
 
@@ -375,4 +375,22 @@ func (d Docker) parseIPAM(config network.IPAMConfig) (ipam k3d.IPAM, err error) 
 	ipam.IPsUsed = append(ipam.IPsUsed, gateway)
 
 	return
+}
+
+// parseIPAddress Returns an netaddr.IP by either receiving the IP address or IP CIDR notation. If the value
+// cannot be parsed, an error is returned
+func parseIPAddress(addr string) (netaddr.IP, error) {
+	if strings.Contains(addr, "/") {
+		prefix, err := netaddr.ParseIPPrefix(addr)
+		if err != nil {
+			return netaddr.IP{}, err
+		}
+		return prefix.IP(), nil
+	} else {
+		ipAddr, err := netaddr.ParseIP(addr)
+		if err != nil {
+			return netaddr.IP{}, err
+		}
+		return ipAddr, nil
+	}
 }
