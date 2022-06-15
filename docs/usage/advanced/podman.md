@@ -66,7 +66,7 @@ EOF
 systemctl daemon-reload
 ```
 
-Reference: https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling-cpu-cpuset-and-io-delegation
+Reference: [https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling-cpu-cpuset-and-io-delegation](https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling-cpu-cpuset-and-io-delegation)
 
 ### Using remote Podman
 
