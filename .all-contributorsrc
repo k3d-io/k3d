@@ -175,6 +175,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "gonzalesraul",
+      "name": "Raul Gonzales",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7568984?v=4",
+      "profile": "https://github.com/gonzalesraul",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
