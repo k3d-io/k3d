@@ -43,7 +43,8 @@ var JSONSchema string
 const DefaultConfigTpl = `---
 apiVersion: k3d.io/v1alpha4
 kind: Simple
-name: %s
+metadata:
+  name: %s
 servers: 1
 agents: 0
 image: %s
