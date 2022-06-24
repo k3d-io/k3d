@@ -15,7 +15,6 @@ assignees: ''
 
 ## Question / Where do you need Help?
 
-
 ## Scope of your Question
 
 - Is your question related to a specific version of k3d (or k3s)?

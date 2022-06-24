@@ -7,6 +7,19 @@ assignees: ''
 
 ---
 
+<!-- 
+BUG REPORT --- README
+
+-> You're struggling with something and it may not be a bug afterall? Please open a discussion instead: https://github.com/k3d-io/k3d/discussions
+
+-> Think it's for sure a bug? Please fill in as many of the fields below as you can so we can help you best!
+
+@@@ Sponsors @@@
+Need this fixed urgently for work? Consider sponsoring this issue via https://issuehunt.io/r/k3d-io/k3d
+@@@ Sponsors @@@
+
+-->
+
 ## What did you do
 
 - How was the cluster created?
@@ -27,7 +40,7 @@ If applicable, add screenshots or terminal output (code block) to help explain y
 
 ## Which OS & Architecture
 
-- Linux, Windows, MacOS / amd64, x86, ...?
+- output of `k3d runtime-info`
 
 ## Which version of `k3d`
 

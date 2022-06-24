@@ -7,6 +7,17 @@ assignees: ''
 
 ---
 
+<!-- 
+FEATURE REQUEST --- README
+
+Please fill in as many of the fields below as you can so we can help you best!
+
+@@@ Sponsors @@@
+Need this feature urgently for work? Consider sponsoring this issue via https://issuehunt.io/r/k3d-io/k3d
+@@@ Sponsors @@@
+
+-->
+
 ## Is your feature request related to a problem or a Pull Request
 
 Please link to the issue/PR here and explain how your request is related to it.
