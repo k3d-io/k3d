@@ -310,12 +310,17 @@ func isFile(image string) bool {
 }
 
 func dockerSpecialImageNameEqual(requestedImageName string, runtimeImageName string) bool {
-	if strings.HasPrefix(requestedImageName, "docker.io/") {
-		return dockerSpecialImageNameEqual(strings.TrimPrefix(requestedImageName, "docker.io/"), runtimeImageName)
+	prefixes := []string{
+		"docker.io/library/",
+		"docker.io/",
+		"library/",
 	}
 
-	if strings.HasPrefix(requestedImageName, "library/") {
-		return imageNamesEqual(strings.TrimPrefix(requestedImageName, "library/"), runtimeImageName)
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(requestedImageName, prefix) {
+			return imageNamesEqual(strings.TrimPrefix(requestedImageName, prefix), runtimeImageName)
+		}
+
 	}
 
 	return false

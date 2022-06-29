@@ -46,6 +46,7 @@ func Test_findRuntimeImage(T *testing.T) {
 		"registry:1234/one/two:latest",
 		"registry:1234/one/two/three/four:version",
 		"registry:1234/one/two/three/four:latest",
+		"one/two:latest",
 	}
 
 	tests := map[string]struct {
@@ -142,6 +143,16 @@ func Test_findRuntimeImage(T *testing.T) {
 			expectedImageName:       "busybox:version",
 			expectedFound:           true,
 			givenRequestedImageName: "docker.io/library/busybox:version",
+		},
+		"docker.io is used as registry": {
+			expectedImageName:       "one/two:latest",
+			expectedFound:           true,
+			givenRequestedImageName: "docker.io/one/two:latest",
+		},
+		"docker.io is used as registry, no version tag": {
+			expectedImageName:       "one/two:latest",
+			expectedFound:           true,
+			givenRequestedImageName: "docker.io/one/two",
 		},
 		"unknown image": {
 			expectedFound:           false,
