@@ -33,12 +33,13 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/go-test/deep"
 	"github.com/imdario/mergo"
+	"github.com/spf13/viper"
+	"sigs.k8s.io/yaml"
+
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	"github.com/k3d-io/k3d/v5/pkg/types"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
-	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
 )
 
 var (

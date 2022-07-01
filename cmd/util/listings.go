@@ -28,10 +28,11 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/liggitt/tabwriter"
+	"sigs.k8s.io/yaml"
+
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
-	"github.com/liggitt/tabwriter"
-	"gopkg.in/yaml.v2"
 )
 
 type NodePrinter interface {

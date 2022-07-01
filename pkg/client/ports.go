@@ -28,14 +28,15 @@ import (
 	"strings"
 
 	"github.com/docker/go-connections/nat"
+	"github.com/sirupsen/logrus"
+	"sigs.k8s.io/yaml"
+
 	"github.com/k3d-io/k3d/v5/pkg/config/types"
 	config "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/k3d-io/k3d/v5/pkg/util"
-	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 )
 
 var (

@@ -27,11 +27,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/k3d-io/k3d/v5/pkg/config"
-	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
+
+	"github.com/k3d-io/k3d/v5/pkg/config"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 )
 
 func InitViperWithConfigFile(cfgViper *viper.Viper, configFile string) error {

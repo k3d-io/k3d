@@ -35,6 +35,11 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/imdario/mergo"
+	copystruct "github.com/mitchellh/copystructure"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
+	"sigs.k8s.io/yaml"
+
 	"github.com/k3d-io/k3d/v5/pkg/actions"
 	config "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
@@ -45,10 +50,6 @@ import (
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 	"github.com/k3d-io/k3d/v5/pkg/util"
-	copystruct "github.com/mitchellh/copystructure"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
-	"gopkg.in/yaml.v2"
 )
 
 // ClusterRun orchestrates the steps of cluster creation, configuration and starting
@@ -1057,7 +1058,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 							}
 
 							var outputBuf bytes.Buffer
-							outputEncoder := yaml.NewEncoder(&outputBuf)
+							outputEncoder := util.NewYAMLEncoder(&outputBuf)
 
 							for _, d := range split {
 								var doc map[string]interface{}
@@ -1066,7 +1067,10 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 								}
 								if kind, ok := doc["kind"]; ok {
 									if strings.ToLower(kind.(string)) == "configmap" {
-										configmapData := doc["data"].(map[interface{}]interface{})
+										configmapData, ok := doc["data"].(map[string]interface{})
+										if !ok {
+											return nil, fmt.Errorf("invalid ConfigMap data type: %T", doc["data"])
+										}
 										configmapData["NodeHosts"] = hosts
 									}
 								}
@@ -1074,7 +1078,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 									return nil, err
 								}
 							}
-							outputEncoder.Close()
+							_ = outputEncoder.Close()
 							return outputBuf.Bytes(), nil
 						},
 					}

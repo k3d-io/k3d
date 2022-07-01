@@ -57,87 +57,87 @@ var DefaultConfig = fmt.Sprintf(
 )
 
 type VolumeWithNodeFilters struct {
-	Volume      string   `mapstructure:"volume" yaml:"volume,omitempty" json:"volume,omitempty"`
-	NodeFilters []string `mapstructure:"nodeFilters" yaml:"nodeFilters,omitempty" json:"nodeFilters,omitempty"`
+	Volume      string   `mapstructure:"volume" json:"volume,omitempty"`
+	NodeFilters []string `mapstructure:"nodeFilters" json:"nodeFilters,omitempty"`
 }
 
 type PortWithNodeFilters struct {
-	Port        string   `mapstructure:"port" yaml:"port,omitempty" json:"port,omitempty"`
-	NodeFilters []string `mapstructure:"nodeFilters" yaml:"nodeFilters,omitempty" json:"nodeFilters,omitempty"`
+	Port        string   `mapstructure:"port" json:"port,omitempty"`
+	NodeFilters []string `mapstructure:"nodeFilters" json:"nodeFilters,omitempty"`
 }
 
 type LabelWithNodeFilters struct {
-	Label       string   `mapstructure:"label" yaml:"label,omitempty" json:"label,omitempty"`
-	NodeFilters []string `mapstructure:"nodeFilters" yaml:"nodeFilters,omitempty" json:"nodeFilters,omitempty"`
+	Label       string   `mapstructure:"label" json:"label,omitempty"`
+	NodeFilters []string `mapstructure:"nodeFilters" json:"nodeFilters,omitempty"`
 }
 
 type EnvVarWithNodeFilters struct {
-	EnvVar      string   `mapstructure:"envVar" yaml:"envVar,omitempty" json:"envVar,omitempty"`
-	NodeFilters []string `mapstructure:"nodeFilters" yaml:"nodeFilters,omitempty" json:"nodeFilters,omitempty"`
+	EnvVar      string   `mapstructure:"envVar" json:"envVar,omitempty"`
+	NodeFilters []string `mapstructure:"nodeFilters" json:"nodeFilters,omitempty"`
 }
 
 // SimpleConfigOptionsKubeconfig describes the set of options referring to the kubeconfig during cluster creation.
 type SimpleConfigOptionsKubeconfig struct {
-	UpdateDefaultKubeconfig bool `mapstructure:"updateDefaultKubeconfig" yaml:"updateDefaultKubeconfig" json:"updateDefaultKubeconfig,omitempty"` // default: true
-	SwitchCurrentContext    bool `mapstructure:"switchCurrentContext" yaml:"switchCurrentContext" json:"switchCurrentContext,omitempty"`          //nolint:lll    // default: true
+	UpdateDefaultKubeconfig bool `mapstructure:"updateDefaultKubeconfig" json:"updateDefaultKubeconfig,omitempty"` // default: true
+	SwitchCurrentContext    bool `mapstructure:"switchCurrentContext" json:"switchCurrentContext,omitempty"`       //nolint:lll    // default: true
 }
 
 type SimpleConfigOptions struct {
-	K3dOptions        SimpleConfigOptionsK3d        `mapstructure:"k3d" yaml:"k3d" json:"k3d"`
-	K3sOptions        SimpleConfigOptionsK3s        `mapstructure:"k3s" yaml:"k3s" json:"k3s"`
-	KubeconfigOptions SimpleConfigOptionsKubeconfig `mapstructure:"kubeconfig" yaml:"kubeconfig" json:"kubeconfig"`
-	Runtime           SimpleConfigOptionsRuntime    `mapstructure:"runtime" yaml:"runtime" json:"runtime"`
+	K3dOptions        SimpleConfigOptionsK3d        `mapstructure:"k3d" json:"k3d"`
+	K3sOptions        SimpleConfigOptionsK3s        `mapstructure:"k3s" json:"k3s"`
+	KubeconfigOptions SimpleConfigOptionsKubeconfig `mapstructure:"kubeconfig" json:"kubeconfig"`
+	Runtime           SimpleConfigOptionsRuntime    `mapstructure:"runtime" json:"runtime"`
 }
 
 type SimpleConfigOptionsRuntime struct {
-	GPURequest    string `mapstructure:"gpuRequest,omitempty" yaml:"gpuRequest,omitempty" json:"gpuRequest,omitempty"`
-	ServersMemory string `mapstructure:"serversMemory,omitempty" yaml:"serversMemory,omitempty" json:"serversMemory,omitempty"`
-	AgentsMemory  string `mapstructure:"agentsMemory,omitempty" yaml:"agentsMemory,omitempty" json:"agentsMemory,omitempty"`
+	GPURequest    string `mapstructure:"gpuRequest,omitempty" json:"gpuRequest,omitempty"`
+	ServersMemory string `mapstructure:"serversMemory,omitempty" json:"serversMemory,omitempty"`
+	AgentsMemory  string `mapstructure:"agentsMemory,omitempty" json:"agentsMemory,omitempty"`
 }
 
 type SimpleConfigOptionsK3d struct {
-	Wait                       bool                 `mapstructure:"wait" yaml:"wait" json:"wait"`
-	Timeout                    time.Duration        `mapstructure:"timeout" yaml:"timeout,omitempty" json:"timeout,omitempty"`
-	DisableLoadbalancer        bool                 `mapstructure:"disableLoadbalancer" yaml:"disableLoadbalancer" json:"disableLoadbalancer"`
-	DisableImageVolume         bool                 `mapstructure:"disableImageVolume" yaml:"disableImageVolume" json:"disableImageVolume"`
-	NoRollback                 bool                 `mapstructure:"disableRollback" yaml:"disableRollback" json:"disableRollback"`
+	Wait                       bool                 `mapstructure:"wait" json:"wait"`
+	Timeout                    time.Duration        `mapstructure:"timeout" json:"timeout,omitempty"`
+	DisableLoadbalancer        bool                 `mapstructure:"disableLoadbalancer" json:"disableLoadbalancer"`
+	DisableImageVolume         bool                 `mapstructure:"disableImageVolume" json:"disableImageVolume"`
+	NoRollback                 bool                 `mapstructure:"disableRollback" json:"disableRollback"`
 	PrepDisableHostIPInjection bool                 `mapstructure:"disableHostIPInjection" json:"disableHostIPInjection"`
-	NodeHookActions            []k3d.NodeHookAction `mapstructure:"nodeHookActions" yaml:"nodeHookActions,omitempty" json:"nodeHookActions,omitempty"`
+	NodeHookActions            []k3d.NodeHookAction `mapstructure:"nodeHookActions" json:"nodeHookActions,omitempty"`
 }
 
 type SimpleConfigOptionsK3s struct {
-	ExtraServerArgs []string `mapstructure:"extraServerArgs,omitempty" yaml:"extraServerArgs,omitempty" json:"extraServerArgs,omitempty"`
-	ExtraAgentArgs  []string `mapstructure:"extraAgentArgs,omitempty" yaml:"extraAgentArgs,omitempty" json:"extraAgentArgs,omitempty"`
+	ExtraServerArgs []string `mapstructure:"extraServerArgs,omitempty" json:"extraServerArgs,omitempty"`
+	ExtraAgentArgs  []string `mapstructure:"extraAgentArgs,omitempty" json:"extraAgentArgs,omitempty"`
 }
 
 // SimpleConfig describes the toplevel k3d configuration file.
 type SimpleConfig struct {
-	configtypes.TypeMeta `mapstructure:",squash" yaml:",inline"`
-	Name                 string                  `mapstructure:"name" yaml:"name,omitempty" json:"name,omitempty"`
-	Servers              int                     `mapstructure:"servers" yaml:"servers,omitempty" json:"servers,omitempty"` //nolint:lll    // default 1
-	Agents               int                     `mapstructure:"agents" yaml:"agents,omitempty" json:"agents,omitempty"`    //nolint:lll    // default 0
-	ExposeAPI            SimpleExposureOpts      `mapstructure:"kubeAPI" yaml:"kubeAPI,omitempty" json:"kubeAPI,omitempty"`
-	Image                string                  `mapstructure:"image" yaml:"image,omitempty" json:"image,omitempty"`
-	Network              string                  `mapstructure:"network" yaml:"network,omitempty" json:"network,omitempty"`
-	Subnet               string                  `mapstructure:"subnet" yaml:"subnet,omitempty" json:"subnet,omitempty"`
-	ClusterToken         string                  `mapstructure:"token" yaml:"clusterToken,omitempty" json:"clusterToken,omitempty"` // default: auto-generated
-	Volumes              []VolumeWithNodeFilters `mapstructure:"volumes" yaml:"volumes,omitempty" json:"volumes,omitempty"`
-	Ports                []PortWithNodeFilters   `mapstructure:"ports" yaml:"ports,omitempty" json:"ports,omitempty"`
-	Labels               []LabelWithNodeFilters  `mapstructure:"labels" yaml:"labels,omitempty" json:"labels,omitempty"`
-	Options              SimpleConfigOptions     `mapstructure:"options" yaml:"options,omitempty" json:"options,omitempty"`
-	Env                  []EnvVarWithNodeFilters `mapstructure:"env" yaml:"env,omitempty" json:"env,omitempty"`
+	configtypes.TypeMeta `mapstructure:",squash"`
+	Name                 string                  `mapstructure:"name" json:"name,omitempty"`
+	Servers              int                     `mapstructure:"servers" json:"servers,omitempty"` //nolint:lll    // default 1
+	Agents               int                     `mapstructure:"agents" json:"agents,omitempty"`   //nolint:lll    // default 0
+	ExposeAPI            SimpleExposureOpts      `mapstructure:"kubeAPI" json:"kubeAPI,omitempty"`
+	Image                string                  `mapstructure:"image" json:"image,omitempty"`
+	Network              string                  `mapstructure:"network" json:"network,omitempty"`
+	Subnet               string                  `mapstructure:"subnet" json:"subnet,omitempty"`
+	ClusterToken         string                  `mapstructure:"token" json:"clusterToken,omitempty"` // default: auto-generated
+	Volumes              []VolumeWithNodeFilters `mapstructure:"volumes" json:"volumes,omitempty"`
+	Ports                []PortWithNodeFilters   `mapstructure:"ports" json:"ports,omitempty"`
+	Labels               []LabelWithNodeFilters  `mapstructure:"labels" json:"labels,omitempty"`
+	Options              SimpleConfigOptions     `mapstructure:"options" json:"options,omitempty"`
+	Env                  []EnvVarWithNodeFilters `mapstructure:"env" json:"env,omitempty"`
 	Registries           struct {
-		Use    []string `mapstructure:"use" yaml:"use,omitempty" json:"use,omitempty"`
-		Create bool     `mapstructure:"create" yaml:"create,omitempty" json:"create,omitempty"`
-		Config string   `mapstructure:"config" yaml:"config,omitempty" json:"config,omitempty"` // registries.yaml (k3s config for containerd registry override)
-	} `mapstructure:"registries" yaml:"registries,omitempty" json:"registries,omitempty"`
+		Use    []string `mapstructure:"use" json:"use,omitempty"`
+		Create bool     `mapstructure:"create" json:"create,omitempty"`
+		Config string   `mapstructure:"config" json:"config,omitempty"` // registries.yaml (k3s config for containerd registry override)
+	} `mapstructure:"registries" json:"registries,omitempty"`
 }
 
 // SimpleExposureOpts provides a simplified syntax compared to the original k3d.ExposureOpts
 type SimpleExposureOpts struct {
-	Host     string `mapstructure:"host" yaml:"host,omitempty" json:"host,omitempty"`
-	HostIP   string `mapstructure:"hostIP" yaml:"hostIP,omitempty" json:"hostIP,omitempty"`
-	HostPort string `mapstructure:"hostPort" yaml:"hostPort,omitempty" json:"hostPort,omitempty"`
+	Host     string `mapstructure:"host" json:"host,omitempty"`
+	HostIP   string `mapstructure:"hostIP" json:"hostIP,omitempty"`
+	HostPort string `mapstructure:"hostPort" json:"hostPort,omitempty"`
 }
 
 // Kind implements Config.Kind
@@ -151,10 +151,10 @@ func (c SimpleConfig) GetAPIVersion() string {
 
 // ClusterConfig describes a single cluster config
 type ClusterConfig struct {
-	configtypes.TypeMeta `mapstructure:",squash" yaml:",inline"`
-	Cluster              k3d.Cluster                   `mapstructure:",squash" yaml:",inline"`
-	ClusterCreateOpts    k3d.ClusterCreateOpts         `mapstructure:"options" yaml:"options"`
-	KubeconfigOpts       SimpleConfigOptionsKubeconfig `mapstructure:"kubeconfig" yaml:"kubeconfig"`
+	configtypes.TypeMeta `mapstructure:",squash"`
+	k3d.Cluster          `mapstructure:",squash"`
+	ClusterCreateOpts    k3d.ClusterCreateOpts         `mapstructure:"options" json:"options"`
+	KubeconfigOpts       SimpleConfigOptionsKubeconfig `mapstructure:"kubeconfig" json:"kubeconfig"`
 }
 
 // Kind implements Config.Kind
@@ -168,8 +168,8 @@ func (c ClusterConfig) GetAPIVersion() string {
 
 // ClusterListConfig describes a list of clusters
 type ClusterListConfig struct {
-	configtypes.TypeMeta `mapstructure:",squash" yaml:",inline"`
-	Clusters             []k3d.Cluster `mapstructure:"clusters" yaml:"clusters"`
+	configtypes.TypeMeta `mapstructure:",squash"`
+	Clusters             []k3d.Cluster `mapstructure:"clusters" json:"clusters"`
 }
 
 func (c ClusterListConfig) GetKind() string {

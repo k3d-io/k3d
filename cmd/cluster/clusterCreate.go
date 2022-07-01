@@ -32,11 +32,10 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/sirupsen/logrus"
-	"inet.af/netaddr"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
+	"inet.af/netaddr"
+	"sigs.k8s.io/yaml"
 
 	cliutil "github.com/k3d-io/k3d/v5/cmd/util"
 	cliconfig "github.com/k3d-io/k3d/v5/cmd/util/config"

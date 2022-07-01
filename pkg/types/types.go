@@ -27,9 +27,10 @@ import (
 	"time"
 
 	"github.com/docker/go-connections/nat"
+	"inet.af/netaddr"
+
 	runtimeTypes "github.com/k3d-io/k3d/v5/pkg/runtimes/types"
 	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
-	"inet.af/netaddr"
 )
 
 // NodeStatusRestarting defines the status string that signals the node container is restarting
@@ -103,34 +104,34 @@ var DoNotCopyServerFlags = []string{
 }
 
 type HostAlias struct {
-	IP        string   `mapstructure:"ip" yaml:"ip" json:"ip"`
-	Hostnames []string `mapstructure:"hostnames" yaml:"hostnames" json:"hostnames"`
+	IP        string   `mapstructure:"ip" json:"ip"`
+	Hostnames []string `mapstructure:"hostnames" json:"hostnames"`
 }
 
 // ClusterCreateOpts describe a set of options one can set when creating a cluster
 type ClusterCreateOpts struct {
-	DisableImageVolume  bool              `yaml:"disableImageVolume" json:"disableImageVolume,omitempty"`
-	WaitForServer       bool              `yaml:"waitForServer" json:"waitForServer,omitempty"`
-	Timeout             time.Duration     `yaml:"timeout" json:"timeout,omitempty"`
-	DisableLoadBalancer bool              `yaml:"disableLoadbalancer" json:"disableLoadbalancer,omitempty"`
-	GPURequest          string            `yaml:"gpuRequest" json:"gpuRequest,omitempty"`
-	ServersMemory       string            `yaml:"serversMemory" json:"serversMemory,omitempty"`
-	AgentsMemory        string            `yaml:"agentsMemory" json:"agentsMemory,omitempty"`
-	NodeHooks           []NodeHook        `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
-	GlobalLabels        map[string]string `yaml:"globalLabels,omitempty" json:"globalLabels,omitempty"`
-	GlobalEnv           []string          `yaml:"globalEnv,omitempty" json:"globalEnv,omitempty"`
-	HostAliases         []HostAlias       `yaml:"hostAliases,omitempty" json:"hostAliases,omitempty"`
+	DisableImageVolume  bool              `json:"disableImageVolume,omitempty"`
+	WaitForServer       bool              `json:"waitForServer,omitempty"`
+	Timeout             time.Duration     `json:"timeout,omitempty"`
+	DisableLoadBalancer bool              `json:"disableLoadbalancer,omitempty"`
+	GPURequest          string            `json:"gpuRequest,omitempty"`
+	ServersMemory       string            `json:"serversMemory,omitempty"`
+	AgentsMemory        string            `json:"agentsMemory,omitempty"`
+	NodeHooks           []NodeHook        `json:"nodeHooks,omitempty"`
+	GlobalLabels        map[string]string `json:"globalLabels,omitempty"`
+	GlobalEnv           []string          `json:"globalEnv,omitempty"`
+	HostAliases         []HostAlias       `json:"hostAliases,omitempty"`
 	Registries          struct {
-		Create *Registry     `yaml:"create,omitempty" json:"create,omitempty"`
-		Use    []*Registry   `yaml:"use,omitempty" json:"use,omitempty"`
-		Config *k3s.Registry `yaml:"config,omitempty" json:"config,omitempty"` // registries.yaml (k3s config for containerd registry override)
-	} `yaml:"registries,omitempty" json:"registries,omitempty"`
+		Create *Registry     `json:"create,omitempty"`
+		Use    []*Registry   `json:"use,omitempty"`
+		Config *k3s.Registry `json:"config,omitempty"` // registries.yaml (k3s config for containerd registry override)
+	} `json:"registries,omitempty"`
 }
 
 // NodeHook is an action that is bound to a specifc stage of a node lifecycle
 type NodeHook struct {
-	Stage  LifecycleStage `yaml:"stage,omitempty" json:"stage,omitempty"`
-	Action NodeHookAction `yaml:"action,omitempty" json:"action,omitempty"`
+	Stage  LifecycleStage `json:"stage,omitempty"`
+	Action NodeHookAction `json:"action,omitempty"`
 }
 
 // LifecycleStage defines descriptors for specific stages in the lifecycle of a node or cluster object
@@ -146,10 +147,10 @@ const (
 type ClusterStartOpts struct {
 	WaitForServer   bool
 	Timeout         time.Duration
-	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	NodeHooks       []NodeHook `json:"nodeHooks,omitempty"`
 	EnvironmentInfo *EnvironmentInfo
 	Intent          Intent
-	HostAliases     []HostAlias `yaml:"hostAliases,omitempty" json:"hostAliases,omitempty"`
+	HostAliases     []HostAlias `json:"hostAliases,omitempty"`
 }
 
 // ClusterDeleteOpts describe a set of options one can set when deleting a cluster
@@ -161,7 +162,7 @@ type ClusterDeleteOpts struct {
 type NodeCreateOpts struct {
 	Wait            bool
 	Timeout         time.Duration
-	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	NodeHooks       []NodeHook `json:"nodeHooks,omitempty"`
 	EnvironmentInfo *EnvironmentInfo
 	ClusterToken    string
 }
@@ -170,7 +171,7 @@ type NodeCreateOpts struct {
 type NodeStartOpts struct {
 	Wait            bool
 	Timeout         time.Duration
-	NodeHooks       []NodeHook `yaml:"nodeHooks,omitempty" json:"nodeHooks,omitempty"`
+	NodeHooks       []NodeHook `json:"nodeHooks,omitempty"`
 	ReadyLogMessage string
 	EnvironmentInfo *EnvironmentInfo
 	Intent          Intent
@@ -212,8 +213,8 @@ type ImageImportOpts struct {
 }
 
 type IPAM struct {
-	IPPrefix netaddr.IPPrefix `yaml:"ipPrefix" json:"ipPrefix,omitempty"`
-	IPsUsed  []netaddr.IP     `yaml:"ipsUsed" json:"ipsUsed,omitempty"`
+	IPPrefix netaddr.IPPrefix `json:"ipPrefix,omitempty"`
+	IPsUsed  []netaddr.IP     `json:"ipsUsed,omitempty"`
 	Managed  bool             // IPAM is done by k3d
 }
 
@@ -224,25 +225,25 @@ type NetworkMember struct {
 
 // ClusterNetwork describes a network which a cluster is running in
 type ClusterNetwork struct {
-	Name     string `yaml:"name" json:"name,omitempty"`
-	ID       string `yaml:"id" json:"id"` // may be the same as name, but e.g. docker only differentiates by random ID, not by name
-	External bool   `yaml:"external" json:"isExternal,omitempty"`
-	IPAM     IPAM   `yaml:"ipam" json:"ipam,omitempty"`
+	Name     string `json:"name,omitempty"`
+	ID       string `json:"id"` // may be the same as name, but e.g. docker only differentiates by random ID, not by name
+	External bool   `json:"isExternal,omitempty"`
+	IPAM     IPAM   `json:"ipam,omitempty"`
 	Members  []*NetworkMember
 }
 
 // Cluster describes a k3d cluster
 type Cluster struct {
-	Name               string             `yaml:"name" json:"name,omitempty"`
-	Network            ClusterNetwork     `yaml:"network" json:"network,omitempty"`
-	Token              string             `yaml:"clusterToken" json:"clusterToken,omitempty"`
-	Nodes              []*Node            `yaml:"nodes" json:"nodes,omitempty"`
+	Name               string             `json:"name,omitempty"`
+	Network            ClusterNetwork     `json:"network,omitempty"`
+	Token              string             `json:"clusterToken,omitempty"`
+	Nodes              []*Node            `json:"nodes,omitempty"`
 	InitNode           *Node              // init server node
-	ExternalDatastore  *ExternalDatastore `yaml:"externalDatastore,omitempty" json:"externalDatastore,omitempty"`
-	KubeAPI            *ExposureOpts      `yaml:"kubeAPI" json:"kubeAPI,omitempty"`
-	ServerLoadBalancer *Loadbalancer      `yaml:"serverLoadbalancer,omitempty" json:"serverLoadBalancer,omitempty"`
-	ImageVolume        string             `yaml:"imageVolume" json:"imageVolume,omitempty"`
-	Volumes            []string           `yaml:"volumes,omitempty" json:"volumes,omitempty"` // k3d-managed volumes attached to this cluster
+	ExternalDatastore  *ExternalDatastore `json:"externalDatastore,omitempty"`
+	KubeAPI            *ExposureOpts      `json:"kubeAPI,omitempty"`
+	ServerLoadBalancer *Loadbalancer      `json:"serverLoadBalancer,omitempty"`
+	ImageVolume        string             `json:"imageVolume,omitempty"`
+	Volumes            []string           `json:"volumes,omitempty"` // k3d-managed volumes attached to this cluster
 }
 
 // ServerCountRunning returns the number of server nodes running in the cluster and the total number
@@ -282,49 +283,49 @@ type NodeIP struct {
 
 // Node describes a k3d node
 type Node struct {
-	Name          string            `yaml:"name" json:"name,omitempty"`
-	Role          Role              `yaml:"role" json:"role,omitempty"`
-	Image         string            `yaml:"image" json:"image,omitempty"`
-	Volumes       []string          `yaml:"volumes" json:"volumes,omitempty"`
-	Env           []string          `yaml:"env" json:"env,omitempty"`
+	Name          string            `json:"name,omitempty"`
+	Role          Role              `json:"role,omitempty"`
+	Image         string            `json:"image,omitempty"`
+	Volumes       []string          `json:"volumes,omitempty"`
+	Env           []string          `json:"env,omitempty"`
 	Cmd           []string          // filled automatically based on role
-	Args          []string          `yaml:"extraArgs" json:"extraArgs,omitempty"`
-	Ports         nat.PortMap       `yaml:"portMappings" json:"portMappings,omitempty"`
-	Restart       bool              `yaml:"restart" json:"restart,omitempty"`
-	Created       string            `yaml:"created" json:"created,omitempty"`
-	HostPidMode   bool              `yaml:"hostPidMode" json:"hostPidMode,omitempty"`
-	RuntimeLabels map[string]string `yaml:"runtimeLabels" json:"runtimeLabels,omitempty"`
-	K3sNodeLabels map[string]string `yaml:"k3sNodeLabels" json:"k3sNodeLabels,omitempty"`
+	Args          []string          `json:"extraArgs,omitempty"`
+	Ports         nat.PortMap       `json:"portMappings,omitempty"`
+	Restart       bool              `json:"restart,omitempty"`
+	Created       string            `json:"created,omitempty"`
+	HostPidMode   bool              `json:"hostPidMode,omitempty"`
+	RuntimeLabels map[string]string `json:"runtimeLabels,omitempty"`
+	K3sNodeLabels map[string]string `json:"k3sNodeLabels,omitempty"`
 	Networks      []string          // filled automatically
 	ExtraHosts    []string          // filled automatically (docker specific?)
-	ServerOpts    ServerOpts        `yaml:"serverOpts" json:"serverOpts,omitempty"`
-	AgentOpts     AgentOpts         `yaml:"agentOpts" json:"agentOpts,omitempty"`
+	ServerOpts    ServerOpts        `json:"serverOpts,omitempty"`
+	AgentOpts     AgentOpts         `json:"agentOpts,omitempty"`
 	GPURequest    string            // filled automatically
 	Memory        string            // filled automatically
 	State         NodeState         // filled automatically
 	IP            NodeIP            // filled automatically -> refers solely to the cluster network
-	HookActions   []NodeHook        `yaml:"hooks" json:"hooks,omitempty"`
+	HookActions   []NodeHook        `json:"hooks,omitempty"`
 }
 
 // ServerOpts describes some additional server role specific opts
 type ServerOpts struct {
-	IsInit  bool          `yaml:"isInitializingServer" json:"isInitializingServer,omitempty"`
-	KubeAPI *ExposureOpts `yaml:"kubeAPI" json:"kubeAPI"`
+	IsInit  bool          `json:"isInitializingServer,omitempty"`
+	KubeAPI *ExposureOpts `json:"kubeAPI"`
 }
 
 // ExposureOpts describes settings that the user can set for accessing the Kubernetes API
 type ExposureOpts struct {
 	nat.PortMapping        // filled automatically (reference to normal portmapping)
-	Host            string `yaml:"host,omitempty" json:"host,omitempty"`
+	Host            string `json:"host,omitempty"`
 }
 
 // ExternalDatastore describes an external datastore used for HA/multi-server clusters
 type ExternalDatastore struct {
-	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty"`
-	CAFile   string `yaml:"caFile" json:"caFile,omitempty"`
-	CertFile string `yaml:"certFile" json:"certFile,omitempty"`
-	KeyFile  string `yaml:"keyFile" json:"keyFile,omitempty"`
-	Network  string `yaml:"network" json:"network,omitempty"`
+	Endpoint string `json:"endpoint,omitempty"`
+	CAFile   string `json:"caFile,omitempty"`
+	CertFile string `json:"certFile,omitempty"`
+	KeyFile  string `json:"keyFile,omitempty"`
+	Network  string `json:"network,omitempty"`
 }
 
 // AgentOpts describes some additional agent role specific opts

@@ -28,15 +28,15 @@ import (
 	"os"
 	"strings"
 
+	"github.com/liggitt/tabwriter"
+	"github.com/spf13/cobra"
+	"sigs.k8s.io/yaml"
+
 	"github.com/k3d-io/k3d/v5/cmd/util"
 	k3cluster "github.com/k3d-io/k3d/v5/pkg/client"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
-	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
-
-	"github.com/liggitt/tabwriter"
 )
 
 // TODO : deal with --all flag to manage differentiate started cluster and stopped cluster like `docker ps` and `docker ps -a`
@@ -103,11 +103,11 @@ func PrintClusters(clusters []*k3d.Cluster, flags clusterFlags) {
 	// the output details printed when we dump JSON/YAML
 	type jsonOutput struct {
 		k3d.Cluster
-		ServersRunning int  `yaml:"servers_running" json:"serversRunning"`
-		ServersCount   int  `yaml:"servers_count" json:"serversCount"`
-		AgentsRunning  int  `yaml:"agents_running" json:"agentsRunning"`
-		AgentsCount    int  `yaml:"agents_count" json:"agentsCount"`
-		LoadBalancer   bool `yaml:"has_lb,omitempty" json:"hasLoadbalancer,omitempty"`
+		ServersRunning int  `json:"serversRunning"`
+		ServersCount   int  `json:"serversCount"`
+		AgentsRunning  int  `json:"agentsRunning"`
+		AgentsCount    int  `json:"agentsCount"`
+		LoadBalancer   bool `json:"hasLoadbalancer,omitempty"`
 	}
 
 	jsonOutputEntries := []jsonOutput{}

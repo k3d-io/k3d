@@ -30,18 +30,18 @@ import (
 	"strings"
 
 	"github.com/docker/go-connections/nat"
+	"inet.af/netaddr"
+	"sigs.k8s.io/yaml"
+
 	cliutil "github.com/k3d-io/k3d/v5/cmd/util" // TODO: move parseapiport to pkg
 	"github.com/k3d-io/k3d/v5/pkg/client"
 	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 	"github.com/k3d-io/k3d/v5/pkg/util"
 	"github.com/k3d-io/k3d/v5/version"
-	"gopkg.in/yaml.v2"
-	"inet.af/netaddr"
-
-	l "github.com/k3d-io/k3d/v5/pkg/logger"
 )
 
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration
