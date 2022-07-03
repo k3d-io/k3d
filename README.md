@@ -12,8 +12,6 @@
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
-**Please Note:** `main` is now v5.0.0 and the code for v4.x can be found in the `main-v4` branch!
-
 ## [k3s in docker](https://k3d.io)
 
 k3s is the lightweight Kubernetes distribution by Rancher: [k3s-io/k3s](https://github.com/k3s-io/k3s)
@@ -21,6 +19,13 @@ k3s is the lightweight Kubernetes distribution by Rancher: [k3s-io/k3s](https://
 k3d creates containerized k3s clusters. This means, that you can spin up a multi-node k3s cluster on a single machine using docker.
 
 [![asciicast](https://asciinema.org/a/436420.svg)](https://asciinema.org/a/436420)
+
+**Note:** k3d is a **community-driven project** but it's not an official Rancher (SUSE) product.
+**Sponsoring**: To spend any significant amount of time improving k3d, we rely on sponsorships:
+
+  - [**GitHub Sponsors**: ![GitHub Sponsors](https://img.shields.io/github/sponsors/k3d-io?label=GitHub%20Sponsors&style=flat-square)](https://github.com/sponsors/k3d-io)
+  - [**LiberaPay**: ![Liberapay patrons](https://img.shields.io/liberapay/patrons/k3d-io?label=Liberapay%20Patrons&style=flat-square)](https://liberapay.com/k3d-io)
+  - **IssueHunt**: <https://issuehunt.io/r/k3d-io/k3d>
 
 ## Learning
 
