@@ -559,6 +559,19 @@
     Using rootless Podman
   </a>
   
+    <nav class="md-nav" aria-label="Using rootless Podman">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-cgroup-v2" class="md-nav__link">
+    Using cgroup (v2)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -1246,6 +1259,19 @@
     Using rootless Podman
   </a>
   
+    <nav class="md-nav" aria-label="Using rootless Podman">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-cgroup-v2" class="md-nav__link">
+    Using cgroup (v2)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -1317,6 +1343,21 @@ sudo --preserve-env<span class="o">=</span>DOCKER_HOST --preserve-env<span class
 <span class="nb">export</span> <span class="nv">DOCKER_SOCK</span><span class="o">=</span><span class="nv">$XDG_RUNTIME_DIR</span>/podman/podman.sock
 k3d cluster create
 </code></pre></div>
+<h4 id="using-cgroup-v2">Using cgroup (v2)<a class="headerlink" href="#using-cgroup-v2" title="Permanent link">&para;</a></h4>
+<p>By default, a non-root user can only get memory controller and pids controller to be delegated.</p>
+<p>To run properly we need to enable CPU, CPUSET, and I/O delegation</p>
+<div class="admonition note">
+<p class="admonition-title">Make sure you&rsquo;re running cgroup v2</p>
+<p>If <code>/sys/fs/cgroup/cgroup.controllers</code> is present on your system, you are using v2, otherwise you are using v1.</p>
+</div>
+<div class="highlight"><pre><span></span><code>mkdir -p /etc/systemd/system/user@.service.d
+cat &gt; /etc/systemd/system/user@.service.d/delegate.conf <span class="s">&lt;&lt;EOF</span>
+<span class="s">[Service]</span>
+<span class="s">Delegate=cpu cpuset io memory pids</span>
+<span class="s">EOF</span>
+systemctl daemon-reload
+</code></pre></div>
+<p>Reference: <a href="https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling-cpu-cpuset-and-io-delegation">https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling-cpu-cpuset-and-io-delegation</a></p>
 <h3 id="using-remote-podman">Using remote Podman<a class="headerlink" href="#using-remote-podman" title="Permanent link">&para;</a></h3>
 <p><a href="https://github.com/containers/podman/blob/main/docs/tutorials/remote_client.md">Start Podman on the remote host</a>, and then set <code>DOCKER_HOST</code> when running k3d:</p>
 <div class="highlight"><pre><span></span><code>export DOCKER_HOST=ssh://username@hostname
@@ -1344,7 +1385,7 @@ k3d cluster create
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">May 13, 2022</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 15, 2022</span>
       
     
   </small>
