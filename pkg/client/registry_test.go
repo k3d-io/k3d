@@ -35,17 +35,17 @@ func TestRegistryGenerateLocalRegistryHostingConfigMapYAML(t *testing.T) {
 	var err error
 
 	expectedYAMLString := `apiVersion: v1
+data:
+  localRegistryHosting.v1: |
+    help: https://k3d.io/usage/guides/registries/#using-a-local-registry
+    host: test-host:5432
+    hostFromClusterNetwork: test-host:1234
+    hostFromContainerRuntime: test-host:1234
 kind: ConfigMap
 metadata:
   name: local-registry-hosting
   namespace: kube-public
-data:
-  localRegistryHosting.v1: |
-    host: test-host:5432
-    hostFromClusterNetwork: test-host:1234
-    hostFromContainerRuntime: test-host:1234
-    help: https://k3d.io/usage/guides/registries/#using-a-local-registry
-`
+	`
 
 	reg := &k3d.Registry{
 		Host: "test-host",
@@ -62,7 +62,7 @@ data:
 	}
 
 	if !(strings.TrimSpace(string(cm)) == strings.TrimSpace(expectedYAMLString)) {
-		t.Errorf("Computed configmap\n-> Actual: %s\n  does not match expected YAML\n-> Expected: %s", strings.TrimSpace(string(cm)), strings.TrimSpace(expectedYAMLString))
+		t.Errorf("Computed configmap\n-> Actual:\n%s\n  does not match expected YAML\n-> Expected:\n%s", strings.TrimSpace(string(cm)), strings.TrimSpace(expectedYAMLString))
 	}
 
 }

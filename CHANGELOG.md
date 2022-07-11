@@ -1,5 +1,22 @@
 # Changelog
 
+## v5.4.4 - 11.07.2022
+
+### Added
+
+- Docs: Clarification of Network Policies in K3s (#1081)
+
+### Changed
+
+- Sponsorship information and updated issue templates
+- Switch to `sigs.k8s.io/yaml` everywhere in the project to allow for consistent json/yaml output (#1094)
+
+### Fixed
+
+- Support running k3d with podman in rootless mode using cgroups v2 (#1084)
+- `k3d config init` used the legacy config format (#1091)
+- Properly handle image prefix "docker.io", etc during image import (#1096)
+
 ## v5.4.3 - 07.06.2022
 
 ### Added
