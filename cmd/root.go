@@ -33,8 +33,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus/hooks/writer"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 
 	"github.com/k3d-io/k3d/v5/cmd/cluster"
 	cfg "github.com/k3d-io/k3d/v5/cmd/config"
@@ -46,9 +47,8 @@ import (
 	cliutil "github.com/k3d-io/k3d/v5/cmd/util"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
+	"github.com/k3d-io/k3d/v5/pkg/util"
 	"github.com/k3d-io/k3d/v5/version"
-	"github.com/sirupsen/logrus"
-	"github.com/sirupsen/logrus/hooks/writer"
 )
 
 // RootFlags describes a struct that holds flags that can be set on root level of the command
@@ -109,7 +109,7 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 				if err != nil {
 					l.Log().Fatalln(err)
 				}
-				err = yaml.NewEncoder(os.Stdout).Encode(info)
+				err = util.NewYAMLEncoder(os.Stdout).Encode(info)
 				if err != nil {
 					l.Log().Fatalln(err)
 				}

@@ -24,13 +24,14 @@ package debug
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+	"sigs.k8s.io/yaml"
+
 	"github.com/k3d-io/k3d/v5/cmd/util"
 	"github.com/k3d-io/k3d/v5/pkg/client"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	"github.com/k3d-io/k3d/v5/pkg/types"
-	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 // NewCmdDebug returns a new cobra command

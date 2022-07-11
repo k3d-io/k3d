@@ -34,8 +34,8 @@ package types
  */
 
 type Loadbalancer struct {
-	Node   *Node               `mapstructure:",squash" yaml:",inline"` // the underlying node
-	Config *LoadbalancerConfig `mapstructure:"config" yaml:"config"`   // its configuration
+	*Node  `mapstructure:",squash"` // the underlying node
+	Config *LoadbalancerConfig      `mapstructure:"config" json:"config"` // its configuration
 }
 
 func NewLoadbalancer() *Loadbalancer {
@@ -68,13 +68,13 @@ func NewLoadbalancer() *Loadbalancer {
  * 		- k3d-k3s-default-agent-1
  */
 type LoadbalancerConfig struct {
-	Ports    map[string][]string  `yaml:"ports"`
-	Settings LoadBalancerSettings `yaml:"settings"`
+	Ports    map[string][]string  `json:"ports"`
+	Settings LoadBalancerSettings `json:"settings"`
 }
 
 type LoadBalancerSettings struct {
-	WorkerConnections   int `yaml:"workerConnections"`
-	DefaultProxyTimeout int `yaml:"defaultProxyTimeout,omitempty"`
+	WorkerConnections   int `json:"workerConnections"`
+	DefaultProxyTimeout int `json:"defaultProxyTimeout,omitempty"`
 }
 
 const (

@@ -28,13 +28,14 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/imdario/mergo"
+	"sigs.k8s.io/yaml"
+
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes/docker"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 	"github.com/k3d-io/k3d/v5/pkg/types/k8s"
-	"gopkg.in/yaml.v2"
 )
 
 func RegistryRun(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registry) (*k3d.Node, error) {
@@ -275,19 +276,19 @@ func RegistryFromNode(node *k3d.Node) (*k3d.Registry, error) {
 func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runtime runtimes.Runtime, registries []*k3d.Registry) ([]byte, error) {
 
 	type cmMetadata struct {
-		Name      string `yaml:"name"`
-		Namespace string `yaml:"namespace"`
+		Name      string `json:"name"`
+		Namespace string `json:"namespace"`
 	}
 
 	type cmData struct {
-		RegHostV1 string `yaml:"localRegistryHosting.v1"`
+		RegHostV1 string `json:"localRegistryHosting.v1"`
 	}
 
 	type configmap struct {
-		APIVersion string     `yaml:"apiVersion"`
-		Kind       string     `yaml:"kind"`
-		Metadata   cmMetadata `yaml:"metadata"`
-		Data       cmData     `yaml:"data"`
+		APIVersion string     `json:"apiVersion"`
+		Kind       string     `json:"kind"`
+		Metadata   cmMetadata `json:"metadata"`
+		Data       cmData     `json:"data"`
 	}
 
 	if len(registries) > 1 {

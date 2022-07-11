@@ -33,33 +33,33 @@ const (
 )
 
 type RegistryOptions struct {
-	ConfigFile string        `yaml:"configFile,omitempty" json:"configFile,omitempty"`
-	Proxy      RegistryProxy `yaml:"proxy,omitempty" json:"proxy,omitempty"`
+	ConfigFile string        `json:"configFile,omitempty"`
+	Proxy      RegistryProxy `json:"proxy,omitempty"`
 }
 
 type RegistryProxy struct {
-	RemoteURL string `yaml:"remoteURL" json:"remoteURL"`
-	Username  string `yaml:"username,omitempty" json:"username,omitempty"`
-	Password  string `yaml:"password,omitempty" json:"password,omitempty"`
+	RemoteURL string `json:"remoteURL"`
+	Username  string `json:"username,omitempty"`
+	Password  string `json:"password,omitempty"`
 }
 
 // Registry describes a k3d-managed registry
 type Registry struct {
 	ClusterRef   string          // filled automatically -> if created with a cluster
-	Protocol     string          `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
-	Host         string          `yaml:"host" json:"host"`
-	Image        string          `yaml:"image,omitempty" json:"image,omitempty"`
-	Network      string          `yaml:"Network,omitempty" json:"Network,omitempty"`
-	Volumes      []string        `yaml:"Volumes,omitempty" json:"Volumes,omitempty"`
-	ExposureOpts ExposureOpts    `yaml:"expose" json:"expose"`
-	Options      RegistryOptions `yaml:"options,omitempty" json:"options,omitempty"`
+	Protocol     string          `json:"protocol,omitempty"` // default: http
+	Host         string          `json:"host"`
+	Image        string          `json:"image,omitempty"`
+	Network      string          `json:"Network,omitempty"`
+	Volumes      []string        `json:"Volumes,omitempty"`
+	ExposureOpts ExposureOpts    `json:"expose"`
+	Options      RegistryOptions `json:"options,omitempty"`
 }
 
 // RegistryExternal describes a minimal spec for an "external" registry
 // "external" meaning, that it's unrelated to the current cluster
 // e.g. used for the --registry-use flag registry reference
 type RegistryExternal struct {
-	Protocol string `yaml:"protocol,omitempty" json:"protocol,omitempty"` // default: http
-	Host     string `yaml:"host" json:"host"`
-	Port     string `yaml:"port" json:"port"`
+	Protocol string `json:"protocol,omitempty"` // default: http
+	Host     string `json:"host"`
+	Port     string `json:"port"`
 }

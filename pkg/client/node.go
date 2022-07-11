@@ -34,25 +34,24 @@ import (
 	"strings"
 	"time"
 
-	copystruct "github.com/mitchellh/copystructure"
-	"gopkg.in/yaml.v2"
-
 	"github.com/docker/go-connections/nat"
 	dockerunits "github.com/docker/go-units"
 	"github.com/imdario/mergo"
+	copystruct "github.com/mitchellh/copystructure"
+	"golang.org/x/sync/errgroup"
+	"sigs.k8s.io/yaml"
+
 	"github.com/k3d-io/k3d/v5/pkg/actions"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes/docker"
-	runtimeTypes "github.com/k3d-io/k3d/v5/pkg/runtimes/types"
-	"github.com/k3d-io/k3d/v5/version"
-
 	runtimeErrors "github.com/k3d-io/k3d/v5/pkg/runtimes/errors"
+	runtimeTypes "github.com/k3d-io/k3d/v5/pkg/runtimes/types"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/k3d-io/k3d/v5/pkg/types/fixes"
 	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 	"github.com/k3d-io/k3d/v5/pkg/util"
-	"golang.org/x/sync/errgroup"
+	"github.com/k3d-io/k3d/v5/version"
 )
 
 // NodeAddToCluster adds a node to an existing cluster
