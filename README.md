@@ -8,7 +8,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/k3d-io/k3d?style=flat-square)](https://goreportcard.com/report/github.com/k3d-io/k3d)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-19-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-20-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
@@ -154,6 +154,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://www.zenior.no/"><img src="https://avatars.githubusercontent.com/u/1142578?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Erik Godding Boye</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=erikgb" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/ethinx"><img src="https://avatars.githubusercontent.com/u/965612?v=4?s=100" width="100px;" alt=""/><br /><sub><b>York Wong</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=ethinx" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/gonzalesraul"><img src="https://avatars.githubusercontent.com/u/7568984?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Raul Gonzales</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=gonzalesraul" title="Code">💻</a> <a href="https://github.com/k3d-io/k3d/commits?author=gonzalesraul" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://hoon.dev"><img src="https://avatars.githubusercontent.com/u/6194958?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Sunghoon Kang</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=devholic" title="Code">💻</a></td>
   </tr>
 </table>
 
