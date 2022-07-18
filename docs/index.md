@@ -53,27 +53,45 @@ You have several options there:
 
 #### Install current latest release
 
-- wget: `#!bash wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash`
-- curl: `#!bash curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash`
+- wget:
+    ``bash
+    wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+    ```
+- curl:
+    ```bash
+    curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+    ```
 
 #### Install specific release
 
 Use the install script to grab a specific release (via `TAG` environment variable):
 
-- wget: `#!bash wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.0.0 bash`
-- curl: `#!bash curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.0.0 bash`
+- wget: 
+    ```bash
+    wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.0.0 bash
+    ```
+- curl:
+    ```bash
+    curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.0.0 bash
+    ```
 
 ### Other Installers
 
 ??? Tip "Other Installation Methods"
 
-    - [:fontawesome-solid-beer: Homebrew (MacOS/Linux)](https://brew.sh): `#!bash brew install k3d`
+    - [:fontawesome-solid-beer: Homebrew (MacOS/Linux)](https://brew.sh):
+        ```bash
+        brew install k3d
+        ```
 
         *Note*: The formula can be found in [homebrew/homebrew-core](https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb) and is mirrored to [homebrew/linuxbrew-core](https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb)
 
-    - [:material-arch: AUR (Arch Linux User Repository)](https://aur.archlinux.org/):  `#!bash yay -S rancher-k3d-bin`
+    - [:material-arch: AUR (Arch Linux User Repository)](https://aur.archlinux.org/):
+        ```bash
+        yay -S rancher-k3d-bin
+        ```
 
-      Package [rancher-k3d-bin](https://aur.archlinux.org/packages/rancher-k3d-bin/)
+        Package [rancher-k3d-bin](https://aur.archlinux.org/packages/rancher-k3d-bin/)
 
     - [:material-github: Download GitHub Release](https://github.com/k3d-io/k3d/releases)
 
