@@ -57,7 +57,8 @@ markdown_extensions:
   - toc:
       permalink: true
   - admonition # https://squidfunk.github.io/mkdocs-material/extensions/admonition/
-  - codehilite # https://squidfunk.github.io/mkdocs-material/extensions/codehilite/
+  - pymdownx.highlight: # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown-extensions/#highlight
+      use_pygments: true
   - pymdownx.inlinehilite # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#inlinehilite
   - pymdownx.superfences # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#superfences
   - pymdownx.tabbed # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#tabbed
