@@ -23,6 +23,7 @@ package config
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,6 +32,7 @@ import (
 	"github.com/spf13/viper"
 	"sigs.k8s.io/yaml"
 
+	"github.com/k3d-io/k3d/v5/cmd/util"
 	"github.com/k3d-io/k3d/v5/pkg/config"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 )
@@ -46,7 +48,12 @@ func InitViperWithConfigFile(cfgViper *viper.Viper, configFile string) error {
 	// Set config file, if specified
 	if configFile != "" {
 
-		if _, err := os.Stat(configFile); err != nil {
+		streams := util.StandardIOStreams()
+		//flag to mark from where we read the config
+		fromStdIn := false
+		if configFile == "-" {
+			fromStdIn = true
+		} else if _, err := os.Stat(configFile); err != nil {
 			l.Log().Fatalf("Failed to stat config file %s: %+v", configFile, err)
 		}
 
@@ -58,10 +65,20 @@ func InitViperWithConfigFile(cfgViper *viper.Viper, configFile string) error {
 		}
 		defer tmpfile.Close()
 
-		originalcontent, err := os.ReadFile(configFile)
-		if err != nil {
-			l.Log().Fatalf("error reading config file %s: %v", configFile, err)
+		var originalcontent []byte
+		if fromStdIn {
+			// otherwise read from stdin
+			originalcontent, err = ioutil.ReadAll(streams.In)
+			if err != nil {
+				l.Log().Fatalf("Failed to read config file from stdin: %+v", configFile, err)
+			}
+		} else {
+			originalcontent, err = os.ReadFile(configFile)
+			if err != nil {
+				l.Log().Fatalf("error reading config file %s: %v", configFile, err)
+			}
 		}
+
 		expandedcontent := os.ExpandEnv(string(originalcontent))
 		if _, err := tmpfile.WriteString(expandedcontent); err != nil {
 			l.Log().Fatalf("error writing expanded config file contents to temp file %s: %v", tmpfile.Name(), err)
