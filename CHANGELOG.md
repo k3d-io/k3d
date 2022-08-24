@@ -1,5 +1,22 @@
 # Changelog
 
+## v5.4.5 - 24.08.2022
+
+### Added
+
+- add: ability to load configuration from stdin (#1126)
+
+### Changed
+
+- update dependencies
+- introduce Go workspace mode
+- updated docker/k3s version test-matrix
+
+### Fixed
+
+- docs: fix code highlighting
+- docs: beautify bash commands (#1103)
+
 ## v5.4.4 - 11.07.2022
 
 ### Added
