@@ -71,7 +71,7 @@ TESTS     := ./...
 TESTFLAGS :=
 LDFLAGS   := -w -s -X github.com/k3d-io/k3d/v5/version.Version=${GIT_TAG} -X github.com/k3d-io/k3d/v5/version.K3sVersion=${K3S_TAG}
 GCFLAGS   := 
-GOFLAGS   := -mod vendor
+GOFLAGS   := -mod readonly
 BINDIR    := $(CURDIR)/bin
 BINARIES  := k3d
 

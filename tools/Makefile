@@ -13,7 +13,7 @@ TAGS      :=
 TESTS     := .
 TESTFLAGS :=
 LDFLAGS   := -w -s -X github.com/k3d-io/k3d/tools/version.Version=${GIT_TAG}
-GOFLAGS   :=
+GOFLAGS   := -mod readonly
 BINDIR    := $(CURDIR)/bin
 BINARIES  := k3d-tools
 

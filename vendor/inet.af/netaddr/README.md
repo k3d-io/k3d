@@ -1,5 +1,10 @@
 # netaddr [![Test Status](https://github.com/inetaf/netaddr/workflows/Linux/badge.svg)](https://github.com/inetaf/netaddr/actions) [![Go Reference](https://pkg.go.dev/badge/inet.af/netaddr.svg)](https://pkg.go.dev/inet.af/netaddr)
 
+## Deprecated
+
+Please see https://pkg.go.dev/go4.org/netipx and the standard library's
+[`net/netip`](https://pkg.go.dev/net/netip).
+
 ## What
 
 This is a package containing a new IP address type for Go.
