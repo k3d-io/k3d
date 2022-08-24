@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package v1alpha4
+package v1alpha5
 
 import (
 	_ "embed"
@@ -33,16 +33,24 @@ import (
 	"github.com/k3d-io/k3d/v5/version"
 )
 
-const ApiVersion = "k3d.io/v1alpha4"
+const ApiVersion = "k3d.io/v1alpha5"
 
 // JSONSchema describes the schema used to validate config files
 //
-//go:embed schema.json
-var JSONSchema string
+//go:embed schema-simpleconfig.json
+var JSONSchemaSimpleConfig string
+
+//go:embed schema-simpleconfiglist.json
+var JSONSchemaSimpleConfigList string
+
+var JSONSchemaMap = map[string]string{
+	"simpleconfig":     JSONSchemaSimpleConfig,
+	"simpleconfiglist": JSONSchemaSimpleConfigList,
+}
 
 // DefaultConfigTpl for printing
 const DefaultConfigTpl = `---
-apiVersion: k3d.io/v1alpha4
+apiVersion: k3d.io/v1alpha5
 kind: Simple
 metadata:
   name: %s
@@ -173,6 +181,19 @@ func (c SimpleConfig) GetAPIVersion() string {
 	return ApiVersion
 }
 
+type SimpleConfigList struct {
+	config.TypeMeta `mapstructure:",squash"`
+	Items           []SimpleConfig `mapstructure:"items" json:"items"`
+}
+
+func (c SimpleConfigList) GetKind() string {
+	return "SimpleList"
+}
+
+func (c SimpleConfigList) GetAPIVersion() string {
+	return ApiVersion
+}
+
 // ClusterConfig describes a single cluster config
 type ClusterConfig struct {
 	config.TypeMeta   `mapstructure:",squash"`
@@ -210,6 +231,10 @@ func GetConfigByKind(kind string) (config.Config, error) {
 	switch strings.ToLower(kind) {
 	case "simple":
 		return SimpleConfig{}, nil
+	case "simplelist":
+		return SimpleConfigList{}, nil
+	case "simpleconfiglist":
+		return SimpleConfigList{}, nil
 	case "cluster":
 		return ClusterConfig{}, nil
 	case "clusterlist":

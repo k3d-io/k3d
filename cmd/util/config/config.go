@@ -79,7 +79,7 @@ func InitViperWithConfigFile(cfgViper *viper.Viper, configFile string) error {
 			l.Log().Fatalf("Failed to read config file %s: %+v", configFile, err)
 		}
 
-		schema, err := config.GetSchemaByVersion(cfgViper.GetString("apiVersion"))
+		schema, err := config.GetSchema(cfgViper.GetString("apiVersion"))
 		if err != nil {
 			l.Log().Fatalf("Cannot validate config file %s: %+v", configFile, err)
 		}

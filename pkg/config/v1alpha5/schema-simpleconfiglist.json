@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SimpleConfigList",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind"
+  ],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": [
+        "k3d.io/v1alpha5"
+      ],
+      "default": "k3d.io/v1alpha5"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "SimpleConfigList",
+        "SimpleList"
+      ],
+      "default": "SimpleConfigList"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SimpleConfig"
+      }
+    }
+  },
+  "additionalProperties": false
+}

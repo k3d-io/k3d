@@ -62,7 +62,7 @@ func NewCmdConfigMigrate() *cobra.Command {
 				l.Log().Fatalf("Failed to read config file %s: %+v", configFile, err)
 			}
 
-			schema, err := config.GetSchemaByVersion(cfgViper.GetString("apiVersion"))
+			schema, err := config.GetSchema(cfgViper.GetString("apiVersion"))
 			if err != nil {
 				l.Log().Fatalf("Cannot validate config file %s: %+v", configFile, err)
 			}

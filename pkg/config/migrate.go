@@ -40,7 +40,7 @@ func Migrate(config types.Config, targetVersion string) (types.Config, error) {
 		return nil, fmt.Errorf("error migrating config: %w", err)
 	}
 
-	schema, err := GetSchemaByVersion(cfg.GetAPIVersion())
+	schema, err := GetSchema(cfg.GetAPIVersion())
 	if err != nil {
 		return nil, fmt.Errorf("error getting schema for config apiVersion %s: %w", cfg.GetAPIVersion(), err)
 	}
