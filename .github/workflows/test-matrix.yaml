@@ -36,6 +36,7 @@ jobs:
         docker_version:
           - "20.10.5"
           - "20.10.12"
+          - "20.10.17"
     steps:
       - uses: actions/checkout@v2
       - name: Setup Docker
@@ -81,6 +82,7 @@ jobs:
         k3s_channel:
           - "v1.22"
           - "v1.23"
+          - "v1.24"
     steps:
       - uses: actions/checkout@v2
       - name: Setup Docker
