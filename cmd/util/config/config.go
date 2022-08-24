@@ -23,7 +23,7 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -68,9 +68,9 @@ func InitViperWithConfigFile(cfgViper *viper.Viper, configFile string) error {
 		var originalcontent []byte
 		if fromStdIn {
 			// otherwise read from stdin
-			originalcontent, err = ioutil.ReadAll(streams.In)
+			originalcontent, err = io.ReadAll(streams.In)
 			if err != nil {
-				l.Log().Fatalf("Failed to read config file from stdin: %+v", configFile, err)
+				l.Log().Fatalf("Failed to read config file from stdin: %+v", err)
 			}
 		} else {
 			originalcontent, err = os.ReadFile(configFile)
