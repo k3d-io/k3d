@@ -26,11 +26,11 @@ if [[ -n "$K3S_IMAGE" ]]; then
   EXTRA_TITLE="(rancher/k3s:$K3S_IMAGE)"
 fi
 
-export CURRENT_STAGE="Test | config-file | $K3S_IMAGE"
+export CURRENT_STAGE="Test | config-file-stdin | $K3S_IMAGE"
 
 configfileoriginal="$CURR_DIR/assets/config_test_simple.yaml"
 configfile="/tmp/config_test_simple-tmp_$(date -u +'%Y%m%dT%H%M%SZ').yaml"
-clustername="configtest"
+clustername="configteststdin"
 
 sed -E "s/^  name:.+/  name: $clustername/g" < "$configfileoriginal" > "$configfile" # replace cluster name in config file so we can use it in this script without running into override issues
 cat "$configfile"
@@ -56,7 +56,7 @@ env:
       - all
 registries:
   create:
-    name: registry.localhost
+    name: stdintest.registry.localhost
   use: []
   config: |
     mirrors:
@@ -90,7 +90,7 @@ options:
           - loadbalancer
 EOF
 
-"$?" || failed "could not create cluster $clustername $EXTRA_TITLE"
+test $? -eq 0 || failed "could not create cluster $clustername $EXTRA_TITLE"
 
 info "Sleeping for 5 seconds to give the cluster enough time to get ready..."
 sleep 5
@@ -117,7 +117,7 @@ info "Ensuring that k3s node labels have been set as stated in the config"
 k3s_assert_node_label "k3d-$clustername-server-0" "foo=bar" || failed "Expected label 'foo=bar' not present on node k3d-$clustername-server-0"
 
 ## Registry Node
-registryname="registry.localhost"
+registryname="stdintest.registry.localhost"
 info "Ensuring, that we have a registry node present"
 $EXE node list "$registryname" || failed "Expected registry node $registryname to be present"
 
