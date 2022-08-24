@@ -8,7 +8,7 @@ env:
   IMAGE_REGISTRY: ghcr.io
   IMAGE_BASE_REPO: k3d-io
   IMAGE_PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
-  GO_VERSION: "1.17.x"
+  GO_VERSION: "1.18.x"
   DOCKER_VERSION: "20.10"
     
 jobs:
@@ -36,7 +36,7 @@ jobs:
         run: make test
       - name: Run E2E Tests
         timeout-minutes: 20
-        run: make e2e
+        run: make e2e -e E2E_PARALLEL=3
       # Builds
       - name: Test Platform Builds
         run: make build-cross
