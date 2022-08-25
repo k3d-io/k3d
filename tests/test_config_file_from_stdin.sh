@@ -28,22 +28,18 @@ fi
 
 export CURRENT_STAGE="Test | config-file-stdin | $K3S_IMAGE"
 
-configfileoriginal="$CURR_DIR/assets/config_test_simple.yaml"
-configfile="/tmp/config_test_simple-tmp_$(date -u +'%Y%m%dT%H%M%SZ').yaml"
 clustername="configteststdin"
 
-sed -E "s/^  name:.+/  name: $clustername/g" < "$configfileoriginal" > "$configfile" # replace cluster name in config file so we can use it in this script without running into override issues
-cat "$configfile"
 highlight "[START] ConfigTest $EXTRA_TITLE"
 
 info "Creating cluster $clustername..."
 
-cat <<EOF | $EXE cluster create "$clustername" --config=-
+cat <<EOF | $EXE cluster create --config=-
 apiVersion: k3d.io/v1alpha4
 kind: Simple
 metadata:
-  name: test
-servers: 3
+  name: $clustername
+servers: 1
 agents: 2
 #image: rancher/k3s:latest
 volumes:
@@ -99,8 +95,8 @@ sleep 5
 info "Checking that we have access to the cluster..."
 check_clusters "$clustername" || failed "error checking cluster"
 
-info "Checking that we have 5 nodes online..."
-check_multi_node "$clustername" 5 || failed "failed to verify number of nodes"
+info "Checking that we have 3 nodes online..."
+check_multi_node "$clustername" 3 || failed "failed to verify number of nodes"
 
 # 2. check some config settings
 
@@ -128,10 +124,16 @@ exec_in_node "k3d-$clustername-server-0" "cat /etc/rancher/k3s/registries.yaml" 
 
 # Cleanup
 
-info "Deleting cluster $clustername (using config file)..."
-$EXE cluster delete --config "$configfile" --trace || failed "could not delete the cluster $clustername"
+info "Deleting cluster $clustername (using config file from stdin)..."
+cat <<EOF | $EXE cluster delete --config=-
+apiVersion: k3d.io/v1alpha4
+kind: Simple
+metadata:
+  name: $clustername
+EOF
 
-rm "$configfile"
+test $? -eq 0 || failed "could not delete cluster $clustername from stdin config"
+
 
 highlight "[DONE] ConfigTest $EXTRA_TITLE"
 

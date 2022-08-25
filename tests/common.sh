@@ -45,7 +45,10 @@ failed() {
   elif [[ -n "$LOG_FILE" ]]; then
     mv "$LOG_FILE" "$LOG_FILE.failed"
   fi
-  abort "test failed"
+  abort "$CURRENT_STAGE: test failed"
+  if [[ "$E2E_FAIL_FAST" == "true" ]]; then
+    exit 1
+  fi
 }
 
 passed() {
@@ -73,11 +76,16 @@ check_url() {
 check_clusters() {
   [ -n "$EXE" ] || abort "EXE is not defined"
   for c in "$@" ; do
-    $EXE kubeconfig merge "$c" --kubeconfig-switch-context || return 1
-    if kubectl cluster-info ; then
-      passed "cluster $c is reachable"
+    if $EXE kubeconfig merge "$c" --kubeconfig-switch-context; then
+      if kubectl cluster-info ; then
+        passed "cluster $c is reachable"
+      else
+        warn "could not obtain cluster info for $c. Kubeconfig:\n$(kubectl config view)"
+        docker ps -a
+        return 1
+      fi
     else
-      warn "could not obtain cluster info for $c. Kubeconfig:\n$(kubectl config view)"
+      warn "could not merge kubeconfig for $c."
       docker ps -a
       return 1
     fi
