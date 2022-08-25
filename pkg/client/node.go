@@ -807,6 +807,7 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 			time.Sleep(500 * time.Millisecond)
 			continue
 		} else {
+			l.Log().Tracef("Non-fatal last log line in node %s: %s", node.Name, previousline)
 			// case 2: last log line we saw did not contain a fatal error, so we break the loop here and return a generic error
 			break
 		}

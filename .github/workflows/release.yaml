@@ -36,7 +36,7 @@ jobs:
         run: make test
       - name: Run E2E Tests
         timeout-minutes: 20
-        run: make e2e -e E2E_PARALLEL=3
+        run: make e2e -e E2E_LOG_LEVEL=trace
       # Builds
       - name: Test Platform Builds
         run: make build-cross
