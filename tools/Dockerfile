@@ -8,7 +8,7 @@ ENV GO111MODULE=on
 ENV CGO_ENABLED=0
 RUN make build
 
-FROM alpine:3.13
+FROM alpine:3.16
 RUN apk update && apk add bash
 WORKDIR /app
 COPY --from=builder /app/bin/k3d-tools .

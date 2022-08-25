@@ -45,7 +45,16 @@ install_yq() {
 
 install_golangci_lint() {
   echo "Installing golangci-lint..."
-  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.45.0
+  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.49.0
+}
+
+install_gox() {
+  echo "Installing gox for $OS/$ARCH..."
+  GOX_REPO=iwilltry42/gox
+  GOX_VERSION=0.1.0
+  curl -sSfL https://github.com/${GOX_REPO}/releases/download/v${GOX_VERSION}/gox_${GOX_VERSION}_${OS}_${ARCH}.tar.gz | tar -xz -C /tmp
+  chmod +x /tmp/gox
+  mv /tmp/gox /usr/local/bin/gox
 }
 
 install_confd() {
@@ -71,6 +80,7 @@ for pkg in "$@"; do
     yq) install_yq;;
     golangci-lint) install_golangci_lint;;
     confd) install_confd;;
+    gox) install_gox;;
     *) printf "ERROR: Unknown Package '%s'" $pkg;;
   esac
 done

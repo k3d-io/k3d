@@ -220,9 +220,12 @@ endif
 # - gox for cross-compilation (build-cross)
 # - kubectl for E2E-tests (e2e)
 ci-setup:
-	@echo "Installing Go tools..."
+	@echo "### Installing Go tools..."
+	@echo "### -> Installing golangci-lint..."
 	curl -sfL $(PKG_GOLANGCI_LINT_SCRIPT) | sh -s -- -b $(GOENVPATH)/bin v$(PKG_GOLANGCI_LINT_VERSION)
-	$(GO) get $(PKG_GOX)
 
-	@echo "Installing kubectl..."
+	@echo "### -> Installing gox..."
+	./scripts/install-tools.sh gox
+
+	@echo "### Installing kubectl..."
 	./scripts/install-tools.sh kubectl
