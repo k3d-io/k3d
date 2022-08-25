@@ -55,7 +55,7 @@ type Runtime interface {
 	RenameNode(context.Context, *k3d.Node, string) error
 	GetNodesByLabel(context.Context, map[string]string) ([]*k3d.Node, error)
 	GetNode(context.Context, *k3d.Node) (*k3d.Node, error)
-	GetNodeStatus(context.Context, *k3d.Node) (bool, string, error)
+	GetNodeStatus(context.Context, *k3d.Node) (bool, string, error) // returns (running, status, error)
 	GetNodesInNetwork(context.Context, string) ([]*k3d.Node, error)
 	CreateNetworkIfNotPresent(context.Context, *k3d.ClusterNetwork) (*k3d.ClusterNetwork, bool, error) // @param context, name - @return NETWORK, EXISTS, ERROR
 	GetKubeconfig(context.Context, *k3d.Node) (io.ReadCloser, error)

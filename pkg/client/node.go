@@ -811,6 +811,11 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 			break
 		}
 	}
+
+	running, status, err := runtime.GetNodeStatus(ctx, node)
+	if err == nil {
+		return fmt.Errorf("%v: node %s is running=%v in status=%s", errMsg, node.Name, running, status)
+	}
 	return errMsg
 }
 
