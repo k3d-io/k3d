@@ -36,7 +36,13 @@ jobs:
         run: make test
       - name: Run E2E Tests
         timeout-minutes: 20
-        run: make e2e -e E2E_LOG_LEVEL=trace
+        # Quite often, tests were failing due to "too many open files" errors, so we're fixing this here
+        # Also, we want to see trace level logs if tests fail and the pipeline should exit on first error
+        run: |
+          sudo prlimit --pid $$ --nofile=1048576:1048576
+          sudo sysctl fs.inotify.max_user_instances=1280
+          sudo sysctl fs.inotify.max_user_watches=655360
+          make e2e -e E2E_LOG_LEVEL=trace -e E2E_FAIL_FAST=true
       # Builds
       - name: Test Platform Builds
         run: make build-cross
