@@ -1,6 +1,6 @@
 # Changelog
 
-## v5.4.5 - 24.08.2022
+## v5.4.6 - 29.08.2022
 
 ### Added
 
@@ -11,11 +11,19 @@
 - update dependencies
 - introduce Go workspace mode
 - updated docker/k3s version test-matrix
+- Go 1.19
+- More info on "node stopped returning log lines" error
 
 ### Fixed
 
+- tests/e2e: failing e2e tests for parsing config file from stdin
+- ci: "random" failing GitHub Actions due to "too many open files"
 - docs: fix code highlighting
 - docs: beautify bash commands (#1103)
+
+## v5.4.5 - Broken/Unreleased
+
+- This tag was reverted because of constant failures in GitHub Actions and the E2E Tests
 
 ## v5.4.4 - 11.07.2022
 
