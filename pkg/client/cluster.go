@@ -38,6 +38,7 @@ import (
 	copystruct "github.com/mitchellh/copystructure"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
+	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/yaml"
 
 	"github.com/k3d-io/k3d/v5/pkg/actions"
@@ -850,7 +851,11 @@ func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster
 	if err != nil {
 		return nil, err
 	}
-	cluster.Volumes = append(cluster.Volumes, vols...)
+	for _, vol := range vols {
+		if !slices.Contains(cluster.Volumes, vol) {
+			cluster.Volumes = append(cluster.Volumes, vol)
+		}
+	}
 
 	if err := populateClusterFieldsFromLabels(cluster); err != nil {
 		l.Log().Warnf("Failed to populate cluster fields from node labels: %v", err)
