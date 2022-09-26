@@ -36,6 +36,7 @@ import (
 const ApiVersion = "k3d.io/v1alpha4"
 
 // JSONSchema describes the schema used to validate config files
+//
 //go:embed schema.json
 var JSONSchema string
 
@@ -93,8 +94,9 @@ type SimpleConfigRegistryCreateConfig struct {
 
 // SimpleConfigOptionsKubeconfig describes the set of options referring to the kubeconfig during cluster creation.
 type SimpleConfigOptionsKubeconfig struct {
-	UpdateDefaultKubeconfig bool `mapstructure:"updateDefaultKubeconfig" json:"updateDefaultKubeconfig,omitempty"` // default: true
-	SwitchCurrentContext    bool `mapstructure:"switchCurrentContext" json:"switchCurrentContext,omitempty"`       //nolint:lll    // default: true
+	KubeConfigPath          string `mapstructure:"kubeConfigPath" json:"kubeConfigPath,omitempty"`                   // default: ""
+	UpdateDefaultKubeconfig bool   `mapstructure:"updateDefaultKubeconfig" json:"updateDefaultKubeconfig,omitempty"` // default: true
+	SwitchCurrentContext    bool   `mapstructure:"switchCurrentContext" json:"switchCurrentContext,omitempty"`       //nolint:lll    // default: true
 }
 
 type SimpleConfigOptions struct {

@@ -184,7 +184,7 @@ func NewCmdClusterCreate() *cobra.Command {
 
 			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig {
 				l.Log().Debugf("Updating default kubeconfig with a new context for cluster %s", clusterConfig.Cluster.Name)
-				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: simpleCfg.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
+				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, clusterConfig.KubeconfigOpts.KubeConfigPath, &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: simpleCfg.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
 					l.Log().Warningln(err)
 				}
 			}
@@ -296,6 +296,9 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	cmd.Flags().Duration("timeout", 0*time.Second, "Rollback changes if cluster couldn't be created in specified duration.")
 	_ = cfgViper.BindPFlag("options.k3d.timeout", cmd.Flags().Lookup("timeout"))
+
+	cmd.Flags().String("kubeconfig-path", "", "Specify path where kube config will be saved. By default this value is loaded from KUBECONFIG env")
+	_ = cfgViper.BindPFlag("options.kubeconfig.kubeconfigpath", cmd.Flags().Lookup("kubeconfig-path"))
 
 	cmd.Flags().Bool("kubeconfig-update-default", true, "Directly update the default kubeconfig with the new cluster's context")
 	_ = cfgViper.BindPFlag("options.kubeconfig.updatedefaultkubeconfig", cmd.Flags().Lookup("kubeconfig-update-default"))
