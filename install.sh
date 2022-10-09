@@ -30,6 +30,11 @@ initOS() {
     mingw*) 
       OS="windows"
       USE_SUDO="false"
+      if [[ ! -d "$K3D_INSTALL_DIR" ]]; then
+        # mingw bash that ships with Git for Windows doesn't have /usr/local/bin but ~/bin is first entry in the path
+        mkdir -p ~/bin
+        K3D_INSTALL_DIR=~/bin
+      fi
       ;;
   esac
 }

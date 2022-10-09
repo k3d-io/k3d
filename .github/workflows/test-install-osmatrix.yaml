@@ -1,0 +1,30 @@
+name: Test install.sh
+
+on:
+  pull_request:
+    paths:
+      - 'install.sh'
+  push:
+    branches:
+      - 'main'
+      - 'pr-*'
+
+jobs:
+  test-install-script:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run install.sh on ${{ matrix.os }}
+        shell: bash
+        # just run install.sh b/c github can throttle itself based on egress limits and gets 503 sometimes
+        run: |
+          echo "Simulating: curl -s https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$GITHUB_REF_NAME/install.sh | bash"
+          ./install.sh
+          k3d version
+      - name: Create cluster
+        if: matrix.os == 'ubuntu-latest' # mac and windows Github runners can't use docker
+        run: k3d cluster create demo
