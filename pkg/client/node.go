@@ -183,22 +183,34 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 
 	l.Log().Tracef("Resulting node %+v", node)
 
+	var registrationNode *k3d.Node
+	// Use LB if available as registration url for nodes otherwise
+	// fallback to server node
+	for _, existingNode := range cluster.Nodes {
+		if existingNode.Role == k3d.LoadBalancerRole {
+			registrationNode = existingNode
+			break
+		} else if existingNode.Role == k3d.ServerRole {
+			registrationNode = existingNode
+		}
+	}
+
 	k3sURLEnvFound := false
+	k3sURLEnvIndex := -1
 	k3sTokenEnvFoundIndex := -1
 	for index, envVar := range node.Env {
 		if strings.HasPrefix(envVar, k3s.EnvClusterConnectURL) {
 			k3sURLEnvFound = true
+			k3sURLEnvIndex = index
 		}
 		if strings.HasPrefix(envVar, k3s.EnvClusterToken) {
 			k3sTokenEnvFoundIndex = index
 		}
 	}
 	if !k3sURLEnvFound {
-		if url, ok := node.RuntimeLabels[k3d.LabelClusterURL]; ok {
-			node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3s.EnvClusterConnectURL, url))
-		} else {
-			l.Log().Warnln("Failed to find K3S_URL value!")
-		}
+		node.Env = append(node.Env, fmt.Sprintf("%s=https://%s:%s", k3s.EnvClusterConnectURL, registrationNode.Name, k3d.DefaultAPIPort))
+	} else {
+		node.Env[k3sURLEnvIndex] = fmt.Sprintf("%s=https://%s:%s", k3s.EnvClusterConnectURL, registrationNode.Name, k3d.DefaultAPIPort)
 	}
 	if k3sTokenEnvFoundIndex != -1 && createNodeOpts.ClusterToken != "" {
 		l.Log().Debugln("Overriding copied cluster token with value from nodeCreateOpts...")
@@ -683,6 +695,7 @@ func patchServerSpec(node *k3d.Node, runtime runtimes.Runtime) error {
 	node.RuntimeLabels[k3d.LabelServerAPIPort] = node.ServerOpts.KubeAPI.Binding.HostPort
 
 	node.Args = append(node.Args, "--tls-san", node.RuntimeLabels[k3d.LabelServerAPIHost]) // add TLS SAN for non default host name
+	node.Args = append(node.Args, "--tls-san", node.RuntimeLabels[k3d.LabelServerLoadBalancer]) // add TLS SAN for server loadbalancer
 
 	return nil
 }
