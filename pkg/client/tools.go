@@ -140,7 +140,7 @@ func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster 
 				importWaitgroup.Add(1)
 				go func(node *k3d.Node, wg *sync.WaitGroup, tarPath string) {
 					l.Log().Infof("Importing images from tarball '%s' into node '%s'...", tarPath, node.Name)
-					if err := runtime.ExecInNode(ctx, node, []string{"ctr", "image", "import", tarPath}); err != nil {
+					if err := runtime.ExecInNode(ctx, node, []string{"ctr", "image", "import", "--all-platforms", tarPath}); err != nil {
 						l.Log().Errorf("failed to import images in node '%s': %v", node.Name, err)
 					}
 					wg.Done()
@@ -241,7 +241,7 @@ func loadImageFromStream(ctx context.Context, runtime runtimes.Runtime, stream i
 			pipeReader := pipeReaders[pipeId]
 			errorGroup.Go(func() error {
 				l.Log().Infof("Importing images '%s' into node '%s'...", imageNames, node.Name)
-				if err := runtime.ExecInNodeWithStdin(ctx, node, []string{"ctr", "image", "import", "-"}, pipeReader); err != nil {
+				if err := runtime.ExecInNodeWithStdin(ctx, node, []string{"ctr", "image", "import", "--all-platforms", "-"}, pipeReader); err != nil {
 					return fmt.Errorf("failed to import images in node '%s': %v", node.Name, err)
 				}
 				return nil
