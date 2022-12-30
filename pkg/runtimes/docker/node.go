@@ -352,9 +352,9 @@ func execInNode(ctx context.Context, node *k3d.Node, cmd []string, stdin io.Read
 	}
 	if err != nil {
 		if execConnection != nil && execConnection.Reader != nil {
-			logs, err := io.ReadAll(execConnection.Reader)
-			if err != nil {
-				return fmt.Errorf("failed to get logs from errored exec process in node '%s': %w", node.Name, err)
+			logs, logsErr := io.ReadAll(execConnection.Reader)
+			if logsErr != nil {
+				return fmt.Errorf("failed to get logs from errored exec process in node '%s': %w", node.Name, logsErr)
 			}
 			err = fmt.Errorf("%w: Logs from failed access process:\n%s", err, string(logs))
 		}
