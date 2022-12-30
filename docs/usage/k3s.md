@@ -12,7 +12,7 @@ K3s ships with lots of built-in features and services, some of which may only be
 
 > Cluster DNS service
 
-## Resources
+### Resources
 
 - Manifest embedded in K3s: <https://github.com/k3s-io/k3s/blob/master/manifests/coredns.yaml>
   - Note: it includes template variables (like `%{CLUSTER_DOMAIN}%`) that will be replaced by K3s before writing the file to the filesystem
