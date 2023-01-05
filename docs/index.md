@@ -141,7 +141,7 @@ kubectl get nodes
 
 1. Join the Rancher community on slack via [slack.rancher.io](https://slack.rancher.io/)
 2. Go to [rancher-users.slack.com](https://rancher-users.slack.com) and join our channel #k3d
-3. Start chatting
+3. Start chatting std
 
 ## Related Projects
 
