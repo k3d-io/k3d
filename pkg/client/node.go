@@ -713,7 +713,10 @@ func patchServerSpec(node *k3d.Node, runtime runtimes.Runtime) error {
 	node.RuntimeLabels[k3d.LabelServerAPIPort] = node.ServerOpts.KubeAPI.Binding.HostPort
 
 	node.Args = append(node.Args, "--tls-san", node.RuntimeLabels[k3d.LabelServerAPIHost]) // add TLS SAN for non default host name
-	node.Args = append(node.Args, "--tls-san", node.RuntimeLabels[k3d.LabelServerLoadBalancer]) // add TLS SAN for server loadbalancer
+	if node.RuntimeLabels[k3d.LabelServerLoadBalancer] != "" {
+		// add TLS SAN for server loadbalancer
+		node.Args = append(node.Args, "--tls-san", node.RuntimeLabels[k3d.LabelServerLoadBalancer])
+	}
 
 	return nil
 }
