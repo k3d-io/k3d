@@ -331,6 +331,7 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	cmd.Flags().String("registry-config", "", "Specify path to an extra registries.yaml file")
 	_ = cfgViper.BindPFlag("registries.config", cmd.Flags().Lookup("registry-config"))
+	_ = cfgViper.BindEnv("registries.config")
 	if err := cmd.MarkFlagFilename("registry-config", "yaml", "yml"); err != nil {
 		l.Log().Fatalln("Failed to mark flag 'config' as filename flag")
 	}
