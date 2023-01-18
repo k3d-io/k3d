@@ -726,6 +726,11 @@ func checkK3SURLIsActive(nodes []*k3d.Node, k3sURL string) bool {
 	// extract the node name
 	re := regexp.MustCompile("K3S_URL=https?://([a-zA-Z0-9_.-]+)")
 	match := re.FindStringSubmatch(k3sURL)
+
+	if match == nil {
+		return false
+	}
+
 	for _, node := range nodes {
 		if node.Name == match[1] {
 			return true
