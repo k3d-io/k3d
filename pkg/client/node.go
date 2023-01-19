@@ -678,7 +678,7 @@ func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, o
 		}
 
 		// if it's a server node, then update the loadbalancer configuration
-		if node.Role == k3d.ServerRole {
+		if node.Role == k3d.ServerRole && cluster.ServerLoadBalancer != nil {
 			if err := UpdateLoadbalancerConfig(ctx, runtime, cluster); err != nil {
 				if !errors.Is(err, ErrLBConfigHostNotFound) {
 					return fmt.Errorf("failed to update cluster loadbalancer: %w", err)
