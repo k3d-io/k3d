@@ -269,7 +269,7 @@ func NewCmdVersionLs() *cobra.Command {
 		Aliases:   []string{"ls"},
 		Short:     "List k3d/K3s versions",
 		ValidArgs: []string{"k3d", "k3s", "k3d-proxy", "k3d-tools"},
-		Args:      cobra.ExactValidArgs(1),
+		Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 		Run: func(cmd *cobra.Command, args []string) {
 			var format VersionLsOutputFormat
 			if f, ok := VersionLsOutputFormats[flags.format]; !ok {
@@ -431,7 +431,7 @@ PowerShell:
 		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
 		ArgAliases:            []string{"psh"},
 		DisableFlagsInUseLine: true,
-		Args:                  cobra.ExactValidArgs(1),
+		Args:                  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 		Run: func(cmd *cobra.Command, args []string) {
 			if completionFunc, ok := completionFunctions[args[0]]; ok {
 				if err := completionFunc(os.Stdout); err != nil {

@@ -1,5 +1,19 @@
 # Changelog
 
+## v5.4.7 - 02.02.2023
+
+### Changed
+
+- updated direct and transitive dependencies
+
+### Fixed
+
+- fix: avoid appending existing volumes (#1154)
+- fix: indentation for CoreDNS doc (#1166)
+- fix: logs error shadowing exec error (#1172)
+- docs: Add missing backtick to k3s-arg example command (#1192)
+- Support reading in registries-config via env (#1199)
+
 ## v5.4.6 - 29.08.2022
 
 ### Added

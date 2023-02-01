@@ -1,5 +1,11 @@
 # go-test/deep Changelog
 
+## v1.0.9 released 2022-12-09
+
+* Fixed issue #45: Panic when comparing errors in unexported fields (PR #54) (@seveas)
+* Fixed issue #46: Functions are handled differently from reflect.DeepEqual (PR #55) (@countcb)
+* Updated matrix to go1.17, go1.18, and go1.19 and moved testing to GitHub Actions
+
 ## v1.0.8 released 2021-10-13
 
 * Updated matrix to go1.15, go1.16, and go1.17
