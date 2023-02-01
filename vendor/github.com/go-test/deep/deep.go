@@ -27,8 +27,16 @@ var (
 	LogErrors = false
 
 	// CompareUnexportedFields causes unexported struct fields, like s in
-	// T{s int}, to be compared when true.
+	// T{s int}, to be compared when true. This does not work for comparing
+	// error or Time types on unexported fields because methods on unexported
+	// fields cannot be called.
 	CompareUnexportedFields = false
+
+	// CompareFunctions compares functions the same as reflect.DeepEqual:
+	// only two nil functions are equal. Every other combination is not equal.
+	// This is disabled by default because previous versions of this package
+	// ignored functions. Enabling it can possibly report new diffs.
+	CompareFunctions = false
 
 	// NilSlicesAreEmpty causes a nil slice to be equal to an empty slice.
 	NilSlicesAreEmpty = false
@@ -48,10 +56,24 @@ var (
 	ErrNotHandled = errors.New("cannot compare the reflect.Kind")
 )
 
+const (
+	// FLAG_NONE is a placeholder for default Equal behavior. You don't have to
+	// pass it to Equal; if you do, it does nothing.
+	FLAG_NONE byte = iota
+
+	// FLAG_IGNORE_SLICE_ORDER causes Equal to ignore slice order so that
+	// []int{1, 2} and []int{2, 1} are equal. Only slices of primitive scalars
+	// like numbers and strings are supported. Slices of complex types,
+	// like []T where T is a struct, are undefined because Equal does not
+	// recurse into the slice value when this flag is enabled.
+	FLAG_IGNORE_SLICE_ORDER
+)
+
 type cmp struct {
 	diff        []string
 	buff        []string
 	floatFormat string
+	flag        map[byte]bool
 }
 
 var errorType = reflect.TypeOf((*error)(nil)).Elem()
@@ -66,13 +88,17 @@ var errorType = reflect.TypeOf((*error)(nil)).Elem()
 //
 // When comparing a struct, if a field has the tag `deep:"-"` then it will be
 // ignored.
-func Equal(a, b interface{}) []string {
+func Equal(a, b interface{}, flags ...interface{}) []string {
 	aVal := reflect.ValueOf(a)
 	bVal := reflect.ValueOf(b)
 	c := &cmp{
 		diff:        []string{},
 		buff:        []string{},
 		floatFormat: fmt.Sprintf("%%.%df", FloatPrecision),
+		flag:        map[byte]bool{},
+	}
+	for i := range flags {
+		c.flag[flags[i].(byte)] = true
 	}
 	if a == nil && b == nil {
 		return nil
@@ -137,18 +163,23 @@ func (c *cmp) equals(a, b reflect.Value, level int) {
 	bElem := bKind == reflect.Ptr || bKind == reflect.Interface
 
 	// If both types implement the error interface, compare the error strings.
-	// This must be done before dereferencing because the interface is on a
-	// pointer receiver. Re https://github.com/go-test/deep/issues/31, a/b might
-	// be primitive kinds; see TestErrorPrimitiveKind.
-	if aType.Implements(errorType) && bType.Implements(errorType) {
-		if (!aElem || !a.IsNil()) && (!bElem || !b.IsNil()) {
-			aString := a.MethodByName("Error").Call(nil)[0].String()
-			bString := b.MethodByName("Error").Call(nil)[0].String()
-			if aString != bString {
-				c.saveDiff(aString, bString)
-				return
-			}
+	// This must be done before dereferencing because errors.New() returns a
+	// pointer to a struct that implements the interface:
+	//   func (e *errorString) Error() string {
+	// And we check CanInterface as a hack to make sure the underlying method
+	// is callable because https://github.com/golang/go/issues/32438
+	// Issues:
+	//   https://github.com/go-test/deep/issues/31
+	//   https://github.com/go-test/deep/issues/45
+	if (aType.Implements(errorType) && bType.Implements(errorType)) &&
+		((!aElem || !a.IsNil()) && (!bElem || !b.IsNil())) &&
+		(a.CanInterface() && b.CanInterface()) {
+		aString := a.MethodByName("Error").Call(nil)[0].String()
+		bString := b.MethodByName("Error").Call(nil)[0].String()
+		if aString != bString {
+			c.saveDiff(aString, bString)
 		}
+		return
 	}
 
 	// Dereference pointers and interface{}
@@ -326,29 +357,54 @@ func (c *cmp) equals(a, b reflect.Value, level int) {
 			}
 		}
 
+		// Equal if same underlying pointer and same length, this latter handles
+		//   foo := []int{1, 2, 3, 4}
+		//   a := foo[0:2] // == {1,2}
+		//   b := foo[2:4] // == {3,4}
+		// a and b are same pointer but different slices (lengths) of the underlying
+		// array, so not equal.
 		aLen := a.Len()
 		bLen := b.Len()
-
 		if a.Pointer() == b.Pointer() && aLen == bLen {
 			return
 		}
 
-		n := aLen
-		if bLen > aLen {
-			n = bLen
-		}
-		for i := 0; i < n; i++ {
-			c.push(fmt.Sprintf("slice[%d]", i))
-			if i < aLen && i < bLen {
-				c.equals(a.Index(i), b.Index(i), level+1)
-			} else if i < aLen {
-				c.saveDiff(a.Index(i), "<no value>")
-			} else {
-				c.saveDiff("<no value>", b.Index(i))
+		if c.flag[FLAG_IGNORE_SLICE_ORDER] {
+			// Compare slices by value and value count; ignore order.
+			// Value equality is impliclity established by the maps:
+			// any value v1 will hash to the same map value if it's equal
+			// to another value v2. Then equality is determiend by value
+			// count: presuming v1==v2, then the slics are equal if there
+			// are equal numbers of v1 in each slice.
+			am := map[interface{}]int{}
+			for i := 0; i < a.Len(); i++ {
+				am[a.Index(i).Interface()] += 1
 			}
-			c.pop()
-			if len(c.diff) >= MaxDiff {
-				break
+			bm := map[interface{}]int{}
+			for i := 0; i < b.Len(); i++ {
+				bm[b.Index(i).Interface()] += 1
+			}
+			c.cmpMapValueCounts(a, b, am, bm, true)  // a cmp b
+			c.cmpMapValueCounts(b, a, bm, am, false) // b cmp a
+		} else {
+			// Compare slices by order
+			n := aLen
+			if bLen > aLen {
+				n = bLen
+			}
+			for i := 0; i < n; i++ {
+				c.push(fmt.Sprintf("slice[%d]", i))
+				if i < aLen && i < bLen {
+					c.equals(a.Index(i), b.Index(i), level+1)
+				} else if i < aLen {
+					c.saveDiff(a.Index(i), "<no value>")
+				} else {
+					c.saveDiff("<no value>", b.Index(i))
+				}
+				c.pop()
+				if len(c.diff) >= MaxDiff {
+					break
+				}
 			}
 		}
 
@@ -385,7 +441,19 @@ func (c *cmp) equals(a, b reflect.Value, level int) {
 		if a.String() != b.String() {
 			c.saveDiff(a.String(), b.String())
 		}
-
+	case reflect.Func:
+		if CompareFunctions {
+			if !a.IsNil() || !b.IsNil() {
+				aVal, bVal := "nil func", "nil func"
+				if !a.IsNil() {
+					aVal = "func"
+				}
+				if !b.IsNil() {
+					bVal = "func"
+				}
+				c.saveDiff(aVal, bVal)
+			}
+		}
 	default:
 		logError(ErrNotHandled)
 	}
@@ -407,6 +475,25 @@ func (c *cmp) saveDiff(aval, bval interface{}) {
 		c.diff = append(c.diff, fmt.Sprintf("%s: %v != %v", varName, aval, bval))
 	} else {
 		c.diff = append(c.diff, fmt.Sprintf("%v != %v", aval, bval))
+	}
+}
+
+func (c *cmp) cmpMapValueCounts(a, b reflect.Value, am, bm map[interface{}]int, a2b bool) {
+	for v := range am {
+		aCount, _ := am[v]
+		bCount, _ := bm[v]
+
+		if aCount != bCount {
+			c.push(fmt.Sprintf("(unordered) slice[]=%v: value count", v))
+			if a2b {
+				c.saveDiff(fmt.Sprintf("%d", aCount), fmt.Sprintf("%d", bCount))
+			} else {
+				c.saveDiff(fmt.Sprintf("%d", bCount), fmt.Sprintf("%d", aCount))
+			}
+			c.pop()
+		}
+		delete(am, v)
+		delete(bm, v)
 	}
 }
 
