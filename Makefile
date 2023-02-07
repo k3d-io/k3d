@@ -126,6 +126,9 @@ build:
 build-cross: LDFLAGS += -extldflags "-static"
 build-cross:
 	CGO_ENABLED=0 gox -parallel=3 -output="_dist/$(BINARIES)-{{.OS}}-{{.Arch}}" -osarch='$(TARGETS)' $(GOFLAGS) $(if $(TAGS),-tags '$(TAGS)',) -ldflags '$(LDFLAGS)'
+gen-checksum:	build-cross
+	$(eval ARTIFACTS_TO_PUBLISH := $(shell ls _dist/*))
+	$$(sha256sum $(ARTIFACTS_TO_PUBLISH) > _dist/checksums.txt)
 
 # build a specific docker target ( '%' matches the target as specified in the Dockerfile)
 build-docker-%:
