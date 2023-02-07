@@ -194,6 +194,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "kameshsampath",
+      "name": "Kamesh Sampath",
+      "avatar_url": "https://avatars.githubusercontent.com/u/947745?v=4",
+      "profile": "https://blogs.kameshs.dev",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
@@ -201,5 +210,6 @@
   "projectOwner": "k3d-io",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "skipCi": true
+  "skipCi": true,
+  "commitConvention": "angular"
 }
