@@ -397,6 +397,14 @@ ClusterCreatOpts:
 	 */
 
 	clusterCreateOpts.GlobalLabels[k3d.LabelClusterName] = cluster.Name
+	// Add serverlb url to be used as tls-san value
+	// This is used to avoid a fatal error on registering server nodes
+	// using loadbalancer
+	if clusterCreateOpts.DisableLoadBalancer {
+		clusterCreateOpts.GlobalLabels[k3d.LabelServerLoadBalancer] = ""
+	} else {
+		clusterCreateOpts.GlobalLabels[k3d.LabelServerLoadBalancer] = fmt.Sprintf("%s-%s-serverlb", k3d.DefaultObjectNamePrefix, cluster.Name)
+	}
 
 	// agent defaults (per cluster)
 	// connection url is always the name of the first server node (index 0) // TODO: change this to the server loadbalancer

@@ -91,6 +91,7 @@ const (
 	LabelServerAPIHost           string = "k3d.server.api.host"
 	LabelServerAPIHostIP         string = "k3d.server.api.hostIP"
 	LabelServerIsInit            string = "k3d.server.init"
+	LabelServerLoadBalancer      string = "k3d.server.loadbalancer"
 	LabelRegistryHost            string = "k3d.registry.host"
 	LabelRegistryHostIP          string = "k3d.registry.hostIP"
 	LabelRegistryPortExternal    string = "k3s.registry.port.external"
