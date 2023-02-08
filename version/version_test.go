@@ -22,6 +22,10 @@ THE SOFTWARE.
 package version
 
 import (
+	"fmt"
+	"log"
+	"net/http"
+	"net/http/httptest"
 	"regexp"
 	"testing"
 )
@@ -37,4 +41,150 @@ func TestGetK3sVersion(t *testing.T) {
 	if !latestRegexp.Match([]byte(v)) {
 		t.Fatalf("found version %s (searched: %s) does not match respective latest regexp `%s`", v, searchVersion, latestRegexp.String())
 	}
+}
+
+func TestFetchLatestK3sVersion(t *testing.T) {
+	type errorTestCases struct {
+		description        string
+		channel            string
+		mockServer         *httptest.Server
+		expected           string
+		expectedError      bool
+		constructErrString bool
+		errorString        string
+	}
+	tests := []errorTestCases{
+		{
+			description: "should be able to fetch the latest k3s version successfully",
+			channel:     "v1.24",
+			expected:    "v1.24.6-k3s1",
+			mockServer: mockServer([]byte(`{
+  "data": [
+    {
+      "id": "stable",
+      "type": "channel",
+      "links": {
+        "self": "https://update.k3s.io/v1-release/channels/stable"
+      },
+      "name": "v1.24",
+      "latest": "v1.24.6+k3s1"
+    },
+    {
+      "id": "latest",
+      "type": "channel",
+      "links": {
+        "self": "https://update.k3s.io/v1-release/channels/latest"
+      },
+      "name": "latest",
+      "latest": "v1.25.2+k3s1",
+      "latestRegexp": ".*",
+      "excludeRegexp": "^[^+]+-"
+    }
+  ]
+}`), http.StatusOK),
+		},
+		{
+			description: "should be able to fetch the latest k3s version successfully",
+			channel:     "v1.25",
+			expected:    "v1.25.2-k3s1",
+			mockServer: mockServer([]byte(`{
+  "data": [
+    {
+      "id": "stable",
+      "type": "channel",
+      "links": {
+        "self": "https://update.k3s.io/v1-release/channels/stable"
+      },
+      "name": "stable",
+      "latest": "v1.24.6+k3s1"
+    },
+    {
+      "id": "latest",
+      "type": "channel",
+      "links": {
+        "self": "https://update.k3s.io/v1-release/channels/latest"
+      },
+      "name": "v1.25",
+      "latest": "v1.25.2+k3s1",
+      "latestRegexp": ".*",
+      "excludeRegexp": "^[^+]+-"
+    }
+  ]
+}`), http.StatusOK),
+		},
+		{
+			description:        "should error out as no latest version found for selected channel",
+			channel:            "v1.25",
+			expected:           "",
+			expectedError:      true,
+			errorString:        "no latest version found for channel v1.25 (%s)",
+			constructErrString: true,
+			mockServer: mockServer([]byte(`{
+  "data": [
+    {
+      "id": "stable",
+      "type": "channel",
+      "links": {
+        "self": "https://update.k3s.io/v1-release/channels/stable"
+      },
+      "name": "stable",
+      "latest": "v1.24.6+k3s1"
+    }
+  ]
+}`), http.StatusOK),
+		},
+		{
+			description:        "should error out while fetching the latest k3s version as call made to URL returned 500",
+			channel:            "v1.25",
+			expected:           "",
+			mockServer:         mockServer([]byte(``), http.StatusInternalServerError),
+			expectedError:      true,
+			constructErrString: true,
+			errorString:        "call made to '%s' failed with status code '500'",
+		},
+		{
+			description:   "should error out while fetching the latest k3s version as response returned in not understandable",
+			channel:       "v1.25",
+			expected:      "",
+			mockServer:    mockServer([]byte(`{"data": [`), http.StatusOK),
+			expectedError: true,
+			errorString:   "error unmarshalling channelserver response: unexpected end of JSON input",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.description, func(t *testing.T) {
+			client := httpClient{client: tt.mockServer.Client(), baseURL: tt.mockServer.URL}
+
+			defer tt.mockServer.Close()
+
+			got, err := client.fetchLatestK3sVersion(tt.channel)
+			if (err != nil) && (!tt.expectedError) {
+				t.Errorf("fetchLatestK3sVersion() error = %v, wantErr %v", err, tt.errorString)
+				return
+			}
+			if tt.expectedError {
+				errorString := tt.errorString
+				if tt.constructErrString {
+					errorString = fmt.Sprintf(tt.errorString, tt.mockServer.URL)
+				}
+				if err.Error() != errorString {
+					t.Errorf("expected error '%s', but got '%s'", errorString, err.Error())
+				}
+			}
+			if got != tt.expected {
+				t.Errorf("fetchLatestK3sVersion() got = %v, want %v", got, tt.expected)
+			}
+		})
+	}
+}
+
+func mockServer(body []byte, statusCode int) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, req *http.Request) {
+		writer.WriteHeader(statusCode)
+		_, err := writer.Write(body)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}))
 }
