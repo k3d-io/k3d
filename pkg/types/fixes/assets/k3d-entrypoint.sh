@@ -19,11 +19,13 @@ echo "[$(date -Iseconds)] Finished k3d entrypoint scripts!" >> "$LOGFILE"
 /bin/k3s "$@" &
 k3s_pid=$!
 
-until kubectl uncordon $HOSTNAME; do sleep 3; done
+# shellcheck disable=SC3028
+until kubectl uncordon "$HOSTNAME"; do sleep 3; done
 
-function cleanup() {
+# shellcheck disable=SC3028
+cleanup() {
   echo Draining node...
-  kubectl drain $HOSTNAME --force --delete-emptydir-data
+  kubectl drain "$HOSTNAME" --force --delete-emptydir-data
   echo Sending SIGTERM to k3s...
   kill -15 $k3s_pid
   echo Waiting for k3s to close...
@@ -31,7 +33,8 @@ function cleanup() {
   echo Bye!
 }
 
+# shellcheck disable=SC3048
 trap cleanup SIGTERM SIGINT SIGQUIT SIGHUP
 
 wait $k3s_pid
-echo Bye!
+echo "k3d cleanup finished! Bye!"
