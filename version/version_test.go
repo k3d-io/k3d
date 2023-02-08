@@ -143,7 +143,7 @@ func TestFetchLatestK3sVersion(t *testing.T) {
 			errorString:        "call made to '%s' failed with status code '500'",
 		},
 		{
-			description:   "should error out while fetching the latest k3s version as response returned in non non understandable",
+			description:   "should error out while fetching the latest k3s version as response returned in not understandable",
 			channel:       "v1.25",
 			expected:      "",
 			mockServer:    mockServer([]byte(`{"data": [`), http.StatusOK),
