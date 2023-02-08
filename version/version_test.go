@@ -43,7 +43,7 @@ func TestGetK3sVersion(t *testing.T) {
 	}
 }
 
-func Test_fetchLatestK3sVersion(t *testing.T) {
+func TestFetchLatestK3sVersion(t *testing.T) {
 	type errorTestCases struct {
 		description        string
 		channel            string
