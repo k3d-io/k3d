@@ -14,12 +14,12 @@ env:
 jobs:
   test-suite:
     name: Full Test Suite
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       # Setup
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Go environment
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: "${{ env.GO_VERSION }}"
       - name: Setup Docker
@@ -52,10 +52,10 @@ jobs:
   release-images:
     name: Build & Release Images
     # Only run on tags
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       # Setup
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       # Container Image Setup
       - name: Setup Docker
         uses: docker-practice/actions-setup-docker@master
@@ -188,12 +188,12 @@ jobs:
   release-github:
     name: Build & Release Binaries
     # Only run on tags
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       # Setup
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Go environment
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: "${{ env.GO_VERSION }}"
       - name: Setup CI Tools

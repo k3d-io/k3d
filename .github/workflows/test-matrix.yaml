@@ -11,7 +11,7 @@ jobs:
         docker_version:
           - "20.10.3"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Docker
         uses: docker-practice/actions-setup-docker@master
       - name: Test Docker Version expected to fail
@@ -38,7 +38,7 @@ jobs:
           - "20.10.12"
           - "20.10.17"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Docker
         uses: docker-practice/actions-setup-docker@master
       - name: Test Docker Version expected to pass
@@ -57,7 +57,7 @@ jobs:
         k3s_channel:
           - "v1.17" 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Docker
         uses: docker-practice/actions-setup-docker@master
       - name: Test K3s Version expected to fail
@@ -83,8 +83,10 @@ jobs:
           - "v1.22"
           - "v1.23"
           - "v1.24"
+          - "v1.25"
+          - "v1.26"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Docker
         uses: docker-practice/actions-setup-docker@master
       - name: Test K3s Version expected to pass

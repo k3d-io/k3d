@@ -7,11 +7,11 @@ on:
 
 jobs:
   aur-release:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container: archlinux:base
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
       - name: Publish Release to AUR
         run: |
           export COMMIT_REF=$GITHUB_REF
