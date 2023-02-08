@@ -27,7 +27,15 @@ initOS() {
 
   case "$OS" in
     # Minimalist GNU for Windows
-    mingw*) OS='windows';;
+    mingw*) 
+      OS="windows"
+      USE_SUDO="false"
+      if [[ ! -d "$K3D_INSTALL_DIR" ]]; then
+        # mingw bash that ships with Git for Windows doesn't have /usr/local/bin but ~/bin is first entry in the path
+        mkdir -p ~/bin
+        K3D_INSTALL_DIR=~/bin
+      fi
+      ;;
   esac
 }
 
@@ -107,6 +115,9 @@ checkLatestVersion() {
 downloadFile() {
   K3D_DIST="k3d-$OS-$ARCH"
   DOWNLOAD_URL="$REPO_URL/releases/download/$TAG/$K3D_DIST"
+  if [[ "$OS" == "windows" ]]; then
+    DOWNLOAD_URL=${DOWNLOAD_URL}.exe
+  fi
   K3D_TMP_ROOT="$(mktemp -dt k3d-binary-XXXXXX)"
   K3D_TMP_FILE="$K3D_TMP_ROOT/$K3D_DIST"
   if type "curl" > /dev/null; then
