@@ -33,6 +33,10 @@ type Mirror struct {
 	// with host specified.
 	// The scheme, host and path from the endpoint URL will be used.
 	Endpoints []string `toml:"endpoint" json:"endpoint"`
+	// Rewrites are rewrite rules for a registry. Rewrites change the tag of an
+	// image based on a regular expression. When using mirrors this can be helpful
+	// structure / organization of the mirror differs to the upstream.
+	Rewrites map[string]string `toml:"rewrite" json:"rewrite"`
 }
 
 // AuthConfig contains the config related to authentication to a specific registry

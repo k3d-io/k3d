@@ -191,6 +191,7 @@ func RegistryConnectNetworks(ctx context.Context, runtime runtimes.Runtime, regi
 // RegistryGenerateK3sConfig generates the k3s specific registries.yaml configuration for multiple registries
 func RegistryGenerateK3sConfig(ctx context.Context, registries []*k3d.Registry) (*k3s.Registry, error) {
 	regConf := &k3s.Registry{}
+	rewritesConf := make(map[string]string)
 
 	for _, reg := range registries {
 		internalAddress := fmt.Sprintf("%s:%s", reg.Host, reg.ExposureOpts.Port.Port())
@@ -205,18 +206,21 @@ func RegistryGenerateK3sConfig(ctx context.Context, registries []*k3d.Registry) 
 			Endpoints: []string{
 				fmt.Sprintf("http://%s", internalAddress),
 			},
+			Rewrites: rewritesConf,
 		}
 
 		regConf.Mirrors[internalAddress] = k3s.Mirror{
 			Endpoints: []string{
 				fmt.Sprintf("http://%s", internalAddress),
 			},
+			Rewrites: rewritesConf, // stub out rewrites so we dont override with nil
 		}
 
 		if reg.Options.Proxy.RemoteURL != "" {
 			regConf.Mirrors[reg.Options.Proxy.RemoteURL] = k3s.Mirror{
 				Endpoints: []string{fmt.Sprintf("http://%s", internalAddress)},
 			}
+
 		}
 	}
 
