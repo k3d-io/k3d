@@ -115,7 +115,7 @@ options:
         - settings.workerConnections=2048
   k3s: # options passed on to K3s itself
     extraArgs: # additional arguments passed to the `k3s server|agent` command; same as `--k3s-arg`
-      - arg: --tls-san=my.host.domain
+      - arg: "--tls-san=my.host.domain"
         nodeFilters:
           - server:*
     nodeLabels:
