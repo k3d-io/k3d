@@ -5,13 +5,28 @@ Podman has an [Docker API compatibility layer](https://podman.io/blogs/2020/06/2
 !!! important "Podman support is experimental"
     k3d is not guaranteed to work with Podman. If you find a bug, do help by [filing an issue](https://github.com/k3d-io/k3d/issues/new?labels=bug&template=bug_report.md&title=%5BBUG%5D+Podman)
 
+Tested with podman version:
+```bash
+Client:       Podman Engine
+Version:      4.3.1
+API Version:  4.3.1
+```
+
 ## Using Podman
 
 Ensure the Podman system socket is available:
 
 ```bash
 sudo systemctl enable --now podman.socket
-# or sudo podman system service --time=0
+# or to start the socket daemonless
+# sudo podman system service --time=0 &
+```
+
+Disable timeout for podman service:<br>
+See the [podman-system-service (1)](https://docs.podman.io/en/latest/markdown/podman-system-service.1.html) man page for more information.
+```bash
+mkdir -p /etc/containers/containers.conf.d
+echo 'service_timeout=0' > /etc/containers/containers.conf.d/timeout.conf
 ```
 
 To point k3d at the right Docker socket, create a symbolic link:
@@ -36,7 +51,7 @@ Ensure the Podman user socket is available:
 
 ```bash
 systemctl --user enable --now podman.socket
-# or podman system service --time=0
+# or podman system service --time=0 &
 ```
 
 Set `DOCKER_HOST` when running k3d:
@@ -76,6 +91,15 @@ Reference: [https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling
 export DOCKER_HOST=ssh://username@hostname
 export DOCKER_SOCK=/run/user/1000/podman/podman.sock
 k3d cluster create
+```
+
+### Podman network
+
+The default `podman` network has dns disabled. To allow k3d cluster nodes to communicate with dns a new network must be created.
+```bash
+podman network create k3d
+podman network inspect k3d -f '{{ .DNSEnabled }}'
+true
 ```
 
 ## Creating local registries
