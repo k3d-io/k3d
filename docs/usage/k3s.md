@@ -52,7 +52,7 @@ You'd need to map some local directory to that path to easily use the files insi
 
 ### Traefik in k3d
 
-k3d runs K3s in containers, so you'll need to expose the http/https ports on your host to easily access Ingress resources in your cluster. We have a guide over here explaining how to do this: <https://k3d.io/usage/guides/exposing_services/#1-via-ingress-recommended>
+k3d runs K3s in containers, so you'll need to expose the http/https ports on your host to easily access Ingress resources in your cluster. We have a guide over here explaining how to do this, [see](exposing_services.md)
 
 ## servicelb (klipper-lb)
 
