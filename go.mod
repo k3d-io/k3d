@@ -6,7 +6,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/Microsoft/hcsshim v0.9.6 // indirect
 	github.com/containerd/cgroups v1.1.0 // indirect
-	github.com/containerd/containerd v1.6.16
+	github.com/containerd/containerd v1.6.18
 	github.com/docker/cli v20.10.23+incompatible
 	github.com/docker/docker v20.10.23+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
