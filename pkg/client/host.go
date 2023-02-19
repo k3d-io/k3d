@@ -91,6 +91,21 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 
 		}
 
+		// Colima
+		if rtimeInfo.InfoName == "colima" {
+			toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
+			if err != nil {
+				return nil, fmt.Errorf("failed to ensure that k3d-tools node is running to get host IP :%w", err)
+			}
+
+			limaIP, err := resolveHostnameFromInside(ctx, runtime, toolsNode, "host.lima.internal", ResolveHostCmdGetEnt)
+			if err == nil {
+				return limaIP, nil
+			}
+
+			l.Log().Debugf("[GetHostIP on colima] failed to resolve 'host.lima.internal' from inside the k3d-tools node: %v", err)
+		}
+
 		ip, err := runtime.GetHostIP(ctx, cluster.Network.Name)
 		if err != nil {
 			return nil, fmt.Errorf("runtime failed to get host IP: %w", err)
