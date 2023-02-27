@@ -46,7 +46,7 @@ It will also delete the respective kubeconfig file in `$HOME/.k3d/` if it exists
 
 ## Handling multiple clusters
 
-`k3d kubeconfig merge` let's you specify one or more clusters via arguments _or_ all via `--all`.  
+`k3d kubeconfig merge` lets you specify one or more clusters via arguments _or_ all via `--all`.  
 All kubeconfigs will then be merged into a single file if `--kubeconfig-merge-default` or `--output` is specified.  
 If none of those two flags was specified, a new file will be created per cluster and the merged path (e.g. `$HOME/.k3d/kubeconfig-cluster1.yaml:$HOME/.k3d/cluster2.yaml`) will be returned.  
 Note, that with multiple cluster specified, the `--kubeconfig-switch-context` flag will change the current context to the cluster which was last in the list.
