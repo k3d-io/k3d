@@ -1,5 +1,24 @@
 # Changelog
 
+## v5.4.8 - 04.03.2023
+
+### Changed
+
+- Go 1.20 and updated dependencies
+- change: Use loadbalancer or any *active* server as K3S_URL (#1190)
+- change: graceful shutdown drains node before k3d container stops (#1119)
+- change: update docs to use quotes around extra args (#1218)
+- changed: update podman service documentation around network dns (#1210)
+- change: no whitespace in goflags in makefile
+- change: fix build with go 1.20 (#1216)
+
+### Fixed
+
+- fix: generate checksum for k3d binaries (#1209)
+- fix: improved error handling when update.k3s.io returns a 5XX or invalid response (#1170)
+- fix: install script on windows (#1168)
+- fix: fix for link in doc (#1219)
+
 ## v5.4.7 - 02.02.2023
 
 ### Changed
