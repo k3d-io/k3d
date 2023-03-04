@@ -42,7 +42,7 @@ LINT_DIRS := $(DIRS) $(foreach dir,$(REC_DIRS),$(dir)/...)
 all: clean fmt check build
 
 build:
-	$(GO) build -i $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o '$(BINDIR)/$(BINARIES)'
+	$(GO) build $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o '$(BINDIR)/$(BINARIES)'
 
 clean:
 	@rm -rf $(BINDIR) _dist/

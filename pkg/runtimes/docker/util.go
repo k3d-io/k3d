@@ -188,11 +188,11 @@ func GetDockerClient() (client.APIClient, error) {
 	}
 
 	newClientOpts := flags.NewClientOptions()
-	newClientOpts.Common.LogLevel = l.Log().GetLevel().String() // this is needed, as the following Initialize() call will set a new log level on the global logrus instance
+	newClientOpts.LogLevel = l.Log().GetLevel().String() // this is needed, as the following Initialize() call will set a new log level on the global logrus instance
 
 	flagset := pflag.NewFlagSet("docker", pflag.ContinueOnError)
-	newClientOpts.Common.InstallFlags(flagset)
-	newClientOpts.Common.SetDefaultOptions(flagset)
+	newClientOpts.InstallFlags(flagset)
+	newClientOpts.SetDefaultOptions(flagset)
 
 	err = dockerCli.Initialize(newClientOpts)
 	if err != nil {

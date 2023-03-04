@@ -3,18 +3,18 @@ package client
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/docker/cli/cli/manifest/types"
 	"github.com/docker/distribution"
 	"github.com/docker/distribution/manifest/manifestlist"
+	"github.com/docker/distribution/manifest/ocischema"
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/distribution/reference"
 	"github.com/docker/distribution/registry/api/errcode"
 	v2 "github.com/docker/distribution/registry/api/v2"
 	distclient "github.com/docker/distribution/registry/client"
 	"github.com/docker/docker/registry"
-	digest "github.com/opencontainers/go-digest"
+	"github.com/opencontainers/go-digest"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -32,6 +32,12 @@ func fetchManifest(ctx context.Context, repo distribution.Repository, ref refere
 	// Removed Schema 1 support
 	case *schema2.DeserializedManifest:
 		imageManifest, err := pullManifestSchemaV2(ctx, ref, repo, *v)
+		if err != nil {
+			return types.ImageManifest{}, err
+		}
+		return imageManifest, nil
+	case *ocischema.DeserializedManifest:
+		imageManifest, err := pullManifestOCISchema(ctx, ref, repo, *v)
 		if err != nil {
 			return types.ImageManifest{}, err
 		}
@@ -95,6 +101,28 @@ func pullManifestSchemaV2(ctx context.Context, ref reference.Named, repo distrib
 	return types.NewImageManifest(ref, manifestDesc, &mfst), nil
 }
 
+func pullManifestOCISchema(ctx context.Context, ref reference.Named, repo distribution.Repository, mfst ocischema.DeserializedManifest) (types.ImageManifest, error) {
+	manifestDesc, err := validateManifestDigest(ref, mfst)
+	if err != nil {
+		return types.ImageManifest{}, err
+	}
+	configJSON, err := pullManifestSchemaV2ImageConfig(ctx, mfst.Target().Digest, repo)
+	if err != nil {
+		return types.ImageManifest{}, err
+	}
+
+	if manifestDesc.Platform == nil {
+		manifestDesc.Platform = &ocispec.Platform{}
+	}
+
+	// Fill in os and architecture fields from config JSON
+	if err := json.Unmarshal(configJSON, manifestDesc.Platform); err != nil {
+		return types.ImageManifest{}, err
+	}
+
+	return types.NewOCIImageManifest(ref, manifestDesc, &mfst), nil
+}
+
 func pullManifestSchemaV2ImageConfig(ctx context.Context, dgst digest.Digest, repo distribution.Repository) ([]byte, error) {
 	blobs := repo.Blobs(ctx)
 	configJSON, err := blobs.Get(ctx, dgst)
@@ -128,7 +156,7 @@ func validateManifestDigest(ref reference.Named, mfst distribution.Manifest) (oc
 	// If pull by digest, then verify the manifest digest.
 	if digested, isDigested := ref.(reference.Canonical); isDigested {
 		if digested.Digest() != desc.Digest {
-			err := fmt.Errorf("manifest verification failed for digest %s", digested.Digest())
+			err := errors.Errorf("manifest verification failed for digest %s", digested.Digest())
 			return ocispec.Descriptor{}, err
 		}
 	}
@@ -154,16 +182,21 @@ func pullManifestList(ctx context.Context, ref reference.Named, repo distributio
 		if err != nil {
 			return nil, err
 		}
-		v, ok := manifest.(*schema2.DeserializedManifest)
-		if !ok {
-			return nil, fmt.Errorf("unsupported manifest format: %v", v)
-		}
 
 		manifestRef, err := reference.WithDigest(ref, manifestDescriptor.Digest)
 		if err != nil {
 			return nil, err
 		}
-		imageManifest, err := pullManifestSchemaV2(ctx, manifestRef, repo, *v)
+
+		var imageManifest types.ImageManifest
+		switch v := manifest.(type) {
+		case *schema2.DeserializedManifest:
+			imageManifest, err = pullManifestSchemaV2(ctx, manifestRef, repo, *v)
+		case *ocischema.DeserializedManifest:
+			imageManifest, err = pullManifestOCISchema(ctx, manifestRef, repo, *v)
+		default:
+			err = errors.Errorf("unsupported manifest type: %T", manifest)
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -278,27 +311,17 @@ func allEndpoints(namedRef reference.Named, insecure bool) ([]registry.APIEndpoi
 	return endpoints, err
 }
 
-type notFoundError struct {
-	object string
+func newNotFoundError(ref string) *notFoundError {
+	return &notFoundError{err: errors.New("no such manifest: " + ref)}
 }
 
-func newNotFoundError(ref string) *notFoundError {
-	return &notFoundError{object: ref}
+type notFoundError struct {
+	err error
 }
 
 func (n *notFoundError) Error() string {
-	return fmt.Sprintf("no such manifest: %s", n.object)
+	return n.err.Error()
 }
 
-// NotFound interface
+// NotFound satisfies interface github.com/docker/docker/errdefs.ErrNotFound
 func (n *notFoundError) NotFound() {}
-
-// IsNotFound returns true if the error is a not found error
-func IsNotFound(err error) bool {
-	_, ok := err.(notFound)
-	return ok
-}
-
-type notFound interface {
-	NotFound()
-}

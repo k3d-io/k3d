@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
-	cliconfig "github.com/docker/cli/cli/config"
+	"github.com/docker/cli/cli/config"
 	"github.com/docker/distribution/reference"
 	"github.com/docker/distribution/registry/client/auth"
 	"github.com/docker/distribution/registry/client/auth/challenge"
@@ -21,7 +21,7 @@ import (
 	registrytypes "github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/registry"
 	"github.com/docker/go-connections/tlsconfig"
-	digest "github.com/opencontainers/go-digest"
+	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/theupdateframework/notary"
@@ -47,7 +47,7 @@ var (
 
 // GetTrustDirectory returns the base trust directory name
 func GetTrustDirectory() string {
-	return filepath.Join(cliconfig.Dir(), "trust")
+	return filepath.Join(config.Dir(), "trust")
 }
 
 // certificateDirectory returns the directory containing
@@ -59,7 +59,7 @@ func certificateDirectory(server string) (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(cliconfig.Dir(), "tls", u.Host), nil
+	return filepath.Join(config.Dir(), "tls", u.Host), nil
 }
 
 // Server returns the base URL for the trust server.
@@ -102,7 +102,7 @@ func GetNotaryRepository(in io.Reader, out io.Writer, userAgent string, repoInfo
 		return nil, err
 	}
 
-	var cfg = tlsconfig.ClientDefault()
+	cfg := tlsconfig.ClientDefault()
 	cfg.InsecureSkipVerify = !repoInfo.Index.Secure
 
 	// Get certificate base directory
@@ -136,7 +136,7 @@ func GetNotaryRepository(in io.Reader, out io.Writer, userAgent string, repoInfo
 		Timeout:   5 * time.Second,
 	}
 	endpointStr := server + "/v2/"
-	req, err := http.NewRequest("GET", endpointStr, nil)
+	req, err := http.NewRequest(http.MethodGet, endpointStr, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +287,6 @@ func GetSignableRoles(repo client.Repository, target *client.Target) ([]data.Rol
 	}
 
 	return signableRoles, nil
-
 }
 
 // ImageRefAndAuth contains all reference information and the auth config for an image request
@@ -384,5 +383,4 @@ func (imgRefAuth *ImageRefAndAuth) Digest() digest.Digest {
 // Name returns the image name used to initialize the ImageRefAndAuth
 func (imgRefAuth *ImageRefAndAuth) Name() string {
 	return imgRefAuth.original
-
 }

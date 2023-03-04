@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	runtimeErr "github.com/k3d-io/k3d/v5/pkg/runtimes/errors"
@@ -159,7 +160,7 @@ func (d Docker) StopNode(ctx context.Context, node *k3d.Node) error {
 	}
 
 	// actually stop the container
-	if err := docker.ContainerStop(ctx, nodeContainer.ID, nil); err != nil {
+	if err := docker.ContainerStop(ctx, nodeContainer.ID, container.StopOptions{}); err != nil {
 		return fmt.Errorf("docker failed to stop the container '%s': %w", nodeContainer.ID, err)
 	}
 

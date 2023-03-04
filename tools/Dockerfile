@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine3.16 as builder
+FROM golang:1.20-alpine3.17 as builder
 ARG GIT_TAG
 WORKDIR /app
 COPY . .
@@ -8,7 +8,7 @@ ENV GO111MODULE=on
 ENV CGO_ENABLED=0
 RUN make build
 
-FROM alpine:3.16
+FROM alpine:3.17
 RUN apk update && apk add bash
 WORKDIR /app
 COPY --from=builder /app/bin/k3d-tools .
