@@ -159,7 +159,7 @@ jobs:
           rm "$OUT_FILE_TMP"
       # Build and Push container images
       - name: Build Images
-        uses: docker/bake-action@v1.7.0
+        uses: docker/bake-action@v2.3.0
         with:
           files: |
             ./docker-bake.hcl
@@ -177,7 +177,7 @@ jobs:
           wait-interval: 20
       - name: Push Images
         if: startsWith(github.ref, 'refs/tags/')
-        uses: docker/bake-action@v1.7.0
+        uses: docker/bake-action@v2.3.0
         with:
           files: |
             ./docker-bake.hcl

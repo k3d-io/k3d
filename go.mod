@@ -1,13 +1,13 @@
 module github.com/k3d-io/k3d/v5
 
-go 1.19
+go 1.20
 
 require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/Microsoft/hcsshim v0.9.6 // indirect
 	github.com/containerd/cgroups v1.1.0 // indirect
-	github.com/containerd/containerd v1.6.16
-	github.com/docker/cli v20.10.23+incompatible
+	github.com/containerd/containerd v1.6.18
+	github.com/docker/cli v23.0.1+incompatible
 	github.com/docker/docker v20.10.23+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-connections v0.4.0
@@ -43,7 +43,7 @@ require (
 require (
 	github.com/goodhosts/hostsfile v0.1.1
 	github.com/spf13/pflag v1.0.5
-	k8s.io/utils v0.0.0-20230115233650-391b47cb4029
+	k8s.io/utils v0.0.0-20230220204549-a5ecb0141aa5
 )
 
 require (
@@ -71,7 +71,9 @@ require (
 	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/moby/patternmatcher v0.5.0 // indirect
 	github.com/moby/sys/mountinfo v0.6.2 // indirect
+	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect

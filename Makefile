@@ -89,7 +89,7 @@ GO_SRC += $(foreach dir,$(REC_DIRS),$(shell find $(dir) -name "*.go"))
 ########## Required Tools ##########
 # Go Package required
 PKG_GOX := github.com/iwilltry42/gox@v0.1.0
-PKG_GOLANGCI_LINT_VERSION := 1.49.0
+PKG_GOLANGCI_LINT_VERSION := 1.51.2
 PKG_GOLANGCI_LINT_SCRIPT := https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
 PKG_GOLANGCI_LINT := github.com/golangci/golangci-lint/cmd/golangci-lint@v${PKG_GOLANGCI_LINT_VERSION}
 
