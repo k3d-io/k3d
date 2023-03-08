@@ -159,7 +159,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://blogs.kameshs.dev"><img src="https://avatars.githubusercontent.com/u/947745?v=4?s=100" width="100px;" alt="Kamesh Sampath"/><br /><sub><b>Kamesh Sampath</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=kameshsampath" title="Code">💻</a></td>
     </tr>
     <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/arikmaor"><img src="https://avatars.githubusercontent.com/u/1926243?v=4?s=100" width="100px;" alt="Arik Maor"/><br /><sub><b>Arik Maor</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=arikmaor" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/arikmaor"><img src="https://avatars.githubusercontent.com/u/1926243?v=4?s=100" width="100px;" alt="Arik Maor"/><br /><sub><b>Arik Maor</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=arikmaor" title="Code">💻</a> <a href="#tutorial-arikmaor" title="Tutorials">✅</a> <a href="#example-arikmaor" title="Examples">💡</a></td>
     </tr>
   </tbody>
 </table>
