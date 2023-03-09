@@ -8,7 +8,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/k3d-io/k3d?style=flat-square)](https://goreportcard.com/report/github.com/k3d-io/k3d)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-21-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-22-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
@@ -157,6 +157,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/gonzalesraul"><img src="https://avatars.githubusercontent.com/u/7568984?v=4?s=100" width="100px;" alt="Raul Gonzales"/><br /><sub><b>Raul Gonzales</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=gonzalesraul" title="Code">💻</a> <a href="https://github.com/k3d-io/k3d/commits?author=gonzalesraul" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://hoon.dev"><img src="https://avatars.githubusercontent.com/u/6194958?v=4?s=100" width="100px;" alt="Sunghoon Kang"/><br /><sub><b>Sunghoon Kang</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=devholic" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://blogs.kameshs.dev"><img src="https://avatars.githubusercontent.com/u/947745?v=4?s=100" width="100px;" alt="Kamesh Sampath"/><br /><sub><b>Kamesh Sampath</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=kameshsampath" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/arikmaor"><img src="https://avatars.githubusercontent.com/u/1926243?v=4?s=100" width="100px;" alt="Arik Maor"/><br /><sub><b>Arik Maor</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=arikmaor" title="Code">💻</a> <a href="#tutorial-arikmaor" title="Tutorials">✅</a> <a href="#example-arikmaor" title="Examples">💡</a></td>
     </tr>
   </tbody>
 </table>
