@@ -53,6 +53,7 @@ func (d Docker) Info() (*runtimeTypes.RuntimeInfo, error) {
 		CgroupVersion: info.CgroupVersion,
 		CgroupDriver:  info.CgroupDriver,
 		Filesystem:    "UNKNOWN",
+		InfoName:      info.Name,
 	}
 
 	// Get the backing filesystem for the storage driver

@@ -31,6 +31,7 @@ type RuntimeInfo struct {
 	CgroupVersion string `json:"cgroupversion,omitempty"`
 	CgroupDriver  string `json:"cgroupdriver,omitempty"`
 	Filesystem    string `json:"filesystem,omitempty"`
+	InfoName      string `json:"infoname,omitempty"`
 }
 
 type NodeLogsOpts struct {
