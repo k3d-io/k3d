@@ -27,10 +27,9 @@ import (
 	"time"
 
 	"github.com/docker/go-connections/nat"
-	"inet.af/netaddr"
-
 	runtimeTypes "github.com/k3d-io/k3d/v5/pkg/runtimes/types"
-	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
+	wharfie "github.com/rancher/wharfie/pkg/registries"
+	"inet.af/netaddr"
 )
 
 // NodeStatusRestarting defines the status string that signals the node container is restarting
@@ -123,9 +122,9 @@ type ClusterCreateOpts struct {
 	GlobalEnv           []string          `json:"globalEnv,omitempty"`
 	HostAliases         []HostAlias       `json:"hostAliases,omitempty"`
 	Registries          struct {
-		Create *Registry     `json:"create,omitempty"`
-		Use    []*Registry   `json:"use,omitempty"`
-		Config *k3s.Registry `json:"config,omitempty"` // registries.yaml (k3s config for containerd registry override)
+		Create *Registry         `json:"create,omitempty"`
+		Use    []*Registry       `json:"use,omitempty"`
+		Config *wharfie.Registry `json:"config,omitempty"` // registries.yaml (k3s config for containerd registry override)
 	} `json:"registries,omitempty"`
 }
 

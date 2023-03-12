@@ -5,7 +5,7 @@
 package zstd
 
 import (
-	"encoding/binary"
+	"bytes"
 	"encoding/hex"
 	"errors"
 	"io"
@@ -29,7 +29,7 @@ type frameDec struct {
 
 	FrameContentSize uint64
 
-	DictionaryID  uint32
+	DictionaryID  *uint32
 	HasCheckSum   bool
 	SingleSegment bool
 }
@@ -43,9 +43,9 @@ const (
 	MaxWindowSize = 1 << 29
 )
 
-const (
-	frameMagic          = "\x28\xb5\x2f\xfd"
-	skippableFrameMagic = "\x2a\x4d\x18"
+var (
+	frameMagic          = []byte{0x28, 0xb5, 0x2f, 0xfd}
+	skippableFrameMagic = []byte{0x2a, 0x4d, 0x18}
 )
 
 func newFrameDec(o decoderOptions) *frameDec {
@@ -89,9 +89,9 @@ func (d *frameDec) reset(br byteBuffer) error {
 			copy(signature[1:], b)
 		}
 
-		if string(signature[1:4]) != skippableFrameMagic || signature[0]&0xf0 != 0x50 {
+		if !bytes.Equal(signature[1:4], skippableFrameMagic) || signature[0]&0xf0 != 0x50 {
 			if debugDecoder {
-				println("Not skippable", hex.EncodeToString(signature[:]), hex.EncodeToString([]byte(skippableFrameMagic)))
+				println("Not skippable", hex.EncodeToString(signature[:]), hex.EncodeToString(skippableFrameMagic))
 			}
 			// Break if not skippable frame.
 			break
@@ -114,9 +114,9 @@ func (d *frameDec) reset(br byteBuffer) error {
 			return err
 		}
 	}
-	if string(signature[:]) != frameMagic {
+	if !bytes.Equal(signature[:], frameMagic) {
 		if debugDecoder {
-			println("Got magic numbers: ", signature, "want:", []byte(frameMagic))
+			println("Got magic numbers: ", signature, "want:", frameMagic)
 		}
 		return ErrMagicMismatch
 	}
@@ -155,7 +155,7 @@ func (d *frameDec) reset(br byteBuffer) error {
 
 	// Read Dictionary_ID
 	// https://github.com/facebook/zstd/blob/dev/doc/zstd_compression_format.md#dictionary_id
-	d.DictionaryID = 0
+	d.DictionaryID = nil
 	if size := fhd & 3; size != 0 {
 		if size == 3 {
 			size = 4
@@ -167,7 +167,7 @@ func (d *frameDec) reset(br byteBuffer) error {
 			return err
 		}
 		var id uint32
-		switch len(b) {
+		switch size {
 		case 1:
 			id = uint32(b[0])
 		case 2:
@@ -178,7 +178,11 @@ func (d *frameDec) reset(br byteBuffer) error {
 		if debugDecoder {
 			println("Dict size", size, "ID:", id)
 		}
-		d.DictionaryID = id
+		if id > 0 {
+			// ID 0 means "sorry, no dictionary anyway".
+			// https://github.com/facebook/zstd/blob/dev/doc/zstd_compression_format.md#dictionary-format
+			d.DictionaryID = &id
+		}
 	}
 
 	// Read Frame_Content_Size
@@ -200,7 +204,7 @@ func (d *frameDec) reset(br byteBuffer) error {
 			println("Reading Frame content", err)
 			return err
 		}
-		switch len(b) {
+		switch fcsSize {
 		case 1:
 			d.FrameContentSize = uint64(b[0])
 		case 2:
@@ -257,16 +261,11 @@ func (d *frameDec) reset(br byteBuffer) error {
 	}
 	d.history.windowSize = int(d.WindowSize)
 	if !d.o.lowMem || d.history.windowSize < maxBlockSize {
-		// Alloc 2x window size if not low-mem, or window size below 2MB.
+		// Alloc 2x window size if not low-mem, or very small window size.
 		d.history.allocFrameBuffer = d.history.windowSize * 2
 	} else {
-		if d.o.lowMem {
-			// Alloc with 1MB extra.
-			d.history.allocFrameBuffer = d.history.windowSize + maxBlockSize/2
-		} else {
-			// Alloc with 2MB extra.
-			d.history.allocFrameBuffer = d.history.windowSize + maxBlockSize
-		}
+		// Alloc with one additional block
+		d.history.allocFrameBuffer = d.history.windowSize + maxBlockSize
 	}
 
 	if debugDecoder {
@@ -301,7 +300,7 @@ func (d *frameDec) checkCRC() error {
 	}
 
 	// We can overwrite upper tmp now
-	buf, err := d.rawInput.readSmall(4)
+	want, err := d.rawInput.readSmall(4)
 	if err != nil {
 		println("CRC missing?", err)
 		return err
@@ -311,17 +310,22 @@ func (d *frameDec) checkCRC() error {
 		return nil
 	}
 
-	want := binary.LittleEndian.Uint32(buf[:4])
-	got := uint32(d.crc.Sum64())
+	var tmp [4]byte
+	got := d.crc.Sum64()
+	// Flip to match file order.
+	tmp[0] = byte(got >> 0)
+	tmp[1] = byte(got >> 8)
+	tmp[2] = byte(got >> 16)
+	tmp[3] = byte(got >> 24)
 
-	if got != want {
+	if !bytes.Equal(tmp[:], want) {
 		if debugDecoder {
-			printf("CRC check failed: got %08x, want %08x\n", got, want)
+			println("CRC Check Failed:", tmp[:], "!=", want)
 		}
 		return ErrCRCMismatch
 	}
 	if debugDecoder {
-		printf("CRC ok %08x\n", got)
+		println("CRC ok", tmp[:])
 	}
 	return nil
 }
