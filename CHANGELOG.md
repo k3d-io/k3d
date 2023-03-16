@@ -1,5 +1,17 @@
 # Changelog
 
+## v5.4.9 - 16.03.2023
+
+### Changed
+
+- Updated docker dependency to v23.0.1
+- change: replace deprecated set-output command with environment file in Github Actions (#1226)
+
+### Fixed
+
+- fix: go install was failing due to outdated docker dependency
+- fix: handle colima host for host.k3d.internal lookup (#1228)
+
 ## v5.4.8 - 04.03.2023
 
 ### Changed
