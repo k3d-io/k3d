@@ -765,6 +765,8 @@ func NodeGet(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node) (*k3
 func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, message string, since time.Time) error {
 	l.Log().Tracef("NodeWaitForLogMessage: Node '%s' waiting for log message '%s' since '%+v'", node.Name, message, since)
 
+	message = strings.ToLower(message)
+
 	// specify max number of retries if container is in crashloop (as defined by last seen message being a fatal log)
 	backOffLimit := k3d.DefaultNodeWaitForLogMessageCrashLoopBackOffLimit
 	if l, ok := os.LookupEnv(k3d.K3dEnvDebugNodeWaitBackOffLimit); ok {
@@ -836,7 +838,7 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 				l.Log().Tracef(">>> Parsing log line: `%s`", scanner.Text())
 			}
 			// check if we can find the specified line in the log
-			if strings.Contains(scanner.Text(), message) {
+			if strings.Contains(strings.ToLower(scanner.Text()), message) {
 				l.Log().Tracef("Found target message `%s` in log line `%s`", message, scanner.Text())
 				l.Log().Debugf("Finished waiting for log message '%s' from node '%s'", message, node.Name)
 				return nil
