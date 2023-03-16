@@ -172,6 +172,9 @@ check-fmt:
 lint:
 	@golangci-lint run -D $(GOLANGCI_LINT_DISABLED_LINTERS) $(LINT_DIRS)
 
+ci-lint:
+	golangci-lint run --timeout 5m0s --out-format=github-actions -D $(GOLANGCI_LINT_DISABLED_LINTERS) $(LINT_DIRS)
+
 check: check-fmt lint
 
 ###########################
