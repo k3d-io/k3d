@@ -37,6 +37,7 @@ jobs:
           - "20.10.5"
           - "20.10.12"
           - "20.10.17"
+          - "23.0.1"
     steps:
       - uses: actions/checkout@v3
       - name: Setup Docker
