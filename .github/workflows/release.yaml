@@ -30,7 +30,7 @@ jobs:
         run: make ci-setup
       # Code Check
       - name: Run Static Analysis
-        run: make lint
+        run: make ci-lint
       # Tests
       - name: Run Go Tests
         run: make test
