@@ -128,7 +128,7 @@ Host localhost
 Export the docker environment variables referenced above and create the cluster
 
 ```
-xport DOCKER_HOST=ssh://core@localhost:53685
+export DOCKER_HOST=ssh://core@localhost:53685
 export DOCKER_SOCK=/run/user/501/podman/podman.sock
 k3d cluster create
 ```
