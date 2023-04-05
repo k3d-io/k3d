@@ -197,15 +197,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		}
 	}
 
-	if checkK3SURLIsActive(cluster.Nodes, node.Env[k3sURLEnvIndex]) {
-		if !k3sURLEnvFound {
-			if url, ok := node.RuntimeLabels[k3d.LabelClusterURL]; ok {
-				node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3s.EnvClusterConnectURL, url))
-			} else {
-				l.Log().Warnln("Failed to find K3S_URL value!")
-			}
-		}
-	} else {
+	if !k3sURLEnvFound || !checkK3SURLIsActive(cluster.Nodes, node.Env[k3sURLEnvIndex]) {
 		// Use LB if available as registration url for nodes
 		// otherwise fallback to server node
 		var registrationNode *k3d.Node
