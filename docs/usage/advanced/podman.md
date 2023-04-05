@@ -93,6 +93,46 @@ export DOCKER_SOCK=/run/user/1000/podman/podman.sock
 k3d cluster create
 ```
 
+### macOS
+
+Initialize a podman machine if not done already
+
+```
+podman machine init
+```
+
+Or start an already existing podman machine
+
+```
+podman machine start
+```
+
+Grab connection details
+
+```
+podman system connection ls
+Name                         URI                                                         Identity                                      Default
+podman-machine-default       ssh://core@localhost:53685/run/user/501/podman/podman.sock  /Users/myusername/.ssh/podman-machine-default  true
+podman-machine-default-root  ssh://root@localhost:53685/run/podman/podman.sock           /Users/myusername/.ssh/podman-machine-default  false
+```
+
+Edit your OpenSSH config file to specify the IdentityFile
+
+```
+vim ~/.ssh/config
+
+Host localhost
+	IdentityFile /Users/myusername/.ssh/podman-machine-default
+```
+
+Export the docker environment variables referenced above and create the cluster
+
+```
+xport DOCKER_HOST=ssh://core@localhost:53685
+export DOCKER_SOCK=/run/user/501/podman/podman.sock
+k3d cluster create
+```
+
 ### Podman network
 
 The default `podman` network has dns disabled. To allow k3d cluster nodes to communicate with dns a new network must be created.
