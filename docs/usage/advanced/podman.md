@@ -107,7 +107,8 @@ Or start an already existing podman machine
 podman machine start
 ```
 
-Grab connection details
+Grab connection details 
+> note: root connection details must be used
 
 ```
 podman system connection ls
