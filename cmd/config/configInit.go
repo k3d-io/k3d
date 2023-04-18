@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"os"
 
-	config "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	config "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/spf13/cobra"
 )

@@ -27,7 +27,7 @@ import (
 	"strings"
 	"testing"
 
-	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 	"github.com/spf13/viper"

@@ -40,7 +40,7 @@ import (
 	cliconfig "github.com/k3d-io/k3d/v5/cmd/util/config"
 	k3dCluster "github.com/k3d-io/k3d/v5/pkg/client"
 	"github.com/k3d-io/k3d/v5/pkg/config"
-	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
@@ -250,6 +250,9 @@ func NewCmdClusterCreate() *cobra.Command {
 
 	cmd.Flags().StringArrayP("runtime-label", "", nil, "Add label to container runtime (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 --runtime-label \"my.label@agent:0,1\" --runtime-label \"other.label=somevalue@server:0\"`")
 	_ = ppViper.BindPFlag("cli.runtime-labels", cmd.Flags().Lookup("runtime-label"))
+
+	cmd.Flags().StringArrayP("runtime-ulimit", "", nil, "Add ulimit to container runtime (Format: `NAME[=SOFT]:[HARD]`\n - Example: `k3d cluster create --agents 2 --runtime-ulimit \"nofiles=1024:1024\" --runtime-ulimit \"noproc=1024:1024\"`")
+	_ = ppViper.BindPFlag("cli.runtime-ulimits", cmd.Flags().Lookup("runtime-ulimit"))
 
 	cmd.Flags().String("registry-create", "", "Create a k3d-managed registry and connect it to the cluster (Format: `NAME[:HOST][:HOSTPORT]`\n - Example: `k3d cluster create --registry-create mycluster-registry:0.0.0.0:5432`")
 	_ = ppViper.BindPFlag("cli.registries.create", cmd.Flags().Lookup("registry-create"))
@@ -514,6 +517,31 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	}
 
 	l.Log().Tracef("RuntimeLabelFilterMap: %+v", runtimeLabelFilterMap)
+
+	for _, ulimit := range ppViper.GetStringSlice("cli.runtime-ulimits") {
+		ulimitSplitted := strings.Split(ulimit, "=")
+		if len(ulimitSplitted) != 2 {
+			l.Log().Fatalf("unknown runtime-ulimit format format: %s, use format \"ulimit=soft:hard\"", ulimit)
+		}
+		cliutil.ValidateRuntimeUlimitKey(ulimitSplitted[0])
+		softHardSplitted := strings.Split(ulimitSplitted[1], ":")
+		if len(softHardSplitted) != 2 {
+			l.Log().Fatalf("unknown runtime-ulimit format format: %s, use format \"ulimit=soft:hard\"", ulimit)
+		}
+		soft, err := strconv.Atoi(softHardSplitted[0])
+		if err != nil {
+			l.Log().Fatalf("unknown runtime-ulimit format format: soft %s has to be int", ulimitSplitted[0])
+		}
+		hard, err := strconv.Atoi(softHardSplitted[1])
+		if err != nil {
+			l.Log().Fatalf("unknown runtime-ulimit format format: hard %s has to be int", ulimitSplitted[1])
+		}
+		cfg.Options.Runtime.Ulimits = append(cfg.Options.Runtime.Ulimits, conf.Ulimit{
+			Name: ulimitSplitted[0],
+			Soft: int64(soft),
+			Hard: int64(hard),
+		})
+	}
 
 	// --env
 	// envFilterMap will add container env vars to applied node filters

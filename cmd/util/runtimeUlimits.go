@@ -19,37 +19,39 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
-package config
+package util
 
 import (
-	"context"
-	"testing"
+	"strings"
 
-	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
-	"github.com/k3d-io/k3d/v5/pkg/runtimes"
-	"github.com/spf13/viper"
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 )
 
-func TestTransformSimpleConfigToClusterConfig(t *testing.T) {
-	cfgFile := "./test_assets/config_test_simple.yaml"
-
-	vip := viper.New()
-	vip.SetConfigFile(cfgFile)
-	_ = vip.ReadInConfig()
-
-	cfg, err := FromViper(vip)
-	if err != nil {
-		t.Error(err)
+// ValidateRuntimeUlimitKey validates a given ulimit key is valid
+func ValidateRuntimeUlimitKey(ulimitKey string) {
+	ulimitsKeys := map[string]bool{
+		"core":       true,
+		"cpu":        true,
+		"data":       true,
+		"fsize":      true,
+		"locks":      true,
+		"memlock":    true,
+		"msgqueue":   true,
+		"nice":       true,
+		"nofile":     true,
+		"nproc":      true,
+		"rss":        true,
+		"rtprio":     true,
+		"rttime":     true,
+		"sigpending": true,
+		"stack":      true,
 	}
+	keysList := make([]string, 0, len(ulimitsKeys))
 
-	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", cfg)
-
-	clusterCfg, err := TransformSimpleToClusterConfig(context.Background(), runtimes.Docker, cfg.(conf.SimpleConfig))
-	if err != nil {
-		t.Error(err)
+	for key := range ulimitsKeys {
+		keysList = append(keysList, key)
 	}
-
-	t.Logf("\n===== Resulting Cluster Config =====\n%+v\n===============\n", clusterCfg)
-
+	if !ulimitsKeys[ulimitKey] {
+		l.Log().Fatalf("runtime ulimit \"%s\" is not valid, allowed keys are: %s", ulimitKey, strings.Join(keysList, ", "))
+	}
 }

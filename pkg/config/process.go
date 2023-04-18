@@ -25,7 +25,7 @@ package config
 import (
 	"strings"
 
-	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	runtimeutil "github.com/k3d-io/k3d/v5/pkg/runtimes/util"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"

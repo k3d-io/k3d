@@ -23,6 +23,7 @@ package node
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -83,6 +84,7 @@ func NewCmdNodeCreate() *cobra.Command {
 	cmd.Flags().DurationVar(&createNodeOpts.Timeout, "timeout", 0*time.Second, "Maximum waiting time for '--wait' before canceling/returning.")
 
 	cmd.Flags().StringSliceP("runtime-label", "", []string{}, "Specify container runtime labels in format \"foo=bar\"")
+	cmd.Flags().StringSliceP("runtime-ulimit", "", []string{}, "Specify container runtime ulimit in format \"ulimit=soft:hard\"")
 	cmd.Flags().StringSliceP("k3s-node-label", "", []string{}, "Specify k3s node labels in format \"foo=bar\"")
 
 	cmd.Flags().StringSliceP("network", "n", []string{}, "Add node to (another) runtime network")
@@ -159,6 +161,38 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string)
 	// Internal k3d runtime labels take precedence over user-defined labels
 	runtimeLabels[k3d.LabelRole] = roleStr
 
+	// --runtime-ulimit
+	runtimeUlimitsFlag, err := cmd.Flags().GetStringSlice("runtime-ulimit")
+	if err != nil {
+		l.Log().Errorln("No runtime-label specified")
+		l.Log().Fatalln(err)
+	}
+
+	runtimeUlimits := make([]*dockerunits.Ulimit, len(runtimeUlimitsFlag))
+	for index, ulimit := range runtimeUlimitsFlag {
+		ulimitSplitted := strings.Split(ulimit, "=")
+		if len(ulimitSplitted) != 2 {
+			l.Log().Fatalf("unknown runtime-ulimit format format: %s, use format \"ulimit=soft:hard\"", ulimit)
+		}
+		cliutil.ValidateRuntimeUlimitKey(ulimitSplitted[0])
+		softHardSplitted := strings.Split(ulimitSplitted[1], ":")
+		if len(softHardSplitted) != 2 {
+			l.Log().Fatalf("unknown runtime-ulimit format format: %s, use format \"ulimit=soft:hard\"", ulimit)
+		}
+		soft, err := strconv.Atoi(softHardSplitted[0])
+		if err != nil {
+			l.Log().Fatalf("unknown runtime-ulimit format format: soft %s has to be int", ulimitSplitted[0])
+		}
+		hard, err := strconv.Atoi(softHardSplitted[1])
+		if err != nil {
+			l.Log().Fatalf("unknown runtime-ulimit format format: hard %s has to be int", ulimitSplitted[1])
+		}
+		runtimeUlimits[index] = &dockerunits.Ulimit{
+			Name: ulimitSplitted[0],
+			Soft: int64(soft),
+			Hard: int64(hard),
+		}
+	}
 	// --k3s-node-label
 	k3sNodeLabelsFlag, err := cmd.Flags().GetStringSlice("k3s-node-label")
 	if err != nil {
@@ -191,15 +225,16 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string)
 	nodes := []*k3d.Node{}
 	for i := 0; i < replicas; i++ {
 		node := &k3d.Node{
-			Name:          fmt.Sprintf("%s-%s-%d", k3d.DefaultObjectNamePrefix, args[0], i),
-			Role:          role,
-			Image:         image,
-			K3sNodeLabels: k3sNodeLabels,
-			RuntimeLabels: runtimeLabels,
-			Restart:       true,
-			Memory:        memory,
-			Networks:      networks,
-			Args:          k3sArgs,
+			Name:           fmt.Sprintf("%s-%s-%d", k3d.DefaultObjectNamePrefix, args[0], i),
+			Role:           role,
+			Image:          image,
+			K3sNodeLabels:  k3sNodeLabels,
+			RuntimeLabels:  runtimeLabels,
+			RuntimeUlimits: runtimeUlimits,
+			Restart:        true,
+			Memory:         memory,
+			Networks:       networks,
+			Args:           k3sArgs,
 		}
 		nodes = append(nodes, node)
 	}

@@ -28,6 +28,7 @@ import (
 	"github.com/go-test/deep"
 	"github.com/k3d-io/k3d/v5/pkg/config/v1alpha3"
 	"github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	"github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/spf13/viper"
 )
@@ -52,6 +53,11 @@ func TestMigrate(t *testing.T) {
 			targetVersion: v1alpha4.ApiVersion,
 			actualPath:    "test_assets/config_test_simple_migration_v1alpha3.yaml",
 			expectedPath:  "test_assets/config_test_simple_migration_v1alpha4.yaml",
+		},
+		"V1Alpha4ToV1Alpha5": {
+			targetVersion: v1alpha5.ApiVersion,
+			actualPath:    "test_assets/config_test_simple_migration_v1alpha4.yaml",
+			expectedPath:  "test_assets/config_test_simple_migration_v1alpha5.yaml",
 		},
 	}
 
@@ -80,6 +86,7 @@ func TestMigrate(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			t.Logf("Migrating %s to %s", actualCfg.GetAPIVersion(), tc.targetVersion)
 			if actualCfg.GetAPIVersion() != tc.targetVersion {
 				actualCfg, err = Migrate(actualCfg, tc.targetVersion)
 				if err != nil {
