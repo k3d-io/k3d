@@ -22,10 +22,22 @@ THE SOFTWARE.
 package util
 
 import (
+	"strconv"
 	"strings"
 
+	dockerunits "github.com/docker/go-units"
+
+	"github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 )
+
+type UlimitTypes interface {
+	dockerunits.Ulimit | v1alpha5.Ulimit
+}
+
+type Ulimit[T UlimitTypes] struct {
+	Values T
+}
 
 // ValidateRuntimeUlimitKey validates a given ulimit key is valid
 func ValidateRuntimeUlimitKey(ulimitKey string) {
@@ -54,4 +66,45 @@ func ValidateRuntimeUlimitKey(ulimitKey string) {
 	if !ulimitsKeys[ulimitKey] {
 		l.Log().Fatalf("runtime ulimit \"%s\" is not valid, allowed keys are: %s", ulimitKey, strings.Join(keysList, ", "))
 	}
+}
+
+func ParseRuntimeUlimit[T UlimitTypes](ulimit string) *T {
+	var parsedUlimit any
+	var tmpUlimit Ulimit[T]
+	ulimitSplitted := strings.Split(ulimit, "=")
+	if len(ulimitSplitted) != 2 {
+		l.Log().Fatalf("unknown runtime-ulimit format format: %s, use format \"ulimit=soft:hard\"", ulimit)
+	}
+	ValidateRuntimeUlimitKey(ulimitSplitted[0])
+	softHardSplitted := strings.Split(ulimitSplitted[1], ":")
+	if len(softHardSplitted) != 2 {
+		l.Log().Fatalf("unknown runtime-ulimit format format: %s, use format \"ulimit=soft:hard\"", ulimit)
+	}
+	soft, err := strconv.Atoi(softHardSplitted[0])
+	if err != nil {
+		l.Log().Fatalf("unknown runtime-ulimit format format: soft %s has to be int", ulimitSplitted[0])
+	}
+	hard, err := strconv.Atoi(softHardSplitted[1])
+	if err != nil {
+		l.Log().Fatalf("unknown runtime-ulimit format format: hard %s has to be int", ulimitSplitted[1])
+	}
+
+	switch any(tmpUlimit.Values).(type) {
+	case dockerunits.Ulimit:
+		parsedUlimit = &dockerunits.Ulimit{
+			Name: ulimitSplitted[0],
+			Soft: int64(soft),
+			Hard: int64(hard),
+		}
+	case v1alpha5.Ulimit:
+		parsedUlimit = &v1alpha5.Ulimit{
+			Name: ulimitSplitted[0],
+			Soft: int64(soft),
+			Hard: int64(hard),
+		}
+	default:
+		l.Log().Fatalf("Wrong Type")
+	}
+
+	return parsedUlimit.(*T)
 }

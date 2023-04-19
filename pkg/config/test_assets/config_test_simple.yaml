@@ -50,6 +50,6 @@ options:
           - server:0
           - loadbalancer
     ulimits:
-      - name: nofiles
+      - name: nofile
         soft: 1024
         hard: 1024

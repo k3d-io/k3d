@@ -105,7 +105,7 @@ func TestReadSimpleConfig(t *testing.T) {
 					},
 				},
 				Ulimits: []conf.Ulimit{{
-					Name: "nofiles",
+					Name: "nofile",
 					Soft: 1024,
 					Hard: 1024,
 				}},
