@@ -39,4 +39,5 @@ const (
 	// Fixes
 	K3dEnvFixCgroupV2 = "K3D_FIX_CGROUPV2"
 	K3dEnvFixDNS      = "K3D_FIX_DNS"
+	K3dEnvFixMounts   = "K3D_FIX_MOUNTS"
 )
