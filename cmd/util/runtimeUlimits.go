@@ -103,7 +103,7 @@ func ParseRuntimeUlimit[T UlimitTypes](ulimit string) *T {
 			Hard: int64(hard),
 		}
 	default:
-		l.Log().Fatalf("Wrong Type")
+		l.Log().Fatalf("Unsupported UlimitTypes, supported types are: dockerunits.Ulimit or v1alpha5.Ulimit")
 	}
 
 	return parsedUlimit.(*T)
