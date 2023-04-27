@@ -143,8 +143,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string)
 	// --runtime-label
 	runtimeLabelsFlag, err := cmd.Flags().GetStringSlice("runtime-label")
 	if err != nil {
-		l.Log().Errorln("No runtime-label specified")
-		l.Log().Fatalln(err)
+		l.Log().Fatalf("No runtime-label specified: %v", err)
 	}
 
 	runtimeLabels := make(map[string]string, len(runtimeLabelsFlag)+1)
@@ -163,8 +162,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string)
 	// --runtime-ulimit
 	runtimeUlimitsFlag, err := cmd.Flags().GetStringSlice("runtime-ulimit")
 	if err != nil {
-		l.Log().Errorln("No runtime-label specified")
-		l.Log().Fatalln(err)
+		l.Log().Fatalf("No runtime-ulimit specified: %v", err)
 	}
 
 	runtimeUlimits := make([]*dockerunits.Ulimit, len(runtimeUlimitsFlag))
