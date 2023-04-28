@@ -164,8 +164,8 @@ func (cli *DockerCli) ContentTrustEnabled() bool {
 
 // BuildKitEnabled returns buildkit is enabled or not.
 func (cli *DockerCli) BuildKitEnabled() (bool, error) {
-	// use DOCKER_BUILDKIT env var value if set
-	if v, ok := os.LookupEnv("DOCKER_BUILDKIT"); ok {
+	// use DOCKER_BUILDKIT env var value if set and not empty
+	if v := os.Getenv("DOCKER_BUILDKIT"); v != "" {
 		enabled, err := strconv.ParseBool(v)
 		if err != nil {
 			return false, errors.Wrap(err, "DOCKER_BUILDKIT environment variable expects boolean value")

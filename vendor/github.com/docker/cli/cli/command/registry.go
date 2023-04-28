@@ -21,8 +21,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ElectAuthServer returns the default registry to use
-// Deprecated: use registry.IndexServer instead
+// ElectAuthServer returns the default registry to use.
+//
+// Deprecated: use [registry.IndexServer] instead.
 func ElectAuthServer(_ context.Context, _ Cli) string {
 	return registry.IndexServer
 }
@@ -55,9 +56,12 @@ func RegistryAuthenticationPrivilegedFunc(cli Cli, index *registrytypes.IndexInf
 	}
 }
 
-// ResolveAuthConfig is like registry.ResolveAuthConfig, but if using the
-// default index, it uses the default index name for the daemon's platform,
-// not the client's platform.
+// ResolveAuthConfig returns auth-config for the given registry from the
+// credential-store. It returns an empty AuthConfig if no credentials were
+// found.
+//
+// It is similar to [registry.ResolveAuthConfig], but uses the credentials-
+// store, instead of looking up credentials from a map.
 func ResolveAuthConfig(_ context.Context, cli Cli, index *registrytypes.IndexInfo) types.AuthConfig {
 	configKey := index.Name
 	if index.Official {

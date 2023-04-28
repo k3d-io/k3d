@@ -1,23 +1,32 @@
 package command
 
 import (
+	"io"
+
 	"github.com/docker/cli/cli/streams"
 )
 
 // InStream is an input stream used by the DockerCli to read user input
-// Deprecated: Use github.com/docker/cli/cli/streams.In instead
+//
+// Deprecated: Use [streams.In] instead.
 type InStream = streams.In
 
 // OutStream is an output stream used by the DockerCli to write normal program
 // output.
-// Deprecated: Use github.com/docker/cli/cli/streams.Out instead
+//
+// Deprecated: Use [streams.Out] instead.
 type OutStream = streams.Out
 
-var (
-	// NewInStream returns a new InStream object from a ReadCloser
-	// Deprecated: Use github.com/docker/cli/cli/streams.NewIn instead
-	NewInStream = streams.NewIn
-	// NewOutStream returns a new OutStream object from a Writer
-	// Deprecated: Use github.com/docker/cli/cli/streams.NewOut instead
-	NewOutStream = streams.NewOut
-)
+// NewInStream returns a new [streams.In] from an [io.ReadCloser].
+//
+// Deprecated: Use [streams.NewIn] instead.
+func NewInStream(in io.ReadCloser) *streams.In {
+	return streams.NewIn(in)
+}
+
+// NewOutStream returns a new [streams.Out] from an [io.Writer].
+//
+// Deprecated: Use [streams.NewOut] instead.
+func NewOutStream(out io.Writer) *streams.Out {
+	return streams.NewOut(out)
+}

@@ -32,7 +32,6 @@ import (
 	dockerunits "github.com/docker/go-units"
 	runtimeTypes "github.com/k3d-io/k3d/v5/pkg/runtimes/types"
 	wharfie "github.com/rancher/wharfie/pkg/registries"
-	"inet.af/netaddr"
 )
 
 // NodeStatusRestarting defines the status string that signals the node container is restarting
