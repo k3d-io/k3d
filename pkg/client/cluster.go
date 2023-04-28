@@ -41,6 +41,8 @@ import (
 	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/yaml"
 
+	wharfie "github.com/rancher/wharfie/pkg/registries"
+
 	"github.com/k3d-io/k3d/v5/pkg/actions"
 	config "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
@@ -179,7 +181,7 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 	// Use existing registries (including the new one, if created)
 	l.Log().Tracef("Using Registries: %+v", clusterConfig.ClusterCreateOpts.Registries.Use)
 
-	var registryConfig *k3s.Registry
+	var registryConfig *wharfie.Registry
 
 	if len(clusterConfig.ClusterCreateOpts.Registries.Use) > 0 {
 		// ensure that all selected registries exist and connect them to the cluster network

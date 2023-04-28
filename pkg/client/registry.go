@@ -24,6 +24,7 @@ package client
 import (
 	"context"
 	"fmt"
+	wharfie "github.com/rancher/wharfie/pkg/registries"
 	gort "runtime"
 
 	"github.com/docker/go-connections/nat"
@@ -34,7 +35,6 @@ import (
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes/docker"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
-	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 	"github.com/k3d-io/k3d/v5/pkg/types/k8s"
 )
 
@@ -189,8 +189,9 @@ func RegistryConnectNetworks(ctx context.Context, runtime runtimes.Runtime, regi
 }
 
 // RegistryGenerateK3sConfig generates the k3s specific registries.yaml configuration for multiple registries
-func RegistryGenerateK3sConfig(ctx context.Context, registries []*k3d.Registry) (*k3s.Registry, error) {
-	regConf := &k3s.Registry{}
+func RegistryGenerateK3sConfig(ctx context.Context, registries []*k3d.Registry) (*wharfie.Registry, error) {
+	regConf := &wharfie.Registry{}
+	rewritesConf := make(map[string]string)
 
 	for _, reg := range registries {
 		internalAddress := fmt.Sprintf("%s:%s", reg.Host, reg.ExposureOpts.Port.Port())
@@ -198,25 +199,28 @@ func RegistryGenerateK3sConfig(ctx context.Context, registries []*k3d.Registry) 
 
 		// init mirrors if nil
 		if regConf.Mirrors == nil {
-			regConf.Mirrors = make(map[string]k3s.Mirror)
+			regConf.Mirrors = make(map[string]wharfie.Mirror)
 		}
 
-		regConf.Mirrors[externalAddress] = k3s.Mirror{
+		regConf.Mirrors[externalAddress] = wharfie.Mirror{
 			Endpoints: []string{
 				fmt.Sprintf("http://%s", internalAddress),
 			},
+			Rewrites: rewritesConf,
 		}
 
-		regConf.Mirrors[internalAddress] = k3s.Mirror{
+		regConf.Mirrors[internalAddress] = wharfie.Mirror{
 			Endpoints: []string{
 				fmt.Sprintf("http://%s", internalAddress),
 			},
+			Rewrites: rewritesConf, // stub out rewrites so we dont override with nil
 		}
 
 		if reg.Options.Proxy.RemoteURL != "" {
-			regConf.Mirrors[reg.Options.Proxy.RemoteURL] = k3s.Mirror{
+			regConf.Mirrors[reg.Options.Proxy.RemoteURL] = wharfie.Mirror{
 				Endpoints: []string{fmt.Sprintf("http://%s", internalAddress)},
 			}
+
 		}
 	}
 
@@ -363,7 +367,7 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runt
 }
 
 // RegistryMergeConfig merges a source registry config into an existing dest registry cofnig
-func RegistryMergeConfig(ctx context.Context, dest, src *k3s.Registry) error {
+func RegistryMergeConfig(ctx context.Context, dest, src *wharfie.Registry) error {
 	if err := mergo.MergeWithOverwrite(dest, src); err != nil {
 		return fmt.Errorf("failed to merge registry configs: %w", err)
 	}

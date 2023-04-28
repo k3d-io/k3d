@@ -25,6 +25,7 @@ package config
 import (
 	"context"
 	"fmt"
+	wharfie "github.com/rancher/wharfie/pkg/registries"
 	"io"
 	"os"
 	"strings"
@@ -40,7 +41,6 @@ import (
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
-	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 	"github.com/k3d-io/k3d/v5/pkg/util"
 	"github.com/k3d-io/k3d/v5/version"
 )
@@ -359,7 +359,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 
 	if simpleConfig.Registries.Config != "" {
-		var k3sRegistry *k3s.Registry
+		var k3sRegistry *wharfie.Registry
 
 		if strings.Contains(simpleConfig.Registries.Config, "\n") { // CASE 1: embedded registries.yaml (multiline string)
 			l.Log().Debugf("Found multiline registries config embedded in SimpleConfig:\n%s", simpleConfig.Registries.Config)
