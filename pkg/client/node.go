@@ -566,6 +566,25 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 				},
 			})
 		}
+
+		if fixes.FixEnabled(fixes.EnvFixMounts) {
+			l.Log().Debugf(">>> enabling mounts magic")
+
+			if nodeStartOpts.NodeHooks == nil {
+				nodeStartOpts.NodeHooks = []k3d.NodeHook{}
+			}
+
+			nodeStartOpts.NodeHooks = append(nodeStartOpts.NodeHooks, k3d.NodeHook{
+				Stage: k3d.LifecycleStagePreStart,
+				Action: actions.WriteFileAction{
+					Runtime:     runtime,
+					Content:     fixes.MountsEntrypoint,
+					Dest:        "/bin/k3d-entrypoint-mounts.sh",
+					Mode:        0744,
+					Description: "Write entrypoint script for mounts fix",
+				},
+			})
+		}
 	}
 	return nil
 }
