@@ -42,7 +42,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/k3d-io/k3d/v5/pkg/actions"
-	config "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	config "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3drt "github.com/k3d-io/k3d/v5/pkg/runtimes"

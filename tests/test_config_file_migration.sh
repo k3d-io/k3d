@@ -28,6 +28,7 @@ tempdir=$(mktemp -d)
 $EXE config migrate "$CURR_DIR/assets/config_test_simple_migration_v1alpha2.yaml" "$tempdir/expected.yaml" || failed "failed on $CURR_DIR/assets/config_test_simple_migration_v1alpha2.yaml"
 $EXE config migrate "$CURR_DIR/assets/config_test_simple_migration_v1alpha3.yaml" "$tempdir/actual.yaml" || failed "failed on $CURR_DIR/assets/config_test_simple_migration_v1alpha3.yaml"
 # TODO: migrate to v1alpha4
+# TODO: migrate to v1alpha5
 
 diff "$tempdir/actual.yaml" "$tempdir/expected.yaml" || failed "config migration failed" && passed "config migration succeeded"
 

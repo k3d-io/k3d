@@ -1,0 +1,405 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SimpleConfig",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind"
+  ],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": [
+        "k3d.io/v1alpha5"
+      ],
+      "default": "k3d.io/v1alpha5"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "Simple"
+      ],
+      "default": "Simple"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Name of the cluster (must be a valid hostname and will be prefixed with 'k3d-'). Example: 'mycluster'.",
+          "type": "string",
+          "format": "hostname"
+        }
+      },
+      "additionalProperties": false
+    },
+    "servers": {
+      "type": "number",
+      "minimum": 1
+    },
+    "agents": {
+      "type": "number",
+      "minimum": 0
+    },
+    "kubeAPI": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "format": "hostname"
+        },
+        "hostIP": {
+          "type": "string",
+          "format": "ipv4",
+          "examples": [
+            "0.0.0.0",
+            "192.168.178.55"
+          ]
+        },
+        "hostPort": {
+          "type": "string",
+          "examples": [
+            "6443"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "image": {
+      "type": "string",
+      "examples": [
+        "rancher/k3s:latest"
+      ]
+    },
+    "network": {
+      "type": "string"
+    },
+    "subnet": {
+      "type": "string",
+      "default": "auto",
+      "examples": [
+        "172.28.0.0/16",
+        "192.162.0.0/16"
+      ]
+    },
+    "token": {
+      "type": "string"
+    },
+    "volumes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "volume": {
+            "type": "string"
+          },
+          "nodeFilters": {
+            "$ref": "#/definitions/nodeFilters"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "port": {
+            "type": "string"
+          },
+          "nodeFilters": {
+            "$ref": "#/definitions/nodeFilters"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "k3d": {
+          "type": "object",
+          "properties": {
+            "wait": {
+              "type": "boolean",
+              "default": true
+            },
+            "timeout": {
+              "examples": [
+                "60s",
+                "1m",
+                "1m30s"
+              ]
+            },
+            "disableLoadbalancer": {
+              "type": "boolean",
+              "default": false
+            },
+            "disableImageVolume": {
+              "type": "boolean",
+              "default": false
+            },
+            "disableRollback": {
+              "type": "boolean",
+              "default": false
+            },
+            "loadbalancer": {
+              "type": "object",
+              "properties": {
+                "configOverrides": {
+                  "type": "array",
+                  "examples": [
+                    "settings.workerConnections=2048",
+                    "settings.defaultProxyTimeout=900"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "k3s": {
+          "type": "object",
+          "properties": {
+            "extraArgs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "arg": {
+                    "type": "string",
+                    "examples": [
+                      "--tls-san=127.0.0.1",
+                      "--disable=traefik"
+                    ]
+                  },
+                  "nodeFilters": {
+                    "$ref": "#/definitions/nodeFilters"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "nodeLabels": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string"
+                  },
+                  "nodeFilters": {
+                    "$ref": "#/definitions/nodeFilters"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "kubeconfig": {
+          "type": "object",
+          "properties": {
+            "updateDefaultKubeconfig": {
+              "type": "boolean",
+              "default": true
+            },
+            "switchCurrentContext": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "runtime": {
+          "type": "object",
+          "properties": {
+            "gpuRequest": {
+              "type": "string"
+            },
+            "serversMemory": {
+              "type": "string"
+            },
+            "agentsMemory": {
+              "type": "string"
+            },
+            "hostPidMode": {
+              "type": "boolean",
+              "default": false
+            },
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string"
+                  },
+                  "nodeFilters": {
+                    "$ref": "#/definitions/nodeFilters"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "ulimits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "soft": {
+                    "type": "number"
+                  },
+                  "hard": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "env": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "envVar": {
+            "type": "string"
+          },
+          "nodeFilters": {
+            "$ref": "#/definitions/nodeFilters"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "registries": {
+      "type": "object",
+      "properties": {
+        "create": {
+          "type": "object",
+          "description": "Create a new container image registry alongside the cluster.",
+          "properties": {
+            "name": {
+              "type": "string",
+              "examples": [
+                "myregistry",
+                "registry.localhost"
+              ]
+            },
+            "host": {
+              "type": "string",
+              "examples": [
+                "0.0.0.0",
+                "localhost",
+                "127.0.0.1"
+              ],
+              "default": "0.0.0.0"
+            },
+            "hostPort": {
+              "type": "string",
+              "examples": [
+                "5000",
+                "2345"
+              ],
+              "default": "random"
+            },
+            "image": {
+              "type": "string",
+              "examples": [
+                "myregistry/registry:2"
+              ],
+              "default": "docker.io/library/registry:2"
+            },
+            "proxy": {
+              "type": "object",
+              "properties": {
+                "remoteURL": {
+                  "type": "string",
+                  "examples": [
+                    "https://registry-1.docker.io"
+                  ]
+                },
+                "username": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "volumes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "examples": [
+                "/tmp/registry:/var/lib/registry"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "use": {
+          "type": "array",
+          "description": "Connect another container image registry to the cluster.",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            "otherregistry:5000"
+          ]
+        },
+        "config": {
+          "type": "string",
+          "description": "Reference a K3s registry configuration file or at it's contents here."
+        },
+        "additionalProperties": false
+      }
+    },
+    "hostAliases": {
+      "type": "array",
+      "description": "Additional IP to multiple hostnames mappings",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ip": {
+            "type": "string"
+          },
+          "hostnames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "nodeFilters": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "examples": [
+        "loadbalancer",
+        "server:*",
+        "server:0",
+        "agent:1",
+        "all"
+      ]
+    }
+  }
+}

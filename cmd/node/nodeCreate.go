@@ -29,7 +29,6 @@ import (
 	"github.com/spf13/cobra"
 
 	dockerunits "github.com/docker/go-units"
-	"github.com/k3d-io/k3d/v5/cmd/util"
 	cliutil "github.com/k3d-io/k3d/v5/cmd/util"
 	k3dc "github.com/k3d-io/k3d/v5/pkg/client"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
@@ -68,11 +67,11 @@ func NewCmdNodeCreate() *cobra.Command {
 	// add flags
 	cmd.Flags().Int("replicas", 1, "Number of replicas of this node specification.")
 	cmd.Flags().String("role", string(k3d.AgentRole), "Specify node role [server, agent]")
-	if err := cmd.RegisterFlagCompletionFunc("role", util.ValidArgsNodeRoles); err != nil {
+	if err := cmd.RegisterFlagCompletionFunc("role", cliutil.ValidArgsNodeRoles); err != nil {
 		l.Log().Fatalln("Failed to register flag completion for '--role'", err)
 	}
 	cmd.Flags().StringP("cluster", "c", k3d.DefaultClusterName, "Cluster URL or k3d cluster name to connect to.")
-	if err := cmd.RegisterFlagCompletionFunc("cluster", util.ValidArgsAvailableClusters); err != nil {
+	if err := cmd.RegisterFlagCompletionFunc("cluster", cliutil.ValidArgsAvailableClusters); err != nil {
 		l.Log().Fatalln("Failed to register flag completion for '--cluster'", err)
 	}
 
@@ -83,6 +82,7 @@ func NewCmdNodeCreate() *cobra.Command {
 	cmd.Flags().DurationVar(&createNodeOpts.Timeout, "timeout", 0*time.Second, "Maximum waiting time for '--wait' before canceling/returning.")
 
 	cmd.Flags().StringSliceP("runtime-label", "", []string{}, "Specify container runtime labels in format \"foo=bar\"")
+	cmd.Flags().StringSliceP("runtime-ulimit", "", []string{}, "Specify container runtime ulimit in format \"ulimit=soft:hard\"")
 	cmd.Flags().StringSliceP("k3s-node-label", "", []string{}, "Specify k3s node labels in format \"foo=bar\"")
 
 	cmd.Flags().StringSliceP("network", "n", []string{}, "Add node to (another) runtime network")
@@ -142,8 +142,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string)
 	// --runtime-label
 	runtimeLabelsFlag, err := cmd.Flags().GetStringSlice("runtime-label")
 	if err != nil {
-		l.Log().Errorln("No runtime-label specified")
-		l.Log().Fatalln(err)
+		l.Log().Fatalf("No runtime-label specified: %v", err)
 	}
 
 	runtimeLabels := make(map[string]string, len(runtimeLabelsFlag)+1)
@@ -159,6 +158,16 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string)
 	// Internal k3d runtime labels take precedence over user-defined labels
 	runtimeLabels[k3d.LabelRole] = roleStr
 
+	// --runtime-ulimit
+	runtimeUlimitsFlag, err := cmd.Flags().GetStringSlice("runtime-ulimit")
+	if err != nil {
+		l.Log().Fatalf("No runtime-ulimit specified: %v", err)
+	}
+
+	runtimeUlimits := make([]*dockerunits.Ulimit, len(runtimeUlimitsFlag))
+	for index, ulimit := range runtimeUlimitsFlag {
+		runtimeUlimits[index] = cliutil.ParseRuntimeUlimit[dockerunits.Ulimit](ulimit)
+	}
 	// --k3s-node-label
 	k3sNodeLabelsFlag, err := cmd.Flags().GetStringSlice("k3s-node-label")
 	if err != nil {
@@ -191,15 +200,16 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string)
 	nodes := []*k3d.Node{}
 	for i := 0; i < replicas; i++ {
 		node := &k3d.Node{
-			Name:          fmt.Sprintf("%s-%s-%d", k3d.DefaultObjectNamePrefix, args[0], i),
-			Role:          role,
-			Image:         image,
-			K3sNodeLabels: k3sNodeLabels,
-			RuntimeLabels: runtimeLabels,
-			Restart:       true,
-			Memory:        memory,
-			Networks:      networks,
-			Args:          k3sArgs,
+			Name:           fmt.Sprintf("%s-%s-%d", k3d.DefaultObjectNamePrefix, args[0], i),
+			Role:           role,
+			Image:          image,
+			K3sNodeLabels:  k3sNodeLabels,
+			RuntimeLabels:  runtimeLabels,
+			RuntimeUlimits: runtimeUlimits,
+			Restart:        true,
+			Memory:         memory,
+			Networks:       networks,
+			Args:           k3sArgs,
 		}
 		nodes = append(nodes, node)
 	}

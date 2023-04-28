@@ -1,4 +1,4 @@
-apiVersion: k3d.io/v1alpha4
+apiVersion: k3d.io/v1alpha5
 kind: Simple
 metadata:
   name: test
@@ -49,3 +49,7 @@ options:
         nodeFilters:
           - server:0
           - loadbalancer
+    ulimits:
+      - name: nofile
+        soft: 1024
+        hard: 1024
