@@ -9,6 +9,20 @@
         {
           "properties": {
             "version": {
+              "const": "v1alpha5"
+            }
+          }
+        },
+        {
+          "$ref": "https://raw.githubusercontent.com/k3d-io/k3d/main/pkg/config/v1alpha5/schema.json"
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "properties": {
+            "version": {
               "const": "v1alpha4"
             }
           }

@@ -200,7 +200,7 @@ jobs:
         run: make ci-setup
       # Go Build
       - name: Build k3d Binary
-        run: make build-cross
+        run: make gen-checksum build-cross
       # Wait for tests to pass and create release (ONLY ON TAG)
       - name: Wait for tests to succeed
         if: startsWith(github.ref, 'refs/tags/')

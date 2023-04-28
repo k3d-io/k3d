@@ -35,7 +35,7 @@ highlight "[START] ConfigTest $EXTRA_TITLE"
 info "Creating cluster $clustername..."
 
 cat <<EOF | $EXE cluster create --config=-
-apiVersion: k3d.io/v1alpha4
+apiVersion: k3d.io/v1alpha5
 kind: Simple
 metadata:
   name: $clustername
@@ -126,7 +126,7 @@ exec_in_node "k3d-$clustername-server-0" "cat /etc/rancher/k3s/registries.yaml" 
 
 info "Deleting cluster $clustername (using config file from stdin)..."
 cat <<EOF | $EXE cluster delete --config=-
-apiVersion: k3d.io/v1alpha4
+apiVersion: k3d.io/v1alpha5
 kind: Simple
 metadata:
   name: $clustername

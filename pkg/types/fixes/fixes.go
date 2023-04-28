@@ -43,12 +43,14 @@ type K3DFixEnv string
 
 const (
 	EnvFixCgroupV2 K3DFixEnv = k3d.K3dEnvFixCgroupV2 // EnvFixCgroupV2 is the environment variable that k3d will check for to enable/disable the cgroupv2 workaround
-	EnvFixDNS      K3DFixEnv = k3d.K3dEnvFixDNS      // EnvFixDNS is the environment variable that check for to enable/disable the application of network magic related to DNS
+	EnvFixDNS      K3DFixEnv = k3d.K3dEnvFixDNS      // EnvFixDNS is the environment variable that k3d will check for to enable/disable the application of network magic related to DNS
+	EnvFixMounts   K3DFixEnv = k3d.K3dEnvFixMounts   // EnvFixMounts is the environment variable that k3d will check for to enable/disable the fixing of mountpoints
 )
 
 var FixEnvs []K3DFixEnv = []K3DFixEnv{
 	EnvFixCgroupV2,
 	EnvFixDNS,
+	EnvFixMounts,
 }
 
 //go:embed assets/k3d-entrypoint-cgroupv2.sh
@@ -56,6 +58,9 @@ var CgroupV2Entrypoint []byte
 
 //go:embed assets/k3d-entrypoint-dns.sh
 var DNSMagicEntrypoint []byte
+
+//go:embed assets/k3d-entrypoint-mounts.sh
+var MountsEntrypoint []byte
 
 //go:embed assets/k3d-entrypoint.sh
 var K3DEntrypoint []byte

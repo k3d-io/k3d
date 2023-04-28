@@ -197,15 +197,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		}
 	}
 
-	if checkK3SURLIsActive(cluster.Nodes, node.Env[k3sURLEnvIndex]) {
-		if !k3sURLEnvFound {
-			if url, ok := node.RuntimeLabels[k3d.LabelClusterURL]; ok {
-				node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3s.EnvClusterConnectURL, url))
-			} else {
-				l.Log().Warnln("Failed to find K3S_URL value!")
-			}
-		}
-	} else {
+	if !k3sURLEnvFound || !checkK3SURLIsActive(cluster.Nodes, node.Env[k3sURLEnvIndex]) {
 		// Use LB if available as registration url for nodes
 		// otherwise fallback to server node
 		var registrationNode *k3d.Node
@@ -571,6 +563,25 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 					Dest:        "/bin/k3d-entrypoint-cgroupv2.sh",
 					Mode:        0744,
 					Description: "Write entrypoint script for CGroupV2 fix",
+				},
+			})
+		}
+
+		if fixes.FixEnabled(fixes.EnvFixMounts) {
+			l.Log().Debugf(">>> enabling mounts magic")
+
+			if nodeStartOpts.NodeHooks == nil {
+				nodeStartOpts.NodeHooks = []k3d.NodeHook{}
+			}
+
+			nodeStartOpts.NodeHooks = append(nodeStartOpts.NodeHooks, k3d.NodeHook{
+				Stage: k3d.LifecycleStagePreStart,
+				Action: actions.WriteFileAction{
+					Runtime:     runtime,
+					Content:     fixes.MountsEntrypoint,
+					Dest:        "/bin/k3d-entrypoint-mounts.sh",
+					Mode:        0744,
+					Description: "Write entrypoint script for mounts fix",
 				},
 			})
 		}

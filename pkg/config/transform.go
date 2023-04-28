@@ -34,9 +34,10 @@ import (
 	"inet.af/netaddr"
 	"sigs.k8s.io/yaml"
 
+	dockerunits "github.com/docker/go-units"
 	cliutil "github.com/k3d-io/k3d/v5/cmd/util" // TODO: move parseapiport to pkg
 	"github.com/k3d-io/k3d/v5/pkg/client"
-	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha4"
+	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
@@ -232,6 +233,23 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			cliutil.ValidateRuntimeLabelKey(k)
 
 			node.RuntimeLabels[k] = v
+		}
+	}
+
+	// -> RUNTIME ULIMITS
+	for index, runtimeUlimit := range simpleConfig.Options.Runtime.Ulimits {
+		for _, node := range nodeList {
+			if node.RuntimeUlimits == nil {
+				node.RuntimeUlimits = make([]*dockerunits.Ulimit, len(simpleConfig.Options.Runtime.Ulimits)) // ensure that the map is initialized
+			}
+
+			cliutil.ValidateRuntimeUlimitKey(runtimeUlimit.Name)
+
+			node.RuntimeUlimits[index] = &dockerunits.Ulimit{
+				Name: runtimeUlimit.Name,
+				Soft: runtimeUlimit.Soft,
+				Hard: runtimeUlimit.Hard,
+			}
 		}
 	}
 

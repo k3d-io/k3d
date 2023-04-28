@@ -89,6 +89,11 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	/* Labels */
 	containerConfig.Labels = node.RuntimeLabels // has to include the role
 
+	/* Ulimits */
+	if len(node.RuntimeUlimits) > 0 {
+		hostConfig.Ulimits = node.RuntimeUlimits
+	}
+
 	/* Auto-Restart */
 	if node.Restart {
 		hostConfig.RestartPolicy = docker.RestartPolicy{
