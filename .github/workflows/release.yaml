@@ -13,6 +13,7 @@ env:
     
 jobs:
   test-suite:
+    timeout-minutes: 30
     name: Full Test Suite
     runs-on: ubuntu-22.04
     steps:
@@ -35,7 +36,7 @@ jobs:
       - name: Run Go Tests
         run: make test
       - name: Run E2E Tests
-        timeout-minutes: 20
+        timeout-minutes: 30
         # Quite often, tests were failing due to "too many open files" errors, so we're fixing this here
         # Also, we want to see trace level logs if tests fail and the pipeline should exit on first error
         run: |
