@@ -40,9 +40,11 @@ jobs:
         # Quite often, tests were failing due to "too many open files" errors, so we're fixing this here
         # Also, we want to see trace level logs if tests fail and the pipeline should exit on first error
         run: |
+          echo "[$(date '+%F %H:%M:%S')] Setting up environment for E2E tests..."
           sudo prlimit --pid $$ --nofile=1048576:1048576
           sudo sysctl fs.inotify.max_user_instances=1280
           sudo sysctl fs.inotify.max_user_watches=655360
+          echo "[$(date '+%F %H:%M:%S')] Running E2E tests..."
           make e2e -e E2E_LOG_LEVEL=trace -e E2E_FAIL_FAST=true
       # Builds
       - name: Test Platform Builds
