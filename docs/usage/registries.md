@@ -226,7 +226,7 @@ Then you should check that the pod is running with `kubectl get pods -l "app=ngi
       -v ~/.local/share/docker-io-registry:/var/lib/registry `# also persist the downloaded images on the device outside the container`
     ```
 
-2. Create `registry.yaml`
+2. Create `registry.yml`
 
     ```yaml
     mirrors:
