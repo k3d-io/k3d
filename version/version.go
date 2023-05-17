@@ -78,10 +78,7 @@ func (c *httpClient) fetchLatestK3sVersion(channel string) (string, error) {
 	}
 
 	defer func(Body io.ReadCloser) {
-		err = Body.Close()
-		if err != nil {
-
-		}
+		_ = Body.Close()
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
