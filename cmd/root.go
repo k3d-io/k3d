@@ -23,10 +23,8 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"regexp"
 	"sort"
@@ -37,6 +35,7 @@ import (
 	"github.com/sirupsen/logrus/hooks/writer"
 	"github.com/spf13/cobra"
 
+	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/k3d-io/k3d/v5/cmd/cluster"
 	cfg "github.com/k3d-io/k3d/v5/cmd/config"
 	"github.com/k3d-io/k3d/v5/cmd/debug"
@@ -254,6 +253,13 @@ func NewCmdVersionLs() *cobra.Command {
 		string(VersionLsSortOff):  VersionLsSortOff,
 	}
 
+	var imageRepos map[string]string = map[string]string{
+		"k3d":       "ghcr.io/k3d-io/k3d",
+		"k3d-tools": "ghcr.io/k3d-io/k3d-tools",
+		"k3d-proxy": "ghcr.io/k3d-io/k3d-proxy",
+		"k3s":       "docker.io/rancher/k3s",
+	}
+
 	type Flags struct {
 		includeRegexp string
 		excludeRegexp string
@@ -271,6 +277,12 @@ func NewCmdVersionLs() *cobra.Command {
 		ValidArgs: []string{"k3d", "k3s", "k3d-proxy", "k3d-tools"},
 		Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 		Run: func(cmd *cobra.Command, args []string) {
+
+			repo, ok := imageRepos[args[0]]
+			if !ok {
+				l.Log().Fatalf("Unknown target '%s'", args[0])
+			}
+
 			var format VersionLsOutputFormat
 			if f, ok := VersionLsOutputFormats[flags.format]; !ok {
 				l.Log().Fatalf("Unknown output format '%s'", flags.format)
@@ -285,24 +297,8 @@ func NewCmdVersionLs() *cobra.Command {
 				sortMode = m
 			}
 
-			urlTpl := "https://registry.hub.docker.com/v1/repositories/%s/tags"
-			org := "rancher"
-			repo := fmt.Sprintf("%s/%s", org, args[0])
-			resp, err := http.Get(fmt.Sprintf(urlTpl, repo))
+			tags, err := crane.ListTags(repo)
 			if err != nil {
-				l.Log().Fatalln(err)
-			}
-			defer resp.Body.Close()
-			type Layers struct {
-				Layer string
-				Name  string
-			}
-			body, err := io.ReadAll(resp.Body)
-			if err != nil {
-				l.Log().Fatalln(err)
-			}
-			respJSON := &[]Layers{}
-			if err := json.Unmarshal(body, respJSON); err != nil {
 				l.Log().Fatalln(err)
 			}
 
@@ -316,41 +312,41 @@ func NewCmdVersionLs() *cobra.Command {
 				l.Log().Fatalln(err)
 			}
 
-			tags := []string{}
+			filteredTags := []string{}
 
-			for _, tag := range *respJSON {
-				if includeRegexp.Match([]byte(tag.Name)) {
-					if flags.excludeRegexp == "" || !excludeRegexp.Match([]byte(tag.Name)) {
+			for _, tag := range tags {
+				if includeRegexp.Match([]byte(tag)) {
+					if flags.excludeRegexp == "" || !excludeRegexp.Match([]byte(tag)) {
 						switch format {
 						case VersionLsOutputFormatRaw:
-							tags = append(tags, tag.Name)
+							filteredTags = append(filteredTags, tag)
 						case VersionLsOutputFormatRepo:
-							tags = append(tags, fmt.Sprintf("%s:%s\n", repo, tag.Name))
+							filteredTags = append(filteredTags, fmt.Sprintf("%s:%s\n", repo, tag))
 						default:
 							l.Log().Fatalf("Unknown output format '%+v'", format)
 						}
 					} else {
-						l.Log().Tracef("Tag %s excluded (regexp: `%s`)", tag.Name, flags.excludeRegexp)
+						l.Log().Tracef("Tag %s excluded (regexp: `%s`)", tag, flags.excludeRegexp)
 					}
 				} else {
-					l.Log().Tracef("Tag %s not included (regexp: `%s`)", tag.Name, flags.includeRegexp)
+					l.Log().Tracef("Tag %s not included (regexp: `%s`)", tag, flags.includeRegexp)
 				}
 			}
 
 			// Sort
 			if sortMode != VersionLsSortOff {
-				sort.Slice(tags, func(i, j int) bool {
+				sort.Slice(filteredTags, func(i, j int) bool {
 					if sortMode == VersionLsSortAsc {
-						return tags[i] < tags[j]
+						return filteredTags[i] < filteredTags[j]
 					}
-					return tags[i] > tags[j]
+					return filteredTags[i] > filteredTags[j]
 				})
 			}
 
 			if flags.limit > 0 {
-				tags = tags[0:flags.limit]
+				filteredTags = filteredTags[0:flags.limit]
 			}
-			fmt.Println(strings.Join(tags, "\n"))
+			fmt.Println(strings.Join(filteredTags, "\n"))
 
 		},
 	}
