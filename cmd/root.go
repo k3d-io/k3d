@@ -58,6 +58,11 @@ type RootFlags struct {
 	version            bool
 }
 
+type VersionInfo struct {
+	K3d string `json:"k3d"`
+	K3s string `json:"k3s"`
+}
+
 var flags = RootFlags{}
 
 func NewCmdK3d() *cobra.Command {
@@ -207,20 +212,46 @@ func initRuntime() {
 }
 
 func NewCmdVersion() *cobra.Command {
+	type VersionOutputFormat string
+
+	const (
+		VersionOutputFormatJson VersionOutputFormat = "json"
+	)
+
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Show k3d and default k3s version",
 		Long:  "Show k3d and default k3s version",
 		Run: func(cmd *cobra.Command, args []string) {
-			printVersion()
+			output, _ := cmd.Flags().GetString("output")
+
+			if output == string(VersionOutputFormatJson) {
+				printJsonVersion()
+			} else {
+				printVersion()
+			}
 		},
 		Args: cobra.NoArgs,
 	}
 
+	cmd.Flags().StringP("output", "o", "", "This will return version information as a different format.  Only json is supported")
+
 	cmd.AddCommand(NewCmdVersionLs())
 
 	return cmd
+}
 
+func printJsonVersion() {
+	versionInfo := VersionInfo{
+		K3d: version.GetVersion(),
+		K3s: version.K3sVersion,
+	}
+	versionJson, err := json.Marshal(versionInfo)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(versionJson))
 }
 
 func printVersion() {
