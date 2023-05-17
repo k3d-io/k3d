@@ -32,7 +32,7 @@ k3d cluster create NAME [flags]
       --host-pid-mode                                                  Enable host pid mode of server(s) and agent(s)
   -i, --image string                                                   Specify k3s image that you want to use for the nodes
       --k3s-arg ARG@NODEFILTER[;@NODEFILTER]                           Additional args passed to k3s command (Format: ARG@NODEFILTER[;@NODEFILTER])
-                                                                        - Example: `k3d cluster create --k3s-arg "--disable=traefik@server:0"
+                                                                        - Example: `k3d cluster create --k3s-arg "--disable=traefik@server:0"`
       --k3s-node-label KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]        Add label to k3s node (Format: KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]
                                                                         - Example: `k3d cluster create --agents 2 --k3s-node-label "my.label@agent:0,1" --k3s-node-label "other.label=somevalue@server:0"`
       --kubeconfig-switch-context                                      Directly switch the default kubeconfig's current-context to the new cluster's context (requires --kubeconfig-update-default) (default true)
@@ -50,6 +50,8 @@ k3d cluster create NAME [flags]
       --registry-use stringArray                                       Connect to one or more k3d-managed registries running locally
       --runtime-label KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]         Add label to container runtime (Format: KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]
                                                                         - Example: `k3d cluster create --agents 2 --runtime-label "my.label@agent:0,1" --runtime-label "other.label=somevalue@server:0"`
+      --runtime-ulimit NAME[=SOFT]:[HARD]                              Add ulimit to container runtime (Format: NAME[=SOFT]:[HARD]
+                                                                        - Example: `k3d cluster create --agents 2 --runtime-ulimit "nofile=1024:1024" --runtime-ulimit "noproc=1024:1024"`
   -s, --servers int                                                    Specify how many servers you want to create
       --servers-memory string                                          Memory limit imposed on the server nodes [From docker]
       --subnet 172.28.0.0/16                                           [Experimental: IPAM] Define a subnet for the newly created container network (Example: 172.28.0.0/16)

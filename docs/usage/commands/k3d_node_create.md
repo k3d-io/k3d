@@ -23,6 +23,7 @@ k3d node create NAME [flags]
       --replicas int             Number of replicas of this node specification. (default 1)
       --role string              Specify node role [server, agent] (default "agent")
       --runtime-label strings    Specify container runtime labels in format "foo=bar"
+      --runtime-ulimit strings   Specify container runtime ulimit in format "ulimit=soft:hard"
       --timeout duration         Maximum waiting time for '--wait' before canceling/returning.
   -t, --token string             Override cluster token (required when connecting to an external cluster)
       --wait                     Wait for the node(s) to be ready before returning. (default true)
