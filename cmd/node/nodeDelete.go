@@ -37,7 +37,6 @@ type nodeDeleteFlags struct {
 
 // NewCmdNodeDelete returns a new cobra command
 func NewCmdNodeDelete() *cobra.Command {
-
 	flags := nodeDeleteFlags{}
 
 	// create new cobra command
@@ -47,7 +46,6 @@ func NewCmdNodeDelete() *cobra.Command {
 		Long:              `Delete node(s).`,
 		ValidArgsFunction: util.ValidArgsAvailableNodes,
 		Run: func(cmd *cobra.Command, args []string) {
-
 			nodes := parseDeleteNodeCmd(cmd, args, &flags)
 			nodeDeleteOpts := k3d.NodeDeleteOpts{SkipLBUpdate: flags.All} // do not update LB, if we're deleting all nodes anyway
 
@@ -76,7 +74,6 @@ func NewCmdNodeDelete() *cobra.Command {
 
 // parseDeleteNodeCmd parses the command input into variables required to delete nodes
 func parseDeleteNodeCmd(cmd *cobra.Command, args []string, flags *nodeDeleteFlags) []*k3d.Node {
-
 	var nodes []*k3d.Node
 	var err error
 

@@ -32,7 +32,6 @@ import (
 
 // NewCmdNodeStop returns a new cobra command
 func NewCmdNodeStop() *cobra.Command {
-
 	// create new command
 	cmd := &cobra.Command{
 		Use:               "stop NAME", // TODO: stopNode: allow one or more names or --all",

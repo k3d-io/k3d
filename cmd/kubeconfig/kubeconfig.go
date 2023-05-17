@@ -28,7 +28,6 @@ import (
 
 // NewCmdKubeconfig returns a new cobra command
 func NewCmdKubeconfig() *cobra.Command {
-
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:   "kubeconfig",

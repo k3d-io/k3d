@@ -50,7 +50,6 @@ var (
 
 // UpdateLoadbalancerConfig updates the loadbalancer config with an updated list of servers belonging to that cluster
 func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) error {
-
 	var err error
 	// update cluster details to ensure that we have the latest node list
 	cluster, err = ClusterGet(ctx, runtime, cluster)
@@ -113,7 +112,6 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 }
 
 func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (types.LoadbalancerConfig, error) {
-
 	var cfg k3d.LoadbalancerConfig
 
 	if cluster.ServerLoadBalancer == nil || cluster.ServerLoadBalancer.Node == nil {
@@ -224,7 +222,6 @@ func LoadbalancerPrepare(ctx context.Context, runtime runtimes.Runtime, cluster 
 	}
 
 	return lbNode, nil
-
 }
 
 func loadbalancerAddPortConfigs(loadbalancer *k3d.Loadbalancer, portmapping nat.PortMapping, targetNodes []*k3d.Node) error {

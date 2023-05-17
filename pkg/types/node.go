@@ -36,5 +36,4 @@ func (node *Node) FillRuntimeLabels() {
 	}
 	// second most important: the node role label
 	node.RuntimeLabels[LabelRole] = string(node.Role)
-
 }

@@ -37,7 +37,6 @@ import (
 )
 
 func TestTranslateNodeToContainer(t *testing.T) {
-
 	inputNode := &k3d.Node{
 		Name:    "test",
 		Role:    k3d.ServerRole,
@@ -113,5 +112,4 @@ func TestTranslateNodeToContainer(t *testing.T) {
 	if diff := deep.Equal(actualRepresentation, expectedRepresentation); diff != nil {
 		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", actualRepresentation, expectedRepresentation, diff)
 	}
-
 }

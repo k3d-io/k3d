@@ -45,7 +45,6 @@ var clusterDeleteCfgViper = viper.New()
 
 // NewCmdClusterDelete returns a new cobra command
 func NewCmdClusterDelete() *cobra.Command {
-
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:               "delete [NAME [NAME ...] | --all]",
@@ -88,7 +87,6 @@ func NewCmdClusterDelete() *cobra.Command {
 					l.Log().Infof("Successfully deleted cluster %s!", c.Name)
 				}
 			}
-
 		},
 	}
 
@@ -112,7 +110,6 @@ func NewCmdClusterDelete() *cobra.Command {
 
 // parseDeleteClusterCmd parses the command input into variables required to delete clusters
 func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
-
 	var clusters []*k3d.Cluster
 
 	// --all

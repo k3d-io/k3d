@@ -43,7 +43,6 @@ import (
 
 // CreateNode creates a new container
 func (d Docker) CreateNode(ctx context.Context, node *k3d.Node) error {
-
 	// translate node spec to docker container specs
 	dockerNode, err := TranslateNodeToContainer(node)
 	if err != nil {
@@ -67,7 +66,6 @@ func (d Docker) DeleteNode(ctx context.Context, nodeSpec *k3d.Node) error {
 
 // GetNodesByLabel returns a list of existing nodes
 func (d Docker) GetNodesByLabel(ctx context.Context, labels map[string]string) ([]*k3d.Node, error) {
-
 	// (0) get containers
 	containers, err := getContainersByLabel(ctx, labels)
 	if err != nil {
@@ -97,7 +95,6 @@ func (d Docker) GetNodesByLabel(ctx context.Context, labels map[string]string) (
 	}
 
 	return nodes, nil
-
 }
 
 // StartNode starts an existing node
@@ -210,7 +207,6 @@ func getContainerDetails(ctx context.Context, containerID string) (types.Contain
 	}
 
 	return containerDetails, nil
-
 }
 
 // GetNode tries to get a node container by its name
@@ -231,12 +227,10 @@ func (d Docker) GetNode(ctx context.Context, node *k3d.Node) (*k3d.Node, error) 
 	}
 
 	return node, nil
-
 }
 
 // GetNodeStatus returns the status of a node (Running, Started, etc.)
 func (d Docker) GetNodeStatus(ctx context.Context, node *k3d.Node) (bool, string, error) {
-
 	stateString := ""
 	running := false
 
@@ -368,7 +362,6 @@ func (d Docker) ExecInNodeWithStdin(ctx context.Context, node *k3d.Node, cmd []s
 }
 
 func executeInNode(ctx context.Context, node *k3d.Node, cmd []string, stdin io.ReadCloser) (*types.HijackedResponse, error) {
-
 	l.Log().Debugf("Executing command '%+v' in node '%s'", cmd, node.Name)
 
 	// get the container for the given node

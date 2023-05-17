@@ -56,7 +56,6 @@ var (
 // GetHostIP returns the routable IP address to be able to access services running on the host system from inside the cluster.
 // This depends on the Operating System and the chosen Runtime.
 func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (net.IP, error) {
-
 	rtimeInfo, err := runtime.Info()
 	if err != nil {
 		return nil, err
@@ -66,10 +65,8 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 
 	// Docker Runtime
 	if runtime == runtimes.Docker {
-
 		// Docker (for Desktop) on MacOS or Windows
 		if docker.IsDockerDesktop(rtimeInfo.OS) {
-
 			toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
 			if err != nil {
 				return nil, fmt.Errorf("failed to ensure that k3d-tools node is running to get host IP :%w", err)
@@ -88,7 +85,6 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 			}
 
 			l.Log().Debugf("[GetHostIP on Docker Desktop] failed to resolve 'host.docker.internal' from inside the k3d-tools node: %v", err)
-
 		}
 
 		// Colima
@@ -113,16 +109,13 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 		l.Log().Infof("HostIP: using network gateway %s address", ip)
 
 		return ip, nil
-
 	}
 
 	// Catch all other runtime selections
 	return nil, fmt.Errorf("GetHostIP only implemented for the docker runtime")
-
 }
 
 func resolveHostnameFromInside(ctx context.Context, rtime runtimes.Runtime, node *k3d.Node, hostname string, cmd ResolveHostCmd) (net.IP, error) {
-
 	errPrefix := fmt.Errorf("error resolving hostname %s from inside node %s", hostname, node.Name)
 
 	logreader, execErr := rtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", fmt.Sprintf(cmd.Cmd, hostname)})
@@ -166,5 +159,4 @@ func resolveHostnameFromInside(ctx context.Context, rtime runtimes.Runtime, node
 	l.Log().Debugf("Hostname '%s' resolved to address '%s' inside node %s", hostname, submatches["ip"], node.Name)
 
 	return net.ParseIP(submatches["ip"]), nil
-
 }

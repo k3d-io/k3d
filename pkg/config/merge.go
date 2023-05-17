@@ -35,7 +35,6 @@ func MergeSimple(dest, src conf.SimpleConfig) (*conf.SimpleConfig, error) {
 	l.Log().Debugf("Merging %+v into %+v", src, dest)
 
 	if err := mergo.Merge(&dest, src); err != nil {
-
 		return nil, fmt.Errorf("failed to merge configs: %w", err)
 	}
 

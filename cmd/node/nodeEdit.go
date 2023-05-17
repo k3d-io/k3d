@@ -33,7 +33,6 @@ import (
 
 // NewCmdNodeEdit returns a new cobra command
 func NewCmdNodeEdit() *cobra.Command {
-
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:               "edit NODE",
@@ -43,7 +42,6 @@ func NewCmdNodeEdit() *cobra.Command {
 		Aliases:           []string{"update"},
 		ValidArgsFunction: util.ValidArgsAvailableNodes,
 		Run: func(cmd *cobra.Command, args []string) {
-
 			existingNode, changeset := parseEditNodeCmd(cmd, args)
 
 			l.Log().Debugf("===== Current =====\n%+v\n===== Changeset =====\n%+v\n", existingNode, changeset)
@@ -53,7 +51,6 @@ func NewCmdNodeEdit() *cobra.Command {
 			}
 
 			l.Log().Infof("Successfully updated %s", existingNode.Name)
-
 		},
 	}
 
@@ -68,7 +65,6 @@ func NewCmdNodeEdit() *cobra.Command {
 
 // parseEditNodeCmd parses the command input into variables required to delete nodes
 func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *k3d.Node) {
-
 	existingNode, err := client.NodeGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Node{Name: args[0]})
 	if err != nil {
 		l.Log().Fatalln(err)
@@ -98,7 +94,6 @@ func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *k3d.Node) 
 	changeset.Ports = nat.PortMap{}
 
 	for _, flag := range portFlags {
-
 		portmappings, err := nat.ParsePortSpec(flag)
 		if err != nil {
 			l.Log().Fatalf("Failed to parse port spec '%s': %+v", flag, err)

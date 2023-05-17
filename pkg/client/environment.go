@@ -32,7 +32,6 @@ import (
 )
 
 func GatherEnvironmentInfo(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (*k3d.EnvironmentInfo, error) {
-
 	envInfo := &k3d.EnvironmentInfo{}
 
 	rtimeInfo, err := runtime.Info()
@@ -60,5 +59,4 @@ func GatherEnvironmentInfo(ctx context.Context, runtime runtimes.Runtime, cluste
 	}
 
 	return envInfo, nil
-
 }

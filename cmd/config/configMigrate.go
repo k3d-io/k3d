@@ -35,13 +35,11 @@ import (
 
 // NewCmdConfigMigrate returns a new cobra command
 func NewCmdConfigMigrate() *cobra.Command {
-
 	cmd := &cobra.Command{
 		Use:     "migrate INPUT [OUTPUT]",
 		Aliases: []string{"update"},
 		Args:    cobra.RangeArgs(1, 2),
 		Run: func(cmd *cobra.Command, args []string) {
-
 			configFile := args[0]
 
 			if _, err := os.Stat(configFile); err != nil {
@@ -105,7 +103,6 @@ func NewCmdConfigMigrate() *cobra.Command {
 					l.Log().Fatalln(err)
 				}
 			}
-
 		},
 	}
 

@@ -28,7 +28,6 @@ import (
 
 // NewCmdNode returns a new cobra command
 func NewCmdNode() *cobra.Command {
-
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:   "node",

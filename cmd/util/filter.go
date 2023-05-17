@@ -30,7 +30,6 @@ import (
 
 // SplitFiltersFromFlag separates a flag's value from the node filter, if there is one
 func SplitFiltersFromFlag(flag string) (string, []string, error) {
-
 	/* Case 1) no filter specified */
 
 	if !strings.Contains(flag, "@") {
@@ -44,7 +43,6 @@ func SplitFiltersFromFlag(flag string) (string, []string, error) {
 	buffer := ""
 
 	for i, it := range split {
-
 		// Case 1: There's a '\' just before the '@' sign -> Should it be escaped (aka be a literal '@')?
 		if strings.HasSuffix(it, "\\") && i != len(split)-1 {
 			// Case 1.1: Escaped backslash
@@ -75,5 +73,4 @@ func SplitFiltersFromFlag(flag string) (string, []string, error) {
 	}
 
 	return newsplit[0], strings.Split(newsplit[1], ";"), nil
-
 }

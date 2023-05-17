@@ -35,7 +35,6 @@ import (
 
 // NewCmdImageImport returns a new cobra command
 func NewCmdImageImport() *cobra.Command {
-
 	loadImageOpts := k3d.ImageImportOpts{}
 
 	// create new command
@@ -107,7 +106,6 @@ So if a file './k3d-io/k3d-tools' exists, k3d will try to import it instead of t
 
 // parseLoadImageCmd parses the command input into variables required to create a cluster
 func parseLoadImageCmd(cmd *cobra.Command, args []string) ([]string, []*k3d.Cluster) {
-
 	// --cluster
 	clusterNames, err := cmd.Flags().GetStringArray("cluster")
 	if err != nil {

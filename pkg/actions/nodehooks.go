@@ -129,7 +129,6 @@ func (act RewriteFileAction) Run(ctx context.Context, node *k3d.Node) error {
 	}
 
 	return nil
-
 }
 
 // ExecAction executes some command inside the node
@@ -168,7 +167,6 @@ func (act ExecAction) Run(ctx context.Context, node *k3d.Node) error {
 			}
 			return fmt.Errorf("error executing hook %s in node %s: %w", act.Name(), node.Name, err)
 		}
-
 	}
 	return nil
 }

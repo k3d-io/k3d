@@ -45,7 +45,6 @@ type mergeKubeconfigFlags struct {
 
 // NewCmdKubeconfigMerge returns a new cobra command
 func NewCmdKubeconfigMerge() *cobra.Command {
-
 	writeKubeConfigOptions := client.WriteKubeConfigOptions{}
 
 	mergeKubeconfigFlags := mergeKubeconfigFlags{}
@@ -73,7 +72,6 @@ func NewCmdKubeconfigMerge() *cobra.Command {
 					l.Log().Fatalln(err)
 				}
 			} else {
-
 				clusternames := []string{k3d.DefaultClusterName}
 				if len(args) != 0 {
 					clusternames = args

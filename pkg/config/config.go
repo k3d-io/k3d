@@ -56,7 +56,6 @@ func GetSchemaByVersion(apiVersion string) ([]byte, error) {
 }
 
 func FromViper(config *viper.Viper) (types.Config, error) {
-
 	var cfg types.Config
 	var err error
 

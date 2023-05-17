@@ -38,7 +38,6 @@ import (
 
 // NewCmdNodeCreate returns a new cobra command
 func NewCmdNodeCreate() *cobra.Command {
-
 	createNodeOpts := k3d.NodeCreateOpts{}
 
 	// create new command
@@ -97,7 +96,6 @@ func NewCmdNodeCreate() *cobra.Command {
 
 // parseCreateNodeCmd parses the command input into variables required to create a node
 func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string) {
-
 	// --replicas
 	replicas, err := cmd.Flags().GetInt("replicas")
 	if err != nil {

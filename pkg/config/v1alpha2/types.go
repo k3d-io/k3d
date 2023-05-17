@@ -181,7 +181,6 @@ func (c ClusterListConfig) GetAPIVersion() string {
 }
 
 func GetConfigByKind(kind string) (configtypes.Config, error) {
-
 	// determine config kind
 	switch kind {
 	case "simple":
@@ -195,5 +194,4 @@ func GetConfigByKind(kind string) (configtypes.Config, error) {
 	default:
 		return nil, fmt.Errorf("unknown `kind` '%s' in config file", kind)
 	}
-
 }

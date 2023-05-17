@@ -29,7 +29,6 @@ import (
 
 // NewCmdCluster returns a new cobra command
 func NewCmdCluster() *cobra.Command {
-
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:   "cluster",

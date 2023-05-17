@@ -77,5 +77,4 @@ func TestProcessClusterConfig(t *testing.T) {
 
 	t.Logf("\n===== Resulting Cluster Config (host network) =====\n%+v\n===============\n", clusterCfg)
 	t.Logf("\n===== First Node in Resulting Cluster Config (host network) =====\n%+v\n===============\n", clusterCfg.Cluster.Nodes[0])
-
 }

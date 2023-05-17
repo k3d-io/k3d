@@ -38,7 +38,6 @@ var apiPortRegexp = regexp.MustCompile(`^(?P<hostref>(?P<hostip>\d{1,3}\.\d{1,3}
 
 // ParsePortExposureSpec parses/validates a string to create an exposePort struct from it
 func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureOpts, error) {
-
 	match := apiPortRegexp.FindStringSubmatch(exposedPortSpec)
 
 	if len(match) == 0 {
@@ -108,7 +107,6 @@ func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureO
 	api.Binding = portMapping[0].Binding
 
 	return api, nil
-
 }
 
 // ValidatePortMap validates a port mapping

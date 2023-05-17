@@ -42,7 +42,6 @@ import (
 // ImageImportIntoClusterMulti starts up a k3d tools container for the selected cluster and uses it to export
 // images from the runtime to import them into the nodes of the selected cluster
 func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, opts k3d.ImageImportOpts) error {
-
 	// stdin case
 	if len(images) == 1 && images[0] == "-" {
 		err := loadImageFromStream(ctx, runtime, os.Stdin, cluster, []string{"stdin"})
@@ -181,7 +180,6 @@ func importWithStream(ctx context.Context, runtime runtimes.Runtime, cluster *k3
 			return fmt.Errorf("could not load image to cluster from stream %s: %w", imagesFromRuntime, err)
 		}
 		// load the images directly into the nodes
-
 	}
 
 	if len(imagesFromTar) > 0 {
@@ -320,7 +318,6 @@ func dockerSpecialImageNameEqual(requestedImageName string, runtimeImageName str
 		if strings.HasPrefix(requestedImageName, prefix) {
 			return imageNamesEqual(strings.TrimPrefix(requestedImageName, prefix), runtimeImageName)
 		}
-
 	}
 
 	return false
@@ -398,7 +395,6 @@ func EnsureToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d
 	var toolsNode *k3d.Node
 	toolsNode, err := runtime.GetNode(ctx, &k3d.Node{Name: fmt.Sprintf("%s-%s-tools", k3d.DefaultObjectNamePrefix, cluster.Name)})
 	if err != nil || toolsNode == nil {
-
 		// Get more info on the cluster, if required
 		var imageVolume string
 		if cluster.Network.Name == "" || cluster.ImageVolume == "" {
@@ -450,5 +446,4 @@ func EnsureToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d
 	}
 
 	return toolsNode, err
-
 }

@@ -421,7 +421,6 @@ func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, node
 
 // NodeStart starts an existing node
 func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeStartOpts *k3d.NodeStartOpts) error {
-
 	// return early, if the node is already running
 	if node.State.Running {
 		l.Log().Infof("Node %s is already running", node.Name)
@@ -489,9 +488,7 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 }
 
 func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeStartOpts *k3d.NodeStartOpts) error {
-
 	if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
-
 		// FIXME: FixCgroupV2 - to be removed when fixed upstream
 		// auto-enable, if needed
 		EnableCgroupV2FixIfNeeded(runtime)
@@ -806,7 +803,6 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 			}
 			time.Sleep(500 * time.Millisecond)
 		}
-
 	}(ctx, runtime, node, since, donechan)
 
 	// pre-building error message in case the node stops returning logs for some reason: to be enriched with scanner error
@@ -817,7 +813,6 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 	// e.g. when a new server is joining an existing cluster and has to wait for another member to finish learning.
 	// The logstream returned by docker ends everytime the container restarts, so we have to start from the beginning.
 	for i := 0; i < backOffLimit; i++ {
-
 		// get the log stream (reader is following the logstream)
 		out, err := runtime.GetNodeLogs(ctx, node, since, &runtimeTypes.NodeLogsOpts{Follow: true})
 		if out != nil {
@@ -856,7 +851,6 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 			}
 
 			previousline = scanner.Text()
-
 		}
 
 		if e := scanner.Err(); e != nil {
@@ -923,7 +917,6 @@ nodeLoop:
 
 // NodeEdit let's you update an existing node
 func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, changeset *k3d.Node) error {
-
 	/*
 	 * Make a deep copy of the existing node
 	 */
@@ -944,7 +937,6 @@ func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, chang
 	for port, portbindings := range changeset.Ports {
 	loopChangesetPortbindings:
 		for _, portbinding := range portbindings {
-
 			// loop over existing portbindings to avoid port collisions (docker doesn't check for it)
 			for _, existingPB := range result.Ports[port] {
 				if util.IsPortBindingEqual(portbinding, existingPB) { // also matches on "equal" HostIPs (127.0.0.1, "", 0.0.0.0)
@@ -997,7 +989,6 @@ func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, chang
 }
 
 func NodeReplace(ctx context.Context, runtime runtimes.Runtime, old, new *k3d.Node) error {
-
 	// rename existing node
 	oldNameTemp := fmt.Sprintf("%s-%s", old.Name, util.GenerateRandomString(5))
 	oldNameOriginal := old.Name
@@ -1053,7 +1044,6 @@ type CopyNodeOpts struct {
 }
 
 func CopyNode(ctx context.Context, src *k3d.Node, opts CopyNodeOpts) (*k3d.Node, error) {
-
 	targetCopy, err := copystruct.Copy(src)
 	if err != nil {
 		return nil, fmt.Errorf("failed to copy node struct: %w", err)

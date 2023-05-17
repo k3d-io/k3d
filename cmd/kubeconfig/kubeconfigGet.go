@@ -39,7 +39,6 @@ type getKubeconfigFlags struct {
 
 // NewCmdKubeconfigGet returns a new cobra command
 func NewCmdKubeconfigGet() *cobra.Command {
-
 	writeKubeConfigOptions := client.WriteKubeConfigOptions{
 		UpdateExisting:       true,
 		UpdateCurrentContext: true,

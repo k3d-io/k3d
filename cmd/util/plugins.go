@@ -61,7 +61,6 @@ func HandlePlugin(ctx context.Context, args []string) (bool, error) {
 	}
 
 	return true, ExecPlugin(ctx, execPath, args[len(argsPrefix):], os.Environ())
-
 }
 
 // FindPlugin tries to find the plugin executable on the filesystem

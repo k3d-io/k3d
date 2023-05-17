@@ -53,7 +53,6 @@ func RegistryRun(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registr
 
 // RegistryCreate creates a registry node
 func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Registry) (*k3d.Node, error) {
-
 	// registry name
 	if len(reg.Host) == 0 {
 		reg.Host = k3d.DefaultRegistryName
@@ -127,12 +126,10 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 	l.Log().Infof("Successfully created registry '%s'", registryNode.Name)
 
 	return registryNode, nil
-
 }
 
 // RegistryConnectClusters connects an existing registry to one or more clusters
 func RegistryConnectClusters(ctx context.Context, runtime runtimes.Runtime, registryNode *k3d.Node, clusters []*k3d.Cluster) error {
-
 	// find registry node
 	registryNode, err := NodeGet(ctx, runtime, registryNode)
 	if err != nil {
@@ -164,7 +161,6 @@ func RegistryConnectClusters(ctx context.Context, runtime runtimes.Runtime, regi
 
 // RegistryConnectNetworks connects an existing registry to one or more networks
 func RegistryConnectNetworks(ctx context.Context, runtime runtimes.Runtime, registryNode *k3d.Node, networks []string) error {
-
 	// find registry node
 	registryNode, err := NodeGet(ctx, runtime, registryNode)
 	if err != nil {
@@ -220,7 +216,6 @@ func RegistryGenerateK3sConfig(ctx context.Context, registries []*k3d.Registry) 
 			regConf.Mirrors[reg.Options.Proxy.RemoteURL] = wharfie.Mirror{
 				Endpoints: []string{fmt.Sprintf("http://%s", internalAddress)},
 			}
-
 		}
 	}
 
@@ -242,7 +237,6 @@ func RegistryGet(ctx context.Context, runtime runtimes.Runtime, name string) (*k
 	}
 	// TODO: finish RegistryGet
 	return registry, nil
-
 }
 
 // RegistryFromNode transforms a node spec to a registry spec
@@ -273,12 +267,10 @@ func RegistryFromNode(node *k3d.Node) (*k3d.Registry, error) {
 	l.Log().Tracef("Got registry %+v from node %+v", registry, node)
 
 	return registry, nil
-
 }
 
 // RegistryGenerateLocalRegistryHostingConfigMapYAML generates a ConfigMap used to advertise the registries in the cluster
 func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runtime runtimes.Runtime, registries []*k3d.Registry) ([]byte, error) {
-
 	type cmMetadata struct {
 		Name      string `json:"name"`
 		Namespace string `json:"namespace"`

@@ -71,12 +71,10 @@ var (
 )
 
 func initConfig() error {
-
 	// Viper for pre-processed config options
 	ppViper.SetEnvPrefix("K3D")
 
 	if l.Log().GetLevel() >= logrus.DebugLevel {
-
 		c, _ := yaml.Marshal(ppViper.AllSettings())
 		l.Log().Debugf("Additional CLI Configuration:\n%s", c)
 	}
@@ -86,7 +84,6 @@ func initConfig() error {
 
 // NewCmdClusterCreate returns a new cobra command
 func NewCmdClusterCreate() *cobra.Command {
-
 	// create new command
 	cmd := &cobra.Command{
 		Use:   "create NAME",
@@ -97,7 +94,6 @@ func NewCmdClusterCreate() *cobra.Command {
 			return initConfig()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-
 			/*************************
 			 * Compute Configuration *
 			 *************************/
@@ -350,7 +346,6 @@ func NewCmdClusterCreate() *cobra.Command {
 }
 
 func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
-
 	/****************************
 	 * Parse and validate flags *
 	 ****************************/
@@ -407,7 +402,6 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	// volumeFilterMap will map volume mounts to applied node filters
 	volumeFilterMap := make(map[string][]string, 1)
 	for _, volumeFlag := range ppViper.GetStringSlice("cli.volumes") {
-
 		// split node filter from the specified volume
 		volume, filters, err := cliutil.SplitFiltersFromFlag(volumeFlag)
 		if err != nil {
@@ -465,7 +459,6 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	// k3sNodeLabelFilterMap will add k3s node label to applied node filters
 	k3sNodeLabelFilterMap := make(map[string][]string, 1)
 	for _, labelFlag := range ppViper.GetStringSlice("cli.k3s-node-labels") {
-
 		// split node filter from the specified label
 		label, nodeFilters, err := cliutil.SplitFiltersFromFlag(labelFlag)
 		if err != nil {
@@ -493,7 +486,6 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	// runtimeLabelFilterMap will add container runtime label to applied node filters
 	runtimeLabelFilterMap := make(map[string][]string, 1)
 	for _, labelFlag := range ppViper.GetStringSlice("cli.runtime-labels") {
-
 		// split node filter from the specified label
 		label, nodeFilters, err := cliutil.SplitFiltersFromFlag(labelFlag)
 		if err != nil {
@@ -527,7 +519,6 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	// envFilterMap will add container env vars to applied node filters
 	envFilterMap := make(map[string][]string, 1)
 	for _, envFlag := range ppViper.GetStringSlice("cli.env") {
-
 		// split node filter from the specified env var
 		env, filters, err := cliutil.SplitFiltersFromFlag(envFlag)
 		if err != nil {
@@ -554,7 +545,6 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	// --k3s-arg
 	argFilterMap := make(map[string][]string, 1)
 	for _, argFlag := range ppViper.GetStringSlice("cli.k3sargs") {
-
 		// split node filter from the specified arg
 		arg, filters, err := cliutil.SplitFiltersFromFlag(argFlag)
 		if err != nil {
@@ -598,7 +588,6 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	hostAliasFlags := ppViper.GetStringSlice("hostaliases")
 	if len(hostAliasFlags) > 0 {
 		for _, ha := range hostAliasFlags {
-
 			// split on :
 			s := strings.Split(ha, ":")
 			if len(s) != 2 {

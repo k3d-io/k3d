@@ -34,7 +34,6 @@ import (
 )
 
 func TestReadSimpleConfig(t *testing.T) {
-
 	exposedAPI := conf.SimpleExposureOpts{}
 	exposedAPI.HostIP = "0.0.0.0"
 	exposedAPI.HostPort = "6443"
@@ -137,11 +136,9 @@ func TestReadSimpleConfig(t *testing.T) {
 	if diff := deep.Equal(cfg, expectedConfig); diff != nil {
 		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", cfg, expectedConfig, diff)
 	}
-
 }
 
 func TestReadClusterConfig(t *testing.T) {
-
 	expectedConfig := conf.ClusterConfig{
 		TypeMeta: configtypes.TypeMeta{
 			APIVersion: "k3d.io/v1alpha5",
@@ -182,11 +179,9 @@ func TestReadClusterConfig(t *testing.T) {
 	if diff := deep.Equal(readConfig, expectedConfig); diff != nil {
 		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", readConfig, expectedConfig, diff)
 	}
-
 }
 
 func TestReadClusterListConfig(t *testing.T) {
-
 	expectedConfig := conf.ClusterListConfig{
 		TypeMeta: configtypes.TypeMeta{
 			APIVersion: "k3d.io/v1alpha5",
@@ -238,11 +233,9 @@ func TestReadClusterListConfig(t *testing.T) {
 	if diff := deep.Equal(readConfig, expectedConfig); diff != nil {
 		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", readConfig, expectedConfig, diff)
 	}
-
 }
 
 func TestReadUnknownConfig(t *testing.T) {
-
 	cfgFile := "./test_assets/config_test_unknown.yaml"
 
 	config := viper.New()
@@ -261,11 +254,9 @@ func TestReadUnknownConfig(t *testing.T) {
 	if err == nil {
 		t.Fail()
 	}
-
 }
 
 func TestReadSimpleConfigRegistries(t *testing.T) {
-
 	exposedAPI := conf.SimpleExposureOpts{}
 	exposedAPI.HostIP = "0.0.0.0"
 	exposedAPI.HostPort = "6443"

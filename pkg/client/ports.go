@@ -102,7 +102,6 @@ func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 				return fmt.Errorf("error adding port mappings: unknown suffix %s", suffix)
 			}
 		}
-
 	}
 
 	// print generated loadbalancer config if exists
@@ -119,7 +118,6 @@ func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 }
 
 func addPortMappings(node *k3d.Node, portmappings []nat.PortMapping) error {
-
 	if node.Ports == nil {
 		node.Ports = nat.PortMap{}
 	}

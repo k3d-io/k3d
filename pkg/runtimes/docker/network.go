@@ -126,13 +126,11 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 	}
 
 	return network, nil
-
 }
 
 // CreateNetworkIfNotPresent creates a new docker network
 // @return: network, exists, error
 func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.ClusterNetwork) (*k3d.ClusterNetwork, bool, error) {
-
 	// (0) create new docker client
 	docker, err := GetDockerClient()
 	if err != nil {
@@ -267,7 +265,6 @@ func GetGatewayIP(ctx context.Context, network string) (net.IP, error) {
 	} else {
 		return nil, fmt.Errorf("Failed to get IPAM Config for network %s", bridgeNetwork.Name)
 	}
-
 }
 
 // ConnectNodeToNetwork connects a node to a network
@@ -353,7 +350,6 @@ func (d Docker) getFreeSubnetPrefix(ctx context.Context) (netaddr.IPPrefix, erro
 	}
 
 	return fakenet.IPAM.IPPrefix, nil
-
 }
 
 // parseIPAM Returns an IPAM structure with the subnet and gateway filled in. If some of the values

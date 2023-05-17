@@ -51,5 +51,4 @@ func TestTransformSimpleConfigToClusterConfig(t *testing.T) {
 	}
 
 	t.Logf("\n===== Resulting Cluster Config =====\n%+v\n===============\n", clusterCfg)
-
 }

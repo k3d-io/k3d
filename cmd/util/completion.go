@@ -34,7 +34,6 @@ import (
 
 // ValidArgsAvailableClusters is used for shell completion: proposes the list of existing clusters
 func ValidArgsAvailableClusters(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-
 	var completions []string
 	var clusters []*k3d.Cluster
 	clusters, err := k3dcluster.ClusterList(context.Background(), runtimes.SelectedRuntime)
@@ -59,7 +58,6 @@ clusterLoop:
 
 // ValidArgsAvailableNodes is used for shell completion: proposes the list of existing nodes
 func ValidArgsAvailableNodes(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-
 	var completions []string
 	var nodes []*k3d.Node
 	nodes, err := k3dcluster.NodeList(context.Background(), runtimes.SelectedRuntime)
@@ -84,7 +82,6 @@ nodeLoop:
 
 // ValidArgsAvailableRegistries is used for shell completions: proposes the list of existing registries
 func ValidArgsAvailableRegistries(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-
 	var completions []string
 	var nodes []*k3d.Node
 	nodes, err := k3dcluster.NodeList(context.Background(), runtimes.SelectedRuntime)
@@ -111,7 +108,6 @@ nodeLoop:
 
 // ValidArgsNodeRoles is used for shell completion: proposes the list of possible node roles
 func ValidArgsNodeRoles(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-
 	var completions []string
 	roles := []string{string(k3d.ServerRole), string(k3d.AgentRole)}
 

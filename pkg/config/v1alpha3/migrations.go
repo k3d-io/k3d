@@ -140,11 +140,9 @@ func MigrateV1Alpha2(input configtypes.Config) (configtypes.Config, error) {
 		l.Log().Debugf("Migrated config: %+v", cfg)
 
 		return cfg, nil
-
 	}
 
 	l.Log().Debugf("No migration needed for %s#%s -> %s#%s", input.GetAPIVersion(), input.GetKind(), ApiVersion, input.GetKind())
 
 	return input, nil
-
 }

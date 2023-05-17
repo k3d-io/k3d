@@ -31,7 +31,6 @@ import (
 
 // NewCmdNodeStart returns a new cobra command
 func NewCmdNodeStart() *cobra.Command {
-
 	// create new command
 	cmd := &cobra.Command{
 		Use:               "start NODE", // TODO: startNode: allow one or more names or --all

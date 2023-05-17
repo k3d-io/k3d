@@ -32,7 +32,6 @@ import (
 // GetConfigDirOrCreate will return the base path of the k3d config directory or create it if it doesn't exist yet
 // k3d's config directory will be $HOME/.k3d (Unix)
 func GetConfigDirOrCreate() (string, error) {
-
 	// build the path
 	homeDir, err := homedir.Dir()
 	if err != nil {
@@ -46,7 +45,6 @@ func GetConfigDirOrCreate() (string, error) {
 	}
 
 	return configDir, nil
-
 }
 
 // createDirIfNotExists checks for the existence of a directory and creates it along with all required parents if not.

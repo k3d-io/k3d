@@ -103,7 +103,6 @@ func FilterNodesWithSuffix(nodes []*k3d.Node, nodefilters []string, allowedSuffi
 
 // FilterNodes takes a string filter to return a filtered list of nodes
 func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
-
 	l.Log().Tracef("Filtering %d nodes by %s", len(nodes), filters)
 
 	if len(filters) == 0 || len(filters[0]) == 0 {
@@ -130,7 +129,6 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 
 	// range over all instances of group[subset] specs
 	for _, filter := range filters {
-
 		// match regex with capturing groups
 		match := NodeFilterRegexp.FindStringSubmatch(filter)
 
@@ -193,7 +191,6 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 
 			/* Option 2) subset defined by range */
 		} else if submatches["subsetRange"] != "" {
-
 			/*
 			 * subset specified by a range 'START-END', where each side is optional
 			 */
@@ -216,7 +213,6 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 				if start < 0 || start >= len(groupNodes) {
 					return nil, fmt.Errorf("Invalid subset range: start < 0 or > number of available nodes in '%s'", filter)
 				}
-
 			}
 
 			if split[1] != "" {
@@ -252,7 +248,6 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 		} else {
 			return nil, fmt.Errorf("Failed to parse node specifiers: unknown subset in '%s'", filter)
 		}
-
 	}
 
 	l.Log().Tracef("Filtered %d nodes (filter: %s)", len(filteredNodes), filters)

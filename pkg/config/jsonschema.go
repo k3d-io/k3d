@@ -54,7 +54,6 @@ func ValidateSchemaFile(filepath string, schema []byte) error {
 
 // ValidateSchema validates a YAML construct (non-struct representation) against a JSON Schema
 func ValidateSchema(content interface{}, schemaJSON []byte) error {
-
 	contentYaml, err := yaml.Marshal(content)
 	if err != nil {
 		return err
@@ -65,7 +64,6 @@ func ValidateSchema(content interface{}, schemaJSON []byte) error {
 	}
 
 	return ValidateSchemaJSON(contentJSON, schemaJSON)
-
 }
 
 func ValidateSchemaJSON(contentJSON []byte, schemaJSON []byte) error {

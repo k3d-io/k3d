@@ -44,7 +44,6 @@ func (d Docker) ID() string {
 
 // GetHost returns the docker daemon host
 func (d Docker) GetHost() string {
-
 	// a) docker-machine
 	machineIP, err := d.GetDockerMachineIP()
 	if err != nil {

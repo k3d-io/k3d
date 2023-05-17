@@ -67,7 +67,6 @@ type VersionInfo struct {
 var flags = RootFlags{}
 
 func NewCmdK3d() *cobra.Command {
-
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd := &cobra.Command{
 		Use:   "k3d",
@@ -198,7 +197,6 @@ func initLogging() {
 	}
 
 	l.Log().SetFormatter(formatter)
-
 }
 
 func initRuntime() {
@@ -261,7 +259,6 @@ func printVersion() {
 }
 
 func NewCmdVersionLs() *cobra.Command {
-
 	type VersionLsOutputFormat string
 	type VersionLsSortMode string
 
@@ -310,7 +307,6 @@ func NewCmdVersionLs() *cobra.Command {
 		ValidArgs: []string{"k3d", "k3s", "k3d-proxy", "k3d-tools"},
 		Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 		Run: func(cmd *cobra.Command, args []string) {
-
 			repo, ok := imageRepos[args[0]]
 			if !ok {
 				l.Log().Fatalf("Unknown target '%s'", args[0])
@@ -384,7 +380,6 @@ func NewCmdVersionLs() *cobra.Command {
 				filteredTags = filteredTags[0:flags.limit]
 			}
 			fmt.Println(strings.Join(filteredTags, "\n"))
-
 		},
 	}
 
@@ -401,7 +396,6 @@ func NewCmdVersionLs() *cobra.Command {
 
 // NewCmdCompletion creates a new completion command
 func NewCmdCompletion(rootCmd *cobra.Command) *cobra.Command {
-
 	completionFunctions := map[string]func(io.Writer) error{
 		"bash": rootCmd.GenBashCompletion,
 		"zsh": func(writer io.Writer) error {

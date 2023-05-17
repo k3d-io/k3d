@@ -103,7 +103,6 @@ func (c *httpClient) fetchLatestK3sVersion(channel string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no latest version found for channel %s (%s)", channel, c.baseURL)
-
 }
 
 func newHttpClient(baseURL string) *httpClient {

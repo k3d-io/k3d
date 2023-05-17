@@ -36,7 +36,6 @@ import (
 
 // NewCmdClusterStart returns a new cobra command
 func NewCmdClusterStart() *cobra.Command {
-
 	startClusterOpts := types.ClusterStartOpts{
 		Intent: k3d.IntentClusterStart,
 	}

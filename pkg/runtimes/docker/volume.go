@@ -113,7 +113,6 @@ func (d Docker) GetVolume(name string) (string, error) {
 	}
 
 	return volumeList.Volumes[0].Name, nil
-
 }
 
 func (d Docker) GetVolumesByLabel(ctx context.Context, labels map[string]string) ([]string, error) {
@@ -144,5 +143,4 @@ func (d Docker) GetVolumesByLabel(ctx context.Context, labels map[string]string)
 	}
 
 	return volumes, nil
-
 }

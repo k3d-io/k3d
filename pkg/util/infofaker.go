@@ -67,7 +67,6 @@ func GetNodeFakerDirOrCreate(name string) (string, error) {
 	}
 
 	return fakeDir, nil
-
 }
 
 // GetFakeMeminfoPathForName returns a path to (existent or not) fake meminfo file for a given node/container name

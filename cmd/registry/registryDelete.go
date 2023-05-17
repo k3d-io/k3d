@@ -36,7 +36,6 @@ type registryDeleteFlags struct {
 
 // NewCmdRegistryDelete returns a new cobra command
 func NewCmdRegistryDelete() *cobra.Command {
-
 	flags := registryDeleteFlags{}
 
 	// create new cobra command
@@ -47,7 +46,6 @@ func NewCmdRegistryDelete() *cobra.Command {
 		Aliases:           []string{"del", "rm"},
 		ValidArgsFunction: util.ValidArgsAvailableRegistries,
 		Run: func(cmd *cobra.Command, args []string) {
-
 			nodes := parseRegistryDeleteCmd(cmd, args, &flags)
 
 			if len(nodes) == 0 {
@@ -73,7 +71,6 @@ func NewCmdRegistryDelete() *cobra.Command {
 
 // parseRegistryDeleteCmd parses the command input into variables required to delete nodes
 func parseRegistryDeleteCmd(cmd *cobra.Command, args []string, flags *registryDeleteFlags) []*k3d.Node {
-
 	var nodes []*k3d.Node
 	var err error
 

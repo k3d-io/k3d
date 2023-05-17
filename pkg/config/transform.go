@@ -47,7 +47,6 @@ import (
 
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration
 func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtime, simpleConfig conf.SimpleConfig) (*conf.ClusterConfig, error) {
-
 	// set default cluster name
 	if simpleConfig.Name == "" {
 		simpleConfig.Name = k3d.DefaultClusterName
@@ -209,7 +208,6 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			}
 			k, v := util.SplitLabelKeyValue(k3sNodeLabelWithNodeFilters.Label)
 			node.K3sNodeLabels[k] = v
-
 		}
 	}
 
@@ -311,7 +309,6 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	 * Registries
 	 */
 	if simpleConfig.Registries.Create != nil {
-
 		epSpecHost := "0.0.0.0"
 		epSpecPort := "random"
 

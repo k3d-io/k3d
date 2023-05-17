@@ -64,5 +64,4 @@ metadata:
 	if !(strings.TrimSpace(string(cm)) == strings.TrimSpace(expectedYAMLString)) {
 		t.Errorf("Computed configmap\n-> Actual:\n%s\n  does not match expected YAML\n-> Expected:\n%s", strings.TrimSpace(string(cm)), strings.TrimSpace(expectedYAMLString))
 	}
-
 }

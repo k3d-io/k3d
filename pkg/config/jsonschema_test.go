@@ -28,17 +28,14 @@ import (
 )
 
 func TestValidateSchema(t *testing.T) {
-
 	cfgPath := "./test_assets/config_test_simple.yaml"
 
 	if err := ValidateSchemaFile(cfgPath, []byte(conf.JSONSchema)); err != nil {
 		t.Errorf("Validation of config file %s against the default schema failed: %+v", cfgPath, err)
 	}
-
 }
 
 func TestValidateSchemaFail(t *testing.T) {
-
 	cfgPath := "./test_assets/config_test_simple_invalid_servers.yaml"
 
 	var err error
@@ -52,5 +49,4 @@ func TestValidateSchemaFail(t *testing.T) {
 	if err.Error() != expectedErrorText {
 		t.Errorf("Actual validation error\n%s\ndoes not match expected error\n%s\n", err.Error(), expectedErrorText)
 	}
-
 }

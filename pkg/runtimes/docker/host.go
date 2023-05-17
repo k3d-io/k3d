@@ -34,5 +34,4 @@ func (d Docker) GetHostIP(ctx context.Context, network string) (net.IP, error) {
 		return nil, fmt.Errorf("failed to get gateway IP of docker network '%s': %w", network, err)
 	}
 	return ip, nil
-
 }

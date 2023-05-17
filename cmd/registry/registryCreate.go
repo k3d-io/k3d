@@ -66,7 +66,6 @@ kubectl run mynginx --image %s/mynginx:v0.1
 
 // NewCmdRegistryCreate returns a new cobra command
 func NewCmdRegistryCreate() *cobra.Command {
-
 	flags := &regCreateFlags{}
 	ppFlags := &regCreatePreProcessedFlags{}
 
@@ -122,7 +121,6 @@ func NewCmdRegistryCreate() *cobra.Command {
 
 // parseCreateRegistryCmd parses the command input into variables required to create a registry
 func parseCreateRegistryCmd(cmd *cobra.Command, args []string, flags *regCreateFlags, ppFlags *regCreatePreProcessedFlags) (*k3d.Registry, []*k3d.Cluster) {
-
 	// --cluster
 	clusters := []*k3d.Cluster{}
 	for _, name := range ppFlags.Clusters {
@@ -171,7 +169,6 @@ func parseCreateRegistryCmd(cmd *cobra.Command, args []string, flags *regCreateF
 			}
 			volumes = append(volumes, volume)
 		}
-
 	}
 
 	return &k3d.Registry{Host: registryName, Image: flags.Image, ExposureOpts: *exposePort, Network: flags.Network, Options: options, Volumes: volumes}, clusters

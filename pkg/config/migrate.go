@@ -29,7 +29,6 @@ import (
 )
 
 func Migrate(config types.Config, targetVersion string) (types.Config, error) {
-
 	migration, ok := getMigrations(targetVersion)[config.GetAPIVersion()]
 	if !ok {
 		return nil, fmt.Errorf("no migration possible from '%s' to '%s'", config.GetAPIVersion(), targetVersion)
@@ -50,5 +49,4 @@ func Migrate(config types.Config, targetVersion string) (types.Config, error) {
 	}
 
 	return cfg, err
-
 }

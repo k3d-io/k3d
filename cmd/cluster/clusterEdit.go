@@ -34,7 +34,6 @@ import (
 
 // NewCmdClusterEdit returns a new cobra command
 func NewCmdClusterEdit() *cobra.Command {
-
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:               "edit CLUSTER",
@@ -44,7 +43,6 @@ func NewCmdClusterEdit() *cobra.Command {
 		Aliases:           []string{"update"},
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Run: func(cmd *cobra.Command, args []string) {
-
 			existingCluster, changeset := parseEditClusterCmd(cmd, args)
 
 			l.Log().Debugf("===== Current =====\n%+v\n===== Changeset =====\n%+v\n", existingCluster, changeset)
@@ -54,7 +52,6 @@ func NewCmdClusterEdit() *cobra.Command {
 			}
 
 			l.Log().Infof("Successfully updated %s", existingCluster.Name)
-
 		},
 	}
 
@@ -69,7 +66,6 @@ func NewCmdClusterEdit() *cobra.Command {
 
 // parseEditClusterCmd parses the command input into variables required to delete nodes
 func parseEditClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, *conf.SimpleConfig) {
-
 	existingCluster, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: args[0]})
 	if err != nil {
 		l.Log().Fatalln(err)
@@ -96,7 +92,6 @@ func parseEditClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, *conf
 
 	portFilterMap := make(map[string][]string, 1)
 	for _, portFlag := range portFlags {
-
 		// split node filter from the specified volume
 		portmap, filters, err := cliutil.SplitFiltersFromFlag(portFlag)
 		if err != nil {

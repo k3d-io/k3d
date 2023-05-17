@@ -38,7 +38,6 @@ import (
 )
 
 func InitViperWithConfigFile(cfgViper *viper.Viper, configFile string) error {
-
 	// viper for the general config (file, env and non pre-processed flags)
 	cfgViper.SetEnvPrefix("K3D")
 	cfgViper.AutomaticEnv()
@@ -48,7 +47,6 @@ func InitViperWithConfigFile(cfgViper *viper.Viper, configFile string) error {
 
 	// Set config file, if specified
 	if configFile != "" {
-
 		streams := util.StandardIOStreams()
 		//flag to mark from where we read the config
 		fromStdIn := false

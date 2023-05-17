@@ -42,7 +42,6 @@ func NewHostAliasesInjectEtcHostsAction(runtime runtimes.Runtime, hostAliases []
 			NoCopy: true,
 		},
 		RewriteFunc: func(input []byte) ([]byte, error) {
-
 			tmpHosts, err := os.CreateTemp("", "k3d-hostsfile-*")
 			if err != nil {
 				return nil, fmt.Errorf("error creating temp hosts file: %w", err)

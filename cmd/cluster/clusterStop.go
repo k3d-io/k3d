@@ -33,7 +33,6 @@ import (
 
 // NewCmdClusterStop returns a new cobra command
 func NewCmdClusterStop() *cobra.Command {
-
 	// create new command
 	cmd := &cobra.Command{
 		Use:               "stop [NAME [NAME...] | --all]",

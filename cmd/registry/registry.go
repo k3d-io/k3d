@@ -28,7 +28,6 @@ import (
 
 // NewCmdRegistry returns a new cobra command
 func NewCmdRegistry() *cobra.Command {
-
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:     "registry",

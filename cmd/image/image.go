@@ -28,7 +28,6 @@ import (
 
 // NewCmdImage returns a new cobra command
 func NewCmdImage() *cobra.Command {
-
 	// create new cobra command
 	cmd := &cobra.Command{
 		Use:     "image",

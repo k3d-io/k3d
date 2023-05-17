@@ -47,7 +47,6 @@ func CheckName(name string) error {
 
 // ValidateHostname ensures that a cluster name is also a valid host name according to RFC 1123.
 func ValidateHostname(name string) error {
-
 	if len(name) == 0 {
 		return fmt.Errorf("No name provided")
 	}

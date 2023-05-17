@@ -63,7 +63,6 @@ func TestMigrate(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			actualViper := viper.New()
 			expectedViper := viper.New()
 
@@ -102,7 +101,6 @@ func TestMigrate(t *testing.T) {
 			if diff := deep.Equal(actualCfg, expectedCfg); diff != nil {
 				t.Fatalf("Actual\n%#v\ndoes not match expected\n%+v\nDiff:\n%#v", actualCfg, expectedCfg, diff)
 			}
-
 		})
 	}
 }

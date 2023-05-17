@@ -49,7 +49,6 @@ type WriteKubeConfigOptions struct {
 // 2. modifies it by updating some fields with cluster-specific information
 // 3. writes it to the specified output
 func KubeconfigGetWrite(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, output string, writeKubeConfigOptions *WriteKubeConfigOptions) (string, error) {
-
 	// get kubeconfig from cluster node
 	kubeconfig, err := KubeconfigGet(ctx, runtime, cluster)
 	if err != nil {
@@ -75,7 +74,6 @@ func KubeconfigGetWrite(ctx context.Context, runtime runtimes.Runtime, cluster *
 	for {
 		existingKubeConfig, err = clientcmd.LoadFromFile(output) // will return an empty config if file is empty
 		if err != nil {
-
 			// the output file does not exist: try to create it and try again
 			if os.IsNotExist(err) && firstRun {
 				l.Log().Debugf("Output path '%s' doesn't exist, trying to create it...", output)
@@ -103,7 +101,6 @@ func KubeconfigGetWrite(ctx context.Context, runtime runtimes.Runtime, cluster *
 
 	// update existing kubeconfig, but error out if there are conflicting fields but we don't want to update them
 	return output, KubeconfigMerge(ctx, kubeconfig, existingKubeConfig, output, writeKubeConfigOptions.UpdateExisting, writeKubeConfigOptions.UpdateCurrentContext)
-
 }
 
 // KubeconfigGet grabs the kubeconfig file from /output from a server node container,
@@ -223,12 +220,10 @@ func KubeconfigWriteToPath(ctx context.Context, kubeconfig *clientcmdapi.Config,
 	l.Log().Debugf("Wrote kubeconfig to '%s'", output.Name())
 
 	return nil
-
 }
 
 // KubeconfigMerge merges a new kubeconfig into an existing kubeconfig and returns the result
 func KubeconfigMerge(ctx context.Context, newKubeConfig *clientcmdapi.Config, existingKubeConfig *clientcmdapi.Config, outPath string, overwriteConflicting bool, updateCurrentContext bool) error {
-
 	l.Log().Tracef("Merging new Kubeconfig:\n%+v\n>>> into existing Kubeconfig:\n%+v", newKubeConfig, existingKubeConfig)
 
 	// Overwrite values in existing kubeconfig
