@@ -23,6 +23,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -294,7 +295,8 @@ func NewCmdVersionLs() *cobra.Command {
 	type Flags struct {
 		includeRegexp string
 		excludeRegexp string
-		format        string
+		format        string // deprecated in favor of outputFormat
+		outputFormat  string
 		sortMode      string
 		limit         int
 	}
@@ -315,8 +317,12 @@ func NewCmdVersionLs() *cobra.Command {
 			}
 
 			var format VersionLsOutputFormat
-			if f, ok := VersionLsOutputFormats[flags.format]; !ok {
-				l.Log().Fatalf("Unknown output format '%s'", flags.format)
+			if cmd.Flags().Changed("format") {
+				l.Log().Warnf("Flag --format is deprecated and will be removed in a future release. Please use --output instead.")
+				flags.outputFormat = flags.format
+			}
+			if f, ok := VersionLsOutputFormats[flags.outputFormat]; !ok {
+				l.Log().Fatalf("Unknown output format '%s'", flags.outputFormat)
 			} else {
 				format = f
 			}
@@ -384,7 +390,9 @@ func NewCmdVersionLs() *cobra.Command {
 
 	cmd.Flags().StringVarP(&flags.includeRegexp, "include", "i", ".*", "Include Regexp (default includes everything")
 	cmd.Flags().StringVarP(&flags.excludeRegexp, "exclude", "e", ".+(rc|engine|alpha|beta|dev|test|arm|arm64|amd64).*", "Exclude Regexp (default excludes pre-releases and arch-specific tags)")
-	cmd.Flags().StringVarP(&flags.format, "format", "f", string(VersionLsOutputFormatRaw), "Output Format")
+	cmd.Flags().StringVarP(&flags.format, "format", "f", string(VersionLsOutputFormatRaw), "[DEPRECATED] Use --output instead")
+	cmd.Flags().StringVarP(&flags.outputFormat, "output", "o", string(VersionLsOutputFormatRaw), "Output Format [raw | repo]")
+	cmd.MarkFlagsMutuallyExclusive("format", "output")
 	cmd.Flags().StringVarP(&flags.sortMode, "sort", "s", string(VersionLsSortDesc), "Sort Mode (asc | desc | off)")
 	cmd.Flags().IntVarP(&flags.limit, "limit", "l", 0, "Limit number of tags in output (0 = unlimited)")
 
