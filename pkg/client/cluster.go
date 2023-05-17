@@ -53,6 +53,7 @@ import (
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 	"github.com/k3d-io/k3d/v5/pkg/util"
+	goyaml "gopkg.in/yaml.v2"
 )
 
 // ClusterRun orchestrates the steps of cluster creation, configuration and starting
@@ -233,7 +234,7 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 		}
 	}
 	if registryConfig != nil {
-		regConfBytes, err := yaml.Marshal(&registryConfig)
+		regConfBytes, err := goyaml.Marshal(&registryConfig)
 		if err != nil {
 			return fmt.Errorf("Failed to marshal registry configuration: %+v", err)
 		}
