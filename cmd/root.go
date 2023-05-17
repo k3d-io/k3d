@@ -271,9 +271,9 @@ func NewCmdVersionLs() *cobra.Command {
 	flags := Flags{}
 
 	cmd := &cobra.Command{
-		Use:       "list",
+		Use:       "list COMPONENT",
 		Aliases:   []string{"ls"},
-		Short:     "List k3d/K3s versions",
+		Short:     "List k3d/K3s versions. Component can be one of 'k3d', 'k3s', 'k3d-proxy', 'k3d-tools'.",
 		ValidArgs: []string{"k3d", "k3s", "k3d-proxy", "k3d-tools"},
 		Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 		Run: func(cmd *cobra.Command, args []string) {
