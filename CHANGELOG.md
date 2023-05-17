@@ -1,6 +1,40 @@
 # Changelog
 
-## v5.4.9 - 16.03.2023
+## v5.5.0 - 17.05.2023
+
+### Added
+
+- Add support for ulimits (#1264)
+  - new flag: `k3d cluster create --runtime-ulimit NAME[=SOFT]:[HARD]` (same for `k3d node create`)
+- add: K3D_FIX_MOUNTS fix to make / rshared (e.g. to make Cilium work) (#1268)
+  - new environment variable: `K3D_FIX_MOUNTS=1`
+- add(docs): podman instructions for macOS (#1257)
+- Adds json response of version info (#1262)
+  - new flag: `k3d version -o json`
+
+### Changed
+
+- change: allow full K3s registry configuration (#1215)
+- change: update deps (manual + dependabot)
+- change: set e2e test ghaction timeout
+- change: improved help text for k3d version ls
+- change: deprecate 'k3d version ls --format' in favor of '--output'
+- change: golangci-lint fix whitespaces
+- change: udpate docs
+
+### Fixed
+
+- Fix panic when k3sURLEnvIndex is -1 (#1252)
+- Fix spelling mistake in configfile.md (#1261)
+- Correct typo: Inconsistent filename in registry documentation. (#1275)
+- fix: k3d version ls (now via crane) (#1286)
+- fix: registries.yaml file not marshalled correctly by k8s yaml package
+
+### Deprecated
+
+- change: deprecate 'k3d version ls --format' in favor of '--output'
+
+## v5.4.9 - 16.03.2023 [BROKEN BUILD]
 
 ### Changed
 
