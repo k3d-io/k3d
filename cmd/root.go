@@ -223,9 +223,9 @@ func NewCmdVersion() *cobra.Command {
 		Short: "Show k3d and default k3s version",
 		Long:  "Show k3d and default k3s version",
 		Run: func(cmd *cobra.Command, args []string) {
-			format, _ := cmd.Flags().GetString("format")
+			output, _ := cmd.Flags().GetString("output")
 
-			if format == string(VersionOutputFormatJson) {
+			if output == string(VersionOutputFormatJson) {
 				printJsonVersion()
 			} else {
 				printVersion()
@@ -234,7 +234,8 @@ func NewCmdVersion() *cobra.Command {
 		Args: cobra.NoArgs,
 	}
 
-	cmd.Flags().String("format", "raw", "This will return version information as a different format.  Only json is supported")
+	cmd.Flags().StringP("output", "o", "", "This will return version information as a different format.  Only json is supported")
+
 	cmd.AddCommand(NewCmdVersionLs())
 
 	return cmd
