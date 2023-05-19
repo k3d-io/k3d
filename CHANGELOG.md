@@ -1,5 +1,11 @@
 # Changelog
 
+## v5.5.1 - 19.05.2023
+
+### Fixed
+
+- fix/regression: custom registry config not parsed correctly (#1292)
+
 ## v5.5.0 - 17.05.2023
 
 ### Added
