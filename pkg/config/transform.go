@@ -25,10 +25,11 @@ package config
 import (
 	"context"
 	"fmt"
-	wharfie "github.com/rancher/wharfie/pkg/registries"
 	"io"
 	"os"
 	"strings"
+
+	wharfie "github.com/rancher/wharfie/pkg/registries"
 
 	"github.com/docker/go-connections/nat"
 	"inet.af/netaddr"
