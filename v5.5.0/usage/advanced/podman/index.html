@@ -12,14 +12,8 @@
       
         <link rel="canonical" href="https://k3d.io/v5.5.0/usage/advanced/podman/">
       
-      
-        <link rel="prev" href="../cuda/">
-      
-      
-        <link rel="next" href="../../commands/k3d/">
-      
       <link rel="icon" href="../../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.11">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.3.9">
     
     
       
@@ -27,13 +21,13 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.0d440cfe.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.1d29e8d0.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.2505c338.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.cbb835fc.min.css">
+        
       
       
-
     
     
     
@@ -50,11 +44,10 @@
     
       <link rel="stylesheet" href="../../../static/css/extra.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
-    
     
     
   </head>
@@ -89,7 +82,9 @@
     </div>
     
       <div data-md-component="outdated" hidden>
-        
+        <aside class="md-banner md-banner--warning">
+          
+        </aside>
       </div>
     
     
@@ -125,6 +120,7 @@
       <form class="md-header__option" data-md-component="palette">
         
           
+          
           <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="grey"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
           
             <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
@@ -132,6 +128,7 @@
             </label>
           
         
+          
           
           <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="light-blue" data-md-color-accent=""  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
           
@@ -158,7 +155,7 @@
       </label>
       <nav class="md-search__options" aria-label="Search">
         
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
       </nav>
@@ -172,7 +169,7 @@
           <div class="md-search-result__meta">
             Initializing search
           </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
+          <ol class="md-search-result__list"></ol>
         </div>
       </div>
     </div>
@@ -184,7 +181,7 @@
         <a href="https://github.com/k3d-io/k3d" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
   </div>
   <div class="md-source__repository">
     k3d-io/k3d
@@ -301,7 +298,7 @@
       <a href="https://github.com/k3d-io/k3d" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
   </div>
   <div class="md-source__repository">
     k3d-io/k3d
@@ -339,18 +336,17 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
       
       
-      
-        <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_2">
           Guides
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+      <nav class="md-nav" aria-label="Guides" data-md-level="1">
         <label class="md-nav__title" for="__nav_2">
           <span class="md-nav__icon md-icon"></span>
           Guides
@@ -466,18 +462,17 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_8" type="checkbox" id="__nav_2_8" checked>
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" checked>
       
       
-      
-        <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_2_8">
           Advanced Guides
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="true">
+      <nav class="md-nav" aria-label="Advanced Guides" data-md-level="2">
         <label class="md-nav__title" for="__nav_2_8">
           <span class="md-nav__icon md-icon"></span>
           Advanced Guides
@@ -521,7 +516,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
       
       
         
@@ -637,20 +632,17 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-      
-      
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_9" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" data-md-toggle="__nav_2_9" type="checkbox" id="__nav_2_9" checked>
       
       
       
-        <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+      
+        <label class="md-nav__link" for="__nav_2_9">
           Commands
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+      <nav class="md-nav" aria-label="Commands" data-md-level="2">
         <label class="md-nav__title" for="__nav_2_9">
           <span class="md-nav__icon md-icon"></span>
           Commands
@@ -1101,20 +1093,17 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-      
-      
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
       
       
       
-        <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+      
+        <label class="md-nav__link" for="__nav_3">
           Design
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+      <nav class="md-nav" aria-label="Design" data-md-level="1">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
           Design
@@ -1194,20 +1183,17 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-      
-      
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" checked>
       
       
       
-        <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+      
+        <label class="md-nav__link" for="__nav_4">
           FAQ
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+      <nav class="md-nav" aria-label="FAQ" data-md-level="1">
         <label class="md-nav__title" for="__nav_4">
           <span class="md-nav__icon md-icon"></span>
           FAQ
@@ -1343,14 +1329,13 @@
               </div>
             
           
-          
-            <div class="md-content" data-md-component="content">
-              <article class="md-content__inner md-typeset">
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
                 
-                  
-
-  
-  
+  <a href="https://github.com/k3d-io/k3d/edit/main/docs/usage/advanced/podman.md" title="Edit this page" class="md-content__button md-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
 
 
 
@@ -1361,41 +1346,41 @@
 <p>k3d is not guaranteed to work with Podman. If you find a bug, do help by <a href="https://github.com/k3d-io/k3d/issues/new?labels=bug&amp;template=bug_report.md&amp;title=%5BBUG%5D+Podman">filing an issue</a></p>
 </div>
 <p>Tested with podman version:
-<div class="highlight"><pre><span></span><code>Client:<span class="w">       </span>Podman<span class="w"> </span>Engine
-Version:<span class="w">      </span><span class="m">4</span>.3.1
-API<span class="w"> </span>Version:<span class="w">  </span><span class="m">4</span>.3.1
+<div class="highlight"><pre><span></span><code>Client:       Podman Engine
+Version:      <span class="m">4</span>.3.1
+API Version:  <span class="m">4</span>.3.1
 </code></pre></div></p>
 <h2 id="using-podman">Using Podman<a class="headerlink" href="#using-podman" title="Permanent link">&para;</a></h2>
 <p>Ensure the Podman system socket is available:</p>
-<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>podman.socket
+<div class="highlight"><pre><span></span><code>sudo systemctl <span class="nb">enable</span> --now podman.socket
 <span class="c1"># or to start the socket daemonless</span>
 <span class="c1"># sudo podman system service --time=0 &amp;</span>
 </code></pre></div>
 <p>Disable timeout for podman service:<br>
 See the <a href="https://docs.podman.io/en/latest/markdown/podman-system-service.1.html">podman-system-service (1)</a> man page for more information.
-<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/containers/containers.conf.d
-<span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;service_timeout=0&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>/etc/containers/containers.conf.d/timeout.conf
+<div class="highlight"><pre><span></span><code>mkdir -p /etc/containers/containers.conf.d
+<span class="nb">echo</span> <span class="s1">&#39;service_timeout=0&#39;</span> &gt; /etc/containers/containers.conf.d/timeout.conf
 </code></pre></div></p>
 <p>To point k3d at the right Docker socket, create a symbolic link:</p>
-<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>ln<span class="w"> </span>-s<span class="w"> </span>/run/podman/podman.sock<span class="w"> </span>/var/run/docker.sock
+<div class="highlight"><pre><span></span><code>sudo ln -s /run/podman/podman.sock /var/run/docker.sock
 <span class="c1"># or install your system podman-docker if available</span>
-sudo<span class="w"> </span>k3d<span class="w"> </span>cluster<span class="w"> </span>create
+sudo k3d cluster create
 </code></pre></div>
 <p>Alternatively, set <code>DOCKER_HOST</code> when running k3d:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">DOCKER_HOST</span><span class="o">=</span>unix:///run/podman/podman.sock
-<span class="nb">export</span><span class="w"> </span><span class="nv">DOCKER_SOCK</span><span class="o">=</span>/run/podman/podman.sock
-sudo<span class="w"> </span>--preserve-env<span class="o">=</span>DOCKER_HOST<span class="w"> </span>--preserve-env<span class="o">=</span>DOCKER_SOCK<span class="w"> </span>k3d<span class="w"> </span>cluster<span class="w"> </span>create
+<div class="highlight"><pre><span></span><code><span class="nb">export</span> <span class="nv">DOCKER_HOST</span><span class="o">=</span>unix:///run/podman/podman.sock
+<span class="nb">export</span> <span class="nv">DOCKER_SOCK</span><span class="o">=</span>/run/podman/podman.sock
+sudo --preserve-env<span class="o">=</span>DOCKER_HOST --preserve-env<span class="o">=</span>DOCKER_SOCK k3d cluster create
 </code></pre></div>
 <h3 id="using-rootless-podman">Using rootless Podman<a class="headerlink" href="#using-rootless-podman" title="Permanent link">&para;</a></h3>
 <p>Ensure the Podman user socket is available:</p>
-<div class="highlight"><pre><span></span><code>systemctl<span class="w"> </span>--user<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>podman.socket
+<div class="highlight"><pre><span></span><code>systemctl --user <span class="nb">enable</span> --now podman.socket
 <span class="c1"># or podman system service --time=0 &amp;</span>
 </code></pre></div>
 <p>Set <code>DOCKER_HOST</code> when running k3d:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">XDG_RUNTIME_DIR</span><span class="o">=</span><span class="si">${</span><span class="nv">XDG_RUNTIME_DIR</span><span class="k">:-</span><span class="p">/run/user/</span><span class="k">$(</span>id<span class="w"> </span>-u<span class="k">)</span><span class="si">}</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">DOCKER_HOST</span><span class="o">=</span>unix://<span class="nv">$XDG_RUNTIME_DIR</span>/podman/podman.sock
-<span class="nb">export</span><span class="w"> </span><span class="nv">DOCKER_SOCK</span><span class="o">=</span><span class="nv">$XDG_RUNTIME_DIR</span>/podman/podman.sock
-k3d<span class="w"> </span>cluster<span class="w"> </span>create
+<div class="highlight"><pre><span></span><code><span class="nv">XDG_RUNTIME_DIR</span><span class="o">=</span><span class="si">${</span><span class="nv">XDG_RUNTIME_DIR</span><span class="k">:-</span><span class="p">/run/user/</span><span class="k">$(</span>id -u<span class="k">)</span><span class="si">}</span>
+<span class="nb">export</span> <span class="nv">DOCKER_HOST</span><span class="o">=</span>unix://<span class="nv">$XDG_RUNTIME_DIR</span>/podman/podman.sock
+<span class="nb">export</span> <span class="nv">DOCKER_SOCK</span><span class="o">=</span><span class="nv">$XDG_RUNTIME_DIR</span>/podman/podman.sock
+k3d cluster create
 </code></pre></div>
 <h4 id="using-cgroup-v2">Using cgroup (v2)<a class="headerlink" href="#using-cgroup-v2" title="Permanent link">&para;</a></h4>
 <p>By default, a non-root user can only get memory controller and pids controller to be delegated.</p>
@@ -1404,12 +1389,12 @@ k3d<span class="w"> </span>cluster<span class="w"> </span>create
 <p class="admonition-title">Make sure you&rsquo;re running cgroup v2</p>
 <p>If <code>/sys/fs/cgroup/cgroup.controllers</code> is present on your system, you are using v2, otherwise you are using v1.</p>
 </div>
-<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/systemd/system/user@.service.d
-cat<span class="w"> </span>&gt;<span class="w"> </span>/etc/systemd/system/user@.service.d/delegate.conf<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<div class="highlight"><pre><span></span><code>mkdir -p /etc/systemd/system/user@.service.d
+cat &gt; /etc/systemd/system/user@.service.d/delegate.conf <span class="s">&lt;&lt;EOF</span>
 <span class="s">[Service]</span>
 <span class="s">Delegate=cpu cpuset io memory pids</span>
 <span class="s">EOF</span>
-systemctl<span class="w"> </span>daemon-reload
+systemctl daemon-reload
 </code></pre></div>
 <p>Reference: <a href="https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling-cpu-cpuset-and-io-delegation">https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling-cpu-cpuset-and-io-delegation</a></p>
 <h3 id="using-remote-podman">Using remote Podman<a class="headerlink" href="#using-remote-podman" title="Permanent link">&para;</a></h3>
@@ -1447,16 +1432,16 @@ k3d cluster create
 </code></pre></div>
 <h3 id="podman-network">Podman network<a class="headerlink" href="#podman-network" title="Permanent link">&para;</a></h3>
 <p>The default <code>podman</code> network has dns disabled. To allow k3d cluster nodes to communicate with dns a new network must be created.
-<div class="highlight"><pre><span></span><code>podman<span class="w"> </span>network<span class="w"> </span>create<span class="w"> </span>k3d
-podman<span class="w"> </span>network<span class="w"> </span>inspect<span class="w"> </span>k3d<span class="w"> </span>-f<span class="w"> </span><span class="s1">&#39;{{ .DNSEnabled }}&#39;</span>
+<div class="highlight"><pre><span></span><code>podman network create k3d
+podman network inspect k3d -f <span class="s1">&#39;{{ .DNSEnabled }}&#39;</span>
 <span class="nb">true</span>
 </code></pre></div></p>
 <h2 id="creating-local-registries">Creating local registries<a class="headerlink" href="#creating-local-registries" title="Permanent link">&para;</a></h2>
 <p>Because Podman does not have a default &ldquo;bridge&rdquo; network, you have to specify a network using the <code>--default-network</code> flag when creating a local registry:</p>
-<div class="highlight"><pre><span></span><code>k3d<span class="w"> </span>registry<span class="w"> </span>create<span class="w"> </span>--default-network<span class="w"> </span>podman<span class="w"> </span>mycluster-registry
+<div class="highlight"><pre><span></span><code>k3d registry create --default-network podman mycluster-registry
 </code></pre></div>
 <p>To use this registry with a cluster, pass the <code>--registry-use</code> flag:</p>
-<div class="highlight"><pre><span></span><code>k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>--registry-use<span class="w"> </span>mycluster-registry<span class="w"> </span>mycluster
+<div class="highlight"><pre><span></span><code>k3d cluster create --registry-use mycluster-registry mycluster
 </code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Incompatibility with <code>--registry-create</code></p>
@@ -1478,15 +1463,10 @@ podman<span class="w"> </span>network<span class="w"> </span>inspect<span class=
   </small>
 </div>
 
-
-
-
-
-                
-              </article>
-            </div>
-          
-          
+              
+            </article>
+            
+          </div>
         </div>
         
           <a href="#" class="md-top md-icon" data-md-component="top" hidden>
@@ -1497,6 +1477,42 @@ podman<span class="w"> </span>network<span class="w"> </span>inspect<span class=
       </main>
       
         <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="../cuda/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Running CUDA workloads" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Running CUDA workloads
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../../commands/k3d/" class="md-footer__link md-footer__link--next" aria-label="Next: K3d" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              K3d
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -1522,11 +1538,10 @@ podman<span class="w"> </span>network<span class="w"> </span>inspect<span class=
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.top", "search.suggest", "search.highlight", "navigation.expand", "navigation.tabs"], "search": "../../../assets/javascripts/workers/search.b97dbffb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": {"provider": "mike"}}</script>
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.top", "search.suggest", "search.highlight", "navigation.expand", "navigation.tabs"], "search": "../../../assets/javascripts/workers/search.db81ec45.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
-    
-      <script src="../../../assets/javascripts/bundle.6df46069.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.6c7ad80a.min.js"></script>
       
         <script src="../../../static/js/asciinema-player.js"></script>
       
