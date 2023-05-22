@@ -118,6 +118,8 @@ func NewCmdClusterCreate() *cobra.Command {
 			// Set the name
 			if len(args) != 0 {
 				simpleCfg.Name = args[0]
+			} else if os.Getenv("K3D_CLUSTER_NAME") != "" {
+				simpleCfg.Name = os.Getenv("K3D_CLUSTER_NAME")
 			}
 
 			if err := config.ProcessSimpleConfig(&simpleCfg); err != nil {
