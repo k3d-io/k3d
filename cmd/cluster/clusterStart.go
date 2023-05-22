@@ -22,6 +22,7 @@ THE SOFTWARE.
 package cluster
 
 import (
+	"os"
 	"time"
 
 	"github.com/k3d-io/k3d/v5/cmd/util"
@@ -106,6 +107,8 @@ func parseStartClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	clusternames := []string{k3d.DefaultClusterName}
 	if len(args) != 0 {
 		clusternames = args
+	} else if os.Getenv("K3D_CLUSTER_NAME") != "" {
+		clusternames = []string{os.Getenv("K3D_CLUSTER_NAME")}
 	}
 
 	for _, name := range clusternames {
