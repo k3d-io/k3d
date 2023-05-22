@@ -41,6 +41,7 @@ import (
 )
 
 var clusterDeleteConfigFile string
+var clusterDeletePpViper = viper.New()
 var clusterDeleteCfgViper = viper.New()
 
 // NewCmdClusterDelete returns a new cobra command
@@ -54,6 +55,11 @@ func NewCmdClusterDelete() *cobra.Command {
 		Args:              cobra.MinimumNArgs(0), // 0 or n arguments; 0 = default cluster name
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			// Preprocessed config
+			clusterDeletePpViper.SetEnvPrefix("K3D")
+			if err := clusterDeletePpViper.BindEnv("CLUSTER_NAME"); err != nil {
+				return err
+			}
 			return cliconfig.InitViperWithConfigFile(clusterDeleteCfgViper, clusterDeleteConfigFile)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -158,8 +164,8 @@ func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	clusternames := []string{k3d.DefaultClusterName}
 	if len(args) != 0 {
 		clusternames = args
-	} else if os.Getenv("K3D_CLUSTER_NAME") != "" {
-		clusternames = []string{os.Getenv("K3D_CLUSTER_NAME")}
+	} else if clusterDeletePpViper.GetString("CLUSTER_NAME") != "" {
+		clusternames = []string{clusterDeletePpViper.GetString("CLUSTER_NAME")}
 	}
 
 	for _, name := range clusternames {

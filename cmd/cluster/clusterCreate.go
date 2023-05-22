@@ -73,6 +73,9 @@ var (
 func initConfig() error {
 	// Viper for pre-processed config options
 	ppViper.SetEnvPrefix("K3D")
+	if err := ppViper.BindEnv("CLUSTER_NAME"); err != nil {
+		return err
+	}
 
 	if l.Log().GetLevel() >= logrus.DebugLevel {
 		c, _ := yaml.Marshal(ppViper.AllSettings())
@@ -118,8 +121,8 @@ func NewCmdClusterCreate() *cobra.Command {
 			// Set the name
 			if len(args) != 0 {
 				simpleCfg.Name = args[0]
-			} else if os.Getenv("K3D_CLUSTER_NAME") != "" {
-				simpleCfg.Name = os.Getenv("K3D_CLUSTER_NAME")
+			} else if ppViper.GetString("CLUSTER_NAME") != "" {
+				simpleCfg.Name = ppViper.GetString("CLUSTER_NAME")
 			}
 
 			if err := config.ProcessSimpleConfig(&simpleCfg); err != nil {
