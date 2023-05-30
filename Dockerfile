@@ -28,7 +28,7 @@ COPY scripts/install-tools.sh /scripts/install-tools.sh
 
 # install some basic packages needed for testing, etc.
 RUN apk update && \
-    apk add bash curl sudo jq git make netcat-openbsd
+    apk add bash curl sudo jq git make netcat-openbsd iptables
 
 # install kubectl to interact with the k3d cluster
 # install yq (yaml processor) from source, as the busybox yq had some issues
