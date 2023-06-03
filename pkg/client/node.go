@@ -580,6 +580,14 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 					Mode:        0744,
 					Description: "Write entrypoint script for mounts fix",
 				},
+			}, k3d.NodeHook{
+				Stage: k3d.LifecycleStagePostStart,
+				Action: actions.ExecAction{
+					Runtime:     runtimes.SelectedRuntime,
+					Command:     []string{"sh", "-c", " /bin/k3d-entrypoint-mounts.sh"},
+					Description: "Execute entrypoint script for mount shared fix",
+					Retries:     5,
+				},
 			})
 		}
 	}
