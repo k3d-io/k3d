@@ -39,6 +39,8 @@ require (
 
 replace github.com/rancher/wharfie => github.com/iwilltry42/wharfie v0.6.2-iwilltry42.0
 
+replace k8s.io/kubelet => k8s.io/kubelet v0.27.2
+
 require (
 	github.com/goodhosts/hostsfile v0.1.1
 	github.com/google/go-containerregistry v0.12.2-0.20230106184643-b063f6aeac72
