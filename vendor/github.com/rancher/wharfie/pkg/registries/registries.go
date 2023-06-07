@@ -151,6 +151,8 @@ func (r *registry) getEndpoints(ref name.Reference) ([]endpoint, error) {
 	keys := []string{registry}
 	if registry == name.DefaultRegistry {
 		keys = append(keys, "docker.io")
+	} else if _, _, err := net.SplitHostPort(registry); err != nil {
+		keys = append(keys, registry+":443", registry+":80")
 	}
 	keys = append(keys, "*")
 

@@ -49,7 +49,7 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 	defer docker.Close()
 
 	// create container
-	var resp container.ContainerCreateCreatedBody
+	var resp container.CreateResponse
 	for {
 		resp, err = docker.ContainerCreate(ctx, &dockerNode.ContainerConfig, &dockerNode.HostConfig, &dockerNode.NetworkingConfig, nil, name)
 		if err != nil {
@@ -176,7 +176,7 @@ func executeCheckInContainer(ctx context.Context, image string, cmd []string) (i
 	defer docker.Close()
 
 	// create container
-	var resp container.ContainerCreateCreatedBody
+	var resp container.CreateResponse
 	for {
 		resp, err = docker.ContainerCreate(ctx, &container.Config{
 			Image:      image,

@@ -102,9 +102,8 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 		// append the used IPs that we already know from the search network
 		// this is needed because the network inspect does not return the container list until the containers are actually started
 		// and we already need this when we create the containers
-		for _, used := range searchNet.IPAM.IPsUsed {
-			network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, used)
-		}
+		network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, searchNet.IPAM.IPsUsed...)
+
 	} else {
 		l.Log().Debugf("Network %s does not have an IPAM config", network.Name)
 	}

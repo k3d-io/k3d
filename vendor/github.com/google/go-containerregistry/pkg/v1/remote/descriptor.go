@@ -17,6 +17,8 @@ package remote
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -59,7 +61,7 @@ type Descriptor struct {
 	v1.Descriptor
 	Manifest []byte
 
-	// So we can share this implementation with Image..
+	// So we can share this implementation with Image.
 	platform v1.Platform
 }
 
@@ -209,28 +211,6 @@ func (d *Descriptor) remoteIndex() *remoteIndex {
 	}
 }
 
-// https://github.com/docker/hub-feedback/issues/2107#issuecomment-1371293316
-//
-// DockerHub supports plugins, which look like normal manifests, but will
-// return a 401 with an incorrect challenge if you attempt to fetch them.
-//
-// They require you send, e.g.:
-// 'repository(plugin):vieux/sshfs:pull' not 'repository:vieux/sshfs:pull'.
-//
-// Hack around this by always including the plugin-ified version in the initial
-// scopes. The request will succeed with the correct subset, so it is safe to
-// have extraneous scopes here.
-func fixPluginScopes(ref name.Reference, scopes []string) []string {
-	if ref.Context().Registry.String() == name.DefaultRegistry {
-		for _, scope := range scopes {
-			if strings.HasPrefix(scope, "repository") {
-				scopes = append(scopes, strings.Replace(scope, "repository", "repository(plugin)", 1))
-			}
-		}
-	}
-	return scopes
-}
-
 // fetcher implements methods for reading from a registry.
 type fetcher struct {
 	Ref     name.Reference
@@ -239,10 +219,7 @@ type fetcher struct {
 }
 
 func makeFetcher(ref name.Reference, o *options) (*fetcher, error) {
-	scopes := []string{ref.Scope(transport.PullScope)}
-	scopes = fixPluginScopes(ref, scopes)
-
-	tr, err := transport.NewWithContext(o.context, ref.Context().Registry, o.auth, o.transport, scopes)
+	tr, err := transport.NewWithContext(o.context, ref.Context().Registry, o.auth, o.transport, []string{ref.Scope(transport.PullScope)})
 	if err != nil {
 		return nil, err
 	}
@@ -260,6 +237,56 @@ func (f *fetcher) url(resource, identifier string) url.URL {
 		Host:   f.Ref.Context().RegistryStr(),
 		Path:   fmt.Sprintf("/v2/%s/%s/%s", f.Ref.Context().RepositoryStr(), resource, identifier),
 	}
+}
+
+// https://github.com/opencontainers/distribution-spec/blob/main/spec.md#referrers-tag-schema
+func fallbackTag(d name.Digest) name.Tag {
+	return d.Context().Tag(strings.Replace(d.DigestStr(), ":", "-", 1))
+}
+
+func (f *fetcher) fetchReferrers(ctx context.Context, filter map[string]string, d name.Digest) (*v1.IndexManifest, error) {
+	// Check the Referrers API endpoint first.
+	u := f.url("referrers", d.DigestStr())
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", string(types.OCIImageIndex))
+
+	resp, err := f.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if err := transport.CheckError(resp, http.StatusOK, http.StatusNotFound, http.StatusBadRequest); err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusOK {
+		var im v1.IndexManifest
+		if err := json.NewDecoder(resp.Body).Decode(&im); err != nil {
+			return nil, err
+		}
+		return filterReferrersResponse(filter, &im), nil
+	}
+
+	// The registry doesn't support the Referrers API endpoint, so we'll use the fallback tag scheme.
+	b, _, err := f.fetchManifest(fallbackTag(d), []types.MediaType{types.OCIImageIndex})
+	if err != nil {
+		return nil, err
+	}
+	var terr *transport.Error
+	if ok := errors.As(err, &terr); ok && terr.StatusCode == http.StatusNotFound {
+		// Not found just means there are no attachments yet. Start with an empty manifest.
+		return &v1.IndexManifest{MediaType: types.OCIImageIndex}, nil
+	}
+
+	var im v1.IndexManifest
+	if err := json.Unmarshal(b, &im); err != nil {
+		return nil, err
+	}
+
+	return filterReferrersResponse(filter, &im), nil
 }
 
 func (f *fetcher) fetchManifest(ref name.Reference, acceptable []types.MediaType) ([]byte, *v1.Descriptor, error) {
@@ -308,6 +335,15 @@ func (f *fetcher) fetchManifest(ref name.Reference, acceptable []types.MediaType
 			return nil, nil, fmt.Errorf("manifest digest: %q does not match requested digest: %q for %q", digest, dgst.DigestStr(), f.Ref)
 		}
 	}
+
+	var artifactType string
+	mf, _ := v1.ParseManifest(bytes.NewReader(manifest))
+	// Failing to parse as a manifest should just be ignored.
+	// The manifest might not be valid, and that's okay.
+	if mf != nil && !mf.Config.MediaType.IsConfig() {
+		artifactType = string(mf.Config.MediaType)
+	}
+
 	// Do nothing for tags; I give up.
 	//
 	// We'd like to validate that the "Docker-Content-Digest" header matches what is returned by the registry,
@@ -318,9 +354,10 @@ func (f *fetcher) fetchManifest(ref name.Reference, acceptable []types.MediaType
 
 	// Return all this info since we have to calculate it anyway.
 	desc := v1.Descriptor{
-		Digest:    digest,
-		Size:      size,
-		MediaType: mediaType,
+		Digest:       digest,
+		Size:         size,
+		MediaType:    mediaType,
+		ArtifactType: artifactType,
 	}
 
 	return manifest, &desc, nil
@@ -452,4 +489,23 @@ func (f *fetcher) blobExists(h v1.Hash) (bool, error) {
 	}
 
 	return resp.StatusCode == http.StatusOK, nil
+}
+
+// If filter applied, filter out by artifactType.
+// See https://github.com/opencontainers/distribution-spec/blob/main/spec.md#listing-referrers
+func filterReferrersResponse(filter map[string]string, origIndex *v1.IndexManifest) *v1.IndexManifest {
+	newIndex := origIndex
+	if filter == nil {
+		return newIndex
+	}
+	if v, ok := filter["artifactType"]; ok {
+		tmp := []v1.Descriptor{}
+		for _, desc := range newIndex.Manifests {
+			if desc.ArtifactType == v {
+				tmp = append(tmp, desc)
+			}
+		}
+		newIndex.Manifests = tmp
+	}
+	return newIndex
 }

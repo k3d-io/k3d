@@ -798,7 +798,7 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 			}
 			// check if the container is restarting
 			running, status, _ := runtime.GetNodeStatus(ctx, node)
-			if running && status == k3d.NodeStatusRestarting && time.Now().Sub(since) > k3d.NodeWaitForLogMessageRestartWarnTime {
+			if running && status == k3d.NodeStatusRestarting && time.Since(since) > k3d.NodeWaitForLogMessageRestartWarnTime {
 				l.Log().Warnf("Node '%s' is restarting for more than %s now. Possibly it will recover soon (e.g. when it's waiting to join). Consider using a creation timeout to avoid waiting forever in a Restart Loop.", node.Name, k3d.NodeWaitForLogMessageRestartWarnTime)
 			}
 			time.Sleep(500 * time.Millisecond)

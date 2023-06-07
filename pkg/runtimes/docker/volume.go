@@ -41,7 +41,7 @@ func (d Docker) CreateVolume(ctx context.Context, name string, labels map[string
 	defer docker.Close()
 
 	// (1) create volume
-	volumeCreateOptions := volume.VolumeCreateBody{
+	volumeCreateOptions := volume.CreateOptions{
 		Name:       name,
 		Labels:     labels,
 		Driver:     "local", // TODO: allow setting driver + opts
@@ -104,7 +104,7 @@ func (d Docker) GetVolume(name string) (string, error) {
 
 	filters := filters.NewArgs()
 	filters.Add("name", fmt.Sprintf("^%s$", name))
-	volumeList, err := docker.VolumeList(ctx, filters)
+	volumeList, err := docker.VolumeList(ctx, volume.ListOptions{Filters: filters})
 	if err != nil {
 		return "", fmt.Errorf("docker failed to list volumes: %w", err)
 	}
@@ -133,7 +133,7 @@ func (d Docker) GetVolumesByLabel(ctx context.Context, labels map[string]string)
 		filters.Add("label", fmt.Sprintf("%s=%s", k, v))
 	}
 
-	volumeList, err := docker.VolumeList(ctx, filters)
+	volumeList, err := docker.VolumeList(ctx, volume.ListOptions{Filters: filters})
 	if err != nil {
 		return volumes, fmt.Errorf("docker failed to list volumes: %w", err)
 	}

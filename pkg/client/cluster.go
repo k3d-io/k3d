@@ -1156,7 +1156,7 @@ func prepCreateLocalRegistryHostingConfigMap(ctx context.Context, runtime k3drt.
 			}
 		}
 	}
-	if success == false {
+	if !success {
 		l.Log().Warnf("Failed to create LocalRegistryHosting ConfigMap")
 	}
 	return nil

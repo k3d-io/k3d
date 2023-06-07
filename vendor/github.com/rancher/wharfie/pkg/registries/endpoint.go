@@ -42,28 +42,30 @@ func (e endpoint) RoundTrip(req *http.Request) (*http.Response, error) {
 	endpointURL := e.url
 	originalURL := req.URL.String()
 
-	// Only rewrite the URL if the request is being made against the original registry host
-	// and endpoint.  We might have been redirected to a different URL as part of the auth
+	// Only rewrite the URL if the request is being made against the original registry host.
+	// We might have been redirected to a different URL as part of the auth
 	// workflow, and must not rewrite URLs if that's the case.
-	if req.URL.Host == e.ref.Context().RegistryStr() && strings.HasPrefix(req.URL.Path, "/v2") {
-		// The default base path is /v2; if a path is included in the endpoint,
-		// replace the /v2 prefix from the request path with the endpoint path.
-		// This behavior is cribbed from containerd.
-		if endpointURL.Path != "" {
-			req.URL.Path = endpointURL.Path + strings.TrimPrefix(req.URL.Path, "/v2")
+	if e.ref.Context().RegistryStr() == req.URL.Host {
+		if strings.HasPrefix(req.URL.Path, "/v2") {
+			// The default base path is /v2; if a path is included in the endpoint,
+			// replace the /v2 prefix from the request path with the endpoint path.
+			// This behavior is cribbed from containerd.
+			if endpointURL.Path != "" {
+				req.URL.Path = endpointURL.Path + strings.TrimPrefix(req.URL.Path, "/v2")
 
-			// If either URL has RawPath set (due to the path including urlencoded
-			// characters), it also needs to be used to set the combined URL
-			if endpointURL.RawPath != "" || req.URL.RawPath != "" {
-				endpointPath := endpointURL.Path
-				if endpointURL.RawPath != "" {
-					endpointPath = endpointURL.RawPath
+				// If either URL has RawPath set (due to the path including urlencoded
+				// characters), it also needs to be used to set the combined URL
+				if endpointURL.RawPath != "" || req.URL.RawPath != "" {
+					endpointPath := endpointURL.Path
+					if endpointURL.RawPath != "" {
+						endpointPath = endpointURL.RawPath
+					}
+					reqPath := req.URL.Path
+					if req.URL.RawPath != "" {
+						reqPath = req.URL.RawPath
+					}
+					req.URL.RawPath = endpointPath + strings.TrimPrefix(reqPath, "/v2")
 				}
-				reqPath := req.URL.Path
-				if req.URL.RawPath != "" {
-					reqPath = req.URL.RawPath
-				}
-				req.URL.RawPath = endpointPath + strings.TrimPrefix(reqPath, "/v2")
 			}
 		}
 

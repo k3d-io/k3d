@@ -158,10 +158,8 @@ func FilterNodes(nodes []*k3d.Node, filters []string) ([]*k3d.Node, error) {
 			switch role {
 			case k3d.ServerRole:
 				groupNodes = serverNodes
-				break
 			case k3d.AgentRole:
 				groupNodes = agentNodes
-				break
 			case k3d.LoadBalancerRole:
 				if serverlb == nil {
 					return nil, fmt.Errorf("Node filter '%s' targets a node that does not exist (disabled?)", filter)

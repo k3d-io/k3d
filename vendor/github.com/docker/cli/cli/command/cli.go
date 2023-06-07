@@ -48,9 +48,7 @@ type Streams interface {
 // Cli represents the docker command line client.
 type Cli interface {
 	Client() client.APIClient
-	Out() *streams.Out
-	Err() io.Writer
-	In() *streams.In
+	Streams
 	SetIn(in *streams.In)
 	Apply(ops ...DockerCliOption) error
 	ConfigFile() *configfile.ConfigFile
@@ -191,7 +189,7 @@ func (cli *DockerCli) ManifestStore() manifeststore.Store {
 // RegistryClient returns a client for communicating with a Docker distribution
 // registry
 func (cli *DockerCli) RegistryClient(allowInsecure bool) registryclient.RegistryClient {
-	resolver := func(ctx context.Context, index *registry.IndexInfo) types.AuthConfig {
+	resolver := func(ctx context.Context, index *registry.IndexInfo) registry.AuthConfig {
 		return ResolveAuthConfig(ctx, cli, index)
 	}
 	return registryclient.NewRegistryClient(resolver, UserAgent(), allowInsecure)

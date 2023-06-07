@@ -83,7 +83,7 @@ func (o *ClientOptions) InstallFlags(flags *pflag.FlagSet) {
 
 	// opts.ValidateHost is not used here, so as to allow connection helpers
 	hostOpt := opts.NewNamedListOptsRef("hosts", &o.Hosts, nil)
-	flags.VarP(hostOpt, "host", "H", "Daemon socket(s) to connect to")
+	flags.VarP(hostOpt, "host", "H", "Daemon socket to connect to")
 	flags.StringVarP(&o.Context, "context", "c", "",
 		`Name of the context to use to connect to the daemon (overrides `+client.EnvOverrideHost+` env var and default context set with "docker context use")`)
 }
