@@ -7,9 +7,10 @@ Create a new cluster
 
 Create a new k3s cluster with containerized nodes (k3s in docker).
 Every cluster will consist of one or more containers:
-	- 1 (or more) server node container (k3s)
-	- (optionally) 1 loadbalancer container as the entrypoint to the cluster (nginx)
-	- (optionally) 1 (or more) agent node containers (k3s)
+
+- 1 (or more) server node container (k3s)
+- (optionally) 1 loadbalancer container as the entrypoint to the cluster (nginx)
+- (optionally) 1 (or more) agent node containers (k3s)
 
 
 ```
