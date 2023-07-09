@@ -46,10 +46,8 @@ import (
 	"github.com/k3d-io/k3d/v5/pkg/actions"
 	config "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
-	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3drt "github.com/k3d-io/k3d/v5/pkg/runtimes"
 	runtimeErr "github.com/k3d-io/k3d/v5/pkg/runtimes/errors"
-	"github.com/k3d-io/k3d/v5/pkg/types"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 	"github.com/k3d-io/k3d/v5/pkg/util"
@@ -361,7 +359,7 @@ ClusterCreatOpts:
 	 */
 	if cluster.KubeAPI.Host == k3d.DefaultAPIHost && runtime == k3drt.Docker {
 		// If the runtime is docker, attempt to use the docker host
-		if runtime == runtimes.Docker {
+		if runtime == k3drt.Docker {
 			dockerHost := runtime.GetHost()
 			if dockerHost != "" {
 				dockerHost = strings.Split(dockerHost, ":")[0] // remove the port
@@ -844,7 +842,7 @@ func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster
 		}
 	}
 
-	vols, err := runtime.GetVolumesByLabel(ctx, map[string]string{types.LabelClusterName: cluster.Name})
+	vols, err := runtime.GetVolumesByLabel(ctx, map[string]string{k3d.LabelClusterName: cluster.Name})
 	if err != nil {
 		return nil, err
 	}
@@ -871,7 +869,7 @@ func GenerateNodeName(cluster string, role k3d.Role, suffix int) string {
 }
 
 // ClusterStart starts a whole cluster (i.e. all nodes of the cluster)
-func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, clusterStartOpts types.ClusterStartOpts) error {
+func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster, clusterStartOpts k3d.ClusterStartOpts) error {
 	l.Log().Infof("Starting cluster '%s'", cluster.Name)
 
 	if clusterStartOpts.Intent == "" {
@@ -920,7 +918,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 		if err := NodeStart(ctx, runtime, initNode, &k3d.NodeStartOpts{
 			Wait:            true, // always wait for the init node
 			NodeHooks:       clusterStartOpts.NodeHooks,
-			ReadyLogMessage: types.GetReadyLogMessage(initNode, clusterStartOpts.Intent), // initNode means, that we're using etcd -> this will need quorum, so "k3s is up and running" won't happen right now
+			ReadyLogMessage: k3d.GetReadyLogMessage(initNode, clusterStartOpts.Intent), // initNode means, that we're using etcd -> this will need quorum, so "k3s is up and running" won't happen right now
 			EnvironmentInfo: clusterStartOpts.EnvironmentInfo,
 		}); err != nil {
 			return fmt.Errorf("Failed to start initializing server node: %+v", err)

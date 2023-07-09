@@ -38,7 +38,6 @@ import (
 
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
-	"github.com/k3d-io/k3d/v5/pkg/types"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
@@ -111,13 +110,13 @@ func UpdateLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, clu
 	return nil
 }
 
-func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (types.LoadbalancerConfig, error) {
+func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (k3d.LoadbalancerConfig, error) {
 	var cfg k3d.LoadbalancerConfig
 
 	if cluster.ServerLoadBalancer == nil || cluster.ServerLoadBalancer.Node == nil {
 		cluster.ServerLoadBalancer = &k3d.Loadbalancer{}
 		for _, node := range cluster.Nodes {
-			if node.Role == types.LoadBalancerRole {
+			if node.Role == k3d.LoadBalancerRole {
 				var err error
 				cluster.ServerLoadBalancer.Node, err = NodeGet(ctx, runtime, node)
 				if err != nil {
@@ -127,9 +126,9 @@ func GetLoadbalancerConfig(ctx context.Context, runtime runtimes.Runtime, cluste
 		}
 	}
 
-	reader, err := runtime.ReadFromNode(ctx, types.DefaultLoadbalancerConfigPath, cluster.ServerLoadBalancer.Node)
+	reader, err := runtime.ReadFromNode(ctx, k3d.DefaultLoadbalancerConfigPath, cluster.ServerLoadBalancer.Node)
 	if err != nil {
-		return cfg, fmt.Errorf("runtime failed to read loadbalancer config '%s' from node '%s': %w", types.DefaultLoadbalancerConfigPath, cluster.ServerLoadBalancer.Node.Name, err)
+		return cfg, fmt.Errorf("runtime failed to read loadbalancer config '%s' from node '%s': %w", k3d.DefaultLoadbalancerConfigPath, cluster.ServerLoadBalancer.Node.Name, err)
 	}
 	defer reader.Close()
 
@@ -176,7 +175,7 @@ func LoadbalancerGenerateConfig(cluster *k3d.Cluster) (k3d.LoadbalancerConfig, e
 	return lbConfig, nil
 }
 
-func LoadbalancerPrepare(ctx context.Context, runtime runtimes.Runtime, cluster *types.Cluster, opts *k3d.LoadbalancerCreateOpts) (*k3d.Node, error) {
+func LoadbalancerPrepare(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, opts *k3d.LoadbalancerCreateOpts) (*k3d.Node, error) {
 	labels := map[string]string{}
 
 	if opts != nil && opts.Labels == nil && len(opts.Labels) == 0 {

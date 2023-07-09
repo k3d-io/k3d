@@ -27,7 +27,6 @@ import (
 	"github.com/k3d-io/k3d/v5/cmd/util"
 	"github.com/k3d-io/k3d/v5/pkg/client"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
-	"github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/spf13/cobra"
 
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
@@ -36,7 +35,7 @@ import (
 
 // NewCmdClusterStart returns a new cobra command
 func NewCmdClusterStart() *cobra.Command {
-	startClusterOpts := types.ClusterStartOpts{
+	startClusterOpts := k3d.ClusterStartOpts{
 		Intent: k3d.IntentClusterStart,
 	}
 

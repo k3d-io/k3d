@@ -22,7 +22,6 @@ THE SOFTWARE.
 package cluster
 
 import (
-	"github.com/k3d-io/k3d/v5/cmd/util"
 	cliutil "github.com/k3d-io/k3d/v5/cmd/util"
 	"github.com/k3d-io/k3d/v5/pkg/client"
 	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
@@ -41,7 +40,7 @@ func NewCmdClusterEdit() *cobra.Command {
 		Long:              `[EXPERIMENTAL] Edit cluster(s).`,
 		Args:              cobra.ExactArgs(1),
 		Aliases:           []string{"update"},
-		ValidArgsFunction: util.ValidArgsAvailableClusters,
+		ValidArgsFunction: cliutil.ValidArgsAvailableClusters,
 		Run: func(cmd *cobra.Command, args []string) {
 			existingCluster, changeset := parseEditClusterCmd(cmd, args)
 
