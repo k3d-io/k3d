@@ -223,6 +223,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "stopanko",
+      "name": "stopanko",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3759349?v=4",
+      "profile": "https://github.com/stopanko",
+      "contributions": [
+        "financial"
+      ]
     }
   ],
   "contributorsPerLine": 7,
@@ -231,5 +240,6 @@
   "repoType": "github",
   "repoHost": "https://github.com",
   "skipCi": true,
-  "commitConvention": "angular"
+  "commitConvention": "angular",
+  "commitType": "docs"
 }
