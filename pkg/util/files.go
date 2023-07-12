@@ -26,6 +26,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/k3d-io/k3d/v5/pkg/types"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -37,7 +38,7 @@ func GetConfigDirOrCreate() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get user's home directory: %w", err)
 	}
-	configDir := path.Join(homeDir, ".k3d")
+	configDir := path.Join(homeDir, types.DefaultConfigDirName)
 
 	// create directories if necessary
 	if err := createDirIfNotExists(configDir); err != nil {
