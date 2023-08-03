@@ -74,7 +74,7 @@ const DefaultK3dInternalHostRecord = "host.k3d.internal"
 const DefaultImageVolumeMountPath = "/k3d/images"
 
 // DefaultConfigDirName defines the name of the config directory (where we'll e.g. put the kubeconfigs)
-const DefaultConfigDirName = ".k3d" // should end up in $HOME/
+const DefaultConfigDirName = ".config/k3d" // should end up in $XDG_CONFIG_HOME
 
 // DefaultKubeconfigPrefix defines the default prefix for kubeconfig files
 const DefaultKubeconfigPrefix = DefaultObjectNamePrefix + "-kubeconfig"

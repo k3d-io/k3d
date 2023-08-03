@@ -27,17 +27,22 @@ import (
 	"path"
 
 	homedir "github.com/mitchellh/go-homedir"
+
+	"github.com/k3d-io/k3d/v5/pkg/types"
 )
 
 // GetConfigDirOrCreate will return the base path of the k3d config directory or create it if it doesn't exist yet
-// k3d's config directory will be $HOME/.k3d (Unix)
+// k3d's config directory will be $XDG_CONFIG_HOME (Unix)
 func GetConfigDirOrCreate() (string, error) {
-	// build the path
-	homeDir, err := homedir.Dir()
-	if err != nil {
-		return "", fmt.Errorf("failed to get user's home directory: %w", err)
+	configDir := os.Getenv("XDG_CONFIG_HOME")
+	if len(configDir) == 0 {
+		// build the path
+		homeDir, err := homedir.Dir()
+		if err != nil {
+			return "", fmt.Errorf("failed to get user's home directory: %w", err)
+		}
+		configDir = path.Join(homeDir, types.DefaultConfigDirName)
 	}
-	configDir := path.Join(homeDir, ".k3d")
 
 	// create directories if necessary
 	if err := createDirIfNotExists(configDir); err != nil {
