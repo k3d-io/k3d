@@ -108,7 +108,6 @@ podman machine start
 ```
 
 Grab connection details 
-> note: root connection details must be used
 
 ```
 podman system connection ls
@@ -126,9 +125,27 @@ Host localhost
 	IdentityFile /Users/myusername/.ssh/podman-machine-default
 ```
 
-Export the docker environment variables referenced above and create the cluster
+#### Rootless mode
 
+Delegate the `cpuset` cgroup controller to the user's systemd slice, export the docker environment variables referenced above for the non-root connection, and create the cluster:
+
+```bash
+podman machine ssh bash -e <<EOF
+  printf '[Service]\nDelegate=cpuset\n' | sudo tee /etc/systemd/system/user@.service.d/k3d.conf
+  sudo systemctl daemon-reload
+  sudo systemctl restart "user@\${UID}"
+EOF
+
+export DOCKER_HOST=ssh://core@localhost:53685
+export DOCKER_SOCKET=/run/user/501/podman/podman.sock
+k3d cluster create --k3s-arg '--kubelet-arg=feature-gates=KubeletInUserNamespace=true@server:*'
 ```
+
+#### Rootful mode
+
+Export the docker environment variables referenced above for the root connection and create the cluster:
+
+```bash
 export DOCKER_HOST=ssh://root@localhost:53685
 export DOCKER_SOCK=/run/podman/podman.sock
 k3d cluster create
