@@ -5,6 +5,7 @@ import (
 	"context"
 	"net"
 	"net/url"
+	"strings"
 
 	"github.com/docker/cli/cli/connhelper/commandconn"
 	"github.com/docker/cli/cli/connhelper/ssh"
@@ -51,6 +52,7 @@ func getConnectionHelper(daemonURL string, sshFlags []string) (*ConnectionHelper
 				if sp.Path != "" {
 					args = append(args, "--host", "unix://"+sp.Path)
 				}
+				sshFlags = addSSHTimeout(sshFlags)
 				args = append(args, "system", "dial-stdio")
 				return commandconn.New(ctx, "ssh", append(sshFlags, sp.Args(args...)...)...)
 			},
@@ -70,4 +72,11 @@ func GetCommandConnectionHelper(cmd string, flags ...string) (*ConnectionHelper,
 		},
 		Host: "http://docker.example.com",
 	}, nil
+}
+
+func addSSHTimeout(sshFlags []string) []string {
+	if !strings.Contains(strings.Join(sshFlags, ""), "ConnectTimeout") {
+		sshFlags = append(sshFlags, "-o ConnectTimeout=30")
+	}
+	return sshFlags
 }
