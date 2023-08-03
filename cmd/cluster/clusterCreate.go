@@ -36,7 +36,6 @@ import (
 	"inet.af/netaddr"
 	"sigs.k8s.io/yaml"
 
-	"github.com/k3d-io/k3d/v5/cmd/util"
 	cliutil "github.com/k3d-io/k3d/v5/cmd/util"
 	cliconfig "github.com/k3d-io/k3d/v5/cmd/util/config"
 	k3dCluster "github.com/k3d-io/k3d/v5/pkg/client"
@@ -512,7 +511,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	l.Log().Tracef("RuntimeLabelFilterMap: %+v", runtimeLabelFilterMap)
 
 	for _, ulimit := range ppViper.GetStringSlice("cli.runtime-ulimits") {
-		cfg.Options.Runtime.Ulimits = append(cfg.Options.Runtime.Ulimits, *util.ParseRuntimeUlimit[conf.Ulimit](ulimit))
+		cfg.Options.Runtime.Ulimits = append(cfg.Options.Runtime.Ulimits, *cliutil.ParseRuntimeUlimit[conf.Ulimit](ulimit))
 	}
 
 	// --env
