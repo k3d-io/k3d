@@ -12,14 +12,8 @@
       
         <link rel="canonical" href="https://k3d.io/v5.5.2/usage/commands/">
       
-      
-        <link rel="prev" href="../../faq/faq/">
-      
-      
-        <link rel="next" href="../configfile/">
-      
       <link rel="icon" href="../../static/img/favicons_black_blue/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.11">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.3.9">
     
     
       
@@ -27,13 +21,13 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.0d440cfe.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.1d29e8d0.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.2505c338.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.cbb835fc.min.css">
+        
       
       
-
     
     
     
@@ -50,11 +44,10 @@
     
       <link rel="stylesheet" href="../../static/css/extra.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
-    
     
     
   </head>
@@ -89,7 +82,9 @@
     </div>
     
       <div data-md-component="outdated" hidden>
-        
+        <aside class="md-banner md-banner--warning">
+          
+        </aside>
       </div>
     
     
@@ -125,6 +120,7 @@
       <form class="md-header__option" data-md-component="palette">
         
           
+          
           <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="grey"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
           
             <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
@@ -132,6 +128,7 @@
             </label>
           
         
+          
           
           <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="light-blue" data-md-color-accent=""  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
           
@@ -158,7 +155,7 @@
       </label>
       <nav class="md-search__options" aria-label="Search">
         
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
       </nav>
@@ -172,7 +169,7 @@
           <div class="md-search-result__meta">
             Initializing search
           </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
+          <ol class="md-search-result__list"></ol>
         </div>
       </div>
     </div>
@@ -184,7 +181,7 @@
         <a href="https://github.com/k3d-io/k3d" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
   </div>
   <div class="md-source__repository">
     k3d-io/k3d
@@ -301,7 +298,7 @@
       <a href="https://github.com/k3d-io/k3d" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
   </div>
   <div class="md-source__repository">
     k3d-io/k3d
@@ -339,18 +336,17 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
       
       
-      
-        <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_2">
           Guides
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+      <nav class="md-nav" aria-label="Guides" data-md-level="1">
         <label class="md-nav__title" for="__nav_2">
           <span class="md-nav__icon md-icon"></span>
           Guides
@@ -464,20 +460,17 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-      
-      
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" data-md-toggle="__nav_2_8" type="checkbox" id="__nav_2_8" checked>
       
       
       
-        <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+      
+        <label class="md-nav__link" for="__nav_2_8">
           Advanced Guides
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+      <nav class="md-nav" aria-label="Advanced Guides" data-md-level="2">
         <label class="md-nav__title" for="__nav_2_8">
           <span class="md-nav__icon md-icon"></span>
           Advanced Guides
@@ -542,20 +535,17 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-      
-      
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_9" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" data-md-toggle="__nav_2_9" type="checkbox" id="__nav_2_9" checked>
       
       
       
-        <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+      
+        <label class="md-nav__link" for="__nav_2_9">
           Commands
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+      <nav class="md-nav" aria-label="Commands" data-md-level="2">
         <label class="md-nav__title" for="__nav_2_9">
           <span class="md-nav__icon md-icon"></span>
           Commands
@@ -1006,20 +996,17 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-      
-      
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
       
       
       
-        <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+      
+        <label class="md-nav__link" for="__nav_3">
           Design
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+      <nav class="md-nav" aria-label="Design" data-md-level="1">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
           Design
@@ -1099,20 +1086,17 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-      
-      
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" checked>
       
       
       
-        <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+      
+        <label class="md-nav__link" for="__nav_4">
           FAQ
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+      <nav class="md-nav" aria-label="FAQ" data-md-level="1">
         <label class="md-nav__title" for="__nav_4">
           <span class="md-nav__icon md-icon"></span>
           FAQ
@@ -1179,107 +1163,106 @@
               </div>
             
           
-          
-            <div class="md-content" data-md-component="content">
-              <article class="md-content__inner md-typeset">
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
                 
-                  
-
-  
-  
+  <a href="https://github.com/k3d-io/k3d/edit/main/docs/usage/commands.md" title="Edit this page" class="md-content__button md-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
 
 
 
 <h1 id="command-tree">Command Tree<a class="headerlink" href="#command-tree" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code>k3d
-<span class="w">  </span>--verbose<span class="w">  </span><span class="c1"># GLOBAL: enable verbose (debug) logging (default: false)</span>
-<span class="w">  </span>--trace<span class="w">  </span><span class="c1"># GLOBAL: enable super verbose logging (trace logging) (default: false)</span>
-<span class="w">  </span>--version<span class="w">  </span><span class="c1"># show k3d and k3s version</span>
-<span class="w">  </span>-h,<span class="w"> </span>--help<span class="w">  </span><span class="c1"># GLOBAL: show help text</span>
+  --verbose  <span class="c1"># GLOBAL: enable verbose (debug) logging (default: false)</span>
+  --trace  <span class="c1"># GLOBAL: enable super verbose logging (trace logging) (default: false)</span>
+  --version  <span class="c1"># show k3d and k3s version</span>
+  -h, --help  <span class="c1"># GLOBAL: show help text</span>
 
-<span class="w">  </span>cluster<span class="w"> </span><span class="o">[</span>CLUSTERNAME<span class="o">]</span><span class="w">  </span><span class="c1"># default cluster name is &#39;k3s-default&#39;</span>
-<span class="w">    </span>create
-<span class="w">      </span>-a,<span class="w"> </span>--agents<span class="w">  </span><span class="c1"># specify how many agent nodes you want to create (integer, default: 0)</span>
-<span class="w">      </span>--agents-memory<span class="w"> </span><span class="c1"># specify memory limit for agent containers/nodes (unit, e.g. 1g)</span>
-<span class="w">      </span>--api-port<span class="w">  </span><span class="c1"># specify the port on which the cluster will be accessible (format &#39;[HOST:]HOSTPORT&#39;, default: random)</span>
-<span class="w">      </span>-c,<span class="w"> </span>--config<span class="w">  </span><span class="c1"># use a config file (format &#39;PATH&#39;)</span>
-<span class="w">      </span>-e,<span class="w"> </span>--env<span class="w">  </span><span class="c1"># add environment variables to the nodes (quoted string, format: &#39;KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]&#39;, use flag multiple times)</span>
-<span class="w">      </span>--gpus<span class="w">  </span><span class="c1"># [from docker CLI] add GPU devices to the node containers (string, e.g. &#39;all&#39;)</span>
-<span class="w">      </span>-i,<span class="w"> </span>--image<span class="w">  </span><span class="c1"># specify which k3s image should be used for the nodes (string, default: &#39;docker.io/rancher/k3s:v1.20.0-k3s2&#39;, tag changes per build)</span>
-<span class="w">      </span>--k3s-arg<span class="w">  </span><span class="c1"># add additional arguments to the k3s server/agent (quoted string, use flag multiple times) (see https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/#k3s-server-cli-help &amp; https://rancher.com/docs/k3s/latest/en/installation/install-options/agent-config/#k3s-agent-cli-help)</span>
-<span class="w">      </span>--kubeconfig-switch-context<span class="w">  </span><span class="c1"># (implies --kubeconfig-update-default) automatically sets the current-context of your default kubeconfig to the new cluster&#39;s context (default: true)</span>
-<span class="w">      </span>--kubeconfig-update-default<span class="w">  </span><span class="c1"># enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets &#39;--wait=true&#39;) (default: true)</span>
-<span class="w">      </span>-l,<span class="w"> </span>--label<span class="w">  </span><span class="c1"># add (docker) labels to the node containers (format: &#39;KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]&#39;, use flag multiple times)</span>
-<span class="w">      </span>--network<span class="w">  </span><span class="c1"># specify an existing (docker) network you want to connect to (string)</span>
-<span class="w">      </span>--no-hostip<span class="w">  </span><span class="c1"># disable the automatic injection of the Host IP as &#39;host.k3d.internal&#39; into the containers and CoreDNS (default: false)</span>
-<span class="w">      </span>--no-image-volume<span class="w">  </span><span class="c1"># disable the creation of a volume for storing images (used for the &#39;k3d image import&#39; command) (default: false)</span>
-<span class="w">      </span>--no-lb<span class="w">  </span><span class="c1"># disable the creation of a load balancer in front of the server nodes (default: false)</span>
-<span class="w">      </span>--no-rollback<span class="w">  </span><span class="c1"># disable the automatic rollback actions, if anything goes wrong (default: false)</span>
-<span class="w">      </span>-p,<span class="w"> </span>--port<span class="w">  </span><span class="c1"># add some more port mappings (format: &#39;[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]&#39;, use flag multiple times)</span>
-<span class="w">      </span>--registry-create<span class="w">  </span><span class="c1"># create a new (docker) registry dedicated for this cluster (default: false)</span>
-<span class="w">      </span>--registry-use<span class="w">  </span><span class="c1"># use an existing local (docker) registry with this cluster (string, use multiple times)</span>
-<span class="w">      </span>-s,<span class="w"> </span>--servers<span class="w">  </span><span class="c1"># specify how many server nodes you want to create (integer, default: 1)</span>
-<span class="w">      </span>--servers-memory<span class="w"> </span><span class="c1"># specify memory limit for server containers/nodes (unit, e.g. 1g)</span>
-<span class="w">      </span>--token<span class="w">  </span><span class="c1"># specify a cluster token (string, default: auto-generated)</span>
-<span class="w">      </span>--timeout<span class="w">  </span><span class="c1"># specify a timeout, after which the cluster creation will be interrupted and changes rolled back (duration, e.g. &#39;10s&#39;)</span>
-<span class="w">      </span>-v,<span class="w"> </span>--volume<span class="w">  </span><span class="c1"># specify additional bind-mounts (format: &#39;[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]&#39;, use flag multiple times)</span>
-<span class="w">      </span>--wait<span class="w">  </span><span class="c1"># enable waiting for all server nodes to be ready before returning (default: true)</span>
-<span class="w">    </span>start<span class="w"> </span>CLUSTERNAME<span class="w">  </span><span class="c1"># start a (stopped) cluster</span>
-<span class="w">      </span>-a,<span class="w"> </span>--all<span class="w">  </span><span class="c1"># start all clusters (default: false)</span>
-<span class="w">      </span>--wait<span class="w">  </span><span class="c1"># wait for all servers and server-loadbalancer to be up before returning (default: true)</span>
-<span class="w">      </span>--timeout<span class="w">  </span><span class="c1"># maximum waiting time for &#39;--wait&#39; before canceling/returning (duration, e.g. &#39;10s&#39;)</span>
-<span class="w">    </span>stop<span class="w"> </span>CLUSTERNAME<span class="w">  </span><span class="c1"># stop a cluster</span>
-<span class="w">      </span>-a,<span class="w"> </span>--all<span class="w">  </span><span class="c1"># stop all clusters (default: false)</span>
-<span class="w">    </span>delete<span class="w"> </span>CLUSTERNAME<span class="w">  </span><span class="c1"># delete an existing cluster</span>
-<span class="w">      </span>-a,<span class="w"> </span>--all<span class="w">  </span><span class="c1"># delete all existing clusters (default: false)</span>
-<span class="w">    </span>list<span class="w"> </span><span class="o">[</span>CLUSTERNAME<span class="w"> </span><span class="o">[</span>CLUSTERNAME<span class="w"> </span>...<span class="o">]]</span>
-<span class="w">      </span>--no-headers<span class="w">  </span><span class="c1"># do not print headers (default: false)</span>
-<span class="w">      </span>--token<span class="w">  </span><span class="c1"># show column with cluster tokens (default: false)</span>
-<span class="w">      </span>-o,<span class="w"> </span>--output<span class="w">  </span><span class="c1"># format the output (format: &#39;json|yaml&#39;)</span>
-<span class="w">  </span>completion<span class="w"> </span><span class="o">[</span>bash<span class="w"> </span><span class="p">|</span><span class="w"> </span>zsh<span class="w"> </span><span class="p">|</span><span class="w"> </span>fish<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="o">(</span>psh<span class="w"> </span><span class="p">|</span><span class="w"> </span>powershell<span class="o">)]</span><span class="w">  </span><span class="c1"># generate completion scripts for common shells</span>
-<span class="w">  </span>config
-<span class="w">    </span>init<span class="w">  </span><span class="c1"># write a default k3d config (as a starting point)</span>
-<span class="w">      </span>-f,<span class="w"> </span>--force<span class="w">  </span><span class="c1"># force overwrite target file (default: false)</span>
-<span class="w">      </span>-o,<span class="w"> </span>--output<span class="w">  </span><span class="c1"># file to write to (string, default &quot;k3d-default.yaml&quot;)</span>
-<span class="w">  </span><span class="nb">help</span><span class="w"> </span><span class="o">[</span>COMMAND<span class="o">]</span><span class="w">  </span><span class="c1"># show help text for any command</span>
-<span class="w">  </span>image
-<span class="w">    </span>import<span class="w"> </span><span class="o">[</span>IMAGE<span class="w"> </span><span class="p">|</span><span class="w"> </span>ARCHIVE<span class="w"> </span><span class="o">[</span>IMAGE<span class="w"> </span><span class="p">|</span><span class="w"> </span>ARCHIVE<span class="w"> </span>...<span class="o">]]</span><span class="w">  </span><span class="c1"># Load one or more images from the local runtime environment or tar-archives into k3d clusters</span>
-<span class="w">      </span>-c,<span class="w"> </span>--cluster<span class="w">  </span><span class="c1"># clusters to load the image into (string, use flag multiple times, default: k3s-default)</span>
-<span class="w">      </span>-k,<span class="w"> </span>--keep-tarball<span class="w">  </span><span class="c1"># do not delete the image tarball from the shared volume after completion (default: false)</span>
-<span class="w">  </span>kubeconfig
-<span class="w">    </span>get<span class="w"> </span><span class="o">(</span>CLUSTERNAME<span class="w"> </span><span class="o">[</span>CLUSTERNAME<span class="w"> </span>...<span class="o">]</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>--all<span class="o">)</span><span class="w"> </span><span class="c1"># get kubeconfig from cluster(s) and write it to stdout</span>
-<span class="w">      </span>-a,<span class="w"> </span>--all<span class="w">  </span><span class="c1"># get kubeconfigs from all clusters (default: false)</span>
-<span class="w">    </span>merge<span class="w"> </span><span class="p">|</span><span class="w"> </span>write<span class="w"> </span><span class="o">(</span>CLUSTERNAME<span class="w"> </span><span class="o">[</span>CLUSTERNAME<span class="w"> </span>...<span class="o">]</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>--all<span class="o">)</span><span class="w">  </span><span class="c1"># get kubeconfig from cluster(s) and merge it/them into a (kubeconfig-)file</span>
-<span class="w">      </span>-a,<span class="w"> </span>--all<span class="w">  </span><span class="c1"># get kubeconfigs from all clusters (default: false)</span>
-<span class="w">      </span>-s,<span class="w"> </span>--kubeconfig-switch-context<span class="w">  </span><span class="c1"># switch current-context in kubeconfig to the new context (default: true)</span>
-<span class="w">      </span>-d,<span class="w"> </span>--kubeconfig-merge-default<span class="w">  </span><span class="c1"># update the default kubeconfig (usually $KUBECONFIG or $HOME/.kube/config)</span>
-<span class="w">      </span>-o,<span class="w"> </span>--output<span class="w">  </span><span class="c1"># specify the output file where the kubeconfig should be written to (string)</span>
-<span class="w">      </span>--overwrite<span class="w">  </span><span class="c1"># [Careful!] forcefully overwrite the output file, ignoring existing contents (default: false)</span>
-<span class="w">      </span>-u,<span class="w"> </span>--update<span class="w">  </span><span class="c1"># update conflicting fields in existing kubeconfig (default: true)</span>
-<span class="w">  </span>node
-<span class="w">    </span>create<span class="w"> </span>NODENAME<span class="w">  </span><span class="c1"># Create new nodes (and add them to existing clusters)</span>
-<span class="w">      </span>-c,<span class="w"> </span>--cluster<span class="w">  </span><span class="c1"># specify the cluster that the node shall connect to (string, default: k3s-default)</span>
-<span class="w">      </span>-i,<span class="w"> </span>--image<span class="w">  </span><span class="c1"># specify which k3s image should be used for the node(s) (string, default: &#39;docker.io/rancher/k3s:v1.20.0-k3s2&#39;, tag changes per build)</span>
-<span class="w">      </span>--replicas<span class="w">  </span><span class="c1"># specify how many replicas you want to create with this spec (integer, default: 1)</span>
-<span class="w">      </span>--role<span class="w">  </span><span class="c1"># specify the node role (string, format: &#39;agent|server&#39;, default: agent)</span>
-<span class="w">      </span>--timeout<span class="w"> </span><span class="c1"># specify a timeout duration, after which the node creation will be interrupted, if not done yet (duration, e.g. &#39;10s&#39;)</span>
-<span class="w">      </span>--wait<span class="w">  </span><span class="c1"># wait for the node to be up and running before returning (default: true)</span>
-<span class="w">    </span>start<span class="w"> </span>NODENAME<span class="w">  </span><span class="c1"># start a (stopped) node</span>
-<span class="w">    </span>stop<span class="w"> </span>NODENAME<span class="w"> </span><span class="c1"># stop a node</span>
-<span class="w">    </span>delete<span class="w"> </span>NODENAME<span class="w">  </span><span class="c1"># delete an existing node</span>
-<span class="w">      </span>-a,<span class="w"> </span>--all<span class="w">  </span><span class="c1"># delete all existing nodes (default: false)</span>
-<span class="w">      </span>-r,<span class="w"> </span>--registries<span class="w">  </span><span class="c1"># also delete registries, as a special type of node (default: false)</span>
-<span class="w">    </span>list<span class="w"> </span>NODENAME
-<span class="w">      </span>--no-headers<span class="w">  </span><span class="c1"># do not print headers (default: false)</span>
-<span class="w">  </span>registry
-<span class="w">    </span>create<span class="w"> </span>REGISTRYNAME
-<span class="w">      </span>-i,<span class="w"> </span>--image<span class="w">  </span><span class="c1"># specify image used for the registry (string, default: &quot;docker.io/library/registry:2&quot;)</span>
-<span class="w">      </span>-p,<span class="w"> </span>--port<span class="w">  </span><span class="c1"># select host port to map to (format: &#39;[HOST:]HOSTPORT&#39;, default: &#39;random&#39;)</span>
-<span class="w">    </span>delete<span class="w"> </span>REGISTRYNAME
-<span class="w">      </span>-a,<span class="w"> </span>--all<span class="w">  </span><span class="c1"># delete all existing registries (default: false)</span>
-<span class="w">    </span>list<span class="w"> </span><span class="o">[</span>NAME<span class="w"> </span><span class="o">[</span>NAME...<span class="o">]]</span>
-<span class="w">      </span>--no-headers<span class="w">  </span><span class="c1"># disable table headers (default: false)</span>
-<span class="w">  </span>version<span class="w">  </span><span class="c1"># show k3d and k3s version</span>
+  cluster <span class="o">[</span>CLUSTERNAME<span class="o">]</span>  <span class="c1"># default cluster name is &#39;k3s-default&#39;</span>
+    create
+      -a, --agents  <span class="c1"># specify how many agent nodes you want to create (integer, default: 0)</span>
+      --agents-memory <span class="c1"># specify memory limit for agent containers/nodes (unit, e.g. 1g)</span>
+      --api-port  <span class="c1"># specify the port on which the cluster will be accessible (format &#39;[HOST:]HOSTPORT&#39;, default: random)</span>
+      -c, --config  <span class="c1"># use a config file (format &#39;PATH&#39;)</span>
+      -e, --env  <span class="c1"># add environment variables to the nodes (quoted string, format: &#39;KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]&#39;, use flag multiple times)</span>
+      --gpus  <span class="c1"># [from docker CLI] add GPU devices to the node containers (string, e.g. &#39;all&#39;)</span>
+      -i, --image  <span class="c1"># specify which k3s image should be used for the nodes (string, default: &#39;docker.io/rancher/k3s:v1.20.0-k3s2&#39;, tag changes per build)</span>
+      --k3s-arg  <span class="c1"># add additional arguments to the k3s server/agent (quoted string, use flag multiple times) (see https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/#k3s-server-cli-help &amp; https://rancher.com/docs/k3s/latest/en/installation/install-options/agent-config/#k3s-agent-cli-help)</span>
+      --kubeconfig-switch-context  <span class="c1"># (implies --kubeconfig-update-default) automatically sets the current-context of your default kubeconfig to the new cluster&#39;s context (default: true)</span>
+      --kubeconfig-update-default  <span class="c1"># enable the automated update of the default kubeconfig with the details of the newly created cluster (also sets &#39;--wait=true&#39;) (default: true)</span>
+      -l, --label  <span class="c1"># add (docker) labels to the node containers (format: &#39;KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]&#39;, use flag multiple times)</span>
+      --network  <span class="c1"># specify an existing (docker) network you want to connect to (string)</span>
+      --no-hostip  <span class="c1"># disable the automatic injection of the Host IP as &#39;host.k3d.internal&#39; into the containers and CoreDNS (default: false)</span>
+      --no-image-volume  <span class="c1"># disable the creation of a volume for storing images (used for the &#39;k3d image import&#39; command) (default: false)</span>
+      --no-lb  <span class="c1"># disable the creation of a load balancer in front of the server nodes (default: false)</span>
+      --no-rollback  <span class="c1"># disable the automatic rollback actions, if anything goes wrong (default: false)</span>
+      -p, --port  <span class="c1"># add some more port mappings (format: &#39;[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]&#39;, use flag multiple times)</span>
+      --registry-create  <span class="c1"># create a new (docker) registry dedicated for this cluster (default: false)</span>
+      --registry-use  <span class="c1"># use an existing local (docker) registry with this cluster (string, use multiple times)</span>
+      -s, --servers  <span class="c1"># specify how many server nodes you want to create (integer, default: 1)</span>
+      --servers-memory <span class="c1"># specify memory limit for server containers/nodes (unit, e.g. 1g)</span>
+      --token  <span class="c1"># specify a cluster token (string, default: auto-generated)</span>
+      --timeout  <span class="c1"># specify a timeout, after which the cluster creation will be interrupted and changes rolled back (duration, e.g. &#39;10s&#39;)</span>
+      -v, --volume  <span class="c1"># specify additional bind-mounts (format: &#39;[SOURCE:]DEST[@NODEFILTER[;NODEFILTER...]]&#39;, use flag multiple times)</span>
+      --wait  <span class="c1"># enable waiting for all server nodes to be ready before returning (default: true)</span>
+    start CLUSTERNAME  <span class="c1"># start a (stopped) cluster</span>
+      -a, --all  <span class="c1"># start all clusters (default: false)</span>
+      --wait  <span class="c1"># wait for all servers and server-loadbalancer to be up before returning (default: true)</span>
+      --timeout  <span class="c1"># maximum waiting time for &#39;--wait&#39; before canceling/returning (duration, e.g. &#39;10s&#39;)</span>
+    stop CLUSTERNAME  <span class="c1"># stop a cluster</span>
+      -a, --all  <span class="c1"># stop all clusters (default: false)</span>
+    delete CLUSTERNAME  <span class="c1"># delete an existing cluster</span>
+      -a, --all  <span class="c1"># delete all existing clusters (default: false)</span>
+    list <span class="o">[</span>CLUSTERNAME <span class="o">[</span>CLUSTERNAME ...<span class="o">]]</span>
+      --no-headers  <span class="c1"># do not print headers (default: false)</span>
+      --token  <span class="c1"># show column with cluster tokens (default: false)</span>
+      -o, --output  <span class="c1"># format the output (format: &#39;json|yaml&#39;)</span>
+  completion <span class="o">[</span>bash <span class="p">|</span> zsh <span class="p">|</span> fish <span class="p">|</span> <span class="o">(</span>psh <span class="p">|</span> powershell<span class="o">)]</span>  <span class="c1"># generate completion scripts for common shells</span>
+  config
+    init  <span class="c1"># write a default k3d config (as a starting point)</span>
+      -f, --force  <span class="c1"># force overwrite target file (default: false)</span>
+      -o, --output  <span class="c1"># file to write to (string, default &quot;k3d-default.yaml&quot;)</span>
+  <span class="nb">help</span> <span class="o">[</span>COMMAND<span class="o">]</span>  <span class="c1"># show help text for any command</span>
+  image
+    import <span class="o">[</span>IMAGE <span class="p">|</span> ARCHIVE <span class="o">[</span>IMAGE <span class="p">|</span> ARCHIVE ...<span class="o">]]</span>  <span class="c1"># Load one or more images from the local runtime environment or tar-archives into k3d clusters</span>
+      -c, --cluster  <span class="c1"># clusters to load the image into (string, use flag multiple times, default: k3s-default)</span>
+      -k, --keep-tarball  <span class="c1"># do not delete the image tarball from the shared volume after completion (default: false)</span>
+  kubeconfig
+    get <span class="o">(</span>CLUSTERNAME <span class="o">[</span>CLUSTERNAME ...<span class="o">]</span> <span class="p">|</span> --all<span class="o">)</span> <span class="c1"># get kubeconfig from cluster(s) and write it to stdout</span>
+      -a, --all  <span class="c1"># get kubeconfigs from all clusters (default: false)</span>
+    merge <span class="p">|</span> write <span class="o">(</span>CLUSTERNAME <span class="o">[</span>CLUSTERNAME ...<span class="o">]</span> <span class="p">|</span> --all<span class="o">)</span>  <span class="c1"># get kubeconfig from cluster(s) and merge it/them into a (kubeconfig-)file</span>
+      -a, --all  <span class="c1"># get kubeconfigs from all clusters (default: false)</span>
+      -s, --kubeconfig-switch-context  <span class="c1"># switch current-context in kubeconfig to the new context (default: true)</span>
+      -d, --kubeconfig-merge-default  <span class="c1"># update the default kubeconfig (usually $KUBECONFIG or $HOME/.kube/config)</span>
+      -o, --output  <span class="c1"># specify the output file where the kubeconfig should be written to (string)</span>
+      --overwrite  <span class="c1"># [Careful!] forcefully overwrite the output file, ignoring existing contents (default: false)</span>
+      -u, --update  <span class="c1"># update conflicting fields in existing kubeconfig (default: true)</span>
+  node
+    create NODENAME  <span class="c1"># Create new nodes (and add them to existing clusters)</span>
+      -c, --cluster  <span class="c1"># specify the cluster that the node shall connect to (string, default: k3s-default)</span>
+      -i, --image  <span class="c1"># specify which k3s image should be used for the node(s) (string, default: &#39;docker.io/rancher/k3s:v1.20.0-k3s2&#39;, tag changes per build)</span>
+      --replicas  <span class="c1"># specify how many replicas you want to create with this spec (integer, default: 1)</span>
+      --role  <span class="c1"># specify the node role (string, format: &#39;agent|server&#39;, default: agent)</span>
+      --timeout <span class="c1"># specify a timeout duration, after which the node creation will be interrupted, if not done yet (duration, e.g. &#39;10s&#39;)</span>
+      --wait  <span class="c1"># wait for the node to be up and running before returning (default: true)</span>
+    start NODENAME  <span class="c1"># start a (stopped) node</span>
+    stop NODENAME <span class="c1"># stop a node</span>
+    delete NODENAME  <span class="c1"># delete an existing node</span>
+      -a, --all  <span class="c1"># delete all existing nodes (default: false)</span>
+      -r, --registries  <span class="c1"># also delete registries, as a special type of node (default: false)</span>
+    list NODENAME
+      --no-headers  <span class="c1"># do not print headers (default: false)</span>
+  registry
+    create REGISTRYNAME
+      -i, --image  <span class="c1"># specify image used for the registry (string, default: &quot;docker.io/library/registry:2&quot;)</span>
+      -p, --port  <span class="c1"># select host port to map to (format: &#39;[HOST:]HOSTPORT&#39;, default: &#39;random&#39;)</span>
+    delete REGISTRYNAME
+      -a, --all  <span class="c1"># delete all existing registries (default: false)</span>
+    list <span class="o">[</span>NAME <span class="o">[</span>NAME...<span class="o">]]</span>
+      --no-headers  <span class="c1"># disable table headers (default: false)</span>
+  version  <span class="c1"># show k3d and k3s version</span>
 </code></pre></div>
 
   <hr>
@@ -1293,15 +1276,10 @@
   </small>
 </div>
 
-
-
-
-
-                
-              </article>
-            </div>
-          
-          
+              
+            </article>
+            
+          </div>
         </div>
         
           <a href="#" class="md-top md-icon" data-md-component="top" hidden>
@@ -1312,6 +1290,42 @@
       </main>
       
         <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="../../faq/faq/" class="md-footer__link md-footer__link--prev" aria-label="Previous: FAQ" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              FAQ
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../configfile/" class="md-footer__link md-footer__link--next" aria-label="Next: Using Config Files" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Using Config Files
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -1337,11 +1351,10 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.top", "search.suggest", "search.highlight", "navigation.expand", "navigation.tabs"], "search": "../../assets/javascripts/workers/search.b97dbffb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": {"provider": "mike"}}</script>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.top", "search.suggest", "search.highlight", "navigation.expand", "navigation.tabs"], "search": "../../assets/javascripts/workers/search.db81ec45.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
-    
-      <script src="../../assets/javascripts/bundle.6df46069.min.js"></script>
+      <script src="../../assets/javascripts/bundle.6c7ad80a.min.js"></script>
       
         <script src="../../static/js/asciinema-player.js"></script>
       
