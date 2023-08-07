@@ -1,1 +1,1 @@
-{"host":"test-host:5432","hostFromContainerRuntime":"test-host:1234","help":"https://k3d.io/usage/guides/registries/#using-a-local-registry"}
+{"host":"test-host:5432","hostFromContainerRuntime":"test-host:1234","help":"https://k3d.io/stable/usage/registries/#using-a-local-registry"}

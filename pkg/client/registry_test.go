@@ -37,7 +37,7 @@ func TestRegistryGenerateLocalRegistryHostingConfigMapYAML(t *testing.T) {
 	expectedYAMLString := `apiVersion: v1
 data:
   localRegistryHosting.v1: |
-    help: https://k3d.io/usage/guides/registries/#using-a-local-registry
+    help: https://k3d.io/stable/usage/registries/#using-a-local-registry
     host: test-host:5432
     hostFromClusterNetwork: test-host:1234
     hostFromContainerRuntime: test-host:1234

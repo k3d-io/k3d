@@ -1,6 +1,6 @@
 # docgen
 
-Only used to generate the command tree for <https://k3d.io/usage/commands>.
+Only used to generate the command tree for <https://k3d.io/stable/usage/commands>.
 
 The code will output files in [`../docs/usage/commands/`](../docs/usage/commands/)
 

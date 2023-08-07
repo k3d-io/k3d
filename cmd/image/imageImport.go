@@ -97,7 +97,7 @@ So if a file './k3d-io/k3d-tools' exists, k3d will try to import it instead of t
 
 	cmd.Flags().BoolVarP(&loadImageOpts.KeepTar, "keep-tarball", "k", false, "Do not delete the tarball containing the saved images from the shared volume")
 	cmd.Flags().BoolVarP(&loadImageOpts.KeepToolsNode, "keep-tools", "t", false, "Do not delete the tools node after import")
-	cmd.Flags().StringP("mode", "m", string(k3d.ImportModeToolsNode), "Which method to use to import images into the cluster [auto, direct, tools]. See https://k3d.io/usage/guides/importing_images/")
+	cmd.Flags().StringP("mode", "m", string(k3d.ImportModeToolsNode), "Which method to use to import images into the cluster [auto, direct, tools]. See https://k3d.io/stable/usage/importing_images/")
 	/* Subcommands */
 
 	// done

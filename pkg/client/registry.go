@@ -24,8 +24,9 @@ package client
 import (
 	"context"
 	"fmt"
-	wharfie "github.com/rancher/wharfie/pkg/registries"
 	gort "runtime"
+
+	wharfie "github.com/rancher/wharfie/pkg/registries"
 
 	"github.com/docker/go-connections/nat"
 	"github.com/imdario/mergo"
@@ -329,7 +330,7 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runt
 			Host:                     fmt.Sprintf("%s:%s", host, registries[0].ExposureOpts.Binding.HostPort),
 			HostFromContainerRuntime: fmt.Sprintf("%s:%s", registries[0].Host, registries[0].ExposureOpts.Port.Port()),
 			HostFromClusterNetwork:   fmt.Sprintf("%s:%s", registries[0].Host, registries[0].ExposureOpts.Port.Port()),
-			Help:                     "https://k3d.io/usage/guides/registries/#using-a-local-registry",
+			Help:                     "https://k3d.io/stable/usage/registries/#using-a-local-registry",
 		},
 	)
 	if err != nil {
