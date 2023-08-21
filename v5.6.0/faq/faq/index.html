@@ -1,0 +1,1842 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Little helper to run Rancher Lab's k3s in Docker">
+      
+      
+      
+        <link rel="canonical" href="https://k3d.io/v5.6.0/faq/faq/">
+      
+      
+        <link rel="prev" href="../../design/networking/">
+      
+      
+        <link rel="next" href="../compatibility/">
+      
+      <link rel="icon" href="../../static/img/favicons_black_blue/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.11">
+    
+    
+      
+        <title>FAQ - k3d</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.0d440cfe.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../static/css/asciinema-player.css">
+    
+      <link rel="stylesheet" href="../../static/css/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="grey">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#faq" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="k3d" class="md-header__button md-logo" aria-label="k3d" data-md-component="logo">
+      
+  <img src="../../static/img/k3d_logo_black_green.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            k3d
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              FAQ
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="grey"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+            </label>
+          
+        
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="light-blue" data-md-color-accent=""  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/k3d-io/k3d" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    k3d-io/k3d
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../.." class="md-tabs__link">
+      Overview
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../usage/configfile/" class="md-tabs__link">
+        Guides
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../design/project/" class="md-tabs__link">
+        Design
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="./" class="md-tabs__link md-tabs__link--active">
+        FAQ
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="k3d" class="md-nav__button md-logo" aria-label="k3d" data-md-component="logo">
+      
+  <img src="../../static/img/k3d_logo_black_green.svg" alt="logo">
+
+    </a>
+    k3d
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/k3d-io/k3d" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    k3d-io/k3d
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/configfile/" class="md-nav__link">
+        Using Config Files
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/kubeconfig/" class="md-nav__link">
+        Handling Kubeconfigs
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/multiserver/" class="md-nav__link">
+        Creating multi-server clusters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/registries/" class="md-nav__link">
+        Using Image Registries
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/exposing_services/" class="md-nav__link">
+        Exposing Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/importing_images/" class="md-nav__link">
+        Importing modes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/k3s/" class="md-nav__link">
+        K3s Features in k3d
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+          Advanced Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2_8">
+          <span class="md-nav__icon md-icon"></span>
+          Advanced Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/advanced/calico/" class="md-nav__link">
+        Use Calico instead of Flannel
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/advanced/cuda/" class="md-nav__link">
+        Running CUDA workloads
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/advanced/podman/" class="md-nav__link">
+        Using Podman instead of Docker
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_9" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+          Commands
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2_9">
+          <span class="md-nav__icon md-icon"></span>
+          Commands
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d/" class="md-nav__link">
+        K3d
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_cluster/" class="md-nav__link">
+        K3d cluster
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_cluster_create/" class="md-nav__link">
+        K3d cluster create
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_cluster_delete/" class="md-nav__link">
+        K3d cluster delete
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_cluster_edit/" class="md-nav__link">
+        K3d cluster edit
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_cluster_list/" class="md-nav__link">
+        K3d cluster list
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_cluster_start/" class="md-nav__link">
+        K3d cluster start
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_cluster_stop/" class="md-nav__link">
+        K3d cluster stop
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_completion/" class="md-nav__link">
+        K3d completion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_config/" class="md-nav__link">
+        K3d config
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_config_init/" class="md-nav__link">
+        K3d config init
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_config_migrate/" class="md-nav__link">
+        K3d config migrate
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_image/" class="md-nav__link">
+        K3d image
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_image_import/" class="md-nav__link">
+        K3d image import
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_kubeconfig/" class="md-nav__link">
+        K3d kubeconfig
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_kubeconfig_get/" class="md-nav__link">
+        K3d kubeconfig get
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_kubeconfig_merge/" class="md-nav__link">
+        K3d kubeconfig merge
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_node/" class="md-nav__link">
+        K3d node
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_node_create/" class="md-nav__link">
+        K3d node create
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_node_delete/" class="md-nav__link">
+        K3d node delete
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_node_edit/" class="md-nav__link">
+        K3d node edit
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_node_list/" class="md-nav__link">
+        K3d node list
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_node_start/" class="md-nav__link">
+        K3d node start
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_node_stop/" class="md-nav__link">
+        K3d node stop
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_registry/" class="md-nav__link">
+        K3d registry
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_registry_create/" class="md-nav__link">
+        K3d registry create
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_registry_delete/" class="md-nav__link">
+        K3d registry delete
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_registry_list/" class="md-nav__link">
+        K3d registry list
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_version/" class="md-nav__link">
+        K3d version
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/commands/k3d_version_list/" class="md-nav__link">
+        K3d version list
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          Design
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Design
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/project/" class="md-nav__link">
+        Project Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/concepts/" class="md-nav__link">
+        Concepts
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/defaults/" class="md-nav__link">
+        Defaults
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/networking/" class="md-nav__link">
+        Networking
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          FAQ
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          FAQ
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          FAQ
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        FAQ
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#issues-with-btrfs" class="md-nav__link">
+    Issues with BTRFS
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#issues-with-zfs" class="md-nav__link">
+    Issues with ZFS
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pods-evicted-due-to-lack-of-disk-space" class="md-nav__link">
+    Pods evicted due to lack of disk space
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restarting-a-multi-server-cluster-or-the-initializing-server-node-fails" class="md-nav__link">
+    Restarting a multi-server cluster or the initializing server node fails
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#passing-additional-argumentsflags-to-k3s-and-on-to-eg-the-kube-apiserver" class="md-nav__link">
+    Passing additional arguments/flags to k3s (and on to e.g. the kube-apiserver)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-access-services-like-a-database-running-on-my-docker-host-machine" class="md-nav__link">
+    How to access services (like a database) running on my Docker Host Machine
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-behind-a-corporate-proxy" class="md-nav__link">
+    Running behind a corporate proxy
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pods-fail-to-start-x509-certificate-signed-by-unknown-authority" class="md-nav__link">
+    Pods fail to start: x509: certificate signed by unknown authority
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts" class="md-nav__link">
+    Spurious PID entries in /proc after deleting k3d cluster with shared mounts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solved-nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied" class="md-nav__link">
+    [SOLVED] Nodes fail to start or get stuck in NotReady state with log nf_conntrack_max: permission denied
+  </a>
+  
+    <nav class="md-nav" aria-label="[SOLVED] Nodes fail to start or get stuck in NotReady state with log nf_conntrack_max: permission denied">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    Problem
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#workaround" class="md-nav__link">
+    Workaround
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix" class="md-nav__link">
+    Fix
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dockerhub-pull-rate-limit" class="md-nav__link">
+    DockerHub Pull Rate Limit
+  </a>
+  
+    <nav class="md-nav" aria-label="DockerHub Pull Rate Limit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#problem_1" class="md-nav__link">
+    Problem
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cause" class="md-nav__link">
+    Cause
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solution" class="md-nav__link">
+    Solution
+  </a>
+  
+    <nav class="md-nav" aria-label="Solution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#c-authenticate-containerd-against-dockerhub" class="md-nav__link">
+    (c) Authenticate Containerd against DockerHub
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#longhorn-in-k3d" class="md-nav__link">
+    Longhorn in k3d
+  </a>
+  
+    <nav class="md-nav" aria-label="Longhorn in k3d">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#problem_2" class="md-nav__link">
+    Problem
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cause_1" class="md-nav__link">
+    Cause
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solution_1" class="md-nav__link">
+    Solution
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compatibility/" class="md-nav__link">
+        Compatibility
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#issues-with-btrfs" class="md-nav__link">
+    Issues with BTRFS
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#issues-with-zfs" class="md-nav__link">
+    Issues with ZFS
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pods-evicted-due-to-lack-of-disk-space" class="md-nav__link">
+    Pods evicted due to lack of disk space
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restarting-a-multi-server-cluster-or-the-initializing-server-node-fails" class="md-nav__link">
+    Restarting a multi-server cluster or the initializing server node fails
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#passing-additional-argumentsflags-to-k3s-and-on-to-eg-the-kube-apiserver" class="md-nav__link">
+    Passing additional arguments/flags to k3s (and on to e.g. the kube-apiserver)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-access-services-like-a-database-running-on-my-docker-host-machine" class="md-nav__link">
+    How to access services (like a database) running on my Docker Host Machine
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-behind-a-corporate-proxy" class="md-nav__link">
+    Running behind a corporate proxy
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pods-fail-to-start-x509-certificate-signed-by-unknown-authority" class="md-nav__link">
+    Pods fail to start: x509: certificate signed by unknown authority
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts" class="md-nav__link">
+    Spurious PID entries in /proc after deleting k3d cluster with shared mounts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solved-nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied" class="md-nav__link">
+    [SOLVED] Nodes fail to start or get stuck in NotReady state with log nf_conntrack_max: permission denied
+  </a>
+  
+    <nav class="md-nav" aria-label="[SOLVED] Nodes fail to start or get stuck in NotReady state with log nf_conntrack_max: permission denied">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    Problem
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#workaround" class="md-nav__link">
+    Workaround
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix" class="md-nav__link">
+    Fix
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dockerhub-pull-rate-limit" class="md-nav__link">
+    DockerHub Pull Rate Limit
+  </a>
+  
+    <nav class="md-nav" aria-label="DockerHub Pull Rate Limit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#problem_1" class="md-nav__link">
+    Problem
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cause" class="md-nav__link">
+    Cause
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solution" class="md-nav__link">
+    Solution
+  </a>
+  
+    <nav class="md-nav" aria-label="Solution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#c-authenticate-containerd-against-dockerhub" class="md-nav__link">
+    (c) Authenticate Containerd against DockerHub
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#longhorn-in-k3d" class="md-nav__link">
+    Longhorn in k3d
+  </a>
+  
+    <nav class="md-nav" aria-label="Longhorn in k3d">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#problem_2" class="md-nav__link">
+    Problem
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cause_1" class="md-nav__link">
+    Cause
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solution_1" class="md-nav__link">
+    Solution
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<h1 id="faq">FAQ<a class="headerlink" href="#faq" title="Permanent link">&para;</a></h1>
+<h2 id="issues-with-btrfs">Issues with BTRFS<a class="headerlink" href="#issues-with-btrfs" title="Permanent link">&para;</a></h2>
+<ul>
+<li>As <a href="https://github.com/jaredallard">@jaredallard</a> <a href="https://github.com/k3d-io/k3d/pull/48">pointed out</a>, people running <code>k3d</code> on a system with <strong>btrfs</strong>, may need to mount <code>/dev/mapper</code> into the nodes for the setup to work.<ul>
+<li>This will do: <code class="highlight">k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>CLUSTER_NAME<span class="w"> </span>-v<span class="w"> </span>/dev/mapper:/dev/mapper</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="issues-with-zfs">Issues with ZFS<a class="headerlink" href="#issues-with-zfs" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>k3s currently has <a href="https://github.com/rancher/k3s/issues/66">no support for ZFS</a> and thus, creating multi-server setups (e.g. <code class="highlight">k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>multiserver<span class="w"> </span>--servers<span class="w"> </span><span class="m">3</span></code>) fails, because the initializing server node (server flag <code>--cluster-init</code>) errors out with the following log:</p>
+<div class="highlight"><pre><span></span><code>starting<span class="w"> </span>kubernetes:<span class="w"> </span>preparing<span class="w"> </span>server:<span class="w"> </span>start<span class="w"> </span>cluster<span class="w"> </span>and<span class="w"> </span>https:<span class="w"> </span>raft_init<span class="o">()</span>:<span class="w"> </span>io:<span class="w"> </span>create<span class="w"> </span>I/O<span class="w"> </span>capabilities<span class="w"> </span>probe<span class="w"> </span>file:<span class="w"> </span>posix_allocate:<span class="w"> </span>operation<span class="w"> </span>not<span class="w"> </span>supported<span class="w"> </span>on<span class="w"> </span>socket
+</code></pre></div>
+<ul>
+<li>This issue can be worked around by providing docker with a different filesystem (that&rsquo;s also better for docker-in-docker stuff).</li>
+<li>A possible solution can be found here: <a href="https://github.com/rancher/k3s/issues/1688#issuecomment-619570374">https://github.com/rancher/k3s/issues/1688#issuecomment-619570374</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="pods-evicted-due-to-lack-of-disk-space">Pods evicted due to lack of disk space<a class="headerlink" href="#pods-evicted-due-to-lack-of-disk-space" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Pods go to evicted state after doing X<ul>
+<li>Related issues: <a href="https://github.com/k3d-io/k3d/issues/133">#133 - Pods evicted due to <code>NodeHasDiskPressure</code></a> (collection of #119 and #130)</li>
+<li>Background: somehow docker runs out of space for the k3d node containers, which triggers a hard eviction in the kubelet</li>
+<li>Possible <a href="https://github.com/k3d-io/k3d/issues/133#issuecomment-549065666">fix/workaround by @zer0def</a>:<ul>
+<li>use a docker storage driver which cleans up properly (e.g. overlay2)</li>
+<li>clean up or expand docker root filesystem</li>
+<li>
+<p>change the kubelet&rsquo;s eviction thresholds upon cluster creation:</p>
+<div class="highlight"><pre><span></span><code>k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--k3s-arg<span class="w"> </span><span class="s1">&#39;--kubelet-arg=eviction-hard=imagefs.available&lt;1%,nodefs.available&lt;1%@agent:*&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--k3s-arg<span class="w"> </span><span class="s1">&#39;--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@agent:*&#39;</span>
+</code></pre></div>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="restarting-a-multi-server-cluster-or-the-initializing-server-node-fails">Restarting a multi-server cluster or the initializing server node fails<a class="headerlink" href="#restarting-a-multi-server-cluster-or-the-initializing-server-node-fails" title="Permanent link">&para;</a></h2>
+<ul>
+<li>What you do: You create a cluster with more than one server node and later, you either stop <code>server-0</code> or stop/start the whole cluster</li>
+<li>What fails: After the restart, you cannot connect to the cluster anymore and <code>kubectl</code> will give you a lot of errors</li>
+<li>What causes this issue: it&rsquo;s a <a href="https://github.com/rancher/k3s/issues/1391">known issue with dqlite in <code>k3s</code></a> which doesn&rsquo;t allow the initializing server node to go down</li>
+<li>What&rsquo;s the solution: Hopefully, this will be solved by the planned <a href="https://github.com/rancher/k3s/pull/1770">replacement of dqlite with embedded etcd in k3s</a></li>
+<li>Related issues: <a href="https://github.com/k3d-io/k3d/issues/262">#262</a></li>
+</ul>
+<h2 id="passing-additional-argumentsflags-to-k3s-and-on-to-eg-the-kube-apiserver">Passing additional arguments/flags to k3s (and on to e.g. the kube-apiserver)<a class="headerlink" href="#passing-additional-argumentsflags-to-k3s-and-on-to-eg-the-kube-apiserver" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The Problem: Passing a feature flag to the Kubernetes API Server running inside k3s.</li>
+<li>Example: you want to enable the EphemeralContainers feature flag in Kubernetes</li>
+<li>
+<p>Solution:</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span>k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--k3s-arg<span class="w"> </span><span class="s1">&#39;--kube-apiserver-arg=feature-gates=EphemeralContainers=true@server:*&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--k3s-arg<span class="w"> </span><span class="s1">&#39;--kube-scheduler-arg=feature-gates=EphemeralContainers=true@server:*&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--k3s-arg<span class="w"> </span><span class="s1">&#39;--kubelet-arg=feature-gates=EphemeralContainers=true@agent:*&#39;</span>
+</code></pre></div>
+<ul>
+<li><strong>Note</strong>: Be aware of where the flags require dashes (<code>--</code>) and where not.<ul>
+<li>the k3s flag (<code>--kube-apiserver-arg</code>) has the dashes</li>
+<li>the kube-apiserver flag <code>feature-gates</code> doesn&rsquo;t have them (k3s adds them internally)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p>Second example:</p>
+<div class="highlight"><pre><span></span><code>k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>k3d-one<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--k3s-arg<span class="w"> </span><span class="s2">&quot;--cluster-cidr=10.118.0.0/17@server:*&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--k3s-arg<span class="w"> </span><span class="s2">&quot;--service-cidr=10.118.128.0/17@server:*&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--k3s-arg<span class="w"> </span><span class="s2">&quot;--disable=servicelb@server:*&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--k3s-arg<span class="w"> </span><span class="s2">&quot;--disable=traefik@server:*&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--verbose
+</code></pre></div>
+<ul>
+<li><strong>Note</strong>: There are many ways to use the <code>"</code> and <code>'</code> quotes, just be aware, that sometimes shells also try to interpret/interpolate parts of the commands</li>
+</ul>
+</li>
+</ul>
+<h2 id="how-to-access-services-like-a-database-running-on-my-docker-host-machine">How to access services (like a database) running on my Docker Host Machine<a class="headerlink" href="#how-to-access-services-like-a-database-running-on-my-docker-host-machine" title="Permanent link">&para;</a></h2>
+<ul>
+<li>As of version v3.1.0, we&rsquo;re injecting the <code>host.k3d.internal</code> entry into the k3d containers (k3s nodes) and into the CoreDNS ConfigMap, enabling you to access your host system by referring to it as <code>host.k3d.internal</code></li>
+</ul>
+<h2 id="running-behind-a-corporate-proxy">Running behind a corporate proxy<a class="headerlink" href="#running-behind-a-corporate-proxy" title="Permanent link">&para;</a></h2>
+<p>Running k3d behind a corporate proxy can lead to some issues with k3d that have already been reported in more than one issue.<br />
+Some can be fixed by passing the <code>HTTP_PROXY</code> environment variables to k3d, some have to be fixed in docker&rsquo;s <code>daemon.json</code> file and some are as easy as adding a volume mount.</p>
+<h2 id="pods-fail-to-start-x509-certificate-signed-by-unknown-authority">Pods fail to start: <code>x509: certificate signed by unknown authority</code><a class="headerlink" href="#pods-fail-to-start-x509-certificate-signed-by-unknown-authority" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>Example Error Message:</p>
+<div class="highlight"><pre><span></span><code>Failed<span class="w"> </span>to<span class="w"> </span>create<span class="w"> </span>pod<span class="w"> </span>sandbox:<span class="w"> </span>rpc<span class="w"> </span>error:<span class="w"> </span><span class="nv">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>Unknown<span class="w"> </span><span class="nv">desc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>failed<span class="w"> </span>to<span class="w"> </span>get<span class="w"> </span>sandbox<span class="w"> </span>image<span class="w"> </span><span class="s2">&quot;docker.io/rancher/pause:3.1&quot;</span>:<span class="w"> </span>failed<span class="w"> </span>to<span class="w"> </span>pull<span class="w"> </span>image<span class="w"> </span><span class="s2">&quot;docker.io/rancher/pause:3.1&quot;</span>:<span class="w"> </span>failed<span class="w"> </span>to<span class="w"> </span>pull<span class="w"> </span>and<span class="w"> </span>unpack<span class="w"> </span>image<span class="w"> </span><span class="s2">&quot;docker.io/rancher/pause:3.1&quot;</span>:<span class="w"> </span>failed<span class="w"> </span>to<span class="w"> </span>resolve<span class="w"> </span>reference<span class="w"> </span><span class="s2">&quot;docker.io/rancher/pause:3.1&quot;</span>:<span class="w"> </span>failed<span class="w"> </span>to<span class="w"> </span><span class="k">do</span><span class="w"> </span>request:<span class="w"> </span>Head<span class="w"> </span>https://registry-1.docker.io/v2/rancher/pause/manifests/3.1:<span class="w"> </span>x509:<span class="w"> </span>certificate<span class="w"> </span>signed<span class="w"> </span>by<span class="w"> </span>unknown<span class="w"> </span>authority
+</code></pre></div>
+</li>
+</ul>
+<ul>
+<li>Problem: inside the container, the certificate of the corporate proxy cannot be validated</li>
+<li>Possible Solution: Mounting the CA Certificate from your host into the node containers at start time via <code>k3d cluster create --volume /path/to/your/certs.crt:/etc/ssl/certs/yourcert.crt</code></li>
+<li>Issue: <a href="https://github.com/k3d-io/k3d/discussions/535#discussioncomment-474982">k3d-io/k3d#535</a></li>
+</ul>
+<h2 id="spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts">Spurious PID entries in <code>/proc</code> after deleting <code>k3d</code> cluster with shared mounts<a class="headerlink" href="#spurious-pid-entries-in-proc-after-deleting-k3d-cluster-with-shared-mounts" title="Permanent link">&para;</a></h2>
+<ul>
+<li>When you perform cluster create and deletion operations multiple times with <strong>same cluster name</strong> and <strong>shared volume mounts</strong>, it was observed that <code>grep k3d /proc/*/mountinfo</code> shows many spurious entries</li>
+<li>Problem: Due to above, at times you&rsquo;ll see <code>no space left on device: unknown</code> when a pod is scheduled to the nodes</li>
+<li>If you observe anything of above sort you can check for inaccessible file systems and unmount them by using below command (note: please remove <code>xargs umount -l</code> and check for the diff o/p first)</li>
+<li><code>diff &lt;(df -ha | grep pods | awk '{print $NF}') &lt;(df -h | grep pods | awk '{print $NF}') | awk '{print $2}' | xargs umount -l</code></li>
+<li>As per the conversation on <a href="https://github.com/k3d-io/k3d/issues/594#issuecomment-837900646">k3d-io/k3d#594</a> above issue wasn&rsquo;t reported/known earlier and so there are high chances that it&rsquo;s not universal.</li>
+</ul>
+<h2 id="solved-nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied">[SOLVED] Nodes fail to start or get stuck in <code>NotReady</code> state with log <code>nf_conntrack_max: permission denied</code><a class="headerlink" href="#solved-nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied" title="Permanent link">&para;</a></h2>
+<h3 id="problem">Problem<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h3>
+<ul>
+<li>When: This happens when running k3d on a Linux system with a kernel version &gt;= 5.12.2 (and others like &gt;= 5.11.19) when creating a new cluster<ul>
+<li>the node(s) stop or get stuck with a log line like this: <code>&lt;TIMESTAMP&gt;  F0516 05:05:31.782902       7 server.go:495] open /proc/sys/net/netfilter/nf_conntrack_max: permission denied</code></li>
+</ul>
+</li>
+<li>Why: The issue was introduced by a change in the Linux kernel (<a href="https://cdn.kernel.org/pub/linux/kernel/v5.x/ChangeLog-5.12.2">Changelog 5.12.2</a>: <a href="https://github.com/torvalds/linux/commit/671c54ea8c7ff47bd88444f3fffb65bf9799ce43">Commit</a>), that changed the netfilter_conntrack behavior in a way that <code>kube-proxy</code> is not able to set the <code>nf_conntrack_max</code> value anymore</li>
+</ul>
+<h3 id="workaround">Workaround<a class="headerlink" href="#workaround" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p>Workaround: as a workaround, we can tell <code>kube-proxy</code> to not even try to set this value:</p>
+<div class="highlight"><pre><span></span><code>k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--k3s-arg<span class="w"> </span><span class="s2">&quot;--kube-proxy-arg=conntrack-max-per-core=0@server:*&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--k3s-arg<span class="w"> </span><span class="s2">&quot;--kube-proxy-arg=conntrack-max-per-core=0@agent:*&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--image<span class="w"> </span>rancher/k3s:v1.20.6-k3s
+</code></pre></div>
+</li>
+</ul>
+<h3 id="fix">Fix<a class="headerlink" href="#fix" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Note</strong>: k3d v4.4.5 already uses rancher/k3s:v1.21.1-k3s1 as the new default k3s image, so no workarounds needed there!</li>
+</ul>
+<p>This is going to be fixed &ldquo;upstream&rdquo; in k3s itself in <a href="https://github.com/k3s-io/k3s/pull/3337">rancher/k3s#3337</a> and backported to k3s versions as low as v1.18.</p>
+<ul>
+<li><strong>The fix was released and backported in k3s, so you don&rsquo;t need to use the workaround when using one of the following k3s versions (or later ones)</strong><ul>
+<li>v1.18.19-k3s1 (<a href="https://github.com/k3s-io/k3s/pull/3344">rancher/k3s#3344</a>)</li>
+<li>v1.19.11-k3s1 (<a href="https://github.com/k3s-io/k3s/pull/3343">rancher/k3s#3343</a>)</li>
+<li>v1.20.7-k3s1 (<a href="https://github.com/k3s-io/k3s/pull/3342">rancher/k3s#3342</a>)</li>
+<li>v1.21.1-k3s1 (<a href="https://github.com/k3s-io/k3s/pull/3341">rancher/k3s#3341</a>))</li>
+</ul>
+</li>
+<li>Issue Reference: <a href="https://github.com/k3d-io/k3d/issues/607">rancher/k3s#607</a></li>
+</ul>
+<h2 id="dockerhub-pull-rate-limit">DockerHub Pull Rate Limit<a class="headerlink" href="#dockerhub-pull-rate-limit" title="Permanent link">&para;</a></h2>
+<h3 id="problem_1">Problem<a class="headerlink" href="#problem_1" title="Permanent link">&para;</a></h3>
+<p>You&rsquo;re deploying something to the cluster using an image from DockerHub and the image fails to be pulled, with a <code>429</code> response code and a message saying <code>You have reached your pull rate limit. You may increase the limit by authenticating and upgrading</code>.</p>
+<h3 id="cause">Cause<a class="headerlink" href="#cause" title="Permanent link">&para;</a></h3>
+<p>This is caused by DockerHub&rsquo;s pull rate limit (see <a href="https://docs.docker.com/docker-hub/download-rate-limit/">https://docs.docker.com/docker-hub/download-rate-limit/</a>), which limits pulls from unauthenticated/anonymous users to 100 pulls per hour and for authenticated users (not paying customers) to 200 pulls per hour (as of the time of writing).</p>
+<h3 id="solution">Solution<a class="headerlink" href="#solution" title="Permanent link">&para;</a></h3>
+<p>a) use images from a private registry, e.g. configured as a pull-through cache for DockerHub<br />
+b) use a different public registry without such limitations, if the same image is stored there<br />
+c) authenticate containerd inside k3s/k3d to use your DockerHub user  </p>
+<h4 id="c-authenticate-containerd-against-dockerhub">(c) Authenticate Containerd against DockerHub<a class="headerlink" href="#c-authenticate-containerd-against-dockerhub" title="Permanent link">&para;</a></h4>
+<ol>
+<li>
+<p>Create a registry configuration file for containerd:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># saved as e.g. $HOME/registries.yaml</span>
+<span class="nt">configs</span><span class="p">:</span>
+<span class="w">  </span><span class="s">&quot;docker.io&quot;</span><span class="p p-Indicator">:</span>
+<span class="w">    </span><span class="nt">auth</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;$USERNAME&quot;</span>
+<span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;$PASSWORD&quot;</span>
+</code></pre></div>
+</li>
+<li>
+<p>Create a k3d cluster using that config:</p>
+<div class="highlight"><pre><span></span><code>k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>--registry-config<span class="w"> </span><span class="nv">$HOME</span>/registries.yaml
+</code></pre></div>
+</li>
+<li>
+<p>Profit. That&rsquo;s it. In the test for this, we pulled the same image 120 times in a row (confirmed, that pull numbers went up), without being rate limited (as a non-paying, normal user)</p>
+</li>
+</ol>
+<h2 id="longhorn-in-k3d">Longhorn in k3d<a class="headerlink" href="#longhorn-in-k3d" title="Permanent link">&para;</a></h2>
+<h3 id="problem_2">Problem<a class="headerlink" href="#problem_2" title="Permanent link">&para;</a></h3>
+<p>Longhorn is not working when deployed in a K3s cluster spawned with k3d.</p>
+<h3 id="cause_1">Cause<a class="headerlink" href="#cause_1" title="Permanent link">&para;</a></h3>
+<p>The container image of K3s is quite limited and doesn&rsquo;t contain the necessary libraries.  Also, additional volume mounts and more would be required to get Longhorn up and running properly.<br />
+So basically Longhorn does rely too much on the host OS to work properly in the dockerized environment without quite some modifications.</p>
+<h3 id="solution_1">Solution<a class="headerlink" href="#solution_1" title="Permanent link">&para;</a></h3>
+<p>There are a few ways one can build a working image to use with k3d.<br />
+See <a href="https://github.com/k3d-io/k3d/discussions/478">https://github.com/k3d-io/k3d/discussions/478</a> for more info.</p>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      Last update:
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">February 17, 2022</span>
+      
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <a href="#" class="md-top md-icon" data-md-component="top" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+            Back to top
+          </a>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2020-2022 k3d Authors
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.top", "search.suggest", "search.highlight", "navigation.expand", "navigation.tabs"], "search": "../../assets/javascripts/workers/search.db81ec45.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.6df46069.min.js"></script>
+      
+        <script src="../../static/js/asciinema-player.js"></script>
+      
+    
+  </body>
+</html>
