@@ -26,13 +26,13 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/netip"
 	"os"
 	"strings"
 
 	wharfie "github.com/rancher/wharfie/pkg/registries"
 
 	"github.com/docker/go-connections/nat"
-	"inet.af/netaddr"
 	"sigs.k8s.io/yaml"
 
 	dockerunits "github.com/docker/go-units"
@@ -78,7 +78,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 	if simpleConfig.Subnet != "" {
 		if simpleConfig.Subnet != "auto" {
-			subnet, err := netaddr.ParseIPPrefix(simpleConfig.Subnet)
+			subnet, err := netip.ParsePrefix(simpleConfig.Subnet)
 			if err != nil {
 				return nil, fmt.Errorf("invalid subnet '%s': %w", simpleConfig.Subnet, err)
 			}

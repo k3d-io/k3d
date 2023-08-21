@@ -28,17 +28,19 @@ import (
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	k3drt "github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
-	"inet.af/netaddr"
+	"go4.org/netipx"
+
+	"net/netip"
 )
 
 // GetIP checks a given network for a free IP and returns it, if possible
-func GetIP(ctx context.Context, runtime k3drt.Runtime, network *k3d.ClusterNetwork) (netaddr.IP, error) {
+func GetIP(ctx context.Context, runtime k3drt.Runtime, network *k3d.ClusterNetwork) (netip.Addr, error) {
 	network, err := runtime.GetNetwork(ctx, network)
 	if err != nil {
-		return netaddr.IP{}, fmt.Errorf("runtime failed to get network '%s': %w", network.Name, err)
+		return netip.Addr{}, fmt.Errorf("runtime failed to get network '%s': %w", network.Name, err)
 	}
 
-	var ipsetbuilder netaddr.IPSetBuilder
+	var ipsetbuilder netipx.IPSetBuilder
 
 	ipsetbuilder.AddPrefix(network.IPAM.IPPrefix)
 
@@ -47,12 +49,12 @@ func GetIP(ctx context.Context, runtime k3drt.Runtime, network *k3d.ClusterNetwo
 	}
 
 	// exclude first and last address
-	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().From())
-	ipsetbuilder.Remove(network.IPAM.IPPrefix.Range().To())
+	ipsetbuilder.Remove(network.IPAM.IPPrefix.Addr())
+	ipsetbuilder.Remove(netipx.PrefixLastIP(network.IPAM.IPPrefix))
 
 	ipset, err := ipsetbuilder.IPSet()
 	if err != nil {
-		return netaddr.IP{}, err
+		return netip.Addr{}, err
 	}
 
 	ip := ipset.Ranges()[0].From()

@@ -1,6 +1,6 @@
 module github.com/k3d-io/k3d/v5
 
-go 1.20
+go 1.21
 
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
@@ -32,7 +32,6 @@ require (
 	golang.org/x/text v0.9.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools v2.2.0+incompatible
-	inet.af/netaddr v0.0.0-20220811202034-502d2d690317
 	k8s.io/client-go v0.27.4
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -42,6 +41,7 @@ require (
 	github.com/google/go-containerregistry v0.16.1
 	github.com/rancher/wharfie v0.6.2
 	github.com/spf13/pflag v1.0.5
+	go4.org/netipx v0.0.0-20230728184502-ec4c8b891b28
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 )
 
@@ -91,8 +91,6 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	go4.org/intern v0.0.0-20220617035311-6925f38cc365 // indirect
-	go4.org/unsafe/assume-no-moving-gc v0.0.0-20230209150437-ee73d164e760 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.10.0 // indirect

@@ -25,6 +25,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"net/netip"
 	"os"
 	"strconv"
 	"strings"
@@ -38,7 +39,6 @@ import (
 	runtimeErr "github.com/k3d-io/k3d/v5/pkg/runtimes/errors"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/k3d-io/k3d/v5/pkg/types/fixes"
-	"inet.af/netaddr"
 
 	dockercliopts "github.com/docker/cli/opts"
 	dockerunits "github.com/docker/go-units"
@@ -157,7 +157,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	networkingConfig.EndpointsConfig = endpointsConfig
 
 	/* Static IP */
-	if !node.IP.IP.IsZero() && node.IP.Static {
+	if node.IP.IP.IsValid() && node.IP.Static {
 		epconf := networkingConfig.EndpointsConfig[node.Networks[0]]
 		if epconf.IPAMConfig == nil {
 			epconf.IPAMConfig = &network.EndpointIPAMConfig{}
@@ -298,7 +298,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		l.Log().Debugf("no netlabel present on container %s", containerDetails.Name)
 	}
 	if clusterNet != nil && labels[k3d.LabelNetwork] != "host" {
-		parsedIP, err := netaddr.ParseIP(clusterNet.IPAddress)
+		parsedIP, err := netip.ParseAddr(clusterNet.IPAddress)
 		if err != nil {
 			if nodeState.Running && nodeState.Status != "restarting" { // if the container is not running or currently restarting, it won't have an IP, so we don't error in that case
 				return nil, fmt.Errorf("failed to parse IP '%s' for container '%s': %s\nStatus: %v\n%+v", clusterNet.IPAddress, containerDetails.Name, err, nodeState.Status, containerDetails.NetworkSettings)
@@ -310,7 +310,7 @@ func TranslateContainerDetailsToNode(containerDetails types.ContainerJSON) (*k3d
 		if staticIPLabel, ok := labels[k3d.LabelNodeStaticIP]; ok && staticIPLabel != "" {
 			isStaticIP = true
 		}
-		if !parsedIP.IsZero() {
+		if parsedIP.IsValid() {
 			nodeIP = k3d.NodeIP{
 				IP:     parsedIP,
 				Static: isStaticIP,

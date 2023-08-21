@@ -259,7 +259,7 @@ func ClusterPrepNetwork(ctx context.Context, runtime k3drt.Runtime, cluster *k3d
 		return fmt.Errorf("Failed to use external network because no name was specified")
 	}
 
-	if cluster.Network.Name != "" && cluster.Network.External && !cluster.Network.IPAM.IPPrefix.IsZero() {
+	if cluster.Network.Name != "" && cluster.Network.External && cluster.Network.IPAM.IPPrefix.IsValid() {
 		return fmt.Errorf("cannot specify subnet for exiting network")
 	}
 

@@ -24,6 +24,7 @@ package config
 
 import (
 	"context"
+	"net/netip"
 	"time"
 
 	k3dc "github.com/k3d-io/k3d/v5/pkg/client"
@@ -31,7 +32,6 @@ import (
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	runtimeutil "github.com/k3d-io/k3d/v5/pkg/runtimes/util"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
-	"inet.af/netaddr"
 
 	"fmt"
 
@@ -86,7 +86,7 @@ func ValidateClusterConfig(ctx context.Context, runtime runtimes.Runtime, config
 		// validate IP and hostname
 		for _, ha := range config.ClusterCreateOpts.HostAliases {
 			// validate IP
-			_, err := netaddr.ParseIP(ha.IP)
+			_, err := netip.ParseAddr(ha.IP)
 			if err != nil {
 				return fmt.Errorf("invalid IP '%s' in hostAlias '%s': %w", ha.IP, ha, err)
 			}

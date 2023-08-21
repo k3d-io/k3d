@@ -23,11 +23,10 @@ package types
 
 import (
 	"context"
-	"net"
+	"net/netip"
 	"time"
 
 	"github.com/docker/go-connections/nat"
-	"inet.af/netaddr"
 
 	dockerunits "github.com/docker/go-units"
 	runtimeTypes "github.com/k3d-io/k3d/v5/pkg/runtimes/types"
@@ -215,14 +214,14 @@ type ImageImportOpts struct {
 }
 
 type IPAM struct {
-	IPPrefix netaddr.IPPrefix `json:"ipPrefix,omitempty"`
-	IPsUsed  []netaddr.IP     `json:"ipsUsed,omitempty"`
-	Managed  bool             // IPAM is done by k3d
+	IPPrefix netip.Prefix `json:"ipPrefix,omitempty"`
+	IPsUsed  []netip.Addr `json:"ipsUsed,omitempty"`
+	Managed  bool         // IPAM is done by k3d
 }
 
 type NetworkMember struct {
 	Name string
-	IP   netaddr.IP
+	IP   netip.Addr
 }
 
 // ClusterNetwork describes a network which a cluster is running in
@@ -279,7 +278,7 @@ func (c *Cluster) AgentCountRunning() (int, int) {
 }
 
 type NodeIP struct {
-	IP     netaddr.IP
+	IP     netip.Addr
 	Static bool
 }
 
@@ -342,6 +341,6 @@ type NodeState struct {
 }
 
 type EnvironmentInfo struct {
-	HostGateway net.IP
+	HostGateway netip.Addr
 	RuntimeInfo runtimeTypes.RuntimeInfo
 }

@@ -25,7 +25,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"net"
+	"net/netip"
 	"regexp"
 	goruntime "runtime"
 
@@ -55,10 +55,10 @@ var (
 
 // GetHostIP returns the routable IP address to be able to access services running on the host system from inside the cluster.
 // This depends on the Operating System and the chosen Runtime.
-func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (net.IP, error) {
+func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster) (netip.Addr, error) {
 	rtimeInfo, err := runtime.Info()
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 
 	l.Log().Tracef("GOOS: %s / Runtime OS: %s (%s)", goruntime.GOOS, rtimeInfo.OSType, rtimeInfo.OS)
@@ -69,7 +69,7 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 		if docker.IsDockerDesktop(rtimeInfo.OS) {
 			toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
 			if err != nil {
-				return nil, fmt.Errorf("failed to ensure that k3d-tools node is running to get host IP :%w", err)
+				return netip.Addr{}, fmt.Errorf("failed to ensure that k3d-tools node is running to get host IP :%w", err)
 			}
 
 			k3dInternalIP, err := resolveHostnameFromInside(ctx, runtime, toolsNode, k3d.DefaultK3dInternalHostRecord, ResolveHostCmdGetEnt)
@@ -91,7 +91,7 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 		if rtimeInfo.InfoName == "colima" {
 			toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
 			if err != nil {
-				return nil, fmt.Errorf("failed to ensure that k3d-tools node is running to get host IP :%w", err)
+				return netip.Addr{}, fmt.Errorf("failed to ensure that k3d-tools node is running to get host IP :%w", err)
 			}
 
 			limaIP, err := resolveHostnameFromInside(ctx, runtime, toolsNode, "host.lima.internal", ResolveHostCmdGetEnt)
@@ -104,7 +104,7 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 
 		ip, err := runtime.GetHostIP(ctx, cluster.Network.Name)
 		if err != nil {
-			return nil, fmt.Errorf("runtime failed to get host IP: %w", err)
+			return netip.Addr{}, fmt.Errorf("runtime failed to get host IP: %w", err)
 		}
 		l.Log().Infof("HostIP: using network gateway %s address", ip)
 
@@ -112,28 +112,28 @@ func GetHostIP(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Clust
 	}
 
 	// Catch all other runtime selections
-	return nil, fmt.Errorf("GetHostIP only implemented for the docker runtime")
+	return netip.Addr{}, fmt.Errorf("GetHostIP only implemented for the docker runtime")
 }
 
-func resolveHostnameFromInside(ctx context.Context, rtime runtimes.Runtime, node *k3d.Node, hostname string, cmd ResolveHostCmd) (net.IP, error) {
+func resolveHostnameFromInside(ctx context.Context, rtime runtimes.Runtime, node *k3d.Node, hostname string, cmd ResolveHostCmd) (netip.Addr, error) {
 	errPrefix := fmt.Errorf("error resolving hostname %s from inside node %s", hostname, node.Name)
 
 	logreader, execErr := rtime.ExecInNodeGetLogs(ctx, node, []string{"sh", "-c", fmt.Sprintf(cmd.Cmd, hostname)})
 
 	if logreader == nil {
 		if execErr != nil {
-			return nil, fmt.Errorf("%v: %w", errPrefix, execErr)
+			return netip.Addr{}, fmt.Errorf("%v: %w", errPrefix, execErr)
 		}
-		return nil, fmt.Errorf("%w: failed to get logs from exec process", errPrefix)
+		return netip.Addr{}, fmt.Errorf("%w: failed to get logs from exec process", errPrefix)
 	}
 
 	submatches := map[string]string{}
 	scanner := bufio.NewScanner(logreader)
 	if scanner == nil {
 		if execErr != nil {
-			return nil, fmt.Errorf("%v: %w", errPrefix, execErr)
+			return netip.Addr{}, fmt.Errorf("%v: %w", errPrefix, execErr)
 		}
-		return nil, fmt.Errorf("Failed to scan logs for host IP: Could not create scanner from logreader")
+		return netip.Addr{}, fmt.Errorf("Failed to scan logs for host IP: Could not create scanner from logreader")
 	}
 	if scanner != nil && execErr != nil {
 		l.Log().Debugln("Exec Process Failed, but we still got logs, so we're at least trying to get the IP from there...")
@@ -153,10 +153,10 @@ func resolveHostnameFromInside(ctx context.Context, rtime runtimes.Runtime, node
 		if execErr != nil {
 			l.Log().Errorln(execErr)
 		}
-		return nil, fmt.Errorf("%w: failed to read address for '%s' from command output", errPrefix, hostname)
+		return netip.Addr{}, fmt.Errorf("%w: failed to read address for '%s' from command output", errPrefix, hostname)
 	}
 
 	l.Log().Debugf("Hostname '%s' resolved to address '%s' inside node %s", hostname, submatches["ip"], node.Name)
 
-	return net.ParseIP(submatches["ip"]), nil
+	return netip.ParseAddr(submatches["ip"])
 }

@@ -24,13 +24,12 @@ package docker
 import (
 	"context"
 	"fmt"
-	"net"
+	"net/netip"
 	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
-	"inet.af/netaddr"
 
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	runtimeErr "github.com/k3d-io/k3d/v5/pkg/runtimes/errors"
@@ -103,7 +102,6 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 		// this is needed because the network inspect does not return the container list until the containers are actually started
 		// and we already need this when we create the containers
 		network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, searchNet.IPAM.IPsUsed...)
-
 	} else {
 		l.Log().Debugf("Network %s does not have an IPAM config", network.Name)
 	}
@@ -170,7 +168,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 	}
 
 	// we want a managed (user-defined) network, but user didn't specify a subnet, so we try to auto-generate one
-	if inNet.IPAM.Managed && inNet.IPAM.IPPrefix.IsZero() {
+	if inNet.IPAM.Managed && inNet.IPAM.IPPrefix == (netip.Prefix{}) {
 		l.Log().Traceln("No subnet prefix given, but network should be managed: Trying to get a free subnet prefix...")
 		freeSubnetPrefix, err := d.getFreeSubnetPrefix(ctx)
 		if err != nil {
@@ -180,12 +178,16 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 	}
 
 	// use user-defined subnet, if given
-	if !inNet.IPAM.IPPrefix.IsZero() {
+	if inNet.IPAM.IPPrefix != (netip.Prefix{}) {
+		l.Log().Debugf("Using user-defined subnet prefix %s", inNet.IPAM.IPPrefix.String())
+		if !inNet.IPAM.IPPrefix.IsValid() {
+			return nil, false, fmt.Errorf("invalid subnet prefix: %s", inNet.IPAM.IPPrefix.String())
+		}
 		netCreateOpts.IPAM = &network.IPAM{
 			Config: []network.IPAMConfig{
 				{
 					Subnet:  inNet.IPAM.IPPrefix.String(),
-					Gateway: inNet.IPAM.IPPrefix.Range().From().Next().String(), // second IP in subnet will be the Gateway (Next, so we don't hit x.x.x.0)
+					Gateway: inNet.IPAM.IPPrefix.Addr().Next().String(), // second IP in subnet will be the Gateway (Next, so we don't hit x.x.x.0)
 				},
 			},
 		}
@@ -202,14 +204,14 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 	}
 
 	l.Log().Infof("Created network '%s'", inNet.Name)
-	prefix, err := netaddr.ParseIPPrefix(networkDetails.IPAM.Config[0].Subnet)
+	prefix, err := netip.ParsePrefix(networkDetails.IPAM.Config[0].Subnet)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to parse IP Prefix of newly created network '%s': %w", newNet.ID, err)
 	}
 
 	newClusterNet := &k3d.ClusterNetwork{Name: inNet.Name, ID: networkDetails.ID, IPAM: k3d.IPAM{IPPrefix: prefix}}
 
-	if !inNet.IPAM.IPPrefix.IsZero() {
+	if inNet.IPAM.IPPrefix != (netip.Prefix{}) {
 		newClusterNet.IPAM.Managed = true
 	}
 
@@ -246,23 +248,23 @@ func GetNetwork(ctx context.Context, ID string) (types.NetworkResource, error) {
 }
 
 // GetGatewayIP returns the IP of the network gateway
-func GetGatewayIP(ctx context.Context, network string) (net.IP, error) {
+func GetGatewayIP(ctx context.Context, network string) (netip.Addr, error) {
 	bridgeNetwork, err := GetNetwork(ctx, network)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get bridge network with name '%s': %w", network, err)
+		return netip.Addr{}, fmt.Errorf("failed to get bridge network with name '%s': %w", network, err)
 	}
 
 	if len(bridgeNetwork.IPAM.Config) > 0 {
 		if bridgeNetwork.IPAM.Config[0].Gateway == "" {
-			return nil, fmt.Errorf("no gateway defined for network %s", bridgeNetwork.Name)
+			return netip.Addr{}, fmt.Errorf("no gateway defined for network %s", bridgeNetwork.Name)
 		}
-		gatewayIP, err := netaddr.ParseIP(bridgeNetwork.IPAM.Config[0].Gateway)
+		gatewayIP, err := netip.ParseAddr(bridgeNetwork.IPAM.Config[0].Gateway)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get gateway of network %s: %w", bridgeNetwork.Name, err)
+			return netip.Addr{}, fmt.Errorf("failed to get gateway of network %s: %w", bridgeNetwork.Name, err)
 		}
-		return gatewayIP.IPAddr().IP, nil
+		return gatewayIP, nil
 	} else {
-		return nil, fmt.Errorf("Failed to get IPAM Config for network %s", bridgeNetwork.Name)
+		return netip.Addr{}, fmt.Errorf("Failed to get IPAM Config for network %s", bridgeNetwork.Name)
 	}
 }
 
@@ -322,11 +324,11 @@ func (d Docker) DisconnectNodeFromNetwork(ctx context.Context, node *k3d.Node, n
 	return docker.NetworkDisconnect(ctx, networkResource.ID, container.ID, true)
 }
 
-func (d Docker) getFreeSubnetPrefix(ctx context.Context) (netaddr.IPPrefix, error) {
+func (d Docker) getFreeSubnetPrefix(ctx context.Context) (netip.Prefix, error) {
 	// (0) create new docker client
 	docker, err := GetDockerClient()
 	if err != nil {
-		return netaddr.IPPrefix{}, fmt.Errorf("failed to create docker client %w", err)
+		return netip.Prefix{}, fmt.Errorf("failed to create docker client %w", err)
 	}
 	defer docker.Close()
 
@@ -334,18 +336,18 @@ func (d Docker) getFreeSubnetPrefix(ctx context.Context) (netaddr.IPPrefix, erro
 	fakenetName := fmt.Sprintf("%s-fakenet-%s", k3d.DefaultObjectNamePrefix, util.GenerateRandomString(10))
 	fakenetResp, err := docker.NetworkCreate(ctx, fakenetName, types.NetworkCreate{})
 	if err != nil {
-		return netaddr.IPPrefix{}, fmt.Errorf("failed to create fake network: %w", err)
+		return netip.Prefix{}, fmt.Errorf("failed to create fake network: %w", err)
 	}
 
 	fakenet, err := d.GetNetwork(ctx, &k3d.ClusterNetwork{ID: fakenetResp.ID})
 	if err != nil {
-		return netaddr.IPPrefix{}, fmt.Errorf("failed to inspect fake network %s: %w", fakenetResp.ID, err)
+		return netip.Prefix{}, fmt.Errorf("failed to inspect fake network %s: %w", fakenetResp.ID, err)
 	}
 
 	l.Log().Tracef("Created fake network %s (%s) with subnet prefix %s. Deleting it again to re-use that prefix...", fakenet.Name, fakenet.ID, fakenet.IPAM.IPPrefix.String())
 
 	if err := d.DeleteNetwork(ctx, fakenet.ID); err != nil {
-		return netaddr.IPPrefix{}, fmt.Errorf("failed to delete fake network %s (%s): %w", fakenet.Name, fakenet.ID, err)
+		return netip.Prefix{}, fmt.Errorf("failed to delete fake network %s (%s): %w", fakenet.Name, fakenet.ID, err)
 	}
 
 	return fakenet.IPAM.IPPrefix, nil
@@ -354,37 +356,37 @@ func (d Docker) getFreeSubnetPrefix(ctx context.Context) (netaddr.IPPrefix, erro
 // parseIPAM Returns an IPAM structure with the subnet and gateway filled in. If some of the values
 // cannot be parsed, an error is returned. If gateway is empty, the function calculates the default gateway.
 func (d Docker) parseIPAM(config network.IPAMConfig) (ipam k3d.IPAM, err error) {
-	var gateway netaddr.IP
-	ipam = k3d.IPAM{IPsUsed: []netaddr.IP{}}
+	var gateway netip.Addr
+	ipam = k3d.IPAM{IPsUsed: []netip.Addr{}}
 
-	ipam.IPPrefix, err = netaddr.ParseIPPrefix(config.Subnet)
+	ipam.IPPrefix, err = netip.ParsePrefix(config.Subnet)
 	if err != nil {
 		return
 	}
 
 	if config.Gateway == "" {
-		gateway = ipam.IPPrefix.IP().Next()
+		gateway = ipam.IPPrefix.Addr().Next()
 	} else {
-		gateway, err = netaddr.ParseIP(config.Gateway)
+		gateway, err = netip.ParseAddr(config.Gateway)
 	}
 	ipam.IPsUsed = append(ipam.IPsUsed, gateway)
 
 	return
 }
 
-// parseIPAddress Returns an netaddr.IP by either receiving the IP address or IP CIDR notation. If the value
+// parseIPAddress Returns an netip.Addr by either receiving the IP address or IP CIDR notation. If the value
 // cannot be parsed, an error is returned
-func parseIPAddress(addr string) (netaddr.IP, error) {
+func parseIPAddress(addr string) (netip.Addr, error) {
 	if strings.Contains(addr, "/") {
-		prefix, err := netaddr.ParseIPPrefix(addr)
+		prefix, err := netip.ParsePrefix(addr)
 		if err != nil {
-			return netaddr.IP{}, err
+			return netip.Addr{}, err
 		}
-		return prefix.IP(), nil
+		return prefix.Addr(), nil
 	} else {
-		ipAddr, err := netaddr.ParseIP(addr)
+		ipAddr, err := netip.ParseAddr(addr)
 		if err != nil {
-			return netaddr.IP{}, err
+			return netip.Addr{}, err
 		}
 		return ipAddr, nil
 	}

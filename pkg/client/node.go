@@ -526,7 +526,7 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 				}
 			}
 
-			if nodeStartOpts.EnvironmentInfo == nil || nodeStartOpts.EnvironmentInfo.HostGateway == nil {
+			if nodeStartOpts.EnvironmentInfo == nil || !nodeStartOpts.EnvironmentInfo.HostGateway.IsValid() {
 				return fmt.Errorf("Cannot enable DNS fix, as Host Gateway IP is missing!")
 			}
 

@@ -374,12 +374,9 @@ go.uber.org/atomic
 # go.uber.org/multierr v1.8.0
 ## explicit; go 1.14
 go.uber.org/multierr
-# go4.org/intern v0.0.0-20220617035311-6925f38cc365
-## explicit; go 1.13
-go4.org/intern
-# go4.org/unsafe/assume-no-moving-gc v0.0.0-20230209150437-ee73d164e760
-## explicit; go 1.11
-go4.org/unsafe/assume-no-moving-gc
+# go4.org/netipx v0.0.0-20230728184502-ec4c8b891b28
+## explicit; go 1.18
+go4.org/netipx
 # golang.org/x/crypto v0.9.0
 ## explicit; go 1.17
 golang.org/x/crypto/ed25519
@@ -501,9 +498,6 @@ gotest.tools/internal/format
 gotest.tools/internal/source
 # gotest.tools/v3 v3.4.0
 ## explicit; go 1.13
-# inet.af/netaddr v0.0.0-20220811202034-502d2d690317
-## explicit; go 1.12
-inet.af/netaddr
 # k8s.io/apimachinery v0.27.4
 ## explicit; go 1.20
 k8s.io/apimachinery/pkg/api/errors
