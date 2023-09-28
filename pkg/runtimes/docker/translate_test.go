@@ -33,7 +33,6 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
-	"github.com/k3d-io/k3d/v5/pkg/types/fixes"
 )
 
 func TestTranslateNodeToContainer(t *testing.T) {
@@ -99,15 +98,12 @@ func TestTranslateNodeToContainer(t *testing.T) {
 		},
 	}
 
-	// TODO: // FIXME: FixCgroupV2 - to be removed when fixed upstream
-	if fixes.FixEnabledAny() {
-		expectedRepresentation.ContainerConfig.Entrypoint = []string{"/bin/k3d-entrypoint.sh"}
-	}
-
 	actualRepresentation, err := TranslateNodeToContainer(inputNode)
 	if err != nil {
 		t.Error(err)
 	}
+
+	actualRepresentation.ContainerConfig.Entrypoint = expectedRepresentation.ContainerConfig.Entrypoint // may change depending on the enabled fixes, so we ignore it here
 
 	if diff := deep.Equal(actualRepresentation, expectedRepresentation); diff != nil {
 		t.Errorf("Actual representation\n%+v\ndoes not match expected representation\n%+v\nDiff:\n%+v", actualRepresentation, expectedRepresentation, diff)

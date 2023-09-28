@@ -68,6 +68,8 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 		return fmt.Errorf("error gathering cluster environment info required to properly create the node: %w", err)
 	}
 
+	createNodeOpts.EnvironmentInfo = envInfo
+
 	// networks: ensure that cluster network is on index 0
 	networks := []string{cluster.Network.Name}
 	if node.Networks != nil {
@@ -489,12 +491,11 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 
 func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeStartOpts *k3d.NodeStartOpts) error {
 	if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
-		// FIXME: FixCgroupV2 - to be removed when fixed upstream
-		// auto-enable, if needed
-		EnableCgroupV2FixIfNeeded(runtime)
+
+		enabledFixes, anyEnabled := fixes.GetFixes(runtime)
 
 		// early exit if we don't need any fix
-		if !fixes.FixEnabledAny() {
+		if !anyEnabled {
 			l.Log().Debugln("No fix enabled.")
 			return nil
 		}
@@ -517,7 +518,7 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 		})
 
 		// DNS Fix
-		if fixes.FixEnabled(fixes.EnvFixDNS) {
+		if enabledFixes[fixes.EnvFixDNS] {
 			l.Log().Debugln(">>> enabling dns magic")
 
 			for _, v := range node.Volumes {
@@ -545,7 +546,7 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 		}
 
 		// CGroupsV2Fix
-		if fixes.FixEnabled(fixes.EnvFixCgroupV2) {
+		if enabledFixes[fixes.EnvFixCgroupV2] {
 			l.Log().Debugf(">>> enabling cgroupsv2 magic")
 
 			if nodeStartOpts.NodeHooks == nil {
@@ -564,7 +565,7 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 			})
 		}
 
-		if fixes.FixEnabled(fixes.EnvFixMounts) {
+		if enabledFixes[fixes.EnvFixMounts] {
 			l.Log().Debugf(">>> enabling mounts magic")
 
 			if nodeStartOpts.NodeHooks == nil {
@@ -588,8 +589,6 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 
 // NodeCreate creates a new containerized k3s node
 func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, createNodeOpts k3d.NodeCreateOpts) error {
-	// FIXME: FixCgroupV2 - to be removed when fixed upstream
-	EnableCgroupV2FixIfNeeded(runtime)
 	l.Log().Tracef("Creating node from spec\n%+v", node)
 
 	/*
@@ -617,6 +616,10 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 		if err := patchServerSpec(node, runtime); err != nil {
 			return fmt.Errorf("failed to patch server spec on node %s: %w", node.Name, err)
 		}
+	}
+
+	if _, any := fixes.GetFixes(runtime); any {
+		node.K3dEntrypoint = true
 	}
 
 	// memory limits

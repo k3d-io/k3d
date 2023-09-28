@@ -26,6 +26,8 @@ import (
 	"os"
 	"strconv"
 
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
@@ -36,7 +38,7 @@ import (
 
 /*
  * Cgroupv2 fix as per https://github.com/k3s-io/k3s/pull/3237 & https://github.com/k3s-io/k3s/pull/3242
- * FIXME: FixCgroupV2 - to be removed when fixed upstream
+ * Since we're NOT running K3s as PID 1 (using init), we still need our fix even though we have the fix upstream https://github.com/k3s-io/k3s/pull/4086#issuecomment-931639392
  */
 
 type K3DFixEnv string
@@ -80,4 +82,57 @@ func FixEnabledAny() bool {
 		}
 	}
 	return false
+}
+
+var EnabledFixes map[K3DFixEnv]bool
+var AnyFixEnabled bool
+
+var fixNeeded = map[K3DFixEnv]func(runtime runtimes.Runtime) bool{
+	EnvFixCgroupV2: func(runtime runtimes.Runtime) bool {
+		runtimeInfo, err := runtime.Info()
+		if err != nil {
+			l.Log().Warnf("Failed to get runtime information: %+v", err)
+			return false
+		}
+		cgroupVersion, err := strconv.Atoi(runtimeInfo.CgroupVersion)
+		if err != nil {
+			l.Log().Debugf("Failed to parse cgroupVersion: %+v", err)
+			return false
+		}
+		l.Log().Debugf("[autofix cgroupsv2] cgroupVersion: %d", cgroupVersion)
+		return cgroupVersion == 2
+	},
+	EnvFixDNS: func(_ runtimes.Runtime) bool {
+		return true
+	},
+	EnvFixMounts: func(_ runtimes.Runtime) bool {
+		return true
+	},
+}
+
+// GetFixes returns a map showing which fixes are enabled and a helper boolean indicating if any fixes are enabled
+func GetFixes(runtime runtimes.Runtime) (map[K3DFixEnv]bool, bool) {
+	if EnabledFixes == nil {
+		result := make(map[K3DFixEnv]bool, len(FixEnvs))
+		any := false
+		for _, fixEnv := range FixEnvs {
+			enabled := false
+			if v, isSet := os.LookupEnv(string(fixEnv)); !isSet {
+				enabled = fixNeeded[fixEnv](runtime)
+			} else {
+				var err error
+				enabled, err = strconv.ParseBool(v)
+				if err != nil {
+					enabled = false
+				}
+			}
+			result[fixEnv] = enabled
+			if enabled {
+				any = true
+			}
+		}
+		EnabledFixes = result
+		AnyFixEnabled = any
+	}
+	return EnabledFixes, AnyFixEnabled
 }

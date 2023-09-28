@@ -307,6 +307,7 @@ type Node struct {
 	State          NodeState             // filled automatically
 	IP             NodeIP                // filled automatically -> refers solely to the cluster network
 	HookActions    []NodeHook            `json:"hooks,omitempty"`
+	K3dEntrypoint  bool
 }
 
 // ServerOpts describes some additional server role specific opts
