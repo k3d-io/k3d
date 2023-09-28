@@ -38,7 +38,6 @@ import (
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	runtimeErr "github.com/k3d-io/k3d/v5/pkg/runtimes/errors"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
-	"github.com/k3d-io/k3d/v5/pkg/types/fixes"
 
 	dockercliopts "github.com/docker/cli/opts"
 	dockerunits "github.com/docker/go-units"
@@ -69,8 +68,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	containerConfig.Image = node.Image
 
 	/* Command & Arguments */
-	// FIXME: FixCgroupV2 - to be removed when fixed upstream
-	if fixes.FixEnabledAny() {
+	if node.K3dEntrypoint {
 		if node.Role == k3d.AgentRole || node.Role == k3d.ServerRole {
 			containerConfig.Entrypoint = []string{
 				"/bin/k3d-entrypoint.sh",
