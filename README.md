@@ -177,4 +177,4 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 
 Thanks to all our amazing sponsors! 🙏
 
-<!-- sponsors --><!-- sponsors -->
+<!-- sponsors -->* [](https://github.com/stopanko) - stopanko* [Dwight Gunning](https://github.com/dwightgunning) - dwightgunning* [Eamon Bauman](https://github.com/ebauman) - ebauman<!-- sponsors -->
