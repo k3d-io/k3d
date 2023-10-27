@@ -30,6 +30,9 @@ theme:
     - search.highlight # highlight search term on target page: https://squidfunk.github.io/mkdocs-material/setup/setting-up-site-search/#search-suggestions
     - navigation.expand
     - navigation.tabs
+    - navigation.tabs.sticky # stick navigation tabs below header while scrolling
+    - navigation.tracking
+    - navigation.path
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -54,6 +57,7 @@ theme:
 
 # Extensions
 markdown_extensions:
+  - attr_list
   - toc:
       permalink: true
   - admonition # https://squidfunk.github.io/mkdocs-material/extensions/admonition/
@@ -64,8 +68,8 @@ markdown_extensions:
   - pymdownx.tabbed # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#tabbed
   - pymdownx.details # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/#details
   - pymdownx.emoji: # https://squidfunk.github.io/mkdocs-material/reference/icons-emojis/#configuration
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - smarty # https://python-markdown.github.io/extensions/smarty/
   - mdx_truly_sane_lists # https://github.com/radude/mdx_truly_sane_lists -> proper indentation of md list items
 

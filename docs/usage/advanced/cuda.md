@@ -16,7 +16,10 @@ To get around this we need to build the image with a supported base image.
 [Dockerfile](cuda/Dockerfile):  
 
 ```Dockerfile
-{% include "cuda/Dockerfile" %}
+{%
+  include-markdown "./cuda/Dockerfile"
+  comments=false
+%}
 ```
 
 This Dockerfile is based on the [K3s Dockerfile](https://github.com/rancher/k3s/blob/master/package/Dockerfile)
@@ -31,7 +34,10 @@ The following changes are applied:
 We need to configure containerd to use the NVIDIA Container Runtime. We need to customize the config.toml that is used at startup. K3s provides a way to do this using a [config.toml.tmpl](cuda/config.toml.tmpl) file. More information can be found on the [K3s site](https://rancher.com/docs/k3s/latest/en/advanced/#configuring-containerd).
 
 ```go
-{% include "cuda/config.toml.tmpl" %}
+{%
+  include-markdown "./cuda/config.toml.tmpl"
+  comments=false
+%}
 ```
 
 ### The NVIDIA device plugin
@@ -43,7 +49,10 @@ To enable NVIDIA GPU support on Kubernetes you also need to install the [NVIDIA 
 * Run GPU enabled containers in your Kubernetes cluster.
 
 ```yaml
-{% include "cuda/device-plugin-daemonset.yaml" %}
+{%
+  include-markdown "./cuda/device-plugin-daemonset.yaml"
+  comments=false
+%}
 ```
 
 ### Build the K3s image
@@ -63,7 +72,10 @@ The `build.sh` script is configured using exports & defaults to `v1.21.2+k3s1`. 
 [build.sh](cuda/build.sh):
 
 ```bash
-{% include "cuda/build.sh" %}
+{%
+  include-markdown "./cuda/build.sh"
+  comments=false
+%}
 ```
 
 ## Run and test the custom image with k3d
