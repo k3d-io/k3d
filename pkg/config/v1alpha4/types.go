@@ -1,5 +1,5 @@
 /*
-Copyright © 2020-2022 The k3d Author(s)
+Copyright © 2020-2023 The k3d Author(s)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,7 @@ import (
 const ApiVersion = "k3d.io/v1alpha4"
 
 // JSONSchema describes the schema used to validate config files
+//
 //go:embed schema.json
 var JSONSchema string
 
