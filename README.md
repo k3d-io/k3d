@@ -181,5 +181,5 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 Thanks to all our amazing sponsors! 🙏
 
 <ul>
-  <!-- sponsors --><li><a href="https://github.com/stopanko">[<strong>stopanko</strong>]</a> </li><li><a href="https://github.com/dwightgunning">[<strong>dwightgunning</strong>]</a> Dwight Gunning</li><li><a href="https://github.com/ebauman">[<strong>ebauman</strong>]</a> Eamon Bauman</li><!-- sponsors -->
+  <!-- sponsors --><li><a href="https://github.com/stopanko">[<strong>stopanko</strong>]</a> </li><li><a href="https://github.com/dwightgunning">[<strong>dwightgunning</strong>]</a> Dwight Gunning</li><!-- sponsors -->
 </ul>
