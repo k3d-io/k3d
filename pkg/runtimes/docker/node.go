@@ -118,7 +118,7 @@ func (d Docker) StartNode(ctx context.Context, node *k3d.Node) error {
 	}
 
 	// actually start the container
-	l.Log().Infof("Starting Node '%s'", node.Name)
+	l.Log().Infof("Starting node '%s'", node.Name)
 	if err := docker.ContainerStart(ctx, nodeContainer.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("docker failed to start container for node '%s': %w", node.Name, err)
 	}
