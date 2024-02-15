@@ -28,10 +28,13 @@ import (
 	"github.com/k3d-io/k3d/v5/pkg/client"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
+
+var clusterStartPpViper = viper.New()
 
 // NewCmdClusterStart returns a new cobra command
 func NewCmdClusterStart() *cobra.Command {
@@ -45,6 +48,11 @@ func NewCmdClusterStart() *cobra.Command {
 		Long:              `Start existing k3d cluster(s)`,
 		Short:             "Start existing k3d cluster(s)",
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			clusterStartPpViper.SetEnvPrefix("K3D")
+			err := clusterStartPpViper.BindEnv("CLUSTER_NAME")
+			return err
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			clusters := parseStartClusterCmd(cmd, args)
 			if len(clusters) == 0 {
@@ -105,6 +113,8 @@ func parseStartClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	clusternames := []string{k3d.DefaultClusterName}
 	if len(args) != 0 {
 		clusternames = args
+	} else if clusterStartPpViper.GetString("CLUSTER_NAME") != "" {
+		clusternames = []string{clusterStartPpViper.GetString("CLUSTER_NAME")}
 	}
 
 	for _, name := range clusternames {
