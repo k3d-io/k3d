@@ -8,7 +8,7 @@ endif
 
 # Go options
 GO        ?= go
-PKG       := $(shell go mod vendor)
+PKG       := $(shell GOWORK=off go mod vendor)
 TAGS      :=
 TESTS     := .
 TESTFLAGS :=
