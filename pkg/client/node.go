@@ -57,19 +57,6 @@ import (
 
 // NodeAddToCluster adds a node to an existing cluster
 func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, cluster *k3d.Cluster, createNodeOpts k3d.NodeCreateOpts) error {
-	targetClusterName := cluster.Name
-	cluster, err := ClusterGet(ctx, runtime, cluster)
-	if err != nil {
-		return fmt.Errorf("Failed to find specified cluster '%s': %w", targetClusterName, err)
-	}
-
-	envInfo, err := GatherEnvironmentInfo(ctx, runtime, cluster)
-	if err != nil {
-		return fmt.Errorf("error gathering cluster environment info required to properly create the node: %w", err)
-	}
-
-	createNodeOpts.EnvironmentInfo = envInfo
-
 	// networks: ensure that cluster network is on index 0
 	networks := []string{cluster.Network.Name}
 	if node.Networks != nil {
@@ -106,7 +93,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 	}
 
 	// get node details
-	srcNode, err = NodeGet(ctx, runtime, srcNode)
+	srcNode, err := NodeGet(ctx, runtime, srcNode)
 	if err != nil {
 		return err
 	}
@@ -262,7 +249,7 @@ func NodeAddToCluster(ctx context.Context, runtime runtimes.Runtime, node *k3d.N
 					Runtime: runtime,
 					Command: []string{
 						"sh", "-c",
-						fmt.Sprintf("echo '%s %s' >> /etc/hosts", envInfo.HostGateway.String(), k3d.DefaultK3dInternalHostRecord),
+						fmt.Sprintf("echo '%s %s' >> /etc/hosts", createNodeOpts.EnvironmentInfo.HostGateway.String(), k3d.DefaultK3dInternalHostRecord),
 					},
 					Retries:     0,
 					Description: fmt.Sprintf("Inject /etc/hosts record for %s", k3d.DefaultK3dInternalHostRecord),
@@ -331,6 +318,16 @@ func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes 
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, createNodeOpts.Timeout)
 		defer cancel()
+	}
+
+	cluster, err := ClusterGet(ctx, runtime, cluster)
+	if err != nil {
+		return fmt.Errorf("Failed to find specified cluster '%s': %w", cluster.Name, err)
+	}
+
+	createNodeOpts.EnvironmentInfo, err = GatherEnvironmentInfo(ctx, runtime, cluster)
+	if err != nil {
+		return fmt.Errorf("error gathering cluster environment info required to properly create the node: %w", err)
 	}
 
 	nodeWaitGroup, ctx := errgroup.WithContext(ctx)
