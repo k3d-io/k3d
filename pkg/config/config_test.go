@@ -56,6 +56,12 @@ func TestReadSimpleConfig(t *testing.T) {
 				NodeFilters: []string{"all"},
 			},
 		},
+		Manifests: []conf.Manifest{
+			{
+				Name:     "my-manifest.yaml",
+				Manifest: "---\n# This is the start of an empty YAML manifest.\n",
+			},
+		},
 		Ports: []conf.PortWithNodeFilters{
 			{
 				Port:        "80:80",

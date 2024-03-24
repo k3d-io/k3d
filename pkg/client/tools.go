@@ -37,6 +37,7 @@ import (
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 )
 
 // ImageImportIntoClusterMulti starts up a k3d tools container for the selected cluster and uses it to export
@@ -424,6 +425,16 @@ func EnsureToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d
 			cluster.ImageVolume = imageVolume
 		}
 
+		toolsNodeVolumes := []string{
+			fmt.Sprintf("%s:%s", cluster.ImageVolume, k3d.DefaultImageVolumeMountPath),
+			fmt.Sprintf("%s:%s", runtime.GetRuntimePath(), runtime.GetRuntimePath()),
+		}
+
+		if cluster.Manifests != nil {
+			toolsNodeVolumes = append(toolsNodeVolumes,
+				fmt.Sprintf("%s:%s", cluster.ManifestVolume, k3s.K3sPathManifestsEmbedded))
+		}
+
 		// start tools node
 		l.Log().Infoln("Starting new tools node...")
 		toolsNode, err = runToolsNode(
@@ -431,10 +442,8 @@ func EnsureToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d
 			runtime,
 			cluster,
 			cluster.Network.Name,
-			[]string{
-				fmt.Sprintf("%s:%s", cluster.ImageVolume, k3d.DefaultImageVolumeMountPath),
-				fmt.Sprintf("%s:%s", runtime.GetRuntimePath(), runtime.GetRuntimePath()),
-			})
+			toolsNodeVolumes)
+
 		if err != nil {
 			l.Log().Errorf("Failed to run tools container for cluster '%s'", cluster.Name)
 		}

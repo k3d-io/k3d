@@ -25,7 +25,6 @@ import (
 	"context"
 	"fmt"
 
-	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
@@ -39,15 +38,6 @@ func GatherEnvironmentInfo(ctx context.Context, runtime runtimes.Runtime, cluste
 		return nil, err
 	}
 	envInfo.RuntimeInfo = *rtimeInfo
-
-	l.Log().Infof("Using the k3d-tools node to gather environment information")
-	toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
-	if err != nil {
-		return nil, err
-	}
-	if err := NodeDelete(ctx, runtime, toolsNode, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
-		l.Log().Warnf("Failed to delete tools node '%s'. This is not critical, but may lead to errors down the road. Error: %v", toolsNode.Name, err)
-	}
 
 	if cluster.Network.Name != "host" {
 		hostIP, err := GetHostIP(ctx, runtime, cluster)

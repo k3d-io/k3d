@@ -81,6 +81,7 @@ const (
 	LabelClusterToken            string = "k3d.cluster.token"
 	LabelClusterExternal         string = "k3d.cluster.external"
 	LabelImageVolume             string = "k3d.cluster.imageVolume"
+	LabelManifestVolume          string = "k3d.cluster.manifestVolume"
 	LabelNetworkExternal         string = "k3d.cluster.network.external"
 	LabelNetwork                 string = "k3d.cluster.network"
 	LabelNetworkID               string = "k3d.cluster.network.id"
@@ -233,6 +234,11 @@ type ClusterNetwork struct {
 	Members  []*NetworkMember
 }
 
+type Manifest struct {
+	Name     string `mapstructure:"name" json:"name,omitempty"`
+	Manifest string `mapstructure:"manifest" json:"manifest,omitempty"`
+}
+
 // Cluster describes a k3d cluster
 type Cluster struct {
 	Name               string             `json:"name,omitempty"`
@@ -244,6 +250,8 @@ type Cluster struct {
 	KubeAPI            *ExposureOpts      `json:"kubeAPI,omitempty"`
 	ServerLoadBalancer *Loadbalancer      `json:"serverLoadBalancer,omitempty"`
 	ImageVolume        string             `json:"imageVolume,omitempty"`
+	ManifestVolume     string             `json:"manifestVolume,omitempty"`
+	Manifests          []Manifest         `json:"manifests,omitempty"`
 	Volumes            []string           `json:"volumes,omitempty"` // k3d-managed volumes attached to this cluster
 }
 

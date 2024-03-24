@@ -175,6 +175,14 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	nodeCount := len(newCluster.Nodes)
 	nodeList := newCluster.Nodes
 
+	// -> MANIFESTS
+	for _, cfgManifest := range simpleConfig.Manifests {
+		newCluster.Manifests = append(newCluster.Manifests, k3d.Manifest{
+			Name:     cfgManifest.Name,
+			Manifest: cfgManifest.Manifest,
+		})
+	}
+
 	// -> VOLUMES
 	for _, volumeWithNodeFilters := range simpleConfig.Volumes {
 		nodes, err := util.FilterNodes(nodeList, volumeWithNodeFilters.NodeFilters)

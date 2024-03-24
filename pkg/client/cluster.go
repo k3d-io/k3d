@@ -76,10 +76,9 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 	/*
 	 * Step 2: Pre-Start Configuration
 	 */
-	// Gather Environment information, e.g. the host gateway address
-	envInfo, err := GatherEnvironmentInfo(ctx, runtime, &clusterConfig.Cluster)
+	envInfo, err := ClusterPreStartConfiguration(ctx, runtime, &clusterConfig.Cluster)
 	if err != nil {
-		return fmt.Errorf("failed to gather environment information used for cluster creation: %w", err)
+		return fmt.Errorf("Failed Pre-Start Configuration: %+v", err)
 	}
 
 	/*
@@ -144,6 +143,12 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 	if !clusterConfig.ClusterCreateOpts.DisableImageVolume {
 		if err := ClusterPrepImageVolume(ctx, runtime, &clusterConfig.Cluster, &clusterConfig.ClusterCreateOpts); err != nil {
 			return fmt.Errorf("Failed Image Volume Preparation: %+v", err)
+		}
+	}
+
+	if clusterConfig.Manifests != nil {
+		if err := ClusterPrepManifestVolume(ctx, runtime, &clusterConfig.Cluster, &clusterConfig.ClusterCreateOpts); err != nil {
+			return fmt.Errorf("Failed Manifests Volume Preparation: %+v", err)
 		}
 	}
 
@@ -575,6 +580,33 @@ ClusterCreatOpts:
 	}
 
 	return nil
+}
+
+func ClusterPreStartConfiguration(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster) (*k3d.EnvironmentInfo, error) {
+	// Ensure that the tools node is working
+	toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	// Gather Environment information, e.g. the host gateway address
+	envInfo, err := GatherEnvironmentInfo(ctx, runtime, cluster)
+	if err != nil {
+		return nil, fmt.Errorf("failed to gather environment information used for cluster creation: %w", err)
+	}
+
+	// Copy embedded manifests to manifests volume which will be auto-deployed on the servers
+	err = CopyManifetsToVolume(ctx, runtime, cluster, toolsNode)
+	if err != nil {
+		return nil, fmt.Errorf("failed to copy embedded manifests to manifest volume: %w", err)
+	}
+
+	// Delete the tools node after finishing all pre-start configuration
+	if err := NodeDelete(ctx, runtime, toolsNode, k3d.NodeDeleteOpts{SkipLBUpdate: true}); err != nil {
+		l.Log().Warnf("Failed to delete tools node '%s'. This is not critical, but may lead to errors down the road. Error: %v", toolsNode.Name, err)
+	}
+
+	return envInfo, nil
 }
 
 // ClusterDelete deletes an existing cluster

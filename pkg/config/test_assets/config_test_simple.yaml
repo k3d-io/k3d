@@ -12,6 +12,11 @@ volumes:
   - volume: /my/path:/some/path
     nodeFilters:
       - all
+manifests:
+  - name: my-manifest.yaml
+    manifest: |
+      ---
+      # This is the start of an empty YAML manifest.
 ports:
   - port: 80:80
     nodeFilters:

@@ -58,6 +58,11 @@ var DefaultConfig = fmt.Sprintf(
 	fmt.Sprintf("%s:%s", k3d.DefaultK3sImageRepo, version.K3sVersion),
 )
 
+type Manifest struct {
+	Name     string `mapstructure:"name" json:"name,omitempty"`
+	Manifest string `mapstructure:"manifest" json:"manifest,omitempty"`
+}
+
 type VolumeWithNodeFilters struct {
 	Volume      string   `mapstructure:"volume" json:"volume,omitempty"`
 	NodeFilters []string `mapstructure:"nodeFilters" json:"nodeFilters,omitempty"`
@@ -156,6 +161,7 @@ type SimpleConfig struct {
 	Network           string                  `mapstructure:"network" json:"network,omitempty"`
 	Subnet            string                  `mapstructure:"subnet" json:"subnet,omitempty"`
 	ClusterToken      string                  `mapstructure:"token" json:"clusterToken,omitempty"` // default: auto-generated
+	Manifests         []Manifest              `mapstructure:"manifests" json:"manifests,omitempty"`
 	Volumes           []VolumeWithNodeFilters `mapstructure:"volumes" json:"volumes,omitempty"`
 	Ports             []PortWithNodeFilters   `mapstructure:"ports" json:"ports,omitempty"`
 	Options           SimpleConfigOptions     `mapstructure:"options" json:"options,omitempty"`

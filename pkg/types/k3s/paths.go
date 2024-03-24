@@ -24,7 +24,8 @@ package k3s
 const (
 	K3sPathStorage              = "/var/lib/rancher/k3s/storage"
 	K3sPathManifests            = "/var/lib/rancher/k3s/server/manifests"
-	K3sPathManifestsCustom      = "/var/lib/rancher/k3s/server/manifests/custom" // custom subfolder
+	K3sPathManifestsCustom      = "/var/lib/rancher/k3s/server/manifests/custom"   // custom subfolder
+	K3sPathManifestsEmbedded    = "/var/lib/rancher/k3s/server/manifests/embedded" // custom subfolder
 	K3sPathContainerdConfig     = "/var/lib/rancher/k3s/agent/etc/containerd/config.toml"
 	K3sPathContainerdConfigTmpl = "/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl"
 	K3sPathRegistryConfig       = "/etc/rancher/k3s/registries.yaml"
