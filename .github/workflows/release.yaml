@@ -172,7 +172,7 @@ jobs:
       # Wait for tests to pass and push images (ONLY ON TAG)
       - name: Wait for tests to succeed
         if: startsWith(github.ref, 'refs/tags/')
-        uses: lewagon/wait-on-check-action@v1.1.1
+        uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.ref }}
           check-name: "Full Test Suite"
@@ -207,7 +207,7 @@ jobs:
       # Wait for tests to pass and create release (ONLY ON TAG)
       - name: Wait for tests to succeed
         if: startsWith(github.ref, 'refs/tags/')
-        uses: lewagon/wait-on-check-action@v1.1.1
+        uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.ref }}
           check-name: "Full Test Suite"
