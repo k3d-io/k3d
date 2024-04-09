@@ -7,27 +7,30 @@ import (
 	"strings"
 )
 
+// HostsLine represents a line of the hosts file after being parsed into their respective parts
 type HostsLine struct {
-	IP      string
-	Hosts   []string
-	Raw     string
-	Err     error
-	Comment string
+	IP      string   // IP found at the beginning of the line
+	Hosts   []string // Hosts split into a slice on the space char
+	Comment string   // Contents of everything after the comment char in the line
+
+	Raw string // Raw contents of the line as parsed in or updated after changes
+	Err error  // Used for error checking during parsing
 }
 
 const commentChar string = "#"
 
-// NewHostsLine return a new instance of ```HostsLine```.
+// NewHostsLine takes a raw line as a string and parses it into a new instance of HostsLine e.g. "192.168.1.1 host1 host2 # comments"
 func NewHostsLine(raw string) HostsLine {
 	output := HostsLine{Raw: raw}
-	if output.IsComment() { //whole line is comment
-		return output
-	}
 
 	if output.HasComment() { //trailing comment
 		commentSplit := strings.Split(output.Raw, commentChar)
 		raw = commentSplit[0]
 		output.Comment = commentSplit[1]
+	}
+
+	if output.IsComment() { //whole line is comment
+		return output
 	}
 
 	fields := strings.Fields(raw)
@@ -46,6 +49,12 @@ func NewHostsLine(raw string) HostsLine {
 	return output
 }
 
+// String to make HostsLine a fmt.Stringer
+func (l *HostsLine) String() string {
+	return l.ToRaw()
+}
+
+// ToRaw returns the HostsLine's contents as a raw string
 func (l *HostsLine) ToRaw() string {
 	var comment string
 	if l.IsComment() { //Whole line is comment
@@ -59,32 +68,41 @@ func (l *HostsLine) ToRaw() string {
 	return fmt.Sprintf("%s %s%s", l.IP, strings.Join(l.Hosts, " "), comment)
 }
 
+// RemoveDuplicateHosts checks all hosts in a line and removes duplicates
 func (l *HostsLine) RemoveDuplicateHosts() {
 	unique := make(map[string]struct{})
-	for _, h := range l.Hosts {
-		unique[h] = struct{}{}
-	}
+	hosts := make([]string, len(l.Hosts))
+	copy(hosts, l.Hosts)
 
 	l.Hosts = []string{}
-	for k := range unique {
-		l.Hosts = append(l.Hosts, k)
+	for _, host := range hosts {
+		if _, ok := unique[host]; !ok {
+			unique[host] = struct{}{}
+			l.Hosts = append(l.Hosts, host)
+		}
 	}
-	l.Raw = l.ToRaw()
+
+	l.RegenRaw()
 }
 
+// Deprecated: will be made internal, combines the hosts and comments of two lines together,
 func (l *HostsLine) Combine(hostline HostsLine) {
+	l.combine(hostline)
+}
+
+func (l *HostsLine) combine(hostline HostsLine) {
 	l.Hosts = append(l.Hosts, hostline.Hosts...)
 	if l.Comment == "" {
 		l.Comment = hostline.Comment
 	} else {
 		l.Comment = fmt.Sprintf("%s %s", l.Comment, hostline.Comment)
 	}
-	l.Raw = l.ToRaw()
+	l.RegenRaw()
 }
 
 func (l *HostsLine) SortHosts() {
 	sort.Strings(l.Hosts)
-	l.Raw = l.ToRaw()
+	l.RegenRaw()
 }
 
 func (l *HostsLine) IsComment() bool {
@@ -104,5 +122,5 @@ func (l *HostsLine) IsMalformed() bool {
 }
 
 func (l *HostsLine) RegenRaw() {
-	l.Raw = fmt.Sprintf("%s %s", l.IP, strings.Join(l.Hosts, " "))
+	l.Raw = l.ToRaw()
 }

@@ -34,9 +34,9 @@ github.com/cespare/xxhash/v2
 # github.com/containerd/cgroups v1.0.4
 ## explicit; go 1.17
 # github.com/containerd/containerd v1.6.18
-## explicit; go 1.19
-# github.com/containerd/containerd v1.7.13
-## explicit; go 1.19
+## explicit; go 1.21
+# github.com/containerd/containerd v1.7.15
+## explicit; go 1.21
 github.com/containerd/containerd/log
 github.com/containerd/containerd/pkg/userns
 # github.com/containerd/log v0.1.0
@@ -64,7 +64,7 @@ github.com/dimchansky/utfbom
 github.com/distribution/reference
 # github.com/docker/cli v20.10.17+incompatible
 ## explicit
-# github.com/docker/cli v25.0.3+incompatible
+# github.com/docker/cli v26.0.0+incompatible
 ## explicit
 github.com/docker/cli/cli/command
 github.com/docker/cli/cli/config
@@ -110,7 +110,7 @@ github.com/docker/distribution/uuid
 ## explicit
 # github.com/docker/docker v24.0.5+incompatible
 ## explicit
-# github.com/docker/docker v25.0.3+incompatible
+# github.com/docker/docker v26.0.0+incompatible
 ## explicit
 github.com/docker/docker/api
 github.com/docker/docker/api/types
@@ -132,7 +132,6 @@ github.com/docker/docker/api/types/versions
 github.com/docker/docker/api/types/volume
 github.com/docker/docker/client
 github.com/docker/docker/errdefs
-github.com/docker/docker/image/spec/specs-go/v1
 github.com/docker/docker/internal/multierror
 github.com/docker/docker/pkg/archive
 github.com/docker/docker/pkg/homedir
@@ -206,8 +205,12 @@ github.com/gogo/protobuf/sortkeys
 ## explicit; go 1.17
 github.com/golang/protobuf/proto
 # github.com/goodhosts/hostsfile v0.1.1
-## explicit; go 1.17
+## explicit; go 1.21
+# github.com/goodhosts/hostsfile v0.1.6
+## explicit; go 1.21
 github.com/goodhosts/hostsfile
+github.com/goodhosts/hostsfile/mage/install
+github.com/goodhosts/hostsfile/mage/test
 # github.com/google/go-cmp v0.5.9
 ## explicit; go 1.13
 # github.com/google/go-cmp v0.6.0
@@ -217,7 +220,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/go-containerregistry v0.16.1
+# github.com/google/go-containerregistry v0.19.1
 ## explicit; go 1.18
 github.com/google/go-containerregistry/internal/and
 github.com/google/go-containerregistry/internal/compression
@@ -293,6 +296,10 @@ github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de
 ## explicit
 github.com/liggitt/tabwriter
+# github.com/magefile/mage v1.15.0
+## explicit; go 1.12
+github.com/magefile/mage/mg
+github.com/magefile/mage/sh
 # github.com/magiconair/properties v1.8.6
 ## explicit; go 1.19
 # github.com/magiconair/properties v1.8.7
@@ -316,6 +323,9 @@ github.com/mitchellh/mapstructure
 # github.com/mitchellh/reflectwalk v1.0.2
 ## explicit
 github.com/mitchellh/reflectwalk
+# github.com/moby/docker-image-spec v1.3.1
+## explicit; go 1.18
+github.com/moby/docker-image-spec/specs-go/v1
 # github.com/moby/patternmatcher v0.5.0
 ## explicit; go 1.19
 github.com/moby/patternmatcher
@@ -528,14 +538,14 @@ go.uber.org/atomic
 go.uber.org/multierr
 # go4.org/intern v0.0.0-20211027215823-ae77deb06f29
 ## explicit; go 1.13
-# go4.org/netipx v0.0.0-20230728184502-ec4c8b891b28
+# go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 ## explicit; go 1.18
 go4.org/netipx
 # go4.org/unsafe/assume-no-moving-gc v0.0.0-20230209150437-ee73d164e760
 ## explicit; go 1.11
 # golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 ## explicit; go 1.18
-# golang.org/x/crypto v0.16.0
+# golang.org/x/crypto v0.22.0
 ## explicit; go 1.18
 golang.org/x/crypto/ed25519
 golang.org/x/crypto/pbkdf2
@@ -555,7 +565,7 @@ golang.org/x/mod/semver
 ## explicit; go 1.18
 # golang.org/x/net v0.9.0
 ## explicit; go 1.18
-# golang.org/x/net v0.19.0
+# golang.org/x/net v0.21.0
 ## explicit; go 1.18
 golang.org/x/net/context
 golang.org/x/net/http/httpguts
@@ -570,21 +580,21 @@ golang.org/x/oauth2
 golang.org/x/oauth2/internal
 # golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
 ## explicit; go 1.18
-# golang.org/x/sync v0.6.0
+# golang.org/x/sync v0.7.0
 ## explicit; go 1.18
 golang.org/x/sync/errgroup
 # golang.org/x/sys v0.5.0
 ## explicit; go 1.18
 # golang.org/x/sys v0.10.0
 ## explicit; go 1.18
-# golang.org/x/sys v0.17.0
+# golang.org/x/sys v0.19.0
 ## explicit; go 1.18
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 # golang.org/x/term v0.5.0
 ## explicit; go 1.18
-# golang.org/x/term v0.15.0
+# golang.org/x/term v0.19.0
 ## explicit; go 1.18
 golang.org/x/term
 # golang.org/x/text v0.7.0

@@ -72,14 +72,17 @@ type ImageInspect struct {
 
 	// Created is the date and time at which the image was created, formatted in
 	// RFC 3339 nano-seconds (time.RFC3339Nano).
-	Created string
+	//
+	// This information is only available if present in the image,
+	// and omitted otherwise.
+	Created string `json:",omitempty"`
 
 	// Container is the ID of the container that was used to create the image.
 	//
 	// Depending on how the image was created, this field may be empty.
 	//
 	// Deprecated: this field is omitted in API v1.45, but kept for backward compatibility.
-	Container string
+	Container string `json:",omitempty"`
 
 	// ContainerConfig is an optional field containing the configuration of the
 	// container that was last committed when creating the image.
@@ -88,7 +91,7 @@ type ImageInspect struct {
 	// and it is not in active use anymore.
 	//
 	// Deprecated: this field is omitted in API v1.45, but kept for backward compatibility.
-	ContainerConfig *container.Config
+	ContainerConfig *container.Config `json:",omitempty"`
 
 	// DockerVersion is the version of Docker that was used to build the image.
 	//

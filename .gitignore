@@ -22,7 +22,9 @@ site/
 .vscode/
 .local/
 .idea/
+qodana.yaml
 *.iml
 
 # Pipenv
 Pipfile*
+

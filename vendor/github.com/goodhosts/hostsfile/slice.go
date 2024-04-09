@@ -45,6 +45,14 @@ func removeFromSliceInt(s int, slice []int) []int {
 	return slice
 }
 
+func removeOneFromSliceInt(s int, slice []int) []int {
+	pos := findPositionInSliceInt(s, slice)
+	if pos > -1 {
+		slice = append(slice[:pos], slice[pos+1:]...)
+	}
+	return slice
+}
+
 func findPositionInSliceInt(s int, slice []int) int {
 	for index, v := range slice {
 		if v == s {

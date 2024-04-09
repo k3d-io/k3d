@@ -8,25 +8,22 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"sync"
+	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/dimchansky/utfbom"
 )
 
-type lookup struct {
-	sync.RWMutex
-	l map[string][]int
-}
-
+// Hosts represents hosts file with the path and parsed contents of each line
 type Hosts struct {
-	Path  string
-	Lines []HostsLine
+	Path  string      // Path to the location of the hosts file that will be loaded/flushed
+	Lines []HostsLine // Slice containing all the lines parsed from the hosts file
+
 	ips   lookup
 	hosts lookup
 }
 
-// NewHosts return a new instance of ``Hosts`` using the default hosts file path.
+// NewHosts return a new instance of Hosts using the default hosts file path.
 func NewHosts() (*Hosts, error) {
 	osHostsFilePath := os.ExpandEnv(filepath.FromSlash(HostsFilePath))
 
@@ -37,12 +34,12 @@ func NewHosts() (*Hosts, error) {
 	return NewCustomHosts(osHostsFilePath)
 }
 
-// NewCustomHosts return a new instance of ``Hosts`` using a custom hosts file path.
+// NewCustomHosts return a new instance of Hosts using a custom hosts file path.
 func NewCustomHosts(osHostsFilePath string) (*Hosts, error) {
 	hosts := &Hosts{
 		Path:  osHostsFilePath,
-		ips:   lookup{l: make(map[string][]int)},
-		hosts: lookup{l: make(map[string][]int)},
+		ips:   newLookup(),
+		hosts: newLookup(),
 	}
 
 	if err := hosts.Load(); err != nil {
@@ -52,7 +49,28 @@ func NewCustomHosts(osHostsFilePath string) (*Hosts, error) {
 	return hosts, nil
 }
 
-// IsWritable return ```true``` if hosts file is writable.
+// String get a string of the contents of the contents to put in the hosts file
+func (h *Hosts) String() string {
+	buf := new(bytes.Buffer)
+	for _, line := range h.Lines {
+		// bytes buffers doesn't actually throw errors but the io.Writer interface requires it
+		fmt.Fprintf(buf, "%s%s", line.ToRaw(), eol)
+	}
+	return buf.String()
+}
+
+// loadString is a helper function for testing but if we want to expose it somehow it's probably safe
+func (h *Hosts) loadString(content string) error {
+	h.Clear()
+	rdr := strings.NewReader(content)
+	scanner := bufio.NewScanner(utfbom.SkipOnly(rdr))
+	for scanner.Scan() {
+		h.addLine(NewHostsLine(scanner.Text()))
+	}
+	return scanner.Err()
+}
+
+// IsWritable return true if hosts file is writable.
 func (h *Hosts) IsWritable() bool {
 	file, err := os.OpenFile(h.Path, os.O_WRONLY, 0660)
 	if err != nil {
@@ -62,9 +80,7 @@ func (h *Hosts) IsWritable() bool {
 	return true
 }
 
-// Load the hosts file into ```l.Lines```.
-// ```Load()``` is called by ```NewHosts()``` and ```Hosts.Flush()``` so you
-// generally you won't need to call this yourself.
+// Load the hosts file from the Path into Lines, called by NewHosts() and Hosts.Flush() and you should not need to call this yourself.
 func (h *Hosts) Load() error {
 	file, err := os.Open(h.Path)
 	if err != nil {
@@ -72,35 +88,26 @@ func (h *Hosts) Load() error {
 	}
 	defer file.Close()
 
-	// if you're reloading from disk confirm you refresh the hash maps and lines
-	if len(h.Lines) != 0 {
-		h.ips = lookup{l: make(map[string][]int)}
-		h.hosts = lookup{l: make(map[string][]int)}
-		h.Lines = []HostsLine{}
-	}
+	h.Clear() // reset the lines and lookups in case anything was previously set
 
 	scanner := bufio.NewScanner(utfbom.SkipOnly(file))
 	for scanner.Scan() {
-		hl := NewHostsLine(scanner.Text())
-		h.Lines = append(h.Lines, hl)
-		pos := len(h.Lines) - 1
-		h.addIpPosition(hl.IP, pos)
-		for _, host := range hl.Hosts {
-			h.addHostPositions(host, pos)
-		}
+		h.addLine(NewHostsLine(scanner.Text()))
 	}
 
 	return scanner.Err()
 }
 
-// Flush any changes made to hosts file.
+// Flush writes to the file located at Path the contents of Lines in a hostsfile format
 func (h *Hosts) Flush() error {
-	h.preFlushClean()
+	if err := h.preFlush(); err != nil {
+		return err
+	}
+
 	file, err := os.Create(h.Path)
 	if err != nil {
 		return err
 	}
-
 	defer file.Close()
 
 	w := bufio.NewWriter(file)
@@ -110,8 +117,11 @@ func (h *Hosts) Flush() error {
 		}
 	}
 
-	err = w.Flush()
-	if err != nil {
+	if err := w.Flush(); err != nil {
+		return err
+	}
+
+	if err := h.postFlush(); err != nil {
 		return err
 	}
 
@@ -131,13 +141,7 @@ func (h *Hosts) AddRaw(raw ...string) error {
 				return fmt.Errorf("hostname is not a valid dns name: %s", host)
 			}
 		}
-
-		h.Lines = append(h.Lines, nl)
-		pos := len(h.Lines) - 1
-		h.addIpPosition(nl.IP, pos)
-		for _, host := range nl.Hosts {
-			h.addHostPositions(host, pos)
-		}
+		h.addLine(nl)
 	}
 
 	return nil
@@ -149,40 +153,46 @@ func (h *Hosts) Add(ip string, hosts ...string) error {
 		return fmt.Errorf("%q is an invalid IP address", ip)
 	}
 
-	position := h.getIpPositions(ip)
+	// remove hosts from other ips if it already exists
+	for _, host := range hosts {
+		for _, p := range h.hosts.get(host) {
+			if h.Lines[p].IP == ip {
+				continue
+			}
+
+			if err := h.Remove(h.Lines[p].IP, host); err != nil {
+				return err
+			}
+		}
+	}
+
+	position := h.ips.get(ip)
 	if len(position) == 0 {
-		nl := HostsLine{
-			Raw:   buildRawLine(ip, hosts),
+		h.addLine(HostsLine{
+			Raw:   fmt.Sprintf("%s %s", ip, strings.Join(hosts, " ")),
 			IP:    ip,
 			Hosts: hosts,
-		}
-		h.Lines = append(h.Lines, nl)
-		pos := len(h.Lines) - 1
-		h.addIpPosition(ip, pos)
-		for _, host := range nl.Hosts {
-			h.addHostPositions(host, pos)
-		}
+		})
 	} else {
 		// add new host to the first one we find
-		hostsCopy := h.Lines[position[0]].Hosts
+		loc := position[len(position)-1] // last element
+		hostsCopy := make([]string, len(h.Lines[loc].Hosts))
+		copy(hostsCopy, h.Lines[loc].Hosts)
+
 		for _, addHost := range hosts {
 			if h.Has(ip, addHost) {
-				// this combo already exists
-				continue
+				continue // this combo already exists
 			}
 
 			if !govalidator.IsDNSName(addHost) {
 				return fmt.Errorf("hostname is not a valid dns name: %s", addHost)
 			}
-			if itemInSliceString(addHost, hostsCopy) {
-				continue // host exists for ip already
-			}
 
 			hostsCopy = append(hostsCopy, addHost)
-			h.addHostPositions(addHost, position[0])
+			h.hosts.add(addHost, loc)
 		}
-		h.Lines[position[0]].Hosts = hostsCopy
-		h.Lines[position[0]].Raw = h.Lines[position[0]].ToRaw() // reset raw
+		h.Lines[loc].Hosts = hostsCopy
+		h.Lines[loc].RegenRaw()
 	}
 
 	return nil
@@ -190,21 +200,23 @@ func (h *Hosts) Add(ip string, hosts ...string) error {
 
 func (h *Hosts) Clear() {
 	h.Lines = []HostsLine{}
+	h.ips.reset()
+	h.hosts.reset()
 }
 
 // Clean merge duplicate ips and hosts per ip
 func (h *Hosts) Clean() {
-	h.RemoveDuplicateIps()
+	h.CombineDuplicateIPs()
 	h.RemoveDuplicateHosts()
 	h.SortHosts()
-	h.SortByIp()
+	h.SortIPs()
 	h.HostsPerLine(HostsPerLine)
 }
 
-// Has return a bool if ip/host combo in hosts file.
+// Has return a bool if ip/host combo exists in the Lines
 func (h *Hosts) Has(ip string, host string) bool {
-	ippos := h.getIpPositions(ip)
-	hostpos := h.getHostPositions(host)
+	ippos := h.ips.get(ip)
+	hostpos := h.hosts.get(host)
 	for _, pos := range ippos {
 		if itemInSliceInt(pos, hostpos) {
 			// if ip and host have matching lookup positions we have a combo match
@@ -217,24 +229,38 @@ func (h *Hosts) Has(ip string, host string) bool {
 
 // HasHostname return a bool if hostname in hosts file.
 func (h *Hosts) HasHostname(host string) bool {
-	return len(h.getHostPositions(host)) > 0
+	return len(h.hosts.get(host)) > 0
 }
 
+// Deprecated: HasIp will be replaced by HasIP
 func (h *Hosts) HasIp(ip string) bool {
-	return len(h.getIpPositions(ip)) > 0
+	return h.HasIP(ip)
 }
 
-// Remove an entry from the hosts file.
+// HasIP will check if the ip exists
+func (h *Hosts) HasIP(ip string) bool {
+	return len(h.ips.get(ip)) > 0
+}
+
+// Remove takes an ip and an optional host(s), if only an ip is passed the whole line is removed
+// when the optional hosts param is passed it will remove only those specific hosts from that ip
 func (h *Hosts) Remove(ip string, hosts ...string) error {
-	var outputLines []HostsLine
 	if net.ParseIP(ip) == nil {
 		return fmt.Errorf("%q is an invalid IP address", ip)
 	}
 
-	for _, line := range h.Lines {
-		// Bad lines or comments just get readded.
-		if line.Err != nil || line.IsComment() || line.IP != ip {
-			outputLines = append(outputLines, line)
+	if len(hosts) == 0 {
+		return nil // no point in trying
+	}
+
+	lines := make([]HostsLine, len(h.Lines))
+	copy(lines, h.Lines)
+	h.Clear()
+
+	for _, line := range lines {
+		// add back all lines which were not the passed ip
+		if line.IP != ip {
+			h.addLine(line)
 			continue
 		}
 
@@ -246,206 +272,258 @@ func (h *Hosts) Remove(ip string, hosts ...string) error {
 		}
 
 		// If hosts is empty, skip the line completely.
-		if len(newHosts) > 0 {
-			newLineRaw := line.IP
-
-			for _, host := range newHosts {
-				newLineRaw = fmt.Sprintf("%s %s", newLineRaw, host)
-			}
-			newLine := NewHostsLine(newLineRaw)
-			outputLines = append(outputLines, newLine)
+		if len(newHosts) == 0 {
+			continue
 		}
+
+		// ip still has hosts, add it back
+		line.Hosts = newHosts
+		line.RegenRaw()
+
+		h.addLine(line)
 	}
 
-	h.Lines = outputLines
 	return nil
 }
 
-// RemoveByHostname remove entries by hostname from the hosts file.
+// RemoveByHostname go through all lines and remove a hostname if it exists
 func (h *Hosts) RemoveByHostname(host string) error {
-	for _, p := range h.getHostPositions(host) {
-		line := &h.Lines[p]
-		if len(line.Hosts) > 0 {
-			line.Hosts = removeFromSliceString(host, line.Hosts)
-			line.RegenRaw()
+	restart := true
+	for restart {
+		restart = false
+		for _, p := range h.hosts.get(host) {
+			line := &h.Lines[p]
+			if len(line.Hosts) > 0 {
+				line.Hosts = removeFromSliceString(host, line.Hosts)
+				line.RegenRaw()
+			}
+			h.hosts.remove(host, p)
+
+			// cleanup the whole line if there remains an IP address
+			// without hostname/alias
+			if len(line.Hosts) == 0 {
+				h.removeByPosition(p)
+				// when an entry in the lines array is removed
+				// the range from hosts.get() above is
+				// outdated. Therefore, the whole procedure needs
+				// to restart over again
+				restart = true
+				break
+			}
 		}
-		h.removeHostPositions(host, p)
 	}
 
+	h.reindex()
 	return nil
 }
 
+func (h *Hosts) RemoveByIP(ip string) {
+	pos := h.ips.get(ip)
+	for _, p := range pos {
+		h.removeByPosition(p)
+	}
+}
+
+// Deprecated: RemoveByIp this got refactored and wont return an error any more
+// leaving it for stable api purposes, will be removed in a major release
 func (h *Hosts) RemoveByIp(ip string) error {
-	pos := h.getIpPositions(ip)
-	for len(pos) > 0 {
-		for _, p := range pos {
-			h.removeByPosition(p)
-		}
-	}
-
+	h.RemoveByIP(ip)
 	return nil
 }
 
+// Deprecated: RemoveDuplicateIps deprecated will be deprecated, use Combine
 func (h *Hosts) RemoveDuplicateIps() {
+	h.CombineDuplicateIPs()
+}
+
+// CombineDuplicateIPs finds all duplicate ips and combines all their hosts into one line
+func (h *Hosts) CombineDuplicateIPs() {
 	ipCount := make(map[string]int)
 	for _, line := range h.Lines {
+		if line.IP == "" {
+			continue // ignore comments
+		}
 		ipCount[line.IP]++
 	}
 	for ip, count := range ipCount {
 		if count > 1 {
-			h.combineIp(ip)
+			// todo: combine will rebuild lines and indexes, maybe rewrite to do the rebuild and call reindex?
+			h.combineIP(ip)
 		}
 	}
 }
 
+func (h *Hosts) combineIP(ip string) {
+	newLine := HostsLine{
+		IP: ip,
+	}
+
+	lines := make([]HostsLine, len(h.Lines))
+	copy(lines, h.Lines)
+
+	// clear the lines and position indexes to start over
+	h.Clear()
+	for _, line := range lines {
+		if line.IP == ip {
+			// if you find the ip combine it into newline
+			newLine.combine(line)
+			continue
+		}
+		// add everyone else
+		h.addLine(line)
+	}
+
+	// sort the hosts and add it to the end of Lines
+	newLine.SortHosts()
+	h.addLine(newLine)
+}
+
+// RemoveDuplicateHosts will check each line and remove hosts if they are the same
 func (h *Hosts) RemoveDuplicateHosts() {
-	for pos, line := range h.Lines {
-		line.RemoveDuplicateHosts()
-		h.Lines[pos] = line
+	for pos := range h.Lines {
+		if h.Lines[pos].IsComment() {
+			continue // skip comments
+		}
+		h.Lines[pos].RemoveDuplicateHosts()
+		for _, host := range h.Lines[pos].Hosts {
+			h.hosts.remove(host, pos)
+		}
 	}
 }
 
+// SortHosts will go through each line and sort the hosts in alpha order
 func (h *Hosts) SortHosts() {
-	for pos, line := range h.Lines {
-		line.SortHosts()
-		h.Lines[pos] = line
+	for pos := range h.Lines {
+		h.Lines[pos].SortHosts()
 	}
 }
 
-// SortByIp convert to net.IP and byte.Compare
+// Deprecated: SortByIp switch to SortByIP
 func (h *Hosts) SortByIp() {
-	sortedIps := make([]net.IP, 0, len(h.Lines))
+	h.SortIPs()
+}
+
+// SortByIP convert to net.IP and byte.Compare, maintains all comment only lines at the top
+func (h *Hosts) SortIPs() {
+	// create a new list of unique ips, if dupe ips they will still get grouped together
+	uniqueIPs := make([]net.IP, 0, len(h.Lines))
+	unique := make(map[string]struct{})
 	for _, l := range h.Lines {
-		sortedIps = append(sortedIps, net.ParseIP(l.IP))
+		if _, ok := unique[l.IP]; !ok {
+			unique[l.IP] = struct{}{}
+			uniqueIPs = append(uniqueIPs, net.ParseIP(l.IP))
+		}
 	}
-	sort.Slice(sortedIps, func(i, j int) bool {
-		return bytes.Compare(sortedIps[i], sortedIps[j]) < 0
+
+	// sort the new unique list
+	sort.Slice(uniqueIPs, func(i, j int) bool {
+		return bytes.Compare(uniqueIPs[i], uniqueIPs[j]) < 0
 	})
 
-	var sortedLines []HostsLine
-	for _, ip := range sortedIps {
-		for _, l := range h.Lines {
+	// create a copy of the lines and Clear
+	lines := make([]HostsLine, len(h.Lines))
+	copy(lines, h.Lines)
+	// clear the lines and position indexes to start over
+	h.Clear()
+
+	// put all the comments back at the top
+	for _, l := range lines {
+		if l.IP == "" {
+			h.addLine(l)
+		}
+	}
+
+	// loop over the sorted ips and find their line and add it
+	for _, ip := range uniqueIPs {
+		for _, l := range lines {
 			if ip.String() == l.IP {
-				sortedLines = append(sortedLines, l)
+				h.addLine(l) // no continue to group duplicate ips
 			}
 		}
 	}
-	h.Lines = sortedLines
 }
 
+// HostsPerLine checks all ips and if their host count is greater than count will split into multiple lines with max of count hosts per line
 func (h *Hosts) HostsPerLine(count int) {
-	// restacks everything into 1 ip again so we can do the split, do this even if count is -1 so it can reset the slice
-	h.RemoveDuplicateIps()
 	if count <= 0 {
 		return
 	}
-	var newLines []HostsLine
-	for _, line := range h.Lines {
+
+	// make a local copy
+	lines := make([]HostsLine, len(h.Lines))
+	copy(lines, h.Lines)
+
+	// clear the lines and position indexes to start over
+	h.Clear()
+
+	for ln, line := range lines {
 		if len(line.Hosts) <= count {
-			newLines = append(newLines, line)
+			for _, host := range line.Hosts {
+				h.hosts.add(host, ln)
+			}
+			h.ips.add(line.IP, ln)
+			h.Lines = append(h.Lines, line)
 			continue
 		}
 
-		for i := 0; i < len(line.Hosts); i += count {
+		// i: index of the host, j: offset for line number
+		for i, j := 0, 0; i < len(line.Hosts); i, j = i+count, j+1 {
 			lineCopy := line
 			end := len(line.Hosts)
 			if end > i+count {
 				end = i + count
 			}
 
+			for _, host := range line.Hosts {
+				h.hosts.add(host, ln+j)
+			}
+			h.ips.add(line.IP, ln+j)
+
 			lineCopy.Hosts = line.Hosts[i:end]
-			lineCopy.Raw = lineCopy.ToRaw()
-			newLines = append(newLines, lineCopy)
+			lineCopy.RegenRaw()
+			h.Lines = append(h.Lines, lineCopy)
 		}
 	}
-	h.Lines = newLines
 }
 
-func (h *Hosts) combineIp(ip string) {
-	newLine := HostsLine{
-		IP: ip,
+// addLine ill append a new HostsLine and add it to the indexes
+func (h *Hosts) addLine(line HostsLine) {
+	h.Lines = append(h.Lines, line)
+	if line.IsComment() {
+		return // don't index comments
 	}
-
-	linesCopy := make([]HostsLine, len(h.Lines))
-	copy(linesCopy, h.Lines)
-	for _, line := range linesCopy {
-		if line.IP == ip {
-			newLine.Combine(line)
-		}
+	pos := len(h.Lines) - 1
+	h.ips.add(line.IP, pos)
+	for _, host := range line.Hosts {
+		h.hosts.add(host, pos)
 	}
-	newLine.SortHosts()
-	h.removeIp(ip)
-	h.Lines = append(h.Lines, newLine)
 }
 
+// removeByPosition will drop a line located at pos and reindex all lookups
 func (h *Hosts) removeByPosition(pos int) {
 	if pos == 0 && len(h.Lines) == 1 {
 		h.Clear()
 		return
 	}
-	if pos == len(h.Lines) {
-		h.Lines = h.Lines[:pos-1]
-		return
-	}
 	h.Lines = append(h.Lines[:pos], h.Lines[pos+1:]...)
+	h.reindex()
 }
 
-func (h *Hosts) removeIp(ip string) {
-	var newLines []HostsLine
-	for _, line := range h.Lines {
-		if line.IP != ip {
-			newLines = append(newLines, line)
+// reindex will reset the internal position arrays for host/ips and rerun the add commands and should be run everytime
+// a HostLine is removed. During the add process it's faster to just call the adds instead of reindex as it's more expensive.
+func (h *Hosts) reindex() {
+	h.hosts.Lock()
+	h.hosts.l = make(map[string][]int)
+	h.hosts.Unlock()
+
+	h.ips.Lock()
+	h.ips.l = make(map[string][]int)
+	h.ips.Unlock()
+
+	for pos, line := range h.Lines {
+		h.ips.add(line.IP, pos)
+		for _, host := range line.Hosts {
+			h.hosts.add(host, pos)
 		}
 	}
-
-	h.Lines = newLines
-}
-
-func (h *Hosts) getHostPositions(host string) []int {
-	h.hosts.RLock()
-	defer h.hosts.RUnlock()
-	i, ok := h.hosts.l[host]
-	if ok {
-		return i
-	}
-	return []int{}
-}
-
-func (h *Hosts) addHostPositions(host string, pos int) {
-	h.hosts.Lock()
-	defer h.hosts.Unlock()
-	h.hosts.l[host] = append(h.hosts.l[host], pos)
-}
-
-func (h *Hosts) removeHostPositions(host string, pos int) {
-	h.hosts.Lock()
-	defer h.hosts.Unlock()
-	positions := h.hosts.l[host]
-	h.hosts.l[host] = removeFromSliceInt(pos, positions)
-}
-
-func (h *Hosts) getIpPositions(ip string) []int {
-	h.ips.RLock()
-	defer h.ips.RUnlock()
-	i, ok := h.ips.l[ip]
-	if ok {
-		return i
-	}
-
-	return []int{}
-}
-
-func (h *Hosts) addIpPosition(ip string, pos int) {
-	h.ips.Lock()
-	defer h.ips.Unlock()
-	h.ips.l[ip] = append(h.ips.l[ip], pos)
-}
-
-func buildRawLine(ip string, hosts []string) string {
-	output := ip
-	for _, host := range hosts {
-		output = fmt.Sprintf("%s %s", output, host)
-	}
-
-	return output
 }

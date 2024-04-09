@@ -4,9 +4,9 @@ go 1.22.0
 
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
-	github.com/containerd/containerd v1.7.13
-	github.com/docker/cli v25.0.3+incompatible
-	github.com/docker/docker v25.0.3+incompatible
+	github.com/containerd/containerd v1.7.15
+	github.com/docker/cli v26.0.0+incompatible
+	github.com/docker/docker v26.0.0+incompatible
 	github.com/docker/docker-credential-helpers v0.8.1 // indirect
 	github.com/docker/go-connections v0.5.0
 	github.com/docker/go-metrics v0.0.1 // indirect
@@ -25,8 +25,8 @@ require (
 	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/sync v0.6.0
-	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/sync v0.7.0
+	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools v2.2.0+incompatible
@@ -35,11 +35,11 @@ require (
 )
 
 require (
-	github.com/goodhosts/hostsfile v0.1.1
-	github.com/google/go-containerregistry v0.16.1
+	github.com/goodhosts/hostsfile v0.1.6
+	github.com/google/go-containerregistry v0.19.1
 	github.com/rancher/wharfie v0.6.2
 	github.com/spf13/pflag v1.0.5
-	go4.org/netipx v0.0.0-20230728184502-ec4c8b891b28
+	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	k8s.io/utils v0.0.0-20240310230437-4693a0247e57
 )
 
@@ -69,11 +69,13 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.0 // indirect
+	github.com/magefile/mage v1.15.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/patternmatcher v0.5.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
@@ -100,12 +102,12 @@ require (
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
-	golang.org/x/term v0.15.0 // indirect
+	golang.org/x/term v0.19.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.16.1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

@@ -1,5 +1,5 @@
 //go:build !windows
-//+build !windows
+// +build !windows
 
 package hostsfile
 
@@ -9,4 +9,5 @@ var (
 	eol           = "\n"
 )
 
-func (h *Hosts) preFlushClean() {} // no op
+func (h *Hosts) preFlush() error  { return nil }
+func (h *Hosts) postFlush() error { return nil }
