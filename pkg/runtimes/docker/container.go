@@ -75,7 +75,7 @@ func startContainer(ctx context.Context, ID string) error {
 	}
 	defer docker.Close()
 
-	return docker.ContainerStart(ctx, ID, types.ContainerStartOptions{})
+	return docker.ContainerStart(ctx, ID, container.StartOptions{})
 }
 
 // removeContainer deletes a running container (like docker rm -f)
@@ -88,7 +88,7 @@ func removeContainer(ctx context.Context, ID string) error {
 	defer docker.Close()
 
 	// (1) define remove options
-	options := types.ContainerRemoveOptions{
+	options := container.RemoveOptions{
 		RemoveVolumes: true,
 		Force:         true,
 	}
@@ -146,7 +146,7 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 	// -> user input may or may not have the "k3d-" prefix
 	filters.Add("name", fmt.Sprintf("^/?(%s-)?%s$", k3d.DefaultObjectNamePrefix, node.Name))
 
-	containers, err := docker.ContainerList(ctx, types.ContainerListOptions{
+	containers, err := docker.ContainerList(ctx, container.ListOptions{
 		Filters: filters,
 		All:     true,
 	})

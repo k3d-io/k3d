@@ -33,7 +33,7 @@ type Channel struct {
 
 type ChannelServerResponse struct {
 	Channels []struct {
-		Channel `json:",squash"`
+		Channel `mapstructure:",squash"`
 	} `json:"data"`
 }
 

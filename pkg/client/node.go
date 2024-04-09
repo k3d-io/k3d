@@ -491,7 +491,6 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 
 func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, nodeStartOpts *k3d.NodeStartOpts) error {
 	if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
-
 		enabledFixes, anyEnabled := fixes.GetFixes(runtime)
 
 		// early exit if we don't need any fix

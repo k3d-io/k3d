@@ -83,7 +83,7 @@ func MakeFakeMeminfo(memoryBytes int64, nodeName string) (string, error) {
 		return "", fmt.Errorf("failed to get fake meminfo path for node '%s': %w", nodeName, err)
 	}
 	fakememinfo, err := os.Create(fakeMeminfoPath)
-	defer fakememinfo.Close()
+	defer fakememinfo.Close() // nolint
 	if err != nil {
 		return "", fmt.Errorf("failed to create fake meminfo path '%s': %w", fakeMeminfoPath, err)
 	}
