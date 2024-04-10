@@ -91,14 +91,14 @@ github.com/docker/cli/cli/version
 github.com/docker/cli/opts
 # github.com/docker/distribution v2.8.2+incompatible
 ## explicit
-# github.com/docker/distribution v2.8.3+incompatible
-## explicit
 github.com/docker/distribution
+github.com/docker/distribution/digestset
 github.com/docker/distribution/manifest
 github.com/docker/distribution/manifest/manifestlist
 github.com/docker/distribution/manifest/ocischema
 github.com/docker/distribution/manifest/schema2
 github.com/docker/distribution/metrics
+github.com/docker/distribution/reference
 github.com/docker/distribution/registry/api/errcode
 github.com/docker/distribution/registry/api/v2
 github.com/docker/distribution/registry/client
@@ -109,8 +109,6 @@ github.com/docker/distribution/registry/storage/cache
 github.com/docker/distribution/registry/storage/cache/memory
 github.com/docker/distribution/uuid
 # github.com/docker/docker v20.10.24+incompatible
-## explicit
-# github.com/docker/docker v24.0.5+incompatible
 ## explicit
 # github.com/docker/docker v26.0.0+incompatible
 ## explicit
@@ -169,6 +167,8 @@ github.com/docker/go-metrics
 github.com/docker/go-units
 # github.com/felixge/httpsnoop v1.0.3
 ## explicit; go 1.13
+# github.com/felixge/httpsnoop v1.0.4
+## explicit; go 1.13
 github.com/felixge/httpsnoop
 # github.com/fsnotify/fsnotify v1.5.4
 ## explicit; go 1.17
@@ -183,6 +183,8 @@ github.com/fvbommel/sortorder
 # github.com/go-logr/logr v1.2.3
 ## explicit; go 1.18
 # github.com/go-logr/logr v1.3.0
+## explicit; go 1.18
+# github.com/go-logr/logr v1.4.1
 ## explicit; go 1.18
 github.com/go-logr/logr
 github.com/go-logr/logr/funcr
@@ -213,8 +215,6 @@ github.com/golang/protobuf/proto
 github.com/goodhosts/hostsfile
 github.com/goodhosts/hostsfile/mage/install
 github.com/goodhosts/hostsfile/mage/test
-# github.com/google/go-cmp v0.5.9
-## explicit; go 1.13
 # github.com/google/go-cmp v0.6.0
 ## explicit; go 1.13
 github.com/google/go-cmp/cmp
@@ -390,11 +390,11 @@ github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
 github.com/prometheus/client_golang/prometheus/promhttp
 # github.com/prometheus/client_model v0.2.0
-## explicit; go 1.18
+## explicit; go 1.19
 # github.com/prometheus/client_model v0.3.0
-## explicit; go 1.18
-# github.com/prometheus/client_model v0.4.0
-## go 1.18
+## explicit; go 1.19
+# github.com/prometheus/client_model v0.5.0
+## go 1.19
 github.com/prometheus/client_model/go
 # github.com/prometheus/common v0.30.0
 ## explicit; go 1.17
@@ -510,11 +510,15 @@ github.com/xeipuuv/gojsonschema
 # go.opencensus.io v0.23.0
 ## explicit; go 1.13
 # go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.45.0
-## explicit; go 1.19
+## explicit; go 1.21
+# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.50.0
+## explicit; go 1.21
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp/internal/semconvutil
 # go.opentelemetry.io/otel v1.19.0
-## explicit; go 1.20
+## explicit; go 1.21
+# go.opentelemetry.io/otel v1.25.0
+## explicit; go 1.21
 go.opentelemetry.io/otel
 go.opentelemetry.io/otel/attribute
 go.opentelemetry.io/otel/baggage
@@ -524,14 +528,23 @@ go.opentelemetry.io/otel/internal/attribute
 go.opentelemetry.io/otel/internal/baggage
 go.opentelemetry.io/otel/internal/global
 go.opentelemetry.io/otel/propagation
-go.opentelemetry.io/otel/semconv/v1.17.0
+go.opentelemetry.io/otel/semconv/v1.20.0
+# go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.25.0
+## explicit; go 1.21
 # go.opentelemetry.io/otel/metric v1.19.0
-## explicit; go 1.20
+## explicit; go 1.21
+# go.opentelemetry.io/otel/metric v1.25.0
+## explicit; go 1.21
 go.opentelemetry.io/otel/metric
 go.opentelemetry.io/otel/metric/embedded
+# go.opentelemetry.io/otel/sdk v1.25.0
+## explicit; go 1.21
 # go.opentelemetry.io/otel/trace v1.19.0
-## explicit; go 1.20
+## explicit; go 1.21
+# go.opentelemetry.io/otel/trace v1.25.0
+## explicit; go 1.21
 go.opentelemetry.io/otel/trace
+go.opentelemetry.io/otel/trace/embedded
 # go.uber.org/atomic v1.9.0
 ## explicit; go 1.13
 go.uber.org/atomic
@@ -569,7 +582,6 @@ golang.org/x/mod/semver
 ## explicit; go 1.18
 # golang.org/x/net v0.24.0
 ## explicit; go 1.18
-golang.org/x/net/context
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
@@ -578,6 +590,8 @@ golang.org/x/net/idna
 ## explicit; go 1.18
 # golang.org/x/oauth2 v0.15.0
 ## explicit; go 1.18
+# golang.org/x/oauth2 v0.17.0
+## go 1.18
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
 # golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
@@ -642,6 +656,8 @@ golang.org/x/tools/internal/typesinternal
 golang.org/x/tools/internal/versions
 # google.golang.org/appengine v1.6.7
 ## explicit; go 1.11
+# google.golang.org/appengine v1.6.8
+## go 1.11
 google.golang.org/appengine/internal
 google.golang.org/appengine/internal/base
 google.golang.org/appengine/internal/datastore
