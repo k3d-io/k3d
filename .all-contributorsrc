@@ -232,6 +232,15 @@
       "contributions": [
         "financial"
       ]
+    },
+    {
+      "login": "dbreyfogle",
+      "name": "Danny Breyfogle",
+      "avatar_url": "https://avatars.githubusercontent.com/u/27653146?v=4",
+      "profile": "https://github.com/dbreyfogle",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
