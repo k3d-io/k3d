@@ -665,13 +665,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#configure-containerd" class="md-nav__link">
-    Configure containerd
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#the-nvidia-device-plugin" class="md-nav__link">
     The NVIDIA device plugin
   </a>
@@ -693,13 +686,6 @@
         <li class="md-nav__item">
   <a href="#run-and-test-the-custom-image-with-k3d" class="md-nav__link">
     Run and test the custom image with k3d
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#known-issues" class="md-nav__link">
-    Known issues
   </a>
   
 </li>
@@ -1666,13 +1652,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#configure-containerd" class="md-nav__link">
-    Configure containerd
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#the-nvidia-device-plugin" class="md-nav__link">
     The NVIDIA device plugin
   </a>
@@ -1694,13 +1673,6 @@
         <li class="md-nav__item">
   <a href="#run-and-test-the-custom-image-with-k3d" class="md-nav__link">
     Run and test the custom image with k3d
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#known-issues" class="md-nav__link">
-    Known issues
   </a>
   
 </li>
@@ -1748,42 +1720,25 @@ The native K3s image is based on Alpine but the NVIDIA container runtime is not 
 To get around this we need to build the image with a supported base image.</p>
 <h3 id="dockerfile">Dockerfile<a class="headerlink" href="#dockerfile" title="Permanent link">&para;</a></h3>
 <p><a href="Dockerfile">Dockerfile</a>:  </p>
-<div class="highlight"><pre><span></span><code><span class="k">ARG</span><span class="w"> </span><span class="nv">K3S_TAG</span><span class="o">=</span><span class="s2">&quot;v1.21.2-k3s1&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="k">ARG</span><span class="w"> </span><span class="nv">K3S_TAG</span><span class="o">=</span><span class="s2">&quot;v1.28.8-k3s1&quot;</span>
+<span class="k">ARG</span><span class="w"> </span><span class="nv">CUDA_TAG</span><span class="o">=</span><span class="s2">&quot;12.4.1-base-ubuntu22.04&quot;</span>
+
 <span class="k">FROM</span><span class="w"> </span><span class="s">rancher/k3s:$K3S_TAG</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="s">k3s</span>
+<span class="k">FROM</span><span class="w"> </span><span class="s">nvcr.io/nvidia/cuda:$CUDA_TAG</span>
 
-<span class="k">FROM</span><span class="w"> </span><span class="s">nvidia/cuda:11.2.0-base-ubuntu18.04</span>
+<span class="c"># Install the NVIDIA container toolkit</span>
+<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>curl<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://nvidia.github.io/libnvidia-container/gpgkey<span class="w"> </span><span class="p">|</span><span class="w"> </span>gpg<span class="w"> </span>--dearmor<span class="w"> </span>-o<span class="w"> </span>/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>curl<span class="w"> </span>-s<span class="w"> </span>-L<span class="w"> </span>https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
+<span class="w">      </span>sed<span class="w"> </span><span class="s1">&#39;s#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
+<span class="w">      </span>tee<span class="w"> </span>/etc/apt/sources.list.d/nvidia-container-toolkit.list<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>nvidia-container-toolkit<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>nvidia-ctk<span class="w"> </span>runtime<span class="w"> </span>configure<span class="w"> </span>--runtime<span class="o">=</span>containerd
 
-<span class="k">ARG</span><span class="w"> </span>NVIDIA_CONTAINER_RUNTIME_VERSION
-<span class="k">ENV</span><span class="w"> </span><span class="nv">NVIDIA_CONTAINER_RUNTIME_VERSION</span><span class="o">=</span><span class="nv">$NVIDIA_CONTAINER_RUNTIME_VERSION</span>
-
-<span class="k">RUN</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;debconf debconf/frontend select Noninteractive&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>debconf-set-selections
-
-<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>apt-get<span class="w"> </span>-y<span class="w"> </span>install<span class="w"> </span>gnupg2<span class="w"> </span>curl
-
-<span class="c"># Install NVIDIA Container Runtime</span>
-<span class="k">RUN</span><span class="w"> </span>curl<span class="w"> </span>-s<span class="w"> </span>-L<span class="w"> </span>https://nvidia.github.io/nvidia-container-runtime/gpgkey<span class="w"> </span><span class="p">|</span><span class="w"> </span>apt-key<span class="w"> </span>add<span class="w"> </span>-
-
-<span class="k">RUN</span><span class="w"> </span>curl<span class="w"> </span>-s<span class="w"> </span>-L<span class="w"> </span>https://nvidia.github.io/nvidia-container-runtime/ubuntu18.04/nvidia-container-runtime.list<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>/etc/apt/sources.list.d/nvidia-container-runtime.list
-
-<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>apt-get<span class="w"> </span>-y<span class="w"> </span>install<span class="w"> </span>nvidia-container-runtime<span class="o">=</span><span class="si">${</span><span class="nv">NVIDIA_CONTAINER_RUNTIME_VERSION</span><span class="si">}</span>
-
-<span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>k3s<span class="w"> </span>/<span class="w"> </span>/
-
-<span class="k">RUN</span><span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;hosts: files dns&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>/etc/nsswitch.conf
-
-<span class="k">RUN</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">1777</span><span class="w"> </span>/tmp
-
-<span class="c"># Provide custom containerd configuration to configure the nvidia-container-runtime</span>
-<span class="k">RUN</span><span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/var/lib/rancher/k3s/agent/etc/containerd/
-
-<span class="k">COPY</span><span class="w"> </span>config.toml.tmpl<span class="w"> </span>/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+<span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>k3s<span class="w"> </span>/<span class="w"> </span>/<span class="w"> </span>--exclude<span class="o">=</span>/bin
+<span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>k3s<span class="w"> </span>/bin<span class="w"> </span>/bin
 
 <span class="c"># Deploy the nvidia driver plugin on startup</span>
-<span class="k">RUN</span><span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/var/lib/rancher/k3s/server/manifests
-
 <span class="k">COPY</span><span class="w"> </span>device-plugin-daemonset.yaml<span class="w"> </span>/var/lib/rancher/k3s/server/manifests/nvidia-device-plugin-daemonset.yaml
 
 <span class="k">VOLUME</span><span class="w"> </span><span class="s">/var/lib/kubelet</span>
@@ -1799,76 +1754,23 @@ To get around this we need to build the image with a supported base image.</p>
 <p>This Dockerfile is based on the <a href="https://github.com/rancher/k3s/blob/master/package/Dockerfile">K3s Dockerfile</a>
 The following changes are applied:</p>
 <ol>
-<li>Change the base images to nvidia/cuda:11.2.0-base-ubuntu18.04 so the NVIDIA Container Runtime can be installed. The version of <code>cuda:xx.x.x</code> must match the one you&rsquo;re planning to use.</li>
-<li>Add a custom containerd <code>config.toml</code> template to add the NVIDIA Container Runtime. This replaces the default <code>runc</code> runtime</li>
-<li>Add a manifest for the NVIDIA driver plugin for Kubernetes</li>
+<li>Change the base images to nvidia/cuda:12.4.1-base-ubuntu22.04 so the NVIDIA Container Toolkit can be installed. The version of <code>cuda:xx.x.x</code> must match the one you&rsquo;re planning to use.</li>
+<li>Add a manifest for the NVIDIA driver plugin for Kubernetes with an added RuntimeClass definition. See <a href="https://docs.k3s.io/advanced#nvidia-container-runtime-support">k3s documentation</a>.</li>
 </ol>
-<h3 id="configure-containerd">Configure containerd<a class="headerlink" href="#configure-containerd" title="Permanent link">&para;</a></h3>
-<p>We need to configure containerd to use the NVIDIA Container Runtime. We need to customize the config.toml that is used at startup. K3s provides a way to do this using a <a href="config.toml.tmpl">config.toml.tmpl</a> file. More information can be found on the <a href="https://rancher.com/docs/k3s/latest/en/advanced/#configuring-containerd">K3s site</a>.</p>
-<div class="highlight"><pre><span></span><code><span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">opt</span><span class="p">]</span>
-<span class="w">  </span><span class="nx">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{{ .NodeConfig.Containerd.Opt }}&quot;</span>
-
-<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">]</span>
-<span class="w">  </span><span class="nx">stream_server_address</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;127.0.0.1&quot;</span>
-<span class="w">  </span><span class="nx">stream_server_port</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;10010&quot;</span>
-
-<span class="p">{{</span><span class="o">-</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">.</span><span class="nx">IsRunningInUserNS</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">  </span><span class="nx">disable_cgroup</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span>
-<span class="w">  </span><span class="nx">disable_apparmor</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span>
-<span class="w">  </span><span class="nx">restrict_oom_score_adj</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span>
-<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-
-<span class="p">{{</span><span class="o">-</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">.</span><span class="nx">NodeConfig</span><span class="p">.</span><span class="nx">AgentConfig</span><span class="p">.</span><span class="nx">PauseImage</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">  </span><span class="nx">sandbox_image</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{{ .NodeConfig.AgentConfig.PauseImage }}&quot;</span>
-<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-
-<span class="p">{{</span><span class="o">-</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nx">not</span><span class="w"> </span><span class="p">.</span><span class="nx">NodeConfig</span><span class="p">.</span><span class="nx">NoFlannel</span><span class="w"> </span><span class="p">}}</span>
-<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">.</span><span class="nx">cni</span><span class="p">]</span>
-<span class="w">  </span><span class="nx">bin_dir</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{{ .NodeConfig.AgentConfig.CNIBinDir }}&quot;</span>
-<span class="w">  </span><span class="nx">conf_dir</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{{ .NodeConfig.AgentConfig.CNIConfDir }}&quot;</span>
-<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-
-<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">.</span><span class="nx">containerd</span><span class="p">.</span><span class="nx">runtimes</span><span class="p">.</span><span class="nx">runc</span><span class="p">]</span>
-<span class="w">  </span><span class="err">#</span><span class="w"> </span><span class="o">----</span><span class="w"> </span><span class="nx">changed</span><span class="w"> </span><span class="nx">from</span><span class="w"> </span><span class="err">&#39;</span><span class="nx">io</span><span class="p">.</span><span class="nx">containerd</span><span class="p">.</span><span class="nx">runc</span><span class="p">.</span><span class="nx">v2</span><span class="err">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">GPU</span><span class="w"> </span><span class="nx">support</span>
-<span class="w">  </span><span class="nx">runtime_type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;io.containerd.runtime.v1.linux&quot;</span>
-
-<span class="err">#</span><span class="w"> </span><span class="o">----</span><span class="w"> </span><span class="nx">added</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">GPU</span><span class="w"> </span><span class="nx">support</span>
-<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">linux</span><span class="p">]</span>
-<span class="w">  </span><span class="nx">runtime</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;nvidia-container-runtime&quot;</span>
-
-<span class="p">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">.</span><span class="nx">PrivateRegistryConfig</span><span class="w"> </span><span class="p">}}</span>
-<span class="p">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">.</span><span class="nx">PrivateRegistryConfig</span><span class="p">.</span><span class="nx">Mirrors</span><span class="w"> </span><span class="p">}}</span>
-<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">.</span><span class="nx">registry</span><span class="p">.</span><span class="nx">mirrors</span><span class="p">]{{</span><span class="nx">end</span><span class="p">}}</span>
-<span class="p">{{</span><span class="k">range</span><span class="w"> </span><span class="err">$</span><span class="nx">k</span><span class="p">,</span><span class="w"> </span><span class="err">$</span><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">.</span><span class="nx">PrivateRegistryConfig</span><span class="p">.</span><span class="nx">Mirrors</span><span class="w"> </span><span class="p">}}</span>
-<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">.</span><span class="nx">registry</span><span class="p">.</span><span class="nx">mirrors</span><span class="p">.</span><span class="s">&quot;{{$k}}&quot;</span><span class="p">]</span>
-<span class="w">  </span><span class="nx">endpoint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[{{</span><span class="k">range</span><span class="w"> </span><span class="err">$</span><span class="nx">i</span><span class="p">,</span><span class="w"> </span><span class="err">$</span><span class="nx">j</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">Endpoints</span><span class="p">}}{{</span><span class="k">if</span><span class="w"> </span><span class="err">$</span><span class="nx">i</span><span class="p">}},</span><span class="w"> </span><span class="p">{{</span><span class="nx">end</span><span class="p">}}{{</span><span class="nx">printf</span><span class="w"> </span><span class="s">&quot;%q&quot;</span><span class="w"> </span><span class="p">.}}{{</span><span class="nx">end</span><span class="p">}}]</span>
-<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-
-<span class="p">{{</span><span class="k">range</span><span class="w"> </span><span class="err">$</span><span class="nx">k</span><span class="p">,</span><span class="w"> </span><span class="err">$</span><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">.</span><span class="nx">PrivateRegistryConfig</span><span class="p">.</span><span class="nx">Configs</span><span class="w"> </span><span class="p">}}</span>
-<span class="p">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">Auth</span><span class="w"> </span><span class="p">}}</span>
-<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">.</span><span class="nx">registry</span><span class="p">.</span><span class="nx">configs</span><span class="p">.</span><span class="s">&quot;{{$k}}&quot;</span><span class="p">.</span><span class="nx">auth</span><span class="p">]</span>
-<span class="w">  </span><span class="p">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">Auth</span><span class="p">.</span><span class="nx">Username</span><span class="w"> </span><span class="p">}}</span><span class="nx">username</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{{ $v.Auth.Username }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-<span class="w">  </span><span class="p">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">Auth</span><span class="p">.</span><span class="nx">Password</span><span class="w"> </span><span class="p">}}</span><span class="nx">password</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{{ $v.Auth.Password }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-<span class="w">  </span><span class="p">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">Auth</span><span class="p">.</span><span class="nx">Auth</span><span class="w"> </span><span class="p">}}</span><span class="nx">auth</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{{ $v.Auth.Auth }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-<span class="w">  </span><span class="p">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">Auth</span><span class="p">.</span><span class="nx">IdentityToken</span><span class="w"> </span><span class="p">}}</span><span class="nx">identitytoken</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{{ $v.Auth.IdentityToken }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-<span class="p">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">TLS</span><span class="w"> </span><span class="p">}}</span>
-<span class="p">[</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">cri</span><span class="p">.</span><span class="nx">registry</span><span class="p">.</span><span class="nx">configs</span><span class="p">.</span><span class="s">&quot;{{$k}}&quot;</span><span class="p">.</span><span class="nx">tls</span><span class="p">]</span>
-<span class="w">  </span><span class="p">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">TLS</span><span class="p">.</span><span class="nx">CAFile</span><span class="w"> </span><span class="p">}}</span><span class="nx">ca_file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{{ $v.TLS.CAFile }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-<span class="w">  </span><span class="p">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">TLS</span><span class="p">.</span><span class="nx">CertFile</span><span class="w"> </span><span class="p">}}</span><span class="nx">cert_file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{{ $v.TLS.CertFile }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-<span class="w">  </span><span class="p">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="err">$</span><span class="nx">v</span><span class="p">.</span><span class="nx">TLS</span><span class="p">.</span><span class="nx">KeyFile</span><span class="w"> </span><span class="p">}}</span><span class="nx">key_file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{{ $v.TLS.KeyFile }}&quot;</span><span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-<span class="p">{{</span><span class="nx">end</span><span class="p">}}</span>
-</code></pre></div>
 <h3 id="the-nvidia-device-plugin">The NVIDIA device plugin<a class="headerlink" href="#the-nvidia-device-plugin" title="Permanent link">&para;</a></h3>
-<p>To enable NVIDIA GPU support on Kubernetes you also need to install the <a href="https://github.com/NVIDIA/k8s-device-plugin">NVIDIA device plugin</a>. The device plugin is a deamonset and allows you to automatically:</p>
+<p>To enable NVIDIA GPU support on Kubernetes you also need to install the <a href="https://github.com/NVIDIA/k8s-device-plugin">NVIDIA device plugin</a>. The device plugin is a daemonset and allows you to automatically:</p>
 <ul>
 <li>Expose the number of GPUs on each nodes of your cluster</li>
 <li>Keep track of the health of your GPUs</li>
 <li>Run GPU enabled containers in your Kubernetes cluster.</li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">apps/v1</span>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">node.k8s.io/v1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RuntimeClass</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span>
+<span class="nt">handler</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span>
+<span class="nn">---</span>
+<span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">apps/v1</span>
 <span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DaemonSet</span>
 <span class="nt">metadata</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia-device-plugin-daemonset</span>
@@ -1877,69 +1779,84 @@ The following changes are applied:</p>
 <span class="w">  </span><span class="nt">selector</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">matchLabels</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia-device-plugin-ds</span>
+<span class="w">  </span><span class="nt">updateStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RollingUpdate</span>
 <span class="w">  </span><span class="nt">template</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">metadata</span><span class="p">:</span>
-<span class="w">      </span><span class="c1"># Mark this pod as a critical add-on; when enabled, the critical add-on scheduler</span>
-<span class="w">      </span><span class="c1"># reserves resources for critical add-on pods so that they can be rescheduled after</span>
-<span class="w">      </span><span class="c1"># a failure.  This annotation works in tandem with the toleration below.</span>
-<span class="w">      </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">scheduler.alpha.kubernetes.io/critical-pod</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
 <span class="w">      </span><span class="nt">labels</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia-device-plugin-ds</span>
 <span class="w">    </span><span class="nt">spec</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">runtimeClassName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span><span class="w"> </span><span class="c1"># Explicitly request the runtime</span>
 <span class="w">      </span><span class="nt">tolerations</span><span class="p">:</span>
-<span class="w">      </span><span class="c1"># Allow this pod to be rescheduled while the node is in &quot;critical add-ons only&quot; mode.</span>
-<span class="w">      </span><span class="c1"># This, along with the annotation above marks this pod as a critical add-on.</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CriticalAddonsOnly</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia.com/gpu</span>
 <span class="w">        </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Exists</span>
+<span class="w">        </span><span class="nt">effect</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NoSchedule</span>
+<span class="w">      </span><span class="c1"># Mark this pod as a critical add-on; when enabled, the critical add-on</span>
+<span class="w">      </span><span class="c1"># scheduler reserves resources for critical add-on pods so that they can</span>
+<span class="w">      </span><span class="c1"># be rescheduled after a failure.</span>
+<span class="w">      </span><span class="c1"># See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/</span>
+<span class="w">      </span><span class="nt">priorityClassName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;system-node-critical&quot;</span>
 <span class="w">      </span><span class="nt">containers</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">env</span><span class="p">:</span>
-<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DP_DISABLE_HEALTHCHECKS</span>
-<span class="w">          </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">xids</span>
-<span class="w">        </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia/k8s-device-plugin:1.11</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvcr.io/nvidia/k8s-device-plugin:v0.15.0-rc.2</span>
 <span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia-device-plugin-ctr</span>
+<span class="w">        </span><span class="nt">env</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">FAIL_ON_INIT_ERROR</span>
+<span class="w">            </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span>
 <span class="w">        </span><span class="nt">securityContext</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">allowPrivilegeEscalation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">          </span><span class="nt">allowPrivilegeEscalation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 <span class="w">          </span><span class="nt">capabilities</span><span class="p">:</span>
 <span class="w">            </span><span class="nt">drop</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;ALL&quot;</span><span class="p p-Indicator">]</span>
 <span class="w">        </span><span class="nt">volumeMounts</span><span class="p">:</span>
-<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">device-plugin</span>
-<span class="w">            </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/lib/kubelet/device-plugins</span>
-<span class="w">      </span><span class="nt">volumes</span><span class="p">:</span>
 <span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">device-plugin</span>
-<span class="w">          </span><span class="nt">hostPath</span><span class="p">:</span>
-<span class="w">            </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/lib/kubelet/device-plugins</span>
+<span class="w">          </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/lib/kubelet/device-plugins</span>
+<span class="w">      </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">device-plugin</span>
+<span class="w">        </span><span class="nt">hostPath</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/lib/kubelet/device-plugins</span>
 </code></pre></div>
+<p>Two modifications have been made to the original NVIDIA daemonset:</p>
+<ol>
+<li>
+<p>Added RuntimeClass definition to the YAML frontmatter.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">node.k8s.io/v1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RuntimeClass</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span>
+<span class="nt">handler</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span>
+</code></pre></div>
+</li>
+<li>
+<p>Added <code>runtimeClassName: nvidia</code> to the Pod spec.</p>
+</li>
+</ol>
+<p>Note: you must explicitly add <code>runtimeClassName: nvidia</code> to all your Pod specs to use the GPU. See <a href="https://docs.k3s.io/advanced#nvidia-container-runtime-support">k3s documentation</a>.</p>
 <h3 id="build-the-k3s-image">Build the K3s image<a class="headerlink" href="#build-the-k3s-image" title="Permanent link">&para;</a></h3>
 <p>To build the custom image we need to build K3s because we need the generated output.</p>
 <p>Put the following files in a directory:</p>
 <ul>
 <li><a href="Dockerfile">Dockerfile</a></li>
-<li><a href="config.toml.tmpl">config.toml.tmpl</a></li>
 <li><a href="device-plugin-daemonset.yaml">device-plugin-daemonset.yaml</a></li>
 <li><a href="build.sh">build.sh</a></li>
 <li><a href="cuda-vector-add.yaml">cuda-vector-add.yaml</a></li>
 </ul>
-<p>The <code>build.sh</code> script is configured using exports &amp; defaults to <code>v1.21.2+k3s1</code>. Please set at least the <code>IMAGE_REGISTRY</code> variable! The script performs the following steps builds the custom K3s image including the nvidia drivers.</p>
+<p>The <code>build.sh</code> script is configured using exports &amp; defaults to <code>v1.28.8+k3s1</code>. Please set at least the <code>IMAGE_REGISTRY</code> variable! The script performs the following steps builds the custom K3s image including the nvidia drivers.</p>
 <p><a href="build.sh">build.sh</a>:</p>
 <div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
 
 <span class="nb">set</span><span class="w"> </span>-euxo<span class="w"> </span>pipefail
 
-<span class="nv">K3S_TAG</span><span class="o">=</span><span class="si">${</span><span class="nv">K3S_TAG</span><span class="p">:=</span><span class="s2">&quot;v1.21.2-k3s1&quot;</span><span class="si">}</span><span class="w"> </span><span class="c1"># replace + with -, if needed</span>
+<span class="nv">K3S_TAG</span><span class="o">=</span><span class="si">${</span><span class="nv">K3S_TAG</span><span class="p">:=</span><span class="s2">&quot;v1.28.8-k3s1&quot;</span><span class="si">}</span><span class="w"> </span><span class="c1"># replace + with -, if needed</span>
+<span class="nv">CUDA_TAG</span><span class="o">=</span><span class="si">${</span><span class="nv">CUDA_TAG</span><span class="p">:=</span><span class="s2">&quot;12.4.1-base-ubuntu22.04&quot;</span><span class="si">}</span>
 <span class="nv">IMAGE_REGISTRY</span><span class="o">=</span><span class="si">${</span><span class="nv">IMAGE_REGISTRY</span><span class="p">:=</span><span class="s2">&quot;MY_REGISTRY&quot;</span><span class="si">}</span>
 <span class="nv">IMAGE_REPOSITORY</span><span class="o">=</span><span class="si">${</span><span class="nv">IMAGE_REPOSITORY</span><span class="p">:=</span><span class="s2">&quot;rancher/k3s&quot;</span><span class="si">}</span>
-<span class="nv">IMAGE_TAG</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$K3S_TAG</span><span class="s2">-cuda&quot;</span>
+<span class="nv">IMAGE_TAG</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$K3S_TAG</span><span class="s2">-cuda-</span><span class="nv">$CUDA_TAG</span><span class="s2">&quot;</span>
 <span class="nv">IMAGE</span><span class="o">=</span><span class="si">${</span><span class="nv">IMAGE</span><span class="p">:=</span><span class="s2">&quot;</span><span class="nv">$IMAGE_REGISTRY</span><span class="s2">/</span><span class="nv">$IMAGE_REPOSITORY</span><span class="s2">:</span><span class="nv">$IMAGE_TAG</span><span class="s2">&quot;</span><span class="si">}</span>
-
-<span class="nv">NVIDIA_CONTAINER_RUNTIME_VERSION</span><span class="o">=</span><span class="si">${</span><span class="nv">NVIDIA_CONTAINER_RUNTIME_VERSION</span><span class="p">:=</span><span class="s2">&quot;3.5.0-1&quot;</span><span class="si">}</span>
 
 <span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;IMAGE=</span><span class="nv">$IMAGE</span><span class="s2">&quot;</span>
 
-<span class="c1"># due to some unknown reason, copying symlinks fails with buildkit enabled</span>
-<span class="nv">DOCKER_BUILDKIT</span><span class="o">=</span><span class="m">0</span><span class="w"> </span>docker<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
+docker<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">K3S_TAG</span><span class="o">=</span><span class="nv">$K3S_TAG</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">NVIDIA_CONTAINER_RUNTIME_VERSION</span><span class="o">=</span><span class="nv">$NVIDIA_CONTAINER_RUNTIME_VERSION</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">CUDA_TAG</span><span class="o">=</span><span class="nv">$CUDA_TAG</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-t<span class="w"> </span><span class="nv">$IMAGE</span><span class="w"> </span>.
 docker<span class="w"> </span>push<span class="w"> </span><span class="nv">$IMAGE</span>
 <span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Done!&quot;</span>
@@ -1963,10 +1880,6 @@ Test<span class="w"> </span>PASSED
 Done
 </code></pre></div>
 <p>If the <code>cuda-vector-add</code> pod is stuck in <code>Pending</code> state, probably the device-driver daemonset didn&rsquo;t get deployed correctly from the auto-deploy manifests. In that case, you can apply it manually via <code class="highlight">kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>device-plugin-daemonset.yaml</code>.</p>
-<h2 id="known-issues">Known issues<a class="headerlink" href="#known-issues" title="Permanent link">&para;</a></h2>
-<ul>
-<li>This approach does not work on WSL2 yet. The NVIDIA driver plugin and container runtime rely on the NVIDIA Management Library (NVML) which is not yet supported. See the <a href="https://docs.nvidia.com/cuda/wsl-user-guide/index.html#known-limitations">CUDA on WSL User Guide</a>.</li>
-</ul>
 <h2 id="acknowledgements">Acknowledgements<a class="headerlink" href="#acknowledgements" title="Permanent link">&para;</a></h2>
 <p>Most of the information in this article was obtained from various sources:</p>
 <ul>
@@ -1980,6 +1893,7 @@ Done
 <li><a href="https://github.com/markrexwinkel">@markrexwinkel</a></li>
 <li><a href="https://github.com/vainkop">@vainkop</a></li>
 <li><a href="https://github.com/iwilltry42">@iwilltry42</a></li>
+<li><a href="https://github.com/dbreyfogle">@dbreyfogle</a></li>
 </ul>
 
   <hr>
@@ -1987,7 +1901,7 @@ Done
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 27, 2023</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">April 15, 2024</span>
       
     
   </small>
