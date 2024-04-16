@@ -232,17 +232,6 @@
       "contributions": [
         "financial"
       ]
-    },
-    {
-      "login": "aabouzaid",
-      "name": "Ahmed AbouZaid",
-      "avatar_url": "https://avatars.githubusercontent.com/u/6760103?v=4",
-      "profile": "https://tech.aabouzaid.com/",
-      "contributions": [
-        "ideas",
-        "code",
-        "doc"
-      ]
     }
   ],
   "contributorsPerLine": 7,
