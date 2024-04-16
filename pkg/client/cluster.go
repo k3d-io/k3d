@@ -247,6 +247,25 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 		})
 	}
 
+	/*
+	 * Step 4: Files
+	 */
+
+	for id, node := range clusterConfig.Nodes {
+		for _, nodefile := range node.Files {
+			clusterConfig.Nodes[id].HookActions = append(clusterConfig.Nodes[id].HookActions, k3d.NodeHook{
+				Stage: k3d.LifecycleStagePreStart,
+				Action: actions.WriteFileAction{
+					Runtime:     runtime,
+					Content:     nodefile.Content,
+					Dest:        nodefile.Destination,
+					Mode:        0644,
+					Description: nodefile.Description,
+				},
+			})
+		}
+	}
+
 	return nil
 }
 

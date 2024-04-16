@@ -25,10 +25,15 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
 
 	homedir "github.com/mitchellh/go-homedir"
 
+	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
+	yaml "gopkg.in/yaml.v3"
 )
 
 // GetConfigDirOrCreate will return the base path of the k3d config directory or create it if it doesn't exist yet
@@ -59,4 +64,50 @@ func createDirIfNotExists(path string) error {
 		return os.MkdirAll(path, os.ModePerm)
 	}
 	return nil
+}
+
+// ReadFileSource reads the file source which is either embedded in the k3d config file or relative to it.
+func ReadFileSource(configFile, source string) ([]byte, error) {
+	sourceContent := &yaml.Node{}
+	sourceContent.SetString(source)
+
+	// If the source input is embedded in the config file, use it as it is.
+	if sourceContent.Style == yaml.LiteralStyle || sourceContent.Style == yaml.FoldedStyle {
+		l.Log().Debugf("read source from embedded file with content '%s'", sourceContent.Value)
+		return []byte(sourceContent.Value), nil
+	}
+
+	// If the source input is referenced as an external file, read its content.
+	sourceFilePath := filepath.Join(filepath.Dir(configFile), sourceContent.Value)
+	fileInfo, err := os.Stat(sourceFilePath)
+	if err == nil && !fileInfo.IsDir() {
+		fileContent, err := os.ReadFile(sourceFilePath)
+		if err != nil {
+			return nil, fmt.Errorf("cannot read file: %s", sourceFilePath)
+		}
+		l.Log().Debugf("read source from external file '%s'", sourceFilePath)
+		return fileContent, nil
+	}
+
+	return nil, fmt.Errorf("could resolve source file path: %s", sourceFilePath)
+}
+
+// ResolveFileDestination determines the file destination and resolves it if it has a magic shortcut.
+func ResolveFileDestination(destPath string) (string, error) {
+	// If the destination path is absolute, then use it as it is.
+	if filepath.IsAbs(destPath) {
+		l.Log().Debugf("resolved destination with absolute path '%s'", destPath)
+		return destPath, nil
+	}
+
+	// If the destination path has a magic shortcut, then resolve it and use it in the path.
+	destPathTree := strings.Split(destPath, string(os.PathSeparator))
+	if shortcutPath, found := k3s.K3sPathShortcuts[destPathTree[0]]; found {
+		destPathTree[0] = shortcutPath
+		destPathResolved := filepath.Join(destPathTree...)
+		l.Log().Debugf("resolved destination with magic shortcut path: '%s'", destPathResolved)
+		return filepath.Join(destPathResolved), nil
+	}
+
+	return "", fmt.Errorf("destination can be only absolute path or starts with predefined shortcut path. Could not resolve destination file path: %s", destPath)
 }

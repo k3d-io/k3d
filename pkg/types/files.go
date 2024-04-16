@@ -1,5 +1,5 @@
 /*
-Copyright © 2020-2023 The k3d Author(s)
+Copyright © 2020-2024 The k3d Author(s)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,36 +19,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+package types
 
-package config
-
-import (
-	"context"
-	"testing"
-
-	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
-	"github.com/k3d-io/k3d/v5/pkg/runtimes"
-	"github.com/spf13/viper"
-)
-
-func TestTransformSimpleConfigToClusterConfig(t *testing.T) {
-	cfgFile := "./test_assets/config_test_simple.yaml"
-
-	vip := viper.New()
-	vip.SetConfigFile(cfgFile)
-	_ = vip.ReadInConfig()
-
-	cfg, err := FromViper(vip)
-	if err != nil {
-		t.Error(err)
-	}
-
-	t.Logf("\n========== Read Config ==========\n%+v\n=================================\n", cfg)
-
-	clusterCfg, err := TransformSimpleToClusterConfig(context.Background(), runtimes.Docker, cfg.(conf.SimpleConfig), cfgFile)
-	if err != nil {
-		t.Error(err)
-	}
-
-	t.Logf("\n===== Resulting Cluster Config =====\n%+v\n===============\n", clusterCfg)
+type File struct {
+	Content     []byte `mapstructure:"content" json:"content,omitempty"`
+	Destination string `mapstructure:"destination" json:"destination,omitempty"`
+	Description string `mapstructure:"description" json:"description,omitempty"`
 }
