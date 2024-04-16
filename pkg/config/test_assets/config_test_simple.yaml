@@ -24,28 +24,28 @@ env:
     nodeFilters:
       - all
 files:
- - source: |
-    apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: foo
-   destination: /var/lib/rancher/k3s/server/manifests/foo.yaml
-   # destination: "Source: Embedded content in k3d config file, Destination: Absolute path, Description: Not defined"
- - source: |
-    apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: bar
-   destination: k3s-manifests/bar.yaml # Resolved to /var/lib/rancher/k3s/server/manifests/bar.yaml
-   description: 'Source: Embedded content in k3d config file, Destination: Magic shortcut path, Description: Defined'
- - source: baz-ns.yaml
-   destination: k3s-manifests-custom/baz.yaml # Resolved to /var/lib/rancher/k3s/server/manifests/custom/bar.yaml
-   description: 'Source: Relative path to k3d config file, Destination: Magic shortcut path, Description: Defined'
- - source: baz-ns.yaml
-   destination: k3s-manifests-custom/baz-server.yaml # Resolved to /var/lib/rancher/k3s/server/manifests/custom/bar-server.yaml
-   nodeFilters:
-   - "server:*"
-   description: 'Source: Relative path to k3d config file, Destination: Magic shortcut path, Node: Defined, Description: Defined'
+  - description: 'Source: Embedded, Destination: Absolute path'
+    source: |
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: foo
+    destination: /var/lib/rancher/k3s/server/manifests/foo.yaml
+  - description: 'Source: Embedded, Destination: Magic shortcut path'
+    source: |
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: bar
+    destination: k3s-manifests/bar.yaml # Resolved to /var/lib/rancher/k3s/server/manifests/bar.yaml
+  - description: 'Source: Relative, Destination: Magic shortcut path'
+    source: ns-baz.yaml
+    destination: k3s-manifests-custom/baz.yaml # Resolved to /var/lib/rancher/k3s/server/manifests/custom/baz.yaml
+  - description: 'Source: Relative, Destination: Magic shortcut path, Node: Servers only'
+    source: ns-baz.yaml
+    destination: k3s-manifests/baz.yaml # Resolved to /var/lib/rancher/k3s/server/manifests/baz.yaml
+    nodeFilters:
+    - "server:*"
 
 options:
   k3d:
