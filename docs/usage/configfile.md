@@ -77,6 +77,19 @@ env:
   - envVar: bar=baz # same as `--env 'bar=baz@server:0'`
     nodeFilters:
       - server:0
+files:
+  - description: 'Source: Embedded, Destination: Magic shortcut path'
+    source: |
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: foo
+    destination: k3s-manifests-custom/foo.yaml # Resolved to /var/lib/rancher/k3s/server/manifests/custom/foo.yaml
+  - description: 'Source: Relative, Destination: Absolute path, Node: Servers only'
+    source: ns-baz.yaml
+    destination: /var/lib/rancher/k3s/server/manifests/baz.yaml
+    nodeFilters:
+    - "server:*"
 registries: # define how registries should be created or used
   create: # creates a default registry to be used with the cluster; same as `--registry-create registry.localhost`
     name: registry.localhost

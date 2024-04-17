@@ -114,6 +114,28 @@
         "additionalProperties": false
       }
     },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "destination"],
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "nodeFilters": {
+            "$ref": "#/definitions/nodeFilters"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
     "options": {
       "type": "object",
       "properties": {

@@ -47,7 +47,7 @@ import (
 )
 
 // TransformSimpleToClusterConfig transforms a simple configuration to a full-fledged cluster configuration
-func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtime, simpleConfig conf.SimpleConfig) (*conf.ClusterConfig, error) {
+func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtime, simpleConfig conf.SimpleConfig, configFileName string) (*conf.ClusterConfig, error) {
 	// set default cluster name
 	if simpleConfig.Name == "" {
 		simpleConfig.Name = k3d.DefaultClusterName
@@ -381,6 +381,35 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 
 		l.Log().Tracef("Registry: read config from input:\n%+v", k3sRegistry)
 		clusterCreateOpts.Registries.Config = k3sRegistry
+	}
+
+	/*
+	 * Files
+	 */
+
+	for _, fileWithNodeFilters := range simpleConfig.Files {
+		nodes, err := util.FilterNodes(nodeList, fileWithNodeFilters.NodeFilters)
+		if err != nil {
+			return nil, fmt.Errorf("failed to filter nodes for file copying '%s': %w", fileWithNodeFilters, err)
+		}
+
+		content, err := util.ReadFileSource(configFileName, fileWithNodeFilters.Source)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read source content: %w", err)
+		}
+
+		destination, err := util.ResolveFileDestination(fileWithNodeFilters.Destination)
+		if err != nil {
+			return nil, fmt.Errorf("destination path is not correct: %w", err)
+		}
+
+		for _, node := range nodes {
+			node.Files = append(node.Files, k3d.File{
+				Content:     content,
+				Destination: destination,
+				Description: fileWithNodeFilters.Description,
+			})
+		}
 	}
 
 	/**********************

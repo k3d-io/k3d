@@ -71,6 +71,35 @@ func TestReadSimpleConfig(t *testing.T) {
 				NodeFilters: []string{"all"},
 			},
 		},
+		Files: []conf.FileWithNodeFilters{
+			{
+				Description: "Source: Embedded, Destination: Absolute path",
+				Source: "apiVersion: v1\n" +
+					"kind: Namespace\n" +
+					"metadata:\n" +
+					"  name: foo\n",
+				Destination: "/var/lib/rancher/k3s/server/manifests/foo.yaml",
+			},
+			{
+				Description: "Source: Embedded, Destination: Magic shortcut path",
+				Source: "apiVersion: v1\n" +
+					"kind: Namespace\n" +
+					"metadata:\n" +
+					"  name: bar\n",
+				Destination: "k3s-manifests/bar.yaml",
+			},
+			{
+				Description: "Source: Relative, Destination: Magic shortcut path",
+				Source:      "ns-baz.yaml",
+				Destination: "k3s-manifests-custom/baz.yaml",
+			},
+			{
+				Description: "Source: Relative, Destination: Magic shortcut path, Node: Servers only",
+				Source:      "ns-baz.yaml",
+				Destination: "k3s-manifests/baz.yaml",
+				NodeFilters: []string{"server:*"},
+			},
+		},
 		Options: conf.SimpleConfigOptions{
 			K3dOptions: conf.SimpleConfigOptionsK3d{
 				Wait:                true,

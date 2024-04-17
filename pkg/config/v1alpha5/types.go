@@ -83,6 +83,13 @@ type K3sArgWithNodeFilters struct {
 	NodeFilters []string `mapstructure:"nodeFilters" json:"nodeFilters,omitempty"`
 }
 
+type FileWithNodeFilters struct {
+	Source      string   `mapstructure:"source" json:"source,omitempty"`
+	Destination string   `mapstructure:"destination" json:"destination,omitempty"`
+	Description string   `mapstructure:"description" json:"description,omitempty"`
+	NodeFilters []string `mapstructure:"nodeFilters" json:"nodeFilters,omitempty"`
+}
+
 type SimpleConfigRegistryCreateConfig struct {
 	Name     string            `mapstructure:"name" json:"name,omitempty"`
 	Host     string            `mapstructure:"host" json:"host,omitempty"`
@@ -162,6 +169,7 @@ type SimpleConfig struct {
 	Env               []EnvVarWithNodeFilters `mapstructure:"env" json:"env,omitempty"`
 	Registries        SimpleConfigRegistries  `mapstructure:"registries" json:"registries,omitempty"`
 	HostAliases       []k3d.HostAlias         `mapstructure:"hostAliases" json:"hostAliases,omitempty"`
+	Files             []FileWithNodeFilters   `mapstructure:"files" json:"files,omitempty"`
 }
 
 // SimpleExposureOpts provides a simplified syntax compared to the original k3d.ExposureOpts

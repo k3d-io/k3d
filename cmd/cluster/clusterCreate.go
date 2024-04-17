@@ -123,7 +123,7 @@ func NewCmdClusterCreate() *cobra.Command {
 				l.Log().Fatalf("error processing/sanitizing simple config: %v", err)
 			}
 
-			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, simpleCfg)
+			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, simpleCfg, configFile)
 			if err != nil {
 				l.Log().Fatalln(err)
 			}

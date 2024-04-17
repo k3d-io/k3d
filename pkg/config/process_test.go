@@ -48,7 +48,7 @@ func TestProcessClusterConfig(t *testing.T) {
 
 	t.Logf("\n========== Read Config and transform to cluster ==========\n%+v\n=================================\n", cfg)
 
-	clusterCfg, err := TransformSimpleToClusterConfig(context.Background(), runtimes.Docker, cfg.(conf.SimpleConfig))
+	clusterCfg, err := TransformSimpleToClusterConfig(context.Background(), runtimes.Docker, cfg.(conf.SimpleConfig), cfgFile)
 	if err != nil {
 		t.Error(err)
 	}
