@@ -53,6 +53,7 @@ func NewCmdConfigInit() *cobra.Command {
 					if err != nil {
 						l.Log().Fatalf("Failed to create/overwrite output file: %s", err)
 					}
+					defer file.Close()
 					// write content
 					if _, err = file.WriteString(config.DefaultConfig); err != nil {
 						l.Log().Fatalf("Failed to write to output file: %+v", err)
