@@ -23,9 +23,7 @@ iptables-save \
   | iptables-restore
 
 # Update resolv.conf to use the Gateway IP if needed: this will also make CoreDNS use it via k3s' default `forward . /etc/resolv.conf` rule in the CoreDNS config
-grep -q "${docker_dns}" /etc/resolv.conf
-grepstatus=$?
-if test $grepstatus -eq 0; then
+if grep -q "${docker_dns}" /etc/resolv.conf; then
   echo "[$(date -Iseconds)] [DNS Fix] > Replacing IP in /etc/resolv.conf ..."
   cp /etc/resolv.conf /etc/resolv.conf.original
   sed -e "s/${docker_dns}/${gateway}/g" /etc/resolv.conf.original >/etc/resolv.conf
