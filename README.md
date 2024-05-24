@@ -183,5 +183,5 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 Thanks to all our amazing sponsors! 🙏
 
 <ul>
-  <!-- sponsors --><li><a href="https://github.com/dwightgunning">[<strong>dwightgunning</strong>]</a> Dwight Gunning</li><!-- sponsors -->
+  <!-- sponsors --><li><a href="https://github.com/dwightgunning">[<strong>dwightgunning</strong>]</a> Dwight Gunning</li><li><a href="https://github.com/mbrettsc">[<strong>mbrettsc</strong>]</a> Martin Brettschneider</li><!-- sponsors -->
 </ul>
