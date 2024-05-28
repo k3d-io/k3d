@@ -127,6 +127,9 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 	// TODO: can we replace this by a reduced set of capabilities?
 	hostConfig.Privileged = true
 
+	// Privileged containers require userns=host when Docker has userns-remap enabled
+	hostConfig.UsernsMode = "host"
+
 	if node.HostPidMode {
 		hostConfig.PidMode = "host"
 	}
