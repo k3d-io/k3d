@@ -8,7 +8,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/k3d-io/k3d?style=flat-square)](https://goreportcard.com/report/github.com/k3d-io/k3d)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-25-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-27-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
@@ -167,6 +167,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/stopanko"><img src="https://avatars.githubusercontent.com/u/3759349?v=4?s=100" width="100px;" alt="stopanko"/><br /><sub><b>stopanko</b></sub></a><br /><a href="#financial-stopanko" title="Financial">💵</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/dbreyfogle"><img src="https://avatars.githubusercontent.com/u/27653146?v=4?s=100" width="100px;" alt="Danny Breyfogle"/><br /><sub><b>Danny Breyfogle</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=dbreyfogle" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://tech.aabouzaid.com/"><img src="https://avatars.githubusercontent.com/u/6760103?v=4?s=100" width="100px;" alt="Ahmed AbouZaid"/><br /><sub><b>Ahmed AbouZaid</b></sub></a><br /><a href="#ideas-aabouzaid" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/k3d-io/k3d/commits?author=aabouzaid" title="Code">💻</a> <a href="https://github.com/k3d-io/k3d/commits?author=aabouzaid" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://roudier.io"><img src="https://avatars.githubusercontent.com/u/1056127?v=4?s=100" width="100px;" alt="Pierre Roudier"/><br /><sub><b>Pierre Roudier</b></sub></a><br /><a href="https://github.com/k3d-io/k3d/commits?author=proudier" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
