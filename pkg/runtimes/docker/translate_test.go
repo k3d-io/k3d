@@ -81,6 +81,7 @@ func TestTranslateNodeToContainer(t *testing.T) {
 			},
 			Init:       &init,
 			Privileged: true,
+			UsernsMode: "host",
 			Tmpfs:      map[string]string{"/run": "", "/var/run": ""},
 			PortBindings: nat.PortMap{
 				"6443/tcp": {
