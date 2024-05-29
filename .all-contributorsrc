@@ -240,7 +240,7 @@
       "profile": "https://github.com/dbreyfogle",
       "contributions": [
         "doc"
-        ]
+      ]
     },
     {
       "login": "aabouzaid",
@@ -251,6 +251,15 @@
         "ideas",
         "code",
         "doc"
+      ]
+    },
+    {
+      "login": "proudier",
+      "name": "Pierre Roudier",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1056127?v=4",
+      "profile": "https://roudier.io",
+      "contributions": [
+        "code"
       ]
     }
   ],
