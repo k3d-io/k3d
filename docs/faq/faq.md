@@ -32,14 +32,6 @@
         --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@agent:*'
       ```
 
-## Restarting a multi-server cluster or the initializing server node fails
-
-- What you do: You create a cluster with more than one server node and later, you either stop `server-0` or stop/start the whole cluster
-- What fails: After the restart, you cannot connect to the cluster anymore and `kubectl` will give you a lot of errors
-- What causes this issue: it's a [known issue with dqlite in `k3s`](https://github.com/rancher/k3s/issues/1391) which doesn't allow the initializing server node to go down
-- What's the solution: Hopefully, this will be solved by the planned [replacement of dqlite with embedded etcd in k3s](https://github.com/rancher/k3s/pull/1770)
-- Related issues: [#262](https://github.com/k3d-io/k3d/issues/262)
-
 ## Passing additional arguments/flags to k3s (and on to e.g. the kube-apiserver)
 
 - The Problem: Passing a feature flag to the Kubernetes API Server running inside k3s.
