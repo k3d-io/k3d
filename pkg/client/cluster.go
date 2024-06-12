@@ -31,6 +31,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/docker/go-connections/nat"
@@ -53,6 +54,10 @@ import (
 	"github.com/k3d-io/k3d/v5/pkg/util"
 	goyaml "gopkg.in/yaml.v2"
 )
+
+//go:embed templates/coredns-custom.yaml.tmpl
+var customDNSTemplateStr string
+var customDNSTemplate = template.Must(template.New("customDNS").Parse(customDNSTemplateStr))
 
 // ClusterRun orchestrates the steps of cluster creation, configuration and starting
 func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *config.ClusterConfig) error {
@@ -1058,58 +1063,34 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 			// -> inject hostAliases and network members into CoreDNS configmap
 			if len(servers) > 0 {
 				postStartErrgrp.Go(func() error {
-					hosts := ""
-
-					// hosts: hostAliases (including host.k3d.internal)
-					for _, hostAlias := range clusterStartOpts.HostAliases {
-						hosts += fmt.Sprintf("%s %s\n", hostAlias.IP, strings.Join(hostAlias.Hostnames, " "))
-					}
-
-					// more hosts: network members ("neighbor" containers)
 					net, err := runtime.GetNetwork(postStartErrgrpCtx, &cluster.Network)
 					if err != nil {
 						return fmt.Errorf("failed to get cluster network %s to inject host records into CoreDNS: %w", cluster.Network.Name, err)
 					}
+					hosts := make([]string, 0, len(net.Members)+1)
+
+					// hosts: hostAliases (including host.k3d.internal)
+					for _, hostAlias := range clusterStartOpts.HostAliases {
+						hosts = append(hosts, fmt.Sprintf("%s %s\n", hostAlias.IP, strings.Join(hostAlias.Hostnames, " ")))
+					}
+
+					// more hosts: network members ("neighbor" containers)
 					for _, member := range net.Members {
-						hosts += fmt.Sprintf("%s %s\n", member.IP.String(), member.Name)
+						hosts = append(hosts, fmt.Sprintf("%s %s\n", member.IP.String(), member.Name))
 					}
 
 					// inject CoreDNS configmap
 					l.Log().Infof("Injecting records for hostAliases (incl. host.k3d.internal) and for %d network members into CoreDNS configmap...", len(net.Members))
-					act := actions.RewriteFileAction{
+					var custom_dns bytes.Buffer
+					err = customDNSTemplate.Execute(&custom_dns, hosts)
+					if err != nil {
+						return fmt.Errorf("failed to render template: %w", err)
+					}
+					act := actions.WriteFileAction{
 						Runtime: runtime,
-						Path:    "/var/lib/rancher/k3s/server/manifests/coredns.yaml",
+						Content: []byte(custom_dns.Bytes()),
+						Dest:    "/var/lib/rancher/k3s/server/manifests/coredns-custom.yaml",
 						Mode:    0744,
-						RewriteFunc: func(input []byte) ([]byte, error) {
-							split, err := util.SplitYAML(input)
-							if err != nil {
-								return nil, fmt.Errorf("error splitting yaml: %w", err)
-							}
-
-							var outputBuf bytes.Buffer
-							outputEncoder := util.NewYAMLEncoder(&outputBuf)
-
-							for _, d := range split {
-								var doc map[string]interface{}
-								if err := yaml.Unmarshal(d, &doc); err != nil {
-									return nil, err
-								}
-								if kind, ok := doc["kind"]; ok {
-									if strings.ToLower(kind.(string)) == "configmap" {
-										configmapData, ok := doc["data"].(map[string]interface{})
-										if !ok {
-											return nil, fmt.Errorf("invalid ConfigMap data type: %T", doc["data"])
-										}
-										configmapData["NodeHosts"] = hosts
-									}
-								}
-								if err := outputEncoder.Encode(doc); err != nil {
-									return nil, err
-								}
-							}
-							_ = outputEncoder.Close()
-							return outputBuf.Bytes(), nil
-						},
 					}
 
 					// get the first server in the list and run action on it once it's ready for it
