@@ -5,9 +5,11 @@ metadata:
   namespace: kube-system
 data:
   hosts.override: |
-    hosts {
-        {{- range . }}
-        {{ . }}
-        {{- end }}
-        fallthrough
-    }
+    file /etc/coredns/custom/additional-dns.db
+  
+  # a SOA record is required
+  additional-dns.db: |
+    @ 3600 IN SOA a.root-servers.net. nstld.verisign-grs.com. 2024061200 1800 900 604800 86400
+    {{- range . }}
+    {{ .Hostname }} IN A {{ .IP }}
+    {{- end }}

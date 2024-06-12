@@ -1063,26 +1063,33 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 			// -> inject hostAliases and network members into CoreDNS configmap
 			if len(servers) > 0 {
 				postStartErrgrp.Go(func() error {
+					type record struct {
+						IP       string
+						Hostname string
+					}
+
+					records := make([]record, 0)
+
+					// hosts: hostAliases (including host.k3d.internal)
+					for _, hostAlias := range clusterStartOpts.HostAliases {
+						for _, hostname := range hostAlias.Hostnames {
+							records = append(records, record{IP: hostAlias.IP, Hostname: hostname})
+						}
+					}
+
+					// more hosts: network members ("neighbor" containers)
 					net, err := runtime.GetNetwork(postStartErrgrpCtx, &cluster.Network)
 					if err != nil {
 						return fmt.Errorf("failed to get cluster network %s to inject host records into CoreDNS: %w", cluster.Network.Name, err)
 					}
-					hosts := make([]string, 0, len(net.Members)+1)
-
-					// hosts: hostAliases (including host.k3d.internal)
-					for _, hostAlias := range clusterStartOpts.HostAliases {
-						hosts = append(hosts, fmt.Sprintf("%s %s\n", hostAlias.IP, strings.Join(hostAlias.Hostnames, " ")))
-					}
-
-					// more hosts: network members ("neighbor" containers)
 					for _, member := range net.Members {
-						hosts = append(hosts, fmt.Sprintf("%s %s\n", member.IP.String(), member.Name))
+						records = append(records, record{IP: member.IP.String(), Hostname: member.Name})
 					}
 
 					// inject CoreDNS configmap
 					l.Log().Infof("Injecting records for hostAliases (incl. host.k3d.internal) and for %d network members into CoreDNS configmap...", len(net.Members))
 					var custom_dns bytes.Buffer
-					err = customDNSTemplate.Execute(&custom_dns, hosts)
+					err = customDNSTemplate.Execute(&custom_dns, records)
 					if err != nil {
 						return fmt.Errorf("failed to render template: %w", err)
 					}
