@@ -283,12 +283,22 @@ func KubeconfigWrite(ctx context.Context, kubeconfig *clientcmdapi.Config, path 
 		return fmt.Errorf("failed to write merged kubeconfig to temporary file '%s': %w", tempPath, err)
 	}
 
+	// In case path is a symlink, retrives the name of the target
+	realPath, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return fmt.Errorf("failed to follow symlink '%s': %w", path, err)
+	}
+
 	// Move temporary file over existing KubeConfig
-	if err := os.Rename(tempPath, path); err != nil {
+	if err := os.Rename(tempPath, realPath); err != nil {
 		return fmt.Errorf("failed to overwrite existing KubeConfig '%s' with new kubeconfig '%s': %w", path, tempPath, err)
 	}
 
-	l.Log().Debugf("Wrote kubeconfig to '%s'", path)
+	extraLog := ""
+	if filepath.Clean(path) != realPath {
+		extraLog = fmt.Sprintf("(via symlink '%s')", path)
+	}
+	l.Log().Debugf("Wrote kubeconfig to '%s' %s", realPath, extraLog)
 
 	return nil
 }
