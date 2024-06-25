@@ -23,6 +23,7 @@ package cluster
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/k3d-io/k3d/v5/cmd/util"
 	"github.com/k3d-io/k3d/v5/pkg/client"
@@ -30,6 +31,8 @@ import (
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
+
+var clusterStopPpViper = viper.New()
 
 // NewCmdClusterStop returns a new cobra command
 func NewCmdClusterStop() *cobra.Command {
@@ -39,6 +42,11 @@ func NewCmdClusterStop() *cobra.Command {
 		Short:             "Stop existing k3d cluster(s)",
 		Long:              `Stop existing k3d cluster(s).`,
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			clusterStopPpViper.SetEnvPrefix("K3D")
+			err := clusterStopPpViper.BindEnv("CLUSTER_NAME")
+			return err
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			clusters := parseStopClusterCmd(cmd, args)
 			if len(clusters) == 0 {
@@ -80,6 +88,8 @@ func parseStopClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	clusternames := []string{k3d.DefaultClusterName}
 	if len(args) != 0 {
 		clusternames = args
+	} else if clusterStopPpViper.GetString("CLUSTER_NAME") != "" {
+		clusternames = []string{clusterStopPpViper.GetString("CLUSTER_NAME")}
 	}
 
 	for _, name := range clusternames {
