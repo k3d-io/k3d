@@ -114,6 +114,10 @@ checkLatestVersion() {
   if [[ "$DEBUG" == "true" ]]; then
     echo "Resolved latest tag: <$TAG>" >&2
   fi
+  if [[ "$TAG" == "latest" ]]; then
+    echo "Failed to get the latest version for $REPO_URL"
+    exit 1
+  fi
 }
 
 # downloadFile downloads the latest binary package and also the checksum
