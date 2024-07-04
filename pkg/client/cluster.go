@@ -64,13 +64,23 @@ func ClusterRun(ctx context.Context, runtime k3drt.Runtime, clusterConfig *confi
 	}
 
 	// Create tools-node for later steps
-	go EnsureToolsNode(ctx, runtime, &clusterConfig.Cluster)
+
+	g, _ := errgroup.WithContext(ctx)
+	g.Go(func() error {
+		_, err := EnsureToolsNode(ctx, runtime, &clusterConfig.Cluster)
+		return err
+	})
 
 	/*
 	 * Step 1: Create Containers
 	 */
 	if err := ClusterCreate(ctx, runtime, &clusterConfig.Cluster, &clusterConfig.ClusterCreateOpts); err != nil {
-		return fmt.Errorf("Failed Cluster Creation: %+v", err)
+		return fmt.Errorf("failed Cluster Creation: %+v", err)
+	}
+
+	// Wait for tools node to be available
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("failed to ensure tools node: %w", err)
 	}
 
 	/*
@@ -831,7 +841,9 @@ func ClusterGet(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Cluster
 		for _, existingNode := range cluster.Nodes {
 			// overwrite existing node
 			if existingNode.Name == node.Name {
-				mergo.MergeWithOverwrite(existingNode, node)
+				if err := mergo.Merge(existingNode, node, mergo.WithOverride); err != nil {
+					return nil, fmt.Errorf("failed to merge node %s into cluster: %v", node.Name, err)
+				}
 				overwroteExisting = true
 			}
 		}
@@ -1116,7 +1128,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 						if err := NodeWaitForLogMessage(postStartErrgrpCtx, runtime, n, "Cluster dns configmap", ts.Truncate(time.Second)); err != nil {
 							return err
 						}
-						return act.Run(postStartErrgrpCtx, n)
+						return act.Run(postStartErrgrpCtx, n) // nolint:staticcheck // FIXME: Does this loop really only concern the first server? (SA4004: the surrounding loop is unconditionally terminated (staticcheck))
 					}
 					return nil
 				})
@@ -1253,7 +1265,9 @@ func ClusterEditChangesetSimple(ctx context.Context, runtime k3drt.Runtime, clus
 	}
 	lbChangeset.Node.HookActions = append(lbChangeset.Node.HookActions, writeLbConfigAction)
 
-	NodeReplace(ctx, runtime, existingLB.Node, lbChangeset.Node)
+	if err := NodeReplace(ctx, runtime, existingLB.Node, lbChangeset.Node); err != nil {
+		return fmt.Errorf("error replacing loadbalancer node: %w", err)
+	}
 
 	return nil
 }

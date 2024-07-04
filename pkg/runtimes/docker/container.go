@@ -30,6 +30,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	dockerimage "github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
@@ -105,7 +106,7 @@ func removeContainer(ctx context.Context, ID string) error {
 
 // pullImage pulls a container image and outputs progress if --verbose flag is set
 func pullImage(ctx context.Context, docker client.APIClient, image string) error {
-	resp, err := docker.ImagePull(ctx, image, types.ImagePullOptions{})
+	resp, err := docker.ImagePull(ctx, image, dockerimage.PullOptions{})
 	if err != nil {
 		return fmt.Errorf("docker failed to pull the image '%s': %w", image, err)
 	}

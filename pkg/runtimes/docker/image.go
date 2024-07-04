@@ -25,7 +25,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/image"
 )
 
 // GetImages returns a list of images present in the runtime
@@ -37,7 +37,7 @@ func (d Docker) GetImages(ctx context.Context) ([]string, error) {
 	}
 	defer docker.Close()
 
-	imageSummary, err := docker.ImageList(ctx, types.ImageListOptions{All: true})
+	imageSummary, err := docker.ImageList(ctx, image.ListOptions{All: true})
 	if err != nil {
 		return nil, fmt.Errorf("docker failed to list images: %w", err)
 	}

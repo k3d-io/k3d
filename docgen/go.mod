@@ -1,6 +1,6 @@
 module github.com/k3d-io/k3d/docgen
 
-go 1.22.2
+go 1.22.4
 
 require github.com/spf13/cobra v1.5.0
 
