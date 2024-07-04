@@ -91,7 +91,7 @@ sleep 5
 
 # 6. test host.k3d.internal
 info "Checking DNS Lookup for host.k3d.internal via Ping..."
-kubectl describe cm coredns -n kube-system | grep "host.k3d.internal" > /dev/null 2>&1 || failed "Couldn't find host.k3d.internal in CoreDNS configmap"
+kubectl describe cm coredns-custom -n kube-system | grep "host.k3d.internal" > /dev/null 2>&1 || failed "Couldn't find host.k3d.internal in coredns-custom configmap"
 wait_for_pod_exec "testimage" "ping -c1 host.k3d.internal" 15 || failed "Pinging host.k3d.internal failed"
 
 # Cleanup
