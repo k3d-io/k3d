@@ -27,6 +27,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
@@ -59,6 +61,7 @@ func TestProcessClusterConfig(t *testing.T) {
 	t.Logf("\n========== Process Cluster Config (non-host network) ==========\n%+v\n=================================\n", cfg)
 
 	clusterCfg, err = ProcessClusterConfig(*clusterCfg)
+	require.NoError(t, err)
 	assert.Assert(t, clusterCfg.ClusterCreateOpts.DisableLoadBalancer == false, "The load balancer should be enabled")
 
 	for _, v := range clusterCfg.Cluster.Nodes[0].Volumes {
@@ -73,6 +76,7 @@ func TestProcessClusterConfig(t *testing.T) {
 
 	clusterCfg.Cluster.Network.Name = "host"
 	clusterCfg, err = ProcessClusterConfig(*clusterCfg)
+	require.NoError(t, err)
 	assert.Assert(t, clusterCfg.ClusterCreateOpts.DisableLoadBalancer == true, "The load balancer should be disabled")
 
 	t.Logf("\n===== Resulting Cluster Config (host network) =====\n%+v\n===============\n", clusterCfg)

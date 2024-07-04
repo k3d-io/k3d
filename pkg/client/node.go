@@ -673,9 +673,12 @@ func NodeDelete(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, o
 	if node.Memory != "" {
 		l.Log().Debug("Cleaning fake files folder from k3d config dir for this node...")
 		filepath, err := util.GetNodeFakerDirOrCreate(node.Name)
+		if err != nil {
+			l.Log().Errorf("Could not get fake files folder for node %s: %+v", node.Name, err)
+		}
 		err = os.RemoveAll(filepath)
 		if err != nil {
-			// this err prob should not be fatal, just log it
+			// this error prob should not be fatal, just log it
 			l.Log().Errorf("Could not remove fake files folder for node %s: %+v", node.Name, err)
 		}
 	}

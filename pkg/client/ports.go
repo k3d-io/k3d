@@ -122,11 +122,7 @@ func addPortMappings(node *k3d.Node, portmappings []nat.PortMapping) error {
 		node.Ports = nat.PortMap{}
 	}
 	for _, pm := range portmappings {
-		if _, exists := node.Ports[pm.Port]; exists {
-			node.Ports[pm.Port] = append(node.Ports[pm.Port], pm.Binding)
-		} else {
-			node.Ports[pm.Port] = []nat.PortBinding{pm.Binding}
-		}
+		node.Ports[pm.Port] = append(node.Ports[pm.Port], pm.Binding)
 	}
 	return nil
 }
