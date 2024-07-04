@@ -59,6 +59,9 @@ scurl() {
   # - `--fail` ensures that the command fails if HTTP response is not 2xx.
   # - `--show-error` causes curl to output error messages when it fails (when
   #   also invoked with -s|--silent).
+  if [[ "$DEBUG" == "true" ]]; then
+    echo "Executing: curl --proto \"=https\" --tlsv1.2 --fail --show-error $*" >&2
+  fi
   curl --proto "=https" --tlsv1.2 --fail --show-error "$@"
 }
 
@@ -104,14 +107,12 @@ checkTagProvided() {
 checkLatestVersion() {
   local latest_release_url="$REPO_URL/releases/latest"
   if type "curl" > /dev/null; then
-    if [[ "$DEBUG" == "true" ]]; then
-      echo "Fetching latest release URL: $latest_release_url"
-      TAG=$(scurl -Lvvv -o /dev/null -w %{url_effective} $latest_release_url | grep -oE "[^/]+$" )
-    else
-      TAG=$(scurl -Ls -o /dev/null -w %{url_effective} $latest_release_url | grep -oE "[^/]+$" )
-    fi
+    TAG=$(scurl -Ls -o /dev/null -w %{url_effective} $latest_release_url | grep -oE "[^/]+$" )
   elif type "wget" > /dev/null; then
     TAG=$(wget $latest_release_url --server-response -O /dev/null 2>&1 | awk '/^\s*Location: /{DEST=$2} END{ print DEST}' | grep -oE "[^/]+$")
+  fi
+  if [[ "$DEBUG" == "true" ]]; then
+    echo "Resolved latest tag: <$TAG>" >&2
   fi
 }
 
@@ -126,12 +127,7 @@ downloadFile() {
   K3D_TMP_ROOT="$(mktemp -dt k3d-binary-XXXXXX)"
   K3D_TMP_FILE="$K3D_TMP_ROOT/$K3D_DIST"
   if type "curl" > /dev/null; then
-    if [[ "$DEBUG" == "true" ]]; then
-      echo "Downloading $DOWNLOAD_URL to $K3D_TMP_FILE"
-      scurl -L -vvv "$DOWNLOAD_URL" -o "$K3D_TMP_FILE"
-    else
-      scurl -sL "$DOWNLOAD_URL" -o "$K3D_TMP_FILE"
-    fi
+    scurl -sL "$DOWNLOAD_URL" -o "$K3D_TMP_FILE"
   elif type "wget" > /dev/null; then
     wget -q -O "$K3D_TMP_FILE" "$DOWNLOAD_URL"
   fi

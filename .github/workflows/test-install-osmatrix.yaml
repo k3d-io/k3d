@@ -20,8 +20,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run install.sh on ${{ matrix.os }}
         shell: bash
-        env:
-          DEBUG: "true"
         # just run install.sh b/c github can throttle itself based on egress limits and gets 503 sometimes
         run: |
           echo "Simulating: curl -s https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$GITHUB_REF_NAME/install.sh | bash"
