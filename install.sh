@@ -104,7 +104,12 @@ checkTagProvided() {
 checkLatestVersion() {
   local latest_release_url="$REPO_URL/releases/latest"
   if type "curl" > /dev/null; then
-    TAG=$(scurl -Ls -o /dev/null -w %{url_effective} $latest_release_url | grep -oE "[^/]+$" )
+    if [[ "$DEBUG" == "true" ]]; then
+      echo "Fetching latest release URL: $latest_release_url"
+      TAG=$(scurl -Lvvv -o /dev/null -w %{url_effective} $latest_release_url | grep -oE "[^/]+$" )
+    else
+      TAG=$(scurl -Ls -o /dev/null -w %{url_effective} $latest_release_url | grep -oE "[^/]+$" )
+    fi
   elif type "wget" > /dev/null; then
     TAG=$(wget $latest_release_url --server-response -O /dev/null 2>&1 | awk '/^\s*Location: /{DEST=$2} END{ print DEST}' | grep -oE "[^/]+$")
   fi
@@ -121,7 +126,12 @@ downloadFile() {
   K3D_TMP_ROOT="$(mktemp -dt k3d-binary-XXXXXX)"
   K3D_TMP_FILE="$K3D_TMP_ROOT/$K3D_DIST"
   if type "curl" > /dev/null; then
-    scurl -sL "$DOWNLOAD_URL" -o "$K3D_TMP_FILE"
+    if [[ "$DEBUG" == "true" ]]; then
+      echo "Downloading $DOWNLOAD_URL to $K3D_TMP_FILE"
+      scurl -L -vvv "$DOWNLOAD_URL" -o "$K3D_TMP_FILE"
+    else
+      scurl -sL "$DOWNLOAD_URL" -o "$K3D_TMP_FILE"
+    fi
   elif type "wget" > /dev/null; then
     wget -q -O "$K3D_TMP_FILE" "$DOWNLOAD_URL"
   fi
