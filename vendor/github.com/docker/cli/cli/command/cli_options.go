@@ -23,7 +23,7 @@ func WithStandardStreams() CLIOption {
 		stdin, stdout, stderr := term.StdStreams()
 		cli.in = streams.NewIn(stdin)
 		cli.out = streams.NewOut(stdout)
-		cli.err = stderr
+		cli.err = streams.NewOut(stderr)
 		return nil
 	}
 }
@@ -40,8 +40,9 @@ func WithBaseContext(ctx context.Context) CLIOption {
 // WithCombinedStreams uses the same stream for the output and error streams.
 func WithCombinedStreams(combined io.Writer) CLIOption {
 	return func(cli *DockerCli) error {
-		cli.out = streams.NewOut(combined)
-		cli.err = combined
+		s := streams.NewOut(combined)
+		cli.out = s
+		cli.err = s
 		return nil
 	}
 }
@@ -65,7 +66,7 @@ func WithOutputStream(out io.Writer) CLIOption {
 // WithErrorStream sets a cli error stream.
 func WithErrorStream(err io.Writer) CLIOption {
 	return func(cli *DockerCli) error {
-		cli.err = err
+		cli.err = streams.NewOut(err)
 		return nil
 	}
 }
