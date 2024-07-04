@@ -22,6 +22,8 @@
   - Related issues: [#133 - Pods evicted due to `NodeHasDiskPressure`](https://github.com/k3d-io/k3d/issues/133) (collection of #119 and #130)
   - Background: somehow docker runs out of space for the k3d node containers, which triggers a hard eviction in the kubelet
   - Possible [fix/workaround by @zer0def](https://github.com/k3d-io/k3d/issues/133#issuecomment-549065666):
+    - cleanup your host file system: Yes, your host file system may actually be quite packed, triggering the eviction threshold.
+      - on large disks, you may still have quite a few GB leftover, which is more than enough. In that case, lower the threshold as per below.
     - use a docker storage driver which cleans up properly (e.g. overlay2)
     - clean up or expand docker root filesystem
     - change the kubelet's eviction thresholds upon cluster creation:

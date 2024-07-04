@@ -27,7 +27,6 @@ import (
 	"net/netip"
 	"strings"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
 
@@ -59,7 +58,7 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 	}
 
 	// get filtered list of networks
-	networkList, err := docker.NetworkList(ctx, types.NetworkListOptions{
+	networkList, err := docker.NetworkList(ctx, network.ListOptions{
 		Filters: filter,
 	})
 	if err != nil {
@@ -70,20 +69,20 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 		return nil, runtimeErr.ErrRuntimeNetworkNotExists
 	}
 
-	targetNetwork, err := docker.NetworkInspect(ctx, networkList[0].ID, types.NetworkInspectOptions{})
+	targetNetwork, err := docker.NetworkInspect(ctx, networkList[0].ID, network.InspectOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("docker failed to inspect network %s: %w", networkList[0].Name, err)
 	}
 	l.Log().Debugf("Found network %+v", targetNetwork)
 
-	network := &k3d.ClusterNetwork{
+	k3dNetwork := &k3d.ClusterNetwork{
 		Name: targetNetwork.Name,
 		ID:   targetNetwork.ID,
 	}
 
 	// for networks that have an IPAM config, we inspect that as well (e.g. "host" network doesn't have it)
 	if len(targetNetwork.IPAM.Config) > 0 {
-		network.IPAM, err = d.parseIPAM(targetNetwork.IPAM.Config[0])
+		k3dNetwork.IPAM, err = d.parseIPAM(targetNetwork.IPAM.Config[0])
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse IPAM config: %w", err)
 		}
@@ -94,24 +93,24 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 				if err != nil {
 					return nil, fmt.Errorf("failed to parse IP address of container %s: %w", container.Name, err)
 				}
-				network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, ipAddr)
+				k3dNetwork.IPAM.IPsUsed = append(k3dNetwork.IPAM.IPsUsed, ipAddr)
 			}
 		}
 
 		// append the used IPs that we already know from the search network
-		// this is needed because the network inspect does not return the container list until the containers are actually started
+		// this is needed because the network inspect does not return the container list until the containers are actually started,
 		// and we already need this when we create the containers
-		network.IPAM.IPsUsed = append(network.IPAM.IPsUsed, searchNet.IPAM.IPsUsed...)
+		k3dNetwork.IPAM.IPsUsed = append(k3dNetwork.IPAM.IPsUsed, searchNet.IPAM.IPsUsed...)
 	} else {
-		l.Log().Debugf("Network %s does not have an IPAM config", network.Name)
+		l.Log().Debugf("Network %s does not have an IPAM config", k3dNetwork.Name)
 	}
 
 	for _, container := range targetNetwork.Containers {
 		ipAddr, err := parseIPAddress(container.IPv4Address)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse IP Prefix of network \"%s\"'s member %s: %v", network.Name, container.Name, err)
+			return nil, fmt.Errorf("failed to parse IP Prefix of network \"%s\"'s member %s: %v", k3dNetwork.Name, container.Name, err)
 		}
-		network.Members = append(network.Members, &k3d.NetworkMember{
+		k3dNetwork.Members = append(k3dNetwork.Members, &k3d.NetworkMember{
 			Name: container.Name,
 			IP:   ipAddr,
 		})
@@ -119,10 +118,10 @@ func (d Docker) GetNetwork(ctx context.Context, searchNet *k3d.ClusterNetwork) (
 
 	// Only one Network allowed, but some functions don't care about this, so they can ignore the error and just use the first one returned
 	if len(networkList) > 1 {
-		return network, runtimeErr.ErrRuntimeNetworkMultiSameName
+		return k3dNetwork, runtimeErr.ErrRuntimeNetworkMultiSameName
 	}
 
-	return network, nil
+	return k3dNetwork, nil
 }
 
 // CreateNetworkIfNotPresent creates a new docker network
@@ -158,13 +157,12 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 	}
 
 	// (3) Create a new network
-	netCreateOpts := types.NetworkCreate{
+	netCreateOpts := network.CreateOptions{
 		Driver: "bridge",
 		Options: map[string]string{
 			"com.docker.network.bridge.enable_ip_masquerade": "true",
 		},
-		CheckDuplicate: true,
-		Labels:         labels,
+		Labels: labels,
 	}
 
 	// we want a managed (user-defined) network, but user didn't specify a subnet, so we try to auto-generate one
@@ -198,7 +196,7 @@ func (d Docker) CreateNetworkIfNotPresent(ctx context.Context, inNet *k3d.Cluste
 		return nil, false, fmt.Errorf("docker failed to create new network '%s': %w", inNet.Name, err)
 	}
 
-	networkDetails, err := docker.NetworkInspect(ctx, newNet.ID, types.NetworkInspectOptions{})
+	networkDetails, err := docker.NetworkInspect(ctx, newNet.ID, network.InspectOptions{})
 	if err != nil {
 		return nil, false, fmt.Errorf("docker failed to inspect newly created network '%s': %w", newNet.ID, err)
 	}
@@ -238,13 +236,13 @@ func (d Docker) DeleteNetwork(ctx context.Context, ID string) error {
 }
 
 // GetNetwork gets information about a network by its ID
-func GetNetwork(ctx context.Context, ID string) (types.NetworkResource, error) {
+func GetNetwork(ctx context.Context, ID string) (network.Inspect, error) {
 	docker, err := GetDockerClient()
 	if err != nil {
-		return types.NetworkResource{}, fmt.Errorf("failed to get docker client: %w", err)
+		return network.Inspect{}, fmt.Errorf("failed to get docker client: %w", err)
 	}
 	defer docker.Close()
-	return docker.NetworkInspect(ctx, ID, types.NetworkInspectOptions{})
+	return docker.NetworkInspect(ctx, ID, network.InspectOptions{})
 }
 
 // GetGatewayIP returns the IP of the network gateway
@@ -334,7 +332,7 @@ func (d Docker) getFreeSubnetPrefix(ctx context.Context) (netip.Prefix, error) {
 
 	// 1. Create a fake network to get auto-generated subnet prefix
 	fakenetName := fmt.Sprintf("%s-fakenet-%s", k3d.DefaultObjectNamePrefix, util.GenerateRandomString(10))
-	fakenetResp, err := docker.NetworkCreate(ctx, fakenetName, types.NetworkCreate{})
+	fakenetResp, err := docker.NetworkCreate(ctx, fakenetName, network.CreateOptions{})
 	if err != nil {
 		return netip.Prefix{}, fmt.Errorf("failed to create fake network: %w", err)
 	}

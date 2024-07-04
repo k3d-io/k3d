@@ -365,7 +365,7 @@ func executeInNode(ctx context.Context, node *k3d.Node, cmd []string, stdin io.R
 	l.Log().Debugf("Executing command '%+v' in node '%s'", cmd, node.Name)
 
 	// get the container for the given node
-	container, err := getNodeContainer(ctx, node)
+	nodeContainer, err := getNodeContainer(ctx, node)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get container for node '%s': %w", node.Name, err)
 	}
@@ -383,7 +383,7 @@ func executeInNode(ctx context.Context, node *k3d.Node, cmd []string, stdin io.R
 	}
 
 	// exec
-	exec, err := docker.ContainerExecCreate(ctx, container.ID, types.ExecConfig{
+	exec, err := docker.ContainerExecCreate(ctx, nodeContainer.ID, container.ExecOptions{
 		Privileged: true,
 		// Don't use tty true when piping stdin.
 		Tty:          !attachStdin,
@@ -396,7 +396,7 @@ func executeInNode(ctx context.Context, node *k3d.Node, cmd []string, stdin io.R
 		return nil, fmt.Errorf("docker failed to create exec config for node '%s': %+v", node.Name, err)
 	}
 
-	execConnection, err := docker.ContainerExecAttach(ctx, exec.ID, types.ExecStartCheck{
+	execConnection, err := docker.ContainerExecAttach(ctx, exec.ID, container.ExecAttachOptions{
 		// Don't use tty true when piping stdin.
 		Tty: !attachStdin,
 	})

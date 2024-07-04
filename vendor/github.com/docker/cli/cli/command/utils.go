@@ -1,5 +1,5 @@
 // FIXME(thaJeztah): remove once we are a module; the go:build directive prevents go from downgrading language version to go1.16:
-//go:build go1.19
+//go:build go1.21
 
 package command
 
@@ -9,16 +9,15 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"syscall"
 
 	"github.com/docker/cli/cli/streams"
 	"github.com/docker/docker/api/types/filters"
 	mounttypes "github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/versions"
+	"github.com/docker/docker/errdefs"
 	"github.com/moby/sys/sequential"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
@@ -75,9 +74,7 @@ func PrettyPrint(i any) string {
 	}
 }
 
-type PromptError error
-
-var ErrPromptTerminated = PromptError(errors.New("prompt terminated"))
+var ErrPromptTerminated = errdefs.Cancelled(errors.New("prompt terminated"))
 
 // PromptForConfirmation requests and checks confirmation from the user.
 // This will display the provided message followed by ' [y/N] '. If the user
@@ -104,11 +101,6 @@ func PromptForConfirmation(ctx context.Context, ins io.Reader, outs io.Writer, m
 
 	result := make(chan bool)
 
-	// Catch the termination signal and exit the prompt gracefully.
-	// The caller is responsible for properly handling the termination.
-	notifyCtx, notifyCancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
-	defer notifyCancel()
-
 	go func() {
 		var res bool
 		scanner := bufio.NewScanner(ins)
@@ -122,7 +114,8 @@ func PromptForConfirmation(ctx context.Context, ins io.Reader, outs io.Writer, m
 	}()
 
 	select {
-	case <-notifyCtx.Done():
+	case <-ctx.Done():
+		_, _ = fmt.Fprintln(outs, "")
 		return false, ErrPromptTerminated
 	case r := <-result:
 		return r, nil
