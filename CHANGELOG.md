@@ -1,5 +1,55 @@
 # Changelog
 
+## v5.7.0 - 04.07.2024
+
+### Added
+
+- feat: support config embedded and external files (#1417)
+- docs: add examples for config embedded and external files (#1432)
+- feat: compatibility with docker userns-remap (#1442) 
+- docs: mention ipam when creating multiserver cluster (#1451) 
+
+### Changed
+
+- docs: Update CUDA docs to use k3s suggested method (#1430)
+- chore: upgrade go + dependencies + address all golangci-lint issues + fix deprecations (#1459)
+- chore: upgrade docker dependency and adjust for deprecations (#1460) 
+
+### Fixed
+
+- fix: close output file (#1436)
+- fix: Script exits fatally when resolv.conf is missing Docker nameserver (#1441)
+- test: fix translate.go test following userns merge (#1444) 
+- fix: respect ~/.kube/config as a symlink (#1455)
+- fix: preserve coredns config during cluster restart (#1453)
+  - **IMPORTANT** This makes use of the `coredns-custom` configmap, so please consider this in case you're using this configmap yourself!
+- fix: make drain ignore DaemonSets & bypass PodDisruptionBudgets (#1414) 
+
+## v5.6.3 - 10.04.2024
+
+### Changed
+
+- Dependency updates and related fixes
+
+## v5.6.2 - 09.04.2024
+
+### Added
+
+-  [DOCS] Add scoop install option (#1390)
+- feat: support writing kubeconfig to a stream (#1381)
+
+### Changed
+
+- Not using stdout directly for logging (#1339)
+- change: enable fixes by default and consolidate lookup logic (#1349)
+- Consistent logging during cluster creation flow (#1398)
+- 
+
+### Fixed
+
+- change: fix docs link (#1343)
+- 
+
 ## v5.6.0 - 21.08.2023
 
 ### Added
