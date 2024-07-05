@@ -1,0 +1,2051 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Little helper to run Rancher Lab's k3s in Docker">
+      
+      
+      
+        <link rel="canonical" href="https://k3d.io/v5.7.1/">
+      
+      
+      
+        <link rel="next" href="usage/configfile/">
+      
+      
+      <link rel="icon" href="static/img/favicons_black_blue/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.6">
+    
+    
+      
+        <title>k3d</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.35e1ed30.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.356b1318.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="static/css/asciinema-player.css">
+    
+      <link rel="stylesheet" href="static/css/extra.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="grey">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#overview" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="k3d" class="md-header__button md-logo" aria-label="k3d" data-md-component="logo">
+      
+  <img src="static/img/k3d_logo_black_green.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            k3d
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Overview
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="grey"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="light-blue" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/k3d-io/k3d" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    k3d-io/k3d
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="." class="md-tabs__link">
+        
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="usage/configfile/" class="md-tabs__link">
+          
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="design/project/" class="md-tabs__link">
+          
+  
+  Design
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="faq/faq/" class="md-tabs__link">
+          
+  
+  FAQ
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="k3d" class="md-nav__button md-logo" aria-label="k3d" data-md-component="logo">
+      
+  <img src="static/img/k3d_logo_black_green.svg" alt="logo">
+
+    </a>
+    k3d
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/k3d-io/k3d" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    k3d-io/k3d
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-k3d" class="md-nav__link">
+    What is k3d?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#learning" class="md-nav__link">
+    Learning
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    Requirements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#releases" class="md-nav__link">
+    Releases
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    Installation
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-script" class="md-nav__link">
+    Install Script
+  </a>
+  
+    <nav class="md-nav" aria-label="Install Script">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-current-latest-release" class="md-nav__link">
+    Install current latest release
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-specific-release" class="md-nav__link">
+    Install specific release
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-installers" class="md-nav__link">
+    Other Installers
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    Quick Start
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connect" class="md-nav__link">
+    Connect
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-projects" class="md-nav__link">
+    Related Projects
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/configfile/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Using Config Files
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/kubeconfig/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Handling Kubeconfigs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/multiserver/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Creating multi-server clusters
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/registries/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Using Image Registries
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/exposing_services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Exposing Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/importing_images/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Importing modes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/k3s/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3s Features in k3d
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Advanced Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            Advanced Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/advanced/calico/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Use Calico instead of Flannel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/advanced/cuda/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Running CUDA workloads
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/advanced/podman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Using Podman instead of Docker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Commands
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            Commands
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_cluster/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_cluster_create/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster create
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_cluster_delete/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster delete
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_cluster_edit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster edit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_cluster_list/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_cluster_start/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster start
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_cluster_stop/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster stop
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_completion/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d completion
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_config_init/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d config init
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_config_migrate/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d config migrate
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_image/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d image
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_image_import/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d image import
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_kubeconfig/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d kubeconfig
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_kubeconfig_get/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d kubeconfig get
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_kubeconfig_merge/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d kubeconfig merge
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_node/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_node_create/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node create
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_node_delete/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node delete
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_node_edit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node edit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_node_list/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_node_start/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node start
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_node_stop/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node stop
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_registry/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d registry
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_registry_create/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d registry create
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_registry_delete/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d registry delete
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_registry_list/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d registry list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_version/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d version
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/commands/k3d_version_list/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d version list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Design
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Design
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="design/project/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Project Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="design/concepts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Concepts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="design/defaults/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Defaults
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="design/networking/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Networking
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    FAQ
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            FAQ
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="faq/faq/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    FAQ
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="faq/compatibility/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Compatibility
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-k3d" class="md-nav__link">
+    What is k3d?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#learning" class="md-nav__link">
+    Learning
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    Requirements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#releases" class="md-nav__link">
+    Releases
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    Installation
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-script" class="md-nav__link">
+    Install Script
+  </a>
+  
+    <nav class="md-nav" aria-label="Install Script">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-current-latest-release" class="md-nav__link">
+    Install current latest release
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-specific-release" class="md-nav__link">
+    Install specific release
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-installers" class="md-nav__link">
+    Other Installers
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    Quick Start
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connect" class="md-nav__link">
+    Connect
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-projects" class="md-nav__link">
+    Related Projects
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h1>
+<p><img alt="k3d" src="static/img/k3d_logo_black_blue.svg" /></p>
+<h2 id="what-is-k3d">What is k3d?<a class="headerlink" href="#what-is-k3d" title="Permanent link">&para;</a></h2>
+<p>k3d is a lightweight wrapper to run <a href="https://github.com/rancher/k3s">k3s</a> (Rancher Lab&rsquo;s minimal Kubernetes distribution) in docker.</p>
+<p>k3d makes it very easy to create single- and multi-node <a href="https://github.com/rancher/k3s">k3s</a> clusters in docker, e.g. for local development on Kubernetes.</p>
+<p><strong>Note:</strong> k3d is a <strong>community-driven project</strong> but it&rsquo;s not an official Rancher (SUSE) product.
+<strong>Sponsoring</strong>: To spend any significant amount of time improving k3d, we rely on sponsorships:</p>
+<p>- <a href="https://github.com/sponsors/k3d-io"><strong>GitHub Sponsors</strong>: <img alt="GitHub Sponsors" src="https://img.shields.io/github/sponsors/k3d-io?label=GitHub%20Sponsors&amp;style=flat-square" /></a>
+  - <a href="https://liberapay.com/k3d-io"><strong>LiberaPay</strong>: <img alt="Liberapay patrons" src="https://img.shields.io/liberapay/patrons/k3d-io?label=Liberapay%20Patrons&amp;style=flat-square" /></a>
+  - <strong>IssueHunt</strong>: <a href="https://issuehunt.io/r/k3d-io/k3d">https://issuehunt.io/r/k3d-io/k3d</a></p>
+<details class="tip">
+<summary>View a quick demo</summary>
+<p><asciinema-player src="/static/asciicast/20210917_k3d_v5.0.0_01.cast" cols=200 rows=32></asciinema-player></p>
+</details>
+<h2 id="learning">Learning<a class="headerlink" href="#learning" title="Permanent link">&para;</a></h2>
+<div class="admonition tip">
+<p class="admonition-title">k3d demo repository: <a href="https://github.com/iwilltry42/k3d-demo">iwilltry42/k3d-demo</a></p>
+<p>Featured use-cases include:</p>
+<ul>
+<li><strong>hot-reloading</strong> of code when developing on k3d (Python Flask App)</li>
+<li>build-deploy-test cycle using <strong>Tilt</strong></li>
+<li>full cluster lifecycle for simple and <strong>multi-server</strong> clusters</li>
+<li>Proof of Concept of using k3d as a service in <strong>Drone CI</strong></li>
+</ul>
+</div>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=hMr3prm9gDM">Rancher Meetup - May 2020 - Simplifying Your Cloud-Native Development Workflow With K3s, K3c and K3d (YouTube)</a></li>
+</ul>
+<h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://docs.docker.com/install/"><strong>docker</strong></a> to be able to use k3d at all<ul>
+<li>Note: k3d v5.x.x requires at least Docker v20.10.5 (runc &gt;= v1.0.0-rc93) to work properly (see <a href="https://github.com/k3d-io/k3d/issues/807">#807</a>)</li>
+</ul>
+</li>
+<li><a href="https://kubernetes.io/docs/tasks/tools/#kubectl">kubectl</a> to interact with the Kubernetes cluster</li>
+</ul>
+<h2 id="releases">Releases<a class="headerlink" href="#releases" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Stage</th>
+<th>Version</th>
+<th>Release Date</th>
+<th>Downloads so far</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/k3d-io/k3d/releases"><strong>GitHub Releases</strong></a></td>
+<td>stable</td>
+<td><a href="https://github.com/k3d-io/k3d/releases/latest"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/k3d-io/k3d?label=%20&amp;style=for-the-badge&amp;logo=github" /></a></td>
+<td><a href="https://github.com/k3d-io/k3d/releases/latest"><img alt="GitHub Release Date" src="https://img.shields.io/github/release-date/k3d-io/k3d?label=%20&amp;style=for-the-badge" /></a></td>
+<td><img alt="GitHub Release Downloads" src="https://img.shields.io/github/downloads/k3d-io/k3d/latest/total?label=%20&amp;style=for-the-badge" /></td>
+</tr>
+<tr>
+<td><a href="https://github.com/k3d-io/k3d/releases"><strong>GitHub Releases</strong></a></td>
+<td>latest</td>
+<td><a href="https://github.com/k3d-io/k3d/releases"><img alt="GitHub release (latest by date including pre-releases)" src="https://img.shields.io/github/v/release/k3d-io/k3d?include_prereleases&amp;label=%20&amp;style=for-the-badge&amp;logo=github" /></a></td>
+<td><a href="https://github.com/k3d-io/k3d/releases"><img alt="GitHub (Pre-)Release Date" src="https://img.shields.io/github/release-date-pre/k3d-io/k3d?label=%20&amp;style=for-the-badge" /></a></td>
+<td><img alt="GitHub Release Downloads (incl. Pre-Releases)" src="https://img.shields.io/github/downloads-pre/k3d-io/k3d/latest/total?label=%20&amp;style=for-the-badge" /></td>
+</tr>
+<tr>
+<td><a href="https://formulae.brew.sh/formula/k3d"><strong>Homebrew</strong></a></td>
+<td>stable</td>
+<td><a href="https://formulae.brew.sh/formula/k3d"><img alt="homebrew" src="https://img.shields.io/homebrew/v/k3d?label=%20&amp;style=for-the-badge" /></a></td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td><a href="https://chocolatey.org/packages/k3d/"><strong>Chocolatey</strong></a></td>
+<td>stable</td>
+<td><a href="https://chocolatey.org/packages/k3d/"><img alt="chocolatey" src="https://img.shields.io/chocolatey/v/k3d?label=%20&amp;style=for-the-badge" /></a></td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td><a href="https://github.com/ScoopInstaller/Main/blob/master/bucket/k3d.json/"><strong>Scoop</strong></a></td>
+<td>stable</td>
+<td><a href="https://github.com/ScoopInstaller/Main/blob/master/bucket/k3d.json/"><img alt="scoop" src="https://img.shields.io/scoop/v/k3d?label=%20&amp;style=for-the-badge" /></a></td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<p>You have several options there:</p>
+<h3 id="install-script"><a href="https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M64 464c-8.8 0-16-7.2-16-16V64c0-8.8 7.2-16 16-16h160v80c0 17.7 14.3 32 32 32h80v288c0 8.8-7.2 16-16 16H64zM64 0C28.7 0 0 28.7 0 64v384c0 35.3 28.7 64 64 64h256c35.3 0 64-28.7 64-64V154.5c0-17-6.7-33.3-18.7-45.3l-90.6-90.5C262.7 6.7 246.5 0 229.5 0H64zm97 289c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0L79 303c-9.4 9.4-9.4 24.6 0 33.9l48 48c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-31-31 31-31zm96-34c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l31 31-31 31c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l48-48c9.4-9.4 9.4-24.6 0-33.9l-48-48z"/></svg></span> Install Script</a><a class="headerlink" href="#install-script" title="Permanent link">&para;</a></h3>
+<h4 id="install-current-latest-release">Install current latest release<a class="headerlink" href="#install-current-latest-release" title="Permanent link">&para;</a></h4>
+<ul>
+<li>wget:<div class="highlight"><pre><span></span><code>wget<span class="w"> </span>-q<span class="w"> </span>-O<span class="w"> </span>-<span class="w"> </span>https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
+</code></pre></div>
+</li>
+</ul>
+<ul>
+<li>curl:<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-s<span class="w"> </span>https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
+</code></pre></div>
+</li>
+</ul>
+<h4 id="install-specific-release">Install specific release<a class="headerlink" href="#install-specific-release" title="Permanent link">&para;</a></h4>
+<p>Use the install script to grab a specific release (via <code>TAG</code> environment variable):</p>
+<ul>
+<li>wget:<div class="highlight"><pre><span></span><code>wget<span class="w"> </span>-q<span class="w"> </span>-O<span class="w"> </span>-<span class="w"> </span>https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">TAG</span><span class="o">=</span>v5.0.0<span class="w"> </span>bash
+</code></pre></div>
+</li>
+</ul>
+<ul>
+<li>curl:<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-s<span class="w"> </span>https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">TAG</span><span class="o">=</span>v5.0.0<span class="w"> </span>bash
+</code></pre></div>
+</li>
+</ul>
+<h3 id="other-installers">Other Installers<a class="headerlink" href="#other-installers" title="Permanent link">&para;</a></h3>
+<details class="tip">
+<summary>Other Installation Methods</summary>
+<ul>
+<li>
+<p><a href="https://brew.sh">:fontawesome-solid-beer: Homebrew (MacOS/Linux)</a>:
+    <div class="highlight"><pre><span></span><code>brew<span class="w"> </span>install<span class="w"> </span>k3d
+</code></pre></div></p>
+<p><em>Note</em>: The formula can be found in <a href="https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb">homebrew/homebrew-core</a> and is mirrored to <a href="https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb">homebrew/linuxbrew-core</a></p>
+</li>
+</ul>
+<ul>
+<li>
+<p><a href="https://aur.archlinux.org/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2c-.89 2.18-1.43 3.61-2.42 5.73.61.64 1.35 1.39 2.56 2.24-1.3-.54-2.19-1.07-2.85-1.63C8 11 6.03 14.75 2 22c3.17-1.83 5.63-2.96 7.92-3.39-.1-.42-.16-.88-.15-1.36v-.1c.05-2.03 1.11-3.59 2.36-3.48 1.25.1 2.22 1.83 2.17 3.87-.01.38-.05.75-.12 1.09 2.26.44 4.69 1.56 7.82 3.37-.62-1.14-1.17-2.16-1.69-3.13-.81-.64-1.7-1.48-3.46-2.37 1.21.3 2.08.66 2.76 1.07C14.26 7.62 13.83 6.3 12 2Z"/></svg></span> AUR (Arch Linux User Repository)</a>:
+    <div class="highlight"><pre><span></span><code>yay<span class="w"> </span>-S<span class="w"> </span>rancher-k3d-bin
+</code></pre></div></p>
+<p>Package <a href="https://aur.archlinux.org/packages/rancher-k3d-bin/">rancher-k3d-bin</a></p>
+</li>
+</ul>
+<ul>
+<li>
+<p><a href="https://github.com/k3d-io/k3d/releases"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2Z"/></svg></span> Download GitHub Release</a></p>
+<p>Grab a release binary from the <a href="https://github.com/k3d-io/k3d/releases">release tab</a> and install it yourself</p>
+</li>
+</ul>
+<ul>
+<li>
+<p><a href="https://chocolatey.org/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 12V6.75l6-1.32v6.48L3 12m17-9v8.75l-10 .15V5.21L20 3M3 13l6 .09v6.81l-6-1.15V13m17 .25V22l-10-1.91V13.1l10 .15Z"/></svg></span> Chocolatey (Windows)</a>: <code>choco install k3d</code></p>
+<p><em>Note</em>: package source can be found in <a href="https://github.com/erwinkersten/chocolatey-packages/tree/master/automatic/k3d">erwinkersten/chocolatey-packages</a></p>
+</li>
+</ul>
+<ul>
+<li>
+<p><a href="https://scoop.sh//"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 12V6.75l6-1.32v6.48L3 12m17-9v8.75l-10 .15V5.21L20 3M3 13l6 .09v6.81l-6-1.15V13m17 .25V22l-10-1.91V13.1l10 .15Z"/></svg></span> Scoop (Windows)</a>: <code>scoop install k3d</code></p>
+<p><em>Note</em>: package source can be found in <a href="https://github.com/ScoopInstaller/Main/blob/master/bucket/k3d.json">ScoopInstaller/Main</a></p>
+</li>
+</ul>
+<ul>
+<li><a href="https://github.com/alexellis/arkade">arkade</a>: <code>arkade get k3d</code></li>
+</ul>
+<ul>
+<li>
+<p><a href="https://asdf-vm.com">asdf</a>: <code>asdf plugin-add k3d &amp;&amp; asdf install k3d latest</code></p>
+<p><em>Note</em>: <code>asdf plugin-add k3d</code>, then <code>asdf install k3d &lt;tag&gt;</code> with <code>&lt;tag&gt; = latest</code> or <code>5.x.x</code> for a specific version (maintained by <a href="https://github.com/spencergilbert/asdf-k3d">spencergilbert/asdf-k3d</a>)</p>
+</li>
+</ul>
+<ul>
+<li>Others<ul>
+<li>install via go: <code class="highlight">go<span class="w"> </span>install<span class="w"> </span>github.com/k3d-io/k3d/v5@latest</code> (<strong>Note</strong>: this will give you unreleased/bleeding-edge changes)</li>
+</ul>
+</li>
+</ul>
+</details>
+<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<p>Create a cluster named <code>mycluster</code> with just a single server node:</p>
+<div class="highlight"><pre><span></span><code>k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>mycluster
+</code></pre></div>
+<p>Use the new cluster with <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl/"><code>kubectl</code></a>, e.g.:</p>
+<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
+</code></pre></div>
+<details class="note">
+<summary>Getting the cluster&rsquo;s kubeconfig (included in <code>k3d cluster create</code>)</summary>
+<p>Get the new cluster&rsquo;s connection details merged into your default kubeconfig (usually specified using the <code>KUBECONFIG</code> environment variable or the default path <code class="highlight"><span class="nv">$HOME</span>/.kube/config</code>) and directly switch to the new context:</p>
+<div class="highlight"><pre><span></span><code>k3d<span class="w"> </span>kubeconfig<span class="w"> </span>merge<span class="w"> </span>mycluster<span class="w"> </span>--kubeconfig-switch-context
+</code></pre></div>
+</details>
+<h2 id="connect">Connect<a class="headerlink" href="#connect" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Join the Rancher community on slack via <a href="https://slack.rancher.io/">slack.rancher.io</a></li>
+<li>Go to <a href="https://rancher-users.slack.com">rancher-users.slack.com</a> and join our channel #k3d</li>
+<li>Start chatting</li>
+</ol>
+<h2 id="related-projects">Related Projects<a class="headerlink" href="#related-projects" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://github.com/inercia/vscode-k3d/">vscode-k3d</a>: VSCode Extension to handle k3d clusters from within VSCode</li>
+<li><a href="https://github.com/inercia/k3x">k3x</a>: a graphics interface (for Linux) to k3d.</li>
+<li><a href="https://github.com/AbsaOSS/k3d-action">AbsaOSS/k3d-action</a>: fully customizable GitHub Action to run lightweight Kubernetes clusters.</li>
+<li><a href="https://github.com/cnrancher/autok3s">AutoK3s</a>: a lightweight tool to help run K3s everywhere including k3d provider.</li>
+<li><a href="https://github.com/nolar/setup-k3d-k3s">nolar/setup-k3d-k3s</a>: setup K3d/K3s for GitHub Actions.</li>
+</ul>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      Last update:
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 2, 2024</span>
+      
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2020-2023 k3d Authors
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.top", "search.suggest", "search.highlight", "navigation.expand", "navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "navigation.path"], "search": "assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="assets/javascripts/bundle.aecac24b.min.js"></script>
+      
+        <script src="static/js/asciinema-player.js"></script>
+      
+    
+  </body>
+</html>
