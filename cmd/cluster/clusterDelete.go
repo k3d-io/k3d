@@ -59,7 +59,7 @@ func initClusterDeleteConfig() error {
 		l.Log().Debugf("Additional CLI Configuration:\n%s", c)
 	}
 
-	return cliconfig.InitViperWithConfigFile(cfgViper, clusterDeletePpViper.GetString("config"))
+	return cliconfig.InitViperWithConfigFile(clusterDeleteCfgViper, clusterDeletePpViper.GetString("config"))
 }
 
 // NewCmdClusterDelete returns a new cobra command
