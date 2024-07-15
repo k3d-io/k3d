@@ -140,28 +140,26 @@ func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 
 	// --config
 	if clusterDeletePpViper.GetString("config") != "" {
-		// not allowed with --all or more args
-		if len(args) > 0 || all {
-			l.Log().Fatalln("failed to delete cluster: cannot use `--config` flag with additional arguments or `--all`")
-		}
-
 		cfg, err := config.SimpleConfigFromViper(clusterDeleteCfgViper)
 		if err != nil {
 			l.Log().Fatalln(err)
 		}
 
-		if cfg.Name == "" {
-			l.Log().Fatalln("failed to delete cluster via config file: no name in config file")
-		}
+		if cfg.Name != "" {
+			// not allowed with --all or more args
+			if len(args) > 0 || all {
+				l.Log().Fatalln("failed to delete cluster: cannot use name from configuration file with additional arguments or `--all`")
+			}
 
-		c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: cfg.Name})
-		if errors.Is(err, client.ClusterGetNoNodesFoundError) {
-			l.Log().Infof("No nodes found for cluster '%s', nothing to delete.", cfg.Name)
-			return nil
-		}
+			c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: cfg.Name})
+			if errors.Is(err, client.ClusterGetNoNodesFoundError) {
+				l.Log().Infof("No nodes found for cluster '%s', nothing to delete.", cfg.Name)
+				return nil
+			}
 
-		clusters = append(clusters, c)
-		return clusters
+			clusters = append(clusters, c)
+			return clusters
+		}
 	}
 
 	// --all was set
