@@ -50,16 +50,16 @@ var (
 
 func initClusterDeleteConfig() error {
 	// Viper for pre-processed config options
-	ppViper.SetEnvPrefix("K3D")
-	ppViper.AutomaticEnv()
-	ppViper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	clusterDeletePpViper.SetEnvPrefix("K3D")
+	clusterDeletePpViper.AutomaticEnv()
+	clusterDeletePpViper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	if l.Log().GetLevel() >= logrus.DebugLevel {
-		c, _ := yaml.Marshal(ppViper.AllSettings())
+		c, _ := yaml.Marshal(clusterDeletePpViper.AllSettings())
 		l.Log().Debugf("Additional CLI Configuration:\n%s", c)
 	}
 
-	return cliconfig.InitViperWithConfigFile(cfgViper, ppViper.GetString("config"))
+	return cliconfig.InitViperWithConfigFile(cfgViper, clusterDeletePpViper.GetString("config"))
 }
 
 // NewCmdClusterDelete returns a new cobra command
@@ -119,7 +119,7 @@ func NewCmdClusterDelete() *cobra.Command {
 	 ***************/
 
 	cmd.Flags().StringP("config", "c", "", "Path of a config file to use")
-	_ = ppViper.BindPFlag("config", cmd.Flags().Lookup("config"))
+	_ = clusterDeletePpViper.BindPFlag("config", cmd.Flags().Lookup("config"))
 	if err := cmd.MarkFlagFilename("config", "yaml", "yml"); err != nil {
 		l.Log().Fatalln("Failed to mark flag 'config' as filename flag")
 	}
