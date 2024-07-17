@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -210,4 +211,97 @@ func isAttachedToNetwork(node *k3d.Node, network string) bool {
 		}
 	}
 	return false
+}
+
+func readerToFile(reader io.Reader, target string) error {
+	file, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(0600))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if _, err := io.Copy(file, reader); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func copyFile(tarReader *tar.Reader, target string, mode os.FileMode) error {
+	file, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	if _, err := io.Copy(file, tarReader); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func copyOriginalContent(cli client.APIClient, ctx context.Context, containerID, linkTarget, target string) error {
+	reader, _, err := cli.CopyFromContainer(ctx, containerID, linkTarget)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	tarReader := tar.NewReader(reader)
+	header, err := tarReader.Next()
+	if err != nil {
+		return err
+	}
+
+	if header.Typeflag == tar.TypeReg {
+		if err := copyFile(tarReader, target, os.FileMode(header.Mode)); err != nil {
+			return err
+		}
+	} else if header.Typeflag == tar.TypeDir {
+		// If the link target is a directory, recursively copy its contents
+		if err := untarReader(ctx, cli, containerID, reader, target); err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("unsupported symlink target file type: %v", header.Typeflag)
+	}
+
+	return nil
+}
+
+func untarReader(ctx context.Context, cli client.APIClient, containerID string, reader io.Reader, dstPath string) error {
+	tarReader := tar.NewReader(reader)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		target := filepath.Join(dstPath, header.Name)
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			if err := os.MkdirAll(target, os.FileMode(header.Mode)); err != nil {
+				return err
+			}
+		case tar.TypeReg:
+			if err := copyFile(tarReader, target, os.FileMode(header.Mode)); err != nil {
+				return err
+			}
+		case tar.TypeSymlink:
+			// Resolve the symlink and copy the original content
+			linkTarget := header.Linkname
+			if err := copyOriginalContent(cli, ctx, containerID, linkTarget, target); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("unsupported file type: %v", header.Typeflag)
+		}
+	}
+
+	return nil
 }

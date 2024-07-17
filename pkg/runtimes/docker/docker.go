@@ -29,6 +29,7 @@ import (
 	"os"
 
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
 type Docker struct{}
@@ -40,6 +41,11 @@ const (
 // ID returns the identity of the runtime
 func (d Docker) ID() string {
 	return "docker"
+}
+
+var roleBasedExportPath = map[k3d.Role][]string{
+	k3d.ServerRole: {"/var/log", "/var/lib/rancher/k3s/agent/containerd/containerd.log"},
+	k3d.AgentRole:  {"/var/log", "/var/lib/rancher/k3s/agent/containerd/containerd.log"},
 }
 
 // GetHost returns the docker daemon host
