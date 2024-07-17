@@ -23,6 +23,8 @@ package debug
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
@@ -33,6 +35,10 @@ import (
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	"github.com/k3d-io/k3d/v5/pkg/types"
 )
+
+var nodeName string
+var exportPath string
+var components []string
 
 // NewCmdDebug returns a new cobra command
 func NewCmdDebug() *cobra.Command {
@@ -50,6 +56,42 @@ func NewCmdDebug() *cobra.Command {
 	}
 
 	cmd.AddCommand(NewCmdDebugLoadbalancer())
+	cmd.AddCommand(NewCmdExportLogs())
+	return cmd
+}
+
+func NewCmdExportLogs() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:               "export-logs CLUSTER",
+		Short:             "Export logs of a k3d cluster",
+		Long:              "Export logs of a k3d cluster for all nodes or selective nodes using filters",
+		ValidArgsFunction: util.ValidArgsAvailableClusters,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 || len(args[0]) == 0 {
+				l.Log().Fatalln("Cluster name is required")
+			}
+			cluster, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &types.Cluster{Name: args[0]})
+			if err != nil {
+				l.Log().Fatalln(err)
+			}
+			exportPath = filepath.Join(exportPath, fmt.Sprintf("debug-logs-%s", cluster.Name))
+			for _, node := range cluster.Nodes {
+				if nodeName == "" || nodeName == node.Name {
+					if err := runtimes.SelectedRuntime.ExportLogsFromNode(cmd.Context(), node, exportPath, components); err != nil {
+						l.Log().Fatalln(err)
+					}
+				}
+			}
+		},
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		l.Log().Fatalln(err)
+	}
+
+	cmd.Flags().StringVarP(&nodeName, "node", "n", "", "Node name to export logs from")
+	cmd.Flags().StringVarP(&exportPath, "path", "p", cwd, "Path to export the logs to")
 
 	return cmd
 }
