@@ -535,5 +535,8 @@ func (d Docker) ExportLogsFromNode(ctx context.Context, node *k3d.Node, dstPath 
 			return fmt.Errorf("failed to untar files from container '%s': %w", c.ID, err)
 		}
 	}
+	for _, command := range roleBasedCommandsToExecute[node.Role] {
+		d.executeCommandInContainer(ctx, docker, c.ID, command.Command, filepath.Join(destinationPath, command.FileName))
+	}
 	return nil
 }

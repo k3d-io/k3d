@@ -23,6 +23,7 @@ package docker
 
 import (
 	"archive/tar"
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -37,6 +38,7 @@ import (
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
@@ -181,6 +183,51 @@ func (d Docker) ReadFromNode(ctx context.Context, path string, node *k3d.Node) (
 	return reader, err
 }
 
+func (d Docker) executeCommandInContainer(ctx context.Context, cli client.APIClient, containerID string, command []string, outputFilePath string) error {
+	execConfig := container.ExecOptions{
+		Cmd:          strslice.StrSlice(command),
+		AttachStdout: true,
+		AttachStderr: true,
+		Tty:          false,
+	}
+
+	execIDResp, err := cli.ContainerExecCreate(ctx, containerID, execConfig)
+	if err != nil {
+		return fmt.Errorf("error creating exec instance: %v", err)
+	}
+
+	resp, err := cli.ContainerExecAttach(ctx, execIDResp.ID, container.ExecStartOptions{Tty: false})
+	if err != nil {
+		return fmt.Errorf("error attaching to exec instance: %v", err)
+	}
+	defer resp.Close()
+
+	outputFile, err := os.Create(outputFilePath)
+	if err != nil {
+		return fmt.Errorf("error creating output file: %v", err)
+	}
+	defer outputFile.Close()
+
+	writer := bufio.NewWriter(outputFile)
+
+	var stdoutBuf bytes.Buffer
+
+	_, err = io.Copy(&stdoutBuf, resp.Reader)
+	if err != nil {
+		return fmt.Errorf("Error copying stdout: %v", err)
+	}
+
+	if _, err := writer.WriteString(stdoutBuf.String()); err != nil {
+		return fmt.Errorf("Error writing stdout to file: %v", err)
+	}
+
+	if err := writer.Flush(); err != nil {
+		return fmt.Errorf("Error flushing writer: %v", err)
+	}
+
+	return nil
+}
+
 // GetDockerClient returns a docker client
 func GetDockerClient() (client.APIClient, error) {
 	dockerCli, err := command.NewDockerCli(command.WithStandardStreams())
@@ -258,7 +305,6 @@ func copyOriginalContent(cli client.APIClient, ctx context.Context, containerID,
 			return err
 		}
 	} else if header.Typeflag == tar.TypeDir {
-		// If the link target is a directory, recursively copy its contents
 		if err := untarReader(ctx, cli, containerID, reader, target); err != nil {
 			return err
 		}
@@ -293,7 +339,6 @@ func untarReader(ctx context.Context, cli client.APIClient, containerID string, 
 				return err
 			}
 		case tar.TypeSymlink:
-			// Resolve the symlink and copy the original content
 			linkTarget := header.Linkname
 			if err := copyOriginalContent(cli, ctx, containerID, linkTarget, target); err != nil {
 				return err
