@@ -1,0 +1,2193 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Little helper to run Rancher Lab's k3s in Docker">
+      
+      
+      
+        <link rel="canonical" href="https://k3d.io/v5.7.3/usage/registries/">
+      
+      
+        <link rel="prev" href="../multiserver/">
+      
+      
+        <link rel="next" href="../exposing_services/">
+      
+      
+      <link rel="icon" href="../../static/img/favicons_black_blue/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.6">
+    
+    
+      
+        <title>Using Image Registries - k3d</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.35e1ed30.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.356b1318.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../static/css/asciinema-player.css">
+    
+      <link rel="stylesheet" href="../../static/css/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="grey">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#using-image-registries" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="k3d" class="md-header__button md-logo" aria-label="k3d" data-md-component="logo">
+      
+  <img src="../../static/img/k3d_logo_black_green.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            k3d
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Using Image Registries
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="grey"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="light-blue" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/k3d-io/k3d" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    k3d-io/k3d
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../configfile/" class="md-tabs__link">
+          
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../design/project/" class="md-tabs__link">
+          
+  
+  Design
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../faq/faq/" class="md-tabs__link">
+          
+  
+  FAQ
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="k3d" class="md-nav__button md-logo" aria-label="k3d" data-md-component="logo">
+      
+  <img src="../../static/img/k3d_logo_black_green.svg" alt="logo">
+
+    </a>
+    k3d
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/k3d-io/k3d" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    k3d-io/k3d
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configfile/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Using Config Files
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kubeconfig/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Handling Kubeconfigs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../multiserver/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Creating multi-server clusters
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Using Image Registries
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Using Image Registries
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#registries-configuration-file" class="md-nav__link">
+    Registries configuration file
+  </a>
+  
+    <nav class="md-nav" aria-label="Registries configuration file">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#registries-configuration-file-embedded-in-k3ds-simpleconfig" class="md-nav__link">
+    Registries Configuration File embedded in k3d&rsquo;s SimpleConfig
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authenticated-registries" class="md-nav__link">
+    Authenticated registries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secure-registries" class="md-nav__link">
+    Secure registries
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-a-local-registry" class="md-nav__link">
+    Using a local registry
+  </a>
+  
+    <nav class="md-nav" aria-label="Using a local registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#preface-referencing-local-registries" class="md-nav__link">
+    Preface: Referencing local registries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-k3d-managed-registries" class="md-nav__link">
+    Using k3d-managed registries
+  </a>
+  
+    <nav class="md-nav" aria-label="Using k3d-managed registries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-dedicated-registry-together-with-your-cluster" class="md-nav__link">
+    Create a dedicated registry together with your cluster
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-a-customized-k3d-managed-registry" class="md-nav__link">
+    Create a customized k3d-managed registry
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-your-own-not-k3d-managed-local-registry" class="md-nav__link">
+    Using your own (not k3d-managed) local registry
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pushing-to-your-local-registry-address" class="md-nav__link">
+    Pushing to your local registry address
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-your-registry" class="md-nav__link">
+    Testing your registry
+  </a>
+  
+    <nav class="md-nav" aria-label="Testing your registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nginx-deployment" class="md-nav__link">
+    Nginx Deployment
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alpine-pod" class="md-nav__link">
+    Alpine Pod
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creating-a-registry-proxy-pull-through-registry" class="md-nav__link">
+    Creating a registry proxy / pull-through registry
+  </a>
+  
+    <nav class="md-nav" aria-label="Creating a registry proxy / pull-through registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-registry-proxy-pull-through-registry-via-configfile" class="md-nav__link">
+    Creating a registry proxy / pull-through registry via configfile
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../exposing_services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Exposing Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../importing_images/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Importing modes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../k3s/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3s Features in k3d
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Advanced Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            Advanced Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced/calico/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Use Calico instead of Flannel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced/cuda/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Running CUDA workloads
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced/podman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Using Podman instead of Docker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Commands
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            Commands
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_cluster/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_cluster_create/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster create
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_cluster_delete/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster delete
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_cluster_edit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster edit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_cluster_list/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_cluster_start/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster start
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_cluster_stop/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d cluster stop
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_completion/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d completion
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_config_init/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d config init
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_config_migrate/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d config migrate
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_image/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d image
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_image_import/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d image import
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_kubeconfig/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d kubeconfig
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_kubeconfig_get/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d kubeconfig get
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_kubeconfig_merge/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d kubeconfig merge
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_node/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_node_create/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node create
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_node_delete/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node delete
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_node_edit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node edit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_node_list/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_node_start/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node start
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_node_stop/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d node stop
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_registry/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d registry
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_registry_create/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d registry create
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_registry_delete/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d registry delete
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_registry_list/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d registry list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_version/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d version
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/k3d_version_list/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    K3d version list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Design
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Design
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/project/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Project Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/concepts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Concepts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/defaults/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Defaults
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/networking/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Networking
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    FAQ
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            FAQ
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/faq/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    FAQ
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/compatibility/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Compatibility
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#registries-configuration-file" class="md-nav__link">
+    Registries configuration file
+  </a>
+  
+    <nav class="md-nav" aria-label="Registries configuration file">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#registries-configuration-file-embedded-in-k3ds-simpleconfig" class="md-nav__link">
+    Registries Configuration File embedded in k3d&rsquo;s SimpleConfig
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authenticated-registries" class="md-nav__link">
+    Authenticated registries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secure-registries" class="md-nav__link">
+    Secure registries
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-a-local-registry" class="md-nav__link">
+    Using a local registry
+  </a>
+  
+    <nav class="md-nav" aria-label="Using a local registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#preface-referencing-local-registries" class="md-nav__link">
+    Preface: Referencing local registries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-k3d-managed-registries" class="md-nav__link">
+    Using k3d-managed registries
+  </a>
+  
+    <nav class="md-nav" aria-label="Using k3d-managed registries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-dedicated-registry-together-with-your-cluster" class="md-nav__link">
+    Create a dedicated registry together with your cluster
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-a-customized-k3d-managed-registry" class="md-nav__link">
+    Create a customized k3d-managed registry
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-your-own-not-k3d-managed-local-registry" class="md-nav__link">
+    Using your own (not k3d-managed) local registry
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pushing-to-your-local-registry-address" class="md-nav__link">
+    Pushing to your local registry address
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-your-registry" class="md-nav__link">
+    Testing your registry
+  </a>
+  
+    <nav class="md-nav" aria-label="Testing your registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nginx-deployment" class="md-nav__link">
+    Nginx Deployment
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alpine-pod" class="md-nav__link">
+    Alpine Pod
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creating-a-registry-proxy-pull-through-registry" class="md-nav__link">
+    Creating a registry proxy / pull-through registry
+  </a>
+  
+    <nav class="md-nav" aria-label="Creating a registry proxy / pull-through registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-registry-proxy-pull-through-registry-via-configfile" class="md-nav__link">
+    Creating a registry proxy / pull-through registry via configfile
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="using-image-registries">Using Image Registries<a class="headerlink" href="#using-image-registries" title="Permanent link">&para;</a></h1>
+<h2 id="registries-configuration-file">Registries configuration file<a class="headerlink" href="#registries-configuration-file" title="Permanent link">&para;</a></h2>
+<p>You can add registries by specifying them in a <code>registries.yaml</code> and referencing it at creation time:
+<code class="highlight">k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>mycluster<span class="w"> </span>--registry-config<span class="w"> </span><span class="s2">&quot;/home/YOU/my-registries.yaml&quot;</span></code>.</p>
+<p>This file is a regular <a href="https://rancher.com/docs/k3s/latest/en/installation/private-registry/">k3s registries configuration file</a>, and looks like this:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">mirrors</span><span class="p">:</span>
+<span class="w">  </span><span class="s">&quot;my.company.registry:5000&quot;</span><span class="p p-Indicator">:</span>
+<span class="w">    </span><span class="nt">endpoint</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://my.company.registry:5000</span>
+</code></pre></div>
+<p>In this example, an image with a name like <code>my.company.registry:5000/nginx:latest</code> would be <em>pulled</em> from the registry running at <code>http://my.company.registry:5000</code>.</p>
+<p>This file can also be used for providing additional information necessary for accessing some registries, like <a href="#authenticated-registries">authentication</a> and <a href="#secure-registries">certificates</a>.</p>
+<h3 id="registries-configuration-file-embedded-in-k3ds-simpleconfig">Registries Configuration File embedded in k3d&rsquo;s SimpleConfig<a class="headerlink" href="#registries-configuration-file-embedded-in-k3ds-simpleconfig" title="Permanent link">&para;</a></h3>
+<p>If you&rsquo;re using a <code>SimpleConfig</code> file to configure your k3d cluster, you may as well embed the registries.yaml in there directly:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">k3d.io/v1alpha5</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Simple</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test</span>
+<span class="nt">servers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="nt">agents</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="nt">registries</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">create</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">myregistry</span>
+<span class="w">  </span><span class="nt">config</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">mirrors:</span>
+<span class="w">      </span><span class="no">&quot;my.company.registry&quot;:</span>
+<span class="w">        </span><span class="no">endpoint:</span>
+<span class="w">          </span><span class="no">- http://my.company.registry:5000</span>
+</code></pre></div>
+<p>Here, the config for the k3d-managed registry, created by the <code>create: {...}</code> option will be merged with the config specified under <code>config: |</code>.</p>
+<h3 id="authenticated-registries">Authenticated registries<a class="headerlink" href="#authenticated-registries" title="Permanent link">&para;</a></h3>
+<p>When using authenticated registries, we can add the <em>username</em> and <em>password</em> in a
+<code>configs</code> section in the <code>registries.yaml</code>, like this:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">mirrors</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">my.company.registry</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">endpoint</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://my.company.registry</span>
+
+<span class="nt">configs</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">my.company.registry</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">auth</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aladin</span>
+<span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">abracadabra</span>
+</code></pre></div>
+<h3 id="secure-registries">Secure registries<a class="headerlink" href="#secure-registries" title="Permanent link">&para;</a></h3>
+<p>When using secure registries, the <a href="#registries-file"><code>registries.yaml</code> file</a> must include information about the certificates. For example, if you want to use images from the secure registry running at <code>https://my.company.registry</code>, you must first download a CA file valid for that server and store it in some well-known directory like <code>${HOME}/.k3d/my-company-root.pem</code>.  </p>
+<p>Then you have to mount the CA file in some directory in the nodes in the cluster and include that mounted file in a <code>configs</code> section in the <a href="#registries-file"><code>registries.yaml</code> file</a>.<br />
+For example, if we mount the CA file in <code>/etc/ssl/certs/my-company-root.pem</code>, the <code>registries.yaml</code> will look like:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">mirrors</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">my.company.registry</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">endpoint</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://my.company.registry</span>
+
+<span class="nt">configs</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">my.company.registry</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">tls</span><span class="p">:</span>
+<span class="w">      </span><span class="c1"># we will mount &quot;my-company-root.pem&quot; in the /etc/ssl/certs/ directory.</span>
+<span class="w">      </span><span class="nt">ca_file</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/etc/ssl/certs/my-company-root.pem&quot;</span>
+</code></pre></div>
+<p>Finally, we can create the cluster, mounting the CA file in the path we specified in <code>ca_file</code>:</p>
+<div class="highlight"><pre><span></span><code>k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--volume<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.k3d/my-registries.yaml:/etc/rancher/k3s/registries.yaml&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--volume<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.k3d/my-company-root.pem:/etc/ssl/certs/my-company-root.pem&quot;</span>
+</code></pre></div>
+<h2 id="using-a-local-registry">Using a local registry<a class="headerlink" href="#using-a-local-registry" title="Permanent link">&para;</a></h2>
+<h3 id="preface-referencing-local-registries">Preface: Referencing local registries<a class="headerlink" href="#preface-referencing-local-registries" title="Permanent link">&para;</a></h3>
+<p>In the next sections, you&rsquo;re going to create a local registry (i.e. a container image registry running in a container in your docker host).<br />
+That container will have a name, e.g. <code>mycluster-registry</code>.<br />
+If you follow the guide closely (or definitely if you use the k3d-managed option), this name will be known to all the hosts (K3s containers) and workloads in your k3d cluster.<br />
+However, you usually want to push images into that registry from your local machine, which <strong>does not know</strong> that name by default.<br />
+Now you have a few options, including the following three:  </p>
+<ol>
+<li>Use <code>localhost</code>: Since the container will have a port mapped to your local host, you can just directly reference it via e.g. <code>localhost:12345</code>, where <code>12345</code> is the mapped port<ul>
+<li>If you later pull the image from the registry, only the repository path (e.g. <code>myrepo/myimage:mytag</code> in <code>mycluster-registry:5000/myrepo/myimage:mytag</code>) matters to find your image in the targeted registry.</li>
+</ul>
+</li>
+<li>
+<p>Get your machine to know the container name: For this you can use the plain old hosts file (<code>/etc/hosts</code> on Unix systems and <code>C:\windows\system32\drivers\etc\hosts</code> on Windows) by adding an entry like the following to the end of the file:  </p>
+<div class="highlight"><pre><span></span><code>127.0.0.1 mycluster-registry
+</code></pre></div>
+</li>
+<li>
+<p>Use some special resolving magic: Tools like <code>dnsmasq</code> or <code>nss-myhostname</code> (see info box below) and others can setup your local resolver to directly resolve the registry name to <code>127.0.0.1</code>.</p>
+</li>
+</ol>
+<div class="admonition info">
+<p class="admonition-title">nss-myhostname to resolve <code>*.localhost</code></p>
+<p>Luckily (for Linux users), <a href="http://man7.org/linux/man-pages/man8/nss-myhostname.8.html">NSS-myhostname</a> ships with many Linux distributions
+and should resolve <code>*.localhost</code> automatically to <code>127.0.0.1</code>.<br />
+Otherwise, it&rsquo;s installable using <code>sudo apt install libnss-myhostname</code>.</p>
+</div>
+<h3 id="using-k3d-managed-registries">Using k3d-managed registries<a class="headerlink" href="#using-k3d-managed-registries" title="Permanent link">&para;</a></h3>
+<h4 id="create-a-dedicated-registry-together-with-your-cluster">Create a dedicated registry together with your cluster<a class="headerlink" href="#create-a-dedicated-registry-together-with-your-cluster" title="Permanent link">&para;</a></h4>
+<ol>
+<li>
+<p><code class="highlight">k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>mycluster<span class="w"> </span>--registry-create<span class="w"> </span>mycluster-registry</code>: This creates your cluster <code>mycluster</code> together with a registry container called <code>mycluster-registry</code></p>
+<ul>
+<li>k3d sets everything up in the cluster for containerd to be able to pull images from that registry (using the <code>registries.yaml</code> file)</li>
+<li>the port, which the registry is listening on will be mapped to a random port on your host system</li>
+</ul>
+</li>
+<li>
+<p>Check the k3d command output or <code class="highlight">docker<span class="w"> </span>ps<span class="w"> </span>-f<span class="w"> </span><span class="nv">name</span><span class="o">=</span>mycluster-registry</code> to find the exposed port</p>
+</li>
+<li><a href="#testing-your-registry">Test your registry</a></li>
+</ol>
+<h4 id="create-a-customized-k3d-managed-registry">Create a customized k3d-managed registry<a class="headerlink" href="#create-a-customized-k3d-managed-registry" title="Permanent link">&para;</a></h4>
+<ol>
+<li><code class="highlight">k3d<span class="w"> </span>registry<span class="w"> </span>create<span class="w"> </span>myregistry.localhost<span class="w"> </span>--port<span class="w"> </span><span class="m">12345</span></code> creates a new registry called <code>k3d-myregistry.localhost</code> (could be used with automatic resolution of <code>*.localhost</code>, see next section - also, <strong>note the <code>k3d-</code> prefix</strong> that k3d adds to all resources it creates)</li>
+<li><code class="highlight">k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>newcluster<span class="w"> </span>--registry-use<span class="w"> </span>k3d-myregistry.localhost:12345</code> (make sure you use the <strong><code>k3d-</code> prefix</strong> here) creates a new cluster set up to use that registry</li>
+<li><a href="#testing-your-registry">Test your registry</a></li>
+</ol>
+<h3 id="using-your-own-not-k3d-managed-local-registry">Using your own (not k3d-managed) local registry<a class="headerlink" href="#using-your-own-not-k3d-managed-local-registry" title="Permanent link">&para;</a></h3>
+<p><em>We recommend using a k3d-managed registry, as it plays nicely together with k3d clusters, but here&rsquo;s also a guide to create your own (not k3d-managed) registry, if you need features or customizations, that k3d does not provide:</em></p>
+<details class="nonk3dregistry">
+<summary>Using your own (not k3d-managed) local registry</summary>
+<p>You can start your own local registry it with some <code>docker</code> commands, like:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>volume<span class="w"> </span>create<span class="w"> </span>local_registry
+docker<span class="w"> </span>container<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--name<span class="w"> </span>registry.localhost<span class="w"> </span>-v<span class="w"> </span>local_registry:/var/lib/registry<span class="w"> </span>--restart<span class="w"> </span>always<span class="w"> </span>-p<span class="w"> </span><span class="m">12345</span>:5000<span class="w"> </span>registry:2
+</code></pre></div>
+<p>These commands will start your registry container with name and port (on your host) <code>registry.localhost:12345</code>. In order to push to this registry, you will need to make it accessible as described in the next section.<br />
+Once your registry is up and running, we will need to add it to your <code>registries.yaml</code> configuration file.<br />
+Finally, you have to connect the registry network to the k3d cluster network: <code class="highlight">docker<span class="w"> </span>network<span class="w"> </span>connect<span class="w"> </span>k3d-k3s-default<span class="w"> </span>registry.localhost</code>.<br />
+And then you can <a href="#testing-your-registry">test your local registry</a>.</p>
+</details>
+<h3 id="pushing-to-your-local-registry-address">Pushing to your local registry address<a class="headerlink" href="#pushing-to-your-local-registry-address" title="Permanent link">&para;</a></h3>
+<div class="admonition info">
+<p class="admonition-title">See Preface</p>
+<p>The information below has been addressed in the <a href="#preface-referencing-local-registries">preface for this section</a>.</p>
+</div>
+<h2 id="testing-your-registry">Testing your registry<a class="headerlink" href="#testing-your-registry" title="Permanent link">&para;</a></h2>
+<p>You should test that you can</p>
+<ul>
+<li>push to your registry from your local development machine.</li>
+<li>use images from that registry in <code>Deployments</code> in your k3d cluster.</li>
+</ul>
+<p>We will verify these two things for a local registry (located at <code>k3d-registry.localhost:12345</code>) running in your development machine.<br />
+Things would be basically the same for checking an external registry, but some additional configuration could be necessary in your local machine when using an authenticated or secure registry (please refer to Docker&rsquo;s documentation for this).</p>
+<p><strong>Assumptions</strong>: In the following test cases, we assume that the registry name <code>k3d-registry.localhost</code> resolves to <code>127.0.0.1</code> in your local machine (see <a href="#preface-referencing-local-registries">section preface for more details</a>) and to the registry container IP for the k3d cluster nodes (K3s containers).</p>
+<p><strong>Note</strong>: as per the explanation in the <a href="#preface-referencing-local-registries">preface</a>, you could replace <code>k3d-registry.localhost:12345</code> with <code>localhost:12345</code> in the <code>docker tag</code> and <code>docker push</code> commands below (but not in the <code>kubectl</code> part!)</p>
+<h3 id="nginx-deployment">Nginx Deployment<a class="headerlink" href="#nginx-deployment" title="Permanent link">&para;</a></h3>
+<p>First, we can download some image (like <code>nginx</code>) and push it to our local registry with:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>pull<span class="w"> </span>nginx:latest
+docker<span class="w"> </span>tag<span class="w"> </span>nginx:latest<span class="w"> </span>k3d-registry.localhost:12345/nginx:latest
+docker<span class="w"> </span>push<span class="w"> </span>k3d-registry.localhost:12345/nginx:latest
+</code></pre></div>
+<p>Then we can deploy a pod referencing this image to your cluster:</p>
+<div class="highlight"><pre><span></span><code>cat<span class="w"> </span><span class="s">&lt;&lt;EOF | kubectl apply -f -</span>
+<span class="s">apiVersion: apps/v1</span>
+<span class="s">kind: Deployment</span>
+<span class="s">metadata:</span>
+<span class="s">  name: nginx-test-registry</span>
+<span class="s">  labels:</span>
+<span class="s">    app: nginx-test-registry</span>
+<span class="s">spec:</span>
+<span class="s">  replicas: 1</span>
+<span class="s">  selector:</span>
+<span class="s">    matchLabels:</span>
+<span class="s">      app: nginx-test-registry</span>
+<span class="s">  template:</span>
+<span class="s">    metadata:</span>
+<span class="s">      labels:</span>
+<span class="s">        app: nginx-test-registry</span>
+<span class="s">    spec:</span>
+<span class="s">      containers:</span>
+<span class="s">      - name: nginx-test-registry</span>
+<span class="s">        image: k3d-registry.localhost:12345/nginx:latest</span>
+<span class="s">        ports:</span>
+<span class="s">        - containerPort: 80</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<p>Then you should check that the pod is running with <code>kubectl get pods -l "app=nginx-test-registry"</code>.</p>
+<h3 id="alpine-pod">Alpine Pod<a class="headerlink" href="#alpine-pod" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Pull the alpine image: <code class="highlight">docker<span class="w"> </span>pull<span class="w"> </span>alpine:latest</code></li>
+<li>re-tag it to reference your newly created registry: <code class="highlight">docker<span class="w"> </span>tag<span class="w"> </span>alpine:latest<span class="w"> </span>k3d-registry.localhost:12345/testimage:local</code></li>
+<li>push it: <code class="highlight">docker<span class="w"> </span>push<span class="w"> </span>k3d-registry.localhost:12345/testimage:local</code></li>
+<li>Use kubectl to create a new pod in your cluster using that image to see, if the cluster can pull from the new registry: <code class="highlight">kubectl<span class="w"> </span>run<span class="w"> </span>--image<span class="w"> </span>k3d-registry.localhost:12345/testimage:local<span class="w"> </span>testimage<span class="w"> </span>--command<span class="w"> </span>--<span class="w"> </span>tail<span class="w"> </span>-f<span class="w"> </span>/dev/null</code><ul>
+<li>(creates a container that will not do anything but keep on running)</li>
+</ul>
+</li>
+</ol>
+<h2 id="creating-a-registry-proxy-pull-through-registry">Creating a registry proxy / pull-through registry<a class="headerlink" href="#creating-a-registry-proxy-pull-through-registry" title="Permanent link">&para;</a></h2>
+<ol>
+<li>
+<p>Create a pull-through registry</p>
+<div class="highlight"><pre><span></span><code>k3d<span class="w"> </span>registry<span class="w"> </span>create<span class="w"> </span>docker-io<span class="w"> </span><span class="sb">`</span><span class="c1"># Create a registry named k3d-docker-io` \</span>
+<span class="w">  </span>-p<span class="w"> </span><span class="m">5000</span><span class="w"> </span><span class="sb">`</span><span class="c1"># listening on local host port 5000` \ </span>
+<span class="w">  </span>--proxy-remote-url<span class="w"> </span>https://registry-1.docker.io<span class="w"> </span><span class="sb">`</span><span class="c1"># let it mirror the Docker Hub registry` \</span>
+<span class="w">  </span>-v<span class="w"> </span>~/.local/share/docker-io-registry:/var/lib/registry<span class="w"> </span><span class="sb">`</span><span class="c1"># also persist the downloaded images on the device outside the container`</span>
+</code></pre></div>
+</li>
+<li>
+<p>Create <code>registry.yml</code></p>
+<div class="highlight"><pre><span></span><code><span class="nt">mirrors</span><span class="p">:</span>
+<span class="w">  </span><span class="s">&quot;docker.io&quot;</span><span class="p p-Indicator">:</span>
+<span class="w">    </span><span class="nt">endpoint</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://k3d-docker-io:5000</span>
+</code></pre></div>
+</li>
+<li>
+<p>Create a cluster and using the pull-through cache</p>
+<div class="highlight"><pre><span></span><code>k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>cluster01<span class="w"> </span>--registry-use<span class="w"> </span>k3d-docker-io:5000<span class="w"> </span>--registry-config<span class="w"> </span>registry.yml
+</code></pre></div>
+</li>
+<li>
+<p>After cluster01 ready, create another cluster with the same registry or rebuild the cluster, it will use the already locally cached images.</p>
+<div class="highlight"><pre><span></span><code>k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>cluster02<span class="w"> </span>--registry-use<span class="w"> </span>k3d-docker-io:5000<span class="w"> </span>--registry-config<span class="w"> </span>registry.yml
+</code></pre></div>
+</li>
+</ol>
+<h3 id="creating-a-registry-proxy-pull-through-registry-via-configfile">Creating a registry proxy / pull-through registry via configfile<a class="headerlink" href="#creating-a-registry-proxy-pull-through-registry-via-configfile" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p>Create a config file, e.g. <code>/home/me/test-regcache.yaml</code></p>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">k3d.io/v1alpha5</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Simple</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test-regcache</span>
+<span class="nt">registries</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">create</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">docker-io</span><span class="w"> </span><span class="c1"># name of the registry container</span>
+<span class="w">    </span><span class="nt">proxy</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">remoteURL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://registry-1.docker.io</span><span class="w"> </span><span class="c1"># proxy DockerHub</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/tmp/reg:/var/lib/registry</span><span class="w"> </span><span class="c1"># persist data locally in /tmp/reg</span>
+<span class="w">  </span><span class="nt">config</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span><span class="w"> </span><span class="c1"># tell K3s to use this registry when pulling from DockerHub</span>
+<span class="w">    </span><span class="no">mirrors:</span>
+<span class="w">      </span><span class="no">&quot;docker.io&quot;:</span>
+<span class="w">        </span><span class="no">endpoint:</span>
+<span class="w">          </span><span class="no">- http://docker-io:5000</span>
+</code></pre></div>
+</li>
+<li>
+<p>Create cluster from config:</p>
+<div class="highlight"><pre><span></span><code>k3d<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>-c<span class="w"> </span>/home/me/test-regcache.yaml
+</code></pre></div>
+</li>
+</ol>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      Last update:
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">May 17, 2023</span>
+      
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2020-2023 k3d Authors
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.top", "search.suggest", "search.highlight", "navigation.expand", "navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "navigation.path"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.aecac24b.min.js"></script>
+      
+        <script src="../../static/js/asciinema-player.js"></script>
+      
+    
+  </body>
+</html>
