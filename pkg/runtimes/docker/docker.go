@@ -29,6 +29,7 @@ import (
 	"os"
 
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
 type Docker struct{}
@@ -40,6 +41,32 @@ const (
 // ID returns the identity of the runtime
 func (d Docker) ID() string {
 	return "docker"
+}
+
+type commandInfo struct {
+	Command  []string
+	FileName string
+}
+
+var roleBasedExportPath = map[k3d.Role][]string{
+	k3d.ServerRole: {"/var/log", "/var/lib/rancher/k3s/agent/containerd/containerd.log"},
+	k3d.AgentRole:  {"/var/log", "/var/lib/rancher/k3s/agent/containerd/containerd.log"},
+}
+
+var roleBasedCommandsToExecute = map[k3d.Role][]commandInfo{
+	k3d.ServerRole: {
+		{Command: []string{"crictl", "images"}, FileName: "crictl-images.log"},
+		{Command: []string{"crictl", "ps", "-a"}, FileName: "crictl-ps.log"},
+		{Command: []string{"kubectl", "cluster-info"}, FileName: "cluster-info.log"},
+		{Command: []string{"kubectl", "version"}, FileName: "kubectl-version.log"},
+		{Command: []string{"kubectl", "get", "node", "-o", "yaml"}, FileName: "kubectl-get-node.yaml"},
+		{Command: []string{"ps", "-aef"}, FileName: "ps-aef.log"},
+	},
+	k3d.AgentRole: {
+		{Command: []string{"crictl", "images"}, FileName: "crictl-images.log"},
+		{Command: []string{"crictl", "ps", "-a"}, FileName: "crictl-ps.log"},
+		{Command: []string{"ps", "-aef"}, FileName: "ps-aef.log"},
+	},
 }
 
 // GetHost returns the docker daemon host
