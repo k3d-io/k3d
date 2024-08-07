@@ -47,8 +47,6 @@ import (
 	"github.com/k3d-io/k3d/v5/version"
 )
 
-var configFile string
-
 const clusterCreateDescription = `
 Create a new k3s cluster with containerized nodes (k3s in docker).
 Every cluster will consist of one or more containers:
@@ -72,13 +70,15 @@ var (
 func initConfig() error {
 	// Viper for pre-processed config options
 	ppViper.SetEnvPrefix("K3D")
+	ppViper.AutomaticEnv()
+	ppViper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	if l.Log().GetLevel() >= logrus.DebugLevel {
 		c, _ := yaml.Marshal(ppViper.AllSettings())
 		l.Log().Debugf("Additional CLI Configuration:\n%s", c)
 	}
 
-	return cliconfig.InitViperWithConfigFile(cfgViper, configFile)
+	return cliconfig.InitViperWithConfigFile(cfgViper, ppViper.GetString("config"))
 }
 
 // NewCmdClusterCreate returns a new cobra command
@@ -123,7 +123,7 @@ func NewCmdClusterCreate() *cobra.Command {
 				l.Log().Fatalf("error processing/sanitizing simple config: %v", err)
 			}
 
-			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, simpleCfg, configFile)
+			clusterConfig, err := config.TransformSimpleToClusterConfig(cmd.Context(), runtimes.SelectedRuntime, simpleCfg, ppViper.GetString("config"))
 			if err != nil {
 				l.Log().Fatalln(err)
 			}
@@ -208,7 +208,8 @@ func NewCmdClusterCreate() *cobra.Command {
 	 * Config File *
 	 ***************/
 
-	cmd.Flags().StringVarP(&configFile, "config", "c", "", "Path of a config file to use")
+	cmd.Flags().StringP("config", "c", "", "Path of a config file to use")
+	_ = ppViper.BindPFlag("config", cmd.Flags().Lookup("config"))
 	if err := cmd.MarkFlagFilename("config", "yaml", "yml"); err != nil {
 		l.Log().Fatalln("Failed to mark flag 'config' as filename flag")
 	}
