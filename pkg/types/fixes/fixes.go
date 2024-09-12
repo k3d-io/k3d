@@ -114,7 +114,7 @@ var fixNeeded = map[K3DFixEnv]func(runtime runtimes.Runtime) bool{
 func GetFixes(runtime runtimes.Runtime) (map[K3DFixEnv]bool, bool) {
 	if EnabledFixes == nil {
 		result := make(map[K3DFixEnv]bool, len(FixEnvs))
-		any := false
+		anyEnabled := false
 		for _, fixEnv := range FixEnvs {
 			enabled := false
 			if v, isSet := os.LookupEnv(string(fixEnv)); !isSet {
@@ -128,11 +128,11 @@ func GetFixes(runtime runtimes.Runtime) (map[K3DFixEnv]bool, bool) {
 			}
 			result[fixEnv] = enabled
 			if enabled {
-				any = true
+				anyEnabled = true
 			}
 		}
 		EnabledFixes = result
-		AnyFixEnabled = any
+		AnyFixEnabled = anyEnabled
 	}
 	return EnabledFixes, AnyFixEnabled
 }
