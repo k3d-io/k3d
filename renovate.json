@@ -20,6 +20,12 @@
         "tools",
         "proxy"
       ]
+    },
+    {
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "matchPackageNames": ["*"]
     }
   ]
 }
