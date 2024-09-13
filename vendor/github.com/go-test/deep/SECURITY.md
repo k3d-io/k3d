@@ -6,7 +6,8 @@ For security patches, the latest release is supported:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
+| 1.1.x   | Yes |
+| 1.0.x   | No |
 
 ## Reporting a Vulnerability
 
