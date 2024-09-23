@@ -630,7 +630,7 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 		}
 	}
 
-	if _, any := fixes.GetFixes(runtime); any {
+	if _, anyFixEnabled := fixes.GetFixes(runtime); anyFixEnabled {
 		node.K3dEntrypoint = true
 	}
 

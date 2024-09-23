@@ -1,0 +1,31 @@
+{
+  "extends": [
+    "config:base"
+  ],
+  "packageRules": [
+    {
+      "managers": ["gomod"],
+      "enabled": true,
+      "paths": [
+        ".",
+        "docgen",
+        "tools"
+      ]
+    },
+    {
+      "managers": ["dockerfile"],
+      "enabled": true,
+      "paths": [
+        ".",
+        "tools",
+        "proxy"
+      ]
+    },
+    {
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "matchPackageNames": ["*"]
+    }
+  ]
+}

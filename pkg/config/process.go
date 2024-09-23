@@ -23,12 +23,14 @@ THE SOFTWARE.
 package config
 
 import (
+	"os"
 	"strings"
 
 	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	runtimeutil "github.com/k3d-io/k3d/v5/pkg/runtimes/util"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/pkg/types/fixes"
 	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 )
 
@@ -40,6 +42,12 @@ func ProcessSimpleConfig(simpleConfig *conf.SimpleConfig) error {
 
 		l.Log().Debugf("Host network was chosen, changing provided/random api port to k3s:%s", k3d.DefaultAPIPort)
 		simpleConfig.ExposeAPI.HostPort = k3d.DefaultAPIPort
+
+		l.Log().Debugln("Host network was chosen, disabling DNS fix as no gateway will be available/required.")
+		err := os.Setenv(string(fixes.EnvFixDNS), "false")
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

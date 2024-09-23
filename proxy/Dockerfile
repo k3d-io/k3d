@@ -1,4 +1,4 @@
-FROM nginx:1.25.1-alpine3.17
+FROM nginx:1.27.0-alpine3.19
 # TODO:_ consider switching to https://github.com/abtreece/confd to not maintain a custom fork anymore
 
 ARG OS
