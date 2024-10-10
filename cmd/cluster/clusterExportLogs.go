@@ -19,41 +19,50 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package cluster
 
 import (
+	"github.com/k3d-io/k3d/v5/cmd/util"
+	"github.com/k3d-io/k3d/v5/pkg/client"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
-
+	"github.com/k3d-io/k3d/v5/pkg/runtimes"
+	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/spf13/cobra"
 )
 
-// NewCmdCluster returns a new cobra command
-func NewCmdCluster() *cobra.Command {
-	// create new cobra command
+var exportPath string
+
+func NewCmdClusterExportLogs() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cluster",
-		Short: "Manage cluster(s)",
-		Long:  `Manage cluster(s)`,
+		Use:               "export-logs CLUSTER [PATH]",
+		Short:             "Export logs of a k3d cluster",
+		Long:              `Export logs of a k3d cluster.`,
+		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := cmd.Help(); err != nil {
-				l.Log().Errorln("Couldn't get help text")
-				l.Log().Fatalln(err)
+			cluster := parseExportLogsCmd(cmd, args)
+
+			for _, node := range cluster.Nodes {
+				if err := runtimes.SelectedRuntime.ExportLogsFromNode(cmd.Context(), node, exportPath); err != nil {
+					l.Log().Fatalln(err)
+				}
 			}
 		},
 	}
 
-	// add subcommands
-	cmd.AddCommand(NewCmdClusterCreate(),
-		NewCmdClusterStart(),
-		NewCmdClusterStop(),
-		NewCmdClusterDelete(),
-		NewCmdClusterList(),
-		NewCmdClusterEdit(),
-		NewCmdClusterExportLogs(),
-	)
+	cmd.Flags().StringVarP(&exportPath, "path", "p", "", "Path to export the logs to")
 
-	// add flags
-
-	// done
 	return cmd
+}
+
+func parseExportLogsCmd(cmd *cobra.Command, args []string) *k3d.Cluster {
+	if len(args) == 0 || len(args[0]) == 0 {
+		l.Log().Fatalln("No cluster name given")
+	}
+
+	cluster, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: args[0]})
+	if err != nil {
+		l.Log().Fatalln(err)
+	}
+	return cluster
 }
