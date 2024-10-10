@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/k3d-io/k3d/v5/cmd/util"
 	cliconfig "github.com/k3d-io/k3d/v5/cmd/util/config"
@@ -35,13 +36,31 @@ import (
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	k3dutil "github.com/k3d-io/k3d/v5/pkg/util"
+	"github.com/sirupsen/logrus"
+	"sigs.k8s.io/yaml"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var clusterDeleteConfigFile string
-var clusterDeleteCfgViper = viper.New()
+var (
+	clusterDeleteCfgViper = viper.New()
+	clusterDeletePpViper  = viper.New()
+)
+
+func initClusterDeleteConfig() error {
+	// Viper for pre-processed config options
+	clusterDeletePpViper.SetEnvPrefix("K3D")
+	clusterDeletePpViper.AutomaticEnv()
+	clusterDeletePpViper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	if l.Log().GetLevel() >= logrus.DebugLevel {
+		c, _ := yaml.Marshal(clusterDeletePpViper.AllSettings())
+		l.Log().Debugf("Additional CLI Configuration:\n%s", c)
+	}
+
+	return cliconfig.InitViperWithConfigFile(clusterDeleteCfgViper, clusterDeletePpViper.GetString("config"))
+}
 
 // NewCmdClusterDelete returns a new cobra command
 func NewCmdClusterDelete() *cobra.Command {
@@ -54,7 +73,7 @@ func NewCmdClusterDelete() *cobra.Command {
 		Args:              cobra.MinimumNArgs(0), // 0 or n arguments; 0 = default cluster name
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return cliconfig.InitViperWithConfigFile(clusterDeleteCfgViper, clusterDeleteConfigFile)
+			return initClusterDeleteConfig()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			clusters := parseDeleteClusterCmd(cmd, args)
@@ -99,7 +118,8 @@ func NewCmdClusterDelete() *cobra.Command {
 	 * Config File *
 	 ***************/
 
-	cmd.Flags().StringVarP(&clusterDeleteConfigFile, "config", "c", "", "Path of a config file to use")
+	cmd.Flags().StringP("config", "c", "", "Path of a config file to use")
+	_ = clusterDeletePpViper.BindPFlag("config", cmd.Flags().Lookup("config"))
 	if err := cmd.MarkFlagFilename("config", "yaml", "yml"); err != nil {
 		l.Log().Fatalln("Failed to mark flag 'config' as filename flag")
 	}
@@ -119,29 +139,27 @@ func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	}
 
 	// --config
-	if clusterDeleteConfigFile != "" {
-		// not allowed with --all or more args
-		if len(args) > 0 || all {
-			l.Log().Fatalln("failed to delete cluster: cannot use `--config` flag with additional arguments or `--all`")
-		}
-
+	if clusterDeletePpViper.GetString("config") != "" {
 		cfg, err := config.SimpleConfigFromViper(clusterDeleteCfgViper)
 		if err != nil {
 			l.Log().Fatalln(err)
 		}
 
-		if cfg.Name == "" {
-			l.Log().Fatalln("failed to delete cluster via config file: no name in config file")
-		}
+		if cfg.Name != "" {
+			// not allowed with --all or more args
+			if len(args) > 0 || all {
+				l.Log().Fatalln("failed to delete cluster: cannot use name from configuration file with additional arguments or `--all`")
+			}
 
-		c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: cfg.Name})
-		if errors.Is(err, client.ClusterGetNoNodesFoundError) {
-			l.Log().Infof("No nodes found for cluster '%s', nothing to delete.", cfg.Name)
-			return nil
-		}
+			c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: cfg.Name})
+			if errors.Is(err, client.ClusterGetNoNodesFoundError) {
+				l.Log().Infof("No nodes found for cluster '%s', nothing to delete.", cfg.Name)
+				return nil
+			}
 
-		clusters = append(clusters, c)
-		return clusters
+			clusters = append(clusters, c)
+			return clusters
+		}
 	}
 
 	// --all was set
