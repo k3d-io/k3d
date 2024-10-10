@@ -1,4 +1,4 @@
-ARG DOCKER_VERSION=25.0.3
+ARG DOCKER_VERSION=27.3.1
 ############################################################
 # builder                                                  #
 # -> golang image used solely for building the k3d binary  #
