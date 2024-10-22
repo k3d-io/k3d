@@ -34,10 +34,10 @@ jobs:
       fail-fast: false
       matrix:
         docker_version:
-          - "20.10.5"
-          - "20.10.12"
-          - "20.10.17"
-          - "23.0.1"
+          - "23.0.15"
+          - "25.0.6"
+          - "26.1.5"
+          - "27.3.1"
     steps:
       - uses: actions/checkout@v3
       - name: Setup Docker
@@ -81,11 +81,10 @@ jobs:
       fail-fast: false
       matrix:
         k3s_channel:
-          - "v1.22"
-          - "v1.23"
-          - "v1.24"
-          - "v1.25"
-          - "v1.26"
+          - "v1.28"
+          - "v1.29"
+          - "v1.30"
+          - "v1.31"
     steps:
       - uses: actions/checkout@v3
       - name: Setup Docker
