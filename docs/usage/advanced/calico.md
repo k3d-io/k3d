@@ -1,86 +1,76 @@
 # Use Calico instead of Flannel
 
 !!! info "Network Policies"
-    k3s comes with a controller that enforces network policies by default. You do not need to switch to Calico for network policies to be enforced. See <https://github.com/k3s-io/k3s/issues/1308> for more information.  
-    The docs below assume you want to switch to Calico's policy engine, thus setting `--disable-network-policy`.
+    k3s comes with a controller that enforces network policies by default.
+    While You do not need to switch to any CNIs for Kubernetes network policies to be enforced, other CNIs such as Calico can help you to bridge the gap where Kubernetes network policies may lack some capabilities. See <https://github.com/k3s-io/k3s/issues/1308> for more information.  
+    The docs below assume you want to switch to Calico's policy engine, thus setting `--disable-network-policy@server:*`.
 
-## 1. Download and modify the Calico descriptor
+## 1. Create the cluster without flannel
+By default K3s deploys flannel CNI to take care of networking in your environment.
+Since we want to use Calico in this example we have to disable the default CNI.
+This can be done by using the `--k3s-arg` flag at the cluster creation time.  
 
-You can following the [documentation](https://docs.projectcalico.org/master/reference/cni-plugin/configuration)
-
-And then you have to change the ConfigMap `calico-config`. On the `cni_network_config` add the entry for allowing IP forwarding  
-
-```json
-"container_settings": {
-    "allow_ip_forwarding": true
-}
-```
-
-Or you can directly use this [calico.yaml](calico.yaml) manifest
-
-## 2. Create the cluster without flannel and with calico
-
-On the k3s cluster creation :
-
-- add the flags `--flannel-backend=none` and `--disable-network-policy`. For this, on k3d you need to forward this flag to k3s with the option `--k3s-arg`.
-- mount (`--volume`) the calico descriptor in the auto deploy manifest directory of k3s `/var/lib/rancher/k3s/server/manifests/`
-
-So the command of the cluster creation is (when you are at root of the k3d repository)
-
+Use the following command to create your cluster:
 ```bash
 k3d cluster create "${clustername}" \
   --k3s-arg '--flannel-backend=none@server:*' \
-  --k3s-arg '--disable-network-policy' \
-  --volume "$(pwd)/docs/usage/guides/calico.yaml:/var/lib/rancher/k3s/server/manifests/calico.yaml"
+  --k3s-arg '--disable-network-policy@server:*' \
+  --k3s-arg '--cluster-cidr=192.168.0.0/16@server:*'
 ```
 
 In this example :
 
-- change `"${clustername}"` with the name of the cluster (or set a variable).
-- `$(pwd)/docs/usage/guides/calico.yaml` is the absolute path of the calico manifest, you can adapt it.
+- Change the `"${clustername}"` with the name of the cluster (or set a variable).
+- Cluster will use the "192.168.0.0/16" CIDR, if you want to change the default CIDR make sure to change it in the `custom-resources.yaml` too.
 
-You can add other options, [see](../commands.md).  
+## 2. Install Calico 
+A simple way to install Calico is to use the Tigera Operator.
+The operator helps us to configure, install and upgrade Calico in an environment.
 
-The cluster will start without flannel and with Calico as CNI Plugin.
-
-For watching for the pod(s) deployment
-
+Use the following command to install the operator:
 ```bash
-watch "kubectl get pods -n kube-system"    
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.0/manifests/tigera-operator.yaml
 ```
 
-You will have something like this at beginning (with the command line `#!bash kubectl get pods -n kube-system`)
+The operator periodically checks for the installation manifest.
+This manifest is how we instruct the Tigera Operator to install Calico.
 
+Use the following command to create the installation manifest:
 ```bash
-NAME                                       READY   STATUS     RESTARTS   AGE
-helm-install-traefik-pn84f                 0/1     Pending    0          3s
-calico-node-97rx8                          0/1     Init:0/3   0          3s
-metrics-server-7566d596c8-hwnqq            0/1     Pending    0          2s
-calico-kube-controllers-58b656d69f-2z7cn   0/1     Pending    0          2s
-local-path-provisioner-6d59f47c7-rmswg     0/1     Pending    0          2s
-coredns-8655855d6-cxtnr                    0/1     Pending    0          2s
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.0/manifests/custom-resources.yaml
 ```
 
-And when it finish to start
-
+At this point, our installation is in progress, and we can verify it by using the following command:
 ```bash
-NAME                                       READY   STATUS      RESTARTS   AGE
-metrics-server-7566d596c8-hwnqq            1/1     Running     0          56s
-calico-node-97rx8                          1/1     Running     0          57s
-helm-install-traefik-pn84f                 0/1     Completed   1          57s
-svclb-traefik-lmjr5                        2/2     Running     0          28s
-calico-kube-controllers-58b656d69f-2z7cn   1/1     Running     0          56s
-local-path-provisioner-6d59f47c7-rmswg     1/1     Running     0          56s
-traefik-758cd5fc85-x8p57                   1/1     Running     0          28s
-coredns-8655855d6-cxtnr                    1/1     Running     0          56s
+kubectl get tigerastatus
 ```
 
-Note :
+After a minute, you should see a result similar to the following:
+```
+NAME        AVAILABLE   PROGRESSING   DEGRADED   SINCE
+apiserver   True        False         False      30s
+calico      True        False         False      10s
+ippools     True        False         False      70s
+```
 
-- you can use the auto deploy manifest or a kubectl apply depending on your needs
-- :exclamation: Calico is not as quick as Flannel (but it provides more features)
+Great Calico is up and running!
+
+## 3. IP forwarding
+By default, Calico disables IP forwarding inside the containers.
+This can cause an issue in some cases where you are using load balancers. You can learn more about loadblanacers [here](https://docs.k3s.io/networking/networking-services#service-load-balancer).
+To fix this issue we have to turn on the IP forwarding flag inside `calico-node` pods.
+
+Use the following command to enable forwarding via the operator:
+```bash
+kubectl patch installation default --type=merge --patch='{"spec":{"calicoNetwork":{"containerIPForwarding":"Enabled"}}}'
+```
+
+## 4. What's next?
+Check out our other guides, here some suggestions:
+- Add an additional node to your setup. [see](k3d_node.md)
+- Expose your services. [see](exposing_services.md)
 
 ## References
 
 - <https://rancher.com/docs/k3s/latest/en/installation/network-options/>  
-- <https://docs.projectcalico.org/getting-started/kubernetes/k3s/>
+- <https://docs.tigera.io/calico/latest/getting-started/kubernetes/k3s/quickstart>
