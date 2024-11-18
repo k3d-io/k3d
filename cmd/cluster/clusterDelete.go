@@ -22,6 +22,7 @@ THE SOFTWARE.
 package cluster
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -130,12 +131,25 @@ func NewCmdClusterDelete() *cobra.Command {
 
 // parseDeleteClusterCmd parses the command input into variables required to delete clusters
 func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
-	var clusters []*k3d.Cluster
-
 	// --all
 	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		l.Log().Fatalln(err)
+	}
+
+	// --all was set
+	if all {
+		l.Log().Infoln("Deleting all clusters...")
+		clusters, err := client.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
+		if err != nil {
+			l.Log().Fatalln(err)
+		}
+		return clusters
+	}
+
+	// args
+	if len(args) != 0 {
+		return getClusters(cmd.Context(), args...)
 	}
 
 	// --config
@@ -144,50 +158,27 @@ func parseDeleteClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 		if err != nil {
 			l.Log().Fatalln(err)
 		}
-
 		if cfg.Name != "" {
-			// not allowed with --all or more args
-			if len(args) > 0 || all {
-				l.Log().Fatalln("failed to delete cluster: cannot use name from configuration file with additional arguments or `--all`")
-			}
-
-			c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: cfg.Name})
-			if errors.Is(err, client.ClusterGetNoNodesFoundError) {
-				l.Log().Infof("No nodes found for cluster '%s', nothing to delete.", cfg.Name)
-				return nil
-			}
-
-			clusters = append(clusters, c)
-			return clusters
+			return getClusters(cmd.Context(), cfg.Name)
 		}
 	}
 
-	// --all was set
-	if all {
-		l.Log().Infoln("Deleting all clusters...")
-		clusters, err = client.ClusterList(cmd.Context(), runtimes.SelectedRuntime)
-		if err != nil {
-			l.Log().Fatalln(err)
-		}
-		return clusters
-	}
+	// default
+	return getClusters(cmd.Context(), k3d.DefaultClusterName)
+}
 
-	// args only
-	clusternames := []string{k3d.DefaultClusterName}
-	if len(args) != 0 {
-		clusternames = args
-	}
-
+func getClusters(ctx context.Context, clusternames ...string) []*k3d.Cluster {
+	var clusters []*k3d.Cluster
 	for _, name := range clusternames {
-		c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: name})
+		c, err := client.ClusterGet(ctx, runtimes.SelectedRuntime, &k3d.Cluster{Name: name})
 		if err != nil {
-			if err == client.ClusterGetNoNodesFoundError {
+			if errors.Is(err, client.ClusterGetNoNodesFoundError) {
+				l.Log().Infof("No nodes found for cluster '%s', nothing to delete.", name)
 				continue
 			}
 			l.Log().Fatalln(err)
 		}
 		clusters = append(clusters, c)
 	}
-
 	return clusters
 }
