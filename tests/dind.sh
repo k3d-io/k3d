@@ -87,7 +87,7 @@ done
 # build helper container images
 if [ -z "$E2E_HELPER_IMAGE_TAG" ]; then
   docker exec "$k3de2e" git config --global --add safe.directory /src
-  docker exec --workdir /src "$k3de2e" make -j2 build-helper-images
+  docker exec --workdir /src "$k3de2e" make -j2 build-helper-images || failed "build-helper-images failed"
   # execute tests
   echo "Start time outside runner: $(date)"
   docker exec "$k3de2e" /src/tests/runner.sh
