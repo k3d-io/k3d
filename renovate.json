@@ -1,21 +1,25 @@
 {
   "extends": [
-    "config:base"
+    "config:recommended"
   ],
   "packageRules": [
     {
-      "managers": ["gomod"],
+      "matchManagers": [
+        "gomod"
+      ],
       "enabled": true,
-      "paths": [
+      "matchFileNames": [
         ".",
         "docgen",
         "tools"
       ]
     },
     {
-      "managers": ["dockerfile"],
+      "matchManagers": [
+        "dockerfile"
+      ],
       "enabled": true,
-      "paths": [
+      "matchFileNames": [
         ".",
         "tools",
         "proxy"
@@ -25,7 +29,9 @@
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "squash",
-      "matchPackageNames": ["*"]
+      "matchPackageNames": [
+        "*"
+      ]
     }
   ]
 }
