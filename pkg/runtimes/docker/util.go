@@ -23,11 +23,13 @@ package docker
 
 import (
 	"archive/tar"
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -36,6 +38,7 @@ import (
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
@@ -180,6 +183,51 @@ func (d Docker) ReadFromNode(ctx context.Context, path string, node *k3d.Node) (
 	return reader, err
 }
 
+func (d Docker) executeCommandInContainer(ctx context.Context, cli client.APIClient, containerID string, command []string, outputFilePath string) error {
+	execConfig := container.ExecOptions{
+		Cmd:          strslice.StrSlice(command),
+		AttachStdout: true,
+		AttachStderr: true,
+		Tty:          false,
+	}
+
+	execIDResp, err := cli.ContainerExecCreate(ctx, containerID, execConfig)
+	if err != nil {
+		return fmt.Errorf("error creating exec instance: %v", err)
+	}
+
+	resp, err := cli.ContainerExecAttach(ctx, execIDResp.ID, container.ExecStartOptions{Tty: false})
+	if err != nil {
+		return fmt.Errorf("error attaching to exec instance: %v", err)
+	}
+	defer resp.Close()
+
+	outputFile, err := os.Create(outputFilePath)
+	if err != nil {
+		return fmt.Errorf("error creating output file: %v", err)
+	}
+	defer outputFile.Close()
+
+	writer := bufio.NewWriter(outputFile)
+
+	var stdoutBuf bytes.Buffer
+
+	_, err = io.Copy(&stdoutBuf, resp.Reader)
+	if err != nil {
+		return fmt.Errorf("Error copying stdout: %v", err)
+	}
+
+	if _, err := writer.WriteString(stdoutBuf.String()); err != nil {
+		return fmt.Errorf("Error writing stdout to file: %v", err)
+	}
+
+	if err := writer.Flush(); err != nil {
+		return fmt.Errorf("Error flushing writer: %v", err)
+	}
+
+	return nil
+}
+
 // GetDockerClient returns a docker client
 func GetDockerClient() (client.APIClient, error) {
 	dockerCli, err := command.NewDockerCli(command.WithStandardStreams())
@@ -210,4 +258,95 @@ func isAttachedToNetwork(node *k3d.Node, network string) bool {
 		}
 	}
 	return false
+}
+
+func readerToFile(reader io.Reader, target string) error {
+	file, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(0600))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if _, err := io.Copy(file, reader); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func copyFile(tarReader *tar.Reader, target string, mode os.FileMode) error {
+	file, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	if _, err := io.Copy(file, tarReader); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func copyOriginalContent(cli client.APIClient, ctx context.Context, containerID, linkTarget, target string) error {
+	reader, _, err := cli.CopyFromContainer(ctx, containerID, linkTarget)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	tarReader := tar.NewReader(reader)
+	header, err := tarReader.Next()
+	if err != nil {
+		return err
+	}
+
+	if header.Typeflag == tar.TypeReg {
+		if err := copyFile(tarReader, target, os.FileMode(header.Mode)); err != nil {
+			return err
+		}
+	} else if header.Typeflag == tar.TypeDir {
+		if err := untarReader(ctx, cli, containerID, reader, target); err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("unsupported symlink target file type: %v", header.Typeflag)
+	}
+
+	return nil
+}
+
+func untarReader(ctx context.Context, cli client.APIClient, containerID string, reader io.Reader, dstPath string) error {
+	tarReader := tar.NewReader(reader)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		target := filepath.Join(dstPath, header.Name)
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			if err := os.MkdirAll(target, os.FileMode(header.Mode)); err != nil {
+				return err
+			}
+		case tar.TypeReg:
+			if err := copyFile(tarReader, target, os.FileMode(header.Mode)); err != nil {
+				return err
+			}
+		case tar.TypeSymlink:
+			linkTarget := header.Linkname
+			if err := copyOriginalContent(cli, ctx, containerID, linkTarget, target); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("unsupported file type: %v", header.Typeflag)
+		}
+	}
+
+	return nil
 }
