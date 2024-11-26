@@ -46,7 +46,7 @@ github.com/containerd/log
 ## explicit; go 1.19
 github.com/containerd/stargz-snapshotter/estargz
 github.com/containerd/stargz-snapshotter/estargz/errorutil
-# github.com/cpuguy83/go-md2man/v2 v2.0.2
+# github.com/cpuguy83/go-md2man/v2 v2.0.3
 ## explicit; go 1.11
 # github.com/cpuguy83/go-md2man/v2 v2.0.4
 ## explicit; go 1.11
@@ -277,8 +277,6 @@ github.com/hashicorp/hcl/json/token
 # github.com/imdario/mergo v0.3.14
 ## explicit; go 1.13
 github.com/imdario/mergo
-# github.com/inconshreveable/mousetrap v1.0.0
-## explicit; go 1.18
 # github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
@@ -448,8 +446,6 @@ github.com/spf13/afero/mem
 # github.com/spf13/cast v1.6.0
 ## explicit; go 1.19
 github.com/spf13/cast
-# github.com/spf13/cobra v1.5.0
-## explicit; go 1.15
 # github.com/spf13/cobra v1.8.0
 ## explicit; go 1.15
 github.com/spf13/cobra
