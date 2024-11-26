@@ -67,8 +67,8 @@ kubectl patch installation default --type=merge --patch='{"spec":{"calicoNetwork
 
 ## 4. What's next?
 Check out our other guides, here some suggestions:
-- Add an additional node to your setup. [see](k3d_node.md)
-- Expose your services. [see](exposing_services.md)
+- Add an additional node to your setup. [see](../commands/k3d_node.md)
+- Expose your services. [see](../exposing_services.md)
 
 ## References
 
