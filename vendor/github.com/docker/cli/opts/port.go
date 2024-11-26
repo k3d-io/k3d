@@ -149,6 +149,7 @@ func ConvertPortToPortConfig(
 
 	for _, binding := range portBindings[port] {
 		if p := net.ParseIP(binding.HostIP); p != nil && !p.IsUnspecified() {
+			// TODO(thaJeztah): use context-logger, so that this output can be suppressed (in tests).
 			logrus.Warnf("ignoring IP-address (%s:%s) service will listen on '0.0.0.0'", net.JoinHostPort(binding.HostIP, binding.HostPort), port)
 		}
 
