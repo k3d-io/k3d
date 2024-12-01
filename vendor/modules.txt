@@ -64,7 +64,7 @@ github.com/dimchansky/utfbom
 github.com/distribution/reference
 # github.com/docker/cli v20.10.17+incompatible
 ## explicit
-# github.com/docker/cli v27.0.3+incompatible
+# github.com/docker/cli v27.1.1+incompatible
 ## explicit
 github.com/docker/cli/cli/command
 github.com/docker/cli/cli/config
@@ -215,7 +215,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/go-containerregistry v0.19.1
+# github.com/google/go-containerregistry v0.20.2
 ## explicit; go 1.18
 github.com/google/go-containerregistry/internal/and
 github.com/google/go-containerregistry/internal/compression
@@ -384,34 +384,34 @@ github.com/pkg/errors
 github.com/pmezard/go-difflib/difflib
 # github.com/prometheus/client_golang v1.11.1
 ## explicit; go 1.17
-# github.com/prometheus/client_golang v1.14.0
+# github.com/prometheus/client_golang v1.16.0
 ## explicit; go 1.17
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
 github.com/prometheus/client_golang/prometheus/promhttp
 # github.com/prometheus/client_model v0.2.0
 ## explicit; go 1.19
-# github.com/prometheus/client_model v0.3.0
+# github.com/prometheus/client_model v0.4.0
 ## explicit; go 1.19
 # github.com/prometheus/client_model v0.5.0
 ## go 1.19
 github.com/prometheus/client_model/go
 # github.com/prometheus/common v0.30.0
-## explicit; go 1.17
-# github.com/prometheus/common v0.39.0
-## explicit; go 1.17
+## explicit; go 1.18
+# github.com/prometheus/common v0.44.0
+## explicit; go 1.18
 github.com/prometheus/common/expfmt
 github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
 github.com/prometheus/common/model
 # github.com/prometheus/procfs v0.7.3
-## explicit; go 1.18
-# github.com/prometheus/procfs v0.9.0
-## explicit; go 1.18
+## explicit; go 1.19
+# github.com/prometheus/procfs v0.10.1
+## explicit; go 1.19
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
-# github.com/rancher/wharfie v0.6.2
-## explicit; go 1.19
+# github.com/rancher/wharfie v0.6.8
+## explicit; go 1.22
 github.com/rancher/wharfie/pkg/registries
 # github.com/russross/blackfriday/v2 v2.1.0
 ## explicit
@@ -588,10 +588,9 @@ go.opentelemetry.io/proto/otlp/common/v1
 go.opentelemetry.io/proto/otlp/metrics/v1
 go.opentelemetry.io/proto/otlp/resource/v1
 go.opentelemetry.io/proto/otlp/trace/v1
-# go.uber.org/atomic v1.9.0
-## explicit; go 1.13
-go.uber.org/atomic
-# go.uber.org/multierr v1.9.0
+# go.uber.org/atomic v1.10.0
+## explicit; go 1.18
+# go.uber.org/multierr v1.11.0
 ## explicit; go 1.19
 go.uber.org/multierr
 # go4.org/intern v0.0.0-20211027215823-ae77deb06f29
@@ -870,7 +869,7 @@ k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/workqueue
 # k8s.io/klog/v2 v2.70.1
 ## explicit; go 1.18
-# k8s.io/klog/v2 v2.120.1
+# k8s.io/klog/v2 v2.130.1
 ## explicit; go 1.18
 k8s.io/klog/v2
 k8s.io/klog/v2/internal/buffer
