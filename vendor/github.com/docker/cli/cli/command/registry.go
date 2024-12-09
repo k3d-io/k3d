@@ -1,10 +1,8 @@
 package command
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"runtime"
 	"strings"
@@ -18,24 +16,27 @@ import (
 	"github.com/docker/docker/api/types"
 	registrytypes "github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/registry"
-	"github.com/moby/term"
 	"github.com/pkg/errors"
 )
 
-const patSuggest = "You can log in with your password or a Personal Access " +
-	"Token (PAT). Using a limited-scope PAT grants better security and is required " +
-	"for organizations using SSO. Learn more at https://docs.docker.com/go/access-tokens/"
+const (
+	registerSuggest = "Log in with your Docker ID or email address to push and pull images from Docker Hub. " +
+		"If you don't have a Docker ID, head over to https://hub.docker.com/ to create one."
+	patSuggest = "You can log in with your password or a Personal Access " +
+		"Token (PAT). Using a limited-scope PAT grants better security and is required " +
+		"for organizations using SSO. Learn more at https://docs.docker.com/go/access-tokens/"
+)
 
 // RegistryAuthenticationPrivilegedFunc returns a RequestPrivilegeFunc from the specified registry index info
 // for the given command.
 func RegistryAuthenticationPrivilegedFunc(cli Cli, index *registrytypes.IndexInfo, cmdName string) types.RequestPrivilegeFunc {
 	return func(ctx context.Context) (string, error) {
-		fmt.Fprintf(cli.Out(), "\nLogin prior to %s:\n", cmdName)
+		_, _ = fmt.Fprintf(cli.Out(), "\nLogin prior to %s:\n", cmdName)
 		indexServer := registry.GetAuthConfigKey(index)
 		isDefaultRegistry := indexServer == registry.IndexServer
 		authConfig, err := GetDefaultAuthConfig(cli.ConfigFile(), true, indexServer, isDefaultRegistry)
 		if err != nil {
-			fmt.Fprintf(cli.Err(), "Unable to retrieve stored credentials for %s, error: %s.\n", indexServer, err)
+			_, _ = fmt.Fprintf(cli.Err(), "Unable to retrieve stored credentials for %s, error: %s.\n", indexServer, err)
 		}
 
 		select {
@@ -44,7 +45,7 @@ func RegistryAuthenticationPrivilegedFunc(cli Cli, index *registrytypes.IndexInf
 		default:
 		}
 
-		err = ConfigureAuth(cli, "", "", &authConfig, isDefaultRegistry)
+		authConfig, err = PromptUserForCredentials(ctx, cli, "", "", authConfig.Username, indexServer)
 		if err != nil {
 			return "", err
 		}
@@ -89,8 +90,33 @@ func GetDefaultAuthConfig(cfg *configfile.ConfigFile, checkCredStore bool, serve
 	return registrytypes.AuthConfig(authconfig), nil
 }
 
-// ConfigureAuth handles prompting of user's username and password if needed
-func ConfigureAuth(cli Cli, flUser, flPassword string, authconfig *registrytypes.AuthConfig, isDefaultRegistry bool) error {
+// ConfigureAuth handles prompting of user's username and password if needed.
+//
+// Deprecated: use [PromptUserForCredentials] instead.
+func ConfigureAuth(ctx context.Context, cli Cli, flUser, flPassword string, authConfig *registrytypes.AuthConfig, _ bool) error {
+	defaultUsername := authConfig.Username
+	serverAddress := authConfig.ServerAddress
+
+	newAuthConfig, err := PromptUserForCredentials(ctx, cli, flUser, flPassword, defaultUsername, serverAddress)
+	if err != nil {
+		return err
+	}
+
+	authConfig.Username = newAuthConfig.Username
+	authConfig.Password = newAuthConfig.Password
+	return nil
+}
+
+// PromptUserForCredentials handles the CLI prompt for the user to input
+// credentials.
+// If argUser is not empty, then the user is only prompted for their password.
+// If argPassword is not empty, then the user is only prompted for their username
+// If neither argUser nor argPassword are empty, then the user is not prompted and
+// an AuthConfig is returned with those values.
+// If defaultUsername is not empty, the username prompt includes that username
+// and the user can hit enter without inputting a username  to use that default
+// username.
+func PromptUserForCredentials(ctx context.Context, cli Cli, argUser, argPassword, defaultUsername, serverAddress string) (registrytypes.AuthConfig, error) {
 	// On Windows, force the use of the regular OS stdin stream.
 	//
 	// See:
@@ -103,84 +129,71 @@ func ConfigureAuth(cli Cli, flUser, flPassword string, authconfig *registrytypes
 		cli.SetIn(streams.NewIn(os.Stdin))
 	}
 
-	// Some links documenting this:
-	// - https://code.google.com/archive/p/mintty/issues/56
-	// - https://github.com/docker/docker/issues/15272
-	// - https://mintty.github.io/ (compatibility)
-	// Linux will hit this if you attempt `cat | docker login`, and Windows
-	// will hit this if you attempt docker login from mintty where stdin
-	// is a pipe, not a character based console.
-	if flPassword == "" && !cli.In().IsTerminal() {
-		return errors.Errorf("Error: Cannot perform an interactive login from a non TTY device")
-	}
-
-	authconfig.Username = strings.TrimSpace(authconfig.Username)
-
-	if flUser = strings.TrimSpace(flUser); flUser == "" {
-		if isDefaultRegistry {
-			// if this is a default registry (docker hub), then display the following message.
-			fmt.Fprintln(cli.Out(), "Log in with your Docker ID or email address to push and pull images from Docker Hub. If you don't have a Docker ID, head over to https://hub.docker.com/ to create one.")
+	argUser = strings.TrimSpace(argUser)
+	if argUser == "" {
+		if serverAddress == registry.IndexServer {
+			// When signing in to the default (Docker Hub) registry, we display
+			// hints for creating an account, and (if hints are enabled), using
+			// a token instead of a password.
+			_, _ = fmt.Fprintln(cli.Out(), registerSuggest)
 			if hints.Enabled() {
-				fmt.Fprintln(cli.Out(), patSuggest)
-				fmt.Fprintln(cli.Out())
+				_, _ = fmt.Fprintln(cli.Out(), patSuggest)
+				_, _ = fmt.Fprintln(cli.Out())
 			}
 		}
-		promptWithDefault(cli.Out(), "Username", authconfig.Username)
+
+		var prompt string
+		defaultUsername = strings.TrimSpace(defaultUsername)
+		if defaultUsername == "" {
+			prompt = "Username: "
+		} else {
+			prompt = fmt.Sprintf("Username (%s): ", defaultUsername)
+		}
+
 		var err error
-		flUser, err = readInput(cli.In())
+		argUser, err = PromptForInput(ctx, cli.In(), cli.Out(), prompt)
 		if err != nil {
-			return err
+			return registrytypes.AuthConfig{}, err
 		}
-		if flUser == "" {
-			flUser = authconfig.Username
+		if argUser == "" {
+			argUser = defaultUsername
+		}
+		if argUser == "" {
+			return registrytypes.AuthConfig{}, errors.Errorf("Error: Non-null Username Required")
 		}
 	}
-	if flUser == "" {
-		return errors.Errorf("Error: Non-null Username Required")
-	}
-	if flPassword == "" {
-		oldState, err := term.SaveState(cli.In().FD())
+
+	argPassword = strings.TrimSpace(argPassword)
+	if argPassword == "" {
+		restoreInput, err := DisableInputEcho(cli.In())
 		if err != nil {
-			return err
+			return registrytypes.AuthConfig{}, err
 		}
-		fmt.Fprintf(cli.Out(), "Password: ")
-		_ = term.DisableEcho(cli.In().FD(), oldState)
 		defer func() {
-			_ = term.RestoreTerminal(cli.In().FD(), oldState)
+			if err := restoreInput(); err != nil {
+				// TODO(thaJeztah): we should consider printing instructions how
+				//  to restore this manually (other than restarting the shell).
+				//  e.g., 'run stty echo' when in a Linux or macOS shell, but
+				//  PowerShell and CMD.exe may need different instructions.
+				_, _ = fmt.Fprintln(cli.Err(), "Error: failed to restore terminal state to echo input:", err)
+			}
 		}()
-		flPassword, err = readInput(cli.In())
+
+		argPassword, err = PromptForInput(ctx, cli.In(), cli.Out(), "Password: ")
 		if err != nil {
-			return err
+			return registrytypes.AuthConfig{}, err
 		}
-		fmt.Fprint(cli.Out(), "\n")
-		if flPassword == "" {
-			return errors.Errorf("Error: Password Required")
+		_, _ = fmt.Fprintln(cli.Out())
+		if argPassword == "" {
+			return registrytypes.AuthConfig{}, errors.Errorf("Error: Password Required")
 		}
 	}
 
-	authconfig.Username = flUser
-	authconfig.Password = flPassword
-
-	return nil
-}
-
-// readInput reads, and returns user input from in. It tries to return a
-// single line, not including the end-of-line bytes, and trims leading
-// and trailing whitespace.
-func readInput(in io.Reader) (string, error) {
-	line, _, err := bufio.NewReader(in).ReadLine()
-	if err != nil {
-		return "", errors.Wrap(err, "error while reading input")
-	}
-	return strings.TrimSpace(string(line)), nil
-}
-
-func promptWithDefault(out io.Writer, prompt string, configDefault string) {
-	if configDefault == "" {
-		fmt.Fprintf(out, "%s: ", prompt)
-	} else {
-		fmt.Fprintf(out, "%s (%s): ", prompt, configDefault)
-	}
+	return registrytypes.AuthConfig{
+		Username:      argUser,
+		Password:      argPassword,
+		ServerAddress: serverAddress,
+	}, nil
 }
 
 // RetrieveAuthTokenFromImage retrieves an encoded auth token given a complete
