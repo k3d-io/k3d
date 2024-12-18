@@ -1,5 +1,5 @@
 // FIXME(thaJeztah): remove once we are a module; the go:build directive prevents go from downgrading language version to go1.16:
-//go:build go1.21
+//go:build go1.22
 
 package command
 
@@ -324,7 +324,7 @@ func newAPIClientFromEndpoint(ep docker.Endpoint, configFile *configfile.ConfigF
 	if len(configFile.HTTPHeaders) > 0 {
 		opts = append(opts, client.WithHTTPHeaders(configFile.HTTPHeaders))
 	}
-	opts = append(opts, client.WithUserAgent(UserAgent()))
+	opts = append(opts, withCustomHeadersFromEnv(), client.WithUserAgent(UserAgent()))
 	return client.NewClientWithOpts(opts...)
 }
 
