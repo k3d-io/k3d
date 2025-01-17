@@ -29,6 +29,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -492,4 +494,49 @@ func (d Docker) RenameNode(ctx context.Context, node *k3d.Node, newName string) 
 	defer docker.Close()
 
 	return docker.ContainerRename(ctx, container.ID, newName)
+}
+
+func (d Docker) ExportLogsFromNode(ctx context.Context, node *k3d.Node, dstPath string, components []string) error {
+	destinationPath := filepath.Join(dstPath, node.Name)
+
+	err := os.MkdirAll(destinationPath, os.FileMode(os.ModePerm))
+	if err != nil {
+		return fmt.Errorf("failed to create destination directory '%s': %w", destinationPath, err)
+	}
+	c, err := getNodeContainer(ctx, node)
+	if err != nil {
+		return fmt.Errorf("failed to get container for node '%s': %w", node.Name, err)
+	}
+
+	// create docker client
+	docker, err := GetDockerClient()
+	if err != nil {
+		return fmt.Errorf("failed to get docker client: %w", err)
+	}
+	defer docker.Close()
+
+	reader, err := docker.ContainerLogs(ctx, c.ID, container.LogsOptions{Details: true, ShowStdout: true, ShowStderr: true})
+	if err != nil {
+		return fmt.Errorf("failed to get logs from container '%s': %w", c.ID, err)
+	}
+	defer reader.Close()
+
+	err = readerToFile(reader, filepath.Join(dstPath, fmt.Sprintf("%s.log", node.Name)))
+	if err != nil {
+		return fmt.Errorf("failed to write logs to file: %w", err)
+	}
+
+	for _, srcPath := range roleBasedExportPath[node.Role] {
+		contentReader, _, err := docker.CopyFromContainer(ctx, c.ID, srcPath)
+		if err != nil {
+			return fmt.Errorf("failed to copy files from container '%s': %w", c.ID, err)
+		}
+		if err := untarReader(ctx, docker, c.ID, contentReader, destinationPath); err != nil {
+			return fmt.Errorf("failed to untar files from container '%s': %w", c.ID, err)
+		}
+	}
+	for _, command := range roleBasedCommandsToExecute[node.Role] {
+		d.executeCommandInContainer(ctx, docker, c.ID, command.Command, filepath.Join(destinationPath, command.FileName))
+	}
+	return nil
 }
