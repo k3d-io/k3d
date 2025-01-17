@@ -7,7 +7,7 @@ on:
 
 jobs:
   aur-pre-release:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     container: archlinux:base
     steps:
       - name: Checkout Project
