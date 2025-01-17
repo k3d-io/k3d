@@ -154,31 +154,16 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=sha
-      - name: Merge Metadata Bake Definitions
-        run: |
-          INPUT=(${{ steps.meta-k3d-binary.outputs.bake-file }} ${{ steps.meta-k3d-dind.outputs.bake-file }} ${{ steps.meta-k3d-proxy.outputs.bake-file }} ${{ steps.meta-k3d-tools.outputs.bake-file }})
-          OUT_FILE=$GITHUB_WORKSPACE/bake-metadata.json
-          OUT_FILE_TMP=$GITHUB_WORKSPACE/bake-metadata-tmp.json
-      
-          cat << EOF > $OUT_FILE
-          {
-            "target": {}
-          }
-          EOF
-      
-          for file in "${INPUT[@]}"; do
-            cat $OUT_FILE > $OUT_FILE_TMP
-            jq -s '.[0] * .[1]' $OUT_FILE_TMP $file > $OUT_FILE
-          done
-      
-          rm "$OUT_FILE_TMP"
       # Build and Push container images
       - name: Build Images
         uses: docker/bake-action@v6
         with:
           files: |
             ./docker-bake.hcl
-            $GITHUB_WORKSPACE/bake-metadata.json
+            cwd://${{ steps.meta-k3d-binary.outputs.bake-file }}
+            cwd://${{ steps.meta-k3d-dind.outputs.bake-file }}
+            cwd://${{ steps.meta-k3d-proxy.outputs.bake-file }}
+            cwd://${{ steps.meta-k3d-tools.outputs.bake-file }}
           targets: release
           push: false
       # Wait for tests to pass and push images (ONLY ON TAG)
