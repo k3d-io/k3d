@@ -1,8 +1,10 @@
 name: Generate Sponsors README
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+  schedule:
+    - cron: 30 15 * * 0-6
+permissions:
+  contents: write
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -22,5 +24,6 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: main
+          git-config-name: GHA-Sponsors
           folder: '.'
           token: ${{ secrets.WRITER_PAT }}
