@@ -986,7 +986,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 			agentWG.Go(func() error {
 				return NodeStart(aCtx, runtime, currentAgentNode, &k3d.NodeStartOpts{
 					Wait:            true,
-					NodeHooks:       clusterStartOpts.NodeHooks,
+					NodeHooks:       append(clusterStartOpts.NodeHooks, agentNode.HookActions...),
 					EnvironmentInfo: clusterStartOpts.EnvironmentInfo,
 				})
 			})
