@@ -385,9 +385,9 @@
         "config": {
           "type": "string",
           "description": "Reference a K3s registry configuration file or at it's contents here."
-        },
-        "additionalProperties": false
-      }
+        }
+      },
+      "additionalProperties": false
     },
     "hostAliases": {
       "type": "array",
