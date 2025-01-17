@@ -48,6 +48,7 @@ type regCreateFlags struct {
 	ProxyUsername  string
 	ProxyPassword  string
 	NoHelp         bool
+	DeleteEnabled  bool
 }
 
 var helptext string = `# You can now use the registry like this (example):
@@ -114,6 +115,7 @@ func NewCmdRegistryCreate() *cobra.Command {
 	cmd.Flags().StringVar(&flags.ProxyPassword, "proxy-password", "", "Specify the password of the proxied remote registry")
 
 	cmd.Flags().BoolVar(&flags.NoHelp, "no-help", false, "Disable the help text (How-To use the registry)")
+	cmd.Flags().BoolVar(&flags.DeleteEnabled, "delete-enabled", false, "Enable image deletion")
 
 	// done
 	return cmd
@@ -170,6 +172,8 @@ func parseCreateRegistryCmd(cmd *cobra.Command, args []string, flags *regCreateF
 			volumes = append(volumes, volume)
 		}
 	}
+
+	options.DeleteEnabled = flags.DeleteEnabled
 
 	return &k3d.Registry{Host: registryName, Image: flags.Image, ExposureOpts: *exposePort, Network: flags.Network, Options: options, Volumes: volumes}, clusters
 }
