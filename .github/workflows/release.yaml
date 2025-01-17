@@ -1,8 +1,20 @@
 name: Test & Release
 
 on:
-  - push
-  - workflow_dispatch
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - 'docgen/**'
+      - 'test/**'
+      - 'examples/**'
+      - 'hack/**'
+      - 'scripts/**'
+      - 'tools/**'
+      - 'vendor/**'
+      - 'LICENSE'
+      - 'README.md'
+      - '.github/**'
+  workflow_dispatch:
 
 env:
   IMAGE_REGISTRY: ghcr.io

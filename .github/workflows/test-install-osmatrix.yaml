@@ -8,6 +8,8 @@ on:
     branches:
       - 'main'
       - 'pr-*'
+    paths:
+      - 'install.sh'
 
 jobs:
   test-install-script:
