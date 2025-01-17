@@ -137,7 +137,7 @@ podman machine ssh bash -e <<EOF
 EOF
 
 export DOCKER_HOST=ssh://core@localhost:53685
-export DOCKER_SOCKET=/run/user/501/podman/podman.sock
+export DOCKER_SOCK=/run/user/501/podman/podman.sock
 k3d cluster create --k3s-arg '--kubelet-arg=feature-gates=KubeletInUserNamespace=true@server:*'
 ```
 
