@@ -81,7 +81,6 @@ type Runtime interface {
 	DisconnectNodeFromNetwork(context.Context, *k3d.Node, string) error // @param context, node, network name
 	Info() (*runtimeTypes.RuntimeInfo, error)
 	GetNetwork(context.Context, *k3d.ClusterNetwork) (*k3d.ClusterNetwork, error) // @param context, network (so we can filter by name or by id)
-	ExportLogsFromNode(context.Context, *k3d.Node, string, []string) error        // @param context, node, source, destination, components (This is meant for future use once we identify what/how to filter)
 }
 
 // GetRuntime checks, if a given name is represented by an implemented k3d runtime and returns it
