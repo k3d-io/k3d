@@ -181,7 +181,10 @@ jobs:
         with:
           files: |
             ./docker-bake.hcl
-            ./bake-metadata.json
+            cwd://${{ steps.meta-k3d-binary.outputs.bake-file }}
+            cwd://${{ steps.meta-k3d-dind.outputs.bake-file }}
+            cwd://${{ steps.meta-k3d-proxy.outputs.bake-file }}
+            cwd://${{ steps.meta-k3d-tools.outputs.bake-file }}
           targets: release
           push: true
 
