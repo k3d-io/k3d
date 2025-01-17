@@ -15,12 +15,12 @@ jobs:
   test-suite:
     timeout-minutes: 30
     name: Full Test Suite
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       # Setup
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Go environment
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: "${{ env.GO_VERSION }}"
       - name: Setup Docker
@@ -55,31 +55,31 @@ jobs:
   release-images:
     name: Build & Release Images
     # Only run on tags
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       # Setup
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       # Container Image Setup
       - name: Setup Docker
         uses: docker-practice/actions-setup-docker@master
         with:
           docker_version: "${{ env.DOCKER_VERSION }}"
       - name: Log in to the Container registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.IMAGE_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
       # Gather Docker Metadata
       - name: Docker Metadata k3d-binary
         id: meta-k3d-binary
         env:
           IMAGE_ID: k3d
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_BASE_REPO }}/${{ env.IMAGE_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -96,7 +96,7 @@ jobs:
         env:
           IMAGE_ID: k3d
           IMAGE_SUFFIX: "-dind"
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_BASE_REPO }}/${{ env.IMAGE_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -114,7 +114,7 @@ jobs:
         id: meta-k3d-proxy
         env:
           IMAGE_ID: k3d-proxy
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_BASE_REPO }}/${{ env.IMAGE_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -130,7 +130,7 @@ jobs:
         id: meta-k3d-tools
         env:
           IMAGE_ID: k3d-tools
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_BASE_REPO }}/${{ env.IMAGE_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -162,7 +162,7 @@ jobs:
           rm "$OUT_FILE_TMP"
       # Build and Push container images
       - name: Build Images
-        uses: docker/bake-action@v2.3.0
+        uses: docker/bake-action@v6
         with:
           files: |
             ./docker-bake.hcl
@@ -180,7 +180,7 @@ jobs:
           wait-interval: 20
       - name: Push Images
         if: startsWith(github.ref, 'refs/tags/')
-        uses: docker/bake-action@v2.3.0
+        uses: docker/bake-action@v6
         with:
           files: |
             ./docker-bake.hcl
@@ -191,12 +191,12 @@ jobs:
   release-github:
     name: Build & Release Binaries
     # Only run on tags
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       # Setup
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Go environment
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: "${{ env.GO_VERSION }}"
       - name: Setup CI Tools

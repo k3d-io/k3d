@@ -3,30 +3,32 @@ name: Test Matrix
 on: workflow_dispatch
 
 jobs:
-  test-docker-versions-failing:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        docker_version:
-          - "20.10.3"
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup Docker
-        uses: docker-practice/actions-setup-docker@master
-      - name: Test Docker Version expected to fail
-        run: |
-          echo "Running test with docker version ${{matrix.docker_version}}"
-          docker info
-          set +e
-          make e2e \
-            -e E2E_DIND_VERSION=${{matrix.docker_version}} \
-            -e E2E_INCLUDE=test_basic
-          if [[ $? == 0 ]]; then
-            echo "ATTENTION: Test passed while it was expected to fail!"
-            exit 1
-          fi
-          set -e
+# The latest known failing docker version is not supported anymore.
+# -> Uncomment the following job once we see another one failing.
+#  test-docker-versions-failing:
+#    runs-on: ubuntu-latest
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        docker_version:
+#          - "20.10.3"
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Setup Docker
+#        uses: docker-practice/actions-setup-docker@master
+#      - name: Test Docker Version expected to fail
+#        run: |
+#          echo "Running test with docker version ${{matrix.docker_version}}"
+#          docker info
+#          set +e
+#          make e2e \
+#            -e E2E_DIND_VERSION=${{matrix.docker_version}} \
+#            -e E2E_INCLUDE=test_basic
+#          if [[ $? == 0 ]]; then
+#            echo "ATTENTION: Test passed while it was expected to fail!"
+#            exit 1
+#          fi
+#          set -e
 
   test-docker-versions:
     runs-on: ubuntu-latest
@@ -39,7 +41,7 @@ jobs:
           - "26.1.5"
           - "27.3.1"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Docker
         uses: docker-practice/actions-setup-docker@master
       - name: Test Docker Version expected to pass
@@ -50,30 +52,32 @@ jobs:
             -e E2E_DIND_VERSION=${{matrix.docker_version}} \
             -e E2E_INCLUDE=test_basic
 
-  test-k3s-versions-failing:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        k3s_channel:
-          - "v1.17" 
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup Docker
-        uses: docker-practice/actions-setup-docker@master
-      - name: Test K3s Version expected to fail
-        run: |
-          echo "Running test with docker version ${{matrix.k3s_channel}}"
-          docker info
-          set +e
-          make e2e \
-            -e E2E_K3S_VERSION=+${{matrix.k3s_channel}} \
-            -e E2E_INCLUDE=test_full_lifecycle
-          if [[ $? == 0 ]]; then
-            echo "ATTENTION: Test passed while it was expected to fail!"
-            exit 1
-          fi
-          set -e
+# The latest known failing K3s version is not supported anymore.
+# -> Uncomment the following job once we see another one failing.
+#  test-k3s-versions-failing:
+#    runs-on: ubuntu-latest
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        k3s_channel:
+#          - "v1.17"
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Setup Docker
+#        uses: docker-practice/actions-setup-docker@master
+#      - name: Test K3s Version expected to fail
+#        run: |
+#          echo "Running test with docker version ${{matrix.k3s_channel}}"
+#          docker info
+#          set +e
+#          make e2e \
+#            -e E2E_K3S_VERSION=+${{matrix.k3s_channel}} \
+#            -e E2E_INCLUDE=test_full_lifecycle
+#          if [[ $? == 0 ]]; then
+#            echo "ATTENTION: Test passed while it was expected to fail!"
+#            exit 1
+#          fi
+#          set -e
 
   test-k3s-versions:
     runs-on: ubuntu-latest
@@ -86,7 +90,7 @@ jobs:
           - "v1.30"
           - "v1.31"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Docker
         uses: docker-practice/actions-setup-docker@master
       - name: Test K3s Version expected to pass
