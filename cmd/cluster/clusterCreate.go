@@ -575,7 +575,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		}
 		cfg.Registries.Create.Name = fvSplit[0]
 		if len(fvSplit) > 1 {
-			exposeAPI, err = cliutil.ParsePortExposureSpec(fvSplit[1], "1234") // internal port is unused after all
+			exposeAPI, err = cliutil.ParseRegistryPortExposureSpec(fvSplit[1])
 			if err != nil {
 				return cfg, fmt.Errorf("failed to registry port spec: %w", err)
 			}

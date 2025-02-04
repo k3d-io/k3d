@@ -52,7 +52,7 @@ kubectl get configmap -n kube-public local-registry-hosting -o go-template='{{in
 
 # 3. load an image into the registry
 info "Pushing an image to the registry..."
-registryPort=$(docker inspect $registryname | jq '.[0].NetworkSettings.Ports["5000/tcp"][0].HostPort' | sed -E 's/"//g')
+registryPort=$(docker inspect $registryname | jq '.[0].NetworkSettings.Ports | with_entries(select(.value | . != null)) | to_entries[0].value[0].HostPort' | sed -E 's/"//g')
 docker pull alpine:latest > /dev/null
 docker tag alpine:latest "localhost:$registryPort/alpine:local" > /dev/null
 docker push "localhost:$registryPort/alpine:local" || failed "Failed to push image to managed registry"
