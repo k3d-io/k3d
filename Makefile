@@ -66,7 +66,6 @@ K3D_HELPER_VERSION ?=
 # Go options
 GO        ?= go
 GOENVPATH := $(shell go env GOPATH)
-PKG       := $(shell go work vendor)
 TAGS      :=
 TESTS     := ./...
 TESTFLAGS :=
