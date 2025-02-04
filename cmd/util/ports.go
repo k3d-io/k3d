@@ -36,8 +36,16 @@ import (
 
 var apiPortRegexp = regexp.MustCompile(`^(?P<hostref>(?P<hostip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|(?P<hostname>\S+):)?(?P<port>(\d{1,5}|random))$`)
 
-// ParsePortExposureSpec parses/validates a string to create an exposePort struct from it
 func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureOpts, error) {
+	return parsePortExposureSpec(exposedPortSpec, internalPort, false)
+}
+
+func ParseRegistryPortExposureSpec(exposedPortSpec string) (*k3d.ExposureOpts, error) {
+	return parsePortExposureSpec(exposedPortSpec, k3d.DefaultRegistryPort, true)
+}
+
+// ParsePortExposureSpec parses/validates a string to create an exposePort struct from it
+func parsePortExposureSpec(exposedPortSpec, internalPort string, enforcePortMatch bool) (*k3d.ExposureOpts, error) {
 	match := apiPortRegexp.FindStringSubmatch(exposedPortSpec)
 
 	if len(match) == 0 {
@@ -83,7 +91,7 @@ func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureO
 	}
 
 	// port: get a free one if there's none defined or set to random
-	if submatches["port"] == "" || submatches["port"] == "random" {
+	if submatches["port"] == "random" {
 		l.Log().Debugf("Port Exposure Mapping didn't specify hostPort, choosing one randomly...")
 		freePort, err := GetFreePort()
 		if err != nil || freePort == 0 {
@@ -94,6 +102,10 @@ func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureO
 			submatches["port"] = strconv.Itoa(freePort)
 			l.Log().Debugf("Got free port for Port Exposure: '%d'", freePort)
 		}
+	}
+
+	if enforcePortMatch {
+		internalPort = submatches["port"]
 	}
 
 	realPortString += fmt.Sprintf("%s:%s/tcp", submatches["port"], internalPort)
