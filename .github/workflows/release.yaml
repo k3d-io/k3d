@@ -1,6 +1,19 @@
 name: Test & Release
 
 on:
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'docgen/**'
+      - 'test/**'
+      - 'examples/**'
+      - 'hack/**'
+      - 'scripts/**'
+      - 'tools/**'
+      - 'vendor/**'
+      - 'LICENSE'
+      - 'README.md'
+      - '.github/**'
   push:
     paths-ignore:
       - 'docs/**'
