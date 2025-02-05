@@ -1,10 +1,8 @@
 package command
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"runtime"
 	"strings"
@@ -18,7 +16,6 @@ import (
 	"github.com/docker/docker/api/types"
 	registrytypes "github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/registry"
-	"github.com/moby/term"
 	"github.com/pkg/errors"
 )
 
@@ -44,7 +41,7 @@ func RegistryAuthenticationPrivilegedFunc(cli Cli, index *registrytypes.IndexInf
 		default:
 		}
 
-		err = ConfigureAuth(cli, "", "", &authConfig, isDefaultRegistry)
+		err = ConfigureAuth(ctx, cli, "", "", &authConfig, isDefaultRegistry)
 		if err != nil {
 			return "", err
 		}
@@ -90,7 +87,7 @@ func GetDefaultAuthConfig(cfg *configfile.ConfigFile, checkCredStore bool, serve
 }
 
 // ConfigureAuth handles prompting of user's username and password if needed
-func ConfigureAuth(cli Cli, flUser, flPassword string, authconfig *registrytypes.AuthConfig, isDefaultRegistry bool) error {
+func ConfigureAuth(ctx context.Context, cli Cli, flUser, flPassword string, authconfig *registrytypes.AuthConfig, isDefaultRegistry bool) error {
 	// On Windows, force the use of the regular OS stdin stream.
 	//
 	// See:
@@ -125,9 +122,15 @@ func ConfigureAuth(cli Cli, flUser, flPassword string, authconfig *registrytypes
 				fmt.Fprintln(cli.Out())
 			}
 		}
-		promptWithDefault(cli.Out(), "Username", authconfig.Username)
+
+		var prompt string
+		if authconfig.Username == "" {
+			prompt = "Username: "
+		} else {
+			prompt = fmt.Sprintf("Username (%s): ", authconfig.Username)
+		}
 		var err error
-		flUser, err = readInput(cli.In())
+		flUser, err = PromptForInput(ctx, cli.In(), cli.Out(), prompt)
 		if err != nil {
 			return err
 		}
@@ -139,16 +142,13 @@ func ConfigureAuth(cli Cli, flUser, flPassword string, authconfig *registrytypes
 		return errors.Errorf("Error: Non-null Username Required")
 	}
 	if flPassword == "" {
-		oldState, err := term.SaveState(cli.In().FD())
+		restoreInput, err := DisableInputEcho(cli.In())
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(cli.Out(), "Password: ")
-		_ = term.DisableEcho(cli.In().FD(), oldState)
-		defer func() {
-			_ = term.RestoreTerminal(cli.In().FD(), oldState)
-		}()
-		flPassword, err = readInput(cli.In())
+		defer restoreInput()
+
+		flPassword, err = PromptForInput(ctx, cli.In(), cli.Out(), "Password: ")
 		if err != nil {
 			return err
 		}
@@ -162,25 +162,6 @@ func ConfigureAuth(cli Cli, flUser, flPassword string, authconfig *registrytypes
 	authconfig.Password = flPassword
 
 	return nil
-}
-
-// readInput reads, and returns user input from in. It tries to return a
-// single line, not including the end-of-line bytes, and trims leading
-// and trailing whitespace.
-func readInput(in io.Reader) (string, error) {
-	line, _, err := bufio.NewReader(in).ReadLine()
-	if err != nil {
-		return "", errors.Wrap(err, "error while reading input")
-	}
-	return strings.TrimSpace(string(line)), nil
-}
-
-func promptWithDefault(out io.Writer, prompt string, configDefault string) {
-	if configDefault == "" {
-		fmt.Fprintf(out, "%s: ", prompt)
-	} else {
-		fmt.Fprintf(out, "%s (%s): ", prompt, configDefault)
-	}
 }
 
 // RetrieveAuthTokenFromImage retrieves an encoded auth token given a complete
