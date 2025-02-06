@@ -320,7 +320,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			epSpecHost = simpleConfig.Registries.Create.Host
 		}
 
-		regPort, err := cliutil.ParsePortExposureSpec(fmt.Sprintf("%s:%s", epSpecHost, epSpecPort), k3d.DefaultRegistryPort)
+		regPort, err := cliutil.ParseRegistryPortExposureSpec(fmt.Sprintf("%s:%s", epSpecHost, epSpecPort))
 		if err != nil {
 			return nil, fmt.Errorf("failed to get port for registry: %w", err)
 		}
