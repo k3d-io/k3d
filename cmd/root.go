@@ -384,7 +384,7 @@ func NewCmdVersionLs() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&flags.includeRegexp, "include", "i", ".*", "Include Regexp (default includes everything")
-	cmd.Flags().StringVarP(&flags.excludeRegexp, "exclude", "e", ".+(rc|engine|alpha|beta|dev|test|arm|arm64|amd64).*", "Exclude Regexp (default excludes pre-releases and arch-specific tags)")
+	cmd.Flags().StringVarP(&flags.excludeRegexp, "exclude", "e", ".+(rc|engine|alpha|beta|dev|test|arm|arm64|amd64|s390x).*", "Exclude Regexp (default excludes pre-releases and arch-specific tags)")
 	cmd.Flags().StringVarP(&flags.format, "format", "f", string(VersionLsOutputFormatRaw), "[DEPRECATED] Use --output instead")
 	cmd.Flags().StringVarP(&flags.outputFormat, "output", "o", string(VersionLsOutputFormatRaw), "Output Format [raw | repo]")
 	cmd.MarkFlagsMutuallyExclusive("format", "output")
