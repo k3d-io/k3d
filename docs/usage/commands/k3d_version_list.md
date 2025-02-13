@@ -9,7 +9,7 @@ k3d version list COMPONENT [flags]
 ### Options
 
 ```
-  -e, --exclude string   Exclude Regexp (default excludes pre-releases and arch-specific tags) (default ".+(rc|engine|alpha|beta|dev|test|arm|arm64|amd64|s390x).*")
+  -e, --exclude string   Exclude Regexp (default excludes pre-releases, arch-specific tags and digests) (default "^sha-|.+(rc|engine|dind|alpha|beta|dev|test|arm|arm64|amd64|s390x).*")
   -f, --format string    [DEPRECATED] Use --output instead (default "raw")
   -h, --help             help for list
   -i, --include string   Include Regexp (default includes everything (default ".*")
