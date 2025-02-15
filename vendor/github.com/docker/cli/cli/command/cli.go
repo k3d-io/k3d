@@ -324,7 +324,7 @@ func newAPIClientFromEndpoint(ep docker.Endpoint, configFile *configfile.ConfigF
 	if len(configFile.HTTPHeaders) > 0 {
 		opts = append(opts, client.WithHTTPHeaders(configFile.HTTPHeaders))
 	}
-	opts = append(opts, client.WithUserAgent(UserAgent()))
+	opts = append(opts, withCustomHeadersFromEnv(), client.WithUserAgent(UserAgent()))
 	return client.NewClientWithOpts(opts...)
 }
 
