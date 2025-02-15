@@ -76,10 +76,6 @@ func RegistryCreate(ctx context.Context, runtime runtimes.Runtime, reg *k3d.Regi
 		Env:      []string{},
 	}
 
-	if reg.ExposureOpts.Binding.HostPort != "" {
-		registryNode.Env = append(registryNode.Env, fmt.Sprintf("REGISTRY_HTTP_ADDR=:%s", reg.ExposureOpts.Binding.HostPort))
-	}
-
 	if reg.Options.Proxy.RemoteURL != "" {
 		registryNode.Env = append(registryNode.Env, fmt.Sprintf("REGISTRY_PROXY_REMOTEURL=%s", reg.Options.Proxy.RemoteURL))
 

@@ -134,7 +134,7 @@ func parseCreateRegistryCmd(cmd *cobra.Command, args []string, flags *regCreateF
 	}
 
 	// --port
-	exposePort, err := cliutil.ParseRegistryPortExposureSpec(ppFlags.Port)
+	exposePort, err := cliutil.ParsePortExposureSpec(ppFlags.Port, k3d.DefaultRegistryPort)
 	if err != nil {
 		l.Log().Errorln("Failed to parse registry port")
 		l.Log().Fatalln(err)
