@@ -35,6 +35,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
 	"github.com/spf13/cobra"
+	"golang.org/x/mod/semver"
 
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/k3d-io/k3d/v5/cmd/cluster"
@@ -369,10 +370,13 @@ func NewCmdVersionLs() *cobra.Command {
 			// Sort
 			if sortMode != VersionLsSortOff {
 				sort.Slice(filteredTags, func(i, j int) bool {
+					// Remove the "v" prefix for comparison, only k3s images have prefix
+					vi, vj := strings.TrimPrefix(filteredTags[i], "v"), strings.TrimPrefix(filteredTags[j], "v")
+
 					if sortMode == VersionLsSortAsc {
-						return filteredTags[i] < filteredTags[j]
+						return semver.Compare("v"+vi, "v"+vj) < 0
 					}
-					return filteredTags[i] > filteredTags[j]
+					return semver.Compare("v"+vi, "v"+vj) > 0
 				})
 			}
 
@@ -384,7 +388,7 @@ func NewCmdVersionLs() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&flags.includeRegexp, "include", "i", ".*", "Include Regexp (default includes everything")
-	cmd.Flags().StringVarP(&flags.excludeRegexp, "exclude", "e", ".+(rc|engine|alpha|beta|dev|test|arm|arm64|amd64|s390x).*", "Exclude Regexp (default excludes pre-releases and arch-specific tags)")
+	cmd.Flags().StringVarP(&flags.excludeRegexp, "exclude", "e", "^sha-|.+(rc|engine|dind|alpha|beta|dev|test|arm|arm64|amd64|s390x).*", "Exclude Regexp (default excludes pre-releases, arch-specific tags and digests)")
 	cmd.Flags().StringVarP(&flags.format, "format", "f", string(VersionLsOutputFormatRaw), "[DEPRECATED] Use --output instead")
 	cmd.Flags().StringVarP(&flags.outputFormat, "output", "o", string(VersionLsOutputFormatRaw), "Output Format [raw | repo]")
 	cmd.MarkFlagsMutuallyExclusive("format", "output")
