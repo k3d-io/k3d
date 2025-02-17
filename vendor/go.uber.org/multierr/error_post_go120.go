@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Uber Technologies, Inc.
+// Copyright (c) 2017-2023 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,41 +18,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package atomic
+//go:build go1.20
+// +build go1.20
 
-import (
-	"sync/atomic"
-	"unsafe"
-)
+package multierr
 
-// UnsafePointer is an atomic wrapper around unsafe.Pointer.
-type UnsafePointer struct {
-	_ nocmp // disallow non-atomic comparison
-
-	v unsafe.Pointer
+// Unwrap returns a list of errors wrapped by this multierr.
+func (merr *multiError) Unwrap() []error {
+	return merr.Errors()
 }
 
-// NewUnsafePointer creates a new UnsafePointer.
-func NewUnsafePointer(val unsafe.Pointer) *UnsafePointer {
-	return &UnsafePointer{v: val}
+type multipleErrors interface {
+	Unwrap() []error
 }
 
-// Load atomically loads the wrapped value.
-func (p *UnsafePointer) Load() unsafe.Pointer {
-	return atomic.LoadPointer(&p.v)
-}
+func extractErrors(err error) []error {
+	if err == nil {
+		return nil
+	}
 
-// Store atomically stores the passed value.
-func (p *UnsafePointer) Store(val unsafe.Pointer) {
-	atomic.StorePointer(&p.v, val)
-}
+	// check if the given err is an Unwrapable error that
+	// implements multipleErrors interface.
+	eg, ok := err.(multipleErrors)
+	if !ok {
+		return []error{err}
+	}
 
-// Swap atomically swaps the wrapped unsafe.Pointer and returns the old value.
-func (p *UnsafePointer) Swap(val unsafe.Pointer) (old unsafe.Pointer) {
-	return atomic.SwapPointer(&p.v, val)
-}
-
-// CAS is an atomic compare-and-swap.
-func (p *UnsafePointer) CAS(old, new unsafe.Pointer) (swapped bool) {
-	return atomic.CompareAndSwapPointer(&p.v, old, new)
+	return append(([]error)(nil), eg.Unwrap()...)
 }
