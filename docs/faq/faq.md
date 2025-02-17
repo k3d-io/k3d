@@ -148,7 +148,7 @@ c) authenticate containerd inside k3s/k3d to use your DockerHub user
   ```yaml
   # saved as e.g. $HOME/registries.yaml
   configs:
-    "docker.io":
+    "registry-1.docker.io":
       auth:
         username: "$USERNAME"
         password: "$PASSWORD"
