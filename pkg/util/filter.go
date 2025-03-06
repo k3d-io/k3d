@@ -49,7 +49,7 @@ var (
 // Regexp pattern to match node filters
 var NodeFilterRegexp = regexp.MustCompile(`^(?P<group>server|servers|agent|agents|loadbalancer|all)(?P<subsetSpec>:(?P<subset>(?P<subsetList>(\d+,?)+)|(?P<subsetRange>\d*-\d*)|(?P<subsetWildcard>\*)))?(?P<suffixSpec>:(?P<suffix>[[:alpha:]]+))?$`)
 
-// FilterNodesBySuffix properly interprets NodeFilters with suffix
+// FilterNodesWithSuffix properly interprets NodeFilters with suffix
 func FilterNodesWithSuffix(nodes []*k3d.Node, nodefilters []string, allowedSuffices ...string) (map[string][]*k3d.Node, error) {
 	if len(nodefilters) == 0 || len(nodefilters[0]) == 0 {
 		return nil, fmt.Errorf("No nodefilters specified")
