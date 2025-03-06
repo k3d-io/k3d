@@ -192,7 +192,7 @@ func getContainersByLabel(ctx context.Context, labels map[string]string) ([]type
 	return containers, nil
 }
 
-// getContainer details returns the containerjson with more details
+// getContainerDetails returns the containerjson with more details
 func getContainerDetails(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	// (0) create docker client
 	docker, err := GetDockerClient()
