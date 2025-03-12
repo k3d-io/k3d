@@ -261,6 +261,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "AdrienHorgnies",
+      "name": "Adrien Horgnies",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7291317?v=4",
+      "profile": "https://www.fita.dev",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
