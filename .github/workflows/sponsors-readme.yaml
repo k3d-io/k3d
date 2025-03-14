@@ -17,7 +17,7 @@ jobs:
         with:
           token: ${{ secrets.READER_PAT }}
           file: 'README.md'
-          template: '<li><a href="{{{ url }}}">[<strong>{{{ login }}}</strong>]</a> {{{ name }}}</li>'
+          template: '<a href="https://github.com/{{ login }}"><img src="{{ avatarUrl }}" width="60px" alt="User avatar: {{ name }}" /></a>'
           organization: true
 
       - name: Deploy to GitHub Pages 🚀
