@@ -185,5 +185,5 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 Thanks to our amazing sponsors! 🙏
 
 <ul>
-  <!-- sponsors --><a href="https://github.com/j7nw4r"><img src="https:&#x2F;&#x2F;github.com&#x2F;j7nw4r.png" width="60px" alt="User avatar: Johnathan W" /></a><!-- sponsors -->
+  <!-- sponsors --><a href="https://github.com/j7nw4r"><img src="https:&#x2F;&#x2F;github.com&#x2F;j7nw4r.png" width="100px" alt="User avatar: Johnathan W" /><br /><sub><b>Johnathan W</b></sub></a><!-- sponsors -->
 </ul>
