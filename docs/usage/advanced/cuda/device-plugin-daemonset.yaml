@@ -1,3 +1,4 @@
+---
 apiVersion: node.k8s.io/v1
 kind: RuntimeClass
 metadata:
@@ -31,7 +32,7 @@ spec:
       # See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/
       priorityClassName: "system-node-critical"
       containers:
-      - image: nvcr.io/nvidia/k8s-device-plugin:v0.15.0-rc.2
+      - image: nvcr.io/nvidia/k8s-device-plugin:v0.17.1
         name: nvidia-device-plugin-ctr
         env:
           - name: FAIL_ON_INIT_ERROR
