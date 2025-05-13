@@ -109,7 +109,7 @@ func removeContainer(ctx context.Context, ID string) error {
 	return nil
 }
 
-// resolveAuth gets registry authenication configuration for an image
+// resolveAuth gets registry authentication configuration for an image
 func resolveAuth(image string) (authConfig registrytypes.AuthConfig, err error) {
 	var ref reference.Named
 	var config *dockerconfigfile.ConfigFile
