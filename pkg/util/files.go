@@ -95,7 +95,7 @@ func ReadFileSource(configFile, source string) ([]byte, error) {
 // ResolveFileDestination determines the file destination and resolves it if it has a magic shortcut.
 func ResolveFileDestination(destPath string) (string, error) {
 	// If the destination path is absolute, then use it as it is.
-	if filepath.IsAbs(destPath) {
+	if path.IsAbs(destPath) {
 		l.Log().Debugf("resolved destination with absolute path '%s'", destPath)
 		return destPath, nil
 	}
@@ -104,9 +104,9 @@ func ResolveFileDestination(destPath string) (string, error) {
 	destPathTree := strings.Split(destPath, string(os.PathSeparator))
 	if shortcutPath, found := k3s.K3sPathShortcuts[destPathTree[0]]; found {
 		destPathTree[0] = shortcutPath
-		destPathResolved := filepath.Join(destPathTree...)
+		destPathResolved := path.Join(destPathTree...)
 		l.Log().Debugf("resolved destination with magic shortcut path: '%s'", destPathResolved)
-		return filepath.Join(destPathResolved), nil
+		return path.Join(destPathResolved), nil
 	}
 
 	return "", fmt.Errorf("destination can be only absolute path or starts with predefined shortcut path. Could not resolve destination file path: %s", destPath)
