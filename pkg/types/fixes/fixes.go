@@ -102,7 +102,18 @@ var fixNeeded = map[K3DFixEnv]func(runtime runtimes.Runtime) bool{
 		l.Log().Debugf("[autofix cgroupsv2] cgroupVersion: %d", cgroupVersion)
 		return cgroupVersion == 2
 	},
-	EnvFixDNS: func(_ runtimes.Runtime) bool {
+	EnvFixDNS: func(runtime runtimes.Runtime) bool {
+		runtimeInfo, err := runtime.Info()
+		if err != nil {
+			l.Log().Warnf("Failed to get runtime information: %+v", err)
+			return false
+		}
+
+		if runtimeInfo.InfoName == "colima" {
+			l.Log().Debug("Skipping the DNS fix on Colima.")
+			return false
+		}
+
 		return true
 	},
 	EnvFixMounts: func(_ runtimes.Runtime) bool {
