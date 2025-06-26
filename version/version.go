@@ -38,7 +38,7 @@ var Version string
 var HelperVersionOverride string
 
 // K3sVersion should contain the latest version tag of k3s (hardcoded at build time)
-var K3sVersion = "v1.32.5+k3s1"
+var K3sVersion = "v1.32.5-k3s1"
 
 type httpClient struct {
 	client  *http.Client
