@@ -454,6 +454,8 @@ github.com/spf13/cobra/doc
 ## explicit
 # github.com/spf13/pflag v1.0.5
 ## explicit; go 1.12
+# github.com/spf13/pflag v1.0.6
+## explicit; go 1.12
 github.com/spf13/pflag
 # github.com/spf13/viper v1.12.0
 ## explicit; go 1.18
