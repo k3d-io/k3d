@@ -283,7 +283,7 @@ func NewCmdVersionLs() *cobra.Command {
 		string(VersionLsSortOff):  VersionLsSortOff,
 	}
 
-	var imageRepos map[string]string = map[string]string{
+	var imageRepos = map[string]string{
 		"k3d":       "ghcr.io/k3d-io/k3d",
 		"k3d-tools": "ghcr.io/k3d-io/k3d-tools",
 		"k3d-proxy": "ghcr.io/k3d-io/k3d-proxy",

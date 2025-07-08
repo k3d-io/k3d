@@ -56,7 +56,7 @@ func NewCmdKubeconfigGet() *cobra.Command {
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if (len(args) < 1 && !getKubeconfigFlags.all) || (len(args) > 0 && getKubeconfigFlags.all) {
-				return fmt.Errorf("Need to specify one or more cluster names *or* set `--all` flag")
+				return fmt.Errorf("need to specify one or more cluster names *or* set `--all` flag")
 			}
 			return nil
 		},

@@ -82,7 +82,7 @@ func PrintNodes(nodes []*k3d.Node, outputFormat string, headers *[]string, nodeP
 		fmt.Println(string(b))
 	} else {
 		for _, node := range nodes {
-			if !(outputFormat == "json" || outputFormat == "yaml") {
+			if outputFormat != "json" && outputFormat != "yaml" {
 				nodePrinter.Print(tabwriter, node)
 			}
 		}

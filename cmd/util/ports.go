@@ -41,14 +41,14 @@ func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureO
 	match := apiPortRegexp.FindStringSubmatch(exposedPortSpec)
 
 	if len(match) == 0 {
-		return nil, fmt.Errorf("Failed to parse Port Exposure specification '%s': Format must be [(HostIP|HostName):]HostPort", exposedPortSpec)
+		return nil, fmt.Errorf("failed to parse Port Exposure specification '%s': Format must be [(HostIP|HostName):]HostPort", exposedPortSpec)
 	}
 
 	submatches := util.MapSubexpNames(apiPortRegexp.SubexpNames(), match)
 
 	// no port specified (or not matched via regex)
 	if submatches["port"] == "" {
-		return nil, fmt.Errorf("Failed to find port in Port Exposure spec '%s'", exposedPortSpec)
+		return nil, fmt.Errorf("failed to find port in Port Exposure spec '%s'", exposedPortSpec)
 	}
 
 	api := &k3d.ExposureOpts{}
@@ -58,7 +58,7 @@ func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureO
 		l.Log().Tracef("Port Exposure: found hostname: %s", submatches["hostname"])
 		addrs, err := net.LookupHost(submatches["hostname"])
 		if err != nil {
-			return nil, fmt.Errorf("Failed to lookup host '%s' specified for Port Exposure: %+v", submatches["hostname"], err)
+			return nil, fmt.Errorf("failed to lookup host '%s' specified for Port Exposure: %+v", submatches["hostname"], err)
 		}
 		api.Host = submatches["hostname"]
 		for _, addr := range addrs {
@@ -67,7 +67,7 @@ func ParsePortExposureSpec(exposedPortSpec, internalPort string) (*k3d.ExposureO
 			}
 		}
 		if submatches["hostip"] == "" {
-			return nil, fmt.Errorf("Failed to lookup IPv4 address for host '%s'", submatches["hostname"])
+			return nil, fmt.Errorf("failed to lookup IPv4 address for host '%s'", submatches["hostname"])
 		}
 	}
 

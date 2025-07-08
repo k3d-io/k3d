@@ -1,5 +1,5 @@
 // FIXME(thaJeztah): remove once we are a module; the go:build directive prevents go from downgrading language version to go1.16:
-//go:build go1.21
+//go:build go1.23
 
 package command
 
@@ -7,7 +7,6 @@ import (
 	"github.com/docker/cli/cli/context/docker"
 	"github.com/docker/cli/cli/context/store"
 	cliflags "github.com/docker/cli/cli/flags"
-	"github.com/docker/docker/errdefs"
 	"github.com/pkg/errors"
 )
 
@@ -117,7 +116,7 @@ func (s *ContextStoreWithDefault) List() ([]store.Metadata, error) {
 // CreateOrUpdate is not allowed for the default context and fails
 func (s *ContextStoreWithDefault) CreateOrUpdate(meta store.Metadata) error {
 	if meta.Name == DefaultContextName {
-		return errdefs.InvalidParameter(errors.New("default context cannot be created nor updated"))
+		return invalidParameter(errors.New("default context cannot be created nor updated"))
 	}
 	return s.Store.CreateOrUpdate(meta)
 }
@@ -125,7 +124,7 @@ func (s *ContextStoreWithDefault) CreateOrUpdate(meta store.Metadata) error {
 // Remove is not allowed for the default context and fails
 func (s *ContextStoreWithDefault) Remove(name string) error {
 	if name == DefaultContextName {
-		return errdefs.InvalidParameter(errors.New("default context cannot be removed"))
+		return invalidParameter(errors.New("default context cannot be removed"))
 	}
 	return s.Store.Remove(name)
 }
@@ -145,7 +144,7 @@ func (s *ContextStoreWithDefault) GetMetadata(name string) (store.Metadata, erro
 // ResetTLSMaterial is not implemented for default context and fails
 func (s *ContextStoreWithDefault) ResetTLSMaterial(name string, data *store.ContextTLSData) error {
 	if name == DefaultContextName {
-		return errdefs.InvalidParameter(errors.New("default context cannot be edited"))
+		return invalidParameter(errors.New("default context cannot be edited"))
 	}
 	return s.Store.ResetTLSMaterial(name, data)
 }
@@ -153,7 +152,7 @@ func (s *ContextStoreWithDefault) ResetTLSMaterial(name string, data *store.Cont
 // ResetEndpointTLSMaterial is not implemented for default context and fails
 func (s *ContextStoreWithDefault) ResetEndpointTLSMaterial(contextName string, endpointName string, data *store.EndpointTLSData) error {
 	if contextName == DefaultContextName {
-		return errdefs.InvalidParameter(errors.New("default context cannot be edited"))
+		return invalidParameter(errors.New("default context cannot be edited"))
 	}
 	return s.Store.ResetEndpointTLSMaterial(contextName, endpointName, data)
 }
@@ -186,7 +185,7 @@ func (s *ContextStoreWithDefault) GetTLSData(contextName, endpointName, fileName
 			return nil, err
 		}
 		if defaultContext.TLS.Endpoints[endpointName].Files[fileName] == nil {
-			return nil, errdefs.NotFound(errors.Errorf("TLS data for %s/%s/%s does not exist", DefaultContextName, endpointName, fileName))
+			return nil, notFound(errors.Errorf("TLS data for %s/%s/%s does not exist", DefaultContextName, endpointName, fileName))
 		}
 		return defaultContext.TLS.Endpoints[endpointName].Files[fileName], nil
 	}
