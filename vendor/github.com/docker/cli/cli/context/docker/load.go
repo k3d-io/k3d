@@ -6,6 +6,7 @@ import (
 	"encoding/pem"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/docker/cli/cli/connhelper"
@@ -90,14 +91,19 @@ func (ep *Endpoint) ClientOpts() ([]client.Opt, error) {
 			return nil, err
 		}
 		if helper == nil {
-			tlsConfig, err := ep.tlsConfig()
-			if err != nil {
-				return nil, err
+			// Check if we're connecting over a socket, because there's no
+			// need to configure TLS for a socket connection.
+			//
+			// TODO(thaJeztah); make resolveDockerEndpoint and resolveDefaultDockerEndpoint not load TLS data,
+			//  and load TLS files lazily; see https://github.com/docker/cli/pull/1581
+			if !isSocket(ep.Host) {
+				tlsConfig, err := ep.tlsConfig()
+				if err != nil {
+					return nil, err
+				}
+				result = append(result, withHTTPClient(tlsConfig))
 			}
-			result = append(result,
-				withHTTPClient(tlsConfig),
-				client.WithHost(ep.Host),
-			)
+			result = append(result, client.WithHost(ep.Host))
 		} else {
 			result = append(result,
 				client.WithHTTPClient(&http.Client{
@@ -114,6 +120,17 @@ func (ep *Endpoint) ClientOpts() ([]client.Opt, error) {
 
 	result = append(result, client.WithVersionFromEnv(), client.WithAPIVersionNegotiation())
 	return result, nil
+}
+
+// isSocket checks if the given address is a Unix-socket (linux),
+// named pipe (Windows), or file-descriptor.
+func isSocket(addr string) bool {
+	switch proto, _, _ := strings.Cut(addr, "://"); proto {
+	case "unix", "npipe", "fd":
+		return true
+	default:
+		return false
+	}
 }
 
 func withHTTPClient(tlsConfig *tls.Config) func(*client.Client) error {

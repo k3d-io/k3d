@@ -1,6 +1,6 @@
 module github.com/k3d-io/k3d/tools
 
-go 1.22.4
+go 1.24.4
 
 require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect

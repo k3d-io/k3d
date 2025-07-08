@@ -82,7 +82,7 @@ func (c *httpClient) fetchLatestK3sVersion(channel string) (string, error) {
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf(fmt.Sprintf("call made to '%s' failed with status code '%d'", c.baseURL, resp.StatusCode))
+		return "", fmt.Errorf("call made to '%s' failed with status code '%d'", c.baseURL, resp.StatusCode)
 	}
 
 	out := k3s.ChannelServerResponse{}

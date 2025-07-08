@@ -164,14 +164,15 @@ func PrintClusters(clusters []*k3d.Cluster, flags clusterFlags) {
 		}
 	}
 
-	if outputFormat == "json" {
+	switch outputFormat {
+	case "json":
 		b, err := json.Marshal(jsonOutputEntries)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 		fmt.Println(string(b))
-	} else if outputFormat == "yaml" {
+	case "yaml":
 		b, err := yaml.Marshal(jsonOutputEntries)
 		if err != nil {
 			fmt.Println(err)
