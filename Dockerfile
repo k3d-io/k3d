@@ -4,7 +4,7 @@ ARG DOCKER_VERSION=27.3.1
 # -> golang image used solely for building the k3d binary  #
 # -> built executable can then be copied into other stages #
 ############################################################
-FROM golang:1.22.4 as builder
+FROM golang:1.24.4 AS builder
 ARG GIT_TAG_OVERRIDE
 WORKDIR /app
 RUN mkdir /tmp/empty
@@ -16,7 +16,7 @@ RUN make build -e GIT_TAG_OVERRIDE=${GIT_TAG_OVERRIDE} && bin/k3d version
 # -> k3d + some tools in a docker-in-docker container #
 # -> used e.g. in our CI pipelines for testing        #
 #######################################################
-FROM docker:$DOCKER_VERSION-dind as dind
+FROM docker:$DOCKER_VERSION-dind AS dind
 ARG OS
 ARG ARCH
 
@@ -40,7 +40,7 @@ COPY --from=builder /app/bin/k3d /bin/k3d
 # binary-only                           #
 # -> only the k3d binary.. nothing else #
 #########################################
-FROM scratch as binary-only
+FROM scratch AS binary-only
 # empty tmp directory to avoid errors when transforming the config file
 COPY --from=builder /tmp/empty /tmp
 COPY --from=builder /app/bin/k3d /bin/k3d

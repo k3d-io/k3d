@@ -26,6 +26,13 @@
       ]
     },
     {
+      "matchPackageNames": [
+        "k3s"
+      ],
+      "enabled": true,
+      "branchName": "renovate/k3s-{{newVersion}}"
+    },
+    {
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "squash",
@@ -33,5 +40,25 @@
         "*"
       ]
     }
-  ]
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^version\\/version.go$/"],
+      "matchStrings": [
+        "var K3sVersion = \"(?<currentValue>v[0-9a-zA-Z\\.-]+-k3s[0-9]*)\""
+      ],
+      "depNameTemplate": "k3s",
+      "versioningTemplate": "loose",
+      "datasourceTemplate": "custom.k3s"
+    }
+  ],
+  "customDatasources": {
+    "k3s": {
+      "defaultRegistryUrlTemplate": "https://update.k3s.io/v1-release/channels",
+      "transformTemplates": [
+        "{\"releases\":[{\"version\": $replace($$.(data[id = 'stable'].latest), '+', '-'),\"sourceUrl\":\"https://github.com/k3s-io/k3s\",\"changelogUrl\":$join([\"https://github.com/k3s-io/k3s/releases/tag/\",data[id = 'stable'].latest])}],\"sourceUrl\": \"https://github.com/k3s-io/k3s\",\"homepage\": \"https://k3s.io/\"}"
+      ]
+    }
+  }
 }

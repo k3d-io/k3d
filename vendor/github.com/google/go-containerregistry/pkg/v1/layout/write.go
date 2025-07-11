@@ -22,6 +22,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
+	"sync"
 
 	"github.com/google/go-containerregistry/pkg/logs"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -36,6 +38,9 @@ import (
 var layoutFile = `{
     "imageLayoutVersion": "1.0.0"
 }`
+
+// renameMutex guards os.Rename calls in AppendImage on Windows only.
+var renameMutex sync.Mutex
 
 // AppendImage writes a v1.Image to the Path and updates
 // the index.json to reference it.
@@ -121,13 +126,13 @@ func (l Path) ReplaceIndex(ii v1.ImageIndex, matcher match.Matcher, options ...O
 
 // replaceDescriptor adds a descriptor to the index.json of the Path, replacing
 // any one matching matcher, if found.
-func (l Path) replaceDescriptor(append mutate.Appendable, matcher match.Matcher, options ...Option) error {
+func (l Path) replaceDescriptor(appendable mutate.Appendable, matcher match.Matcher, options ...Option) error {
 	ii, err := l.ImageIndex()
 	if err != nil {
 		return err
 	}
 
-	desc, err := partial.Descriptor(append)
+	desc, err := partial.Descriptor(appendable)
 	if err != nil {
 		return err
 	}
@@ -138,7 +143,7 @@ func (l Path) replaceDescriptor(append mutate.Appendable, matcher match.Matcher,
 	}
 
 	add := mutate.IndexAddendum{
-		Add:        append,
+		Add:        appendable,
 		Descriptor: *desc,
 	}
 	ii = mutate.AppendManifests(mutate.RemoveManifests(ii, matcher), add)
@@ -259,6 +264,11 @@ func (l Path) writeBlob(hash v1.Hash, size int64, rc io.ReadCloser, renamer func
 	}
 
 	renamePath := l.path("blobs", finalHash.Algorithm, finalHash.Hex)
+
+	if runtime.GOOS == "windows" {
+		renameMutex.Lock()
+		defer renameMutex.Unlock()
+	}
 	return os.Rename(w.Name(), renamePath)
 }
 

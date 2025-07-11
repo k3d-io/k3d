@@ -50,7 +50,7 @@ func (d Docker) GetDockerMachineIP() (string, error) {
 	out, err := exec.Command(dockerMachinePath, "ip", machine).Output()
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
-			return "", fmt.Errorf(string(exitError.Stderr))
+			return "", fmt.Errorf("%s", exitError.Stderr)
 		}
 		return "", err
 	}

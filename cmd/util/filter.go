@@ -64,12 +64,12 @@ func SplitFiltersFromFlag(flag string) (string, []string, error) {
 
 	// max number of pieces after split = 2 (only one @ allowed in flag)
 	if len(newsplit) > 2 {
-		return "", nil, fmt.Errorf("Invalid flag '%s': only one unescaped '@' allowed for node filter(s) (Escape literal '@' with '\\')", flag)
+		return "", nil, fmt.Errorf("invalid flag '%s': only one unescaped '@' allowed for node filter(s) (Escape literal '@' with '\\')", flag)
 	}
 
 	// trailing or leading '@'
 	if len(newsplit) < 2 {
-		return "", nil, fmt.Errorf("Invalid flag '%s' includes unescaped '@' but is missing a node filter (Escape literal '@' with '\\')", flag)
+		return "", nil, fmt.Errorf("invalid flag '%s' includes unescaped '@' but is missing a node filter (Escape literal '@' with '\\')", flag)
 	}
 
 	return newsplit[0], strings.Split(newsplit[1], ";"), nil

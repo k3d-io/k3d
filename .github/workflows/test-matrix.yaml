@@ -15,7 +15,9 @@ jobs:
 #    steps:
 #      - uses: actions/checkout@v4
 #      - name: Setup Docker
-#        uses: docker-practice/actions-setup-docker@master
+#        uses: docker/setup-docker-action@v4
+#        with:
+#          version: "${{ env.DOCKER_VERSION }}"
 #      - name: Test Docker Version expected to fail
 #        run: |
 #          echo "Running test with docker version ${{matrix.docker_version}}"
@@ -36,14 +38,14 @@ jobs:
       fail-fast: false
       matrix:
         docker_version:
-          - "23.0.15"
-          - "25.0.6"
-          - "26.1.5"
-          - "27.3.1"
+          - "v23.0.15"
+          - "v25.0.6"
+          - "v26.1.5"
+          - "v27.4.0"
     steps:
       - uses: actions/checkout@v4
       - name: Setup Docker
-        uses: docker-practice/actions-setup-docker@master
+        uses: docker/setup-docker-action@v4
       - name: Test Docker Version expected to pass
         run: |
           echo "Running test with docker version ${{matrix.docker_version}}"
@@ -64,7 +66,9 @@ jobs:
 #    steps:
 #      - uses: actions/checkout@v4
 #      - name: Setup Docker
-#        uses: docker-practice/actions-setup-docker@master
+#        uses: docker/setup-docker-action@v4
+#        with:
+#          version: "${{ env.DOCKER_VERSION }}"
 #      - name: Test K3s Version expected to fail
 #        run: |
 #          echo "Running test with docker version ${{matrix.k3s_channel}}"
@@ -85,14 +89,14 @@ jobs:
       fail-fast: false
       matrix:
         k3s_channel:
-          - "v1.28"
-          - "v1.29"
           - "v1.30"
           - "v1.31"
+          - "v1.32"
+          - "v1.33"
     steps:
       - uses: actions/checkout@v4
       - name: Setup Docker
-        uses: docker-practice/actions-setup-docker@master
+        uses: docker/setup-docker-action@v4
       - name: Test K3s Version expected to pass
         run: |
           echo "Running test with K3s version ${{matrix.k3s_channel}}"

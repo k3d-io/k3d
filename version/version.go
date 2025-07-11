@@ -38,7 +38,7 @@ var Version string
 var HelperVersionOverride string
 
 // K3sVersion should contain the latest version tag of k3s (hardcoded at build time)
-var K3sVersion = "v1.21.7-k3s1"
+var K3sVersion = "v1.32.5-k3s1"
 
 type httpClient struct {
 	client  *http.Client
@@ -82,7 +82,7 @@ func (c *httpClient) fetchLatestK3sVersion(channel string) (string, error) {
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf(fmt.Sprintf("call made to '%s' failed with status code '%d'", c.baseURL, resp.StatusCode))
+		return "", fmt.Errorf("call made to '%s' failed with status code '%d'", c.baseURL, resp.StatusCode)
 	}
 
 	out := k3s.ChannelServerResponse{}

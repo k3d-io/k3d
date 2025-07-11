@@ -144,7 +144,7 @@ func NewCmdClusterCreate() *cobra.Command {
 
 			// check if a cluster with that name exists already
 			if _, err := k3dCluster.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster); err == nil {
-				l.Log().Fatalf("Failed to create cluster '%s' because a cluster with that name already exists", clusterConfig.Cluster.Name)
+				l.Log().Fatalf("Failed to create cluster '%s' because a cluster with that name already exists", clusterConfig.Name)
 			}
 
 			// create cluster
@@ -167,7 +167,7 @@ func NewCmdClusterCreate() *cobra.Command {
 				}
 				l.Log().Fatalln("Cluster creation FAILED, all changes have been rolled back!")
 			}
-			l.Log().Infof("Cluster '%s' created successfully!", clusterConfig.Cluster.Name)
+			l.Log().Infof("Cluster '%s' created successfully!", clusterConfig.Name)
 
 			/**************
 			 * Kubeconfig *
@@ -179,7 +179,7 @@ func NewCmdClusterCreate() *cobra.Command {
 			}
 
 			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig {
-				l.Log().Debugf("Updating default kubeconfig with a new context for cluster %s", clusterConfig.Cluster.Name)
+				l.Log().Debugf("Updating default kubeconfig with a new context for cluster %s", clusterConfig.Name)
 				if _, err := k3dCluster.KubeconfigGetWrite(cmd.Context(), runtimes.SelectedRuntime, &clusterConfig.Cluster, "", &k3dCluster.WriteKubeConfigOptions{UpdateExisting: true, OverwriteExisting: false, UpdateCurrentContext: simpleCfg.Options.KubeconfigOptions.SwitchCurrentContext}); err != nil {
 					l.Log().Warningln(err)
 				}
@@ -192,12 +192,12 @@ func NewCmdClusterCreate() *cobra.Command {
 			// print information on how to use the cluster with kubectl
 			l.Log().Infoln("You can now use it like this:")
 			if clusterConfig.KubeconfigOpts.UpdateDefaultKubeconfig && !clusterConfig.KubeconfigOpts.SwitchCurrentContext {
-				fmt.Printf("kubectl config use-context %s\n", fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, clusterConfig.Cluster.Name))
+				fmt.Printf("kubectl config use-context %s\n", fmt.Sprintf("%s-%s", k3d.DefaultObjectNamePrefix, clusterConfig.Name))
 			} else if !clusterConfig.KubeconfigOpts.SwitchCurrentContext {
 				if runtime.GOOS == "windows" {
-					fmt.Printf("$env:KUBECONFIG=(%s kubeconfig write %s)\n", os.Args[0], clusterConfig.Cluster.Name)
+					fmt.Printf("$env:KUBECONFIG=(%s kubeconfig write %s)\n", os.Args[0], clusterConfig.Name)
 				} else {
-					fmt.Printf("export KUBECONFIG=$(%s kubeconfig write %s)\n", os.Args[0], clusterConfig.Cluster.Name)
+					fmt.Printf("export KUBECONFIG=$(%s kubeconfig write %s)\n", os.Args[0], clusterConfig.Name)
 				}
 			}
 			fmt.Println("kubectl cluster-info")

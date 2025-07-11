@@ -182,8 +182,21 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 
 ## Sponsors
 
-Thanks to our amazing sponsors! 🙏
+**Thanks to our amazing sponsors!** 🙏
 
-<ul>
-  <!-- sponsors --><a href="https://github.com/j7nw4r"><img src="https:&#x2F;&#x2F;github.com&#x2F;j7nw4r.png" width="100px" alt="User avatar: Johnathan W" /><br /><sub><b>Johnathan W</b></sub></a><!-- sponsors -->
-</ul>
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+
+  .grid-item {
+    padding: 20px;
+    text-align: center;
+  }
+</style>
+<div class="grid">
+  <div class="grid-item"><a href="https://github.com/j7nw4r"><img src="https:&#x2F;&#x2F;github.com&#x2F;j7nw4r.png" width="100px" alt="User avatar: Johnathan W" /><br /><sub><b>Johnathan W</b></sub></a></div>
+  <div class="grid-item"><a href="https://github.com/stackabletech"><img src="https:&#x2F;&#x2F;github.com&#x2F;stackabletech.png" width="100px" alt="User avatar: Stackable" /><br /><sub><b>Stackable</b></sub></a></div>
+</div>
