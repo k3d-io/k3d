@@ -320,6 +320,11 @@ github.com/moby/docker-image-spec/specs-go/v1
 github.com/moby/go-archive
 github.com/moby/go-archive/compression
 github.com/moby/go-archive/tarheader
+# github.com/moby/moby/api v0.0.0-20250722085533-c9a83e316184
+## explicit; go 1.23.0
+github.com/moby/moby/api/types/filters
+github.com/moby/moby/api/types/registry
+github.com/moby/moby/api/types/versions
 # github.com/moby/patternmatcher v0.6.0
 ## explicit; go 1.19
 github.com/moby/patternmatcher
