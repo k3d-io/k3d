@@ -23,10 +23,13 @@ THE SOFTWARE.
 package docker
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"strings"
 
+	"github.com/docker/cli/cli/config"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -34,6 +37,7 @@ import (
 	"github.com/docker/docker/client"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	"github.com/moby/moby/api/types/registry"
 	"github.com/sirupsen/logrus"
 )
 
@@ -104,9 +108,47 @@ func removeContainer(ctx context.Context, ID string) error {
 	return nil
 }
 
+// getRegistryAuth attempts to get the base64 encoded registry auth for an image from the docker config file
+//
+// all errors are ignored
+func getRegistryAuth(image string) string {
+	buf := bytes.NewBuffer(nil)
+	cfgFile := config.LoadDefaultConfigFile(buf)
+	l.Log().DebugFn(func() []interface{} {
+		s := buf.String()
+		if len(s) > 0 {
+			return []interface{}{"Docker config file read error: %s", s}
+		}
+		return []interface{}{"Docker config file read success"}
+	})
+
+	auth, err := cfgFile.GetAuthConfig(strings.Split(image, "/")[0])
+	if err != nil {
+		l.Log().Debugf("Failed to get registry auth for image '%s': %v", image, err)
+		return ""
+	}
+
+	encodedAuth, err := registry.EncodeAuthConfig(registry.AuthConfig{
+		Username:      auth.Username,
+		Password:      auth.Password,
+		Auth:          auth.Auth,
+		Email:         auth.Email,
+		ServerAddress: auth.ServerAddress,
+		IdentityToken: auth.IdentityToken,
+		RegistryToken: auth.RegistryToken,
+	})
+	if err != nil {
+		l.Log().Debugf("Failed to encode registry auth for image '%s': %v", image, err)
+		return ""
+	}
+	return encodedAuth
+}
+
 // pullImage pulls a container image and outputs progress if --verbose flag is set
 func pullImage(ctx context.Context, docker client.APIClient, image string) error {
-	resp, err := docker.ImagePull(ctx, image, dockerimage.PullOptions{})
+	resp, err := docker.ImagePull(ctx, image, dockerimage.PullOptions{
+		RegistryAuth: getRegistryAuth(image),
+	})
 	if err != nil {
 		return fmt.Errorf("docker failed to pull the image '%s': %w", image, err)
 	}

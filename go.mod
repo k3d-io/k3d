@@ -5,6 +5,7 @@ go 1.24.4
 require (
 	github.com/goodhosts/hostsfile v0.1.6
 	github.com/google/go-containerregistry v0.20.6
+	github.com/moby/moby/api v0.0.0-20250722085533-c9a83e316184
 	github.com/rancher/wharfie v0.6.2
 	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.10.0
