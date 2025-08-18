@@ -148,6 +148,11 @@ options:
       - name: nofile
         soft: 26677
         hard: 26677
+    platforms: # overwrite the default platforms for the cluster to pass it as an runtime argument
+      - platform: linux/arm64/v8
+        nodeFilters:
+          - server:*
+          - agent:*
 
 ```
 

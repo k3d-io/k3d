@@ -292,6 +292,7 @@ type Node struct {
 	Cmd            []string              // filled automatically based on role
 	Args           []string              `json:"extraArgs,omitempty"`
 	Files          []File                `json:"files,omitempty"`
+	Platform       string                `json:"platform,omitempty"`
 	Ports          nat.PortMap           `json:"portMappings,omitempty"`
 	Restart        bool                  `json:"restart,omitempty"`
 	Created        string                `json:"created,omitempty"`
