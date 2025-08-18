@@ -24,6 +24,7 @@ package docker
 import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
+	ocispecv1 "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 // NodeInDocker represents everything that we need to represent a k3d node in docker
@@ -31,4 +32,5 @@ type NodeInDocker struct {
 	ContainerConfig  container.Config // TODO: do we need this as pointers?
 	HostConfig       container.HostConfig
 	NetworkingConfig network.NetworkingConfig
+	PlatformConfig   *ocispecv1.Platform
 }

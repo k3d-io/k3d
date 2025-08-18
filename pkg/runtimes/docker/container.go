@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/containerd/platforms"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -34,12 +35,13 @@ import (
 	"github.com/docker/docker/client"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	ocispecv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/sirupsen/logrus"
 )
 
 // createContainer creates a new docker container from translated specs
 func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string) (string, error) {
-	l.Log().Tracef("Creating docker container with translated config\n%+v\n", dockerNode)
+	l.Log().Tracef("Creating docker container with translated config: %s\n%+v\n", name, dockerNode)
 
 	// initialize docker client
 	docker, err := GetDockerClient()
@@ -51,10 +53,10 @@ func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string)
 	// create container
 	var resp container.CreateResponse
 	for {
-		resp, err = docker.ContainerCreate(ctx, &dockerNode.ContainerConfig, &dockerNode.HostConfig, &dockerNode.NetworkingConfig, nil, name)
+		resp, err = docker.ContainerCreate(ctx, &dockerNode.ContainerConfig, &dockerNode.HostConfig, &dockerNode.NetworkingConfig, dockerNode.PlatformConfig, name)
 		if err != nil {
 			if client.IsErrNotFound(err) {
-				if err := pullImage(ctx, docker, dockerNode.ContainerConfig.Image); err != nil {
+				if err := pullImage(ctx, docker, dockerNode.ContainerConfig.Image, dockerNode.PlatformConfig); err != nil {
 					return "", fmt.Errorf("docker failed to pull image '%s': %w", dockerNode.ContainerConfig.Image, err)
 				}
 				continue
@@ -105,8 +107,15 @@ func removeContainer(ctx context.Context, ID string) error {
 }
 
 // pullImage pulls a container image and outputs progress if --verbose flag is set
-func pullImage(ctx context.Context, docker client.APIClient, image string) error {
-	resp, err := docker.ImagePull(ctx, image, dockerimage.PullOptions{})
+func pullImage(ctx context.Context, docker client.APIClient, image string, platform *ocispecv1.Platform) error {
+	opts := dockerimage.PullOptions{}
+
+	if platform != nil {
+		// if a platform is specified, use it to pull the image
+		opts.Platform = platforms.Format(*platform)
+	}
+
+	resp, err := docker.ImagePull(ctx, image, opts)
 	if err != nil {
 		return fmt.Errorf("docker failed to pull the image '%s': %w", image, err)
 	}
@@ -168,7 +177,7 @@ func getNodeContainer(ctx context.Context, node *k3d.Node) (*types.Container, er
 
 // executes an arbitrary command in a container while returning its exit code.
 // useful to check something in docker env
-func executeCheckInContainer(ctx context.Context, image string, cmd []string) (int64, error) {
+func executeCheckInContainer(ctx context.Context, image string, platform *ocispecv1.Platform, cmd []string) (int64, error) {
 	docker, err := GetDockerClient()
 	if err != nil {
 		return -1, fmt.Errorf("failed to create docker client: %w", err)
@@ -186,7 +195,7 @@ func executeCheckInContainer(ctx context.Context, image string, cmd []string) (i
 		}, nil, nil, nil, "")
 		if err != nil {
 			if client.IsErrNotFound(err) {
-				if err := pullImage(ctx, docker, image); err != nil {
+				if err := pullImage(ctx, docker, image, platform); err != nil {
 					return -1, fmt.Errorf("docker failed to pull image '%s': %w", image, err)
 				}
 				continue
@@ -219,11 +228,11 @@ func executeCheckInContainer(ctx context.Context, image string, cmd []string) (i
 }
 
 // CheckIfDirectoryExists checks for the existence of a given path inside the docker environment
-func CheckIfDirectoryExists(ctx context.Context, image string, dir string) (bool, error) {
+func CheckIfDirectoryExists(ctx context.Context, image string, platform *ocispecv1.Platform, dir string) (bool, error) {
 	l.Log().Tracef("checking if dir %s exists in docker environment...", dir)
 	shellCmd := fmt.Sprintf("[ -d \"%s\" ] && exit 0 || exit 1", dir)
 	cmd := []string{"sh", "-c", shellCmd}
-	exitCode, err := executeCheckInContainer(ctx, image, cmd)
+	exitCode, err := executeCheckInContainer(ctx, image, platform, cmd)
 	l.Log().Tracef("check dir container returned %d exit code", exitCode)
 	return exitCode == 0, err
 }

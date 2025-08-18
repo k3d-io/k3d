@@ -7,14 +7,14 @@ LOGFILE="/var/log/k3d-entrypoints_$(date "+%y%m%d%H%M%S").log"
 
 touch "$LOGFILE"
 
-echo "[$(date -Iseconds)] Running k3d entrypoints..." >> "$LOGFILE"
+echo "[$(date -Iseconds)] Running k3d entrypoints..." | tee -a "$LOGFILE"
 
-for entrypoint in /bin/k3d-entrypoint-*.sh ; do
-  echo "[$(date -Iseconds)] Running $entrypoint"  >> "$LOGFILE"
-  "$entrypoint"  >> "$LOGFILE" 2>&1 || exit 1
+for entrypoint in /bin/k3d-entrypoint-*.sh; do
+  echo "[$(date -Iseconds)] Running $entrypoint" | tee -a "$LOGFILE"
+  eval "$entrypoint" 2>&1 | tee "$LOGFILE" || exit 1
 done
 
-echo "[$(date -Iseconds)] Finished k3d entrypoint scripts!" >> "$LOGFILE"
+echo "[$(date -Iseconds)] Finished k3d entrypoint scripts!" | tee -a "$LOGFILE"
 
 /bin/k3s "$@" &
 k3s_pid=$!
