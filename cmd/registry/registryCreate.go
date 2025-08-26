@@ -42,13 +42,14 @@ type regCreatePreProcessedFlags struct {
 }
 
 type regCreateFlags struct {
-	Image          string
-	Network        string
-	ProxyRemoteURL string
-	ProxyUsername  string
-	ProxyPassword  string
-	NoHelp         bool
-	DeleteEnabled  bool
+	Image            string
+	Network          string
+	ProxyRemoteURL   string
+	ProxyUsername    string
+	ProxyPassword    string
+	NoHelp           bool
+	DeleteEnabled    bool
+	EnforcePortMatch bool
 }
 
 var helptext string = `# You can now use the registry like this (example):
@@ -116,6 +117,7 @@ func NewCmdRegistryCreate() *cobra.Command {
 
 	cmd.Flags().BoolVar(&flags.NoHelp, "no-help", false, "Disable the help text (How-To use the registry)")
 	cmd.Flags().BoolVar(&flags.DeleteEnabled, "delete-enabled", false, "Enable image deletion")
+	cmd.Flags().BoolVar(&flags.EnforcePortMatch, "enforce-port-match", false, "Make the internal registry port match the external one")
 
 	// done
 	return cmd
@@ -134,7 +136,7 @@ func parseCreateRegistryCmd(cmd *cobra.Command, args []string, flags *regCreateF
 	}
 
 	// --port
-	exposePort, err := cliutil.ParsePortExposureSpec(ppFlags.Port, k3d.DefaultRegistryPort)
+	exposePort, err := cliutil.ParsePortExposureSpec(ppFlags.Port, k3d.DefaultRegistryPort, flags.EnforcePortMatch)
 	if err != nil {
 		l.Log().Errorln("Failed to parse registry port")
 		l.Log().Fatalln(err)
@@ -174,6 +176,7 @@ func parseCreateRegistryCmd(cmd *cobra.Command, args []string, flags *regCreateF
 	}
 
 	options.DeleteEnabled = flags.DeleteEnabled
+	options.EnforcePortMatch = flags.EnforcePortMatch
 
 	return &k3d.Registry{Host: registryName, Image: flags.Image, ExposureOpts: *exposePort, Network: flags.Network, Options: options, Volumes: volumes}, clusters
 }
