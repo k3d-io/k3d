@@ -15,12 +15,12 @@ echo "[$(date -Iseconds)] [DNS Fix] Use the detected Gateway IP $gateway instead
 
 # Change iptables rules added by Docker to route traffic to out Gateway IP instead of Docker's embedded DNS
 echo "[$(date -Iseconds)] [DNS Fix] > Changing iptables rules ..."
-iptables-save \
+iptables-legacy-save \
   | sed \
     -e "s/-d ${docker_dns}/-d ${gateway}/g" \
     -e 's/-A OUTPUT \(.*\) -j DOCKER_OUTPUT/\0\n-A PREROUTING \1 -j DOCKER_OUTPUT/' \
     -e "s/--to-source :53/--to-source ${gateway}:53/g"\
-  | iptables-restore
+  | iptables-legacy-restore
 
 # Update resolv.conf to use the Gateway IP if needed: this will also make CoreDNS use it via k3s' default `forward . /etc/resolv.conf` rule in the CoreDNS config
 if grep -q "${docker_dns}" /etc/resolv.conf; then
