@@ -97,6 +97,7 @@ type SimpleConfigRegistryCreateConfig struct {
 	Image    string            `mapstructure:"image" json:"image,omitempty"`
 	Proxy    k3d.RegistryProxy `mapstructure:"proxy" json:"proxy,omitempty"`
 	Volumes  []string          `mapstructure:"volumes" json:"volumes,omitempty"`
+	EnforcePortMatch bool      `mapstructure:"enforcePortMatch" json:"enforcePortMatch,omitempty"`
 }
 
 // SimpleConfigOptionsKubeconfig describes the set of options referring to the kubeconfig during cluster creation.

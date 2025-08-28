@@ -33,9 +33,10 @@ const (
 )
 
 type RegistryOptions struct {
-	ConfigFile    string        `json:"configFile,omitempty"`
-	Proxy         RegistryProxy `json:"proxy,omitempty"`
-	DeleteEnabled bool          `json:"deleteEnabled,omitempty"`
+	ConfigFile       string        `json:"configFile,omitempty"`
+	Proxy            RegistryProxy `json:"proxy,omitempty"`
+	DeleteEnabled    bool          `json:"deleteEnabled,omitempty"`
+	EnforcePortMatch bool          `json:"enforcePortMatch,omitempty"`
 }
 
 type RegistryProxy struct {
