@@ -1239,7 +1239,7 @@ func ClusterEditChangesetSimple(ctx context.Context, runtime k3drt.Runtime, clus
 		// 2. transform
 		cluster.ServerLoadBalancer = lbChangeset // we're working with pointers, so let's point to the changeset here to not update the original that we keep as a reference
 		if err := TransformPorts(ctx, runtime, cluster, changeset.Ports); err != nil {
-			return fmt.Errorf("error transforming port config %s: %w", changeset.Ports, err)
+			return fmt.Errorf("error transforming port config %+v: %w", changeset.Ports, err)
 		}
 	}
 

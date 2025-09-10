@@ -57,7 +57,8 @@ func NewCmdClusterEdit() *cobra.Command {
 	// add subcommands
 
 	// add flags
-	cmd.Flags().StringArray("port-add", nil, "[EXPERIMENTAL] Map ports from the node containers (via the serverlb) to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d node edit k3d-mycluster-serverlb --port-add 8080:80`")
+	cmd.Flags().StringArray("port-add", nil, "Map ports from the node containers (via the serverlb) to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d node edit k3d-mycluster-serverlb --port-add 8080:80`")
+	cmd.Flags().StringArray("port-delete", nil, "[EXPERIMENTAL] Delete a port mapping with the given format\nThe mapping spec needs to be exactly the same as the one used during creation\n - Example: `k3d node edit k3d-mycluster-serverlb --port-delete 8080:80`")
 
 	// done
 	return cmd
@@ -76,18 +77,24 @@ func parseEditClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, *conf
 	}
 
 	changeset := conf.SimpleConfig{}
+	changeset.Ports = []conf.PortWithNodeFilters{}
 
-	/*
-	 * --port-add
-	 */
-	portFlags, err := cmd.Flags().GetStringArray("port-add")
-	if err != nil {
-		l.Log().Errorln(err)
-		return nil, nil
+	portsAdded := parsePortChangeFlag(cmd, &changeset, "port-add", false)
+
+	portsDeleted := parsePortChangeFlag(cmd, &changeset, "port-delete", true)
+
+	if portsAdded && portsDeleted {
+		l.Log().Fatalln("Cannot combine port addition and deletion")
 	}
 
-	// init portmap
-	changeset.Ports = []conf.PortWithNodeFilters{}
+	return existingCluster, &changeset
+}
+
+func parsePortChangeFlag(cmd *cobra.Command, changeset *conf.SimpleConfig, flagName string, isRemoval bool) bool {
+	portFlags, err := cmd.Flags().GetStringArray(flagName)
+	if err != nil {
+		l.Log().Fatalln(err)
+	}
 
 	portFilterMap := make(map[string][]string, 1)
 	for _, portFlag := range portFlags {
@@ -104,15 +111,14 @@ func parseEditClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, *conf
 			portFilterMap[portmap] = filters
 		}
 	}
+	l.Log().Tracef("PortFilterMap: %+v", portFilterMap)
 
 	for port, nodeFilters := range portFilterMap {
 		changeset.Ports = append(changeset.Ports, conf.PortWithNodeFilters{
 			Port:        port,
 			NodeFilters: nodeFilters,
+			Removal:     isRemoval,
 		})
 	}
-
-	l.Log().Tracef("PortFilterMap: %+v", portFilterMap)
-
-	return existingCluster, &changeset
+	return len(portFilterMap) > 0
 }
