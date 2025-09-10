@@ -67,6 +67,8 @@ func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 			return err
 		}
 
+		removalFlag := portWithNodeFilters.Removal
+
 		for suffix, nodes := range filteredNodes {
 			// skip, if no nodes in filtered set, so we don't add portmappings with no targets in the backend
 			if len(nodes) == 0 {
@@ -81,11 +83,9 @@ func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 				if cluster.ServerLoadBalancer == nil {
 					return fmt.Errorf("port-mapping of type 'proxy' specified, but loadbalancer is disabled")
 				}
-				if err := addPortMappings(cluster.ServerLoadBalancer.Node, portmappings); err != nil {
-					return err
-				}
+				changePortMappings(cluster.ServerLoadBalancer.Node, portmappings, removalFlag)
 				for _, pm := range portmappings {
-					if err := loadbalancerAddPortConfigs(cluster.ServerLoadBalancer, pm, nodes); err != nil {
+					if err := changeLBPortConfigs(cluster.ServerLoadBalancer, pm, nodes, removalFlag); err != nil {
 						return fmt.Errorf("error adding port config to loadbalancer: %w", err)
 					}
 				}
@@ -94,9 +94,7 @@ func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 					return fmt.Errorf("error: cannot apply a direct port-mapping (%s) to more than one node", portmappings)
 				}
 				for _, node := range nodes {
-					if err := addPortMappings(node, portmappings); err != nil {
-						return err
-					}
+					changePortMappings(node, portmappings, removalFlag)
 				}
 			} else if suffix != util.NodeFilterMapKeyAll {
 				return fmt.Errorf("error adding port mappings: unknown suffix %s", suffix)
@@ -117,12 +115,44 @@ func TransformPorts(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.
 	return nil
 }
 
-func addPortMappings(node *k3d.Node, portmappings []nat.PortMapping) error {
+func changeLBPortConfigs(loadbalancer *k3d.Loadbalancer, portmapping nat.PortMapping, targetNodes []*k3d.Node, remove bool) error {
+	if remove {
+		return loadbalancerRemovePortConfigs(loadbalancer, portmapping, targetNodes)
+	} else {
+		return loadbalancerAddPortConfigs(loadbalancer, portmapping, targetNodes)
+	}
+}
+
+func changePortMappings(node *k3d.Node, portmappings []nat.PortMapping, remove bool) {
+	if remove {
+		removePortMappings(node, portmappings)
+	} else {
+		addPortMappings(node, portmappings)
+	}
+}
+
+func addPortMappings(node *k3d.Node, portmappings []nat.PortMapping) {
 	if node.Ports == nil {
 		node.Ports = nat.PortMap{}
 	}
 	for _, pm := range portmappings {
 		node.Ports[pm.Port] = append(node.Ports[pm.Port], pm.Binding)
 	}
-	return nil
+}
+
+func removePortMappings(node *k3d.Node, portmappings []nat.PortMapping) {
+	if node.Ports == nil {
+		return
+	}
+	for _, pm := range portmappings {
+		bindings, found := node.Ports[pm.Port]
+		if !found {
+			continue
+		}
+		node.Ports[pm.Port] = util.RemoveFirst(bindings, pm.Binding)
+		if 0 == len(node.Ports[pm.Port]) {
+			// deleting the empty map entry to get rid of the Docker-level port mapping
+			delete(node.Ports, pm.Port)
+		}
+	}
 }

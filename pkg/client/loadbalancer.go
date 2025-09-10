@@ -39,6 +39,7 @@ import (
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	"github.com/k3d-io/k3d/v5/pkg/util"
 )
 
 var (
@@ -228,7 +229,7 @@ func loadbalancerAddPortConfigs(loadbalancer *k3d.Loadbalancer, portmapping nat.
 	nodenames := []string{}
 	for _, node := range targetNodes {
 		if node.Role == k3d.LoadBalancerRole {
-			return fmt.Errorf("cannot add port config referencing the loadbalancer itself (loop)")
+			return fmt.Errorf("cannot add a port config referencing the loadbalancer itself (loop)")
 		}
 		nodenames = append(nodenames, node.Name)
 	}
@@ -241,11 +242,37 @@ func loadbalancerAddPortConfigs(loadbalancer *k3d.Loadbalancer, portmapping nat.
 
 nodenameLoop:
 	for _, nodename := range nodenames {
-		for _, existingNames := range loadbalancer.Config.Ports[portconfig] {
-			if nodename == existingNames {
+		for _, existingName := range loadbalancer.Config.Ports[portconfig] {
+			if nodename == existingName {
 				continue nodenameLoop
 			}
 			loadbalancer.Config.Ports[portconfig] = append(loadbalancer.Config.Ports[portconfig], nodename)
+		}
+	}
+
+	return nil
+}
+
+func loadbalancerRemovePortConfigs(loadbalancer *k3d.Loadbalancer, portmapping nat.PortMapping, targetNodes []*k3d.Node) error {
+	portconfig := fmt.Sprintf("%s.%s", portmapping.Port.Port(), portmapping.Port.Proto())
+	// entry for that port doesn't exist
+	if _, ok := loadbalancer.Config.Ports[portconfig]; !ok {
+		return nil
+	}
+
+	nodenames := []string{}
+	for _, node := range targetNodes {
+		if node.Role == k3d.LoadBalancerRole {
+			return fmt.Errorf("cannot have a port config referencing the loadbalancer itself (loop)")
+		}
+		nodenames = append(nodenames, node.Name)
+	}
+
+	for _, nodename := range nodenames {
+		loadbalancer.Config.Ports[portconfig] = util.RemoveFirst(loadbalancer.Config.Ports[portconfig], nodename)
+		if 0 == len(loadbalancer.Config.Ports[portconfig]) {
+			// deleting the empty map entry to get rid of the Docker-level port mapping
+			delete(loadbalancer.Config.Ports, portconfig)
 		}
 	}
 
