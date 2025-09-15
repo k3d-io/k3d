@@ -57,8 +57,8 @@ func NewCmdClusterEdit() *cobra.Command {
 	// add subcommands
 
 	// add flags
-	cmd.Flags().StringArray("port-add", nil, "Map ports from the node containers (via the serverlb) to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d node edit k3d-mycluster-serverlb --port-add 8080:80`")
-	cmd.Flags().StringArray("port-delete", nil, "[EXPERIMENTAL] Delete a port mapping with the given format\nThe mapping spec needs to be exactly the same as the one used during creation\n - Example: `k3d node edit k3d-mycluster-serverlb --port-delete 8080:80`")
+	cmd.Flags().StringArray("port-add", nil, "Map ports from the node containers (via the serverlb) to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster edit k3d-mycluster-serverlb --port-add 8080:80`")
+	cmd.Flags().StringArray("port-delete", nil, "[EXPERIMENTAL] Delete a port mapping with the given format\nThe mapping spec needs to be exactly the same as the one used during creation\n - Example: `k3d cluster edit k3d-mycluster-serverlb --port-delete 8080:80`")
 
 	// done
 	return cmd
