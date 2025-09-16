@@ -96,9 +96,9 @@ func ParsePortExposureSpec(exposedPortSpec, internalPort string, enforcePortMatc
 		}
 	}
 
-    if enforcePortMatch {
+	if enforcePortMatch {
 		internalPort = submatches["port"]
-    }
+	}
 
 	realPortString += fmt.Sprintf("%s:%s/tcp", submatches["port"], internalPort)
 
