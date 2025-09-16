@@ -933,8 +933,17 @@ nodeLoop:
 	return resultList
 }
 
+type NodeEditPortBinding struct {
+	nat.PortBinding
+	RemovalFlag bool
+}
+
+type NodeEditChangeset struct {
+	Ports map[nat.Port][]NodeEditPortBinding
+}
+
 // NodeEdit let's you update an existing node
-func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, changeset *k3d.Node) error {
+func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode *k3d.Node, changeset *NodeEditChangeset) error {
 	/*
 	 * Make a deep copy of the existing node
 	 */
@@ -957,13 +966,13 @@ func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, chang
 		for _, portbinding := range portbindings {
 			// loop over existing portbindings to avoid port collisions (docker doesn't check for it)
 			for _, existingPB := range result.Ports[port] {
-				if util.IsPortBindingEqual(portbinding, existingPB) { // also matches on "equal" HostIPs (127.0.0.1, "", 0.0.0.0)
+				if util.IsPortBindingEqual(portbinding.PortBinding, existingPB) { // also matches on "equal" HostIPs (127.0.0.1, "", 0.0.0.0)
 					l.Log().Tracef("Skipping existing PortBinding: %+v", existingPB)
 					continue loopChangesetPortbindings
 				}
 			}
-			l.Log().Tracef("Adding portbinding %+v for port %s", portbinding, port.Port())
-			result.Ports[port] = append(result.Ports[port], portbinding)
+			l.Log().Tracef("Adding portbinding %+v for port %s", portbinding.PortBinding, port.Port())
+			result.Ports[port] = append(result.Ports[port], portbinding.PortBinding)
 		}
 	}
 
