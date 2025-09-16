@@ -64,7 +64,7 @@ func NewCmdNodeEdit() *cobra.Command {
 }
 
 // parseEditNodeCmd parses the command input into variables required to delete nodes
-func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *k3d.Node) {
+func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *client.NodeEditChangeset) {
 	existingNode, err := client.NodeGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Node{Name: args[0]})
 	if err != nil {
 		l.Log().Fatalln(err)
@@ -79,7 +79,7 @@ func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *k3d.Node) 
 		l.Log().Fatalln("Currently only the loadbalancer can be updated!")
 	}
 
-	changeset := &k3d.Node{}
+	changeset := &client.NodeEditChangeset{}
 
 	/*
 	 * --port-add
@@ -91,7 +91,7 @@ func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *k3d.Node) 
 	}
 
 	// init portmap
-	changeset.Ports = nat.PortMap{}
+	changeset.Ports = make(map[nat.Port][]client.NodeEditPortBinding)
 
 	for _, flag := range portFlags {
 		portmappings, err := nat.ParsePortSpec(flag)
@@ -100,7 +100,8 @@ func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *k3d.Node) 
 		}
 
 		for _, pm := range portmappings {
-			changeset.Ports[pm.Port] = append(changeset.Ports[pm.Port], pm.Binding)
+			changeset.Ports[pm.Port] = append(changeset.Ports[pm.Port],
+				client.NodeEditPortBinding{PortBinding: pm.Binding, RemovalFlag: false})
 		}
 	}
 
