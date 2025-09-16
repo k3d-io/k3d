@@ -60,7 +60,7 @@ Every cluster will consist of one or more containers:
  * we use two different instances of Viper here to handle
  * - cfgViper: "static" configuration
  * - ppViper: "pre-processed" configuration, where CLI input has to be pre-processed
- *             to be treated as part of the SImpleConfig
+ *             to be treated as part of the SimpleConfig
  */
 var (
 	cfgViper = viper.New()
@@ -329,6 +329,9 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().StringArray("registry-use", nil, "Connect to one or more k3d-managed registries running locally")
 	_ = cfgViper.BindPFlag("registries.use", cmd.Flags().Lookup("registry-use"))
 
+	cmd.Flags().Bool("enforce-registry-port-match", false, "Make the internal registry port match the external one")
+	_ = cfgViper.BindPFlag("registries.create.enforcePortMatch", cmd.Flags().Lookup("enforce-registry-port-match"))
+
 	cmd.Flags().String("registry-config", "", "Specify path to an extra registries.yaml file")
 	_ = cfgViper.BindPFlag("registries.config", cmd.Flags().Lookup("registry-config"))
 	if err := cmd.MarkFlagFilename("registry-config", "yaml", "yml"); err != nil {
@@ -373,7 +376,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		if cfg.ExposeAPI.HostPort != "" {
 			l.Log().Debugf("Overriding pre-defined kubeAPI Exposure Spec %+v with CLI argument %s", cfg.ExposeAPI, ppViper.GetString("cli.api-port"))
 		}
-		exposeAPI, err = cliutil.ParsePortExposureSpec(ppViper.GetString("cli.api-port"), k3d.DefaultAPIPort)
+		exposeAPI, err = cliutil.ParsePortExposureSpec(ppViper.GetString("cli.api-port"), k3d.DefaultAPIPort, false)
 		if err != nil {
 			return cfg, fmt.Errorf("failed to parse API Port spec: %w", err)
 		}
@@ -575,7 +578,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		}
 		cfg.Registries.Create.Name = fvSplit[0]
 		if len(fvSplit) > 1 {
-			exposeAPI, err = cliutil.ParsePortExposureSpec(fvSplit[1], "1234") // internal port is unused after all
+			exposeAPI, err = cliutil.ParsePortExposureSpec(fvSplit[1], k3d.DefaultRegistryPort, cfg.Registries.Create.EnforcePortMatch)
 			if err != nil {
 				return cfg, fmt.Errorf("failed to registry port spec: %w", err)
 			}
