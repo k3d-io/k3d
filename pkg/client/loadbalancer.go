@@ -271,7 +271,7 @@ func loadbalancerRemovePortConfigs(loadbalancer *k3d.Loadbalancer, portmapping n
 	for _, nodename := range nodenames {
 		loadbalancer.Config.Ports[portconfig] = util.RemoveFirst(loadbalancer.Config.Ports[portconfig], nodename)
 		if 0 == len(loadbalancer.Config.Ports[portconfig]) {
-			// deleting the empty map entry to get rid of the Docker-level port mapping
+			// deleting the empty map entry to get rid of an invalid Docker-level port mapping it leaves
 			delete(loadbalancer.Config.Ports, portconfig)
 		}
 	}
