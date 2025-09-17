@@ -251,6 +251,9 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().StringArrayP("runtime-ulimit", "", nil, "Add ulimit to container runtime (Format: `NAME[=SOFT]:[HARD]`\n - Example: `k3d cluster create --agents 2 --runtime-ulimit \"nofile=1024:1024\" --runtime-ulimit \"noproc=1024:1024\"`")
 	_ = ppViper.BindPFlag("cli.runtime-ulimits", cmd.Flags().Lookup("runtime-ulimit"))
 
+	cmd.Flags().StringArrayP("runtime-platform", "", nil, "Add platform to container runtime (Format: `<os>[(<OSVersion>)]|<arch>|<os>[(<OSVersion>)]/<arch>[/<variant>][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 --runtime-platform \"linux/amd64@agent:0,1\" --runtime-platform \"linux/arm64/v8@server:0\"`")
+	_ = ppViper.BindPFlag("cli.runtime-platform", cmd.Flags().Lookup("runtime-platform"))
+
 	cmd.Flags().String("registry-create", "", "Create a k3d-managed registry and connect it to the cluster (Format: `NAME[:HOST][:HOSTPORT]`\n - Example: `k3d cluster create --registry-create mycluster-registry:0.0.0.0:5432`")
 	_ = ppViper.BindPFlag("cli.registries.create", cmd.Flags().Lookup("registry-create"))
 
@@ -517,6 +520,33 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	for _, ulimit := range ppViper.GetStringSlice("cli.runtime-ulimits") {
 		cfg.Options.Runtime.Ulimits = append(cfg.Options.Runtime.Ulimits, *cliutil.ParseRuntimeUlimit[conf.Ulimit](ulimit))
 	}
+
+	// --runtime-platform
+	// runtimePlatform will add container platform configuration to applied node filters
+	runtimePlatformFilterMap := make(map[string][]string, 1)
+	for _, platformFlag := range ppViper.GetStringSlice("cli.runtime-platform") {
+		// split node filter from the specified platform
+		platform, nodeFilters, err := cliutil.SplitFiltersFromFlag(platformFlag)
+		if err != nil {
+			l.Log().Fatalln(err)
+		}
+
+		// create new entry or append filter to existing entry
+		if _, exists := runtimePlatformFilterMap[platform]; exists {
+			runtimePlatformFilterMap[platform] = append(runtimePlatformFilterMap[platform], nodeFilters...)
+		} else {
+			runtimePlatformFilterMap[platform] = nodeFilters
+		}
+	}
+
+	for platform, nodeFilters := range runtimePlatformFilterMap {
+		cfg.Options.Runtime.Platforms = append(cfg.Options.Runtime.Platforms, conf.PlatformWithNodeFilters{
+			Platform:    platform,
+			NodeFilters: nodeFilters,
+		})
+	}
+
+	l.Log().Tracef("RuntimePlatformFilterMap: %+v", runtimePlatformFilterMap)
 
 	// --env
 	// envFilterMap will add container env vars to applied node filters

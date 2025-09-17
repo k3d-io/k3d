@@ -82,6 +82,7 @@ func NewCmdNodeCreate() *cobra.Command {
 
 	cmd.Flags().StringSliceP("runtime-label", "", []string{}, "Specify container runtime labels in format \"foo=bar\"")
 	cmd.Flags().StringSliceP("runtime-ulimit", "", []string{}, "Specify container runtime ulimit in format \"ulimit=soft:hard\"")
+	cmd.Flags().StringP("runtime-platform", "", "", "Specify container platform in format \"linux/amd64\"")
 	cmd.Flags().StringSliceP("k3s-node-label", "", []string{}, "Specify k3s node labels in format \"foo=bar\"")
 
 	cmd.Flags().StringSliceP("network", "n", []string{}, "Add node to (another) runtime network")
@@ -166,6 +167,13 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string)
 	for index, ulimit := range runtimeUlimitsFlag {
 		runtimeUlimits[index] = cliutil.ParseRuntimeUlimit[dockerunits.Ulimit](ulimit)
 	}
+
+	// runtime-platform
+	platform, err := cmd.Flags().GetString("runtime-platform")
+	if err != nil {
+		l.Log().Fatalf("No runtime-platform specified: %v", err)
+	}
+
 	// --k3s-node-label
 	k3sNodeLabelsFlag, err := cmd.Flags().GetStringSlice("k3s-node-label")
 	if err != nil {
@@ -204,6 +212,7 @@ func parseCreateNodeCmd(cmd *cobra.Command, args []string) ([]*k3d.Node, string)
 			K3sNodeLabels:  k3sNodeLabels,
 			RuntimeLabels:  runtimeLabels,
 			RuntimeUlimits: runtimeUlimits,
+			Platform:       platform,
 			Restart:        true,
 			Memory:         memory,
 			Networks:       networks,

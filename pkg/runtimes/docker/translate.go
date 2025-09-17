@@ -30,6 +30,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/containerd/platforms"
 	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -37,6 +38,7 @@ import (
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	runtimeErr "github.com/k3d-io/k3d/v5/pkg/runtimes/errors"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
+	ocispecv1 "github.com/opencontainers/image-spec/specs-go/v1"
 
 	dockercliopts "github.com/docker/cli/opts"
 	dockerunits "github.com/docker/go-units"
@@ -122,6 +124,16 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 		hostConfig.Memory = memory
 	}
 
+	var platformConfig *ocispecv1.Platform
+	if node.Platform != "" {
+		// parse platform string
+		p, err := platforms.Parse(node.Platform)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to parse platform string '%s': %+v", node.Platform, err)
+		}
+		platformConfig = &p
+	}
+
 	/* They have to run in privileged mode */
 	// TODO: can we replace this by a reduced set of capabilities?
 	hostConfig.Privileged = true
@@ -178,6 +190,7 @@ func TranslateNodeToContainer(node *k3d.Node) (*NodeInDocker, error) {
 		ContainerConfig:  containerConfig,
 		HostConfig:       hostConfig,
 		NetworkingConfig: networkingConfig,
+		PlatformConfig:   platformConfig,
 	}, nil
 }
 
