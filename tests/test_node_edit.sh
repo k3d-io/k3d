@@ -39,7 +39,17 @@ $EXE node edit k3d-$clustername-serverlb --port-add $existingPortMappingHostPort
 
 info "Checking port-mappings..."
 docker inspect k3d-$clustername-serverlb --format '{{ range $k, $v := .NetworkSettings.Ports }}{{ printf "%s->%s\n" $k $v }}{{ end }}' | grep -qE "^$existingPortMappingContainerPort" || failed "failed to verify pre-existing port-mapping"
-docker inspect k3d-$clustername-serverlb --format '{{ range $k, $v := .NetworkSettings.Ports }}{{ printf "%s->%s\n" $k $v }}{{ end }}' | grep -qE "^$newPortMappingContainerPort" || failed "failed to verify pre-existing port-mapping"
+docker inspect k3d-$clustername-serverlb --format '{{ range $k, $v := .NetworkSettings.Ports }}{{ printf "%s->%s\n" $k $v }}{{ end }}' | grep -qE "^$newPortMappingContainerPort" || failed "failed to verify new port-mapping"
+
+info "Checking cluster access..."
+check_clusters "$clustername" || failed "error checking cluster access"
+
+info "Removing port-mapping from loadbalancer..."
+$EXE node edit k3d-$clustername-serverlb --port-delete $existingPortMappingHostPort:$existingPortMappingContainerPort || failed "failed to delete port-mapping from serverlb in $clustername"
+
+info "Checking port-mappings..."
+docker inspect k3d-$clustername-serverlb --format '{{ range $k, $v := .NetworkSettings.Ports }}{{ printf "%s->%s\n" $k $v }}{{ end }}' | grep -qvE "^$existingPortMappingContainerPort" || failed "failed to verify deleted port-mapping"
+docker inspect k3d-$clustername-serverlb --format '{{ range $k, $v := .NetworkSettings.Ports }}{{ printf "%s->%s\n" $k $v }}{{ end }}' | grep -qE "^$newPortMappingContainerPort" || failed "failed to verify retained port-mapping"
 
 info "Checking cluster access..."
 check_clusters "$clustername" || failed "error checking cluster access"
