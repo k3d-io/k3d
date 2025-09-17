@@ -151,7 +151,7 @@ func removePortMappings(node *k3d.Node, portmappings []nat.PortMapping) {
 		}
 		node.Ports[pm.Port] = util.RemoveFirst(bindings, pm.Binding)
 		if 0 == len(node.Ports[pm.Port]) {
-			// deleting the empty map entry to get rid of the Docker-level port mapping
+			// deleting the empty map entry to get rid of an invalid Docker-level port mapping it leaves
 			delete(node.Ports, pm.Port)
 		}
 	}

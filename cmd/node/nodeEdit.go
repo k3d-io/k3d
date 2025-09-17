@@ -58,6 +58,7 @@ func NewCmdNodeEdit() *cobra.Command {
 
 	// add flags
 	cmd.Flags().StringArray("port-add", nil, "[EXPERIMENTAL] (serverlb only!) Map ports from the node container to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d node edit k3d-mycluster-serverlb --port-add 8080:80`")
+	cmd.Flags().StringArray("port-delete", nil, "[EXPERIMENTAL] (serverlb only!) Remove port mappings between a node and the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d node edit k3d-mycluster-serverlb --port-delete 8080:80`")
 
 	// done
 	return cmd
@@ -65,6 +66,7 @@ func NewCmdNodeEdit() *cobra.Command {
 
 // parseEditNodeCmd parses the command input into variables required to delete nodes
 func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *client.NodeEditChangeset) {
+
 	existingNode, err := client.NodeGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Node{Name: args[0]})
 	if err != nil {
 		l.Log().Fatalln(err)
@@ -80,18 +82,25 @@ func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *client.Nod
 	}
 
 	changeset := &client.NodeEditChangeset{}
+	changeset.Ports = make(map[nat.Port][]client.NodeEditPortBinding)
 
-	/*
-	 * --port-add
-	 */
-	portFlags, err := cmd.Flags().GetStringArray("port-add")
-	if err != nil {
-		l.Log().Errorln(err)
-		return nil, nil
+	portsAdded := parsePortChangeFlag(cmd, changeset, "port-add", false)
+
+	portsDeleted := parsePortChangeFlag(cmd, changeset, "port-delete", true)
+
+	if portsAdded && portsDeleted {
+		l.Log().Fatalln("Cannot combine port addition and deletion")
 	}
 
-	// init portmap
-	changeset.Ports = make(map[nat.Port][]client.NodeEditPortBinding)
+	return existingNode, changeset
+}
+
+func parsePortChangeFlag(cmd *cobra.Command, changeset *client.NodeEditChangeset, flagName string, isRemoval bool) bool {
+
+	portFlags, err := cmd.Flags().GetStringArray(flagName)
+	if err != nil {
+		l.Log().Fatalln(err)
+	}
 
 	for _, flag := range portFlags {
 		portmappings, err := nat.ParsePortSpec(flag)
@@ -101,9 +110,9 @@ func parseEditNodeCmd(cmd *cobra.Command, args []string) (*k3d.Node, *client.Nod
 
 		for _, pm := range portmappings {
 			changeset.Ports[pm.Port] = append(changeset.Ports[pm.Port],
-				client.NodeEditPortBinding{PortBinding: pm.Binding, RemovalFlag: false})
+				client.NodeEditPortBinding{PortBinding: pm.Binding, RemovalFlag: isRemoval})
 		}
 	}
 
-	return existingNode, changeset
+	return len(portFlags) > 0
 }
