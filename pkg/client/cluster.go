@@ -1114,13 +1114,11 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 
 					// get the first server in the list and run action on it once it's ready for it
 					for _, n := range servers {
-						// do not try to run the action, if CoreDNS is disabled on K3s level
-						for _, flag := range n.Args {
-							if strings.HasPrefix(flag, "--disable") && strings.Contains(flag, "coredns") {
-								l.Log().Debugf("CoreDNS disabled in K3s via flag `%s`. Not trying to use it.", flag)
-								return nil
-							}
+						if coreDNSDisabledLabel, exists := n.RuntimeLabels[k3d.LabelClusterCoreDNSDisabled]; exists && coreDNSDisabledLabel == "true" {
+							l.Log().Debugf("CoreDNS disabled via cluster label. Not trying to use it.")
+							return nil
 						}
+
 						ts, err := time.Parse("2006-01-02T15:04:05.999999999Z", n.State.Started)
 						if err != nil {
 							return err
