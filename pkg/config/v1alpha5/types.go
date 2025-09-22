@@ -74,6 +74,11 @@ type LabelWithNodeFilters struct {
 	NodeFilters []string `mapstructure:"nodeFilters" json:"nodeFilters,omitempty"`
 }
 
+type PlatformWithNodeFilters struct {
+	Platform    string   `mapstructure:"platform" json:"platform,omitempty"`
+	NodeFilters []string `mapstructure:"nodeFilters" json:"nodeFilters,omitempty"`
+}
+
 type EnvVarWithNodeFilters struct {
 	EnvVar      string   `mapstructure:"envVar" json:"envVar,omitempty"`
 	NodeFilters []string `mapstructure:"nodeFilters" json:"nodeFilters,omitempty"`
@@ -115,12 +120,13 @@ type SimpleConfigOptions struct {
 }
 
 type SimpleConfigOptionsRuntime struct {
-	GPURequest    string                 `mapstructure:"gpuRequest" json:"gpuRequest,omitempty"`
-	ServersMemory string                 `mapstructure:"serversMemory" json:"serversMemory,omitempty"`
-	AgentsMemory  string                 `mapstructure:"agentsMemory" json:"agentsMemory,omitempty"`
-	HostPidMode   bool                   `mapstructure:"hostPidMode" yjson:"hostPidMode,omitempty"`
-	Labels        []LabelWithNodeFilters `mapstructure:"labels" json:"labels,omitempty"`
-	Ulimits       []Ulimit               `mapstructure:"ulimits" json:"ulimits,omitempty"`
+	GPURequest    string                    `mapstructure:"gpuRequest" json:"gpuRequest,omitempty"`
+	ServersMemory string                    `mapstructure:"serversMemory" json:"serversMemory,omitempty"`
+	AgentsMemory  string                    `mapstructure:"agentsMemory" json:"agentsMemory,omitempty"`
+	HostPidMode   bool                      `mapstructure:"hostPidMode" yjson:"hostPidMode,omitempty"`
+	Labels        []LabelWithNodeFilters    `mapstructure:"labels" json:"labels,omitempty"`
+	Ulimits       []Ulimit                  `mapstructure:"ulimits" json:"ulimits,omitempty"`
+	Platforms     []PlatformWithNodeFilters `mapstructure:"platforms" json:"platforms,omitempty"`
 }
 
 type Ulimit struct {

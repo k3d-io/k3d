@@ -42,6 +42,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"sigs.k8s.io/yaml"
 
+	"github.com/containerd/platforms"
 	"github.com/k3d-io/k3d/v5/pkg/actions"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
@@ -53,6 +54,7 @@ import (
 	"github.com/k3d-io/k3d/v5/pkg/types/k3s"
 	"github.com/k3d-io/k3d/v5/pkg/util"
 	"github.com/k3d-io/k3d/v5/version"
+	ocispecv1 "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 // NodeAddToCluster adds a node to an existing cluster
@@ -650,7 +652,15 @@ func NodeCreate(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, c
 			}
 			node.Volumes = append(node.Volumes, fmt.Sprintf("%s:%s:ro", fakemempath, util.MemInfoPath))
 			// mount empty edac folder, but only if it exists
-			exists, err := docker.CheckIfDirectoryExists(ctx, node.Image, util.EdacFolderPath)
+			var platform *ocispecv1.Platform
+			if node.Platform != "" {
+				p, err := platforms.Parse(node.Platform)
+				if err != nil {
+					return fmt.Errorf("failed to parse platform '%s': %w", node.Platform, err)
+				}
+				platform = &p
+			}
+			exists, err := docker.CheckIfDirectoryExists(ctx, node.Image, platform, util.EdacFolderPath)
 			if err != nil {
 				return fmt.Errorf("failed to check for the existence of edac folder: %w", err)
 			}
