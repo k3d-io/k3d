@@ -37,3 +37,16 @@ func ReplaceInAllElements(replacer *strings.Replacer, arr []string) []string {
 	}
 	return arr
 }
+
+func RemoveByIndex[T comparable](slice []T, index int) []T {
+	return append(slice[:index], slice[index+1:]...)
+}
+
+func RemoveFirst[T comparable](slice []T, element T) []T {
+	for i, v := range slice {
+		if v == element {
+			return RemoveByIndex(slice, i)
+		}
+	}
+	return slice
+}

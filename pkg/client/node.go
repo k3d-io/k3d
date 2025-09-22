@@ -933,8 +933,17 @@ nodeLoop:
 	return resultList
 }
 
+type NodeEditPortBinding struct {
+	nat.PortBinding
+	RemovalFlag bool
+}
+
+type NodeEditChangeset struct {
+	Ports map[nat.Port][]NodeEditPortBinding
+}
+
 // NodeEdit let's you update an existing node
-func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, changeset *k3d.Node) error {
+func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode *k3d.Node, changeset *NodeEditChangeset) error {
 	/*
 	 * Make a deep copy of the existing node
 	 */
@@ -955,15 +964,29 @@ func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode, chang
 	for port, portbindings := range changeset.Ports {
 	loopChangesetPortbindings:
 		for _, portbinding := range portbindings {
-			// loop over existing portbindings to avoid port collisions (docker doesn't check for it)
-			for _, existingPB := range result.Ports[port] {
-				if util.IsPortBindingEqual(portbinding, existingPB) { // also matches on "equal" HostIPs (127.0.0.1, "", 0.0.0.0)
-					l.Log().Tracef("Skipping existing PortBinding: %+v", existingPB)
+			for i, existingPB := range result.Ports[port] {
+				if util.IsPortBindingEqual(portbinding.PortBinding, existingPB) { // also matches on "equal" HostIPs (127.0.0.1, "", 0.0.0.0)
+					if portbinding.RemovalFlag {
+						// the mapping exists, needs to be removed
+						l.Log().Tracef("Removing PortBinding: %+v", existingPB)
+						result.Ports[port] = util.RemoveByIndex(result.Ports[port], i)
+						if 0 == len(result.Ports[port]) {
+							// deleting the empty map entry to get rid of an invalid Docker-level port mapping it leaves
+							delete(result.Ports, port)
+						}
+					} else {
+						// the mapping already exists, nothing to be added
+						// Docker doesn't check for port collisions resulting from duplicates
+						l.Log().Tracef("Skipping existing PortBinding: %+v", existingPB)
+					}
 					continue loopChangesetPortbindings
 				}
 			}
-			l.Log().Tracef("Adding portbinding %+v for port %s", portbinding, port.Port())
-			result.Ports[port] = append(result.Ports[port], portbinding)
+			// the mapping doesn't exist already and we need to add it
+			if !portbinding.RemovalFlag {
+				l.Log().Tracef("Adding portbinding %+v for port %s", portbinding.PortBinding, port.Port())
+				result.Ports[port] = append(result.Ports[port], portbinding.PortBinding)
+			}
 		}
 	}
 

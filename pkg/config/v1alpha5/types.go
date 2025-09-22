@@ -66,6 +66,7 @@ type VolumeWithNodeFilters struct {
 type PortWithNodeFilters struct {
 	Port        string   `mapstructure:"port" json:"port,omitempty"`
 	NodeFilters []string `mapstructure:"nodeFilters" json:"nodeFilters,omitempty"`
+	Removal     bool     `mapstructure:"removal" json:"removal,omitempty"`
 }
 
 type LabelWithNodeFilters struct {
