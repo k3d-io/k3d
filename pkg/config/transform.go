@@ -28,6 +28,7 @@ import (
 	"io"
 	"net/netip"
 	"os"
+	"regexp"
 	"strings"
 
 	wharfie "github.com/rancher/wharfie/pkg/registries"
@@ -284,7 +285,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 			node.Args = append(node.Args, argWithNodeFilters.Arg)
 		}
 
-		if strings.HasPrefix(argWithNodeFilters.Arg, "--disable") && strings.Contains(argWithNodeFilters.Arg, "coredns") {
+		if regexp.MustCompile(`^--disable\s*(=|\s)\s*coredns$`).MatchString(argWithNodeFilters.Arg) {
 			coreDNSDisabled = true
 		}
 
