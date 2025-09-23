@@ -28,6 +28,7 @@ import (
 	"io"
 	"net/netip"
 	"os"
+	"regexp"
 	"strings"
 
 	wharfie "github.com/rancher/wharfie/pkg/registries"
@@ -269,6 +270,7 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	}
 
 	// -> ARGS
+	coreDNSDisabled := false
 	for _, argWithNodeFilters := range simpleConfig.Options.K3sOptions.ExtraArgs {
 		if len(argWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
 			return nil, fmt.Errorf("K3sExtraArg '%s' lacks a node filter, but there's more than one node", argWithNodeFilters.Arg)
@@ -282,6 +284,11 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		for _, node := range nodes {
 			node.Args = append(node.Args, argWithNodeFilters.Arg)
 		}
+
+		if regexp.MustCompile(`^--disable\s*(=|\s)\s*coredns$`).MatchString(argWithNodeFilters.Arg) {
+			coreDNSDisabled = true
+		}
+
 	}
 
 	/**************************
@@ -304,6 +311,10 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	// ensure, that we have the default object labels
 	for k, v := range k3d.DefaultRuntimeLabels {
 		clusterCreateOpts.GlobalLabels[k] = v
+	}
+
+	if coreDNSDisabled {
+		clusterCreateOpts.GlobalLabels[k3d.LabelClusterCoreDNSDisabled] = "true"
 	}
 
 	/*
