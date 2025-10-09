@@ -254,6 +254,9 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().String("registry-create", "", "Create a k3d-managed registry and connect it to the cluster (Format: `NAME[:HOST][:HOSTPORT]`\n - Example: `k3d cluster create --registry-create mycluster-registry:0.0.0.0:5432`")
 	_ = ppViper.BindPFlag("cli.registries.create", cmd.Flags().Lookup("registry-create"))
 
+	cmd.Flags().Bool("enforce-registry-port-match", false, "Make the internal registry port match the external one")
+	_ = ppViper.BindPFlag("cli.registries.create.enforcePortMatch", cmd.Flags().Lookup("enforce-registry-port-match"))
+
 	cmd.Flags().StringArray("host-alias", nil, "Add `ip:host[,host,...]` mappings")
 	_ = ppViper.BindPFlag("hostaliases", cmd.Flags().Lookup("host-alias"))
 
@@ -328,9 +331,6 @@ func NewCmdClusterCreate() *cobra.Command {
 	/* Registry */
 	cmd.Flags().StringArray("registry-use", nil, "Connect to one or more k3d-managed registries running locally")
 	_ = cfgViper.BindPFlag("registries.use", cmd.Flags().Lookup("registry-use"))
-
-	cmd.Flags().Bool("enforce-registry-port-match", false, "Make the internal registry port match the external one")
-	_ = cfgViper.BindPFlag("registries.create.enforcePortMatch", cmd.Flags().Lookup("enforce-registry-port-match"))
 
 	cmd.Flags().String("registry-config", "", "Specify path to an extra registries.yaml file")
 	_ = cfgViper.BindPFlag("registries.config", cmd.Flags().Lookup("registry-config"))
@@ -576,6 +576,7 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 		if cfg.Registries.Create == nil {
 			cfg.Registries.Create = &conf.SimpleConfigRegistryCreateConfig{}
 		}
+		cfg.Registries.Create.EnforcePortMatch = ppViper.GetBool("cli.registries.create.enforcePortMatch")
 		cfg.Registries.Create.Name = fvSplit[0]
 		if len(fvSplit) > 1 {
 			exposeAPI, err = cliutil.ParsePortExposureSpec(fvSplit[1], k3d.DefaultRegistryPort, cfg.Registries.Create.EnforcePortMatch)
