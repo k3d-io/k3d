@@ -270,6 +270,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "fix",
+      "name": "François-Xavier Thoorens",
+      "avatar_url": "https://avatars.githubusercontent.com/u/709388?v=4",
+      "profile": "http://vaultys.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
