@@ -5,8 +5,9 @@ K3s ships with lots of built-in features and services, some of which may only be
 ## General: K3s documentation
 
 - Automatically Deploying Manifests and Helm Charts: <https://rancher.com/docs/k3s/latest/en/helm/#automatically-deploying-manifests-and-helm-charts>
-  - Note: `/var/lib/rancher/k3s/server/manifests` is also the path inside the K3s container filesystem, where all built-in component manifests are, so you can override them or provide your own variants by mounting files there, e.g. `--volume /path/to/my/custom/coredns.yaml:/var/lib/rancher/k3s/server/manifests/coredns.yaml` will override the packaged CoreDNS component.
+  - Note: `/var/lib/rancher/k3s/server/manifests` is also the path inside the K3s container filesystem, where all built-in component manifests are. These can not be overwritten, but need to be ajusted with with HelmChartConfig.
 - Customizing packaged Components with `HelmChartConfig`: <https://rancher.com/docs/k3s/latest/en/helm/#customizing-packaged-components-with-helmchartconfig>
+  - Note: To extend the default traefik configuration, create a file `traefik-config.yaml` and mount it like -volume /path/to/my/custom/traefik-config.yaml:/var/lib/rancher/k3s/server/manifests/traefik-config.yaml
 
 ## CoreDNS
 
