@@ -28,56 +28,11 @@ import (
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
 
-func TestAPIHostReplacement(t *testing.T) {
-	tests := []struct {
-		name            string
-		inputHost       string
-		expectedHost    string
-		shouldBeChanged bool
-	}{
-		{
-			name:            "0.0.0.0 should be replaced with 127.0.0.1",
-			inputHost:       "0.0.0.0",
-			expectedHost:    "127.0.0.1",
-			shouldBeChanged: true,
-		},
-		{
-			name:            "127.0.0.1 should remain unchanged",
-			inputHost:       "127.0.0.1",
-			expectedHost:    "127.0.0.1",
-			shouldBeChanged: false,
-		},
-		{
-			name:            "localhost should remain unchanged",
-			inputHost:       "localhost",
-			expectedHost:    "localhost",
-			shouldBeChanged: false,
-		},
-		{
-			name:            "custom IP should remain unchanged",
-			inputHost:       "192.168.1.100",
-			expectedHost:    "192.168.1.100",
-			shouldBeChanged: false,
-		},
-		{
-			name:            "hostname should remain unchanged",
-			inputHost:       "my-server.example.com",
-			expectedHost:    "my-server.example.com",
-			shouldBeChanged: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			apiHost := tt.inputHost
-			// This is the logic from KubeconfigGet that replaces 0.0.0.0 with 127.0.0.1
-			if apiHost == k3d.DefaultAPIHost {
-				apiHost = "127.0.0.1"
-			}
-
-			if apiHost != tt.expectedHost {
-				t.Errorf("Expected API host to be '%s', but got '%s'", tt.expectedHost, apiHost)
-			}
-		})
+func TestDefaultAPIHostIsLoopback(t *testing.T) {
+	// Verify that DefaultAPIHost is set to 127.0.0.1 (loopback) instead of 0.0.0.0
+	// This ensures that kubeconfig files use a valid client-connectable address
+	expectedHost := "127.0.0.1"
+	if k3d.DefaultAPIHost != expectedHost {
+		t.Errorf("DefaultAPIHost should be '%s' for client connectivity, but got '%s'", expectedHost, k3d.DefaultAPIHost)
 	}
 }

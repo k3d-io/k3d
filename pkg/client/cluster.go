@@ -386,7 +386,7 @@ ClusterCreatOpts:
 	/*
 	 * Docker Machine Special Configuration
 	 */
-	if cluster.KubeAPI.Host == k3d.DefaultAPIHost && runtime == k3drt.Docker {
+	if (cluster.KubeAPI.Host == k3d.DefaultAPIHost || cluster.KubeAPI.Host == "0.0.0.0") && runtime == k3drt.Docker {
 		// If the runtime is docker, attempt to use the docker host
 		if runtime == k3drt.Docker {
 			dockerHost := runtime.GetHost()
