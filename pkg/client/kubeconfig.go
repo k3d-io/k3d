@@ -162,6 +162,10 @@ func KubeconfigGet(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.C
 	}
 
 	// update the server URL
+	// Replace 0.0.0.0 with 127.0.0.1 in the kubeconfig, as 0.0.0.0 is not a valid address for clients to connect to
+	if APIHost == k3d.DefaultAPIHost {
+		APIHost = "127.0.0.1"
+	}
 	kc.Clusters["default"].Server = fmt.Sprintf("https://%s:%s", APIHost, APIPort)
 
 	// rename user from default to admin
