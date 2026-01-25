@@ -175,8 +175,8 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 		*reg = *regFromNode
 	}
 
-	// Create managed registry bound to this cluster
-	if clusterConfig.ClusterCreateOpts.Registries.Create != nil {
+	// Create managed registry bound to this cluster if not already created (podman usecase)
+	if clusterConfig.ClusterCreateOpts.Registries.Use == nil && clusterConfig.ClusterCreateOpts.Registries.Create != nil {
 		registryNode, err := RegistryCreate(ctx, runtime, clusterConfig.ClusterCreateOpts.Registries.Create)
 		if err != nil {
 			return fmt.Errorf("Failed to create registry: %+v", err)
