@@ -38,6 +38,40 @@ make e2e -e E2E_LOG_LEVEL=trace -e E2E_FAIL_FAST=true  # E2E with debug output
 
 E2E tests are bash scripts in `tests/` that run inside Docker-in-Docker containers. Unit tests use `testify` for assertions and `go-test/deep` for deep equality. Config test assets are in `pkg/config/test_assets/`.
 
+### E2E Test Framework
+
+**Execution chain:** `make e2e` -> `tests/dind.sh` (builds DIND image, starts privileged container) -> `tests/runner.sh` (discovers and batches tests) -> `test_*.sh` scripts.
+
+**Writing a new E2E test:**
+
+1. Create `tests/test_<name>.sh` (the `test_` prefix is required for auto-discovery)
+2. Make it executable (`chmod +x`)
+3. Follow the standard boilerplate:
+   ```bash
+   #!/bin/bash
+   CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+   [ -d "$CURR_DIR" ] || { echo "FATAL: no current dir (maybe running in zsh?)"; exit 1; }
+   source "$CURR_DIR/common.sh"
+
+   ### Step Setup ###
+   LOG_FILE="$TEST_OUTPUT_DIR/$( basename "${BASH_SOURCE[0]}" ).log"
+   exec >${LOG_FILE} 2>&1
+   export LOG_FILE
+   KUBECONFIG="$KUBECONFIG_ROOT/$( basename "${BASH_SOURCE[0]}" ).yaml"
+   export KUBECONFIG
+   ### Step Setup ###
+
+   export CURRENT_STAGE="Test | <name>"
+   # ... test logic using $EXE, info, failed, check_clusters, etc.
+   exit 0
+   ```
+4. Use unique cluster/resource names to avoid collisions with parallel tests
+5. Always clean up resources (cluster delete, registry delete) at the end
+
+**Key helpers from `tests/common.sh`:** `info`, `failed`, `passed`, `highlight`, `check_clusters`, `check_multi_node`, `check_registry`, `wait_for_pod_running_by_name`, `wait_for_pod_running_by_label`, `exec_in_node`, `docker_assert_container_label`, `k3s_assert_node_label`.
+
+**E2E environment variables:** `E2E_INCLUDE` (run only named tests), `E2E_EXCLUDE` (skip named tests), `E2E_PARALLEL` (default: 4), `E2E_EXTRA` (run `extra_test_*` files), `E2E_FAIL_FAST`, `E2E_LOG_LEVEL`, `E2E_K3S_VERSION`, `E2E_DIND_VERSION`, `E2E_KEEP` (keep runner container).
+
 ## Linting & Formatting
 
 ```bash
