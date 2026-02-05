@@ -1,6 +1,6 @@
 module github.com/k3d-io/k3d/v5
 
-go 1.24.4
+go 1.25.7
 
 require (
 	github.com/goodhosts/hostsfile v0.1.6
