@@ -136,10 +136,12 @@ func pullImage(ctx context.Context, docker client.APIClient, image string) error
 	authConfig, err := resolveAuth(image)
 	if err != nil {
 		l.Log().Warnf("Failed to get auth: %v", err)
+		authConfig = registrytypes.AuthConfig{}
 	}
 	encoded, err := registrytypes.EncodeAuthConfig(authConfig)
 	if err != nil {
 		l.Log().Warnf("Failed to encode auth: %v", err)
+		encoded = ""
 	}
 	resp, err := docker.ImagePull(ctx, image, dockerimage.PullOptions{
 		RegistryAuth: encoded,
