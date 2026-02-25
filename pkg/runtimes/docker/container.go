@@ -42,6 +42,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	defaultDomain          = "docker.io"
+	legacyDefaultDomain    = "index.docker.io"
+	defaultRegistryAuthKey = "https://index.docker.io/v1/"
+)
+
 // createContainer creates a new docker container from translated specs
 func createContainer(ctx context.Context, dockerNode *NodeInDocker, name string) (string, error) {
 	l.Log().Tracef("Creating docker container with translated config\n%+v\n", dockerNode)
@@ -118,8 +124,8 @@ func resolveAuth(image string) (authConfig registrytypes.AuthConfig, err error) 
 		return
 	}
 	authKey := reference.Domain(ref)
-	if authKey == "docker.io" || authKey == "index.docker.io" {
-		authKey = "https://index.docker.io/v1/"
+	if authKey == defaultDomain || authKey == legacyDefaultDomain {
+		authKey = defaultRegistryAuthKey
 	}
 	if config, err = dockerconfig.Load(dockerconfig.Dir()); err != nil {
 		return
