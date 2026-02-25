@@ -43,9 +43,9 @@ import (
 )
 
 const (
-	defaultDomain          = "docker.io"
-	legacyDefaultDomain    = "index.docker.io"
-	defaultRegistryAuthKey = "https://index.docker.io/v1/"
+	defaultDomain        = "docker.io"
+	legacyDefaultDomain  = "index.docker.io"
+	defaultDomainAuthKey = "https://index.docker.io/v1/"
 )
 
 // createContainer creates a new docker container from translated specs
@@ -125,7 +125,7 @@ func resolveAuth(image string) (authConfig registrytypes.AuthConfig, err error) 
 	}
 	authKey := reference.Domain(ref)
 	if authKey == defaultDomain || authKey == legacyDefaultDomain {
-		authKey = defaultRegistryAuthKey
+		authKey = defaultDomainAuthKey
 	}
 	if config, err = dockerconfig.Load(dockerconfig.Dir()); err != nil {
 		return
