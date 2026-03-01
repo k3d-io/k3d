@@ -1,97 +1,102 @@
 # Using Podman instead of Docker
 
-Podman has an [Docker API compatibility layer](https://podman.io/blogs/2020/06/29/podman-v2-announce.html#restful-api). k3d uses the Docker API and is compatible with Podman v4 and higher.
+Podman has an [Docker API compatibility layer](https://podman.io/blogs/2020/06/29/podman-v2-announce.html#restful-api).  
+k3d uses the Docker API and is compatible with Podman v4 and higher.
 
 !!! important "Podman support is experimental"
     k3d is not guaranteed to work with Podman. If you find a bug, do help by [filing an issue](https://github.com/k3d-io/k3d/issues/new?labels=bug&template=bug_report.md&title=%5BBUG%5D+Podman)
 
-Tested with podman version:
-```bash
-Client:       Podman Engine
-Version:      4.3.1
-API Version:  4.3.1
+Tested with:
+```
+podman version 5.7.0
+k3d version v5.8.3
 ```
 
-## Using Podman
+## Basic Setup
 
-Ensure the Podman system socket is available:
-
-```bash
-sudo systemctl enable --now podman.socket
-# or to start the socket daemonless
-# sudo podman system service --time=0 &
-```
-
-Disable timeout for podman service:<br>
-See the [podman-system-service (1)](https://docs.podman.io/en/latest/markdown/podman-system-service.1.html) man page for more information.
-```bash
-mkdir -p /etc/containers/containers.conf.d
-echo 'service_timeout=0' > /etc/containers/containers.conf.d/timeout.conf
-```
-
-To point k3d at the right Docker socket, create a symbolic link:
+Ensure the Podman system socket is available and exposed with the environment variable `DOCKER_HOST`.
 
 ```bash
-sudo ln -s /run/podman/podman.sock /var/run/docker.sock
-# or install your system podman-docker if available
-sudo k3d cluster create
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/podman/podman.sock"
 ```
-
-Alternatively, set `DOCKER_HOST` when running k3d:
-
+or using rootful podman:
 ```bash
 export DOCKER_HOST=unix:///run/podman/podman.sock
-export DOCKER_SOCK=/run/podman/podman.sock
-sudo --preserve-env=DOCKER_HOST --preserve-env=DOCKER_SOCK k3d cluster create
 ```
 
-### Using rootless Podman
-
-Ensure the Podman user socket is available:
+The socket should be enabled per-default on your system if you have installed podman properly.
+You can check if the socket exists with
 
 ```bash
-systemctl --user enable --now podman.socket
-# or podman system service --time=0 &
+ls "${DOCKER_HOST#unix://}"
 ```
 
-Set `DOCKER_HOST` when running k3d:
+If the file does not show up you can start a rootless podman service with
 
 ```bash
-XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
-export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/podman/podman.sock
-export DOCKER_SOCK=$XDG_RUNTIME_DIR/podman/podman.sock
-k3d cluster create
+podman system service --time 0
 ```
 
-#### Using cgroup (v2)
+## Rootless Setup
 
-By default, a non-root user can only get memory controller and pids controller to be delegated.
+Rootless podman requires some additional setup to run k3d.
 
-To run properly we need to enable CPU, CPUSET, and I/O delegation
+### Using cgroup v2
 
-!!! note "Make sure you're running cgroup v2"
-    If `/sys/fs/cgroup/cgroup.controllers` is present on your system, you are using v2, otherwise you are using v1.
+If you are running cgroup v2, you need to delegate some control groups to normal user processes.
+You are using cgroup v2 if `/sys/fs/cgroup/cgroup.controllers` exists.
 
 ```bash
-mkdir -p /etc/systemd/system/user@.service.d
-cat > /etc/systemd/system/user@.service.d/delegate.conf <<EOF
+ls /sys/fs/cgroup/cgroup.controllers
+```
+
+If you are using cgroup v2 you can check which control groups your user has access to (systemd):
+
+```bash
+cat /sys/fs/cgroup/user.slice/user-$(id -u).slice/user@$(id -u).service/cgroup.controllers
+```
+
+If your output does not include `cpu`, `cpuset`, `io`, `memory`, `pids` then
+you need to manually delegate control over these from your init system.
+
+In systemd you can do this by adding `Delegate=cpu cpuset io memory pids` to the `user@` service.
+
+`/etc/systemd/system/user@.service.d/delegate.conf`
+```systemd
 [Service]
 Delegate=cpu cpuset io memory pids
-EOF
+```
+```bash
 systemctl daemon-reload
 ```
 
-Reference: [https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling-cpu-cpuset-and-io-delegation](https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling-cpu-cpuset-and-io-delegation)
+Reference:  
+- [Guide](https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling-cpu-cpuset-and-io-delegation)  
+- [cgroup v2 linux kernel docs](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html)
 
-### Using remote Podman
+### Running the kubelet in rootless mode
 
-[Start Podman on the remote host](https://github.com/containers/podman/blob/main/docs/tutorials/remote_client.md), and then set `DOCKER_HOST` when running k3d:
+You have to inform the k3s kubelet that it should run in rootless mode.  
+You can pass the kubelet argument `--kubelet-arg=feature-gates=KubeletInUserNamespace=true`
 
+```yaml
+options:
+  k3s:
+    extraArgs:
+      - arg: "--kubelet-arg=feature-gates=KubeletInUserNamespace=true"
+        nodeFilters:
+          - server:*
+          - agent:*
 ```
-export DOCKER_HOST=ssh://username@hostname
-export DOCKER_SOCK=/run/user/1000/podman/podman.sock
-k3d cluster create
-```
+
+!!! note "Issues with k3s image before k3d version v5.9"
+    On some distros k3d defaults to the `v1.21.7-k3s1` k3s image which is too old to support this argument.  
+    To make it work anyway you can override the image:
+
+    ```yaml
+    image: docker.io/rancher/k3s:v1.32.5-k3s1
+    ```
 
 ### macOS
 
@@ -151,15 +156,6 @@ export DOCKER_SOCK=/run/podman/podman.sock
 k3d cluster create
 ```
 
-### Podman network
-
-The default `podman` network has dns disabled. To allow k3d cluster nodes to communicate with dns a new network must be created.
-```bash
-podman network create k3d
-podman network inspect k3d -f '{{ .DNSEnabled }}'
-true
-```
-
 ## Creating local registries
 
 Because Podman does not have a default "bridge" network, you have to specify a network using the `--default-network` flag when creating a local registry:
@@ -174,9 +170,10 @@ To use this registry with a cluster, pass the `--registry-use` flag:
 k3d cluster create --registry-use mycluster-registry mycluster
 ```
 
+This flag does not have a k3d config option yet.
+
 !!! note "Incompatibility with `--registry-create`"
     Because `--registry-create` assumes the default network to be "bridge", avoid `--registry-create` when using Podman. Instead, always create a registry before creating a cluster.
 
 !!! note "Missing cpuset cgroup controller"
-    If you experince an error regarding missing cpuset cgroup controller, ensure the user unit `xdg-document-portal.service` is disabled by running `systemctl --user stop xdg-document-portal.service`. See [this issue](https://github.com/systemd/systemd/issues/18293#issuecomment-831397578)
-
+    If you experience an error regarding missing cpuset cgroup controller, ensure the user unit `xdg-document-portal.service` is disabled by running `systemctl --user stop xdg-document-portal.service`. See [this issue](https://github.com/systemd/systemd/issues/18293#issuecomment-831397578)
