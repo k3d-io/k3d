@@ -6,4 +6,4 @@ keys = [
     "settings"
 ]
 check_cmd = "/usr/sbin/nginx -T -c {{.src}}"
-reload_cmd = "/usr/sbin/nginx -s reload"
+reload_cmd = "/bin/sh -c 'PID=$(cat /var/run/nginx.pid 2>/dev/null || true); [ -n \"$PID\" ] && /usr/sbin/nginx -s reload || true'"
