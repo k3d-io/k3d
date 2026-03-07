@@ -125,21 +125,58 @@ checkLatestVersion() {
 downloadFile() {
   K3D_DIST="k3d-$OS-$ARCH"
   DOWNLOAD_URL="$REPO_URL/releases/download/$TAG/$K3D_DIST"
+  CHECKSUM_URL="$REPO_URL/releases/download/$TAG/checksums.txt"
   if [[ "$OS" == "windows" ]]; then
     DOWNLOAD_URL=${DOWNLOAD_URL}.exe
   fi
   K3D_TMP_ROOT="$(mktemp -dt k3d-binary-XXXXXX)"
   K3D_TMP_FILE="$K3D_TMP_ROOT/$K3D_DIST"
+  K3D_SUM_FILE="$K3D_TMP_ROOT/checksums.txt"
   if type "curl" > /dev/null; then
     scurl -sL "$DOWNLOAD_URL" -o "$K3D_TMP_FILE"
+    scurl -sL "$CHECKSUM_URL" -o "$K3D_SUM_FILE"
   elif type "wget" > /dev/null; then
     wget -q -O "$K3D_TMP_FILE" "$DOWNLOAD_URL"
+    wget -q -O "$K3D_SUM_FILE" "$CHECKSUM_URL"
   fi
+}
+
+# verifyChecksum verifies the SHA256 checksum of the downloaded binary.
+verifyChecksum() {
+  echo "Verifying SHA256 checksum of $K3D_TMP_FILE..."
+
+  local expected_sum
+  expected_sum=$(grep "_dist/${K3D_DIST}" "$K3D_SUM_FILE" | awk '{print $1}')
+
+  if [[ -z "$expected_sum" ]]; then
+    echo "Error: Could not find checksum for ${K3D_DIST} in checksums.txt"
+    exit 1
+  fi
+
+  local actual_sum
+  if type "sha256sum" > /dev/null 2>&1; then
+    actual_sum=$(sha256sum "$K3D_TMP_FILE" | awk '{print $1}')
+  elif type "shasum" > /dev/null 2>&1; then
+    actual_sum=$(shasum -a 256 "$K3D_TMP_FILE" | awk '{print $1}')
+  else
+    echo "Error: Neither sha256sum nor shasum is available — cannot verify checksum"
+    exit 1
+  fi
+
+  if [[ "$actual_sum" != "$expected_sum" ]]; then
+    echo "Error: SHA256 checksum verification FAILED for $K3D_TMP_FILE"
+    echo "  Expected: $expected_sum"
+    echo "  Actual:   $actual_sum"
+    exit 1
+  fi
+
+  echo "Checksum verified OK ($actual_sum)"
 }
 
 # installFile verifies the SHA256 for the file, then unpacks and
 # installs it.
 installFile() {
+  verifyChecksum
   echo "Preparing to install $APP_NAME into ${K3D_INSTALL_DIR}"
   runAsRoot chmod +x "$K3D_TMP_FILE"
   runAsRoot cp "$K3D_TMP_FILE" "$K3D_INSTALL_DIR/$APP_NAME"
