@@ -20,7 +20,7 @@ k3d makes it very easy to create single- and multi-node [k3s](https://github.com
 
 ## Learning
 
-!!! Tip "k3d demo repository: [iwilltry42/k3d-demo](https://github.com/iwilltry42/k3d-demo)"
+!!! Tip "k3d demo repository: [k3d-io/k3d-demo](https://github.com/k3d-io/k3d-demo)"
     Featured use-cases include:
 
     - **hot-reloading** of code when developing on k3d (Python Flask App)

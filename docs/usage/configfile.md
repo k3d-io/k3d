@@ -169,5 +169,5 @@ For example, you use the same config file to create three clusters which only ha
 
 ## References
 
-- k3d demo repository: <https://github.com/iwilltry42/k3d-demo/blob/main/README.md#config-file-support>
+- k3d demo repository: <https://github.com/k3d-io/k3d-demo/blob/main/README.md#config-file-support>
 - SUSE Blog: <https://www.suse.com/c/introduction-k3d-run-k3s-docker-src/> (Search for `The “Configuration as Code” Way`)

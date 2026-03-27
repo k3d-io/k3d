@@ -177,14 +177,25 @@ func ClusterPrep(ctx context.Context, runtime k3drt.Runtime, clusterConfig *conf
 
 	// Create managed registry bound to this cluster
 	if clusterConfig.ClusterCreateOpts.Registries.Create != nil {
-		registryNode, err := RegistryCreate(ctx, runtime, clusterConfig.ClusterCreateOpts.Registries.Create)
-		if err != nil {
-			return fmt.Errorf("Failed to create registry: %+v", err)
+		// Skip creation if registry is already in the use list
+		alreadyInUse := false
+		for _, reg := range clusterConfig.ClusterCreateOpts.Registries.Use {
+			if reg.Host == clusterConfig.ClusterCreateOpts.Registries.Create.Host {
+				alreadyInUse = true
+				l.Log().Infof("Skipping registry creation: registry '%s' already referenced in use list", reg.Host)
+				break
+			}
 		}
+		if !alreadyInUse {
+			registryNode, err := RegistryCreate(ctx, runtime, clusterConfig.ClusterCreateOpts.Registries.Create)
+			if err != nil {
+				return fmt.Errorf("Failed to create registry: %+v", err)
+			}
 
-		clusterConfig.Cluster.Nodes = append(clusterConfig.Cluster.Nodes, registryNode)
+			clusterConfig.Cluster.Nodes = append(clusterConfig.Cluster.Nodes, registryNode)
 
-		clusterConfig.ClusterCreateOpts.Registries.Use = append(clusterConfig.ClusterCreateOpts.Registries.Use, clusterConfig.ClusterCreateOpts.Registries.Create)
+			clusterConfig.ClusterCreateOpts.Registries.Use = append(clusterConfig.ClusterCreateOpts.Registries.Use, clusterConfig.ClusterCreateOpts.Registries.Create)
+		}
 	}
 
 	// Use existing registries (including the new one, if created)

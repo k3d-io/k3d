@@ -16,21 +16,39 @@ done
 
 echo "[$(date -Iseconds)] Finished k3d entrypoint scripts!" >> "$LOGFILE"
 
+# Capture the k3s subcommand ("server" or "agent") before starting k3s.
+# We need this in a variable because $1 inside functions refers to the
+# function's arguments, not the script's.
+K3S_ROLE="${1:-}"
+
 /bin/k3s "$@" &
 k3s_pid=$!
 
-# shellcheck disable=SC3028
-until kubectl uncordon "$HOSTNAME"; do sleep 3; done
+# Only server nodes have a kubeconfig at /etc/rancher/k3s/k3s.yaml that
+# grants kubectl API access. Agent nodes have no usable kubeconfig, so
+# running kubectl commands on them fails in an infinite retry loop (#1420,
+# #1535). Drain/uncordon is also semantically a server-side scheduling
+# operation — agents don't need to drain themselves.
+#
+# We match "server" explicitly rather than excluding "agent" so that any
+# unexpected value (manual docker run, future k3s subcommands) falls
+# through to the safe default: SIGTERM forwarding only.
+if [ "$K3S_ROLE" = "server" ]; then
+  # shellcheck disable=SC3028
+  until kubectl uncordon "$HOSTNAME"; do sleep 3; done
+fi
 
 # shellcheck disable=SC3028
 cleanup() {
-  echo Draining node...
-  kubectl drain "$HOSTNAME" --force --delete-emptydir-data --ignore-daemonsets --disable-eviction
-  echo Sending SIGTERM to k3s...
+  if [ "$K3S_ROLE" = "server" ]; then
+    echo "Draining node..."
+    kubectl drain "$HOSTNAME" --force --delete-emptydir-data --ignore-daemonsets --disable-eviction
+  fi
+  echo "Sending SIGTERM to k3s..."
   kill -15 $k3s_pid
-  echo Waiting for k3s to close...
+  echo "Waiting for k3s to close..."
   wait $k3s_pid
-  echo Bye!
+  echo "Bye!"
 }
 
 # shellcheck disable=SC3048

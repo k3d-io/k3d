@@ -26,6 +26,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	conf "github.com/k3d-io/k3d/v5/pkg/config/v1alpha5"
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	"github.com/spf13/viper"
@@ -51,4 +54,53 @@ func TestTransformSimpleConfigToClusterConfig(t *testing.T) {
 	}
 
 	t.Logf("\n===== Resulting Cluster Config =====\n%+v\n===============\n", clusterCfg)
+}
+
+func TestTransformEmptyRegistryCreateIsNil(t *testing.T) {
+	// Simulate a config that has registries.use but no registries.create.
+	// Viper unmarshaling can produce a non-nil but zero-value Create pointer
+	// when the registries namespace has data from registries.use.
+	simpleCfg := conf.SimpleConfig{
+		Servers: 1,
+		Registries: conf.SimpleConfigRegistries{
+			Use:    []string{"k3d-myregistry"},
+			Create: &conf.SimpleConfigRegistryCreateConfig{}, // empty, non-nil
+		},
+	}
+	simpleCfg.Name = "emptyregtest"
+
+	clusterCfg, err := TransformSimpleToClusterConfig(context.Background(), runtimes.Docker, simpleCfg, "")
+	require.NoError(t, err)
+
+	assert.Nil(t, clusterCfg.ClusterCreateOpts.Registries.Create,
+		"empty Registries.Create should be treated as nil after transform")
+	assert.Len(t, clusterCfg.ClusterCreateOpts.Registries.Use, 1,
+		"Registries.Use should still have the referenced registry")
+}
+
+func TestTransformRegistryUseOnlyConfig(t *testing.T) {
+	// Test loading a config file that only has registries.use (no create)
+	cfgFile := "./test_assets/config_test_registry_use_only.yaml"
+
+	vip := viper.New()
+	vip.SetConfigFile(cfgFile)
+	err := vip.ReadInConfig()
+	require.NoError(t, err)
+
+	cfg, err := FromViper(vip)
+	require.NoError(t, err)
+
+	simpleCfg := cfg.(conf.SimpleConfig)
+	assert.Nil(t, simpleCfg.Registries.Create,
+		"Registries.Create should be nil when only use is specified")
+	assert.Len(t, simpleCfg.Registries.Use, 1)
+
+	clusterCfg, err := TransformSimpleToClusterConfig(context.Background(), runtimes.Docker, simpleCfg, cfgFile)
+	require.NoError(t, err)
+
+	assert.Nil(t, clusterCfg.ClusterCreateOpts.Registries.Create,
+		"Registries.Create should remain nil after transform")
+	assert.Len(t, clusterCfg.ClusterCreateOpts.Registries.Use, 1,
+		"Registries.Use should have one entry")
+	assert.Equal(t, "k3d-registry-use-test-registry", clusterCfg.ClusterCreateOpts.Registries.Use[0].Host)
 }

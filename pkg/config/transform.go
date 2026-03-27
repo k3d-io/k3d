@@ -309,6 +309,16 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 	/*
 	 * Registries
 	 */
+
+	// Treat empty create config as nil (can happen via Viper unmarshaling artifacts)
+	if simpleConfig.Registries.Create != nil &&
+		simpleConfig.Registries.Create.Name == "" &&
+		simpleConfig.Registries.Create.Host == "" &&
+		simpleConfig.Registries.Create.HostPort == "" &&
+		simpleConfig.Registries.Create.Image == "" {
+		simpleConfig.Registries.Create = nil
+	}
+
 	if simpleConfig.Registries.Create != nil {
 		epSpecHost := "0.0.0.0"
 		epSpecPort := "random"

@@ -25,6 +25,9 @@ site/
 qodana.yaml
 *.iml
 
+# AI tools
+.claude/
+
 # Pipenv
 Pipfile*
 

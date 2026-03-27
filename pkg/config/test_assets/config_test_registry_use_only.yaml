@@ -1,0 +1,12 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: registry-use-test
+servers: 1
+registries:
+  use:
+    - k3d-registry-use-test-registry
+options:
+  k3d:
+    wait: true
+    timeout: "60s"

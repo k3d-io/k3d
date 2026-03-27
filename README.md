@@ -31,7 +31,7 @@ k3d creates containerized k3s clusters. This means, that you can spin up a multi
 
 - Website with documentation: [k3d.io](https://k3d.io/)
 - [Rancher Meetup - May 2020 - Simplifying Your Cloud-Native Development Workflow With K3s, K3c and K3d (YouTube)](https://www.youtube.com/watch?v=hMr3prm9gDM)
-  - k3d demo repository: [iwilltry42/k3d-demo](https://github.com/iwilltry42/k3d-demo)
+  - k3d demo repository: [k3d-io/k3d-demo](https://github.com/k3d-io/k3d-demo)
 
 ## Requirements
 
