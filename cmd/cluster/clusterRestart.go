@@ -22,6 +22,8 @@ THE SOFTWARE.
 package cluster
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 
 	"github.com/k3d-io/k3d/v5/cmd/util"
@@ -33,6 +35,10 @@ import (
 
 // NewCmdClusterRestart returns a new cobra command
 func NewCmdClusterRestart() *cobra.Command {
+	startClusterOpts := k3d.ClusterStartOpts{
+		Intent: k3d.IntentClusterStart,
+	}
+
 	// create new command
 	cmd := &cobra.Command{
 		Use:               "restart [NAME [NAME...] | --all]",
@@ -44,10 +50,6 @@ func NewCmdClusterRestart() *cobra.Command {
 			if len(clusters) == 0 {
 				l.Log().Infoln("No clusters found")
 			} else {
-				startClusterOpts := k3d.ClusterStartOpts{
-					Intent: k3d.IntentClusterStart,
-				}
-
 				for _, c := range clusters {
 					l.Log().Infof("Restarting cluster '%s'", c.Name)
 
@@ -77,12 +79,13 @@ func NewCmdClusterRestart() *cobra.Command {
 					l.Log().Infof("Restarted cluster '%s'", c.Name)
 				}
 			}
-			}
 		},
 	}
 
 	// add flags
 	cmd.Flags().BoolP("all", "a", false, "Restart all existing clusters")
+	cmd.Flags().BoolVar(&startClusterOpts.WaitForServer, "wait", true, "Wait for the server(s) (and loadbalancer) to be ready before returning.")
+	cmd.Flags().DurationVar(&startClusterOpts.Timeout, "timeout", 0*time.Second, "Maximum waiting time for '--wait' before canceling/returning.")
 
 	// add subcommands
 
