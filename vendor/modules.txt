@@ -188,7 +188,7 @@ github.com/gogo/protobuf/sortkeys
 ## explicit; go 1.17
 # github.com/goodhosts/hostsfile v0.1.1
 ## explicit; go 1.21
-# github.com/goodhosts/hostsfile v0.1.6
+# github.com/goodhosts/hostsfile v0.1.7
 ## explicit; go 1.21
 github.com/goodhosts/hostsfile
 github.com/goodhosts/hostsfile/mage/install
