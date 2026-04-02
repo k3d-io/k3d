@@ -42,8 +42,8 @@ func NewCmdClusterRestart() *cobra.Command {
 	// create new command
 	cmd := &cobra.Command{
 		Use:               "restart [NAME [NAME...] | --all]",
-		Short:             "restart existing k3d cluster(s)",
-		Long:              `restart existing k3d cluster(s).`,
+		Short:             "Restart existing k3d cluster(s)",
+		Long:              `Restart existing k3d cluster(s).`,
 		ValidArgsFunction: util.ValidArgsAvailableClusters,
 		Run: func(cmd *cobra.Command, args []string) {
 			clusters := parseRestartClusterCmd(cmd, args)
