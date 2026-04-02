@@ -74,9 +74,9 @@ func NewCmdClusterRestart() *cobra.Command {
 					if err := client.ClusterStart(cmd.Context(), runtimes.SelectedRuntime, c, startClusterOpts); err != nil {
 						l.Log().Fatalln(err)
 					}
-					l.Log().Infof("Started cluster '%s'", c.Name)
 					l.Log().Infof("Restarted cluster '%s'", c.Name)
 				}
+			}
 			}
 		},
 	}
