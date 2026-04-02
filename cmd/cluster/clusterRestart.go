@@ -50,11 +50,17 @@ func NewCmdClusterRestart() *cobra.Command {
 			if len(clusters) == 0 {
 				l.Log().Infoln("No clusters found")
 			} else {
-				for _, c := range clusters {
-					l.Log().Infof("Restarting cluster '%s'", c.Name)
+				for _, cluster := range clusters {
+					l.Log().Infof("Restarting cluster '%s'", cluster.Name)
 
-					if err := client.ClusterStop(cmd.Context(), runtimes.SelectedRuntime, c); err != nil {
+					if err := client.ClusterStop(cmd.Context(), runtimes.SelectedRuntime, cluster); err != nil {
 						l.Log().Fatalln(err)
+					}
+
+					// retrive cluster latest status to start
+					c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: cluster.Name})
+					if err != nil {
+						l.Log().Fatalf("failed to get cluster %s: %v", c.Name, err)
 					}
 
 					envInfo, err := client.GatherEnvironmentInfo(cmd.Context(), runtimes.SelectedRuntime, c)
