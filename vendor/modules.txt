@@ -416,9 +416,11 @@ github.com/sagikazarmark/locafero
 ## explicit; go 1.20
 github.com/sagikazarmark/slog-shim
 # github.com/sirupsen/logrus v1.9.0
-## explicit; go 1.13
+## explicit; go 1.17
 # github.com/sirupsen/logrus v1.9.3
-## explicit; go 1.13
+## explicit; go 1.17
+# github.com/sirupsen/logrus v1.9.4
+## explicit; go 1.17
 github.com/sirupsen/logrus
 github.com/sirupsen/logrus/hooks/writer
 # github.com/sourcegraph/conc v0.3.0
