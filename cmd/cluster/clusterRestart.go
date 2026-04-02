@@ -90,7 +90,7 @@ func NewCmdClusterRestart() *cobra.Command {
 	return cmd
 }
 
-// parseRestartClusterCmd parses the command input into variables required to start clusters
+// parseRestartClusterCmd parses the command input into variables required to restart clusters
 func parseRestartClusterCmd(cmd *cobra.Command, args []string) []*k3d.Cluster {
 	// --all
 	var clusters []*k3d.Cluster
