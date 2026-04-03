@@ -27,14 +27,25 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/distribution/reference"
+	dockerconfig "github.com/docker/cli/cli/config"
+	dockerconfigfile "github.com/docker/cli/cli/config/configfile"
+	dockerconfigtypes "github.com/docker/cli/cli/config/types"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	dockerimage "github.com/docker/docker/api/types/image"
+	registrytypes "github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 	l "github.com/k3d-io/k3d/v5/pkg/logger"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	defaultDomain        = "docker.io"
+	legacyDefaultDomain  = "index.docker.io"
+	defaultDomainAuthKey = "https://index.docker.io/v1/"
 )
 
 // createContainer creates a new docker container from translated specs
@@ -104,9 +115,43 @@ func removeContainer(ctx context.Context, ID string) error {
 	return nil
 }
 
+// resolveAuth gets registry authentication configuration for an image
+func resolveAuth(image string) (authConfig registrytypes.AuthConfig, err error) {
+	var ref reference.Named
+	var config *dockerconfigfile.ConfigFile
+	var dockerAuthConfig dockerconfigtypes.AuthConfig
+	if ref, err = reference.ParseNormalizedNamed(image); err != nil {
+		return
+	}
+	authKey := reference.Domain(ref)
+	if authKey == defaultDomain || authKey == legacyDefaultDomain {
+		authKey = defaultDomainAuthKey
+	}
+	if config, err = dockerconfig.Load(dockerconfig.Dir()); err != nil {
+		return
+	}
+	if dockerAuthConfig, err = config.GetAuthConfig(authKey); err != nil {
+		return
+	}
+	authConfig = registrytypes.AuthConfig(dockerAuthConfig)
+	return
+}
+
 // pullImage pulls a container image and outputs progress if --verbose flag is set
 func pullImage(ctx context.Context, docker client.APIClient, image string) error {
-	resp, err := docker.ImagePull(ctx, image, dockerimage.PullOptions{})
+	authConfig, err := resolveAuth(image)
+	if err != nil {
+		l.Log().Warnf("Failed to get auth: %v", err)
+		authConfig = registrytypes.AuthConfig{}
+	}
+	encoded, err := registrytypes.EncodeAuthConfig(authConfig)
+	if err != nil {
+		l.Log().Warnf("Failed to encode auth: %v", err)
+		encoded = ""
+	}
+	resp, err := docker.ImagePull(ctx, image, dockerimage.PullOptions{
+		RegistryAuth: encoded,
+	})
 	if err != nil {
 		return fmt.Errorf("docker failed to pull the image '%s': %w", image, err)
 	}
