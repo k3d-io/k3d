@@ -252,6 +252,22 @@ func TransformSimpleToClusterConfig(ctx context.Context, runtime runtimes.Runtim
 		}
 	}
 
+	// -> RUNTIME PLATFORMS
+	for _, runtimePlatformWithNodeFilters := range simpleConfig.Options.Runtime.Platforms {
+		if len(runtimePlatformWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
+			return nil, fmt.Errorf("RuntimePlatformmapping '%s' lacks a node filter, but there's more than one node", runtimePlatformWithNodeFilters.Platform)
+		}
+
+		nodes, err := util.FilterNodes(nodeList, runtimePlatformWithNodeFilters.NodeFilters)
+		if err != nil {
+			return nil, fmt.Errorf("failed to filter nodes for runtime platform mapping '%s': %w", runtimePlatformWithNodeFilters.Platform, err)
+		}
+
+		for _, node := range nodes {
+			node.Platform = runtimePlatformWithNodeFilters.Platform
+		}
+	}
+
 	// -> ENV
 	for _, envVarWithNodeFilters := range simpleConfig.Env {
 		if len(envVarWithNodeFilters.NodeFilters) == 0 && nodeCount > 1 {
