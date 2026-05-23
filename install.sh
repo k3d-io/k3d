@@ -79,6 +79,11 @@ verifySupported() {
     echo "Either curl or wget is required"
     exit 1
   fi
+
+  if [[ "$OS" != "windows" ]] && ! type "sha256sum" > /dev/null && ! type "shasum" > /dev/null; then
+    echo "Either sha256sum or shasum is required"
+    exit 1
+  fi
 }
 
 # checkK3dInstalledVersion checks which version of k3d is installed and
@@ -124,16 +129,45 @@ checkLatestVersion() {
 # for that binary.
 downloadFile() {
   K3D_DIST="k3d-$OS-$ARCH"
+  K3D_DIST_FILE="$K3D_DIST"
   DOWNLOAD_URL="$REPO_URL/releases/download/$TAG/$K3D_DIST"
   if [[ "$OS" == "windows" ]]; then
+    K3D_DIST_FILE="${K3D_DIST_FILE}.exe"
     DOWNLOAD_URL=${DOWNLOAD_URL}.exe
   fi
+  CHECKSUMS_URL="$REPO_URL/releases/download/$TAG/checksums.txt"
   K3D_TMP_ROOT="$(mktemp -dt k3d-binary-XXXXXX)"
-  K3D_TMP_FILE="$K3D_TMP_ROOT/$K3D_DIST"
+  K3D_TMP_FILE="$K3D_TMP_ROOT/$K3D_DIST_FILE"
+  K3D_CHECKSUMS_FILE="$K3D_TMP_ROOT/checksums.txt"
   if type "curl" > /dev/null; then
     scurl -sL "$DOWNLOAD_URL" -o "$K3D_TMP_FILE"
+    scurl -sL "$CHECKSUMS_URL" -o "$K3D_CHECKSUMS_FILE"
   elif type "wget" > /dev/null; then
     wget -q -O "$K3D_TMP_FILE" "$DOWNLOAD_URL"
+    wget -q -O "$K3D_CHECKSUMS_FILE" "$CHECKSUMS_URL"
+  fi
+}
+
+verifyChecksum() {
+  local expected actual
+  expected=$(awk -v target="$K3D_DIST_FILE" '$2 == target { print $1 }' "$K3D_CHECKSUMS_FILE")
+  if [[ -z "$expected" ]]; then
+    echo "Failed to find checksum for $K3D_DIST_FILE in checksums.txt"
+    exit 1
+  fi
+
+  if type "sha256sum" > /dev/null; then
+    actual=$(sha256sum "$K3D_TMP_FILE" | awk '{print $1}')
+  elif type "shasum" > /dev/null; then
+    actual=$(shasum -a 256 "$K3D_TMP_FILE" | awk '{print $1}')
+  else
+    echo "No supported SHA256 checksum tool available"
+    exit 1
+  fi
+
+  if [[ "$actual" != "$expected" ]]; then
+    echo "SHA256 verification failed for $K3D_DIST_FILE"
+    exit 1
   fi
 }
 
@@ -141,6 +175,7 @@ downloadFile() {
 # installs it.
 installFile() {
   echo "Preparing to install $APP_NAME into ${K3D_INSTALL_DIR}"
+  verifyChecksum
   runAsRoot chmod +x "$K3D_TMP_FILE"
   runAsRoot cp "$K3D_TMP_FILE" "$K3D_INSTALL_DIR/$APP_NAME"
   echo "$APP_NAME installed into $K3D_INSTALL_DIR/$APP_NAME"
