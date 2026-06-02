@@ -5,6 +5,21 @@ CUDA workloads require the NVIDIA Container Runtime, so containerd needs to be c
 The K3s container itself also needs to run with this runtime.  
 If you are using Docker you can install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html).
 
+## Preparing Server to run Keda
+
+To Create a Server that has all the drivers installed you can use exmaple script prepared for Ubuntu 24.04
+
+[install_gpu_drivers_server.sh](cuda/install_gpu_drivers_server.sh):
+
+```install_gpu_drivers_server.sh
+{%
+  include-markdown "./cuda/install_gpu_drivers_server.sh"
+  comments=false
+%}
+```
+
+This will install all drivers and such to Ubuntu 24.04 Server
+
 ## Building a customized K3s image
 
 To get the NVIDIA container runtime in the K3s image you need to build your own K3s image.  
@@ -25,7 +40,7 @@ To get around this we need to build the image with a supported base image.
 This Dockerfile is based on the [K3s Dockerfile](https://github.com/rancher/k3s/blob/master/package/Dockerfile)
 The following changes are applied:
 
-1. Change the base images to nvidia/cuda:12.4.1-base-ubuntu22.04 so the NVIDIA Container Toolkit can be installed. The version of `cuda:xx.x.x` must match the one you're planning to use.
+1. Change the base images to nvidia/cuda:12.8.1-base-ubuntu24.04 so the NVIDIA Container Toolkit can be installed. The version of `cuda:xx.x.x` must match the one you're planning to use.
 2. Add a manifest for the NVIDIA driver plugin for Kubernetes with an added RuntimeClass definition. See [k3s documentation](https://docs.k3s.io/advanced#nvidia-container-runtime-support).
 
 ### The NVIDIA device plugin
@@ -126,3 +141,4 @@ Most of the information in this article was obtained from various sources:
 * [@vainkop](https://github.com/vainkop)
 * [@iwilltry42](https://github.com/iwilltry42)
 * [@dbreyfogle](https://github.com/dbreyfogle)
+* [@omerfsen](https://github.com/omerfsen)
