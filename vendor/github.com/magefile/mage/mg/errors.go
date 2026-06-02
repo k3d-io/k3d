@@ -5,12 +5,13 @@ import (
 	"fmt"
 )
 
-type fatalErr struct {
-	code int
+type fatalError struct {
 	error
+
+	code int
 }
 
-func (f fatalErr) ExitStatus() int {
+func (f fatalError) ExitStatus() int {
 	return f.code
 }
 
@@ -21,7 +22,7 @@ type exitStatus interface {
 // Fatal returns an error that will cause mage to print out the
 // given args and exit with the given exit code.
 func Fatal(code int, args ...interface{}) error {
-	return fatalErr{
+	return fatalError{
 		code:  code,
 		error: errors.New(fmt.Sprint(args...)),
 	}
@@ -30,7 +31,7 @@ func Fatal(code int, args ...interface{}) error {
 // Fatalf returns an error that will cause mage to print out the
 // given message and exit with the given exit code.
 func Fatalf(code int, format string, args ...interface{}) error {
-	return fatalErr{
+	return fatalError{
 		code:  code,
 		error: fmt.Errorf(format, args...),
 	}
@@ -38,14 +39,14 @@ func Fatalf(code int, format string, args ...interface{}) error {
 
 // ExitStatus queries the error for an exit status.  If the error is nil, it
 // returns 0.  If the error does not implement ExitStatus() int, it returns 1.
-// Otherwise it retiurns the value from ExitStatus().
+// Otherwise it returns the value from ExitStatus().
 func ExitStatus(err error) int {
 	if err == nil {
 		return 0
 	}
-	exit, ok := err.(exitStatus)
-	if !ok {
-		return 1
+	var exit exitStatus
+	if errors.As(err, &exit) {
+		return exit.ExitStatus()
 	}
-	return exit.ExitStatus()
+	return 1
 }

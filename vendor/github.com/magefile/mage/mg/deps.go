@@ -72,10 +72,12 @@ func SerialCtxDeps(ctx context.Context, fns ...interface{}) {
 
 // CtxDeps runs the given functions as dependencies of the calling function.
 // Dependencies must only be of type:
-//     func()
-//     func() error
-//     func(context.Context)
-//     func(context.Context) error
+//
+//	func()
+//	func() error
+//	func(context.Context)
+//	func(context.Context) error
+//
 // Or a similar method on a mg.Namespace type.
 // Or an mg.Fn interface.
 //
@@ -148,10 +150,12 @@ func checkFns(fns []interface{}) []Fn {
 
 // Deps runs the given functions in parallel, exactly once. Dependencies must
 // only be of type:
-//     func()
-//     func() error
-//     func(context.Context)
-//     func(context.Context) error
+//
+//	func()
+//	func() error
+//	func(context.Context)
+//	func(context.Context) error
+//
 // Or a similar method on a mg.Namespace type.
 // Or an mg.Fn interface.
 //
@@ -162,14 +166,14 @@ func Deps(fns ...interface{}) {
 	CtxDeps(context.Background(), fns...)
 }
 
-func changeExit(old, new int) int {
-	if new == 0 {
+func changeExit(old, nw int) int {
+	if nw == 0 {
 		return old
 	}
 	if old == 0 {
-		return new
+		return nw
 	}
-	if old == new {
+	if old == nw {
 		return old
 	}
 	// both different and both non-zero, just set
@@ -177,7 +181,7 @@ func changeExit(old, new int) int {
 	return 1
 }
 
-// funcName returns the unique name for the function
+// funcName returns the unique name for the function.
 func funcName(i interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }
