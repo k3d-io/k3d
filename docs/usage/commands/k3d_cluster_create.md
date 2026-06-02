@@ -52,7 +52,7 @@ k3d cluster create NAME [flags]
       --runtime-label KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]         Add label to container runtime (Format: KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]
                                                                         - Example: `k3d cluster create --agents 2 --runtime-label "my.label@agent:0,1" --runtime-label "other.label=somevalue@server:0"`
       --runtime-ulimit NAME[=SOFT]:[HARD]                              Add ulimit to container runtime (Format: NAME[=SOFT]:[HARD]
-                                                                        - Example: `k3d cluster create --agents 2 --runtime-ulimit "nofile=1024:1024" --runtime-ulimit "noproc=1024:1024"`
+                                                                        - Example: `k3d cluster create --agents 2 --runtime-ulimit "nofile=1024:1024" --runtime-ulimit "nproc=1024:1024"`
   -s, --servers int                                                    Specify how many servers you want to create
       --servers-memory string                                          Memory limit imposed on the server nodes [From docker]
       --subnet 172.28.0.0/16                                           [Experimental: IPAM] Define a subnet for the newly created container network (Example: 172.28.0.0/16)
