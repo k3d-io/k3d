@@ -33,8 +33,8 @@ env:
   IMAGE_REGISTRY: ghcr.io
   IMAGE_BASE_REPO: k3d-io
   IMAGE_PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
-  GO_VERSION: "1.24.x"
-  DOCKER_VERSION: "v27.4.0"
+  GO_VERSION: "1.26.x"
+  DOCKER_VERSION: "v28.5.2"
     
 jobs:
   test-suite:

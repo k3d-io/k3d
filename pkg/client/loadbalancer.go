@@ -32,7 +32,7 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/go-test/deep"
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 	"github.com/spf13/viper"
 	"sigs.k8s.io/yaml"
 

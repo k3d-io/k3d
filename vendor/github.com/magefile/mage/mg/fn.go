@@ -3,6 +3,7 @@ package mg
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -37,7 +38,7 @@ func F(target interface{}, args ...interface{}) Fn {
 	}
 	id, err := json.Marshal(args)
 	if err != nil {
-		panic(fmt.Errorf("can't convert args into a mage-compatible id for mg.Deps: %s", err))
+		panic(fmt.Errorf("can't convert args into a mage-compatible id for mg.Deps: %w", err))
 	}
 	return fn{
 		name: funcName(target),
@@ -70,7 +71,11 @@ func F(target interface{}, args ...interface{}) Fn {
 				if ret[0].IsNil() {
 					return nil
 				}
-				return ret[0].Interface().(error)
+				val, ok := ret[0].Interface().(error)
+				if !ok {
+					return nil
+				}
+				return val
 			}
 			return nil
 		},
@@ -88,7 +93,7 @@ func (f fn) Name() string {
 	return f.name
 }
 
-// ID returns a hash of the argument values passed in
+// ID returns a hash of the argument values passed in.
 func (f fn) ID() string {
 	return f.id
 }
@@ -108,7 +113,7 @@ func checkF(target interface{}, args []interface{}) (hasContext, isNamespace boo
 		return false, false, fmt.Errorf("target has too many return values, must be zero or just an error: %T", target)
 	}
 	if t.NumOut() == 1 && t.Out(0) != errType {
-		return false, false, fmt.Errorf("target's return value is not an error")
+		return false, false, errors.New("target's return value is not an error")
 	}
 
 	// more inputs than slots is an error if not variadic
@@ -145,7 +150,6 @@ func checkF(target interface{}, args []interface{}) (hasContext, isNamespace boo
 	if t.IsVariadic() {
 		if len(args) < inputs-1 {
 			return false, false, fmt.Errorf("too few arguments for target, got %d for %T", len(args), target)
-
 		}
 	} else if len(args) != inputs {
 		return false, false, fmt.Errorf("wrong number of arguments for target, got %d for %T", len(args), target)
@@ -171,7 +175,7 @@ func checkF(target interface{}, args []interface{}) (hasContext, isNamespace boo
 	return hasContext, isNamespace, nil
 }
 
-// Here we define the types that are supported as arguments/returns
+// Here we define the types that are supported as arguments/returns.
 var (
 	ctxType   = reflect.TypeOf(func(context.Context) {}).In(0)
 	errType   = reflect.TypeOf(func() error { return nil }).Out(0)
@@ -182,7 +186,7 @@ var (
 	boolType   = reflect.TypeOf(bool(false))
 	durType    = reflect.TypeOf(time.Second)
 
-	// don't put ctx in here, this is for non-context types
+	// don't put ctx in here, this is for non-context types.
 	argTypes = map[reflect.Type]bool{
 		intType:    true,
 		boolType:   true,
