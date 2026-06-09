@@ -1,5 +1,5 @@
 ARG K3S_TAG="v1.28.8-k3s1"
-ARG CUDA_TAG="12.4.1-base-ubuntu22.04"
+ARG CUDA_TAG="12.9.2-base-ubuntu22.04"
 
 FROM rancher/k3s:$K3S_TAG as k3s
 FROM nvcr.io/nvidia/cuda:$CUDA_TAG
