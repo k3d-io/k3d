@@ -335,6 +335,14 @@
               ],
               "default": "random"
             },
+            "network": {
+              "type": "string",
+              "examples": [
+                "bridge",
+                "k3d-network"
+              ],
+              "default": "bridge"
+            },
             "image": {
               "type": "string",
               "examples": [
