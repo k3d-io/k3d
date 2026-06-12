@@ -3,16 +3,16 @@ package command
 import (
 	"context"
 	"encoding/csv"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/docker/cli/cli/streams"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 	"github.com/moby/term"
-	"github.com/pkg/errors"
 )
 
 // CLIOption is a functional argument to apply options to a [DockerCli]. These
@@ -71,37 +71,6 @@ func WithOutputStream(out io.Writer) CLIOption {
 func WithErrorStream(err io.Writer) CLIOption {
 	return func(cli *DockerCli) error {
 		cli.err = streams.NewOut(err)
-		return nil
-	}
-}
-
-// withContentTrustFromEnv enables content trust on a cli from environment variable DOCKER_CONTENT_TRUST value.
-func withContentTrustFromEnv() CLIOption {
-	return func(cli *DockerCli) error {
-		cli.contentTrust = false
-		if e := os.Getenv("DOCKER_CONTENT_TRUST"); e != "" {
-			if t, err := strconv.ParseBool(e); t || err != nil {
-				// treat any other value as true
-				cli.contentTrust = true
-			}
-		}
-		return nil
-	}
-}
-
-// WithContentTrustFromEnv enables content trust on a cli from environment variable DOCKER_CONTENT_TRUST value.
-//
-// Deprecated: this option is no longer used, and will be removed in the next release.
-func WithContentTrustFromEnv() CLIOption {
-	return withContentTrustFromEnv()
-}
-
-// WithContentTrust enables content trust on a cli.
-//
-// Deprecated: this option is no longer used, and will be removed in the next release.
-func WithContentTrust(enabled bool) CLIOption {
-	return func(cli *DockerCli) error {
-		cli.contentTrust = enabled
 		return nil
 	}
 }
@@ -197,7 +166,7 @@ func withCustomHeadersFromEnv() (client.Opt, error) {
 	csvReader := csv.NewReader(strings.NewReader(value))
 	fields, err := csvReader.Read()
 	if err != nil {
-		return nil, invalidParameter(errors.Errorf(
+		return nil, invalidParameter(fmt.Errorf(
 			"failed to parse custom headers from %s environment variable: value must be formatted as comma-separated key=value pairs",
 			envOverrideHTTPHeaders,
 		))
@@ -214,7 +183,7 @@ func withCustomHeadersFromEnv() (client.Opt, error) {
 		k = strings.TrimSpace(k)
 
 		if k == "" {
-			return nil, invalidParameter(errors.Errorf(
+			return nil, invalidParameter(fmt.Errorf(
 				`failed to set custom headers from %s environment variable: value contains a key=value pair with an empty key: '%s'`,
 				envOverrideHTTPHeaders, kv,
 			))
@@ -225,7 +194,7 @@ func withCustomHeadersFromEnv() (client.Opt, error) {
 		// from an environment variable with the same name). In the meantime,
 		// produce an error to prevent users from depending on this.
 		if !hasValue {
-			return nil, invalidParameter(errors.Errorf(
+			return nil, invalidParameter(fmt.Errorf(
 				`failed to set custom headers from %s environment variable: missing "=" in key=value pair: '%s'`,
 				envOverrideHTTPHeaders, kv,
 			))
