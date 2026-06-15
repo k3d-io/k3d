@@ -95,6 +95,7 @@ type SimpleConfigRegistryCreateConfig struct {
 	Name     string            `mapstructure:"name" json:"name,omitempty"`
 	Host     string            `mapstructure:"host" json:"host,omitempty"`
 	HostPort string            `mapstructure:"hostPort" json:"hostPort,omitempty"`
+	Network  string 		   `mapstructure:"network" json:"network,omitempty"`
 	Image    string            `mapstructure:"image" json:"image,omitempty"`
 	Proxy    k3d.RegistryProxy `mapstructure:"proxy" json:"proxy,omitempty"`
 	Volumes  []string          `mapstructure:"volumes" json:"volumes,omitempty"`

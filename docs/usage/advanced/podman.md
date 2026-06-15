@@ -107,7 +107,7 @@ Or start an already existing podman machine
 podman machine start
 ```
 
-Grab connection details 
+Grab connection details
 
 ```
 podman system connection ls
@@ -162,7 +162,11 @@ true
 
 ## Creating local registries
 
-Because Podman does not have a default "bridge" network, you have to specify a network using the `--default-network` flag when creating a local registry:
+Because Podman does not have a default "bridge" network, you have to specify a network to use when creating a local registry.
+
+### Using the CLI
+
+In the CLI, you can use the `--default-network` flag to specify a network for the registry:
 
 ```bash
 k3d registry create --default-network podman mycluster-registry
@@ -180,3 +184,18 @@ k3d cluster create --registry-use mycluster-registry mycluster
 !!! note "Missing cpuset cgroup controller"
     If you experince an error regarding missing cpuset cgroup controller, ensure the user unit `xdg-document-portal.service` is disabled by running `systemctl --user stop xdg-document-portal.service`. See [this issue](https://github.com/systemd/systemd/issues/18293#issuecomment-831397578)
 
+### Using the config file
+
+If you're using a configuration file to create your cluster, you can use the `registries.create.network` field to specify the network for the registry.
+
+```yaml
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+
+...
+
+registries:
+  create:
+    name: mycluster-registry
+    network: podman
+```
