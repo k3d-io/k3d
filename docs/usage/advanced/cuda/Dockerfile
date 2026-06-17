@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y curl \
       tee /etc/apt/sources.list.d/nvidia-container-toolkit.list \
     && apt-get update && apt-get install -y nvidia-container-toolkit \
     && nvidia-ctk runtime configure --runtime=containerd
+    # Set alternative 'nvidia' runtime as default prior to container start. 
+    # GPU nodes will always use the nvidia runtime without the need to explicitly define it.
+    && mkdir -p /etc/rancher/k3s && echo "default-runtime: nvidia" > /etc/rancher/k3s/config.yaml
 
 COPY --from=k3s / / --exclude=/bin
 COPY --from=k3s /bin /bin
