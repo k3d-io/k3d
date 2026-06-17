@@ -380,7 +380,7 @@ func NewCmdVersionLs() *cobra.Command {
 				})
 			}
 
-			if flags.limit > 0 {
+			if flags.limit > 0 && flags.limit < len(filteredTags) {
 				filteredTags = filteredTags[0:flags.limit]
 			}
 			fmt.Println(strings.Join(filteredTags, "\n"))
