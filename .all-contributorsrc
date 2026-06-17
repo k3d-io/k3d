@@ -270,6 +270,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "ar3s3ru",
+      "name": "Danilo Cianfrone",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6481571?v=4",
+      "profile": "https://ar3s3ru.dev",
+      "contributions": [
+        "ideas"
+      ]
     }
   ],
   "contributorsPerLine": 7,
