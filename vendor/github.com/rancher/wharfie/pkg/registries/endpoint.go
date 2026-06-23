@@ -13,6 +13,11 @@ import (
 var _ authn.Keychain = &endpoint{}
 var _ http.RoundTripper = &endpoint{}
 
+const (
+	defaultRegistry     = "docker.io"
+	defaultRegistryHost = "index.docker.io"
+)
+
 type endpoint struct {
 	auth     authn.Authenticator
 	keychain authn.Keychain
@@ -69,6 +74,13 @@ func (e endpoint) RoundTrip(req *http.Request) (*http.Response, error) {
 			}
 		}
 
+		// set ns from original host if the request is being proxied
+		if ns := getNamespace(req.Host); isProxy(endpointURL.Host, ns) {
+			q := req.URL.Query()
+			q.Set("ns", ns)
+			req.URL.RawQuery = q.Encode()
+		}
+
 		// override request host and scheme
 		req.Host = endpointURL.Host
 		req.URL.Host = endpointURL.Host
@@ -79,4 +91,26 @@ func (e endpoint) RoundTrip(req *http.Request) (*http.Response, error) {
 		logrus.Debugf("Registry endpoint URL modified: %s => %s", originalURL, newURL)
 	}
 	return e.registry.getTransport(req.URL).RoundTrip(req)
+}
+
+// isDefault returns true if this endpoint is the default endpoint for the image -
+// does the registry namespace match the mirror endpoint namespace?
+func (e endpoint) isDefault() bool {
+	return getNamespace(e.ref.Context().RegistryStr()) == getNamespace(e.url.Host)
+}
+
+func getNamespace(host string) string {
+	if host == defaultRegistryHost {
+		return defaultRegistry
+	}
+	return host
+}
+
+func isProxy(host, ns string) bool {
+	if ns != "" && ns != host {
+		if ns != defaultRegistry || host != defaultRegistryHost {
+			return true
+		}
+	}
+	return false
 }

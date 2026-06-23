@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -56,7 +57,6 @@ func GetPrivateRegistries(path string) (*registry, error) {
 }
 
 func (r *registry) Image(ref name.Reference, options ...remote.Option) (v1.Image, error) {
-	ref = r.rewrite(ref)
 	endpoints, err := r.getEndpoints(ref)
 	if err != nil {
 		return nil, err
@@ -64,8 +64,13 @@ func (r *registry) Image(ref name.Reference, options ...remote.Option) (v1.Image
 
 	errs := []error{}
 	for _, endpoint := range endpoints {
+		epRef := ref
+		if !endpoint.isDefault() {
+			epRef = r.rewrite(ref)
+		}
+		logrus.Debugf("Trying endpoint %s", endpoint.url)
 		endpointOptions := append(options, remote.WithTransport(endpoint), remote.WithAuthFromKeychain(endpoint))
-		remoteImage, err := remote.Image(ref, endpointOptions...)
+		remoteImage, err := remote.Image(epRef, endpointOptions...)
 		if err != nil {
 			logrus.Warnf("Failed to get image from endpoint: %v", err)
 			errs = append(errs, err)
@@ -159,38 +164,20 @@ func (r *registry) getEndpoints(ref name.Reference) ([]endpoint, error) {
 	for _, key := range keys {
 		if mirror, ok := r.Registry.Mirrors[key]; ok {
 			for _, endpointStr := range mirror.Endpoints {
-				endpointURL, err := url.Parse(endpointStr)
-				if err != nil {
-					logrus.Warnf("Ignoring invalid endpoint URL for registry %s: %v", registry, err)
-					continue
-				}
-				if !endpointURL.IsAbs() {
-					logrus.Warnf("Ignoring relative endpoint URL for registry %s: %q", registry, endpointStr)
-					continue
-				}
-				if endpointURL.Host == "" {
-					logrus.Warnf("Ignoring endpoint URL without host for registry %s: %q", registry, endpointStr)
-					continue
-				}
-				if endpointURL.Scheme == "" {
-					logrus.Warnf("Ignoring endpoint URL without scheme for registry %s: %q", registry, endpointStr)
-					continue
-				}
-				if endpointURL.Path == "" {
-					endpointURL.Path = "/v2"
+				if endpointURL, err := normalizeEndpointAddress(endpointStr); err != nil {
+					logrus.Warnf("Ignoring invalid endpoint %s for registry %s: %v", endpointStr, registry, err)
 				} else {
-					endpointURL.Path = path.Clean(endpointURL.Path)
+					endpoints = append(endpoints, r.makeEndpoint(endpointURL, ref))
 				}
-				endpoints = append(endpoints, r.makeEndpoint(endpointURL, ref))
 			}
-			// found a mirrors configuration for this registry, don't check any further entries
+			// found a mirror for this registry, don't check any further entries
 			// even if we didn't add any valid endpoints.
 			break
 		}
 	}
 
 	// always add the default endpoint
-	defaultURL, err := url.Parse(fmt.Sprintf("https://%s/v2", registry))
+	defaultURL, err := normalizeEndpointAddress(registry)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to construct default endpoint for registry %s", registry)
 	}
@@ -210,6 +197,41 @@ func (r *registry) makeEndpoint(endpointURL *url.URL, ref name.Reference) endpoi
 	}
 }
 
+// normalizeEndpointAddress normalizes the endpoint address.
+// If successful, it returns the registry URL.
+// If unsuccessful, an error is returned.
+// Scheme and hostname logic should match containerd:
+// https://github.com/containerd/containerd/blob/v1.7.13/remotes/docker/config/hosts.go#L99-L131
+func normalizeEndpointAddress(endpoint string) (*url.URL, error) {
+	// Ensure that the endpoint address has a scheme so that the URL is parsed properly
+	if !strings.Contains(endpoint, "://") {
+		endpoint = "//" + endpoint
+	}
+	endpointURL, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, err
+	}
+	if endpointURL.Host == "" {
+		return nil, fmt.Errorf("invalid URL without host: %s", endpoint)
+	}
+	if endpointURL.Scheme == "" {
+		// localhost on odd ports defaults to http
+		port := endpointURL.Port()
+		if isLocalhost(endpointURL.Host) && port != "" && port != "443" {
+			endpointURL.Scheme = "http"
+		} else {
+			endpointURL.Scheme = "https"
+		}
+	}
+	switch endpointURL.Path {
+	case "", "/", "/v2":
+		endpointURL.Path = "/v2"
+	default:
+		endpointURL.Path = path.Clean(endpointURL.Path)
+	}
+	return endpointURL, nil
+}
+
 // getAuthenticatorForHost returns an Authenticator for an endpoint URL. If no
 // configuration is present, Anonymous authentication is used.
 func (r *registry) getAuthenticator(endpointURL *url.URL) authn.Authenticator {
@@ -218,6 +240,7 @@ func (r *registry) getAuthenticator(endpointURL *url.URL) authn.Authenticator {
 	if registry == name.DefaultRegistry {
 		keys = append(keys, "docker.io")
 	}
+	keys = append(keys, "*")
 
 	for _, key := range keys {
 		if config, ok := r.Registry.Configs[key]; ok {
@@ -229,6 +252,9 @@ func (r *registry) getAuthenticator(endpointURL *url.URL) authn.Authenticator {
 					IdentityToken: config.Auth.IdentityToken,
 				})
 			}
+			// found a config for this registry, don't check any further entries
+			// even if we didn't add any valid auth.
+			break
 		}
 	}
 	return authn.Anonymous
@@ -237,41 +263,52 @@ func (r *registry) getAuthenticator(endpointURL *url.URL) authn.Authenticator {
 // getTLSConfig returns TLS configuration for an endpoint URL. This is cribbed from
 // https://github.com/containerd/cri/blob/release/1.4/pkg/server/image_pull.go#L274
 func (r *registry) getTLSConfig(endpointURL *url.URL) (*tls.Config, error) {
-	host := endpointURL.Host
 	tlsConfig := &tls.Config{}
-	if config, ok := r.Registry.Configs[host]; ok {
-		if config.TLS != nil {
-			if config.TLS.CertFile != "" && config.TLS.KeyFile == "" {
-				return nil, errors.Errorf("cert file %q was specified, but no corresponding key file was specified", config.TLS.CertFile)
-			}
-			if config.TLS.CertFile == "" && config.TLS.KeyFile != "" {
-				return nil, errors.Errorf("key file %q was specified, but no corresponding cert file was specified", config.TLS.KeyFile)
-			}
-			if config.TLS.CertFile != "" && config.TLS.KeyFile != "" {
-				cert, err := tls.LoadX509KeyPair(config.TLS.CertFile, config.TLS.KeyFile)
-				if err != nil {
-					return nil, errors.Wrap(err, "failed to load cert file")
-				}
-				if len(cert.Certificate) != 0 {
-					tlsConfig.Certificates = []tls.Certificate{cert}
-				}
-				tlsConfig.BuildNameToCertificate() // nolint:staticcheck
-			}
+	registry := endpointURL.Host
+	keys := []string{registry}
+	if registry == name.DefaultRegistry {
+		keys = append(keys, "docker.io")
+	}
+	keys = append(keys, "*")
 
-			if config.TLS.CAFile != "" {
-				caCertPool, err := x509.SystemCertPool()
-				if err != nil {
-					return nil, errors.Wrap(err, "failed to get system cert pool")
+	for _, key := range keys {
+		if config, ok := r.Registry.Configs[key]; ok {
+			if config.TLS != nil {
+				if config.TLS.CertFile != "" && config.TLS.KeyFile == "" {
+					return nil, errors.Errorf("cert file %q was specified, but no corresponding key file was specified", config.TLS.CertFile)
 				}
-				caCert, err := ioutil.ReadFile(config.TLS.CAFile)
-				if err != nil {
-					return nil, errors.Wrap(err, "failed to load CA file")
+				if config.TLS.CertFile == "" && config.TLS.KeyFile != "" {
+					return nil, errors.Errorf("key file %q was specified, but no corresponding cert file was specified", config.TLS.KeyFile)
 				}
-				caCertPool.AppendCertsFromPEM(caCert)
-				tlsConfig.RootCAs = caCertPool
-			}
+				if config.TLS.CertFile != "" && config.TLS.KeyFile != "" {
+					cert, err := tls.LoadX509KeyPair(config.TLS.CertFile, config.TLS.KeyFile)
+					if err != nil {
+						return nil, errors.Wrap(err, "failed to load cert file")
+					}
+					if len(cert.Certificate) != 0 {
+						tlsConfig.Certificates = []tls.Certificate{cert}
+					}
+					tlsConfig.BuildNameToCertificate() // nolint:staticcheck
+				}
 
-			tlsConfig.InsecureSkipVerify = config.TLS.InsecureSkipVerify
+				if config.TLS.CAFile != "" {
+					caCertPool, err := x509.SystemCertPool()
+					if err != nil {
+						return nil, errors.Wrap(err, "failed to get system cert pool")
+					}
+					caCert, err := ioutil.ReadFile(config.TLS.CAFile)
+					if err != nil {
+						return nil, errors.Wrap(err, "failed to load CA file")
+					}
+					caCertPool.AppendCertsFromPEM(caCert)
+					tlsConfig.RootCAs = caCertPool
+				}
+
+				tlsConfig.InsecureSkipVerify = config.TLS.InsecureSkipVerify
+			}
+			// found a config for this registry, don't check any further entries
+			// even if we didn't add any valid tls config.
+			break
 		}
 	}
 
@@ -291,8 +328,24 @@ func (r *registry) getRewrites(registry string) map[string]string {
 			if len(mirror.Rewrites) > 0 {
 				return mirror.Rewrites
 			}
+			// found a mirror for this registry, don't check any further entries
+			// even if we didn't add any rewrites.
+			break
 		}
 	}
 
 	return nil
+}
+
+func isLocalhost(host string) bool {
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		host = h
+	}
+
+	if host == "localhost" {
+		return true
+	}
+
+	ip := net.ParseIP(host)
+	return ip.IsLoopback()
 }

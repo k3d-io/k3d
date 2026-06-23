@@ -29,7 +29,7 @@ import (
 	wharfie "github.com/rancher/wharfie/pkg/registries"
 
 	"github.com/docker/go-connections/nat"
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 	"sigs.k8s.io/yaml"
 
 	l "github.com/k3d-io/k3d/v5/pkg/logger"

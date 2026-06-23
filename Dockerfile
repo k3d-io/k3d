@@ -1,10 +1,10 @@
-ARG DOCKER_VERSION=27.3.1
+ARG DOCKER_VERSION=28.5.2
 ############################################################
 # builder                                                  #
 # -> golang image used solely for building the k3d binary  #
 # -> built executable can then be copied into other stages #
 ############################################################
-FROM golang:1.24.4 AS builder
+FROM golang:1.26.3 AS builder
 ARG GIT_TAG_OVERRIDE
 WORKDIR /app
 RUN mkdir /tmp/empty

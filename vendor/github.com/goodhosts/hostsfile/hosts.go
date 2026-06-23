@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/dimchansky/utfbom"
@@ -16,8 +18,9 @@ import (
 
 // Hosts represents hosts file with the path and parsed contents of each line
 type Hosts struct {
-	Path  string      // Path to the location of the hosts file that will be loaded/flushed
-	Lines []HostsLine // Slice containing all the lines parsed from the hosts file
+	Path    string      // Path to the location of the hosts file that will be loaded/flushed
+	Lines   []HostsLine // Slice containing all the lines parsed from the hosts file
+	modTime time.Time   // Track file modification time
 
 	ips   lookup
 	hosts lookup
@@ -88,6 +91,13 @@ func (h *Hosts) Load() error {
 	}
 	defer file.Close()
 
+	// Capture modification time for concurrent modification detection
+	info, err := file.Stat()
+	if err != nil {
+		return err
+	}
+	h.modTime = info.ModTime()
+
 	h.Clear() // reset the lines and lookups in case anything was previously set
 
 	scanner := bufio.NewScanner(utfbom.SkipOnly(file))
@@ -96,6 +106,15 @@ func (h *Hosts) Load() error {
 	}
 
 	return scanner.Err()
+}
+
+// HasBeenModified checks if the hosts file was modified since it was loaded
+func (h *Hosts) HasBeenModified() (bool, error) {
+	info, err := os.Stat(h.Path)
+	if err != nil {
+		return false, err
+	}
+	return !info.ModTime().Equal(h.modTime), nil
 }
 
 // Flush writes to the file located at Path the contents of Lines in a hostsfile format
@@ -126,6 +145,34 @@ func (h *Hosts) Flush() error {
 	}
 
 	return h.Load()
+}
+
+// BackupPath returns the default backup path for the hosts file
+func (h *Hosts) BackupPath() string {
+	return h.Path + ".bak"
+}
+
+// Backup creates a backup of the current hosts file
+func (h *Hosts) Backup() error {
+	return h.BackupTo(h.BackupPath())
+}
+
+// BackupTo creates a backup of the hosts file to a specified path
+func (h *Hosts) BackupTo(path string) error {
+	source, err := os.Open(h.Path)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+
+	dest, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer dest.Close()
+
+	_, err = io.Copy(dest, source)
+	return err
 }
 
 // AddRaw takes a line from a hosts file and parses/adds the HostsLine
@@ -240,6 +287,41 @@ func (h *Hosts) HasIp(ip string) bool {
 // HasIP will check if the ip exists
 func (h *Hosts) HasIP(ip string) bool {
 	return len(h.ips.get(ip)) > 0
+}
+
+// HasAll returns true if the IP has ALL specified hostnames mapped to it
+func (h *Hosts) HasAll(ip string, hosts ...string) bool {
+	if len(hosts) == 0 {
+		return h.HasIP(ip)
+	}
+	for _, host := range hosts {
+		if !h.Has(ip, host) {
+			return false
+		}
+	}
+	return true
+}
+
+// HasAny returns true if the IP has ANY of the specified hostnames mapped to it
+func (h *Hosts) HasAny(ip string, hosts ...string) bool {
+	if len(hosts) == 0 {
+		return h.HasIP(ip)
+	}
+	for _, host := range hosts {
+		if h.Has(ip, host) {
+			return true
+		}
+	}
+	return false
+}
+
+// CheckAll returns a map indicating which hostnames exist for the IP
+func (h *Hosts) CheckAll(ip string, hosts ...string) map[string]bool {
+	result := make(map[string]bool)
+	for _, host := range hosts {
+		result[host] = h.Has(ip, host)
+	}
+	return result
 }
 
 // Remove takes an ip and an optional host(s), if only an ip is passed the whole line is removed

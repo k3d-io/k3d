@@ -24,9 +24,9 @@ func NewHostsLine(raw string) HostsLine {
 	output := HostsLine{Raw: raw}
 
 	if output.HasComment() { //trailing comment
-		commentSplit := strings.Split(output.Raw, commentChar)
-		raw = commentSplit[0]
-		output.Comment = commentSplit[1]
+		idx := strings.Index(output.Raw, commentChar)
+		raw = output.Raw[:idx]
+		output.Comment = output.Raw[idx+1:]
 	}
 
 	if output.IsComment() { //whole line is comment

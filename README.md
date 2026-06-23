@@ -25,13 +25,12 @@ k3d creates containerized k3s clusters. This means, that you can spin up a multi
 
   - [**GitHub Sponsors**: ![GitHub Sponsors](https://img.shields.io/github/sponsors/k3d-io?label=GitHub%20Sponsors&style=flat-square)](https://github.com/sponsors/k3d-io)
   - [**LiberaPay**: ![Liberapay patrons](https://img.shields.io/liberapay/patrons/k3d-io?label=Liberapay%20Patrons&style=flat-square)](https://liberapay.com/k3d-io)
-  - **IssueHunt**: <https://issuehunt.io/r/k3d-io/k3d>
-
+  - [**IssueHunt**: ![IssueHunt](https://raw.githubusercontent.com/BoostIO/issuehunt-materials/refs/heads/master/v1/issuehunt-shield-v1.svg)](https://issuehunt.io/r/k3d-io/k3d)
 ## Learning
 
 - Website with documentation: [k3d.io](https://k3d.io/)
 - [Rancher Meetup - May 2020 - Simplifying Your Cloud-Native Development Workflow With K3s, K3c and K3d (YouTube)](https://www.youtube.com/watch?v=hMr3prm9gDM)
-  - k3d demo repository: [iwilltry42/k3d-demo](https://github.com/iwilltry42/k3d-demo)
+  - k3d demo repository: [k3d-io/k3d-demo](https://github.com/k3d-io/k3d-demo)
 
 ## Requirements
 

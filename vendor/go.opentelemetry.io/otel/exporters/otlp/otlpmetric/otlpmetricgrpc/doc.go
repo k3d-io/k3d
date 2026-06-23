@@ -12,9 +12,8 @@ The environment variables described below can be used for configuration.
 OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_METRICS_ENDPOINT (default: "https://localhost:4317") -
 target to which the exporter sends telemetry.
 The target syntax is defined in https://github.com/grpc/grpc/blob/master/doc/naming.md.
-The value must contain a host.
-The value may additionally a port, a scheme, and a path.
-The value accepts "http" and "https" scheme.
+The value must contain a scheme ("http" or "https") and host.
+The value may additionally contain a port, and a path.
 The value should not contain a query string or fragment.
 OTEL_EXPORTER_OTLP_METRICS_ENDPOINT takes precedence over OTEL_EXPORTER_OTLP_ENDPOINT.
 The configuration can be overridden by [WithEndpoint], [WithEndpointURL], [WithInsecure], and [WithGRPCConn] options.
@@ -77,6 +76,9 @@ default aggregation to use for histogram instruments. Supported values:
   - "base2_exponential_bucket_histogram" - [Base2 Exponential Bucket Histogram Aggregation].
 
 The configuration can be overridden by [WithAggregationSelector] option.
+
+See [go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc/internal/x] for information about
+the experimental features.
 
 [W3C Baggage HTTP Header Content Format]: https://www.w3.org/TR/baggage/#header-content
 [Explicit Bucket Histogram Aggregation]: https://github.com/open-telemetry/opentelemetry-specification/blob/v1.26.0/specification/metrics/sdk.md#explicit-bucket-histogram-aggregation

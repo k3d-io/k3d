@@ -34,7 +34,7 @@ import (
 	"time"
 
 	"github.com/docker/go-connections/nat"
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 	copystruct "github.com/mitchellh/copystructure"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"

@@ -37,7 +37,7 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	dockerunits "github.com/docker/go-units"
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 	copystruct "github.com/mitchellh/copystructure"
 	"golang.org/x/sync/errgroup"
 	"sigs.k8s.io/yaml"
