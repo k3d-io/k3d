@@ -30,6 +30,7 @@ import (
 	"github.com/distribution/reference"
 	dockerconfig "github.com/docker/cli/cli/config"
 	dockerconfigfile "github.com/docker/cli/cli/config/configfile"
+	dockerconfigcredentials "github.com/docker/cli/cli/config/credentials"
 	dockerconfigtypes "github.com/docker/cli/cli/config/types"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -129,6 +130,9 @@ func resolveAuth(image string) (authConfig registrytypes.AuthConfig, err error) 
 	}
 	if config, err = dockerconfig.Load(dockerconfig.Dir()); err != nil {
 		return
+	}
+	if !config.ContainsAuth() {
+		config.CredentialsStore = dockerconfigcredentials.DetectDefaultStore(config.CredentialsStore)
 	}
 	if dockerAuthConfig, err = config.GetAuthConfig(authKey); err != nil {
 		return
