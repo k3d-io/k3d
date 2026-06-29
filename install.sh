@@ -213,6 +213,7 @@ help () {
   echo "Accepted cli arguments are:"
   echo -e "\t[--help|-h ] ->> prints this help"
   echo -e "\t[--no-sudo]  ->> install without sudo"
+  echo -e "\t[--tag|-t <tag>] ->> specify target release tag (e.g., v5.8.3)"
 }
 
 # cleanup temporary files
@@ -235,6 +236,13 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     '--no-sudo')
        USE_SUDO="false"
+       ;;
+    '--tag'|'-t')
+       TAG="$2"
+       shift
+       ;;
+    --tag=*)
+       TAG="${1#*=}"
        ;;
     '--help'|-h)
        help
