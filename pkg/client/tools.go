@@ -45,8 +45,11 @@ import (
 func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, opts k3d.ImageImportOpts) error {
 	// stdin case
 	if len(images) == 1 && images[0] == "-" {
-		err := loadImageFromStream(ctx, runtime, os.Stdin, cluster, []string{"stdin"})
-		return fmt.Errorf("failed to load image to cluster from stdin: %v", err)
+		if err := loadImageFromStream(ctx, runtime, os.Stdin, cluster, []string{"stdin"}); err != nil {
+			return fmt.Errorf("failed to load image to cluster from stdin: %w", err)
+		}
+		l.Log().Infoln("Successfully imported image(s)")
+		return nil
 	}
 
 	imagesFromRuntime, imagesFromTar, err := findImages(ctx, runtime, images)

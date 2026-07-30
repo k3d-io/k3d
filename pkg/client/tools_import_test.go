@@ -25,6 +25,8 @@ package client
 import (
 	"context"
 	"errors"
+	"io"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -65,6 +67,17 @@ func (f *fakeToolsRuntime) CopyToNode(_ context.Context, _ string, _ string, _ *
 
 func (f *fakeToolsRuntime) DeleteNode(_ context.Context, _ *k3d.Node) error {
 	return nil
+}
+
+func (f *fakeToolsRuntime) ExecInNodeWithStdin(_ context.Context, node *k3d.Node, _ []string, stdin io.ReadCloser) error {
+	// Consume one chunk so that the writer side of the pipe can make progress.
+	// We deliberately do not read until EOF: loadImageFromStream never closes the pipe writers,
+	// so a full drain would block forever (just like `ctr image import -` waiting for more input).
+	buf := make([]byte, 4096)
+	if _, err := stdin.Read(buf); err != nil && err != io.EOF {
+		return err
+	}
+	return f.execErrByNode[node.Name]
 }
 
 func testCluster() *k3d.Cluster {
@@ -114,5 +127,33 @@ func Test_importWithToolsNode_returnsErrorWhenTarballCopyFails(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "/tmp/images.tar") {
 		t.Errorf("expected error to name the tarball that could not be copied, got: %v", err)
+	}
+}
+
+func Test_ImageImportIntoClusterMulti_succeedsWhenReadingImageFromStdin(t *testing.T) {
+	// given: an image tarball on stdin that imports successfully into every node
+	tarball, err := os.CreateTemp(t.TempDir(), "images-*.tar")
+	if err != nil {
+		t.Fatalf("failed to create temporary tarball: %v", err)
+	}
+	if _, err := tarball.WriteString("not a real tarball, but the runtime is faked anyway"); err != nil {
+		t.Fatalf("failed to write temporary tarball: %v", err)
+	}
+	if _, err := tarball.Seek(0, io.SeekStart); err != nil {
+		t.Fatalf("failed to rewind temporary tarball: %v", err)
+	}
+
+	originalStdin := os.Stdin
+	os.Stdin = tarball
+	t.Cleanup(func() { os.Stdin = originalStdin })
+
+	runtime := &fakeToolsRuntime{execErrByNode: map[string]error{}}
+
+	// when
+	err = ImageImportIntoClusterMulti(context.Background(), runtime, []string{"-"}, testCluster(), k3d.ImageImportOpts{})
+
+	// then
+	if err != nil {
+		t.Errorf("expected no error when the import from stdin succeeds, got: %v", err)
 	}
 }
