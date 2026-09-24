@@ -22,7 +22,6 @@ THE SOFTWARE.
 package client
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
 	"encoding/json"
@@ -33,8 +32,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/docker/go-connections/nat"
 	"dario.cat/mergo"
+	"github.com/docker/go-connections/nat"
 	copystruct "github.com/mitchellh/copystructure"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
@@ -1069,59 +1068,18 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 			// -> inject hostAliases and network members into CoreDNS configmap
 			if len(servers) > 0 {
 				postStartErrgrp.Go(func() error {
-					hosts := ""
-
-					// hosts: hostAliases (including host.k3d.internal)
-					for _, hostAlias := range clusterStartOpts.HostAliases {
-						hosts += fmt.Sprintf("%s %s\n", hostAlias.IP, strings.Join(hostAlias.Hostnames, " "))
-					}
-
-					// more hosts: network members ("neighbor" containers)
+					// build the full alias list: user aliases + network members
+					allAliases := append([]k3d.HostAlias{}, clusterStartOpts.HostAliases...)
 					net, err := runtime.GetNetwork(postStartErrgrpCtx, &cluster.Network)
 					if err != nil {
 						return fmt.Errorf("failed to get cluster network %s to inject host records into CoreDNS: %w", cluster.Network.Name, err)
 					}
 					for _, member := range net.Members {
-						hosts += fmt.Sprintf("%s %s\n", member.IP.String(), member.Name)
+						allAliases = append(allAliases, k3d.HostAlias{IP: member.IP.String(), Hostnames: []string{member.Name}})
 					}
 
 					// inject CoreDNS configmap
 					l.Log().Infof("Injecting records for hostAliases (incl. host.k3d.internal) and for %d network members into CoreDNS configmap...", len(net.Members))
-					act := actions.RewriteFileAction{
-						Runtime: runtime,
-						Path:    "/var/lib/rancher/k3s/server/manifests/coredns.yaml",
-						Mode:    0744,
-						RewriteFunc: func(input []byte) ([]byte, error) {
-							split, err := util.SplitYAML(input)
-							if err != nil {
-								return nil, fmt.Errorf("error splitting yaml: %w", err)
-							}
-
-							var outputBuf bytes.Buffer
-							outputEncoder := util.NewYAMLEncoder(&outputBuf)
-
-							for _, d := range split {
-								var doc map[string]interface{}
-								if err := yaml.Unmarshal(d, &doc); err != nil {
-									return nil, err
-								}
-								if kind, ok := doc["kind"]; ok {
-									if strings.ToLower(kind.(string)) == "configmap" {
-										configmapData, ok := doc["data"].(map[string]interface{})
-										if !ok {
-											return nil, fmt.Errorf("invalid ConfigMap data type: %T", doc["data"])
-										}
-										configmapData["NodeHosts"] = hosts
-									}
-								}
-								if err := outputEncoder.Encode(doc); err != nil {
-									return nil, err
-								}
-							}
-							_ = outputEncoder.Close()
-							return outputBuf.Bytes(), nil
-						},
-					}
 
 					// get the first server in the list and run action on it once it's ready for it
 					for _, n := range servers {
@@ -1139,7 +1097,8 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 						if err := NodeWaitForLogMessage(postStartErrgrpCtx, runtime, n, "Cluster dns configmap", ts.Truncate(time.Second)); err != nil {
 							return err
 						}
-						return act.Run(postStartErrgrpCtx, n) // nolint:staticcheck // FIXME: Does this loop really only concern the first server? (SA4004: the surrounding loop is unconditionally terminated (staticcheck))
+						l.Log().Infof("Injecting records for hostAliases (incl. host.k3d.internal) and for %d network members into CoreDNS configmap...", len(net.Members))
+						return InjectHostAliasesIntoCoreDNS(postStartErrgrpCtx, runtime, n, allAliases) // nolint:staticcheck // FIXME: Does this loop really only concern the first server? (SA4004: the surrounding loop is unconditionally terminated (staticcheck))
 					}
 					return nil
 				})
@@ -1255,6 +1214,48 @@ func ClusterEditChangesetSimple(ctx context.Context, runtime k3drt.Runtime, clus
 	}
 
 	l.Log().Debugf("ORIGINAL:\n> Ports: %+v\n> Config: %+v\nCHANGESET:\n> Ports: %+v\n> Config: %+v", existingLB.Node.Ports, existingLB.Config, lbChangeset.Node.Ports, lbChangeset.Config)
+
+	// === Host Aliases ===
+
+	if len(changeset.HostAliases) > 0 {
+		// persist aliases via the LB node label
+		hostAliasesJSON, err := json.Marshal(changeset.HostAliases)
+		if err != nil {
+			return fmt.Errorf("error marshalling host aliases: %w", err)
+		}
+		lbChangeset.Node.RuntimeLabels[k3d.LabelClusterStartHostAliases] = string(hostAliasesJSON)
+
+		// inject aliases into /etc/hosts on all running server/agent nodes immediately
+		injectAction := NewHostAliasesInjectEtcHostsAction(runtime, changeset.HostAliases)
+		for _, node := range nodeList {
+			if node.Role == k3d.LoadBalancerRole {
+				continue
+			}
+			if err := injectAction.Run(ctx, node); err != nil {
+				return fmt.Errorf("error injecting host aliases into /etc/hosts of node %s: %w", node.Name, err)
+			}
+		}
+
+		// append new aliases to the live CoreDNS ConfigMap so pods pick up the new aliases immediately
+		// include network members so we don't clobber entries like host.k3d.internal and node container names
+		allAliases := append([]k3d.HostAlias{}, changeset.HostAliases...)
+		net, err := runtime.GetNetwork(ctx, &cluster.Network)
+		if err != nil {
+			return fmt.Errorf("failed to get cluster network %s: %w", cluster.Network.Name, err)
+		}
+		for _, member := range net.Members {
+			allAliases = append(allAliases, k3d.HostAlias{IP: member.IP.String(), Hostnames: []string{member.Name}})
+		}
+		for _, node := range nodeList {
+			if node.Role != k3d.ServerRole {
+				continue
+			}
+			if err := InjectHostAliasesIntoCoreDNS(ctx, runtime, node, allAliases); err != nil {
+				return fmt.Errorf("error injecting host aliases into CoreDNS on node %s: %w", node.Name, err)
+			}
+			break
+		}
+	}
 
 	// prepare to write config to lb container
 	configyaml, err := yaml.Marshal(lbChangeset.Config)
