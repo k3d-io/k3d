@@ -60,6 +60,29 @@ func (act WriteFileAction) Info() string {
 	return fmt.Sprintf("[%s] Writing %d bytes to %s (mode %s): %s", act.Name(), len(act.Content), act.Dest, act.Mode.String(), act.Description)
 }
 
+// CopyFileAction copies a file from the host into the node filesystem
+type CopyFileAction struct {
+	Runtime     runtimes.Runtime
+	Src         string
+	Dest        string
+	Description string
+}
+
+func (act CopyFileAction) Run(ctx context.Context, node *k3d.Node) error {
+	return act.Runtime.CopyToNode(ctx, act.Src, act.Dest, node)
+}
+
+func (act CopyFileAction) Name() string {
+	return "CopyFileAction"
+}
+
+func (act CopyFileAction) Info() string {
+	if act.Description == "" {
+		act.Description = "<no description>"
+	}
+	return fmt.Sprintf("[%s] Copying %s to %s: %s", act.Name(), act.Src, act.Dest, act.Description)
+}
+
 // RewriteFileAction takes an existing file from the node filesystem and rewrites it using a specified rewrite function
 type RewriteFileAction struct {
 	Runtime     runtimes.Runtime

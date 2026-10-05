@@ -30,6 +30,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -346,6 +347,47 @@ func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes 
 		return fmt.Errorf("error gathering cluster environment info required to properly create the node: %w", err)
 	}
 
+	if len(createNodeOpts.ImportImages) > 0 {
+		imageDirStage, imageFiles, cleanup, err := prepareImagesForNodeImport(ctx, runtime, createNodeOpts.ImportImages)
+		if err != nil {
+			return fmt.Errorf("failed to prepare images for import: %w", err)
+		}
+		defer cleanup()
+
+		// CopyToNode can only copy into a directory that already exists, and k3s' agent directory
+		// doesn't exist before k3s ran for the first time, so copy in the staged (empty) directory
+		// tree first. This hook has to run before the ones copying the tarballs below.
+		createNodeOpts.NodeHooks = append(createNodeOpts.NodeHooks, k3d.NodeHook{
+			Stage: k3d.LifecycleStagePreStart,
+			Action: actions.CopyFileAction{
+				Runtime:     runtime,
+				Src:         imageDirStage,
+				Dest:        k3sDirPath,
+				Description: "Create k3s agent images directory",
+			},
+			// --import-image was explicitly requested; fail the node rather than silently start it without the image(s)
+			MustSucceed: true,
+		})
+
+		for i, src := range imageFiles {
+			createNodeOpts.NodeHooks = append(createNodeOpts.NodeHooks, k3d.NodeHook{
+				Stage: k3d.LifecycleStagePreStart,
+				Action: actions.CopyFileAction{
+					Runtime:     runtime,
+					Src:         src,
+					Dest:        fmt.Sprintf("%s/k3d-import-%d.tar", k3sAgentImagesDirPath, i),
+					Description: "Import image into node before start",
+				},
+				MustSucceed: true,
+			})
+		}
+
+		// NodeAddToCluster appends more hooks to this slice, concurrently, once per node. Cut the slice's
+		// capacity down to its length, so those appends have to allocate instead of racing on (and
+		// overwriting each other in) a shared backing array.
+		createNodeOpts.NodeHooks = createNodeOpts.NodeHooks[:len(createNodeOpts.NodeHooks):len(createNodeOpts.NodeHooks)]
+	}
+
 	nodeWaitGroup, ctx := errgroup.WithContext(ctx)
 	for _, node := range nodes {
 		currentNode := node
@@ -358,6 +400,103 @@ func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes 
 	}
 
 	return nil
+}
+
+const (
+	// k3sDirPath is k3s' data directory inside a node, which is a mountpoint and thus exists before k3s starts
+	k3sDirPath = "/var/lib/rancher/k3s"
+	// k3sAgentImagesDirName is the directory that k3s imports image tarballs from on startup, relative to k3sDirPath
+	k3sAgentImagesDirName = "agent/images"
+	k3sAgentImagesDirPath = k3sDirPath + "/" + k3sAgentImagesDirName
+)
+
+// runtimeImageExporter is the subset of runtimes.Runtime that prepareImagesForNodeImport needs; narrowed
+// (like runtimeImageGetter above) so it can be faked in tests without a real container runtime.
+type runtimeImageExporter interface {
+	runtimeImageGetter
+	GetImageStream(context.Context, []string) (io.ReadCloser, error)
+}
+
+// prepareImagesForNodeImport makes all requested images available as tarballs on the host, so that they
+// can be copied into new nodes before those nodes start.
+// Requested images that are tarballs already are used as they are, while images that are present in the
+// container runtime are exported into a single temporary tarball.
+// It returns a staging directory that mirrors (the empty) k3sAgentImagesDirPath and has to be copied into
+// k3sDirPath to create that directory, the list of tarballs to import and a cleanup function that removes
+// all temporary files. The cleanup function has to be called by the caller once all nodes were created.
+func prepareImagesForNodeImport(ctx context.Context, runtime runtimeImageExporter, requested []string) (string, []string, func(), error) {
+	imagesFromRuntime, imagesFromTar, err := findImages(ctx, runtime, requested)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("failed to find images: %w", err)
+	}
+
+	// findImages only warns about images that it couldn't resolve, but here we don't want to end up with a
+	// node that's silently missing images that were explicitly requested
+	var imagesNotFound []string
+	for _, requestedImage := range requested {
+		if isFile(requestedImage) {
+			continue
+		}
+		if _, found := findRuntimeImage(requestedImage, imagesFromRuntime); found {
+			continue
+		}
+		imagesNotFound = append(imagesNotFound, requestedImage)
+	}
+	if len(imagesNotFound) > 0 {
+		return "", nil, nil, fmt.Errorf("image(s) '%s' are neither a file nor present in the container runtime", strings.Join(imagesNotFound, "', '"))
+	}
+
+	// stage the directory tree that k3s imports images from, so that it can be created inside the node
+	stageDir, err := os.MkdirTemp("", "k3d-node-import-*")
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("failed to create temporary directory for image import: %w", err)
+	}
+	cleanup := func() {
+		l.Log().Debugf("Removing temporary image import directory '%s'...", stageDir)
+		if err := os.RemoveAll(stageDir); err != nil {
+			l.Log().Warnf("failed to remove temporary image import directory '%s': %v", stageDir, err)
+		}
+	}
+
+	if err := os.MkdirAll(path.Join(stageDir, k3sAgentImagesDirName), 0755); err != nil {
+		cleanup()
+		return "", nil, nil, fmt.Errorf("failed to stage image import directory in '%s': %w", stageDir, err)
+	}
+	// copying the top of the staged tree ('<stageDir>/agent') into k3sDirPath creates the whole tree in the node
+	imageDirStage := path.Join(stageDir, path.Dir(k3sAgentImagesDirName))
+
+	tarballs := make([]string, 0, len(imagesFromTar)+1)
+	tarballs = append(tarballs, imagesFromTar...)
+
+	if len(imagesFromRuntime) > 0 {
+		l.Log().Infof("Saving %d image(s) from runtime...", len(imagesFromRuntime))
+		stream, err := runtime.GetImageStream(ctx, imagesFromRuntime)
+		if err != nil {
+			cleanup()
+			return "", nil, nil, fmt.Errorf("could not open image stream for given images %s: %w", imagesFromRuntime, err)
+		}
+		defer stream.Close()
+
+		tarball, err := os.CreateTemp(stageDir, "images-*.tar")
+		if err != nil {
+			cleanup()
+			return "", nil, nil, fmt.Errorf("failed to create temporary file to export image(s) to: %w", err)
+		}
+
+		if _, err := io.Copy(tarball, stream); err != nil {
+			tarball.Close()
+			cleanup()
+			return "", nil, nil, fmt.Errorf("failed to write image(s) to temporary file '%s': %w", tarball.Name(), err)
+		}
+		if err := tarball.Close(); err != nil {
+			cleanup()
+			return "", nil, nil, fmt.Errorf("failed to close temporary file '%s': %w", tarball.Name(), err)
+		}
+
+		tarballs = append(tarballs, tarball.Name())
+	}
+
+	return imageDirStage, tarballs, cleanup, nil
 }
 
 func NodeAddToClusterMultiRemote(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d.Node, clusterRef string, createNodeOpts k3d.NodeCreateOpts) error {
@@ -454,7 +593,10 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 		if hook.Stage == k3d.LifecycleStagePreStart {
 			l.Log().Tracef("Node %s: Executing preStartAction '%s': %s", node.Name, hook.Action.Name(), hook.Action.Info())
 			if err := hook.Action.Run(ctx, node); err != nil {
-				l.Log().Errorf("Node %s: Failed executing preStartAction '%s': %s: %+v", node.Name, hook.Action.Name(), hook.Action.Info(), err) // TODO: should we error out on failed preStartAction?
+				if hook.MustSucceed {
+					return fmt.Errorf("Node %s: preStartAction '%s' failed: %s: %w", node.Name, hook.Action.Name(), hook.Action.Info(), err)
+				}
+				l.Log().Errorf("Node %s: Failed executing preStartAction '%s': %s: %+v", node.Name, hook.Action.Name(), hook.Action.Info(), err)
 			}
 		}
 	}
