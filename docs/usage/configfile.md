@@ -46,7 +46,7 @@ Currently, the config file is still in an Alpha-State, meaning, that it is subje
 
     For example:
     ```yaml
-    # yaml-language-server: $schema=https://raw.githubusercontent.com/k3d-io/k3d/refs/heads/main/pkg/config/v1alpha3/schema.json
+    # yaml-language-server: $schema=https://raw.githubusercontent.com/k3d-io/k3d/refs/heads/main/pkg/config/v1alpha5/schema.json
     ```
     For [redhat.vscode-yaml](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)
 
