@@ -230,7 +230,9 @@ func (f *FakeRuntimeImageGetter) GetImages(_ context.Context) ([]string, error) 
 }
 
 func Test_prepareImagesForNodeImport(t *testing.T) {
-	tarImage, err := os.CreateTemp("", "images.tar")
+	// the "*" is required so CreateTemp's random suffix lands before ".tar", not after - otherwise the
+	// file wouldn't actually have a ".tar" suffix, which tarExtension (and k3s) checks for
+	tarImage, err := os.CreateTemp("", "images-*.tar")
 	if err != nil {
 		t.Fatal("Failed to create temporary file")
 	}
@@ -252,6 +254,28 @@ func Test_prepareImagesForNodeImport(t *testing.T) {
 		}
 		if runtime.getImageStreamCalls != 0 {
 			t.Errorf("expected no image export attempt when a requested image can't be resolved, got %d", runtime.getImageStreamCalls)
+		}
+	})
+
+	t.Run("requested tarball has no k3s-supported extension", func(t *testing.T) {
+		unsupported, err := os.CreateTemp("", "images-*.whatever")
+		if err != nil {
+			t.Fatal("Failed to create temporary file")
+		}
+		defer os.Remove(unsupported.Name())
+
+		runtime := &FakeRuntimeImageExporter{}
+
+		_, _, cleanup, err := prepareImagesForNodeImport(context.Background(), runtime, []string{unsupported.Name()})
+		if cleanup != nil {
+			defer cleanup()
+		}
+
+		if err == nil {
+			t.Fatal("expected an error for a tarball with an unsupported extension, got none")
+		}
+		if !strings.Contains(err.Error(), unsupported.Name()) {
+			t.Errorf("expected error to mention the offending tarball, got: %v", err)
 		}
 	})
 
@@ -306,4 +330,28 @@ func (f *FakeRuntimeImageExporter) GetImages(_ context.Context) ([]string, error
 func (f *FakeRuntimeImageExporter) GetImageStream(_ context.Context, _ []string) (io.ReadCloser, error) {
 	f.getImageStreamCalls++
 	return io.NopCloser(strings.NewReader(f.streamContent)), nil
+}
+
+func Test_tarExtension(t *testing.T) {
+	tests := map[string]string{
+		"/path/to/image.tar":      ".tar",
+		"/path/to/image.tar.gz":   ".tar.gz",
+		"/path/to/image.tgz":      ".tgz",
+		"/path/to/IMAGE.TAR.GZ":   ".tar.gz", // k3s matches case-insensitively
+		"/path/to/image.tar.bz2":  ".tar.bz2",
+		"/path/to/image.tbz":      ".tbz",
+		"/path/to/image.tar.zst":  ".tar.zst",
+		"/path/to/image.tzst":     ".tzst",
+		"/path/to/image.tar.lz4":  ".tar.lz4",
+		"/path/to/image.whatever": "",
+		"/path/to/image":          "",
+	}
+
+	for path, want := range tests {
+		t.Run(path, func(t *testing.T) {
+			if got := tarExtension(path); got != want {
+				t.Errorf("tarExtension(%q) = %q, want %q", path, got, want)
+			}
+		})
+	}
 }

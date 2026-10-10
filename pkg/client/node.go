@@ -330,6 +330,11 @@ func NodeAddToClusterRemote(ctx context.Context, runtime runtimes.Runtime, node 
 
 // NodeAddToClusterMulti adds multiple nodes to a chosen cluster
 func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes []*k3d.Node, cluster *k3d.Cluster, createNodeOpts k3d.NodeCreateOpts) error {
+	// --timeout is documented as bounding how long we wait for the node(s) to become ready, not how long
+	// preparing images for import may take (that happens before any node exists) - so prepare images
+	// against the original, un-timed-out context.
+	prepCtx := ctx
+
 	if createNodeOpts.Timeout > 0*time.Second {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, createNodeOpts.Timeout)
@@ -348,7 +353,7 @@ func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes 
 	}
 
 	if len(createNodeOpts.ImportImages) > 0 {
-		imageDirStage, imageFiles, cleanup, err := prepareImagesForNodeImport(ctx, runtime, createNodeOpts.ImportImages)
+		imageDirStage, imageFiles, cleanup, err := prepareImagesForNodeImport(prepCtx, runtime, createNodeOpts.ImportImages)
 		if err != nil {
 			return fmt.Errorf("failed to prepare images for import: %w", err)
 		}
@@ -370,15 +375,34 @@ func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes 
 		})
 
 		for i, src := range imageFiles {
+			// k3s picks its decompressor purely from the destination's filename suffix (see
+			// k3sSupportedTarExtensions), so the original (possibly compressed) extension has to be
+			// preserved - renaming everything to ".tar" would make k3s try to import a compressed
+			// tarball as an uncompressed one and fail.
+			dest := fmt.Sprintf("%s/k3d-import-%d%s", k3sAgentImagesDirPath, i, tarExtension(src))
 			createNodeOpts.NodeHooks = append(createNodeOpts.NodeHooks, k3d.NodeHook{
 				Stage: k3d.LifecycleStagePreStart,
 				Action: actions.CopyFileAction{
 					Runtime:     runtime,
 					Src:         src,
-					Dest:        fmt.Sprintf("%s/k3d-import-%d.tar", k3sAgentImagesDirPath, i),
+					Dest:        dest,
 					Description: "Import image into node before start",
 				},
 				MustSucceed: true,
+			})
+
+			// k3s imports the tarball into containerd's content store but never removes the tarball
+			// itself, so without this it sits there permanently, doubling the node's disk usage for
+			// these images. By the time the node is considered started (NodeStart waits for the node
+			// to register, which happens after containerd - and thus this import - is done), it's
+			// safe to remove.
+			createNodeOpts.NodeHooks = append(createNodeOpts.NodeHooks, k3d.NodeHook{
+				Stage: k3d.LifecycleStagePostStart,
+				Action: actions.ExecAction{
+					Runtime:     runtime,
+					Command:     []string{"rm", "-f", dest},
+					Description: "Remove imported image tarball",
+				},
 			})
 		}
 
@@ -409,6 +433,25 @@ const (
 	k3sAgentImagesDirName = "agent/images"
 	k3sAgentImagesDirPath = k3sDirPath + "/" + k3sAgentImagesDirName
 )
+
+// k3sSupportedTarExtensions mirrors rancher/wharfie's tarfile.SupportedExtensions: the only file suffixes
+// k3s recognizes when auto-importing tarballs from k3sAgentImagesDirPath. k3s picks a decompressor by
+// this suffix alone (not by sniffing file contents), so a tarball copied in under any other name - or
+// under the wrong one of these, e.g. a gzipped tarball renamed to ".tar" - is either silently ignored or
+// fails to import.
+var k3sSupportedTarExtensions = []string{".tar", ".tar.lz4", ".tar.bz2", ".tbz", ".tar.gz", ".tgz", ".tar.zst", ".tzst"}
+
+// tarExtension returns whichever of k3sSupportedTarExtensions p ends in (case-insensitively), or "" if
+// none match.
+func tarExtension(p string) string {
+	lower := strings.ToLower(p)
+	for _, ext := range k3sSupportedTarExtensions {
+		if strings.HasSuffix(lower, ext) {
+			return ext
+		}
+	}
+	return ""
+}
 
 // runtimeImageExporter is the subset of runtimes.Runtime that prepareImagesForNodeImport needs; narrowed
 // (like runtimeImageGetter above) so it can be faked in tests without a real container runtime.
@@ -444,6 +487,18 @@ func prepareImagesForNodeImport(ctx context.Context, runtime runtimeImageExporte
 	}
 	if len(imagesNotFound) > 0 {
 		return "", nil, nil, fmt.Errorf("image(s) '%s' are neither a file nor present in the container runtime", strings.Join(imagesNotFound, "', '"))
+	}
+
+	// a tarball k3s won't recognize (see k3sSupportedTarExtensions) would otherwise be copied into the
+	// node and then silently never imported - fail now instead
+	var unsupportedTarballs []string
+	for _, tarball := range imagesFromTar {
+		if tarExtension(tarball) == "" {
+			unsupportedTarballs = append(unsupportedTarballs, tarball)
+		}
+	}
+	if len(unsupportedTarballs) > 0 {
+		return "", nil, nil, fmt.Errorf("tarball(s) '%s' don't have a k3s-supported extension (%s)", strings.Join(unsupportedTarballs, "', '"), strings.Join(k3sSupportedTarExtensions, ", "))
 	}
 
 	// stage the directory tree that k3s imports images from, so that it can be created inside the node
@@ -567,6 +622,14 @@ func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, node
 		EnvironmentInfo: nodeCreateOpts.EnvironmentInfo,
 		Intent:          k3d.IntentNodeCreate,
 	}); err != nil {
+		// we created the node's container above; don't leave it behind just because starting it
+		// failed (e.g. a MustSucceed preStart hook). Use a fresh context: ctx may already be past its
+		// deadline here, e.g. if createNodeOpts.Timeout fired, which would make cleanup fail too.
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if delErr := runtime.DeleteNode(cleanupCtx, node); delErr != nil {
+			l.Log().Errorf("Node %s: failed to clean up after a failed start: %v", node.Name, delErr)
+		}
 		return fmt.Errorf("failed to start node '%s': %w", node.Name, err)
 	}
 

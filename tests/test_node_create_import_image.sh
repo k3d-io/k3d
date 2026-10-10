@@ -27,11 +27,14 @@ clustername="nodeimporttest"
 # proves the image came from --import-image rather than a registry pull
 testimage="k3d-node-import-e2e:local"
 testtar="$TEST_OUTPUT_DIR/k3d-node-import-e2e.tar"
+testtargz="$TEST_OUTPUT_DIR/k3d-node-import-e2e.tar.gz"
 
 info "Preparing local-only test image $testimage..."
 docker pull busybox:1.36 > /dev/null || failed "could not pull busybox:1.36"
 docker tag busybox:1.36 "$testimage" > /dev/null || failed "could not tag test image"
 docker save -o "$testtar" "$testimage" || failed "could not save test image to $testtar"
+gzip -k -f "$testtar" || failed "could not gzip $testtar"
+mv "$testtar.gz" "$testtargz" || failed "could not move gzipped tarball to $testtargz"
 
 info "Creating cluster $clustername..."
 $EXE cluster create "$clustername" --timeout 360s --wait || failed "could not create cluster $clustername"
@@ -95,10 +98,24 @@ make_pod_yaml "proof-imp-tar" "k3d-imp-tar-0" | kubectl apply -f - || failed "co
 wait_for_pod_running_by_name "proof-imp-tar" || failed "image imported via tarball path was not available on the node"
 passed "node created with --import-image <tarball-path> has the image available"
 
+info "Checking that the imported tarball was cleaned up from the node afterwards..."
+leftover=$(exec_in_node "k3d-imp-tar-0" "ls /var/lib/rancher/k3s/agent/images/ 2>/dev/null")
+[[ -z "$leftover" ]] || failed "expected /var/lib/rancher/k3s/agent/images/ to be empty after import, found: $leftover"
+passed "imported tarball was removed from the node after import"
+
+### 3b. --import-image <compressed tarball path>: k3s decompresses by filename suffix, which must be preserved ###
+info "Creating node with --import-image $testtargz (gzip-compressed)..."
+$EXE node create imp-targz --cluster "$clustername" --role agent --import-image "$testtargz" --wait --timeout 120s || failed "could not create node with --import-image (gzip tarball)"
+check_multi_node "$clustername" 5 || failed "imp-targz node did not join the cluster"
+
+make_pod_yaml "proof-imp-targz" "k3d-imp-targz-0" | kubectl apply -f - || failed "could not create proof-imp-targz pod"
+wait_for_pod_running_by_name "proof-imp-targz" || failed "image imported via gzip-compressed tarball was not available on the node"
+passed "node created with --import-image <gzip-compressed-tarball> has the image available"
+
 ### 4. --replicas with --import-image: every replica gets the image from a single export ###
 info "Creating 2 replicas with --import-image..."
 $EXE node create imp-rep --cluster "$clustername" --role agent --replicas 2 --import-image "$testimage" --wait --timeout 120s || failed "could not create replica nodes with --import-image"
-check_multi_node "$clustername" 6 || failed "replica nodes did not join the cluster"
+check_multi_node "$clustername" 7 || failed "replica nodes did not join the cluster"
 
 for i in 0 1; do
   make_pod_yaml "proof-imp-rep-$i" "k3d-imp-rep-$i" | kubectl apply -f - || failed "could not create proof-imp-rep-$i pod"
@@ -111,7 +128,7 @@ info "Creating node with a nonexistent --import-image (expected to fail)..."
 if $EXE node create imp-bad --cluster "$clustername" --role agent --import-image "doesnotexist:v1" --wait --timeout 60s; then
   failed "node create with a nonexistent --import-image unexpectedly succeeded"
 fi
-check_multi_node "$clustername" 6 || failed "a node was created despite the invalid --import-image"
+check_multi_node "$clustername" 7 || failed "a node was created despite the invalid --import-image"
 passed "node create with a nonexistent --import-image fails and creates no node"
 
 # Cleanup
@@ -119,7 +136,7 @@ passed "node create with a nonexistent --import-image fails and creates no node"
 info "Deleting cluster $clustername..."
 $EXE cluster delete "$clustername" || failed "could not delete the cluster $clustername"
 
-rm -f "$testtar"
+rm -f "$testtar" "$testtargz"
 docker rmi "$testimage" > /dev/null 2>&1
 
 exit 0
