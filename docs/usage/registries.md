@@ -18,6 +18,8 @@ In this example, an image with a name like `my.company.registry:5000/nginx:lates
 
 This file can also be used for providing additional information necessary for accessing some registries, like [authentication](#authenticated-registries) and [certificates](#secure-registries).
 
+Together with the `--embedded-registry` server flag, the `mirrors` section also decides which registries K3s' embedded distributed registry mirror (Spegel) serves, see [Embedded Registry Mirror](advanced/embedded-registry.md).
+
 ### Registries Configuration File embedded in k3d's SimpleConfig
 
 If you're using a `SimpleConfig` file to configure your k3d cluster, you may as well embed the registries.yaml in there directly:
