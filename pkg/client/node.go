@@ -393,17 +393,20 @@ func NodeAddToClusterMulti(ctx context.Context, runtime runtimes.Runtime, nodes 
 
 			// k3s imports the tarball into containerd's content store but never removes the tarball
 			// itself, so without this it sits there permanently, doubling the node's disk usage for
-			// these images. By the time the node is considered started (NodeStart waits for the node
-			// to register, which happens after containerd - and thus this import - is done), it's
-			// safe to remove.
-			createNodeOpts.NodeHooks = append(createNodeOpts.NodeHooks, k3d.NodeHook{
-				Stage: k3d.LifecycleStagePostStart,
-				Action: actions.ExecAction{
-					Runtime:     runtime,
-					Command:     []string{"rm", "-f", dest},
-					Description: "Remove imported image tarball",
-				},
-			})
+			// these images. This is only safe once we know the node is actually ready, which NodeStart
+			// only waits for when createNodeOpts.Wait is true - with --wait=false, postStart hooks run
+			// right after the container starts, likely before k3s gets around to importing the
+			// tarball, so skip the cleanup and just leave the tarball in that case.
+			if createNodeOpts.Wait {
+				createNodeOpts.NodeHooks = append(createNodeOpts.NodeHooks, k3d.NodeHook{
+					Stage: k3d.LifecycleStagePostStart,
+					Action: actions.ExecAction{
+						Runtime:     runtime,
+						Command:     []string{"rm", "-f", dest},
+						Description: "Remove imported image tarball",
+					},
+				})
+			}
 		}
 
 		// NodeAddToCluster appends more hooks to this slice, concurrently, once per node. Cut the slice's
@@ -622,14 +625,6 @@ func NodeRun(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, node
 		EnvironmentInfo: nodeCreateOpts.EnvironmentInfo,
 		Intent:          k3d.IntentNodeCreate,
 	}); err != nil {
-		// we created the node's container above; don't leave it behind just because starting it
-		// failed (e.g. a MustSucceed preStart hook). Use a fresh context: ctx may already be past its
-		// deadline here, e.g. if createNodeOpts.Timeout fired, which would make cleanup fail too.
-		cleanupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		if delErr := runtime.DeleteNode(cleanupCtx, node); delErr != nil {
-			l.Log().Errorf("Node %s: failed to clean up after a failed start: %v", node.Name, delErr)
-		}
 		return fmt.Errorf("failed to start node '%s': %w", node.Name, err)
 	}
 
@@ -657,6 +652,18 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 			l.Log().Tracef("Node %s: Executing preStartAction '%s': %s", node.Name, hook.Action.Name(), hook.Action.Info())
 			if err := hook.Action.Run(ctx, node); err != nil {
 				if hook.MustSucceed {
+					// runtime.StartNode has not been called yet at this point, so the container was
+					// created (by NodeCreate, earlier in NodeRun) but never actually started - clean it
+					// up instead of leaving an orphaned, never-started container behind. Scoped to
+					// exactly this case: unlike e.g. a --timeout wait-for-ready failure or a postStart
+					// hook failure, the container can't have made any of its own progress yet, so
+					// deleting it here can't lose anything (e.g. an etcd membership for a server node
+					// that's mid-join).
+					cleanupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+					if delErr := NodeDelete(cleanupCtx, runtime, node, k3d.NodeDeleteOpts{}); delErr != nil {
+						l.Log().Errorf("Node %s: failed to clean up after a failed preStart hook: %v", node.Name, delErr)
+					}
+					cancel()
 					return fmt.Errorf("Node %s: preStartAction '%s' failed: %s: %w", node.Name, hook.Action.Name(), hook.Action.Info(), err)
 				}
 				l.Log().Errorf("Node %s: Failed executing preStartAction '%s': %s: %+v", node.Name, hook.Action.Name(), hook.Action.Info(), err)
