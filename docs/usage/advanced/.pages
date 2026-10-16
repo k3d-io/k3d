@@ -2,4 +2,5 @@ title: Advanced Guides
 nav:
   - calico.md
   - cuda.md
+  - embedded-registry.md
   - podman.md
