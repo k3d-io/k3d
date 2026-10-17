@@ -3,6 +3,7 @@ package registries
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -18,9 +19,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"go.uber.org/multierr"
 	"gopkg.in/yaml.v2"
 )
 
@@ -78,7 +77,7 @@ func (r *registry) Image(ref name.Reference, options ...remote.Option) (v1.Image
 		}
 		return remoteImage, nil
 	}
-	return nil, errors.Wrap(multierr.Combine(errs...), "all endpoints failed")
+	return nil, fmt.Errorf("all endpoints failed: %w", errors.Join(errs...))
 }
 
 // rewrite applies repository rewrites to the given image reference.
@@ -179,7 +178,7 @@ func (r *registry) getEndpoints(ref name.Reference) ([]endpoint, error) {
 	// always add the default endpoint
 	defaultURL, err := normalizeEndpointAddress(registry)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to construct default endpoint for registry %s", registry)
+		return nil, fmt.Errorf("failed to construct default endpoint for registry %s: %w", registry, err)
 	}
 	endpoints = append(endpoints, r.makeEndpoint(defaultURL, ref))
 	return endpoints, nil
@@ -275,15 +274,15 @@ func (r *registry) getTLSConfig(endpointURL *url.URL) (*tls.Config, error) {
 		if config, ok := r.Registry.Configs[key]; ok {
 			if config.TLS != nil {
 				if config.TLS.CertFile != "" && config.TLS.KeyFile == "" {
-					return nil, errors.Errorf("cert file %q was specified, but no corresponding key file was specified", config.TLS.CertFile)
+					return nil, fmt.Errorf("cert file %q was specified, but no corresponding key file was specified", config.TLS.CertFile)
 				}
 				if config.TLS.CertFile == "" && config.TLS.KeyFile != "" {
-					return nil, errors.Errorf("key file %q was specified, but no corresponding cert file was specified", config.TLS.KeyFile)
+					return nil, fmt.Errorf("key file %q was specified, but no corresponding cert file was specified", config.TLS.KeyFile)
 				}
 				if config.TLS.CertFile != "" && config.TLS.KeyFile != "" {
 					cert, err := tls.LoadX509KeyPair(config.TLS.CertFile, config.TLS.KeyFile)
 					if err != nil {
-						return nil, errors.Wrap(err, "failed to load cert file")
+						return nil, fmt.Errorf("failed to load cert file: %w", err)
 					}
 					if len(cert.Certificate) != 0 {
 						tlsConfig.Certificates = []tls.Certificate{cert}
@@ -294,11 +293,11 @@ func (r *registry) getTLSConfig(endpointURL *url.URL) (*tls.Config, error) {
 				if config.TLS.CAFile != "" {
 					caCertPool, err := x509.SystemCertPool()
 					if err != nil {
-						return nil, errors.Wrap(err, "failed to get system cert pool")
+						return nil, fmt.Errorf("failed to get system cert pool: %w", err)
 					}
 					caCert, err := ioutil.ReadFile(config.TLS.CAFile)
 					if err != nil {
-						return nil, errors.Wrap(err, "failed to load CA file")
+						return nil, fmt.Errorf("failed to load CA file: %w", err)
 					}
 					caCertPool.AppendCertsFromPEM(caCert)
 					tlsConfig.RootCAs = caCertPool
