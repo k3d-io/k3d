@@ -24,7 +24,9 @@ package client
 
 import (
 	"context"
+	"io"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/go-test/deep"
@@ -225,4 +227,131 @@ type FakeRuntimeImageGetter struct {
 
 func (f *FakeRuntimeImageGetter) GetImages(_ context.Context) ([]string, error) {
 	return f.runtimeImages, nil
+}
+
+func Test_prepareImagesForNodeImport(t *testing.T) {
+	// the "*" is required so CreateTemp's random suffix lands before ".tar", not after - otherwise the
+	// file wouldn't actually have a ".tar" suffix, which tarExtension (and k3s) checks for
+	tarImage, err := os.CreateTemp("", "images-*.tar")
+	if err != nil {
+		t.Fatal("Failed to create temporary file")
+	}
+	defer os.Remove(tarImage.Name())
+
+	t.Run("requested image is neither a file nor known to the runtime", func(t *testing.T) {
+		runtime := &FakeRuntimeImageExporter{runtimeImages: []string{"busybox:latest"}}
+
+		_, _, cleanup, err := prepareImagesForNodeImport(context.Background(), runtime, []string{"doesnotexist:v1"})
+		if cleanup != nil {
+			defer cleanup()
+		}
+
+		if err == nil {
+			t.Fatal("expected an error for an image that is neither a file nor present in the runtime, got none")
+		}
+		if !strings.Contains(err.Error(), "doesnotexist:v1") {
+			t.Errorf("expected error to mention the missing image, got: %v", err)
+		}
+		if runtime.getImageStreamCalls != 0 {
+			t.Errorf("expected no image export attempt when a requested image can't be resolved, got %d", runtime.getImageStreamCalls)
+		}
+	})
+
+	t.Run("requested tarball has no k3s-supported extension", func(t *testing.T) {
+		unsupported, err := os.CreateTemp("", "images-*.whatever")
+		if err != nil {
+			t.Fatal("Failed to create temporary file")
+		}
+		defer os.Remove(unsupported.Name())
+
+		runtime := &FakeRuntimeImageExporter{}
+
+		_, _, cleanup, err := prepareImagesForNodeImport(context.Background(), runtime, []string{unsupported.Name()})
+		if cleanup != nil {
+			defer cleanup()
+		}
+
+		if err == nil {
+			t.Fatal("expected an error for a tarball with an unsupported extension, got none")
+		}
+		if !strings.Contains(err.Error(), unsupported.Name()) {
+			t.Errorf("expected error to mention the offending tarball, got: %v", err)
+		}
+	})
+
+	t.Run("mix of tarball and runtime image exports the runtime image exactly once", func(t *testing.T) {
+		runtime := &FakeRuntimeImageExporter{
+			runtimeImages: []string{"busybox:latest"},
+			streamContent: "fake-tar-content",
+		}
+
+		imageDirStage, tarballs, cleanup, err := prepareImagesForNodeImport(context.Background(), runtime, []string{tarImage.Name(), "busybox"})
+		if err != nil {
+			t.Fatalf("got unexpected error: %v", err)
+		}
+		defer cleanup()
+
+		if runtime.getImageStreamCalls != 1 {
+			t.Errorf("expected exactly one GetImageStream call (one export for all runtime images), got %d", runtime.getImageStreamCalls)
+		}
+		if len(tarballs) != 2 {
+			t.Fatalf("expected 2 tarballs (the given one plus the exported one), got %d: %v", len(tarballs), tarballs)
+		}
+		if tarballs[0] != tarImage.Name() {
+			t.Errorf("expected the first tarball to be the one passed in, got %s", tarballs[0])
+		}
+		if _, err := os.Stat(tarballs[1]); err != nil {
+			t.Errorf("expected exported tarball '%s' to exist: %v", tarballs[1], err)
+		}
+		if got, err := os.ReadFile(tarballs[1]); err != nil || string(got) != runtime.streamContent {
+			t.Errorf("expected exported tarball to contain the streamed content, got %q (err: %v)", got, err)
+		}
+		if _, err := os.Stat(imageDirStage); err != nil {
+			t.Errorf("expected staged image directory '%s' to exist: %v", imageDirStage, err)
+		}
+
+		cleanup()
+		if _, err := os.Stat(imageDirStage); !os.IsNotExist(err) {
+			t.Errorf("expected cleanup to remove the staging directory '%s'", imageDirStage)
+		}
+	})
+}
+
+type FakeRuntimeImageExporter struct {
+	runtimeImages       []string
+	streamContent       string
+	getImageStreamCalls int
+}
+
+func (f *FakeRuntimeImageExporter) GetImages(_ context.Context) ([]string, error) {
+	return f.runtimeImages, nil
+}
+
+func (f *FakeRuntimeImageExporter) GetImageStream(_ context.Context, _ []string) (io.ReadCloser, error) {
+	f.getImageStreamCalls++
+	return io.NopCloser(strings.NewReader(f.streamContent)), nil
+}
+
+func Test_tarExtension(t *testing.T) {
+	tests := map[string]string{
+		"/path/to/image.tar":      ".tar",
+		"/path/to/image.tar.gz":   ".tar.gz",
+		"/path/to/image.tgz":      ".tgz",
+		"/path/to/IMAGE.TAR.GZ":   ".tar.gz", // k3s matches case-insensitively
+		"/path/to/image.tar.bz2":  ".tar.bz2",
+		"/path/to/image.tbz":      ".tbz",
+		"/path/to/image.tar.zst":  ".tar.zst",
+		"/path/to/image.tzst":     ".tzst",
+		"/path/to/image.tar.lz4":  ".tar.lz4",
+		"/path/to/image.whatever": "",
+		"/path/to/image":          "",
+	}
+
+	for path, want := range tests {
+		t.Run(path, func(t *testing.T) {
+			if got := tarExtension(path); got != want {
+				t.Errorf("tarExtension(%q) = %q, want %q", path, got, want)
+			}
+		})
+	}
 }

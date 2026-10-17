@@ -49,6 +49,9 @@ func NewCmdNodeCreate() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			nodes, clusterName := parseCreateNodeCmd(cmd, args)
 			if strings.HasPrefix(clusterName, "https://") {
+				if len(createNodeOpts.ImportImages) > 0 {
+					l.Log().Fatalln("--import-image is not supported when adding nodes to a remote cluster")
+				}
 				l.Log().Infof("Adding %d node(s) to the remote cluster '%s'...", len(nodes), clusterName)
 				if err := k3dc.NodeAddToClusterMultiRemote(cmd.Context(), runtimes.SelectedRuntime, nodes, clusterName, createNodeOpts); err != nil {
 					l.Log().Fatalf("failed to add %d node(s) to the remote cluster '%s': %v", len(nodes), clusterName, err)
@@ -87,6 +90,8 @@ func NewCmdNodeCreate() *cobra.Command {
 	cmd.Flags().StringSliceP("network", "n", []string{}, "Add node to (another) runtime network")
 
 	cmd.Flags().StringVarP(&createNodeOpts.ClusterToken, "token", "t", "", "Override cluster token (required when connecting to an external cluster)")
+
+	cmd.Flags().StringSliceVar(&createNodeOpts.ImportImages, "import-image", nil, "Import image(s) into the node(s) before they start, so they're available before any pods are scheduled")
 
 	cmd.Flags().StringArray("k3s-arg", nil, "Additional args passed to k3d command")
 
