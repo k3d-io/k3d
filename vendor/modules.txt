@@ -590,12 +590,12 @@ go.yaml.in/yaml/v3
 go4.org/netipx
 # go4.org/unsafe/assume-no-moving-gc v0.0.0-20230209150437-ee73d164e760
 ## explicit; go 1.11
-# golang.org/x/crypto v0.22.0
+# golang.org/x/crypto v0.52.0
 ## explicit; go 1.25.0
 # golang.org/x/mod v0.36.0
 ## explicit; go 1.25.0
 golang.org/x/mod/semver
-# golang.org/x/net v0.24.0
+# golang.org/x/net v0.54.0
 ## explicit; go 1.25.0
 # golang.org/x/net v0.55.0
 ## explicit; go 1.25.0
@@ -613,26 +613,18 @@ golang.org/x/net/trace
 ## explicit; go 1.25.0
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
-## explicit; go 1.25.0
 # golang.org/x/sync v0.20.0
 ## explicit; go 1.25.0
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.19.0
-## explicit; go 1.25.0
 # golang.org/x/sys v0.45.0
 ## explicit; go 1.25.0
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/windows/registry
-# golang.org/x/term v0.19.0
-## explicit; go 1.25.0
 # golang.org/x/term v0.43.0
 ## explicit; go 1.25.0
 golang.org/x/term
-# golang.org/x/text v0.14.0
-## explicit; go 1.25.0
 # golang.org/x/text v0.37.0
 ## explicit; go 1.25.0
 golang.org/x/text/encoding
