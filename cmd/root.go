@@ -67,11 +67,28 @@ type VersionInfo struct {
 
 var flags = RootFlags{}
 
+// AnnotationRuntimeNotRequired marks commands that do their job without talking to a container runtime.
+// Those commands must not fail just because there's no runtime around (see #1514).
+const AnnotationRuntimeNotRequired = "k3d.io/runtime-not-required"
+
+// runtimeNotRequired returns the annotation map used to mark a command as not requiring a container runtime
+func runtimeNotRequired() map[string]string {
+	return map[string]string{AnnotationRuntimeNotRequired: ""}
+}
+
+// runtimeInitRequired tells whether the given command needs an initialized container runtime to run
+func runtimeInitRequired(cmd *cobra.Command) bool {
+	_, notRequired := cmd.Annotations[AnnotationRuntimeNotRequired]
+	return !notRequired
+}
+
 func NewCmdK3d() *cobra.Command {
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd := &cobra.Command{
-		Use:   "k3d",
-		Short: "https://k3d.io/ -> Run k3s in Docker!",
+		Use: "k3d",
+		// the root command only prints usage or the version, so it doesn't need a runtime
+		Annotations: runtimeNotRequired(),
+		Short:       "https://k3d.io/ -> Run k3s in Docker!",
 		Long: `https://k3d.io/
 k3d is a wrapper CLI that helps you to easily create k3s clusters inside docker.
 Nodes of a k3d cluster are docker containers running a k3s image.
@@ -123,8 +140,17 @@ All Nodes of a k3d cluster are part of the same docker network.`,
 		},
 	)
 
+	// Initialize the runtime only for the commands that actually need it, so that e.g. `k3d version`
+	// keeps working on machines without a container runtime.
+	// Note: this is inherited by all subcommands that don't define a PersistentPreRun of their own.
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		if runtimeInitRequired(cmd) {
+			initRuntime()
+		}
+	}
+
 	// Init
-	cobra.OnInitialize(initLogging, initRuntime)
+	cobra.OnInitialize(initLogging)
 
 	return rootCmd
 }
@@ -219,9 +245,10 @@ func NewCmdVersion() *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "version",
-		Short: "Show k3d and default k3s version",
-		Long:  "Show k3d and default k3s version",
+		Use:         "version",
+		Short:       "Show k3d and default k3s version",
+		Long:        "Show k3d and default k3s version",
+		Annotations: runtimeNotRequired(),
 		Run: func(cmd *cobra.Command, args []string) {
 			output, _ := cmd.Flags().GetString("output")
 
@@ -302,11 +329,13 @@ func NewCmdVersionLs() *cobra.Command {
 	flags := Flags{}
 
 	cmd := &cobra.Command{
-		Use:       "list COMPONENT",
-		Aliases:   []string{"ls"},
-		Short:     "List k3d/K3s versions. Component can be one of 'k3d', 'k3s', 'k3d-proxy', 'k3d-tools'.",
-		ValidArgs: []string{"k3d", "k3s", "k3d-proxy", "k3d-tools"},
-		Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+		Use:     "list COMPONENT",
+		Aliases: []string{"ls"},
+		Short:   "List k3d/K3s versions. Component can be one of 'k3d', 'k3s', 'k3d-proxy', 'k3d-tools'.",
+		// the versions are fetched from the image registries, so no container runtime is involved
+		Annotations: runtimeNotRequired(),
+		ValidArgs:   []string{"k3d", "k3s", "k3d-proxy", "k3d-tools"},
+		Args:        cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 		Run: func(cmd *cobra.Command, args []string) {
 			repo, ok := imageRepos[args[0]]
 			if !ok {
@@ -422,6 +451,8 @@ func NewCmdCompletion(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "completion SHELL",
 		Short: "Generate completion scripts for [bash, zsh, fish, powershell | psh]",
+		// completion scripts are generated from the command tree, so no container runtime is involved
+		Annotations: runtimeNotRequired(),
 		Long: `To load completions:
 
 Bash:
