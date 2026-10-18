@@ -133,6 +133,9 @@ type ClusterCreateOpts struct {
 type NodeHook struct {
 	Stage  LifecycleStage `json:"stage,omitempty"`
 	Action NodeHookAction `json:"action,omitempty"`
+	// MustSucceed marks a preStart hook as critical: if it fails, node start aborts with an error
+	// instead of just logging it and continuing (the default, kept for backwards compatibility).
+	MustSucceed bool `json:"mustSucceed,omitempty"`
 }
 
 // LifecycleStage defines descriptors for specific stages in the lifecycle of a node or cluster object
@@ -166,6 +169,7 @@ type NodeCreateOpts struct {
 	NodeHooks       []NodeHook `json:"nodeHooks,omitempty"`
 	EnvironmentInfo *EnvironmentInfo
 	ClusterToken    string
+	ImportImages    []string // images (names or tarball paths) to load into the nodes before they start
 }
 
 // NodeStartOpts describes a set of options one can set when (re-)starting a node
