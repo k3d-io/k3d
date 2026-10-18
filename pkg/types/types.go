@@ -86,6 +86,7 @@ const (
 	LabelNetworkID               string = "k3d.cluster.network.id"
 	LabelNetworkIPRange          string = "k3d.cluster.network.iprange"
 	LabelClusterStartHostAliases string = "k3d.cluster.start.hostaliases"
+	LabelClusterCoreDNSDisabled  string = "k3d.cluster.coredns.disabled"
 	LabelRole                    string = "k3d.role"
 	LabelServerAPIPort           string = "k3d.server.api.port"
 	LabelServerAPIHost           string = "k3d.server.api.host"
