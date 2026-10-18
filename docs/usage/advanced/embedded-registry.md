@@ -10,14 +10,6 @@ k3d does not need any special support for this: it only takes a K3s server flag 
 1. The `--embedded-registry` flag on the server node(s).
 2. A `mirrors` entry in `registries.yaml` for every registry that should be mirrored.
 
-The flag on its own does nothing. Without a mirrors entry, the server logs this and the mirror never starts:
-
-```text
-level=error msg="Not starting distributed registry mirror: no registries configured for distributed mirroring"
-```
-
-The [K3s docs](https://docs.k3s.io/installation/registry-mirror#enabling-registry-mirroring) say the same: a node with no registries enabled for mirroring does not take part in the distributed registry at all.
-
 ## Using the CLI
 
 Create a `registries.yaml` that lists the registries to mirror. An entry with no endpoints is enough:
