@@ -464,19 +464,20 @@ ClusterCreatOpts:
 		// ensure global env
 		node.Env = append(node.Env, clusterCreateOpts.GlobalEnv...)
 
+		// create static IPs when network is IPAM managed
+		if cluster.Network.IPAM.Managed {
+			ip, err := GetIP(ctx, runtime, &cluster.Network)
+			if err != nil {
+				return fmt.Errorf("failed to find free IP in network %s: %w", cluster.Network.Name, err)
+			}
+			cluster.Network.IPAM.IPsUsed = append(cluster.Network.IPAM.IPsUsed, ip) // make sure that we're not reusing the same IP next time
+			node.IP.Static = true
+			node.IP.IP = ip
+			node.RuntimeLabels[k3d.LabelNodeStaticIP] = ip.String()
+		}
+
 		// node role specific settings
 		if node.Role == k3d.ServerRole {
-			if cluster.Network.IPAM.Managed {
-				ip, err := GetIP(ctx, runtime, &cluster.Network)
-				if err != nil {
-					return fmt.Errorf("failed to find free IP in network %s: %w", cluster.Network.Name, err)
-				}
-				cluster.Network.IPAM.IPsUsed = append(cluster.Network.IPAM.IPsUsed, ip) // make sure that we're not reusing the same IP next time
-				node.IP.Static = true
-				node.IP.IP = ip
-				node.RuntimeLabels[k3d.LabelNodeStaticIP] = ip.String()
-			}
-
 			node.ServerOpts.KubeAPI = cluster.KubeAPI
 
 			// the cluster has an init server node, but its not this one, so connect it to the init node
