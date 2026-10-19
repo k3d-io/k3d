@@ -36,9 +36,9 @@ import (
 	"strings"
 	"time"
 
+	"dario.cat/mergo"
 	"github.com/docker/go-connections/nat"
 	dockerunits "github.com/docker/go-units"
-	"dario.cat/mergo"
 	copystruct "github.com/mitchellh/copystructure"
 	"golang.org/x/sync/errgroup"
 	"sigs.k8s.io/yaml"
@@ -1044,12 +1044,35 @@ func NodeWaitForLogMessage(ctx context.Context, runtime runtimes.Runtime, node *
 	// The logstream returned by docker ends everytime the container restarts, so we have to start from the beginning.
 	for i := 0; i < backOffLimit; i++ {
 		// get the log stream (reader is following the logstream)
-		out, err := runtime.GetNodeLogs(ctx, node, since, &runtimeTypes.NodeLogsOpts{Follow: true})
+		//
+		// A runtime can briefly refuse to open the stream after the container
+		// starts, even if the node is fine. Podman's journald log reader has been
+		// seen answering a logs request with a 500 in a process that had not yet
+		// opened the journal. A node that is still running gets its own retries
+		// here, same limit as the crash loop retries but a separate retry budget.
+		var out io.ReadCloser
+		var err error
+		for attempt := 0; ; attempt++ {
+			out, err = runtime.GetNodeLogs(ctx, node, since, &runtimeTypes.NodeLogsOpts{Follow: true})
+			if err == nil {
+				break
+			}
+			running, _, statusErr := runtime.GetNodeStatus(ctx, node)
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			if statusErr != nil || !running || attempt >= backOffLimit-1 {
+				return fmt.Errorf("Failed waiting for log message '%s' from node '%s': %w", message, node.Name, err)
+			}
+			l.Log().Warnf("warning: failed to open the log stream of node %s (retrying %d/%d): %v", node.Name, attempt+1, backOffLimit, err)
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(500 * time.Millisecond):
+			}
+		}
 		if out != nil {
 			defer out.Close()
-		}
-		if err != nil {
-			return fmt.Errorf("Failed waiting for log message '%s' from node '%s': %w", message, node.Name, err)
 		}
 
 		// We're scanning the logstream continuously line-by-line
