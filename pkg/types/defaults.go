@@ -85,6 +85,9 @@ const DefaultAPIPort = "6443"
 // DefaultAPIHost defines the default host (IP) for the Kubernetes API
 const DefaultAPIHost = "0.0.0.0"
 
+// DefaultNodePortRange defines the default Kubernetes NodePort range (used by --expose-nodeports)
+const DefaultNodePortRange = "30000-32767"
+
 // GetDefaultObjectName prefixes the passed name with the default prefix
 func GetDefaultObjectName(name string) string {
 	return fmt.Sprintf("%s-%s", DefaultObjectNamePrefix, name)

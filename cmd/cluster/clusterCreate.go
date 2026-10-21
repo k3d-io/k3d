@@ -242,6 +242,9 @@ func NewCmdClusterCreate() *cobra.Command {
 	cmd.Flags().StringArrayP("port", "p", nil, "Map ports from the node containers (via the serverlb) to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster create --agents 2 -p 8080:80@agent:0 -p 8081@agent:1`")
 	_ = ppViper.BindPFlag("cli.ports", cmd.Flags().Lookup("port"))
 
+	cmd.Flags().Bool("expose-nodeports", false, fmt.Sprintf("Expose the whole default k3s NodePort range (%s) on the server node, mapped to the same range on the host\n - Shorthand for --port %s:%s@server:0", k3d.DefaultNodePortRange, k3d.DefaultNodePortRange, k3d.DefaultNodePortRange))
+	_ = ppViper.BindPFlag("cli.expose-nodeports", cmd.Flags().Lookup("expose-nodeports"))
+
 	cmd.Flags().StringArrayP("k3s-node-label", "", nil, "Add label to k3s node (Format: `KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]`\n - Example: `k3d cluster create --agents 2 --k3s-node-label \"my.label@agent:0,1\" --k3s-node-label \"other.label=somevalue@server:0\"`")
 	_ = ppViper.BindPFlag("cli.k3s-node-labels", cmd.Flags().Lookup("k3s-node-label"))
 
@@ -457,6 +460,14 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 	}
 
 	l.Log().Tracef("PortFilterMap: %+v", portFilterMap)
+
+	// --expose-nodeports maps the whole default k3s NodePort range to the same range on the host (server node only)
+	if ppViper.GetBool("cli.expose-nodeports") {
+		cfg.Ports = append(cfg.Ports, conf.PortWithNodeFilters{
+			Port:        fmt.Sprintf("%s:%s", k3d.DefaultNodePortRange, k3d.DefaultNodePortRange),
+			NodeFilters: []string{"server:0"},
+		})
+	}
 
 	// --k3s-node-label
 	// k3sNodeLabelFilterMap will add k3s node label to applied node filters
