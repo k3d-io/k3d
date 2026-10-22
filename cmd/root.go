@@ -380,9 +380,7 @@ func NewCmdVersionLs() *cobra.Command {
 				})
 			}
 
-			if flags.limit > 0 {
-				filteredTags = filteredTags[0:flags.limit]
-			}
+			filteredTags = limitTags(filteredTags, flags.limit)
 			fmt.Println(strings.Join(filteredTags, "\n"))
 		},
 	}
@@ -396,6 +394,13 @@ func NewCmdVersionLs() *cobra.Command {
 	cmd.Flags().IntVarP(&flags.limit, "limit", "l", 0, "Limit number of tags in output (0 = unlimited)")
 
 	return cmd
+}
+
+func limitTags(tags []string, limit int) []string {
+	if limit > 0 && limit < len(tags) {
+		return tags[:limit]
+	}
+	return tags
 }
 
 // NewCmdCompletion creates a new completion command
