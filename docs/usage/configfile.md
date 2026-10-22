@@ -44,6 +44,12 @@ Currently, the config file is still in an Alpha-State, meaning, that it is subje
     This schema is also used to [validate](https://github.com/xeipuuv/gojsonschema#validation) a user-given config file.  
     This JSON-Schema can be found in the specific config version sub-directory in the repository (e.g. [here for `v1alpha5`](https://github.com/k3d-io/k3d/blob/main/pkg/config/v1alpha5/schema.json)) and could be used to lookup supported fields or by linters to validate the config file, e.g. in your code editor.  
 
+    For example:
+    ```yaml
+    # yaml-language-server: $schema=https://raw.githubusercontent.com/k3d-io/k3d/refs/heads/main/pkg/config/v1alpha5/schema.json
+    ```
+    For [redhat.vscode-yaml](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)
+
 ### All Options: Example
 
 Since the config options and the config file are changing quite a bit, it's hard to keep track of all the supported config file settings, so here's an example showing all of them as of the time of writing:
