@@ -1,0 +1,13 @@
+apiVersion: k3d.io/v1alpha6
+kind: Simple
+metadata:
+  name: newconfig
+nodes: # if omitted, one server will be assumed
+  - role: server
+  - role: agent
+    name: myagent
+  - role: agent
+    name: otheragents
+    replicas: 2
+    volumes:
+      - /foo/bar:/baz/bom

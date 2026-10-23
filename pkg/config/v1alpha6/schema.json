@@ -1,0 +1,363 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "k3d Configuration Schema v1alpha6",
+  "description": "Configuration file for k3d clusters using node-based syntax",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["k3d.io/v1alpha6"],
+      "description": "API version of the configuration"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["Simple"],
+      "description": "Kind of configuration"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the cluster"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels to apply to the cluster"
+        }
+      },
+      "required": ["name"]
+    },
+    "nodes": {
+      "type": "array",
+      "description": "List of nodes in the cluster",
+      "items": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["server", "agent"],
+            "description": "Role of the node"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the node (optional, auto-generated if not provided)"
+          },
+          "replicas": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of replicas for this node configuration"
+          },
+          "image": {
+            "type": "string",
+            "description": "Container image to use for this node"
+          },
+          "volumes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Volumes to mount on this node"
+          },
+          "ports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Ports to expose from this node"
+          },
+          "env": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Environment variables for this node"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Labels to apply to this node"
+          },
+          "extraArgs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Additional arguments for k3s on this node"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "description": "Source file path"
+                },
+                "destination": {
+                  "type": "string",
+                  "description": "Destination file path in the container"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the file"
+                }
+              },
+              "required": ["source", "destination"]
+            },
+            "description": "Files to copy to this node"
+          }
+        },
+        "required": ["role"]
+      }
+    },
+    "kubeAPI": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "Host IP to bind the Kubernetes API to"
+        },
+        "hostIP": {
+          "type": "string",
+          "description": "Host IP to bind the Kubernetes API to"
+        },
+        "hostPort": {
+          "type": "string",
+          "description": "Host port to bind the Kubernetes API to"
+        }
+      },
+      "description": "Kubernetes API exposure options"
+    },
+    "image": {
+      "type": "string",
+      "description": "Container image to use for all nodes (can be overridden per node)"
+    },
+    "network": {
+      "type": "string",
+      "description": "Docker network to connect the cluster to"
+    },
+    "subnet": {
+      "type": "string",
+      "description": "Subnet for the cluster network"
+    },
+    "token": {
+      "type": "string",
+      "description": "Cluster token for node joining"
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "k3d": {
+          "type": "object",
+          "properties": {
+            "wait": {
+              "type": "boolean",
+              "description": "Wait for the cluster to be ready"
+            },
+            "timeout": {
+              "type": "string",
+              "description": "Timeout for waiting operations"
+            },
+            "disableLoadbalancer": {
+              "type": "boolean",
+              "description": "Disable the load balancer"
+            },
+            "disableImageVolume": {
+              "type": "boolean",
+              "description": "Disable the shared image volume"
+            },
+            "disableRollback": {
+              "type": "boolean",
+              "description": "Disable rollback on failure"
+            },
+            "nodeHookActions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Node hook actions"
+            },
+            "loadbalancer": {
+              "type": "object",
+              "properties": {
+                "configOverrides": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Load balancer configuration overrides"
+                }
+              }
+            }
+          }
+        },
+        "k3s": {
+          "type": "object",
+          "properties": {
+            "extraArgs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "arg": {
+                    "type": "string",
+                    "description": "Additional argument for k3s"
+                  }
+                },
+                "required": ["arg"]
+              },
+              "description": "Additional arguments for k3s"
+            },
+            "nodeLabels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Labels to apply to nodes"
+            }
+          }
+        },
+        "kubeconfig": {
+          "type": "object",
+          "properties": {
+            "updateDefaultKubeconfig": {
+              "type": "boolean",
+              "description": "Update the default kubeconfig"
+            },
+            "switchCurrentContext": {
+              "type": "boolean",
+              "description": "Switch to the new cluster context"
+            }
+          }
+        },
+        "runtime": {
+          "type": "object",
+          "properties": {
+            "gpuRequest": {
+              "type": "string",
+              "description": "GPU request for nodes"
+            },
+            "serversMemory": {
+              "type": "string",
+              "description": "Memory limit for server nodes"
+            },
+            "agentsMemory": {
+              "type": "string",
+              "description": "Memory limit for agent nodes"
+            },
+            "hostPidMode": {
+              "type": "boolean",
+              "description": "Use host PID mode"
+            },
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Labels to apply to nodes"
+            },
+            "ulimits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "soft": {
+                    "type": "integer"
+                  },
+                  "hard": {
+                    "type": "integer"
+                  }
+                },
+                "required": ["name", "soft", "hard"]
+              },
+              "description": "Ulimits for containers"
+            }
+          }
+        }
+      }
+    },
+    "registries": {
+      "type": "object",
+      "properties": {
+        "use": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Registries to use"
+        },
+        "create": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the registry"
+            },
+            "host": {
+              "type": "string",
+              "description": "Host for the registry"
+            },
+            "hostPort": {
+              "type": "string",
+              "description": "Host port for the registry"
+            },
+            "image": {
+              "type": "string",
+              "description": "Image for the registry"
+            },
+            "proxy": {
+              "type": "object",
+              "description": "Proxy configuration"
+            },
+            "volumes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Volumes for the registry"
+            },
+            "enforcePortMatch": {
+              "type": "boolean",
+              "description": "Enforce port matching"
+            }
+          }
+        },
+        "config": {
+          "type": "string",
+          "description": "Registry configuration file"
+        }
+      }
+    },
+    "hostAliases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ip": {
+            "type": "string",
+            "description": "IP address"
+          },
+          "hostnames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Hostnames"
+          }
+        },
+        "required": ["ip", "hostnames"]
+      },
+      "description": "Host aliases for the cluster"
+    }
+  },
+  "required": ["apiVersion", "kind", "metadata"]
+}
