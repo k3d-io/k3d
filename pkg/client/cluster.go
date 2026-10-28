@@ -1043,7 +1043,7 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 	 * Additional Cluster Preparation (post start)
 	 */
 
-	if len(servers) > 0 || len(agents) > 0 { // TODO: make checks for required cluster start actions cleaner
+	if initNode != nil || len(servers) > 0 || len(agents) > 0 { // TODO: make checks for required cluster start actions cleaner
 		postStartErrgrp, postStartErrgrpCtx := errgroup.WithContext(ctx)
 
 		/*** DNS ***/
@@ -1059,7 +1059,13 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 				Hostnames: []string{"host.k3d.internal"},
 			})
 
-			for _, node := range append(servers, agents...) {
+			nodesToUpdate := make([]*k3d.Node, 0, len(servers)+len(agents)+1)
+			if initNode != nil {
+				nodesToUpdate = append(nodesToUpdate, initNode)
+			}
+			nodesToUpdate = append(nodesToUpdate, servers...)
+			nodesToUpdate = append(nodesToUpdate, agents...)
+			for _, node := range nodesToUpdate {
 				currNode := node
 				postStartErrgrp.Go(func() error {
 					return NewHostAliasesInjectEtcHostsAction(runtime, clusterStartOpts.HostAliases).Run(postStartErrgrpCtx, currNode)
