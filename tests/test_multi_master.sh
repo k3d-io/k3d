@@ -40,6 +40,13 @@ sleep 5
 info "Checking that we have 3 server nodes online..."
 check_multi_node "$clustername" 3 || failed "failed to verify number of nodes $EXTRA_TITLE"
 
+info "Checking that all server nodes have host.k3d.internal in /etc/hosts..."
+for i in 0 1 2; do
+  nodename="k3d-${clustername}-server-$i"
+  exec_in_node "$nodename" "grep -q 'host\.k3d\.internal' /etc/hosts" \
+    || failed "node $nodename is missing the host.k3d.internal record in /etc/hosts $EXTRA_TITLE"
+done
+
 info "Deleting cluster $clustername..."
 $EXE cluster delete "$clustername" || failed "could not delete the cluster $clustername $EXTRA_TITLE"
 
