@@ -33,8 +33,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/docker/go-connections/nat"
 	"dario.cat/mergo"
+	"github.com/docker/go-connections/nat"
 	copystruct "github.com/mitchellh/copystructure"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
@@ -1059,7 +1059,11 @@ func ClusterStart(ctx context.Context, runtime k3drt.Runtime, cluster *k3d.Clust
 				Hostnames: []string{"host.k3d.internal"},
 			})
 
-			for _, node := range append(servers, agents...) {
+			hosts := append(servers, agents...)
+			if initNode != nil {
+				hosts = append([]*k3d.Node{initNode}, hosts...)
+			}
+			for _, node := range hosts {
 				currNode := node
 				postStartErrgrp.Go(func() error {
 					return NewHostAliasesInjectEtcHostsAction(runtime, clusterStartOpts.HostAliases).Run(postStartErrgrpCtx, currNode)
