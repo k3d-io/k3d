@@ -41,7 +41,7 @@ var DoNotCopyVolumeSuffices = []string{
 	fmt.Sprintf("%s:ro", MemInfoPath),
 }
 
-// creates a mininal fake meminfo with fields required by cadvisor (see machine.go in cadvisor)
+// creates a minimal fake meminfo with fields required by cadvisor (see machine.go in cadvisor)
 func meminfoContent(totalKB int64) string {
 	var lines = []string{
 		fmt.Sprintf("MemTotal: %d kB", totalKB),

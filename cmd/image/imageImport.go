@@ -80,7 +80,7 @@ So if a file './k3d-io/k3d-tools' exists, k3d will try to import it instead of t
 				}
 			}
 			if errOccurred {
-				l.Log().Warnln("At least one error occured while trying to import the image(s) into the selected cluster(s)")
+				l.Log().Warnln("At least one error occurred while trying to import the image(s) into the selected cluster(s)")
 				os.Exit(1)
 			}
 			l.Log().Infof("Successfully imported %d image(s) into %d cluster(s)", len(images), len(clusters))

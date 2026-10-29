@@ -32,7 +32,7 @@
 
 /* Dark Mode */
 [data-md-color-scheme="slate"] .md-header {
-    /* keep black backgroud of title bar (header) */
+    /* keep black background of title bar (header) */
     background-color: black;
 }
 

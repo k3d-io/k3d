@@ -129,7 +129,7 @@ type ClusterCreateOpts struct {
 	} `json:"registries,omitempty"`
 }
 
-// NodeHook is an action that is bound to a specifc stage of a node lifecycle
+// NodeHook is an action that is bound to a specific stage of a node lifecycle
 type NodeHook struct {
 	Stage  LifecycleStage `json:"stage,omitempty"`
 	Action NodeHookAction `json:"action,omitempty"`

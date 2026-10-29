@@ -57,7 +57,7 @@ func NewCmdClusterRestart() *cobra.Command {
 						l.Log().Fatalln(err)
 					}
 
-					// retrive cluster latest status to start
+					// retrieve cluster latest status to start
 					c, err := client.ClusterGet(cmd.Context(), runtimes.SelectedRuntime, &k3d.Cluster{Name: cluster.Name})
 					if err != nil {
 						l.Log().Fatalf("failed to get cluster %s: %v", c.Name, err)

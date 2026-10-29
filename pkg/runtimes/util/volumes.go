@@ -87,7 +87,7 @@ func ReadVolumeMount(volumeMount string) (string, string, error) {
 
 	// validate 'SRC[:DEST]' substring
 	split := strings.Split(volumeMount, ":")
-	// a volume mapping can have 3 parts seperated by a ':' followed by a node filter
+	// a volume mapping can have 3 parts separated by a ':' followed by a node filter
 	// [SOURCE:]DEST[:OPT[,OPT]][@NODEFILTER[;NODEFILTER...]]
 	// On Windows the source path needs to be an absolute path which means the path starts with
 	// a drive designator and will also have a ':' in it. So for Windows the maxParts is increased by one.

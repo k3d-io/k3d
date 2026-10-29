@@ -21,7 +21,7 @@ k3d cluster create multiserver --servers 3
     (or whatever subnet you need) flags. With `--subnet auto`, k3d will create a fake docker network 
     to get an available subnet.
     
-    See the relavent issue [#550](https://github.com/k3d-io/k3d/issues/550) for more details.
+    See the relevant issue [#550](https://github.com/k3d-io/k3d/issues/550) for more details.
 
 ## Adding server nodes to a running cluster
 

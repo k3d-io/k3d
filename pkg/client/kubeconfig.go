@@ -283,7 +283,7 @@ func KubeconfigWrite(ctx context.Context, kubeconfig *clientcmdapi.Config, path 
 		return fmt.Errorf("failed to write merged kubeconfig to temporary file '%s': %w", tempPath, err)
 	}
 
-	// In case path is a symlink, retrives the name of the target
+	// In case path is a symlink, retrieves the name of the target
 	realPath, err := filepath.EvalSymlinks(path)
 	if err != nil {
 		return fmt.Errorf("failed to follow symlink '%s': %w", path, err)
