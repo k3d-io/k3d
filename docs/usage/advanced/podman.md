@@ -178,5 +178,5 @@ k3d cluster create --registry-use mycluster-registry mycluster
     Because `--registry-create` assumes the default network to be "bridge", avoid `--registry-create` when using Podman. Instead, always create a registry before creating a cluster.
 
 !!! note "Missing cpuset cgroup controller"
-    If you experince an error regarding missing cpuset cgroup controller, ensure the user unit `xdg-document-portal.service` is disabled by running `systemctl --user stop xdg-document-portal.service`. See [this issue](https://github.com/systemd/systemd/issues/18293#issuecomment-831397578)
+    If you experience an error regarding missing cpuset cgroup controller, ensure the user unit `xdg-document-portal.service` is disabled by running `systemctl --user stop xdg-document-portal.service`. See [this issue](https://github.com/systemd/systemd/issues/18293#issuecomment-831397578)
 
