@@ -84,6 +84,11 @@ jobs:
     steps:
       # Setup
       - uses: actions/checkout@v4
+      # The images are built from a Git context without the .git directory,
+      # so resolve the version here and pass it to the build (see docker-bake.hcl)
+      - name: Get k3d Version
+        id: version
+        run: echo "tag=$(git describe --tags --always)" >> "$GITHUB_OUTPUT"
       # Container Image Setup
       - name: Setup Docker
         uses: docker/setup-docker-action@v4
@@ -170,6 +175,8 @@ jobs:
       # Build and Push container images
       - name: Build Images
         uses: docker/bake-action@v6
+        env:
+          GIT_TAG: ${{ steps.version.outputs.tag }}
         with:
           files: |
             ./docker-bake.hcl
@@ -191,6 +198,8 @@ jobs:
       - name: Push Images
         if: startsWith(github.ref, 'refs/tags/')
         uses: docker/bake-action@v6
+        env:
+          GIT_TAG: ${{ steps.version.outputs.tag }}
         with:
           files: |
             ./docker-bake.hcl
