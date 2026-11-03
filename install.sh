@@ -5,6 +5,7 @@ REPO_URL="https://github.com/k3d-io/k3d"
 
 : ${USE_SUDO:="true"}
 : ${K3D_INSTALL_DIR:="/usr/local/bin"}
+: ${TAG:=""}
 
 # initArch discovers the architecture for this system.
 initArch() {
@@ -213,6 +214,7 @@ help () {
   echo "Accepted cli arguments are:"
   echo -e "\t[--help|-h ] ->> prints this help"
   echo -e "\t[--no-sudo]  ->> install without sudo"
+  echo -e "\t[--tag|-t <tag>] ->> install a specific release tag (or set TAG env var)"
 }
 
 # cleanup temporary files
@@ -235,6 +237,15 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     '--no-sudo')
        USE_SUDO="false"
+       ;;
+    '--tag'|-t)
+       if [[ $# -lt 2 || -z "$2" ]]; then
+         echo "Error: --tag requires a release tag argument"
+         help
+         exit 1
+       fi
+       TAG="$2"
+       shift
        ;;
     '--help'|-h)
        help
