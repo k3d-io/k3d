@@ -659,11 +659,16 @@ func NodeStart(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, no
 					// hook failure, the container can't have made any of its own progress yet, so
 					// deleting it here can't lose anything (e.g. an etcd membership for a server node
 					// that's mid-join).
-					cleanupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-					if delErr := NodeDelete(cleanupCtx, runtime, node, k3d.NodeDeleteOpts{}); delErr != nil {
-						l.Log().Errorf("Node %s: failed to clean up after a failed preStart hook: %v", node.Name, delErr)
+					// Only NodeRun sets this intent. With any other intent the node may have run
+					// before (cluster/node start) or belongs to a cluster that the caller rolls back
+					// (cluster create), so it must not be deleted here.
+					if nodeStartOpts.Intent == k3d.IntentNodeCreate {
+						cleanupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+						if delErr := NodeDelete(cleanupCtx, runtime, node, k3d.NodeDeleteOpts{}); delErr != nil {
+							l.Log().Errorf("Node %s: failed to clean up after a failed preStart hook: %v", node.Name, delErr)
+						}
+						cancel()
 					}
-					cancel()
 					return fmt.Errorf("Node %s: preStartAction '%s' failed: %s: %w", node.Name, hook.Action.Name(), hook.Action.Info(), err)
 				}
 				l.Log().Errorf("Node %s: Failed executing preStartAction '%s': %s: %+v", node.Name, hook.Action.Name(), hook.Action.Info(), err)
@@ -739,6 +744,8 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 				Mode:        0744,
 				Description: "Write custom k3d entrypoint script (that powers the magic fixes)",
 			},
+			// this script is the node's entrypoint: without it, the container can't start
+			MustSucceed: true,
 		})
 
 		// DNS Fix
