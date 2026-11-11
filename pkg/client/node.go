@@ -739,6 +739,7 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 				Mode:        0744,
 				Description: "Write custom k3d entrypoint script (that powers the magic fixes)",
 			},
+			MustSucceed: true,
 		})
 
 		// DNS Fix
@@ -766,6 +767,7 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 					Mode:        0744,
 					Description: "Write entrypoint script for DNS fix",
 				},
+				MustSucceed: true,
 			})
 		}
 
@@ -786,6 +788,7 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 					Mode:        0744,
 					Description: "Write entrypoint script for CGroupV2 fix",
 				},
+				MustSucceed: true,
 			})
 		}
 
@@ -805,6 +808,7 @@ func enableFixes(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, 
 					Mode:        0744,
 					Description: "Write entrypoint script for mounts fix",
 				},
+				MustSucceed: true,
 			})
 		}
 	}
@@ -1232,6 +1236,7 @@ func NodeEdit(ctx context.Context, runtime runtimes.Runtime, existingNode *k3d.N
 				Content:     configyaml,
 				Description: "Write Loadbalancer Configuration",
 			},
+			MustSucceed: true,
 		}
 
 		result.HookActions = append(result.HookActions, writeLbConfigAction)
