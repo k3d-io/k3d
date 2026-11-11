@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://k3d.io/stable/sitemap.xml
