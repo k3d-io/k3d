@@ -51,6 +51,7 @@ theme:
   favicon: static/img/favicons_black_blue/favicon.png
   icon:
     repo: fontawesome/brands/github
+  custom_dir: docs/overrides
 
 # Navigation
 # nav: omitted, because we're using the awesome-pages plugin (https://squidfunk.github.io/mkdocs-material/plugins/awesome-pages/)
@@ -84,12 +85,13 @@ plugins:
       version_selector: true   # set to false to leave out the version selector
       css_dir: static/css             # the directory to put the version selector's CSS
       javascript_dir: static/js       # the directory to put the version selector's JS
-      canonical_version: null  # the version for <link rel="canonical">; `null` uses the version specified via `mike deploy`
+      canonical_version: stable  # all versions declare /stable/... as their canonical URL
 
 # Extra mkdocs-material settings
 extra:
   version:
     provider: mike
+    default: stable
 
 # Other Settings
 strict: true # halt processing when a warning is raised

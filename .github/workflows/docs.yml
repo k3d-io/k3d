@@ -46,5 +46,19 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           mike deploy --update-aliases --push ${{ steps.git.outputs.tag }} stable
+          mike set-default --push stable
+      - name: Publish root robots.txt on gh-pages
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          git fetch origin gh-pages
+          git worktree add /tmp/k3d-gh-pages origin/gh-pages
+          cp docs/robots-root.txt /tmp/k3d-gh-pages/robots.txt
+          git -C /tmp/k3d-gh-pages add robots.txt
+          if git -C /tmp/k3d-gh-pages diff --cached --quiet; then
+            echo "robots.txt already up to date"
+          else
+            git -C /tmp/k3d-gh-pages commit -m "docs: add root robots.txt pointing at the stable sitemap"
+            git -C /tmp/k3d-gh-pages push origin HEAD:gh-pages
+          fi
       
 
