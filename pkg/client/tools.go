@@ -132,22 +132,34 @@ func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster 
 	// import image in each node
 	l.Log().Infoln("Importing images into nodes...")
 	var importWaitgroup sync.WaitGroup
+	var importErrLock sync.Mutex
+	var importErrors []error
+
 	for _, tarName := range importTarNames {
 		for _, node := range cluster.Nodes {
 			// only import image in server and agent nodes (i.e. ignoring auxiliary nodes like the server loadbalancer)
 			if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
 				importWaitgroup.Add(1)
 				go func(node *k3d.Node, wg *sync.WaitGroup, tarPath string) {
+					defer wg.Done()
 					l.Log().Infof("Importing images from tarball '%s' into node '%s'...", tarPath, node.Name)
 					if err := runtime.ExecInNode(ctx, node, []string{"ctr", "image", "import", "--all-platforms", tarPath}); err != nil {
-						l.Log().Errorf("failed to import images in node '%s': %v", node.Name, err)
+						l.Log().Debugf("Failed to import with '--all-platforms' into node '%s' (%v), retrying without '--all-platforms'...", node.Name, err)
+						if retryErr := runtime.ExecInNode(ctx, node, []string{"ctr", "image", "import", tarPath}); retryErr != nil {
+							l.Log().Errorf("failed to import images in node '%s': %v", node.Name, retryErr)
+							importErrLock.Lock()
+							importErrors = append(importErrors, fmt.Errorf("node '%s': %w", node.Name, retryErr))
+							importErrLock.Unlock()
+						}
 					}
-					wg.Done()
 				}(node, &importWaitgroup, tarName)
 			}
 		}
 	}
 	importWaitgroup.Wait()
+	if len(importErrors) > 0 {
+		return fmt.Errorf("failed to import images into one or more nodes: %v", importErrors)
+	}
 
 	// remove tarball
 	if !opts.KeepTar && len(importTarNames) > 0 {
