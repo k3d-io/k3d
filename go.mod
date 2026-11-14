@@ -8,7 +8,7 @@ require (
 	github.com/rancher/wharfie v0.7.0
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
-	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
+	go4.org/netipx v0.0.0-20260823151212-3075585bcbeb
 	golang.org/x/mod v0.36.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/utils v0.0.0-20260507154919-ff6756f316d2
@@ -28,6 +28,7 @@ require (
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/mattn/go-runewidth v0.0.24 // indirect
+	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/moby/go-archive v0.1.0 // indirect
 	github.com/moby/sys/atomicwriter v0.1.0 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
@@ -42,7 +43,6 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	google.golang.org/genproto v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	k8s.io/kube-openapi v0.0.0-20260520065146-aa012df4f4af // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.0 // indirect
