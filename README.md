@@ -63,7 +63,7 @@ You have several options there:
   - curl: `curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.0.0 bash`
 
 - use [Homebrew](https://brew.sh): `brew install k3d` (Homebrew is available for MacOS and Linux)
-  - Formula can be found in [homebrew/homebrew-core](https://github.com/Homebrew/homebrew-core/blob/master/Formula/k3d.rb) and is mirrored to [homebrew/linuxbrew-core](https://github.com/Homebrew/linuxbrew-core/blob/master/Formula/k3d.rb)
+  - Formula can be found in homebrew/homebrew-core and is mirrored to homebrew/linuxbrew-core
 - install via [MacPorts](https://www.macports.org): `sudo port selfupdate && sudo port install k3d` (MacPorts is available for MacOS)
 - install via [AUR](https://aur.archlinux.org/) package [rancher-k3d-bin](https://aur.archlinux.org/packages/rancher-k3d-bin/): `yay -S rancher-k3d-bin`
 - grab a release from the [release tab](https://github.com/k3d-io/k3d/releases) and install it yourself.
@@ -126,7 +126,7 @@ You can find an overview of the k3d project (e.g. explanations and a repository 
 
 ## Contributors ✨
 
-Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+Thanks goes to these wonderful people (emoji key):
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
