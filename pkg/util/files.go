@@ -37,7 +37,7 @@ import (
 )
 
 // GetConfigDirOrCreate will return the base path of the k3d config directory or create it if it doesn't exist yet
-// k3d's config directory will be $XDG_CONFIG_HOME (Unix)
+// k3d's config directory will be $XDG_CONFIG_HOME/k3d, if $XDG_CONFIG_HOME is set, and $HOME/.config/k3d otherwise
 func GetConfigDirOrCreate() (string, error) {
 	configDir := os.Getenv("XDG_CONFIG_HOME")
 	if len(configDir) == 0 {
@@ -47,6 +47,8 @@ func GetConfigDirOrCreate() (string, error) {
 			return "", fmt.Errorf("failed to get user's home directory: %w", err)
 		}
 		configDir = path.Join(homeDir, types.DefaultConfigDirName)
+	} else {
+		configDir = path.Join(configDir, "k3d")
 	}
 
 	// create directories if necessary

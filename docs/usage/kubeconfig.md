@@ -14,7 +14,7 @@ To get a kubeconfig set up for you to connect to a k3d cluster without this auto
 1. Create a new kubeconfig file **after** cluster creation
 
   - `#!bash k3d kubeconfig write mycluster`
-    - *Note:* this will create (or update) the file `$HOME/.k3d/kubeconfig-mycluster.yaml`
+    - *Note:* this will create (or update) the file `$HOME/.config/k3d/kubeconfig-mycluster.yaml` (or `$XDG_CONFIG_HOME/k3d/kubeconfig-mycluster.yaml`, if `XDG_CONFIG_HOME` is set)
     - *Tip:* Use it: `#!bash export KUBECONFIG=$(k3d kubeconfig write mycluster)`
     - *Note 2*: alternatively you can use `#!bash k3d kubeconfig get mycluster > some-file.yaml`
 
@@ -42,11 +42,11 @@ To get a kubeconfig set up for you to connect to a k3d cluster without this auto
 ## Removing cluster details from the kubeconfig
 
 `#!bash k3d cluster delete mycluster` will always remove the details for `mycluster` from the default kubeconfig.
-It will also delete the respective kubeconfig file in `$HOME/.k3d/` if it exists.
+It will also delete the respective kubeconfig file in `$HOME/.config/k3d/` (or `$XDG_CONFIG_HOME/k3d/`, if `XDG_CONFIG_HOME` is set) if it exists.
 
 ## Handling multiple clusters
 
 `k3d kubeconfig merge` let's you specify one or more clusters via arguments _or_ all via `--all`.  
 All kubeconfigs will then be merged into a single file if `--kubeconfig-merge-default` or `--output` is specified.  
-If none of those two flags was specified, a new file will be created per cluster and the merged path (e.g. `$HOME/.k3d/kubeconfig-cluster1.yaml:$HOME/.k3d/cluster2.yaml`) will be returned.  
+If none of those two flags was specified, a new file will be created per cluster and the merged path (e.g. `$HOME/.config/k3d/kubeconfig-cluster1.yaml:$HOME/.config/k3d/kubeconfig-cluster2.yaml`) will be returned.  
 Note, that with multiple cluster specified, the `--kubeconfig-switch-context` flag will change the current context to the cluster which was last in the list.
