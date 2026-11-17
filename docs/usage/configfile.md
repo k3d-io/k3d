@@ -5,7 +5,7 @@ The config file feature is **available as of k3d v4.0.0**
 ## Introduction
 
 !!! info "Syntax & Semantics"
-    The options defined in the config file are not 100% the same as the CLI flags.  
+    The options defined in the config file are not 100% the same as the CLI flags.
     This concerns naming and style/usage/structure, e.g.
 
     - `--api-port` is split up into a field named `kubeAPI` that has 3 different "child fields" (`host`, `hostIP` and `hostPort`)
@@ -36,13 +36,13 @@ kind: Simple
 
 ## Config Options
 
-The configuration options for k3d are continuously evolving and so is the config file (syntax) itself.  
+The configuration options for k3d are continuously evolving and so is the config file (syntax) itself.
 Currently, the config file is still in an Alpha-State, meaning, that it is subject to change anytime (though we try to keep breaking changes low).
 
 !!! info "Validation via JSON-Schema"
-    k3d uses a [JSON-Schema](https://json-schema.org/) to describe the expected format and fields of the configuration file.  
-    This schema is also used to [validate](https://github.com/xeipuuv/gojsonschema#validation) a user-given config file.  
-    This JSON-Schema can be found in the specific config version sub-directory in the repository (e.g. [here for `v1alpha5`](https://github.com/k3d-io/k3d/blob/main/pkg/config/v1alpha5/schema.json)) and could be used to lookup supported fields or by linters to validate the config file, e.g. in your code editor.  
+    k3d uses a [JSON-Schema](https://json-schema.org/) to describe the expected format and fields of the configuration file.
+    This schema is also used to [validate](https://github.com/xeipuuv/gojsonschema#validation) a user-given config file.
+    This JSON-Schema can be found in the specific config version sub-directory in the repository (e.g. [here for `v1alpha5`](https://github.com/k3d-io/k3d/blob/main/pkg/config/v1alpha5/schema.json)) and could be used to lookup supported fields or by linters to validate the config file, e.g. in your code editor.
 
 ### All Options: Example
 
@@ -95,6 +95,7 @@ registries: # define how registries should be created or used
     name: registry.localhost
     host: "0.0.0.0"
     hostPort: "5000"
+    network: k3d-network # use a network other than the default "bridge" network
     proxy: # omit this to have a "normal" registry, set this to create a registry proxy (pull-through cache)
       remoteURL: https://registry-1.docker.io # mirror the DockerHub registry
       username: "" # unauthenticated
@@ -110,7 +111,7 @@ registries: # define how registries should be created or used
           - http://my.company.registry:5000
 hostAliases: # /etc/hosts style entries to be injected into /etc/hosts in the node containers and in the NodeHosts section in CoreDNS
   - ip: 1.2.3.4
-    hostnames: 
+    hostnames:
       - my.host.local
       - that.other.local
   - ip: 1.1.1.1
@@ -153,18 +154,18 @@ options:
 
 ## Tips
 
-- k3d [expands environment variables](https://pkg.go.dev/os#ExpandEnv) (`$VAR` or `${VAR}`) unconditionally in the config file, even before processing it in any way.  
+- k3d [expands environment variables](https://pkg.go.dev/os#ExpandEnv) (`$VAR` or `${VAR}`) unconditionally in the config file, even before processing it in any way.
 
 ## Config File vs. CLI Flags
 
-k3d uses [`Cobra`](https://github.com/spf13/cobra) and [`Viper`](https://github.com/spf13/viper) for CLI and general config handling respectively.  
+k3d uses [`Cobra`](https://github.com/spf13/cobra) and [`Viper`](https://github.com/spf13/viper) for CLI and general config handling respectively.
 This automatically introduces a "config option order of priority" ([precedence order](https://github.com/spf13/viper#why-viper)):
 
 !!! info "Config Precedence Order"
-    Source: [spf13/viper#why-viper](https://github.com/spf13/viper#why-viper)  
+    Source: [spf13/viper#why-viper](https://github.com/spf13/viper#why-viper)
     >Internal Setting > **CLI Flag** > Environment Variable > **Config File** > (k/v store >) Defaults
 
-This means, that you can define e.g. a "base configuration file" with settings that you share across different clusters and override only the fields that differ between those clusters in your CLI flags/arguments.  
+This means, that you can define e.g. a "base configuration file" with settings that you share across different clusters and override only the fields that differ between those clusters in your CLI flags/arguments.
 For example, you use the same config file to create three clusters which only have different names and `kubeAPI` (`--api-port`) settings.
 
 ## References
