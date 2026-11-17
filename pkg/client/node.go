@@ -29,6 +29,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/netip"
 	"os"
 	"path"
 	"regexp"
@@ -321,11 +322,51 @@ func NodeAddToClusterRemote(ctx context.Context, runtime runtimes.Runtime, node 
 	node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3s.EnvClusterConnectURL, clusterRef))
 	node.Env = append(node.Env, fmt.Sprintf("%s=%s", k3s.EnvClusterToken, createNodeOpts.ClusterToken))
 
+	// There's no local cluster to gather the environment info from (as NodeAddToClusterMulti does), but
+	// the DNS fix still needs a gateway IP, so take it from the network the node will be attached to.
+	if createNodeOpts.EnvironmentInfo == nil {
+		envInfo, err := remoteNodeEnvironmentInfo(ctx, runtime, node)
+		if err != nil {
+			return fmt.Errorf("error gathering environment info required to properly create the node: %w", err)
+		}
+		createNodeOpts.EnvironmentInfo = envInfo
+	}
+
 	if err := NodeRun(ctx, runtime, node, createNodeOpts); err != nil {
 		return fmt.Errorf("failed to run node '%s': %w", node.Name, err)
 	}
 
 	return nil
+}
+
+// remoteNodeRuntime is the subset of runtimes.Runtime that remoteNodeEnvironmentInfo needs
+type remoteNodeRuntime interface {
+	Info() (*runtimeTypes.RuntimeInfo, error)
+	GetHostIP(ctx context.Context, network string) (netip.Addr, error)
+}
+
+// remoteNodeEnvironmentInfo gathers the environment info for a node that joins a remote cluster: the host
+// gateway is the gateway of the first network the node is attached to (or Docker's default bridge network).
+func remoteNodeEnvironmentInfo(ctx context.Context, runtime remoteNodeRuntime, node *k3d.Node) (*k3d.EnvironmentInfo, error) {
+	rtimeInfo, err := runtime.Info()
+	if err != nil {
+		return nil, err
+	}
+	envInfo := &k3d.EnvironmentInfo{RuntimeInfo: *rtimeInfo}
+
+	network := "bridge"
+	if len(node.Networks) > 0 {
+		network = node.Networks[0]
+	}
+	if network != "host" {
+		hostIP, err := runtime.GetHostIP(ctx, network)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get host IP: %w", err)
+		}
+		envInfo.HostGateway = hostIP
+	}
+
+	return envInfo, nil
 }
 
 // NodeAddToClusterMulti adds multiple nodes to a chosen cluster
@@ -946,11 +987,14 @@ func patchServerSpec(node *k3d.Node, runtime runtimes.Runtime) error {
 
 	// Add labels and TLS SAN for the exposed API
 	// FIXME: For now, the labels concerning the API on the server nodes are only being used for configuring the kubeconfig
-	node.RuntimeLabels[k3d.LabelServerAPIHostIP] = node.ServerOpts.KubeAPI.Binding.HostIP // TODO: maybe get docker machine IP here
-	node.RuntimeLabels[k3d.LabelServerAPIHost] = node.ServerOpts.KubeAPI.Host
-	node.RuntimeLabels[k3d.LabelServerAPIPort] = node.ServerOpts.KubeAPI.Binding.HostPort
+	// A server node that joins a remote cluster doesn't expose an API of its own, so there's nothing to set.
+	if node.ServerOpts.KubeAPI != nil {
+		node.RuntimeLabels[k3d.LabelServerAPIHostIP] = node.ServerOpts.KubeAPI.Binding.HostIP // TODO: maybe get docker machine IP here
+		node.RuntimeLabels[k3d.LabelServerAPIHost] = node.ServerOpts.KubeAPI.Host
+		node.RuntimeLabels[k3d.LabelServerAPIPort] = node.ServerOpts.KubeAPI.Binding.HostPort
 
-	node.Args = append(node.Args, "--tls-san", node.RuntimeLabels[k3d.LabelServerAPIHost]) // add TLS SAN for non default host name
+		node.Args = append(node.Args, "--tls-san", node.RuntimeLabels[k3d.LabelServerAPIHost]) // add TLS SAN for non default host name
+	}
 	if node.RuntimeLabels[k3d.LabelServerLoadBalancer] != "" {
 		// add TLS SAN for server loadbalancer
 		node.Args = append(node.Args, "--tls-san", node.RuntimeLabels[k3d.LabelServerLoadBalancer])
