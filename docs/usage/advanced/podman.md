@@ -88,8 +88,7 @@ Reference: [https://rootlesscontaine.rs/getting-started/common/cgroup2/#enabling
 [Start Podman on the remote host](https://github.com/containers/podman/blob/main/docs/tutorials/remote_client.md), and then set `DOCKER_HOST` when running k3d:
 
 ```
-export DOCKER_HOST=ssh://username@hostname
-export DOCKER_SOCK=/run/user/1000/podman/podman.sock
+export DOCKER_HOST=ssh://username@hostname/run/user/1000/podman/podman.sock
 k3d cluster create
 ```
 
