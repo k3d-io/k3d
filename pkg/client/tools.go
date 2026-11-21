@@ -24,6 +24,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -44,8 +45,11 @@ import (
 func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, images []string, cluster *k3d.Cluster, opts k3d.ImageImportOpts) error {
 	// stdin case
 	if len(images) == 1 && images[0] == "-" {
-		err := loadImageFromStream(ctx, runtime, os.Stdin, cluster, []string{"stdin"})
-		return fmt.Errorf("failed to load image to cluster from stdin: %v", err)
+		if err := loadImageFromStream(ctx, runtime, os.Stdin, cluster, []string{"stdin"}); err != nil {
+			return fmt.Errorf("failed to load image to cluster from stdin: %w", err)
+		}
+		l.Log().Infoln("Successfully imported image(s)")
+		return nil
 	}
 
 	imagesFromRuntime, imagesFromTar, err := findImages(ctx, runtime, images)
@@ -105,6 +109,8 @@ func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster 
 	}
 
 	var importTarNames []string
+	// errors that must not abort the import of the remaining images, but still have to be reported in the end
+	var deferredErrs []error
 
 	if len(imagesFromRuntime) > 0 {
 		// save image to tarfile in shared volume
@@ -123,6 +129,8 @@ func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster 
 			tarName := fmt.Sprintf("%s/k3d-%s-images-%s-file-%s", k3d.DefaultImageVolumeMountPath, cluster.Name, time.Now().Format("20060102150405"), path.Base(file))
 			if err := runtime.CopyToNode(ctx, file, tarName, toolsNode); err != nil {
 				l.Log().Errorf("failed to copy image tar '%s' to tools node! Error below:\n%+v", file, err)
+				// continue with the other tarballs, but remember the failure so we don't report success later on
+				deferredErrs = append(deferredErrs, fmt.Errorf("failed to copy image tar '%s' to tools node: %w", file, err))
 				continue
 			}
 			importTarNames = append(importTarNames, tarName)
@@ -131,23 +139,27 @@ func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster 
 
 	// import image in each node
 	l.Log().Infoln("Importing images into nodes...")
-	var importWaitgroup sync.WaitGroup
+	var importErrGroup errgroup.Group
 	for _, tarName := range importTarNames {
 		for _, node := range cluster.Nodes {
 			// only import image in server and agent nodes (i.e. ignoring auxiliary nodes like the server loadbalancer)
 			if node.Role == k3d.ServerRole || node.Role == k3d.AgentRole {
-				importWaitgroup.Add(1)
-				go func(node *k3d.Node, wg *sync.WaitGroup, tarPath string) {
-					l.Log().Infof("Importing images from tarball '%s' into node '%s'...", tarPath, node.Name)
-					if err := runtime.ExecInNode(ctx, node, []string{"ctr", "image", "import", "--all-platforms", tarPath}); err != nil {
+				importErrGroup.Go(func() error {
+					l.Log().Infof("Importing images from tarball '%s' into node '%s'...", tarName, node.Name)
+					if err := runtime.ExecInNode(ctx, node, []string{"ctr", "image", "import", "--all-platforms", tarName}); err != nil {
+						// log here as well, so that all failures are visible, not just the first one returned below
 						l.Log().Errorf("failed to import images in node '%s': %v", node.Name, err)
+						return fmt.Errorf("failed to import images in node '%s': %w", node.Name, err)
 					}
-					wg.Done()
-				}(node, &importWaitgroup, tarName)
+					return nil
+				})
 			}
 		}
 	}
-	importWaitgroup.Wait()
+	// cleanup below is done even if the import failed, so we only return the errors at the very end
+	if err := importErrGroup.Wait(); err != nil {
+		deferredErrs = append(deferredErrs, err)
+	}
 
 	// remove tarball
 	if !opts.KeepTar && len(importTarNames) > 0 {
@@ -164,7 +176,7 @@ func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster 
 			l.Log().Errorf("failed to delete tools node '%s' (try to delete it manually): %v", toolsNode.Name, err)
 		}
 	}
-	return nil
+	return errors.Join(deferredErrs...)
 }
 
 func importWithStream(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, imagesFromRuntime []string, imagesFromTar []string) error {
