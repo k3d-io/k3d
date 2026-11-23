@@ -62,6 +62,7 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 
 	switch opts.Mode {
 	case k3d.ImportModeAutoDetect:
+		opts.FallbackPull = true
 		if err != nil {
 			return fmt.Errorf("failed to retrieve container runtime information: %w", err)
 		}
@@ -74,6 +75,11 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 		loadWithToolsNode = true
 	case k3d.ImportModeDirect:
 		loadWithToolsNode = false
+	case k3d.ImageImportModePull:
+		if len(imagesFromTar) > 0 {
+			return fmt.Errorf("pull mode doesn't support tar inputs")
+		}
+		return importWithPull(ctx, runtime, cluster, imagesFromRuntime)
 	}
 
 	/* TODO:
@@ -97,6 +103,14 @@ func ImageImportIntoClusterMulti(ctx context.Context, runtime runtimes.Runtime, 
 	return nil
 }
 
+func isMissingDigestErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := err.Error()
+	return strings.Contains(s, "content digest sha256:") && strings.Contains(s, "not found")
+}
+
 func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster *k3d.Cluster, imagesFromRuntime []string, imagesFromTar []string, opts k3d.ImageImportOpts) error {
 	// create tools node to export images
 	toolsNode, err := EnsureToolsNode(ctx, runtime, cluster)
@@ -104,7 +118,10 @@ func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster 
 		return fmt.Errorf("failed to ensure that tools node is running: %w", err)
 	}
 
-	var importTarNames []string
+	var (
+		importTarNames []string
+		copyErrs       []error
+	)
 
 	if len(imagesFromRuntime) > 0 {
 		// save image to tarfile in shared volume
@@ -122,12 +139,15 @@ func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster 
 		for _, file := range imagesFromTar {
 			tarName := fmt.Sprintf("%s/k3d-%s-images-%s-file-%s", k3d.DefaultImageVolumeMountPath, cluster.Name, time.Now().Format("20060102150405"), path.Base(file))
 			if err := runtime.CopyToNode(ctx, file, tarName, toolsNode); err != nil {
+				copyErrs = append(copyErrs, fmt.Errorf("failed to copy image tar '%s' to tools node: %w", file, err))
 				l.Log().Errorf("failed to copy image tar '%s' to tools node! Error below:\n%+v", file, err)
 				continue
 			}
 			importTarNames = append(importTarNames, tarName)
 		}
 	}
+
+	errCh := make(chan error, len(importTarNames)*len(cluster.Nodes))
 
 	// import image in each node
 	l.Log().Infoln("Importing images into nodes...")
@@ -141,6 +161,21 @@ func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster 
 					l.Log().Infof("Importing images from tarball '%s' into node '%s'...", tarPath, node.Name)
 					if err := runtime.ExecInNode(ctx, node, []string{"ctr", "image", "import", "--all-platforms", tarPath}); err != nil {
 						l.Log().Errorf("failed to import images in node '%s': %v", node.Name, err)
+						if opts.FallbackPull && isMissingDigestErr(err) && len(imagesFromRuntime) > 0 {
+							l.Log().Warnf("tar import failed in node '%s' due to missing digest; falling back to pull", node.Name)
+
+							// pull each runtime image into this node
+							for _, img := range imagesFromRuntime {
+								pullCmd := []string{"crictl", "pull", img}
+								if pullErr := runtime.ExecInNode(ctx, node, pullCmd); pullErr != nil {
+									errCh <- fmt.Errorf("node %s: import failed (%v) and pull fallback failed for %s: %w",
+										node.Name, err, img, pullErr)
+									return
+								}
+							}
+							// fallback succeeded, so treat as success
+							return
+						}
 					}
 					wg.Done()
 				}(node, &importWaitgroup, tarName)
@@ -148,6 +183,7 @@ func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster 
 		}
 	}
 	importWaitgroup.Wait()
+	close(errCh)
 
 	// remove tarball
 	if !opts.KeepTar && len(importTarNames) > 0 {
@@ -164,6 +200,18 @@ func importWithToolsNode(ctx context.Context, runtime runtimes.Runtime, cluster 
 			l.Log().Errorf("failed to delete tools node '%s' (try to delete it manually): %v", toolsNode.Name, err)
 		}
 	}
+
+	var importErrs []error
+	for e := range errCh {
+		importErrs = append(importErrs, e)
+	}
+	allErrs := append(copyErrs, importErrs...)
+	if len(allErrs) > 0 {
+		// Go 1.20+: return errors.Join(allErrs...)
+		// Compatible fallback:
+		return fmt.Errorf("image import encountered %d error(s): %v", len(allErrs), allErrs)
+	}
+
 	return nil
 }
 

@@ -201,6 +201,7 @@ const (
 	ImportModeAutoDetect ImportMode = "auto"
 	ImportModeDirect     ImportMode = "direct"
 	ImportModeToolsNode  ImportMode = "tools-node"
+	ImageImportModePull  ImportMode = "pull"
 )
 
 // ImportModes defines the loading methods for image loading
@@ -208,6 +209,7 @@ var ImportModes = map[string]ImportMode{
 	string(ImportModeAutoDetect): ImportModeAutoDetect,
 	string(ImportModeDirect):     ImportModeDirect,
 	string(ImportModeToolsNode):  ImportModeToolsNode,
+	string(ImageImportModePull):  ImageImportModePull,
 }
 
 // ImageImportOpts describes a set of options one can set for loading image(s) into cluster(s)
@@ -215,6 +217,7 @@ type ImageImportOpts struct {
 	KeepTar       bool
 	KeepToolsNode bool
 	Mode          ImportMode
+	FallbackPull  bool
 }
 
 type IPAM struct {
