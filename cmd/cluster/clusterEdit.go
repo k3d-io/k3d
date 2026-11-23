@@ -59,6 +59,7 @@ func NewCmdClusterEdit() *cobra.Command {
 	// add flags
 	cmd.Flags().StringArray("port-add", nil, "Map ports from the node containers (via the serverlb) to the host (Format: `[HOST:][HOSTPORT:]CONTAINERPORT[/PROTOCOL][@NODEFILTER]`)\n - Example: `k3d cluster edit k3d-mycluster-serverlb --port-add 8080:80`")
 	cmd.Flags().StringArray("port-delete", nil, "[EXPERIMENTAL] Delete a port mapping with the given format\nThe mapping spec needs to be exactly the same as the one used during creation\n - Example: `k3d cluster edit k3d-mycluster-serverlb --port-delete 8080:80`")
+	cmd.Flags().StringArray("host-alias", nil, "Add `ip:host[,host,...]` mappings")
 
 	// done
 	return cmd
@@ -86,6 +87,16 @@ func parseEditClusterCmd(cmd *cobra.Command, args []string) (*k3d.Cluster, *conf
 	if portsAdded && portsDeleted {
 		l.Log().Fatalln("Cannot combine port addition and deletion")
 	}
+
+	hostAliasFlags, err := cmd.Flags().GetStringArray("host-alias")
+	if err != nil {
+		l.Log().Fatalln(err)
+	}
+	hostAliases, err := parseHostAliases(hostAliasFlags)
+	if err != nil {
+		l.Log().Fatalln(err)
+	}
+	changeset.HostAliases = hostAliases
 
 	return existingCluster, &changeset
 }

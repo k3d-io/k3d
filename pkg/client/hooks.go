@@ -22,8 +22,11 @@ THE SOFTWARE.
 package client
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/goodhosts/hostsfile"
@@ -31,6 +34,24 @@ import (
 	"github.com/k3d-io/k3d/v5/pkg/runtimes"
 	k3d "github.com/k3d-io/k3d/v5/pkg/types"
 )
+
+// InjectHostAliasesIntoCoreDNS replaces the NodeHosts field in the live CoreDNS ConfigMap
+// with the given aliases. k3d is the authority on this field.
+func InjectHostAliasesIntoCoreDNS(ctx context.Context, runtime runtimes.Runtime, node *k3d.Node, hostAliases []k3d.HostAlias) error {
+	var lines []string
+	for _, ha := range hostAliases {
+		lines = append(lines, fmt.Sprintf("%s %s", ha.IP, strings.Join(ha.Hostnames, " ")))
+	}
+	patch, err := json.Marshal(map[string]any{"data": map[string]string{"NodeHosts": strings.Join(lines, "\n")}})
+	if err != nil {
+		return fmt.Errorf("error marshalling CoreDNS configmap patch: %w", err)
+	}
+	err = runtime.ExecInNode(ctx, node, []string{"kubectl", "patch", "configmap", "coredns", "-n", "kube-system", "-p", string(patch)})
+	if err != nil {
+		return fmt.Errorf("error patching CoreDNS configmap: %w", err)
+	}
+	return nil
+}
 
 func NewHostAliasesInjectEtcHostsAction(runtime runtimes.Runtime, hostAliases []k3d.HostAlias) actions.RewriteFileAction {
 	return actions.RewriteFileAction{

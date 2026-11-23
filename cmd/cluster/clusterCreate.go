@@ -590,34 +590,40 @@ func applyCLIOverrides(cfg conf.SimpleConfig) (conf.SimpleConfig, error) {
 
 	// --host-alias
 	hostAliasFlags := ppViper.GetStringSlice("hostaliases")
-	if len(hostAliasFlags) > 0 {
-		for _, ha := range hostAliasFlags {
-			// split on :
-			s := strings.Split(ha, ":")
-			if len(s) != 2 {
-				return cfg, fmt.Errorf("invalid format of host-alias %s (exactly one ':' allowed)", ha)
-			}
-
-			// validate IP
-			ip, err := netip.ParseAddr(s[0])
-			if err != nil {
-				return cfg, fmt.Errorf("invalid IP '%s' in host-alias '%s': %w", s[0], ha, err)
-			}
-
-			// hostnames
-			hostnames := strings.Split(s[1], ",")
-			for _, hostname := range hostnames {
-				if err := k3dCluster.ValidateHostname(hostname); err != nil {
-					return cfg, fmt.Errorf("invalid hostname '%s' in host-alias '%s': %w", hostname, ha, err)
-				}
-			}
-
-			cfg.HostAliases = append(cfg.HostAliases, k3d.HostAlias{
-				IP:        ip.String(),
-				Hostnames: hostnames,
-			})
-		}
+	hostAliases, err := parseHostAliases(hostAliasFlags)
+	if err != nil {
+		return cfg, err
 	}
+	cfg.HostAliases = append(cfg.HostAliases, hostAliases...)
 
 	return cfg, nil
+}
+
+func parseHostAliases(hostAliases []string) (aliases []k3d.HostAlias, err error) {
+	for _, ha := range hostAliases {
+		s := strings.Split(ha, ":")
+		if len(s) != 2 {
+			return nil, fmt.Errorf("invalid format of host-alias %s (exactly one ':' allowed)", ha)
+		}
+
+		// validate IP
+		ip, err := netip.ParseAddr(s[0])
+		if err != nil {
+			return nil, fmt.Errorf("invalid IP '%s' in host-alias '%s': %w", s[0], ha, err)
+		}
+
+		// hostnames
+		hostnames := strings.Split(s[1], ",")
+		for _, hostname := range hostnames {
+			if err := k3dCluster.ValidateHostname(hostname); err != nil {
+				return nil, fmt.Errorf("invalid hostname '%s' in host-alias '%s': %w", hostname, ha, err)
+			}
+		}
+
+		aliases = append(aliases, k3d.HostAlias{
+			IP:        ip.String(),
+			Hostnames: hostnames,
+		})
+	}
+	return
 }
