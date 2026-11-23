@@ -39,6 +39,20 @@
       "matchPackageNames": [
         "*"
       ]
+    },
+    {
+      "description": "Hold docker/cli and docker/docker at the v28 major. The v29 line moves the Go API onto github.com/moby/moby (redesigned options/result client) and requires migrating pkg/runtimes/docker, so the bump cannot build as-is. The v29 [security] advisory (CVE-2025-15558) is Windows + cli-plugins/manager only and is not reachable from k3d (govulncheck confirms; k3d does not import cli-plugins/manager). Re-enable when migrating to github.com/moby/moby/v2.",
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchPackageNames": [
+        "github.com/docker/cli",
+        "github.com/docker/docker"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
     }
   ],
   "customManagers": [
