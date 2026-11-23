@@ -211,8 +211,9 @@ testVersion() {
 # help provides possible cli installation arguments
 help () {
   echo "Accepted cli arguments are:"
-  echo -e "\t[--help|-h ] ->> prints this help"
-  echo -e "\t[--no-sudo]  ->> install without sudo"
+  echo -e "\t[--help|-h ]     ->> prints this help"
+  echo -e "\t[--no-sudo]      ->> install without sudo"
+  echo -e "\t[--version|-v ]  ->> install a specific version (e.g., v5.8.3)"
 }
 
 # cleanup temporary files
@@ -239,6 +240,14 @@ while [[ $# -gt 0 ]]; do
     '--help'|-h)
        help
        exit 0
+       ;;
+    '--version'|-v)
+       shift
+       TAG="$1"
+       # ponytail: auto-prepend v if missing, e.g., 5.8.3 -> v5.8.3
+       if [[ ! "$TAG" =~ ^v ]]; then
+         TAG="v$TAG"
+       fi
        ;;
     *) exit 1
        ;;
