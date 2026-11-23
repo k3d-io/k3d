@@ -312,7 +312,7 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runt
 	}
 
 	// if the host is now 0.0.0.0, check if we can set it to the IP of the docker-machine, if it's used
-	if host == k3d.DefaultAPIHost && runtime == runtimes.Docker {
+	if (host == k3d.DefaultAPIHost || host == "0.0.0.0") && runtime == runtimes.Docker {
 		if gort.GOOS == "windows" || gort.GOOS == "darwin" {
 			l.Log().Tracef("Running on %s: checking if it's using docker-machine", gort.GOOS)
 			machineIP, err := runtime.(docker.Docker).GetDockerMachineIP()
@@ -328,7 +328,7 @@ func RegistryGenerateLocalRegistryHostingConfigMapYAML(ctx context.Context, runt
 	}
 
 	// if host is still 0.0.0.0, use localhost instead
-	if host == k3d.DefaultAPIHost {
+	if host == k3d.DefaultAPIHost || host == "0.0.0.0" {
 		host = "localhost" // we prefer localhost over 0.0.0.0
 	}
 

@@ -83,7 +83,7 @@ const DefaultKubeconfigPrefix = DefaultObjectNamePrefix + "-kubeconfig"
 const DefaultAPIPort = "6443"
 
 // DefaultAPIHost defines the default host (IP) for the Kubernetes API
-const DefaultAPIHost = "0.0.0.0"
+const DefaultAPIHost = "127.0.0.1"
 
 // GetDefaultObjectName prefixes the passed name with the default prefix
 func GetDefaultObjectName(name string) string {
