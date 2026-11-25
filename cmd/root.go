@@ -351,14 +351,7 @@ func NewCmdVersionLs() *cobra.Command {
 			for _, tag := range tags {
 				if includeRegexp.Match([]byte(tag)) {
 					if flags.excludeRegexp == "" || !excludeRegexp.Match([]byte(tag)) {
-						switch format {
-						case VersionLsOutputFormatRaw:
-							filteredTags = append(filteredTags, tag)
-						case VersionLsOutputFormatRepo:
-							filteredTags = append(filteredTags, fmt.Sprintf("%s:%s\n", repo, tag))
-						default:
-							l.Log().Fatalf("Unknown output format '%+v'", format)
-						}
+						filteredTags = append(filteredTags, tag)
 					} else {
 						l.Log().Tracef("Tag %s excluded (regexp: `%s`)", tag, flags.excludeRegexp)
 					}
@@ -382,6 +375,11 @@ func NewCmdVersionLs() *cobra.Command {
 
 			if flags.limit > 0 {
 				filteredTags = filteredTags[0:flags.limit]
+			}
+			if format == VersionLsOutputFormatRepo {
+				for i, tag := range filteredTags {
+					filteredTags[i] = fmt.Sprintf("%s:%s\n", repo, tag)
+				}
 			}
 			fmt.Println(strings.Join(filteredTags, "\n"))
 		},
