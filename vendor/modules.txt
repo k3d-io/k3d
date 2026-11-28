@@ -585,7 +585,7 @@ go.yaml.in/yaml/v2
 go.yaml.in/yaml/v3
 # go4.org/intern v0.0.0-20211027215823-ae77deb06f29
 ## explicit; go 1.13
-# go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
+# go4.org/netipx v0.0.0-20260823151212-3075585bcbeb
 ## explicit; go 1.18
 go4.org/netipx
 # go4.org/unsafe/assume-no-moving-gc v0.0.0-20230209150437-ee73d164e760
